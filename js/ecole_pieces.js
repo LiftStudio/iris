@@ -96,12 +96,45 @@ function geoDossier() {
   g.computeVertexNormals();
   return (_dossier = g);
 }
-// UN VÊTEMENT pendu (patère, porte-manteau) : un corps évasé aplati, des épaules rondes ; `y` le crochet
-function vetement(g, mat, x, y, z, { haut = 0.8, rot = 0 } = {}) {
-  const v = new THREE.Group(); v.position.set(x, y, z); v.rotation.y = rot; g.add(v);
-  const corps = maille(new THREE.CylinderGeometry(0.115, 0.2, haut, 16, 1), mat, 0, -0.06 - haut / 2, 0, 0, v); corps.scale.z = 0.38;
-  const ep = maille(new THREE.SphereGeometry(0.13, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat, 0, -0.07, 0, 0, v); ep.scale.set(1.05, 0.45, 0.42);
-  const col = maille(new THREE.TorusGeometry(0.06, 0.018, 6, 16), mat, 0, -0.045, 0, 0, v, { ombre: false }); col.rotation.x = Math.PI / 2; col.scale.y = 0.6;
+// UN VÊTEMENT pendu (patère, porte-manteau) par sa bride de col ; `y` le crochet. La silhouette d'une veste vue de face
+// (encolure, épaules tombantes, corps qui s'évase un peu jusqu'à l'ourlet), extrudée avec un biseau épais : un tissu
+// rembourré, pas une planche. Les manches pendent le long du corps, un peu devant ; la capuche retombe dans le dos ; la
+// fermeture éclair et les poches passepoilées, d'un ton plus sombre. Le bas penche vers le mur (ou le mât) : une veste
+// accrochée s'y appuie. (L'ancienne version, un cône aplati, se lisait comme un abat-jour bleu.)
+const _vestes = new Map();
+function geoVeste(haut) {
+  const k = haut.toFixed(3);
+  if (_vestes.has(k)) return _vestes.get(k);
+  const s = new THREE.Shape(), h = -haut;
+  s.moveTo(-0.065, -0.035);
+  s.quadraticCurveTo(-0.15, -0.045, -0.185, -0.085);              // l'épaule gauche, tombante
+  s.lineTo(-0.2, -0.15); s.lineTo(-0.205, h * 0.55); s.quadraticCurveTo(-0.215, h * 0.85, -0.225, h);
+  s.lineTo(0.225, h);
+  s.quadraticCurveTo(0.215, h * 0.85, 0.205, h * 0.55); s.lineTo(0.2, -0.15); s.lineTo(0.185, -0.085);
+  s.quadraticCurveTo(0.15, -0.045, 0.065, -0.035);
+  s.quadraticCurveTo(0, -0.09, -0.065, -0.035);                   // l'encolure
+  const geo = new THREE.ExtrudeGeometry(s, { depth: 0.045, bevelEnabled: true, bevelThickness: 0.028, bevelSize: 0.022, bevelSegments: 3, curveSegments: 8 });
+  geo.translate(0, 0, -0.0225);
+  geo.computeVertexNormals();
+  _vestes.set(k, geo);
+  return geo;
+}
+function vetement(g, mat, x, y, z, { haut = 0.8, rot = 0, capuche = true } = {}) {
+  const v = new THREE.Group(); v.position.set(x, y, z); v.rotation.y = rot; v.rotation.x = 0.05; g.add(v);
+  maille(geoVeste(haut), mat, 0, 0, 0, 0, v);
+  // les manches (un peu plus courtes que le corps, légèrement écartées au coude)
+  const lm = haut * 0.78;
+  for (const sx of [-1, 1]) {
+    const m = R(v, mat, 0.1, lm, 0.095, 0.04, sx * 0.205, -0.1 - lm / 2, 0.035);
+    m.rotation.z = sx * 0.05;
+  }
+  // la capuche qui retombe dans le dos, la bride de col sur le crochet
+  if (capuche) { const c = maille(new THREE.SphereGeometry(0.12, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat, 0, -0.07, -0.045, 0, v); c.rotation.x = Math.PI; c.scale.set(1, 0.85, 0.42); }
+  const col = maille(new THREE.TorusGeometry(0.05, 0.016, 6, 16), mat, 0, -0.04, 0.0, 0, v, { ombre: false }); col.rotation.x = Math.PI / 2; col.scale.y = 0.55;
+  // la fermeture éclair et deux poches passepoilées
+  const sombre = mat.__sombre || (mat.__sombre = new THREE.MeshStandardMaterial({ color: mat.color.clone().multiplyScalar(0.45), roughness: 0.7 }));
+  B(v, sombre, 0.008, haut - 0.08, 0.004, 0, -0.04 - (haut - 0.08) / 2, 0.0515, { ombre: false });
+  for (const sx of [-1, 1]) { const p = B(v, sombre, 0.11, 0.008, 0.004, sx * 0.11, -haut * 0.68, 0.0518, { ombre: false }); p.rotation.z = -sx * 0.35; }
   return v;
 }
 const CY = (g, mat, r, h, x, y, z, seg = 12, o) => maille(new THREE.CylinderGeometry(r, r, h, seg), mat, x, y, z, 0, g, o);
@@ -138,6 +171,10 @@ function matieres(M) {
     plastique: std({ color: 0x1b1c1f, roughness: 0.45 }),                       // écrans, claviers, piètements de chaise
     plastiqueGris: std({ color: 0x3a3c41, roughness: 0.5 }),
     chrome: std({ color: 0xd4d7da, roughness: 0.16, metalness: 0.78 }),     // (pas tout à fait 1 : sans carte d'environnement, il resterait noir)
+    // le chrome poli des robinets : un rien bleuté, parce qu'il ne fait que renvoyer la faïence et les portes safran
+    // chaudes des toilettes (avec le chrome ordinaire, ils sortaient couleur bois) ; métal à 0,7 seulement : sans carte
+    // d'environnement (téléphone), il garde un fond gris clair au lieu de sortir noir
+    robinet: std({ color: 0xd0d8e0, roughness: 0.12, metalness: 0.7 }),
     tissu: std({ color: 0x2b2e33, roughness: 0.95 }),                           // chaises de bureau
     tissuBleu: std({ color: 0x2c3e57, roughness: 0.95 }),
     blancMat: std({ color: 0xf2f1ec, roughness: 0.55 }),
@@ -730,8 +767,8 @@ function salleA(ch, P) {
   B(pat, P.chene, 1.0, 0.1, 0.02, 0, 0, 0.01);
   for (let i = 0; i < 5; i++) { const p = CY(pat, P.chrome, 0.008, 0.07, -0.4 + i * 0.2, 0.0, 0.05, 8, { ombre: false }); p.rotation.x = Math.PI / 2 - 0.3; }
   vetement(pat, P.tissuBleu, -0.2, 0.0, 0.1, { haut: 0.62 });            // une veste accrochée
-  // ---- la plaque « Salle A » côté hall ----
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaque('Salle A', 'ecran'), roughness: 0.4 }), 4.75, 7.62, 'W', 0.17, 0.17, 1.6, { ep: 0.006 });
+  // ---- la plaque « Salle A » côté hall, du côté de la poignée (comme la plaque « Toilettes » du C01, photo 01) ----
+  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaque('Salle A', 'ecran'), roughness: 0.4 }), 4.75, 6.08, 'W', 0.17, 0.17, 1.6, { ep: 0.006 });
 }
 // UNE DALLE LED encastrée dans le plafond à plateaux : cadre d'aluminium blanc, diffuseur allumé ; c'est une LAMPE
 function dalleLED(ch, P, x, y, h, zone) {
@@ -802,7 +839,7 @@ function bureauB(ch, P) {
   const pm = groupe(ch, 12.92, 4.35, 'S');
   CY(pm, P.noirMat, 0.17, 0.02, 0, 0.01, 0, 20); CY(pm, P.noirMat, 0.016, 1.75, 0, 0.88, 0, 8);
   for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + 0.4; const c = CY(pm, P.noirMat, 0.008, 0.18, Math.sin(a) * 0.07, 1.67, Math.cos(a) * 0.07, 6, { ombre: false }); c.rotation.set(Math.cos(a) * 0.8, 0, -Math.sin(a) * 0.8); }
-  vetement(pm, P.tissu, 0.0, 1.66, 0.1, { haut: 0.85, rot: 0.3 });   // un manteau sombre
+  vetement(pm, P.tissu, 0.0, 1.66, 0.12, { haut: 0.85, rot: 0.3 });  // un manteau sombre (devant le mât, qu'il frôle)
   C.ajouterCercle(12.92, -4.35, 0.2, { y1: 1.8 });
   corbeille(ch, P, 12.75, 2.35, null, 0.12, 0.3);
   // la plaque « Bureau B » côté cou
@@ -1080,8 +1117,14 @@ function toilettes(ch, P) {
   const barre = CY(ba, P.inox, 0.017, 0.7, 0, 0, 0.07, 10, { ombre: false }); barre.rotation.z = Math.PI / 2;
   for (const s of [-1, 1]) { const p = CY(ba, P.inox, 0.017, 0.07, s * 0.33, 0, 0.035, 8, { ombre: false }); p.rotation.x = Math.PI / 2; }
   const rel = groupe(ch, 6.82, WC.y1 - 0.012, 'S', 0.8); B(rel, P.inox, 0.03, 0.03, 0.75, 0, 0, 0.37, { ombre: false }); B(rel, P.inox, 0.06, 0.12, 0.04, 0, 0, 0.0, { ombre: false });
-  const lvP = groupe(ch, 7.5, WC.y1, 'S', 0.8); vasque(lvP, P, 0, 0.05, 0.15); B(lvP, P.ceramique, 0.4, 0.04, 0.3, 0, 0, 0.15);
-  miroir(ch, P, 7.5, WC.y1 - 0.012, 1.35, 0.45, 0.6, 'S', { x0: WC.x0, y0: 18.3, x1: 7.85, y1: WC.y1 });
+  // le lave-mains : une petite vasque posée sur sa tablette (devant la faïence : z local 0,012), robinet mural au-dessus
+  const lvP = groupe(ch, 7.5, WC.y1, 'S', 0.8);
+  B(lvP, P.ceramique, 0.42, 0.04, 0.3, 0, 0, 0.162);
+  vasque(lvP, P, 0, 0.02, 0.172, 0.72);
+  robinetMural(lvP, P, 0, 0.17, 0.012, 0.13);
+  // (la boîte de projection : toute la pièce, pas la cabine — le point de prise de vue est dans le sas, hors de la
+  // cabine ; projeté sur la cabine, le reflet allait chercher les portes safran là où il n'y a que la façade grise)
+  miroir(ch, P, 7.5, WC.y1 - 0.012, 1.35, 0.45, 0.6, 'S', WC);
   C.ajouterBoite(7.3, -(WC.y1 - 0.32), 7.72, -WC.y1, { y1: 0.85 });
   // ---- LES VASQUES : plan de quartz anthracite, trois vasques à poser, robinets, grand miroir rétroéclairé ----
   const yV = WC.y0 + ep;
@@ -1092,11 +1135,13 @@ function toilettes(ch, P) {
   for (const x of [7.85, 8.85, 9.85]) {
     const g = groupe(ch, x, yV, 'N', 0.86);
     vasque(g, P, 0, 0, 0.29);
-    CY(g, P.chrome, 0.016, 0.24, 0, 0.12, 0.07, 12);
-    B(g, P.chrome, 0.025, 0.02, 0.14, 0, 0.235, 0.13);                          // le bec
-    const sav = groupe(ch, x + 0.36, yV + 0.08, 'N', 0.86); CY(sav, P.blancMat, 0.03, 0.15, 0, 0.075, 0, 12); CY(sav, P.chrome, 0.01, 0.04, 0, 0.17, 0.0, 8);
+    mitigeur(g, P, 0, 0, 0.07);
+    const sav = groupe(ch, x + 0.36, yV + 0.08, 'N', 0.86); CY(sav, P.blancMat, 0.03, 0.15, 0, 0.075, 0, 12); CY(sav, P.robinet, 0.01, 0.04, 0, 0.17, 0.0, 8);
   }
-  const mir = miroir(ch, P, 8.85, yV, 1.475, 3.06, 0.91, 'N', WC, { reel: true });
+  // (la glace peinte des petites qualités : en face, les trois portes safran et, à gauche, l'ouverture de la cabine PMR ;
+  // vues d'1,60 m à un pas du miroir, les cabines tiennent entre 19 et 76 % de sa hauteur)
+  const reflet = { x0: 7.32, x1: 10.38, bas: 0.19, haut: 0.76, portes: [[8.005, 8.595], [8.905, 9.495], [9.805, 10.395]], jours: [[7.32, 7.75]] };
+  const mir = miroir(ch, P, 8.85, yV, 1.475, 3.06, 0.91, 'N', WC, { reel: true, sonde: ZONES.find((z) => z.id === 'wc').env, reflet });
   maille(boiteM(3.0, 0.012, 0.012), P.led, 0, 0.49, 0.012, 0, mir, { ombre: false, recoit: false });
   // ---- le sèche-mains, la poubelle, le distributeur d'essuie-mains, le panneau « sol glissant » ----
   const sm = groupe(ch, WC.x1 - ep, 16.85, 'W', 1.05);
@@ -1122,20 +1167,26 @@ function toilettes(ch, P) {
 //     peinte : un reflet flou, clair en haut — une glace métallique n'aurait rien à refléter et sortirait noire.
 // C'est le CADRE qui choisit, à chaque image où il est à l'écran : le vrai miroir seulement avec la carte
 // d'environnement (haute qualité et au-delà, donc une machine qui peut payer le second rendu), sinon la glace.
-function miroir(ch, P, x, y, h0, w, h, face, boite, { reel = false } = {}) {
+// Et le vrai miroir seulement quand Haythem est DANS la pièce (`sonde` : le point de prise de vue de la pièce, que
+// js/ecole_lumieres.js reprend quand il y entre) : sans ce garde-fou, il refaisait toute la scène à chaque image où il
+// était dans le champ — depuis le couloir C01, le C05 ou l'escalier, à travers les murs. Le cadre ignore la caméra du
+// reflet lui-même (il y est vu aussi) : seule la vraie caméra décide.
+function miroir(ch, P, x, y, h0, w, h, face, boite, { reel = false, sonde = null, reflet = null } = {}) {
   const g = groupe(ch, x, y, face, h0);
   const cadre = B(g, P.alu, w + 0.04, h + 0.04, 0.02, 0, 0, 0.01, { ombre: false });
   nePasFusionner(cadre);
-  const matBoite = matMiroirBoite(ch, boite), peinte = matGlacePeinte();
+  const matBoite = matMiroirBoite(ch, boite), peinte = matGlacePeinte(reflet);
   const glace = plan(g, matBoite, w, h, 0, 0, 0.0205);
   nePasFusionner(glace);
   let vrai = null;
-  cadre.onBeforeRender = (renderer, scene) => {
-    const env = !!scene.environment;
-    if (vrai) vrai.visible = env;
-    glace.visible = !(vrai && env);
+  cadre.onBeforeRender = (renderer, scene, camera) => {
+    if (vrai && camera === vrai.camera) return;
+    const env = !!scene.environment, Q = scene.userData.pointEnv;
+    if (Q) matBoite.__sonde.set(Q.x, Q.y, Q.z);
+    const ici = !sonde || (!!Q && Math.hypot(Q.x - sonde.x, Q.y - sonde.y, Q.z - sonde.z) < 0.1);
+    if (vrai) vrai.visible = env && ici;
+    glace.visible = !(vrai && vrai.visible);
     glace.material = env ? matBoite : peinte;
-    const Q = scene.userData.pointEnv; if (Q) matBoite.__sonde.set(Q.x, Q.y, Q.z);
   };
   if (reel && !TELEPHONE) {
     const res = 768;
@@ -1157,18 +1208,41 @@ function miroir(ch, P, x, y, h0, w, h, face, boite, { reel = false } = {}) {
   return g;
 }
 // LA GLACE PEINTE (sans carte d'environnement) : un dégradé gris perle, plus clair en haut (le plafond éclairé), deux
-// traînées de lumière en biais ; un peu d'émissif, pour qu'elle reste claire comme une vraie glace
-let _glace = null;
-function matGlacePeinte() {
-  if (_glace) return _glace;
-  const t = canvasTex(128, 128, (g, w, h) => {
+// traînées de lumière en biais ; un peu d'émissif, pour qu'elle reste claire comme une vraie glace. `reflet` : ce que la
+// glace renvoie, peint flou — `cabines` (le grand miroir des vasques : en face, les portes safran entre leurs montants
+// gris, la lisse inox, le carrelage dessous), sinon rien de précis. Sans ce reflet, au téléphone, le grand miroir se
+// lisait comme un tableau blanc.
+const _glaces = new Map();
+function matGlacePeinte(reflet = null) {
+  const cle = reflet ? JSON.stringify(reflet) : '-';
+  if (_glaces.has(cle)) return _glaces.get(cle);
+  const t = canvasTex(reflet ? 256 : 128, reflet ? 80 : 128, (g, w, h) => {
     const d = g.createLinearGradient(0, 0, 0, h);
     d.addColorStop(0, '#e9ecec'); d.addColorStop(0.45, '#c5cacb'); d.addColorStop(1, '#9ea4a6');
     g.fillStyle = d; g.fillRect(0, 0, w, h);
+    if (reflet) {
+      // (u croît vers -x du plan : la glace regarde le nord, son +x local est le -x du plan ; v = 0 en haut du canvas)
+      const U = (x) => (reflet.x1 - x) / (reflet.x1 - reflet.x0) * w, v0 = h * (1 - reflet.haut), v1 = h * (1 - reflet.bas);
+      g.filter = 'blur(2.5px)';
+      g.fillStyle = '#c9c7bf'; g.fillRect(0, v1, w, h - v1);                         // le carrelage, en bas
+      g.fillStyle = '#e4e1d8'; g.fillRect(0, 0, w, v0);                              // le mur et le plafond, en haut
+      g.fillStyle = '#8f9193'; g.fillRect(0, v0, w, v1 - v0);                        // les montants gris
+      g.fillStyle = '#d99c2c';
+      for (const [a, b] of reflet.portes) g.fillRect(U(b), v0 + 2, U(a) - U(b), v1 - v0 - 2);
+      g.fillStyle = '#e6e4dd';
+      for (const [a, b] of reflet.jours || []) g.fillRect(U(b), v0 + 2, U(a) - U(b), v1 - v0 - 2);   // une ouverture : du clair
+      g.fillStyle = '#dfe3e6'; g.fillRect(0, v0 - 2, w, 3);                         // la lisse inox
+      g.filter = 'none';
+      // un voile clair (la glace n'est pas une photo) et les deux traînées de lumière
+      g.fillStyle = 'rgba(236,238,238,0.28)'; g.fillRect(0, 0, w, h);
+    }
     g.fillStyle = 'rgba(255,255,255,0.22)';
-    for (const [x0, l] of [[18, 22], [58, 9]]) { g.beginPath(); g.moveTo(x0, 0); g.lineTo(x0 + l, 0); g.lineTo(x0 + l - 40, h); g.lineTo(x0 - 40, h); g.closePath(); g.fill(); }
+    const k = w / 128;
+    for (const [x0, l] of [[18, 22], [58, 9]]) { g.beginPath(); g.moveTo(x0 * k, 0); g.lineTo((x0 + l) * k, 0); g.lineTo((x0 + l - 40) * k, h); g.lineTo((x0 - 40) * k, h); g.closePath(); g.fill(); }
   }, null, false, 2);
-  return (_glace = new THREE.MeshStandardMaterial({ map: t, roughness: 0.18, metalness: 0.1, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.32 }));
+  const m = new THREE.MeshStandardMaterial({ map: t, roughness: 0.18, metalness: 0.1, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.32 });
+  _glaces.set(cle, m);
+  return m;
 }
 // le matériau de glace à carte d'environnement projetée sur la boîte de la pièce (plan -> monde : z = -y)
 function matMiroirBoite(ch, b) {
@@ -1198,16 +1272,36 @@ function wcSuspendu(ch, P, x, y, face) {
   B(g, P.chrome, 0.24, 0.16, 0.012, 0, 1.05, 0.018, { ombre: false });
   const rp = groupe(ch, x + 0.32, y - 0.25, face, 0.72); CY(rp, P.blancMat, 0.055, 0.11, 0, 0, 0, 14).rotation.z = Math.PI / 2;
 }
-// UNE VASQUE À POSER (céramique blanche, profil tourné), dans le groupe `g`, en (x, z), à la hauteur `y`
+// UNE VASQUE À POSER (céramique blanche, profil tourné), dans le groupe `g`, en (x, z), à la hauteur `y` ; `s` l'échelle
+// (1 : 40 cm de diamètre)
 let _vasque = null;
-function vasque(g, P, x, y, z) {
+function vasque(g, P, x, y, z, s = 1) {
   if (!_vasque) {
     const pts = [[0, 0], [0.12, 0.0], [0.17, 0.03], [0.19, 0.08], [0.2, 0.13], [0.19, 0.13], [0.175, 0.085], [0.155, 0.045], [0.1, 0.025], [0, 0.025]].map(([a, b]) => new THREE.Vector2(a, b));
     _vasque = new THREE.LatheGeometry(pts, 32);
   }
-  const m = maille(_vasque, P.ceramique, x, y, z, 0, g);
-  maille(new THREE.CircleGeometry(0.025, 14), P.chrome, x, y + 0.027, z, 0, g, { ombre: false }).rotation.x = -Math.PI / 2;
+  const m = maille(_vasque, P.ceramique, x, y, z, 0, g); m.scale.setScalar(s);
+  maille(new THREE.CircleGeometry(0.025 * s, 14), P.robinet, x, y + 0.027 * s, z, 0, g, { ombre: false }).rotation.x = -Math.PI / 2;
   return m;
+}
+// LE MITIGEUR HAUT « col de cygne » posé sur le plan, dans le groupe `g` (dont +z regarde l'usager), en (x, y, z) : la
+// rosace, le fût, le bec en demi-anneau qui retombe au-dessus de la vasque, l'aérateur, la manette en biais
+function mitigeur(g, P, x, y, z) {
+  const r = 0.055, ht = 0.24;
+  CY(g, P.robinet, 0.025, 0.012, x, y + 0.006, z, 18, { ombre: false });
+  CY(g, P.robinet, 0.016, ht, x, y + ht / 2, z, 14);
+  const bec = maille(new THREE.TorusGeometry(r, 0.011, 8, 18, Math.PI), P.robinet, x, y + ht, z + r, 0, g);
+  bec.rotation.y = Math.PI / 2;                              // (le demi-anneau dans le plan y-z : du fût vers l'usager)
+  CY(g, P.robinet, 0.013, 0.03, x, y + ht - 0.012, z + 2 * r, 12, { ombre: false });
+  const man = CY(g, P.robinet, 0.007, 0.09, x + 0.03, y + ht - 0.07, z - 0.012, 8, { ombre: false });
+  man.rotation.z = -0.9; man.rotation.x = -0.3;
+}
+// LE ROBINET MURAL (lave-mains) : rosace au mur, bec droit qui avance de `L`, aérateur, manette sur le dessus
+function robinetMural(g, P, x, y, z, L) {
+  CY(g, P.robinet, 0.026, 0.016, x, y, z + 0.008, 18, { ombre: false }).rotation.x = Math.PI / 2;
+  CY(g, P.robinet, 0.012, L, x, y, z + L / 2, 12).rotation.x = Math.PI / 2;
+  CY(g, P.robinet, 0.012, 0.025, x, y - 0.012, z + L - 0.008, 12, { ombre: false });
+  const man = CY(g, P.robinet, 0.006, 0.05, x, y + 0.025, z + 0.05, 8, { ombre: false }); man.rotation.x = 1.0;
 }
 // LE SOL DES TOILETTES : un plan de grès posé à 3 mm au-dessus du carrelage. Il porte, sur sa seconde couche d'UV, la
 // même lumière cuite et la même ombre cuite que le carrelage (js/ecole_lumieres.js, js/kit_decor.js) : la carte les

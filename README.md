@@ -129,7 +129,12 @@ une école de commerce et du numérique parisienne, avec les matières et la lum
 dans `js/ecole_pieces.js` (appelé par la carte comme `poserMobilier`) : **quand Haythem enverra des photos de ces
 pièces, c'est ce module qu'on reprend**, pièce par pièce (chaque pièce est une fonction : `salleA`, `bureauB`,
 `couloirService`, `localTechnique`, `toilettes`). Leurs portes s'ouvrent toutes seules (état `'auto'` dans
-`js/carte_ecole.js`) ; chaque pièce a sa zone de lumière (rendue par `poserPieces`), sans voisines.
+`js/carte_ecole.js`) ; chaque pièce a sa zone de lumière (rendue par `poserPieces`), sans voisines. Ce que disent les
+photos des portes est respecté : le local a ses gonds au nord (photo 01) et la porte vitrée du bureau B s'ouvre
+toujours vers le cou (`libre: -1`, photo 03) ; la salle A a ses gonds au nord pour que son vantail ne barre pas
+l'allée des postes. Le vrai miroir des toilettes (un second rendu de la scène) ne se calcule que quand Haythem est
+dans la pièce ; ailleurs et sur les petites qualités, une glace (carte d'environnement projetée, ou peinte avec le
+reflet flou des portes safran).
 
 ## Construire la suite de l'école
 

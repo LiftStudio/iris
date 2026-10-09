@@ -625,7 +625,8 @@ function construireMurs(ch) {
   // le mur est du passage = l'ouest de la salle A, avec la porte de la salle A côté hall
   ch.mur({ de: [4.825, -0.4], a: [4.825, 5.0], mats: { W: CR, E: B }, plinthes: ['W'] });
   ch.mur({ de: [4.825, 5.0], a: [4.825, 9.0], mats: B, plinthes: ['W', 'E'], ouvertures: [{ c: 6.85, l: 0.93, h: 2.04 }] });
-  ch.porte('y', 4.825, 6.85, { l: 0.93, h: 2.04, modele: 'grise', etat: 'auto', cote: 'E', nom: 'salle A' });
+  // (gonds au nord : ouverte dans la salle, le vantail longe le bureau de l'enseignant au lieu de barrer l'allée des postes)
+  ch.porte('y', 4.825, 6.85, { l: 0.93, h: 2.04, modele: 'grise', etat: 'auto', cote: 'E', charniere: 'd', nom: 'salle A' });
   // ---- LA SALLE D'ATTENTE ----
   // le sud : le mur de la salle A et ses deux jours dépolis (photos 02, 21)
   ch.mur({ de: [4.75, 9.0], a: [10.05, 9.0], mats: B, plinthes: ['N', 'S'], ouvertures: [{ c: 6.65, l: 1.3, bas: 0.95, h: 2.3 }, { c: 8.35, l: 1.3, bas: 0.95, h: 2.3 }] });
@@ -650,7 +651,8 @@ function construireMurs(ch) {
   ch.mur({ de: [5.875, 12.15], a: [5.875, 18.6], mats: B, plinthes: ['W'] });
   ch.mur({ de: [11.625, 12.15], a: [11.625, 20.75], mats: B, plinthes: ['E'], ouvertures: [{ c: 13.85, l: 0.93, h: 2.04 }, { c: 19.05, l: 0.93, h: 2.04 }] });
   // (les portes du C01 n'ont pas d'oculus, photo 01)
-  ch.porte('y', 11.625, 13.85, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'auto', cote: 'E', notices: 2, nom: 'local (C01)' });
+  // (le local : gonds au nord, poignée au sud, photo 01)
+  ch.porte('y', 11.625, 13.85, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'auto', cote: 'E', charniere: 'd', notices: 2, nom: 'local (C01)' });
   ch.porte('y', 11.625, 19.05, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'auto', cote: 'E', charniere: 'd', nom: 'toilettes' });
   ch.mur({ de: [11.55, 20.675], a: [13.65, 20.675], mats: B, plinthes: ['S'], ouvertures: [{ c: 12.6, l: 0.93, h: 2.04 }] });
   ch.porte('x', 20.675, 12.6, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'S', nom: 'fond du C01' });
@@ -660,7 +662,8 @@ function construireMurs(ch) {
   const nordB = new THREE.Group(); nordB.position.set(0, 0, -4.8); ch.decor.add(nordB);
   fenetreDepolie(nordB, M, { x: 10.6, l: 1.0, bas: 1.0, haut: 2.4, ep: 0.12, bandeClaire: 0.2 });
   ch.C.ajouterBoite(10.1, -4.75, 11.1, -4.85, { y0: 1.0, y1: 2.4, vitre: true });
-  ch.porte('x', 4.8, 11.85, { l: 0.9, h: 2.1, ep: 0.12, modele: 'vitree', etat: 'auto', cote: 'S', tirant: 'court', nom: 'bureau B' });
+  // (toujours vers le cou, comme sur la photo 03 où elle est ouverte de ce côté : jamais de vantail dans ce petit bureau)
+  ch.porte('x', 4.8, 11.85, { l: 0.9, h: 2.1, ep: 0.12, modele: 'vitree', etat: 'auto', cote: 'S', tirant: 'court', libre: -1, nom: 'bureau B' });
   // le mur est du bureau B : tableau noir du portail n° 6 jusqu'à y = 0,3, puis le hall
   ch.mur({ de: [13.275, -0.4], a: [13.275, 0.3], mats: { E: M.noirMat, W: B } });
   ch.mur({ de: [13.275, 0.3], a: [13.275, 4.875], mats: B, plinthes: ['E', 'W'] });
@@ -863,7 +866,9 @@ export function construireCarte(scene, renderer = null) {
     { id: 'escalier', rects: [zr(1.6, 13.6, 4.75, 18.75)], voisines: ['hallO', 'palier1'], env: { x: 3.4, y: 2.4, z: -16.0 } },
     { id: 'passage', rects: [zr(1.6, -0.45, 4.9, 5.0)], voisines: ['hallO', 'rue'], env: { x: 3.25, y: 1.6, z: -2.6 } },
     { id: 'c05', rects: [zr(4.6, 13.6, 5.9, 18.75)], voisines: ['hallO'], env: { x: 5.2, y: 1.5, z: -15.8 } },
-    { id: 'hallO', rects: [zr(1.6, 5.0, 5.8, 13.6)], voisines: ['attente', 'passage', 'c05', 'escalier'], env: { x: 3.4, y: 1.6, z: -9.8 } },
+    // (le hall ouest en deux rectangles : au sud de y = 9, le mur de la salle A est en x = 4,825 — d'un seul tenant
+    // jusqu'à x = 5,8, il prenait l'allée ouest de la salle A, qui y recevait les lampes et la carte du hall)
+    { id: 'hallO', rects: [zr(1.6, 5.0, 4.9, 9.0), zr(1.6, 9.0, 5.8, 13.6)], voisines: ['attente', 'passage', 'c05', 'escalier'], env: { x: 3.4, y: 1.6, z: -9.8 } },
     { id: 'c01', rects: [zr(11.6, 12.0, 13.6, 20.75)], voisines: ['attente'], env: { x: 12.6, y: 1.5, z: -16.5 } },
     { id: 'attente', rects: [zr(5.8, 9.0, 13.6, 12.0)], voisines: ['hallO', 'cou', 'c01'], env: { x: 9.2, y: 1.6, z: -10.5 } },
     { id: 'cou', rects: [zr(9.9, 4.8, 13.5, 9.0)], voisines: ['attente', 'hall'], env: { x: 11.9, y: 1.6, z: -7.2 } },
