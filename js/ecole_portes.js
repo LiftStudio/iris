@@ -337,7 +337,7 @@ export class Portes {
       // (un vantail qui tourne ne projette pas d'ombre : la carte d'ombre du décor est gardée en cache, js/ombre_cache.js,
       // et sous une lumière presque d'aplomb l'ombre d'une porte n'est qu'un trait)
       for (const v of vantaux) v.g.traverse((x) => { if (x.isMesh) x.castShadow = false; });
-      this.auto.push({ g, vantaux, forme, cx: o.cx, cz: o.cz, rot: o.rot, cote, k: 0, sens: cote, nx: Math.sin(o.rot), nz: Math.cos(o.rot), libre: o.libre || null });
+      this.auto.push({ g, vantaux, forme, cx: o.cx, cz: o.cz, rot: o.rot, cote, k: 0, sens: cote, nx: Math.sin(o.rot), nz: Math.cos(o.rot), libre: o.libre || null, base, h });
     }
     this.decor.add(g);
     return { g, vantaux };
@@ -359,11 +359,15 @@ export class Portes {
   // ---------------------------------------------------------------- l'ouverture automatique
   // À chaque image (js/carte_ecole.js maj) : la porte s'ouvre quand Haythem est à moins de RAYON_AUTO de son centre (ou
   // quand la caméra traverse son ouverture), du côté opposé au sien ; elle se referme quand il s'en va.
-  maj(dt, x, z, camX, camZ) {
+  // (09/10, le sous-sol : À SON NIVEAU seulement — ses pieds entre 1,2 m sous le seuil et 2,2 m au-dessus, la caméra dans
+  // la hauteur de l'ouverture ; sinon les portes du -1 s'ouvraient sous les pas du joueur du rez-de-chaussée, et
+  // inversement. `y`, `camY` : les pieds de Haythem et la caméra ; par défaut, le rez-de-chaussée)
+  maj(dt, x, z, camX, camZ, y = 0, camY = 1.5) {
     for (const P of this.auto) {
       const dx = x - P.cx, dz = z - P.cz, d = Math.hypot(dx, dz);
       const dc = Math.hypot(camX - P.cx, camZ - P.cz);
-      const veut = d < RAYON_AUTO || dc < 0.8;
+      const ici = y > P.base - 1.2 && y < P.base + 2.2, camIci = camY > P.base - 0.3 && camY < P.base + P.h + 0.6;
+      const veut = (d < RAYON_AUTO && ici) || (dc < 0.8 && camIci);
       if (veut && P.k <= 0.001) {
         // le côté d'où il arrive : la porte s'ouvre de l'autre
         const cote = dx * P.nx + dz * P.nz;

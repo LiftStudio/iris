@@ -12,9 +12,10 @@
 //        enrouleurs des trois fenêtres sur rue, six dalles LED dans le plafond à plateaux, l'imprimante, l'horloge
 //   LE BUREAU B                x 10,05-13,2 y 0-4,74   bureau de chêne clair, fauteuil, deux chaises visiteurs (on s'y
 //        assoit), armoire, bibliothèque, tableau, grande plante, tapis, porte-manteau
-//   LE COULOIR DE SERVICE      x 0-1,6      y 0-13,6   derrière la porte grise du hall ouest et la porte blanche du
-//        passage : il mène à la porte de secours de la façade (barre anti-panique) ; bacs roulants, chariot de ménage,
-//        escabeau, cartons, extincteur, goulotte
+//   LE COULOIR DE SERVICE      x 0-1,6      y 0-8,95   derrière la porte blanche « Sortie » du passage : il mène à la
+//        porte de secours de la façade (barre anti-panique) ; bacs roulants, chariot de ménage, escabeau, cartons,
+//        extincteur, goulotte. (09/10 : la vidéo du sous-sol montre que la porte grise du hall ouest ouvre sur le palier de
+//        l'escalier du -1, js/ecole_soussol.js : le couloir s'arrête au mur de ce palier, y = 9,1)
 //   LE LOCAL TECHNIQUE         x 5,95-11,55 y 12,15-15,9 (porte « local » du couloir C01) baies serveurs aux diodes qui
 //        clignotent, onduleur, tableau électrique, étagères, photocopieur, établi, climatiseur, chemins de câbles ; pas
 //        de faux plafond (la dalle brute à 3,25 m) et des réglettes LED suspendues
@@ -44,7 +45,7 @@ const H_DALLE = 3.25;                       // le dessous de la dalle du 1er ét
 // ---- les pièces, en plan (le nu intérieur des murs) ----
 const SA = { x0: 4.9, x1: 9.9, y0: 0, y1: 8.925 };          // la salle A
 const BB = { x0: 10.05, x1: 13.2, y0: 0, y1: 4.74 };        // le bureau B
-const SV = { x0: 0, x1: 1.6, y0: 0, y1: 13.6 };             // le couloir de service
+const SV = { x0: 0, x1: 1.6, y0: 0, y1: 8.95 };             // le couloir de service (jusqu'au palier du sous-sol)
 const LT = { x0: 5.95, x1: 11.55, y0: 12.15, y1: 15.9 };    // le local technique
 const WC = { x0: 5.95, x1: 11.55, y0: 16.05, y1: 20.6 };    // les toilettes
 
@@ -863,19 +864,21 @@ function chaiseLuge(ch, P, x, y, face, rot = 0) {
 // =====================================================================
 //  LE COULOIR DE SERVICE
 // =====================================================================
-// Derrière la porte grise du hall ouest et la porte blanche « Sortie » du passage : un couloir de 1,6 m le long du
-// mitoyen ouest qui mène à la porte de secours de la façade (travée 1). Fermé au nord par la porte de la réserve.
+// Derrière la porte blanche « Sortie » du passage : un couloir de 1,6 m le long du mitoyen ouest qui mène à la porte de
+// secours de la façade (travée 1). Fermé au nord par le mur du palier du sous-sol (la porte grise du hall ouest ouvre sur
+// ce palier : js/ecole_soussol.js) ; derrière, au-dessus du rampant de l'escalier, la réserve reste close.
 function couloirService(ch, P) {
   const { M, C } = ch;
-  // le mitoyen ouest (30 cm), le mur du fond et sa porte (fermée : la réserve n'est pas visitée)
-  ch.mur({ de: [-0.15, 0], a: [-0.15, 13.75], ep: 0.3, mats: M.blanc, plinthes: ['E'] });
-  ch.mur({ de: [-0.3, 13.675], a: [1.675, 13.675], mats: M.blanc, plinthes: ['S'], ouvertures: [{ c: 0.8, l: 0.93, h: 2.04 }] });
-  ch.porte('x', 13.675, 0.8, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'fermee', cote: 'S', notices: 1, nom: 'réserve (service)' });
-  // les plinthes du mur du passage et du hall, côté couloir (les portes laissées libres)
-  for (const [a0, a1] of [[0, 3.65], [4.65, 9.06], [10.09, 13.6]]) plinthe(ch, 'y', SV.x1, a0, a1, -1);
+  // le mitoyen ouest (30 cm), le mur du fond (le mur sud du palier du sous-sol : plinthe de bois de ce côté-ci, peinte
+  // de l'autre), et celui de la réserve, au-dessus du pied du rampant (sans porte : on ne la voit de nulle part)
+  ch.mur({ de: [-0.15, 0], a: [-0.15, 9.1], ep: 0.3, mats: M.blanc, plinthes: ['E'] });
+  ch.mur({ de: [-0.3, 9.025], a: [1.675, 9.025], mats: M.blanc, plinthes: ['S'] });
+  ch.mur({ de: [-0.3, 13.675], a: [1.675, 13.675], mats: M.blanc });
+  // les plinthes du mur du passage et du hall, côté couloir (la porte laissée libre)
+  for (const [a0, a1] of [[0, 3.65], [4.65, SV.y1]]) plinthe(ch, 'y', SV.x1, a0, a1, -1);
   // le plafond de plâtre, les hublots, le bloc de sortie au-dessus de la porte de secours
   ch.plafond(SV.x0, SV.y0, SV.x1, SV.y1, 2.45, 'platre');
-  for (const y of [2.2, 6.8, 11.4]) ch.opale(0.8, y, 2.45, 'service', { r: 0.15 });
+  for (const y of [1.9, 4.9, 7.6]) ch.opale(0.8, y, 2.45, 'service', { r: 0.15 });
   ch.sortie(0.8, 0.12, 2.32, 'N');
   // LA PORTE DE SECOURS, vue de dedans : sa barre anti-panique (le vantail est au nu extérieur, y = -0,35)
   const bp = groupe(ch, 0.8, -0.35, 'N', 0);
@@ -906,11 +909,11 @@ function couloirService(ch, P) {
   for (const s of [-1, 1]) B(es, P.alu, 0.04, 1.55, 0.025, s * 0.2, 0.775, 0);
   for (let i = 0; i < 4; i++) B(es, P.alu, 0.4, 0.02, 0.07, 0, 0.3 + i * 0.3, 0.02);
   C.ajouterBoite(0, -7.75, 0.2, -8.25, { y1: 1.6 });
-  // les cartons empilés
-  [[0.3, 11.95, 0, 0.55, 0.45, 0.4], [0.33, 12.5, 0, 0.5, 0.45, 0.35], [0.31, 12.2, 0.4, 0.45, 0.4, 0.3]].forEach(([x, y, h0, w, d, h]) => {
+  // les cartons empilés (09/10 : redescendus entre les bacs et la porte du passage — le nord du couloir est le palier)
+  [[0.3, 2.95, 0, 0.55, 0.45, 0.4], [0.33, 3.5, 0, 0.5, 0.45, 0.35], [0.31, 3.2, 0.4, 0.45, 0.4, 0.3]].forEach(([x, y, h0, w, d, h]) => {
     const g = groupe(ch, x, y, 'E', h0); g.rotation.y += (x * 7) % 0.2 - 0.1; R(g, P.carton, d, h, w, 0.01, 0, h / 2, 0);
   });
-  C.ajouterBoite(0.03, -11.68, 0.6, -12.76, { y1: 0.75 });
+  C.ajouterBoite(0.03, -2.68, 0.6, -3.76, { y1: 0.75 });
   // l'extincteur et son pictogramme, la goulotte électrique, le plan d'évacuation, le coffret électrique
   const ex = groupe(ch, 0.11, 4.9, 'E');
   CY(ex, P.rouge, 0.075, 0.48, 0, 1.2, 0, 16); CY(ex, P.noirMat, 0.04, 0.08, 0, 1.48, 0, 10);
@@ -918,9 +921,10 @@ function couloirService(ch, P) {
   cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), SV.x0, 4.9, 'E', 0.16, 0.16, 1.85, { ep: 0.004 });
   ch.boite(SV.x0, SV.y0, SV.x0 + 0.06, SV.y1, 2.2, 2.28, P.blancMat, { ombre: false });
   cadre(ch, P, new THREE.MeshStandardMaterial({ map: texConsignes(), roughness: 0.5 }), SV.x1, 6.9, 'W', 0.45, 0.62, 1.6, { ep: 0.01 });
-  const co = groupe(ch, SV.x0, 10.5, 'E', 1.5);
+  // (le coffret, redescendu au-dessus du chariot)
+  const co = groupe(ch, SV.x0, 5.5, 'E', 1.5);
   B(co, P.grisClair, 0.45, 0.6, 0.14, 0, 0, 0.07); B(co, P.plastiqueGris, 0.08, 0.02, 0.02, 0.15, 0, 0.145, { ombre: false });
-  C.ajouterBoite(SV.x0, -10.27, SV.x0 + 0.15, -10.73, { y0: 1.2, y1: 1.8 });
+  C.ajouterBoite(SV.x0, -5.27, SV.x0 + 0.15, -5.73, { y0: 1.2, y1: 1.8 });
 }
 
 // =====================================================================

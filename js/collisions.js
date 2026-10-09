@@ -357,7 +357,8 @@ export class Collisions {
       const l = new THREE.Line(geo, mS); l.renderOrder = 999; g.add(l);
     }
     for (const s of this.formes) {
-      const y0 = Math.max(-0.05, s.y0), y1 = Math.min(Math.max(hMax, y0 + hMax), s.y1), h = Math.max(0.02, y1 - y0);
+      // (les formes du sous-sol, js/ecole_soussol.js, partent de leur sol : sous -0,5 m, on les dessine où elles sont)
+      const y0 = s.y0 < -0.5 ? s.y0 : Math.max(-0.05, s.y0), y1 = Math.min(Math.max(hMax, y0 + hMax), s.y1), h = Math.max(0.02, y1 - y0);
       let geo, m;
       if (s.t === 'c') { geo = new THREE.CylinderGeometry(s.r, s.r, h, 16, 1, true); m = new THREE.Object3D(); m.position.set(s.x, y0 + h / 2, s.z); }
       else if (s.t === 'b') { geo = new THREE.BoxGeometry(s.x1 - s.x0, h, s.z1 - s.z0); m = new THREE.Object3D(); m.position.set((s.x0 + s.x1) / 2, y0 + h / 2, (s.z0 + s.z1) / 2); }

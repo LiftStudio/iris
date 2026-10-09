@@ -34,6 +34,8 @@
 //   les pièces fermées         la salle A, le bureau B, les WC, le local, le couloir de service : leurs portes s'ouvrent,
 //                              leur intérieur est imaginé (js/ecole_pieces.js) ; fermés : les bureaux est, la gaine
 //   le 1er étage (3,50 m)      js/ecole_etage1.js : salles sur rue, couloir, toilettes, bureaux, l'escalier vers le 2e
+//   le sous-sol (-3,06 m)      js/ecole_soussol.js (la vidéo de Haythem) : derrière la porte grise du hall ouest, le palier
+//                              « 0 », la volée de tôle, le hall du -1, le couloir, l'espace pause
 import * as THREE from 'three';
 import { Collisions } from './collisions.js';
 import { carteLocale, poserSondeLocale, planifierOcclusionSol, optimiserDecor, nePasFusionner, animerVent } from './kit_decor.js';
@@ -44,6 +46,7 @@ import { poserMobilier } from './ecole_mobilier.js';
 import { poserRue } from './ecole_rue.js';
 import { poserPieces } from './ecole_pieces.js';
 import { poserEtage1 } from './ecole_etage1.js';
+import { poserSousSol } from './ecole_soussol.js';
 
 // ---- les hauteurs ----
 const H_DALLE = 3.25;            // le dessous de la dalle du 1er étage (les cloisons montent jusque-là)
@@ -613,7 +616,11 @@ function construireMurs(ch) {
   ch.mur({ de: [1.675, -0.4], a: [1.675, 5.0], mats: { E: CR, W: B }, plinthes: ['E'], ouvertures: [{ c: 4.15, l: 0.9, h: 2.04 }] });
   ch.porte('y', 1.675, 4.15, { l: 0.9, h: 2.04, modele: 'blanche', etat: 'auto', cote: 'E', charniere: 'd', nom: 'service (passage)' });
   ch.mur({ de: [1.675, 5.0], a: [1.675, 13.6], mats: B, plinthes: ['E'], ouvertures: [{ c: 9.575, l: 0.95, h: 2.04 }] });
-  ch.porte('y', 1.675, 9.575, { l: 0.93, h: 2.04, modele: 'grise', etat: 'auto', cote: 'W', nom: 'service (hall)' });
+  // (09/10, la vidéo du sous-sol : elle ouvre sur le palier de l'escalier du -1, js/ecole_soussol.js ; on la TIRE depuis le
+  // hall — vantail côté hall, gonds au sud, barre inox verticale, ferme-porte à glissière côté hall, photo 06 et v_001)
+  ch.porte('y', 1.675, 9.575, { l: 0.93, h: 2.04, modele: 'grise', poignee: 'tirant', fermePorte: false, etat: 'auto', cote: 'E', libre: 1, nom: 'service (hall)' });
+  ch.boite(1.765, 9.06, 1.8, 9.6, 2.06, 2.1, M.ferme, { ombre: false });
+  ch.boite(1.765, 9.12, 1.82, 9.4, 2.1, 2.16, M.ferme, { ombre: false });
   // LES DEUX AVANCÉES DU MUR OUEST (photo 06) : la porte grise, l'extincteur et le radiateur sont dans un RENFONCEMENT ;
   // de part et d'autre, le mur avance de 25 cm — au sud, le pan du plan d'évacuation, au nord, celui de l'affiche jaune
   // du tri, contre l'angle des portes de l'escalier (09/10). Plinthes de bois sur les faces vues.
@@ -755,8 +762,11 @@ export function construireCarte(scene, renderer = null) {
   scene.fog = null;
 
   // ---- les sols du rez-de-chaussée ----
+  // (09/10 : coupé au droit du palier et de la trémie de l'escalier du sous-sol, x -0,3-1,6, y 9,1-13,6 — le palier a son
+  // sol de béton peint, js/ecole_soussol.js)
   const RN = [
-    [-0.3, -0.4, 1.6, 20.75, 'ns', 1.75, 0], [1.6, 5.0, 4.9, 20.75, 'ns', 1.75, 0], [4.9, -0.4, 5.3, 20.75, 'ns', 1.75, 0],
+    [-0.3, -0.4, 1.6, 9.1, 'ns', 1.75, 0], [-0.3, 13.6, 1.6, 20.75, 'ns', 1.75, 0],
+    [1.6, 5.0, 4.9, 20.75, 'ns', 1.75, 0], [4.9, -0.4, 5.3, 20.75, 'ns', 1.75, 0],
     [5.3, -0.4, 13.5, 9.0, 'ns', 1.75, 0], [5.3, 9.0, 13.5, 12.0, 'ew', 5.8, 9.0], [5.3, 12.0, 13.5, 20.75, 'ns', 1.75, 0],
     [13.5, -0.4, 20.1, 20.75, 'ns', 1.75, 0],
   ];
@@ -843,6 +853,10 @@ export function construireCarte(scene, renderer = null) {
   // le 1er étage (IMAGINÉ en attendant des photos : salles derrière les fenêtres de la façade, couloir, toilettes,
   // bureaux, l'escalier vers le 2e) : ses zones de lumière et sa mise à jour reviennent ici
   const etage1 = poserEtage1(ch, renderer);
+  // le SOUS-SOL (d'après la vidéo de Haythem) : derrière la porte grise du hall ouest, le palier, la volée, le hall du -1,
+  // le couloir et l'espace pause ; ses zones (en tête : elles passent sous celles du rez-de-chaussée), sa mise à jour, et
+  // le sol du palier (niveau 0) qui prend la lumière et l'ombre cuites d'ici
+  const sousSol = poserSousSol(ch, renderer, { RECT });
 
   // =====================================================================
   //  LA LUMIÈRE
@@ -885,11 +899,13 @@ export function construireCarte(scene, renderer = null) {
     { id: 'rue', rects: [zr(-25, -12, 50, -0.4)], voisines: ['hall', 'passage'], env: { x: 9.5, y: 1.7, z: 3.4 } },
     ...pieces.zones,
   ];
-  zones.unshift(...etage1.zones);      // (celles de l'étage d'abord : leurs rectangles couvrent ceux du rez-de-chaussée)
+  // (celles de l'étage et du sous-sol d'abord : leurs rectangles couvrent ceux du rez-de-chaussée, à d'autres hauteurs)
+  zones.unshift(...etage1.zones, ...sousSol.zones);
   const lumieres = new LumieresEcole(scene, { lampes: ch.lampes.filter((l) => l.reel !== false), zones });
   // LA LUMIÈRE CUITE AU SOL (toutes les sources, découpées par les murs)
   const lm = cuireLumiereSol(C, ch.lampes, { x0: RECT.x0, z0: -RECT.y1, W, L }, { tpm: 16 });
-  for (const m of [M.sol, M.solPassage]) { m.lightMap = lm; m.lightMapIntensity = 1.4; m.needsUpdate = true; }
+  const solsCuits = [M.sol, M.solPassage, ...sousSol.solsRDC];
+  for (const m of solsCuits) { m.lightMap = lm; m.lightMapIntensity = 1.4; m.needsUpdate = true; }
   // (le passage : le jour de la grille et les deux réglettes s'y ajoutent ; à 1,4 son carrelage sortait blanc — 09/10)
   M.solPassage.lightMapIntensity = 0.85;
 
@@ -914,13 +930,15 @@ export function construireCarte(scene, renderer = null) {
   let cuit = -1;
   const maj = (dt, jeu) => {
     const u = jeu.user.pos, cam = jeu.camera.position;
-    ch.portes.maj(dt, u.x, u.z, cam.x, cam.z);
+    ch.portes.maj(dt, u.x, u.z, cam.x, cam.z, u.y, cam.y);
     lumieres.maj(dt, u.x, u.z, jeu.renderer, u.y);
     etage1.maj(dt, jeu);
-    // l'ombre cuite au sol vaut aussi pour le carrelage du passage (elle est posée sur le matériau du « terrain »)
+    sousSol.maj(dt, jeu);
+    // l'ombre cuite au sol vaut aussi pour le carrelage du passage et le sol du palier du sous-sol (elle est posée sur le
+    // matériau du « terrain »)
     if ((scene.userData.solCuit || 0) !== cuit && M.sol.aoMap) {
       cuit = scene.userData.solCuit || 0;
-      M.solPassage.aoMap = M.sol.aoMap; M.solPassage.aoMapIntensity = M.sol.aoMapIntensity; M.solPassage.needsUpdate = true;
+      for (const m of solsCuits) if (m !== M.sol) { m.aoMap = M.sol.aoMap; m.aoMapIntensity = M.sol.aoMapIntensity; m.needsUpdate = true; }
     }
   };
   // le départ : dans le hall d'entrée, juste passé la porte 6, tourné vers le cou et la salle d'attente

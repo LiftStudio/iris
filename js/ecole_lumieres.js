@@ -35,7 +35,7 @@ const CHAUD = new THREE.Color(0xffe9cc), JOUR = new THREE.Color(0xdde8f4);
 export class LumieresEcole {
   // lampes : [{ x, z, h, zone, type ('spot' | 'opale' | 'tube' | 'dalle' | 'jour'), force, cx, cz (visée du jour),
   //            base (le plancher sous la lampe, 0 au rez-de-chaussée) }] en monde
-  // zones  : [{ id, rects: [[x0, z0, x1, z1]], voisines: [id], env: { x, y, z } }]
+  // zones  : [{ id, rects: [[x0, z0, x1, z1, hauteur mini, hauteur maxi]], voisines: [id], env: { x, y, z } }]
   constructor(scene, { lampes, zones }) {
     this.scene = scene; this.lampes = lampes; this.zones = zones;
     this.parId = new Map(zones.map((z) => [z.id, z]));
@@ -50,9 +50,11 @@ export class LumieresEcole {
     this.force = 1;                // réglage global (calé sur les photos)
   }
 
-  // la zone sous (x, z) pour des pieds à `y` (un rectangle peut demander une hauteur minimale : le palier de l'étage)
+  // la zone sous (x, z) pour des pieds à `y` (un rectangle peut demander une hauteur minimale, r[4] : le palier de
+  // l'étage ; et une hauteur MAXIMALE, r[5] : les pièces du sous-sol, js/ecole_soussol.js, dont les rectangles passent
+  // sous ceux du rez-de-chaussée — elles sont en tête de liste, et le joueur d'en haut n'y est pas)
   zoneEn(x, z, y = 0) {
-    for (const Z of this.zones) for (const r of Z.rects) if (x >= r[0] && x <= r[2] && z >= r[1] && z <= r[3] && !(r[4] > 0 && y < r[4])) return Z;
+    for (const Z of this.zones) for (const r of Z.rects) if (x >= r[0] && x <= r[2] && z >= r[1] && z <= r[3] && !(r[4] > 0 && y < r[4]) && !(r[5] !== undefined && y > r[5])) return Z;
     return null;
   }
 
