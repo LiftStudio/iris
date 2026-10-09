@@ -15,12 +15,17 @@
 // hall 2,15 ; couloir 0,92) et les 17 marches sont sûres. CE QUI N'EST PAS VU (le sud et l'ouest de l'espace pause,
 // l'aile des distributeurs, le dedans du sas des toilettes et du local sombre, le fond du hall et du couloir) est
 // IMAGINÉ, sobrement, dans le même style.
+// (Relecture du 09/10 : la focale de la vidéo, recalée sur les 16 nez de la volée et sa largeur (v_010), vaut ≈ 1 200 px
+// et non 1 475 — l'objectif ordinaire d'un téléphone, 49° de large. Les profondeurs relevées en sont plus courtes : le
+// HALL DU -1 est presque carré (mur du fond à y 17,3 : vu du palier, v_010, on en voit le bas par l'ouverture ; v_026 à
+// v_038 le montrent proche, la porte grise et le ressaut à leur place), le COULOIR s'arrête vers y 6,4 (v_048 : le
+// caisson et la grille du fond à ≈ 7 m), et l'entrée de l'espace pause est dégagée sur trois mètres (v_059, v_060).)
 //
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; dans le jeu X = x, Z = -y) :
 //   le palier (niveau 0)       x 0-1,6      y 9,1-10,1    derrière la porte grise du hall ouest (x 1,675, y 9,575)
 //   la volée                   x 0,40-1,25  y 10,1-14,18  nez du rang k en y 10,10 + 0,255 k, à -0,18 k (k = 0 … 16)
-//   le hall du -1              x 0,40-2,42  y 14,18-20,6  plafond à 2,36 m ; « -1 », extincteur, consignes
-//   le couloir                 x 1,50-2,42  y 3,2-14,18   0,92 m de large, plafond à 2,45 m, caisson et grille au fond
+//   le hall du -1              x 0,40-2,42  y 14,18-17,3  plafond à 2,36 m ; « -1 », extincteur, consignes
+//   le couloir                 x 1,50-2,42  y 6,4-14,18   0,92 m de large, plafond à 2,45 m, caisson et grille au fond
 //   l'espace pause             x 2,55-12,9  y 11,6-15,8   et son aile x 5,0-12,9 y 6,5-11,6 ; dalles à 2,55 m
 //   le sas des toilettes       x 10,55-12,9 y 13,65-14,95 deux portes crème à plaque rouge (fermées)
 // Le sol du sous-sol est à Y_SS = -3,06 (17 x 0,18).
@@ -67,14 +72,20 @@ const H_PALIER = 2.5;                    // le plafond du palier
 const ESC = { x0: 0.40, x1: 1.25, y0: 10.10, G: 0.255, R: 0.18, n: 17 };
 ESC.yPied = ESC.y0 + (ESC.n - 1) * ESC.G;                   // 14,18 : le pied de l'escalier
 const nez = (k) => ESC.y0 + k * ESC.G;                       // le nez du rang k (k = 0 : le bord du palier)
-// le RAMPANT au-dessus de la volée : parallèle, 2,20 m au-dessus des nez, arrêté au pied par une retombée
-const Y_RAMP1 = 14.08;
+// le RAMPANT au-dessus de la volée : parallèle, 2,20 m au-dessus des nez ; il bute sous la dalle du rez-de-chaussée
+// (-0,30) en y 13,64, un plafond plat la suit jusqu'à la RETOMBÉE du pied (y 14,08-14,35, dessous à -0,78) — vue du
+// palier, sa face blanche fait un bandeau d'un demi-mètre au-dessus de l'ouverture du hall (v_010, v_020)
+const Y_RAMP1 = 13.64, Y_RET = 14.08;
 const rampant = (y) => 2.2 - (y - ESC.y0) * ESC.R / ESC.G;
 // ---- le plan ----
 const X_MUR = 2.485, EP_MUR = 0.13;       // le mur entre couloir (et hall) et espace pause
 const PORTE_PAUSE = 12.15, PORTE_HALL = 14.85, L_PORTE = 1.0;
+const Y_FOND = 17.3;                      // le nu du mur du fond du hall du -1
+const Y_COUL0 = 6.4;                      // le nu du mur du fond (sud) du couloir
+const Y_EXT = 15.6;                       // l'extincteur du hall (mur ouest), entre le « -1 » et le fond
 // le rectangle du sol cuit du -1 (lumière et ombre cuites, uv1 de 0 à 1, v = 1 au nord)
 const R_SS = { x0: 0, x1: 13.4, y0: 2.8, y1: 21.0 };
+const LED = new THREE.Color(0xf3f6f8);       // la lumière des LED du -1 (blanc neutre)
 
 // =====================================================================
 //  LES TEXTURES (dessinées : le sous-sol n'ajoute aucun fichier à charger)
@@ -142,8 +153,8 @@ function texBetonTaupe() {
 function texResine() {
   return canvasTex(512, 512, (g, w, h) => {
     const r2 = graine(3131);
-    g.fillStyle = '#7e7f7c'; g.fillRect(0, 0, w, h);
-    nuees(g, w, h, r2, 120, [126, 127, 124], 10, 0.35, 20, 110);
+    g.fillStyle = '#767a7b'; g.fillRect(0, 0, w, h);
+    nuees(g, w, h, r2, 120, [118, 122, 123], 10, 0.35, 20, 110);
     for (let k = 0; k < 2500; k++) { const v = 120 + (r2() - 0.5) * 30; g.fillStyle = rgb(v, v, v - 2, 0.18); g.fillRect(r2() * w, r2() * h, 1.5, 1.5); }
   }, [0.5, 0.5], false, 8);
 }
@@ -342,6 +353,18 @@ function texBordeaux() {
     g.fillStyle = '#7a1f2e'; g.fillRect(24, 154, 80, 5);
   }, null, false, 2);
 }
+// LE VERRE DÉPOLI des cloisons du mur vert (v_062 à v_064) : gris bleuté, plus clair en haut (la lumière d'à côté),
+// quelques taches plus claires — un aplat blanc et lumineux le faisait passer pour un panneau peint
+function texDepoli() {
+  return canvasTex(64, 256, (g, w, h) => {
+    const r2 = graine(4242);
+    const gr = g.createLinearGradient(0, h, 0, 0);
+    gr.addColorStop(0, '#b9c3c4'); gr.addColorStop(0.55, '#d3dad9'); gr.addColorStop(1, '#e4e9e7');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    nuees(g, w, h, r2, 14, [226, 232, 230], 8, 0.35, 8, 30);
+    for (let k = 0; k < 600; k++) { const v = 200 + (r2() - 0.5) * 30; g.fillStyle = rgb(v, v + 4, v + 4, 0.12); g.fillRect(r2() * w, r2() * h, 1, 1); }
+  }, [1, 1 / 2.1], false, 4);
+}
 // LA CONSIGNE DU HALL (v_037 à v_039) : un protège-document, une fiche vert pâle
 function texConsigneVerte() {
   return canvasTex(64, 150, (g, w, h) => {
@@ -413,7 +436,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   const nommer = (m, n) => { m.name = n; return m; };
   const X = {
     tole: nommer(std({ map: texTole(), roughness: 0.52, metalness: 0.55 }), 'tôle larmée'),
-    inox: nommer(std({ color: 0xc4c4bf, roughness: 0.3, metalness: 0.45 }), 'garde-corps inox terni'),
+    // (le garde-corps est d'un gris d'acier satiné, terni — v_009 à v_036 ; plus clair, il sortait crème)
+    inox: nommer(std({ color: 0xa19f98, roughness: 0.34, metalness: 0.55 }), 'garde-corps inox terni'),
     limon: std({ color: 0x77766f, roughness: 0.5, metalness: 0.5 }),
     plintheGrise: nommer(std({ color: 0x3d3c38, roughness: 0.6 }), 'plinthe peinte gris foncé'),
     plintheSalle: std({ color: 0x6e6f6a, roughness: 0.55 }),
@@ -431,7 +455,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     creme: std({ color: 0xe9e6d6, roughness: 0.5 }),
     porteCreme: std({ color: 0xe6dfcc, roughness: 0.45 }),
     // le verre DÉPOLI des cloisons du mur vert : on n'y voit rien, il luit à peine de la lumière d'à côté
-    depoli: nommer(std({ color: 0xd9e4df, roughness: 0.14, metalness: 0.15, emissive: 0xdde7e2, emissiveIntensity: 0.3, envMapIntensity: 1.4 }), 'verre dépoli (opaque)'),
+    depoli: nommer(std({ map: texDepoli(), roughness: 0.2, metalness: 0.1, emissive: 0xdde7e2, emissiveIntensity: 0.12, envMapIntensity: 1.2 }), 'verre dépoli (opaque)'),
     sombre: std({ color: 0x2b2a26, roughness: 0.85 }),
     caisse: std({ color: 0x1d1d1c, roughness: 0.4, metalness: 0.3 }),
     montant: std({ color: 0x9a9a96, roughness: 0.4, metalness: 0.5 }),
@@ -448,6 +472,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   const L_ = {
     plafonnier: nommer(new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff4e4).multiplyScalar(4.2) }), 'plafonnier rond allumé'),
     voyant: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.2, 2.2, 0.5) }),
+    bloc: new THREE.MeshBasicMaterial({ color: new THREE.Color(0xf4f8fa).multiplyScalar(2.4) }),
     friandises: new THREE.MeshBasicMaterial({ map: texFriandises(), color: new THREE.Color(1.15, 1.15, 1.15) }),
     cafe: new THREE.MeshBasicMaterial({ map: texCafe(), color: new THREE.Color(1.05, 1.05, 1.05) }),
     frais: new THREE.MeshBasicMaterial({ map: texFrais(), color: new THREE.Color(1.1, 1.1, 1.1) }),
@@ -456,8 +481,10 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   // à elles (l'optimisation du décor ne doit les confondre avec rien)
   const SOL = {
     hall: nommer(std({ map: texResine(), roughness: 0.43 }), 'résine grise du hall du -1'),
-    couloir: nommer(std({ map: texCarreaux([86, 84, 78], '#3f3e3a', 909, 6), roughness: 0.47 }), 'carreaux gris foncé du couloir'),
-    pause: nommer(std({ map: texCarreaux([198, 191, 166], '#a39b84', 512, 16), roughness: 0.33 }), 'carrelage beige 60x60'),
+    couloir: nommer(std({ map: texCarreaux([88, 89, 88], '#3f4040', 909, 6), roughness: 0.47 }), 'carreaux gris foncé du couloir'),
+    // (relecture du 09/10 : #c6bfa6 sortait presque blanc sous les plafonniers ; mesuré sur v_063, le carrelage est d'un
+    // tiers plus sombre que les murs)
+    pause: nommer(std({ map: texCarreaux([160, 155, 136], '#88837a', 512, 14), roughness: 0.33 }), 'carrelage beige 60x60'),
   };
   for (const m of [SOL.couloir, SOL.pause]) avecRelief(m, normalesCarreaux(), 0.35);
   const solsSS = Object.values(SOL);
@@ -466,9 +493,14 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   X.tole.bumpMap = texGrains(); X.tole.bumpScale = 2.0;
   for (const m of [X.tole, X.inox, X.chrome]) m.envMapIntensity = 1.0;
   // LES PLAFONDS DU -1 sont blancs sous les LED (v_027 à v_067 : bien plus clairs que ceux du rez-de-chaussée, qui ne
-  // voient que le rebond des plafonniers chauds) : les mêmes matières, d'un rebond plus fort
+  // voient que le rebond des plafonniers chauds) : les mêmes matières, d'un rebond plus fort. Plafonds et murs y
+  // tirent un rien vers le froid (relecture du 09/10 : sous le « soleil » et l'hémisphère du rez-de-chaussée, légèrement
+  // chauds, le blanc du -1 sortait beige ; la vidéo le montre d'un blanc neutre)
+  const FROID = new THREE.Color(0.96, 0.99, 1.03);
   const plafondsSS = new Map();
-  for (const [m, k] of [[M.platre, 0.3], [M.dalles, 0.3]]) { const c = m.clone(); c.emissiveIntensity = k; c.name = m.name + ' (sous-sol)'; plafondsSS.set(m, c); }
+  for (const [m, k] of [[M.platre, 0.3], [M.dalles, 0.3], [M.blanc, null]]) {
+    const c = m.clone(); if (k !== null) c.emissiveIntensity = k; c.color.multiply(FROID); c.name = m.name + ' (sous-sol)'; plafondsSS.set(m, c);
+  }
 
   const lampes = [];                 // les lampes du -1 (cuites sur son sol)
   const sieges = [];
@@ -538,8 +570,10 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     if (axe === 'x') B(a0, Math.min(v0, v1), a1, Math.max(v0, v1), base, base + 0.1, mat, { ombre: false });
     else B(Math.min(v0, v1), a0, Math.max(v0, v1), a1, base, base + 0.1, mat, { ombre: false });
   };
-  // LES LAMPES du -1 : cuites sur son sol (pas sur le carrelage d'en haut), leurs spots visent son sol
-  const opts = (o = {}) => ({ base: Y_SS, cuire: false, ...o });
+  // LES LAMPES du -1 : cuites sur son sol (pas sur le carrelage d'en haut), leurs spots visent son sol ; des LED d'un
+  // blanc neutre (relecture du 09/10 : sur toute la vidéo, murs blancs et sols gris — la lumière chaude des plafonniers
+  // du rez-de-chaussée les sortait crème et brun)
+  const opts = (o = {}) => ({ base: Y_SS, cuire: false, couleur: LED, ...o });
   const noter = () => lampes.push(ch.lampes[ch.lampes.length - 1]);
   const spot = (x, y, h, zone, o = {}) => { ch.spot(x, y, h, zone, opts(o)); noter(); };
   // LE PLAFONNIER ROND de l'espace pause (v_061 à v_067) : une galette LED de 36 cm, à fleur des dalles, son anneau blanc
@@ -549,7 +583,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     const d = maille(_geoDisque, L_.plafonnier, x, h - 0.011, -y, 0, ch.decor, { ombre: false, recoit: false });
     d.rotation.x = Math.PI / 2; void a;
     ch.halo(x, y, h, 1.5);
-    const L = { x, z: -y, h, zone, type: 'spot', base: Y_SS, cuire: false, force: 1.05 };
+    const L = { x, z: -y, h, zone, type: 'spot', base: Y_SS, cuire: false, force: 1.05, couleur: LED };
     ch.lampes.push(L); lampes.push(L);
   };
   // UN SIÈGE (js/game.js) : le point d'assise, sa hauteur au-dessus du sol, la direction regardée, le point où l'on se
@@ -638,7 +672,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     B(0.27, 10.86, 0.34, 10.92, -0.06, -0.035, std({ color: 0xe0b32a, roughness: 0.6 }), { ombre: false });
     // LA CLOISON entre la volée et le couloir (x 1,35-1,50), du sol du -1 à la dalle, jusqu'au pilier du pied
     // (elle borde aussi le couloir au sud du palier) ; LE MUR OUEST du hall
-    mur({ de: [1.425, 3.05], a: [1.425, ESC.yPied], mats: M.blanc, plinthes: ['E'] });
+    mur({ de: [1.425, Y_COUL0 - 0.15], a: [1.425, ESC.yPied], mats: M.blanc, plinthes: ['E'] });
     plinthe('x', ESC.yPied, 1.35, 1.5, 1);
     // le monde solide : le garde-corps et la cloison à l'est, le ressaut et le mur à l'ouest (du sol du -1 au plafond
     // du rez-de-chaussée : au palier, le joueur d'en haut ne passe pas)
@@ -660,19 +694,23 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     }
     // les pattes du garde-corps sur le limon
     for (const k of [0, 3, 7, 11, 15, 16]) B(x1 - 0.03, nez(k) - 0.03, xg, nez(k) + 0.01, -R * k - 0.2, -R * k - 0.12, X.limon, { ombre: false });
-    // LE RAMPANT (plâtre blanc, tourné vers le bas) de y 10,1 à 14,08, de x 0,2 à 1,35, puis la retombée au pied
+    // LE RAMPANT (plâtre blanc, tourné vers le bas) de y 10,1 à 13,64, de x 0,2 à 1,35 ; le plafond plat sous la dalle
+    // jusqu'à la retombée du pied
     const Lr = Math.hypot(Y_RAMP1 - ESC.y0, rampant(ESC.y0) - rampant(Y_RAMP1));
     const rp = maille(new THREE.PlaneGeometry(1.15, Lr), M.platre, 0.775, (rampant(ESC.y0) + rampant(Y_RAMP1)) / 2, -(ESC.y0 + Y_RAMP1) / 2, 0, ch.decor, { ombre: false });
     rp.rotation.order = 'YXZ'; rp.rotation.x = Math.PI / 2 - pente; rp.userData.horsAOSol = true;
-    // (la retombée du pied : sous-face à -0,75, sur toute la largeur du hall, la poutre de v_035)
-    B(0.4, Y_RAMP1, 2.42, 14.35, H_HALL - 0.08, DALLE, M.platre, { ombre: false });
-    // LA CAMÉRA : le rampant en marches (son point le plus bas de chaque giron, jusqu'au plafond du rez-de-chaussée), et
-    // sous le palier, le plein
+    B(0.2, Y_RAMP1 - 0.02, 1.35, Y_RET, DALLE, DALLE + 0.02, M.platre, { ombre: false });
+    // (la retombée du pied : sous-face à -0,78, sur toute la largeur du hall, la poutre de v_035 ; sa face sud monte
+    // jusqu'à la dalle : le bandeau blanc au-dessus de l'ouverture, vu de la volée)
+    B(0.4, Y_RET, 2.42, 14.35, H_HALL - 0.08, DALLE, M.platre, { ombre: false });
+    // LA CAMÉRA : le rampant en marches (son point le plus bas de chaque giron, jusqu'au plafond du rez-de-chaussée), le
+    // plafond plat, et sous le palier, le plein
     for (let k = 0; k < 16; k++) {
       const ya = nez(k), yb = Math.min(nez(k + 1), Y_RAMP1);
       if (yb <= ya) break;
       C.plafond(0.2, -yb, 1.35, -ya, rampant(yb), 3.25 - rampant(yb));
     }
+    C.plafond(0.2, -Y_RET, 1.35, -Y_RAMP1, DALLE, 3.25 - DALLE);
     C.ajouterBoite(0.0, -9.1, 1.6, -ESC.y0, { y0: Y_SS, y1: -0.02, joueur: false });
     // le panneau « -1 » au mur ouest du pied de l'escalier, le bloc de sortie au-dessus, son fourreau, deux étiquettes
     panneau(new THREE.MeshStandardMaterial({ map: texPanneauNiveau('-1'), roughness: 0.45 }), 0.2, 0.2, 0.4, 14.62, Y_SS + 1.6, 'E');
@@ -687,15 +725,15 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   function construireMurs() {
     const B0 = M.blanc;
     // le mur ouest du hall (le mitoyen, x 0,2-0,4) et son mur du fond
-    mur({ de: [0.3, 14.3], a: [0.3, 20.75], ep: 0.2, mats: B0, plinthes: ['E'] });
-    mur({ de: [0.2, 20.675], a: [2.55, 20.675], mats: B0, plinthes: ['S'] });
+    mur({ de: [0.3, 14.3], a: [0.3, Y_FOND + 0.15], ep: 0.2, mats: B0, plinthes: ['E'] });
+    mur({ de: [0.2, Y_FOND + 0.075], a: [2.55, Y_FOND + 0.075], mats: B0, plinthes: ['S'] });
     // LE MUR entre le couloir (et le hall) et l'espace pause, et ses deux portes grises (v_038 à v_058)
-    mur({ de: [X_MUR, 3.05], a: [X_MUR, 20.75], ep: EP_MUR, mats: B0, plinthes: ['W'],
+    mur({ de: [X_MUR, Y_COUL0 - 0.15], a: [X_MUR, Y_FOND + 0.15], ep: EP_MUR, mats: B0, plinthes: ['W'],
       ouvertures: [{ c: PORTE_PAUSE, l: L_PORTE + 0.02 }, { c: PORTE_HALL, l: L_PORTE + 0.02 }] });
     // (côté espace pause, ses plinthes grises à elle)
     for (const [a0, a1] of [[11.6, PORTE_PAUSE - 0.52], [PORTE_PAUSE + 0.52, PORTE_HALL - 0.52], [PORTE_HALL + 0.52, 15.8]]) plinthe('y', X_MUR + EP_MUR / 2, a0, a1, 1, Y_SS, X.plintheSalle);
     // le fond du couloir (au sud) et son caisson
-    mur({ de: [1.35, 3.125], a: [2.55, 3.125], mats: B0, plinthes: ['N'] });
+    mur({ de: [1.35, Y_COUL0 - 0.075], a: [2.55, Y_COUL0 - 0.075], mats: B0, plinthes: ['N'] });
     // LE HALL : un petit ressaut au mur est, après la porte (v_037)
     B(2.27, 15.55, 2.42, 15.95, Y_SS, DALLE, B0, { ombre: false, collision: true });
     plinthe('x', 15.55, 2.27, 2.42, -1); plinthe('x', 15.95, 2.27, 2.42, 1); plinthe('y', 2.27, 15.55, 15.95, -1);
@@ -723,8 +761,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       const m = new THREE.Mesh(geoSolNiveau(rects, Y_SS, R_SS), mat);
       m.receiveShadow = true; m.castShadow = false; m.name = nom; m.userData.solSS = true; groupe.add(m);
     };
-    sol([[0.4, 14.18, 2.42, 20.6], [0.4, 13.6, 1.35, 14.18]], SOL.hall, 'sol du hall du -1');
-    sol([[1.5, 3.2, 2.42, 14.18]], SOL.couloir, 'sol du couloir du -1');
+    sol([[0.4, 14.18, 2.42, Y_FOND], [0.4, 13.6, 1.35, 14.18]], SOL.hall, 'sol du hall du -1');
+    sol([[1.5, Y_COUL0, 2.42, 14.18]], SOL.couloir, 'sol du couloir du -1');
     sol([[2.42, 11.6, 12.9, 13.55], [2.55, 13.55, 10.45, 15.8], [5.0, 6.5, 12.9, 11.6], [10.45, 13.65, 12.9, 14.95], [2.42, 14.3, 2.55, 15.4]], SOL.pause, 'sol de l\'espace pause');
     // les barres de seuil inox des deux portes
     for (const c of [PORTE_PAUSE, PORTE_HALL]) B(X_MUR - 0.07, c - 0.5, X_MUR + 0.07, c + 0.5, Y_SS, Y_SS + 0.006, M.inox, { ombre: false });
@@ -745,12 +783,16 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   // =====================================================================
   function construirePlafonds() {
     // le hall (plâtre, 2,36 m), deux spots ; le couloir (2,45 m), quatre spots, le caisson et la grille noire du fond
-    ch.plafond(0.4, 14.18, 2.42, 20.6, H_HALL, 'platre', { retombees: false });
-    for (const y of [15.9, 18.9]) spot(1.41, y, H_HALL, 'hallSS');
-    ch.plafond(1.5, 3.2, 2.42, 14.18, H_COUL, 'platre', { retombees: false });
-    for (const y of [13.0, 10.5, 8.0, 5.5]) spot(1.96, y, H_COUL, 'couloirSS');
-    B(1.5, 3.2, 2.42, 4.0, Y_SS + 2.1, H_COUL, M.platre, { ombre: false });
-    B(1.6, 3.995, 2.32, 4.0, Y_SS + 2.18, Y_SS + 2.26, std({ color: 0x141414, roughness: 0.6 }), { ombre: false });
+    // (v_036 à v_038 : un spot près de la volée, une poutre en travers, le second spot au fond, sous le bloc lumineux)
+    ch.plafond(0.4, 14.18, 2.42, Y_FOND, H_HALL, 'platre', { retombees: false });
+    for (const y of [14.95, 16.75]) spot(1.41, y, H_HALL, 'hallSS');
+    B(0.4, 15.95, 2.42, 16.15, H_HALL - 0.12, H_HALL + 0.01, M.platre, { ombre: false });
+    C.plafond(0.4, -16.15, 2.42, -15.95, H_HALL - 0.12, 0.13);
+    ch.plafond(1.5, Y_COUL0, 2.42, 14.18, H_COUL, 'platre', { retombees: false });
+    for (const y of [13.0, 11.2, 9.4, 7.6]) spot(1.96, y, H_COUL, 'couloirSS');
+    B(1.5, Y_COUL0, 2.42, Y_COUL0 + 0.8, Y_SS + 2.1, H_COUL, M.platre, { ombre: false });
+    B(1.6, Y_COUL0 + 0.795, 2.32, Y_COUL0 + 0.8, Y_SS + 2.18, Y_SS + 2.26, std({ color: 0x141414, roughness: 0.6 }), { ombre: false });
+    C.plafond(1.5, -(Y_COUL0 + 0.8), 2.42, -Y_COUL0, Y_SS + 2.1, H_COUL - Y_SS - 2.1);
     // LE PLAFOND DE L'ESPACE PAUSE (v_061 à v_067) : dalles blanches de 60 x 60 sur ossature, à 2,55 m, coupées de
     // retombées de plâtre à 2,30 m (une bande parallèle au mur vert, à 1,3 m de lui ; une entre la salle et l'aile ; une
     // en travers ; le caisson au-dessus de la tablette) : des caissons, chacun ses plafonniers ronds
@@ -776,7 +818,10 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     for (const x of [11.2, 12.3]) spot(x, 14.3, H_SAS, 'pauseSS', { force: 0.8 });
     // le bloc de sortie au-dessus de la porte de l'espace pause, côté salle ; au fond du hall, le bloc lumineux
     ch.sortie(X_MUR + 0.09, PORTE_PAUSE, Y_SS + 2.2, 'E');
-    ch.sortie(1.41, 20.58, Y_SS + 2.18, 'S');
+    // (relecture du 09/10 : ce bloc-là est BLANC, une barre allumée sous le plafond — c_hall_full, v_036 —, pas le
+    // pictogramme vert d'un bloc de sortie)
+    B(1.25, Y_FOND - 0.06, 1.57, Y_FOND, Y_SS + 2.1, Y_SS + 2.2, X.blancMat, { ombre: false });
+    B(1.27, Y_FOND - 0.064, 1.55, Y_FOND - 0.06, Y_SS + 2.125, Y_SS + 2.175, L_.bloc, { ombre: false });
   }
 
   // =====================================================================
@@ -812,18 +857,18 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   // =====================================================================
   function garnirHall() {
     // L'EXTINCTEUR à eau de 6 L (v_027 à v_037), son pictogramme au-dessus
-    const ex = new THREE.Group(); ex.position.set(0.5, Y_SS, -16.2); ch.decor.add(ex);
+    const ex = new THREE.Group(); ex.position.set(0.5, Y_SS, -Y_EXT); ch.decor.add(ex);
     maille(new THREE.CylinderGeometry(0.085, 0.085, 0.46, 18), X.rouge, 0, 1.13, 0, 0, ex);
     maille(new THREE.SphereGeometry(0.085, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), X.rouge, 0, 1.36, 0, 0, ex);
     maille(new THREE.CylinderGeometry(0.03, 0.03, 0.08, 10), X.noir, 0, 1.47, 0, 0, ex);
-    B(0.55, 16.17, 0.6, 16.23, Y_SS + 1.42, Y_SS + 1.5, X.noir);
-    tube(ch.decor, X.noir, P3(0.6, Y_SS + 1.47, 16.2), P3(0.6, Y_SS + 0.98, 16.25), 0.012, 8);
-    panneau(new THREE.MeshStandardMaterial({ color: 0xf6f6f2, roughness: 0.6 }), 0.1, 0.16, 0.5 + 0.086, 16.2, Y_SS + 1.1, 'E', 0.001);
-    C.ajouterCercle(0.52, -16.2, 0.1, { y0: Y_SS + 0.8, y1: Y_SS + 1.55 });
-    panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.15, 0.15, 0.4, 16.2, Y_SS + 1.85, 'E');
+    B(0.55, Y_EXT - 0.03, 0.6, Y_EXT + 0.03, Y_SS + 1.42, Y_SS + 1.5, X.noir);
+    tube(ch.decor, X.noir, P3(0.6, Y_SS + 1.47, Y_EXT), P3(0.6, Y_SS + 0.98, Y_EXT + 0.05), 0.012, 8);
+    panneau(new THREE.MeshStandardMaterial({ color: 0xf6f6f2, roughness: 0.6 }), 0.1, 0.16, 0.5 + 0.086, Y_EXT, Y_SS + 1.1, 'E', 0.001);
+    C.ajouterCercle(0.52, -Y_EXT, 0.1, { y0: Y_SS + 0.8, y1: Y_SS + 1.55 });
+    panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.15, 0.15, 0.4, Y_EXT, Y_SS + 1.85, 'E');
     // LA CONSIGNE vert pâle sous son protège-document, l'interrupteur dessous (mur est, v_037 à v_039)
-    panneau(new THREE.MeshStandardMaterial({ map: texConsigneVerte(), roughness: 0.3 }), 0.15, 0.35, X_MUR - EP_MUR / 2, 19.0, Y_SS + 1.85, 'W', 0.006);
-    B(X_MUR - EP_MUR / 2 - 0.01, 18.96, X_MUR - EP_MUR / 2, 19.04, Y_SS + 1.46, Y_SS + 1.54, X.blancMat, { ombre: false });
+    panneau(new THREE.MeshStandardMaterial({ map: texConsigneVerte(), roughness: 0.3 }), 0.15, 0.35, X_MUR - EP_MUR / 2, Y_FOND - 0.45, Y_SS + 1.85, 'W', 0.006);
+    B(X_MUR - EP_MUR / 2 - 0.01, Y_FOND - 0.49, X_MUR - EP_MUR / 2, Y_FOND - 0.41, Y_SS + 1.46, Y_SS + 1.54, X.blancMat, { ombre: false });
     // (deux affichettes A4 au mur du couloir, près de la porte de l'espace pause)
     panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#fbfbf8', 41), roughness: 0.7 }), 0.21, 0.297, 1.5, 12.9, Y_SS + 1.55, 'E');
   }
@@ -949,22 +994,23 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       mangeDebout(x, 15.35, 'colonne');
       tabouret(x + (i % 2 ? 0.05 : -0.05), 14.87, 0, -1, i === 1 || i === 3 ? 'tolix' : 'miura');
     });
-    // ---- l'îlot central : des mange-debout trépieds, trois Tolix verts, des tabourets noirs (à trois mètres de la
-    // porte : v_059 à v_061, l'entrée est dégagée) ----
-    mangeDebout(5.4, 13.5, 'trepied'); autour(5.4, 13.5, 0.5, [200, 20], ['miura', 'tolix']);
-    mangeDebout(6.6, 12.6, 'trepied'); autour(6.6, 12.6, 0.5, [90, 250]);
-    mangeDebout(7.4, 13.8, 'trepied'); autour(7.4, 13.8, 0.5, [160, 340], ['tolix', 'miura']);
-    mangeDebout(8.4, 12.9, 'trepied'); autour(8.4, 12.9, 0.5, [60, 220]);
-    mangeDebout(9.2, 13.85, 'trepied'); autour(9.2, 13.85, 0.5, [30, 150], ['tolix', 'miura']);
-    // ---- la table grise du retour sud, à droite de l'entrée ----
-    B(3.85, 11.62, 5.0, 12.2, Y_SS + 0.92, Y_SS + 0.95, X.tablette, { collision: true });
-    B(3.85, 11.62, 5.0, 12.2, Y_SS + 0.915, Y_SS + 0.92, X.acierGris, { ombre: false });
-    for (const x of [3.9, 4.95]) for (const y of [11.67, 12.15]) B(x - 0.02, y - 0.02, x + 0.02, y + 0.02, Y_SS, Y_SS + 0.915, X.noir);
-    tabouret(4.15, 12.6, 0, 1); tabouret(4.75, 12.6, 0, 1);
-    // ---- le baby-foot et les deux grandes tables en X ----
+    // ---- l'îlot central : des mange-debout trépieds, trois Tolix verts, des tabourets noirs. (Relecture du 09/10 :
+    // v_059 et v_060, de la porte, montrent TROIS MÈTRES DE CARRELAGE NU devant soi — le premier tabouret à plus de
+    // 3 m, la grande table en X à ≈ 4,5 m droit devant, le baby-foot derrière elle, la table grise à droite au bord de
+    // l'aile ; l'îlot posé à 1 m de la porte barrait l'entrée) ----
+    mangeDebout(6.1, 13.7, 'trepied'); autour(6.1, 13.7, 0.5, [200, 300], ['miura', 'tolix']);
+    mangeDebout(7.3, 13.85, 'trepied'); autour(7.3, 13.85, 0.5, [160, 340], ['tolix', 'miura']);
+    mangeDebout(8.4, 13.1, 'trepied'); autour(8.4, 13.1, 0.5, [60, 220]);
+    mangeDebout(9.25, 13.9, 'trepied'); autour(9.25, 13.9, 0.5, [30, 150], ['tolix', 'miura']);
+    // ---- le baby-foot, la grande table en X devant lui, l'autre devant les distributeurs ----
     babyFoot(9.9, 12.25);
-    grandeTable(8.25, 10.55); autour(8.25, 10.55, 0.62, [60, 180, 300]);
+    grandeTable(7.2, 12.1); autour(7.2, 12.1, 0.62, [60, 180, 300]);
     grandeTable(11.0, 8.3); autour(11.0, 8.3, 0.62, [90, 200, 320]);
+    // ---- la table grise, au bord de l'aile (v_060 : à droite de la table en X, un peu plus loin) ----
+    B(8.0, 10.55, 9.2, 11.13, Y_SS + 0.92, Y_SS + 0.95, X.tablette, { collision: true });
+    B(8.0, 10.55, 9.2, 11.13, Y_SS + 0.915, Y_SS + 0.92, X.acierGris, { ombre: false });
+    for (const x of [8.05, 9.15]) for (const y of [10.6, 11.08]) B(x - 0.02, y - 0.02, x + 0.02, y + 0.02, Y_SS, Y_SS + 0.915, X.noir);
+    tabouret(8.3, 10.12, 0, -1); tabouret(8.9, 10.12, 0, -1);
     // ---- LA TABLETTE HAUTE murale (mur est, y 10,1-12,9) : stratifié gris clair, pieds d'acier, trois tabourets dessous ----
     B(12.48, 10.1, 12.9, 12.9, Y_SS + 1.02, Y_SS + 1.05, X.tablette, { collision: true });
     for (const y of [10.2, 11.5, 12.8]) B(12.5, y - 0.02, 12.54, y + 0.02, Y_SS, Y_SS + 1.02, X.acierGris);
@@ -1095,7 +1141,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   const proxy = { formes: C.formes.filter((f) => f.y0 > Y_SS - 0.35 && f.y0 < Y_SS + 0.3).map((f) => ({ ...f, y0: f.y0 - Y_SS, y1: f.y1 - Y_SS })) };
   const aCuire = lampes.filter((L) => L.base === Y_SS).map((L) => ({ ...L, h: L.h - Y_SS, cuire: true }));
   const lm = cuireLumiereSol(proxy, aCuire, { x0: R_SS.x0, z0: -R_SS.y1, W, L: Lg }, { tpm: 16 });
-  for (const m of solsSS) { m.lightMap = lm; m.lightMapIntensity = 1.4; }
+  // (relecture du 09/10 : à 1,4 partout, la résine du hall et le carrelage beige sortaient presque blancs, aussi clairs
+  // que les murs ; sur la vidéo, le sol est nettement plus sombre qu'eux — le couloir, lui, est bien gris foncé)
+  for (const m of solsSS) { m.lightMap = lm; m.lightMapIntensity = m === SOL.couloir ? 1.4 : 0.9; }
   groupe.traverse((o) => { o.userData.horsAOSol = true; });
   if (renderer) {
     try { cuireOcclusionNiveau(renderer, groupe, solsSS, Y_SS, R_SS); } catch (e) { console.warn('[sous-sol] ombre du sol non cuite :', e); }
@@ -1119,8 +1167,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   const zones = [
     { id: 'palierSS', rects: [[0.0, -ESC.y0, 1.6, -9.1, -10]], voisines: ['escalierSS'], env: { x: 0.9, y: 1.5, z: -9.6 } },
     { id: 'escalierSS', rects: [[0.2, -ESC.yPied, 1.5, -ESC.y0, -10]], voisines: ['palierSS', 'hallSS'], env: { x: 0.85, y: -1.1, z: -12.0 } },
-    { id: 'hallSS', rects: [zr(0.4, ESC.yPied, 2.48, 20.6)], voisines: ['escalierSS', 'couloirSS'], env: env(1.45, 17.4) },
-    { id: 'couloirSS', rects: [zr(1.45, 3.2, 2.48, ESC.yPied)], voisines: ['hallSS'], env: env(1.96, 9.6, 1.5) },
+    { id: 'hallSS', rects: [zr(0.4, ESC.yPied, 2.48, Y_FOND)], voisines: ['escalierSS', 'couloirSS'], env: env(1.45, 15.7) },
+    { id: 'couloirSS', rects: [zr(1.45, Y_COUL0, 2.48, ESC.yPied)], voisines: ['hallSS'], env: env(1.96, 10.3, 1.5) },
     { id: 'pauseSS', rects: [zr(2.48, 11.6, 12.95, 15.85), zr(4.95, 6.45, 12.95, 11.6)], voisines: [], env: env(7.4, 12.2) },
   ];
 

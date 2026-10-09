@@ -34,7 +34,8 @@ const CHAUD = new THREE.Color(0xffe9cc), JOUR = new THREE.Color(0xdde8f4);
 
 export class LumieresEcole {
   // lampes : [{ x, z, h, zone, type ('spot' | 'opale' | 'tube' | 'dalle' | 'jour'), force, cx, cz (visée du jour),
-  //            base (le plancher sous la lampe, 0 au rez-de-chaussée) }] en monde
+  //            base (le plancher sous la lampe, 0 au rez-de-chaussée), couleur (une THREE.Color : les LED du sous-sol ;
+  //            par défaut la lumière chaude des plafonniers) }] en monde
   // zones  : [{ id, rects: [[x0, z0, x1, z1, hauteur mini, hauteur maxi]], voisines: [id], env: { x, y, z } }]
   constructor(scene, { lampes, zones }) {
     this.scene = scene; this.lampes = lampes; this.zones = zones;
@@ -88,7 +89,7 @@ export class LumieresEcole {
         l.color.copy(JOUR); l.angle = 1.0; l.penumbra = 1; l.distance = 9;
       } else {
         l.position.set(L.x, L.h - 0.04, L.z); l.target.position.set(L.x, L.base || 0, L.z);
-        l.color.copy(CHAUD); l.angle = L.type === 'tube' ? 1.3 : 1.12; l.penumbra = 0.85; l.distance = 7.5;
+        l.color.copy(L.couleur || CHAUD); l.angle = L.type === 'tube' ? 1.3 : 1.12; l.penumbra = 0.85; l.distance = 7.5;
       }
       l.target.updateMatrixWorld();
     }
@@ -168,7 +169,7 @@ export function cuireLumiereSol(C, lampes, rect, { tpm = 16, flou = 1.2 } = {}) 
     g.save();
     g.beginPath(); pts.forEach((p, i) => (i ? g.lineTo(X(p[0]), Y(p[1])) : g.moveTo(X(p[0]), Y(p[1])))); g.closePath(); g.clip();
     const gr = g.createRadialGradient(X(sx), Y(sz), 0, X(sx), Y(sz), R * tpm);
-    const c = jour ? JOUR : CHAUD, pic = (L.cuireForce ?? 1) * (jour ? 0.62 : 0.5);
+    const c = L.couleur || (jour ? JOUR : CHAUD), pic = (L.cuireForce ?? 1) * (jour ? 0.62 : 0.5);
     for (let k = 0; k <= 10; k++) {
       const r = (k / 10) * R, e = Math.pow((hh * hh) / (hh * hh + r * r), 2) * (1 - k / 10);
       const v = (q) => Math.round(255 * Math.min(1, q * pic * e));
