@@ -29,7 +29,8 @@
 //   le mur d'échiffre                y 10,725 (10,65-10,8)          de x 16,05 à 18,29, jusqu'au plafond de la cage
 //   au 1er : le palier est           x 13,55-16,05   y 7,0-12,45    le mur du panneau (face est x 14,225) de y 8,6 à
 //                                                                  11,1, la porte du couloir en x 13,55 (y 7,12-8,55),
-//                                                                  le renfoncement nord x 13,2-14,2 y 11,1-12,45
+//                                                                  le renfoncement nord x 13,2-14,2 y 11,1-12,45, au
+//                                                                  fond la porte de la 106 (B 1.6, fermée) en x 15,2
 //            et la bande sud         x 16,05-19,8    y 7,0-9,0      jusqu'à la salle 104 et l'issue de secours
 //   au-dessus (IMAGINÉ, rien n'est photographié) : la volée 3 au-dessus de la volée 1 (17,2 cm, palier à 5,05 m), la
 //   volée 4 au-dessus de la volée 2, le palier du 2e (6,60 m, x 14,2-16,05 y 9,15-10,65) et sa porte fermée.
@@ -754,9 +755,11 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   ch.porte('y', 13.55, 7.36, { l: 0.48, h: 2.06, base: N1, ep: 0.12, modele: 'grise', etat: 'fermee', cote: 'E', oculus: false, poignee: null, fermePorte: false, huisserie: false, nom: 'palier est (semi-fixe)' });
   ch.porte('y', 13.55, 8.075, { l: 0.95, h: 2.06, base: N1, ep: 0.12, modele: 'grise', etat: 'ouverte', angle: 1.75, cote: 'W', charniere: 'd', huisserie: false, nom: 'palier est (couloir du 1er)' });
   ch.panneau(matPanneau(texAfficheOrange(), 0.6), 0.21, 0.297, 13.603, 7.36, N1 + 1.4, 'E');
-  // l'huisserie (métal blanc) autour des deux vantaux
+  // l'huisserie (métal blanc) autour des deux vantaux ; en tête, côté palier, au-dessus du semi-fixe, le boîtier du
+  // ferme-porte (photo 28)
   for (const [y0, y1] of [[7.08, 7.12], [8.55, 8.59]]) B(ch, G, 13.48, y0, 13.62, y1, N1, N1 + 2.1, M.huisserie, { ombre: false });
   B(ch, G, 13.48, 7.08, 13.62, 8.59, N1 + 2.06, N1 + 2.1, M.huisserie, { ombre: false });
+  B(ch, G, 13.62, 7.16, 13.675, 7.48, N1 + 2.1, N1 + 2.16, M.ferme, { ombre: false });
   // le retour du mur du panneau (y 8,65) et LE MUR DU PANNEAU (face est en x 14,225, de y 8,6 à 11,1)
   mur(ch, G, { de: [13.61, 8.65], a: [14.075, 8.65], ep: 0.12, base: N1, h: DALLE2, mats: B0, plinthes: ['S'] });
   mur(ch, G, { de: [14.15, 8.59], a: [14.15, 11.175], base: N1, h: DALLE2, mats: B0, plinthes: ['E'] });
@@ -811,7 +814,8 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   B(ch, G, xf + 0.02, 9.93, xf + 0.024, 9.97, N1 + 1.08, N1 + 1.12, M.noirMat, { ombre: false });
   B(ch, G, xf, 9.91, xf + 0.018, 9.99, N1 + 0.21, N1 + 0.29, M.boitier, { ombre: false });
   B(ch, G, xf + 0.018, 9.935, xf + 0.021, 9.965, N1 + 0.235, N1 + 0.265, M.noirMat, { ombre: false });
-  B(ch, G, 14.35, 9.05, 14.95, 10.65, N1, N1 + 0.008, X.tapis1, { ombre: false });
+  // (le tapis à ≈ 0,6 m du mur : photo 27, une bande de sol entre la plinthe et lui ; photo 28, au bas de l'image)
+  B(ch, G, 14.8, 9.05, 15.4, 10.65, N1, N1 + 0.008, X.tapis1, { ombre: false });
   // (sur le mur sud du palier, près du renfoncement, la petite photo encadrée sombre et brillante, à 1,7-1,9 m)
   B(ch, G, 14.17, 7.035, 14.45, 7.045, N1 + 1.64, N1 + 1.96, M.noirMat, { ombre: false });
   ch.panneau(new THREE.MeshStandardMaterial({ map: texPhotoNuit(), roughness: 0.08, metalness: 0.1 }), 0.25, 0.29, 14.31, 7.047, N1 + 1.8, 'N', G);
