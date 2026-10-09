@@ -28,7 +28,9 @@ import { TELEPHONE } from './appareil.js';
 
 const N_SPOTS = TELEPHONE ? 2 : 4;
 const FONDU = 3.2;                 // /s : vitesse d'allumage et d'extinction d'un spot qui change de place
-const CHAUD = new THREE.Color(0xffe4be), JOUR = new THREE.Color(0xdde8f4);
+// (09/10 : CHAUD #FFE4BE -> #FFE9CC — côte à côte avec les photos 02 et 21, les murs blancs sortaient crème, le sol brun ;
+// la lumière des plafonniers est chaude, mais l'œil la ramène vers le blanc)
+const CHAUD = new THREE.Color(0xffe9cc), JOUR = new THREE.Color(0xdde8f4);
 
 export class LumieresEcole {
   // lampes : [{ x, z, h, zone, type ('spot' | 'opale' | 'tube' | 'jour'), force, cx, cz (visée du jour) }] en monde

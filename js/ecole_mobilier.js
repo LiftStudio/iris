@@ -16,29 +16,41 @@ import { texAffiche, texConsignes, texTri, texEcran, texPictoExtincteur } from '
 import { canvasTex } from './kit_decor.js';
 
 // ---- LES CHAISES COQUE (type Eames DAR) : coque moulée, piètement « tour Eiffel » chromé ----
-// Couleurs relevées (photos 02, 21) : blanc, bleu canard, grège, citron vert, noir, rose poudré.
-const COQUE = { blanc: 0xefebe0, canard: 0x5a7f8c, grege: 0x8e8580, citron: 0xbdba1e, noir: 0x2e2c2c, rose: 0xc9afa0 };
-let _coque = null;
+// Couleurs relevées (photos 02, 21, rééquilibrées sur le blanc des murs) : blanc cassé, bleu canard (un bleu-vert
+// grisé, pas un bleu), grège (taupe rosé), vert anis, noir, gris rosé (rose poudré).
+const COQUE = { blanc: 0xefebe0, canard: 0x6b9294, grege: 0x8e8580, citron: 0xb8bc28, noir: 0x2e2c2c, rose: 0xc6aca0 };
+let _coque = null, _ourlet = null;
 // LA COQUE, une surface paramétrée sur un plan presque RECTANGULAIRE (super-ellipse : la coque Eames est plus large que
-// profonde, aux angles arrondis) : une assise à peine creusée, puis un bord qui REMONTE près du pourtour — à peine
-// devant (le bord qui retombe sous les genoux), en accoudoirs sur les côtés (18 cm), en dossier derrière (38 cm, raide
-// et un peu renversé).
+// profonde, aux angles arrondis). (09/10/2026, refaite d'après les photos 02 et 21 : la première, un bord qui montait
+// en pente douce sur toute la moitié extérieure, faisait une soucoupe plate.) Le profil, de l'axe vers le bord : une
+// ASSISE presque plate (légèrement creusée), puis un large CONGÉ qui redresse la paroi presque à la verticale (72°) —
+// un baquet. La hauteur de la paroi suit le tour : le bord avant RETOMBE sous les genoux (-3 cm, la « cascade »), les
+// accoudoirs montent à 18 cm au-dessus de l'assise, le dossier à 38 cm, renversé vers l'arrière.
 function geoCoque() {
   if (_coque) return _coque;
-  const NA = 48, NR = 14, A = 0.31, P = 0.27, Y = 0.43, n = 3.2;
-  const pos = [], idx = [];
+  const NA = 56, NS = 8, NC = 12, A = 0.31, P = 0.27, Y = 0.43, n = 3.2, T0 = 0.5, K = 0.8;
+  const pos = [], idx = [], ourlet = [];
   const lisse = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const NR = NS + NC;
   for (let j = 0; j <= NR; j++) {
-    const t = j / NR, mont = Math.pow(lisse(0.5, 1, t), 1.15);
+    // ρ : la fraction du rayon ; η : la part de la paroi déjà montée (0 sur l'assise, 1 au bord). Le congé est un arc de
+    // 72° (K = 0,8 du quart de cercle) : la paroi finit raide mais pas verticale — la coque s'évase un peu vers le haut.
+    let rho, eta;
+    if (j <= NS) { rho = (j / NS) * T0; eta = 0; }
+    else {
+      const s = (j - NS) / NC * K * Math.PI / 2, sK = Math.sin(K * Math.PI / 2), cK = 1 - Math.cos(K * Math.PI / 2);
+      rho = T0 + (1 - T0) * Math.sin(s) / sK; eta = (1 - Math.cos(s)) / cK;
+    }
     for (let i = 0; i <= NA; i++) {
       const phi = i / NA * Math.PI * 2, s = Math.sin(phi), c = Math.cos(phi);
       const r = 1 / Math.pow(Math.pow(Math.abs(s), n) + Math.pow(Math.abs(c), n), 1 / n);
       const dos = (1 - c) / 2;                                       // 0 devant, 1 derrière
-      const bord = 0.035 + 0.15 * lisse(0.12, 0.55, dos) + 0.2 * lisse(0.6, 1, dos);
-      const creux = -0.02 * (1 - t * t);
-      const devant = c > 0 ? -0.045 * Math.pow(c, 4) * lisse(0.8, 1, t) : 0;
-      const k = t * (1 + 0.06 * mont);
-      pos.push(s * A * r * k, Y + creux + bord * mont + devant, c * P * r * k - 0.06 * mont * Math.pow(dos, 2));
+      const bord = -0.03 + 0.21 * lisse(0.1, 0.5, dos) + 0.2 * lisse(0.55, 1, dos);
+      const creux = -0.022 * (1 - rho * rho);
+      const h = bord * eta;
+      const p = [s * A * r * rho, Y + creux + h, c * P * r * rho - 0.22 * Math.max(0, h) * dos * dos];
+      pos.push(...p);
+      if (j === NR) ourlet.push(new THREE.Vector3(...p));
     }
   }
   for (let j = 0; j < NR; j++) for (let i = 0; i < NA; i++) {
@@ -48,24 +60,49 @@ function geoCoque() {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setIndex(idx); g.computeVertexNormals();
+  // L'OURLET : le bord roulé de la coque (6 mm), qui accroche la lumière et donne l'épaisseur de la fibre
+  ourlet.pop();
+  _ourlet = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ourlet, true), NA * 2, 0.006, 6, true);
   return (_coque = g);
 }
 const _matsCoque = new Map();
+// le voile d'ombre d'une chaise : un dégradé radial noir, transparent, sans écriture de profondeur (partagé)
+let _geoVoile = null, _matVoile = null;
+function matVoile() {
+  if (_matVoile) return _matVoile;
+  const t = canvasTex(128, 128, (g, w, h) => {
+    const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+    gr.addColorStop(0, 'rgba(0,0,0,0.42)'); gr.addColorStop(0.45, 'rgba(0,0,0,0.3)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.clearRect(0, 0, w, h); g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  }, null, true, 1);
+  return (_matVoile = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
+}
 function chaise(ch, x, y, face, couleur) {
   const M = ch.M, fx = face === 'S' ? 0 : face === 'N' ? 0 : face === 'E' ? 1 : -1, fz = face === 'S' ? 1 : face === 'N' ? -1 : 0;
   const g = new THREE.Group(); g.position.set(x, 0, -y); g.rotation.y = Math.atan2(fx, fz);
-  if (!_matsCoque.has(couleur)) _matsCoque.set(couleur, new THREE.MeshStandardMaterial({ color: couleur, roughness: 0.38, side: THREE.DoubleSide }));
-  maille(geoCoque(), _matsCoque.get(couleur), 0, 0, 0, 0, g);
+  if (!_matsCoque.has(couleur)) _matsCoque.set(couleur, new THREE.MeshStandardMaterial({ color: couleur, roughness: 0.32, side: THREE.DoubleSide }));
+  // L'OMBRE DE LA COQUE. Ni dans l'ombre cuite au sol (vue de dessus, la coque faisait une tache noire de sa taille
+  // posée sur des pieds fins), ni dans la carte d'ombre de la lumière principale (presque d'aplomb, elle découpait sous
+  // chaque chaise un pavé noir à bord net) : sur les photos 02 et 21, la lumière vient de tous les plafonniers à la fois
+  // et l'ombre d'une chaise n'est qu'un voile flou. Ce voile est une tache dégradée posée au sol ; les pieds, eux,
+  // gardent leurs ombres fines.
+  const coque = maille(geoCoque(), _matsCoque.get(couleur), 0, 0, 0, 0, g, { ombre: false });
+  const ourlet = maille(_ourlet, _matsCoque.get(couleur), 0, 0, 0, 0, g, { ombre: false });
+  coque.userData.horsAOSol = ourlet.userData.horsAOSol = true;
+  const voile = new THREE.Mesh(_geoVoile || (_geoVoile = new THREE.PlaneGeometry(0.86, 0.8).rotateX(-Math.PI / 2)), matVoile());
+  voile.position.set(0, 0.003, -0.02); voile.renderOrder = 1; voile.userData.horsAOSol = true; g.add(voile);
+  // le piètement chromé (sans ombre portée : sous une lumière presque d'aplomb, la platine et les croisillons
+  // découpaient un rectangle noir crénelé ; le voile suffit) et ses patins gris foncé de 15 mm
   for (const [px, pz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-    const p = maille(new THREE.CylinderGeometry(0.008, 0.008, 0.44, 6), M.inox, px * 0.17, 0.21, pz * 0.15, 0, g);
+    const p = maille(new THREE.CylinderGeometry(0.008, 0.008, 0.44, 6), M.inox, px * 0.17, 0.21, pz * 0.15, 0, g, { ombre: false });
     p.rotation.z = -px * 0.2; p.rotation.x = pz * 0.2;
-    maille(new THREE.CylinderGeometry(0.014, 0.014, 0.012, 8), M.noirMat, px * 0.215, 0.006, pz * 0.195, 0, g);
+    maille(new THREE.CylinderGeometry(0.0075, 0.0085, 0.01, 8), M.patin || (M.patin = new THREE.MeshStandardMaterial({ color: 0x45433f, roughness: 0.6 })), px * 0.215, 0.005, pz * 0.195, 0, g, { ombre: false });
   }
   for (const s of [-1, 1]) {
-    const e = maille(new THREE.CylinderGeometry(0.006, 0.006, 0.5, 5), M.inox, 0, 0.2, 0, 0, g);
+    const e = maille(new THREE.CylinderGeometry(0.006, 0.006, 0.5, 5), M.inox, 0, 0.2, 0, 0, g, { ombre: false });
     e.rotation.z = Math.PI / 2; e.rotation.y = s * 0.72;
   }
-  maille(boiteM(0.22, 0.012, 0.2), M.inox, 0, 0.37, -0.01, 0, g);
+  maille(boiteM(0.22, 0.012, 0.2), M.inox, 0, 0.37, -0.01, 0, g, { ombre: false });
   ch.decor.add(g);
   // l'assise (le jeu y pose les hanches) et d'où l'on se relève, 60 cm devant (en monde : z = -y)
   ch.sieges.push({ x: x + fx * 0.02, z: -y + fz * 0.02, y: 0.45, fx, fz, sx: x + fx * 0.7, sz: -y + fz * 0.7, nom: 'la chaise' });
@@ -100,13 +137,15 @@ export function poserMobilier(ch) {
   ch.panneau(new THREE.MeshBasicMaterial({ map: texEcran(), color: new THREE.Color(1.25, 1.25, 1.25) }), 1.39, 0.79, 7.225, 11.935, 1.975, 'S');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#cfe8d2', '#fbfbf8', 3), roughness: 0.7 }), 1.0, 1.5, 8.9, 11.994, 1.8, 'S');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#ffffff', '#f5f5f0', 4), roughness: 0.7 }), 0.15, 0.21, 7.0, 11.994, 1.4, 'S');
-  // la borne numérique noire (x 9,45), son écran en mosaïque de photos, tournée vers le nord-ouest
-  const borne = new THREE.Group(); borne.position.set(9.45, 0, -9.35); borne.rotation.y = Math.PI * 0.82; ch.decor.add(borne);
+  // la borne numérique noire (x 9,45), son écran en mosaïque de photos, tournée vers l'ouest-nord-ouest : on la voit de
+  // face depuis le bout ouest de la salle (photo 21 ; 09/10 : elle était tournée vers le nord-est, vue de chant)
+  // (et poussée contre le bout du mur de la salle A, x 9,45 -> 9,7 : sur la photo, son pied touche presque l'angle)
+  const borne = new THREE.Group(); borne.position.set(9.7, 0, -9.42); borne.rotation.y = -Math.PI * 0.62; ch.decor.add(borne);
   maille(boiteM(0.6, 0.02, 0.5), M.noir, 0, 0.01, 0, 0, borne);
   maille(boiteM(0.6, 1.95, 0.08), M.noir, 0, 0.995, 0, 0, borne);
   const mos = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 1.6), new THREE.MeshBasicMaterial({ map: texMosaique(), color: new THREE.Color(1.1, 1.1, 1.1) }));
   mos.position.set(0, 1.05, 0.041); borne.add(mos);
-  C.ajouterBoite(9.12, -9.65, 9.78, -9.05, { y1: 2 });
+  C.ajouterBoite(9.35, -9.78, 10.05, -9.08, { y1: 2 });
   // le présentoir à brochures noir contre le mur du fond (x 13,3, y 11,3), tourné vers l'ouest
   const pres = new THREE.Group(); pres.position.set(13.28, 0, -11.3); pres.rotation.y = -Math.PI / 2; ch.decor.add(pres);
   for (const sx of [-0.39, 0.39]) maille(boiteM(0.02, 1.55, 0.35), M.noir, sx, 0.8, 0, 0, pres);
@@ -123,12 +162,21 @@ export function poserMobilier(ch) {
   ch.boite(13.3, 12.2, 13.48, 12.9, 0, 0.06, M.aluGris);
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3b3b3b', '#1d1d1d', 6), roughness: 0.6 }), 0.78, 1.9, 13.377, 12.55, 1.02, 'W');
   C.ajouterBoite(13.28, -12.95, 13.5, -12.15, { y1: 2 });
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#111111', '#151515', 7), roughness: 0.5 }), 0.2, 0.3, 13.494, 9.55, 1.65, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#f08a3c', '#ffffff', 8), roughness: 0.6 }), 0.2, 0.3, 13.494, 9.55, 1.9, 'W');
-  // les affiches du pilier (une A2 blanche, un tract orange, deux feuilles côté nord)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e8eef8', '#ffffff', 9), roughness: 0.7 }), 0.42, 0.6, 10.294, 9.2, 1.6, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#f08a3c', '#ffffff', 10), roughness: 0.7 }), 0.3, 0.42, 10.294, 9.2, 1.1, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3e9b6b', '#ffffff', 11), roughness: 0.7 }), 0.21, 0.3, 10.6, 9.506, 1.55, 'N');
+  // (09/10 : les affichettes du fond suivent le radiateur, juste à gauche du pilier sur la photo 21 ; y 9,55 -> 10,05)
+  const wifi = new THREE.MeshStandardMaterial({ map: texWifi(), roughness: 0.45 });
+  ch.panneau(wifi, 0.2, 0.17, 13.494, 10.05, 1.5, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c7783a', '#f4ead9', 8), roughness: 0.6 }), 0.24, 0.17, 13.494, 10.05, 1.75, 'W');
+  // ... et les mêmes au bout du mur, près de l'angle du hall, sous le haut-parleur (photo 03)
+  ch.panneau(wifi, 0.2, 0.17, 13.494, 7.95, 1.45, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c7783a', '#f4ead9', 12), roughness: 0.6 }), 0.26, 0.19, 13.494, 7.95, 1.72, 'W');
+  const hp = new THREE.Group(); hp.position.set(13.44, 2.32, -7.97); ch.decor.add(hp);
+  maille(boiteM(0.1, 0.17, 0.13), M.boitier, 0, 0, 0, 0, hp, { ombre: false });
+  maille(new THREE.CylinderGeometry(0.035, 0.035, 0.01, 16), M.grille, -0.051, 0.01, 0, 0, hp, { ombre: false }).rotation.z = Math.PI / 2;
+  // les affiches du pilier (il est maintenant planté dans la salle, y 9,75-10,35) : sur la face ouest, l'A3 blanche aux
+  // dessins de couleur et le tract orange dessous ; sur la face nord, une feuille étroite (photo 21)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e8eef8', '#ffffff', 9), roughness: 0.7 }), 0.42, 0.6, 10.294, 10.05, 1.72, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#f08a3c', '#ffffff', 10), roughness: 0.7 }), 0.3, 0.42, 10.294, 10.05, 1.2, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3e9b6b', '#ffffff', 11), roughness: 0.7 }), 0.21, 0.42, 10.45, 10.356, 1.55, 'N');
   // les affiches scotchées sur les jours dépolis
   [[6.3, 1.7, '#e07b2a'], [6.95, 1.85, '#2f6fb0'], [8.0, 1.75, '#3e9b6b'], [8.65, 1.9, '#7b2a6e']].forEach(([x, h, c], i) =>
     ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche(c, '#fbfbf8', 20 + i), roughness: 0.7 }), 0.21, 0.297, x, 9.088, h, 'N'));
@@ -136,16 +184,27 @@ export function poserMobilier(ch) {
   // =====================================================================
   //  LE HALL OUEST (photo 06)
   // =====================================================================
-  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texConsignes(), roughness: 0.5 }), 1.75, 8.45, 'E', 0.45, 1.3, 1.92);
+  // (sur l'avancée sud du mur ouest, x 2,0 : js/carte_ecole.js ; 09/10)
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texConsignes(), roughness: 0.5 }), 2.0, 8.45, 'E', 0.45, 1.3, 1.92);
   // l'extincteur rouge sur sa console (h 0,95-1,55) et ses pictogrammes
   const ext = new THREE.Group(); ext.position.set(1.86, 0, -11.2); ch.decor.add(ext);
   maille(new THREE.CylinderGeometry(0.075, 0.075, 0.48, 16), M.rougeEtiquette, 0, 1.2, 0, 0, ext);
-  maille(new THREE.CylinderGeometry(0.03, 0.045, 0.08, 10), M.noirMat, 0, 1.48, 0, 0, ext);
+  maille(new THREE.SphereGeometry(0.075, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.rougeEtiquette, 0, 1.44, 0, 0, ext);
+  maille(new THREE.CylinderGeometry(0.03, 0.045, 0.08, 10), M.noirMat, 0, 1.5, 0, 0, ext);
   maille(boiteM(0.04, 0.06, 0.06), M.noirMat, -0.08, 1.35, 0, 0, ext);
+  // (photo 06 : la poignée noire et son levier, l'étiquette blanche, le tuyau noir qui fait une boucle le long du corps
+  // jusqu'à la lance clipsée en bas ; 09/10)
+  maille(boiteM(0.12, 0.018, 0.035), M.noirMat, 0.03, 1.56, 0, 0, ext).rotation.z = -0.25;
+  const etiq = maille(new THREE.CylinderGeometry(0.0765, 0.0765, 0.2, 16, 1, true, -0.7, 1.4), M.boitier, 0, 1.18, 0, Math.PI / 2, ext, { ombre: false });
+  void etiq;
+  const tuyau = new THREE.CatmullRomCurve3([[0.03, 1.5, 0.02], [0.11, 1.45, 0.05], [0.12, 1.2, 0.07], [0.1, 1.0, 0.06], [0.06, 0.97, 0.06]].map((p) => new THREE.Vector3(...p)));
+  maille(new THREE.TubeGeometry(tuyau, 24, 0.009, 6), M.noirMat, 0, 0, 0, 0, ext, { ombre: false });
   C.ajouterCercle(1.86, -11.2, 0.09, { y0: 0.9, y1: 1.6 });
   ch.panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.16, 0.16, 1.755, 11.2, 1.9, 'E');
-  // l'affiche jaune du tri, à gauche des portes de l'escalier
-  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texTri(), roughness: 0.6 }), 2.2, 13.6, 'S', 0.6, 1.1, 1.95);
+  // l'affiche jaune du tri, à gauche des portes de l'escalier : sur l'avancée nord du mur OUEST, dans l'angle (09/10 :
+  // elle était sur le mur des portes, cachée par le vantail ouvert ; photos 04, 20 : on la voit à gauche du vantail, sur
+  // le mur en fuite)
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texTri(), roughness: 0.6 }), 2.0, 13.17, 'E', 0.6, 1.1, 1.95);
 
   // =====================================================================
   //  LE PASSAGE (photos 07, 19)
@@ -189,19 +248,42 @@ export function poserMobilier(ch) {
 }
 
 // ---- les petites textures du mobilier ----
+// L'ÉCRAN DE LA BORNE (photo 21) : une mosaïque de PHOTOS d'étudiants — des vignettes à dominante bleue et grise, des
+// visages, quelques touches chaudes —, pas des aplats de couleurs vives (09/10). Chaque vignette : un ciel ou un mur en
+// dégradé, une silhouette sombre, un visage clair.
 function texMosaique() {
-  return canvasTex(128, 372, (g, w, h) => {
+  return canvasTex(256, 744, (g, w, h) => {
     g.fillStyle = '#0d0f12'; g.fillRect(0, 0, w, h);
-    const cols = ['#5a7f9c', '#c49a6c', '#7c5a8e', '#d6d0c4', '#3e6b5a', '#b65a3c', '#8aa4c8'];
+    const fonds = [['#7f9fc4', '#3d5878'], ['#a9b7c8', '#59677a'], ['#6b84a6', '#27364f'], ['#c9b49a', '#6d5a48'], ['#8fb0c9', '#4a6a86'], ['#b0a8a0', '#4c4744']];
     let k = 0;
-    for (let y = 4; y < h - 4; y += 46) for (let x = 4; x < w - 4; x += 62) { g.fillStyle = cols[(k++ * 3) % cols.length]; g.fillRect(x, y, 58, 42); }
+    for (let y = 6; y < h - 6; y += 92) for (let x = 6; x < w - 6; x += 124) {
+      const f = fonds[(k * 5 + (k >> 1)) % fonds.length], d = g.createLinearGradient(0, y, 0, y + 86);
+      d.addColorStop(0, f[0]); d.addColorStop(1, f[1]); g.fillStyle = d; g.fillRect(x, y, 118, 86);
+      const cx = x + 30 + ((k * 37) % 60), r = 11 + (k % 3) * 3;
+      g.fillStyle = ['#1d2430', '#3a2c2a', '#2b3b55', '#e7e2da'][k % 4]; g.beginPath(); g.ellipse(cx, y + 86, r * 2.1, r * 2.4, 0, Math.PI, 0); g.fill();
+      g.fillStyle = ['#d8ae90', '#a87458', '#e3c2a6', '#8a5a42'][(k + 1) % 4]; g.beginPath(); g.arc(cx, y + 86 - r * 2.6, r, 0, 7); g.fill();
+      g.fillStyle = '#20180f'; g.beginPath(); g.arc(cx, y + 86 - r * 2.9, r * 1.02, Math.PI, 0); g.fill();
+      k++;
+    }
   }, null, false, 4);
 }
+// LES BROCHURES du présentoir (photos 01, 21) : des couvertures de magazine — fond blanc ou clair, une grande photo aux
+// tons doux, un bandeau de titre de couleur — et non des tranches de couleurs vives (09/10)
 function texBrochures() {
-  return canvasTex(256, 84, (g, w, h) => {
+  return canvasTex(512, 168, (g, w, h) => {
     g.fillStyle = '#111'; g.fillRect(0, 0, w, h);
-    const cols = ['#e04e3a', '#2f6fb0', '#f2b705', '#ffffff', '#7b2a6e', '#3e9b6b', '#f08a3c', '#cccccc'];
-    for (let i = 0; i < 9; i++) { g.fillStyle = cols[(i * 5) % cols.length]; g.fillRect(4 + i * 28, 6, 24, h - 12); g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(4 + i * 28, 6 + (h - 12) * 0.6, 24, 6); }
+    const fonds = ['#f4f2ee', '#eceae4', '#f6f4f0', '#dfe4ea', '#f2efe8'];
+    const photos = [['#8aa0b8', '#4e5f73'], ['#c8a07a', '#6e4e38'], ['#9fb39a', '#4f6650'], ['#b9b4c8', '#5d566e'], ['#d6c2a8', '#7d6650'], ['#7f95a8', '#3a4a5c']];
+    const titres = ['#e04e3a', '#2f6fb0', '#f2b705', '#7b2a6e', '#3e9b6b', '#f08a3c', '#222222'];
+    for (let i = 0; i < 9; i++) {
+      const x = 6 + i * 56, y = 10, cw = 50, chh = h - 20;
+      g.fillStyle = fonds[i % fonds.length]; g.fillRect(x, y, cw, chh);
+      const p = photos[(i * 4 + 1) % photos.length], d = g.createLinearGradient(0, y + 18, 0, y + chh - 16);
+      d.addColorStop(0, p[0]); d.addColorStop(1, p[1]); g.fillStyle = d; g.fillRect(x + 3, y + 18, cw - 6, chh - 38);
+      g.fillStyle = 'rgba(240,226,210,0.8)'; g.beginPath(); g.arc(x + cw * 0.55, y + 50, 7, 0, 7); g.fill();
+      g.fillStyle = titres[(i * 3) % titres.length]; g.fillRect(x + 3, y + 4, cw - 6, 10);
+      g.fillStyle = 'rgba(40,40,40,0.55)'; g.fillRect(x + 4, y + chh - 14, cw * 0.7, 3); g.fillRect(x + 4, y + chh - 8, cw * 0.5, 3);
+    }
   }, null, false, 4);
 }
 function texLiege() {
@@ -217,6 +299,16 @@ function texLiege() {
       g.fillStyle = '#d0262d'; g.beginPath(); g.arc(0, -34, 3, 0, 7); g.fill();
       g.restore();
     }
+  }, null, false, 4);
+}
+// l'affichette WIFI (photo 03) : noire, le titre et deux lignes en blanc, le QR code à droite
+function texWifi() {
+  return canvasTex(160, 136, (g, w, h) => {
+    g.fillStyle = '#121212'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#f2f2f2'; g.font = '700 15px "Segoe UI", Arial, sans-serif'; g.fillText('WIFI IRIS', 12, 30);
+    g.font = '500 9px "Segoe UI", Arial, sans-serif'; g.fillText('réseau : iris-etudiants', 12, 62); g.fillText('scanne le code', 12, 78);
+    g.fillStyle = '#f2f2f2'; g.fillRect(98, 48, 50, 50); g.fillStyle = '#121212';
+    for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) if ((i * 7 + j * 3 + i * j) % 3 === 0) g.fillRect(101 + i * 6.5, 51 + j * 6.5, 6, 6);
   }, null, false, 4);
 }
 function texToilettes() {

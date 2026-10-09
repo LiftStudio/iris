@@ -246,10 +246,12 @@ export class Portes {
       }
     }
     if (autocollants) {
-      // deux rangées de quatre (h 1,0 et 1,55), lisibles côté passage (+z)
+      // `true` : deux rangées de quatre (h 1,0 et 1,55) ; sinon la liste des rangées [[hauteur, nombre], …] (un seul
+      // autocollant : au milieu du vantail). Lisibles côté +z (le passage), le dos noir de l'autre côté.
       const A = this._matAutocollant();
-      for (const y of [1.0, 1.55]) for (let i = 0; i < 4; i++) {
-        const x = s * (c + 0.06 + i * (w - 2 * c - 0.12) / 3.2);
+      const rangs = autocollants === true ? [[1.0, 4], [1.55, 4]] : autocollants;
+      for (const [y, nb] of rangs) for (let i = 0; i < nb; i++) {
+        const x = nb === 1 ? s * w / 2 : s * (c + 0.06 + i * (w - 2 * c - 0.12) / 3.2);
         const p = plan(g, A, 0.11, 0.04, x, y, 0.004, 1);
         const q = plan(g, M.noirMat, 0.11, 0.04, x, y, -0.004, -1);
         p.userData.vitre = q.userData.vitre = true;
@@ -291,7 +293,8 @@ export class Portes {
       if (o.modele.startsWith('gaine')) return this._vantailGaine(w, h, s);
       if (o.modele === 'blanche') return this._vantailGris(w, h, s, { oculus: false, mat: M.alu, poignee: 'bequille' });
       if (o.modele === 'noire') return this._vantailGris(w, h, s, { oculus: false, mat: M.acierNoir, poignee: null });
-      return this._vantailVitre(w, h, s, { blanc: o.blanc !== false, tirant: o.tirant || 'long', autocollants: !!o.autocollants });
+      // (`autocollants` : une fonction du vantail, s => rangées, quand les deux vantaux n'en portent pas autant)
+      return this._vantailVitre(w, h, s, { blanc: o.blanc !== false, tirant: o.tirant || 'long', autocollants: typeof o.autocollants === 'function' ? o.autocollants(s) : !!o.autocollants });
     };
     if (double) {
       const w = l / 2;

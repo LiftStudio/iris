@@ -160,7 +160,8 @@ class Chantier {
     g.rotateX(Math.PI / 2);                                    // tourné vers le bas
     const p = g.attributes.position, uv = g.attributes.uv;
     for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) + w / 2, p.getZ(i) + d / 2);
-    const m = maille(g, type === 'plateaux' ? M.plateaux : M.platre, (x0 + x1) / 2, h, -(y0 + y1) / 2, 0, this.decor, { ombre: false });
+    // (`type` : 'plateaux' (perforés), 'dalles' (60 x 60 posées sur ossature), sinon le plâtre)
+    const m = maille(g, { plateaux: M.plateaux, dalles: M.dalles }[type] || M.platre, (x0 + x1) / 2, h, -(y0 + y1) / 2, 0, this.decor, { ombre: false });
     m.userData.horsAOSol = true;
     if (retombees && h < H_DALLE - 0.01) {
       const hr = H_DALLE - h, ym = h + hr / 2;
@@ -173,14 +174,24 @@ class Chantier {
   }
 
   // ---------------------------------------------------------------- les luminaires
-  // LE SPOT ENCASTRÉ (photos 02, 03, 21) : disque lumineux de 20 cm dans une couronne blanche, à fleur du plafond
+  // LE SPOT ENCASTRÉ (photos 02, 03, 21) : disque lumineux de 18 cm dans une couronne blanche FINE (09/10 : la couronne
+  // de 24 cm faisait un anneau gris épais autour d'un disque pâle ; sur les photos, un filet blanc autour d'un disque
+  // qui éblouit), à fleur du plafond
   spot(x, y, h, zone, o = {}) {
     const M = this.M;
-    const c = maille(new THREE.CylinderGeometry(0.12, 0.12, 0.012, 28), M.couronne, x, h - 0.006, -y, 0, this.decor, { ombre: false, recoit: false });
-    const d = maille(new THREE.CircleGeometry(0.095, 28), M.spot, x, h - 0.0125, -y, 0, this.decor, { ombre: false, recoit: false });
+    const c = maille(new THREE.CylinderGeometry(0.105, 0.105, 0.012, 32), M.couronne, x, h - 0.006, -y, 0, this.decor, { ombre: false, recoit: false });
+    const d = maille(new THREE.CircleGeometry(0.09, 32), M.spot, x, h - 0.0125, -y, 0, this.decor, { ombre: false, recoit: false });
     d.rotation.x = Math.PI / 2;
     c.userData.horsAOSol = d.userData.horsAOSol = true;
+    this.halo(x, y, h, 1.0);
     this.lampes.push({ x, z: -y, h, zone, type: 'spot', ...o });
+  }
+  // L'AURÉOLE d'un plafonnier, sur le plafond autour de lui (js/ecole_matieres.js texHalo), de `d` mètres de diamètre
+  halo(x, y, h, d) {
+    if (!this._geoHalo) this._geoHalo = new THREE.PlaneGeometry(1, 1).rotateX(Math.PI / 2);
+    const m = maille(this._geoHalo, this.M.halo, x, h - 0.004, -y, 0, this.decor, { ombre: false, recoit: false });
+    m.scale.set(d, 1, d); m.renderOrder = 2; m.userData.horsAOSol = true;
+    return m;
   }
   // LE HUBLOT OPALE EN APPLIQUE (photos 01, 05) : une galette blanche lumineuse de 30 à 35 cm. `mur` : posé sur une face
   // (son axe regarde alors dans la direction donnée, 'S' ou 'N'…), sinon au plafond.
@@ -193,6 +204,7 @@ class Chantier {
     if (mur) { g.rotation.x = -Math.PI / 2; g.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), { S: 0, N: Math.PI, E: Math.PI / 2, W: -Math.PI / 2 }[mur]); }
     g.traverse((m) => { m.userData.horsAOSol = true; });
     this.decor.add(g);
+    if (!mur) this.halo(x, y, h, r * 6.5);
     this.lampes.push({ x, z: -y, h: mur ? h - 0.1 : h, zone, type: 'opale', ...o });
   }
   // LA RÉGLETTE FLUORESCENTE DU PASSAGE (photos 07, 19) : tube de 1,5 m sous une réglette blanche à embouts orange,
@@ -291,6 +303,13 @@ function construireEscalier(ch) {
     ch.boite(E.xO0, yb + G - 0.04, E.xO1, yb + G, h2 + 0.012, h2 + 0.016, M.nez, { ombre: false });
   }
   ch.boite(E.xE0, E.yPalier, E.xE1, E.yPalier + 0.04, HP, HP + 0.004, M.nez, { ombre: false });
+  // ---- les contremarches anthracite (photos 06, 20 : seuls les limons et la sous-face sont blancs ; 09/10) : un
+  // parement de 6 mm devant chaque contremarche du béton, côté de celui qui monte ----
+  for (let i = 0; i < N; i++) {
+    const ya = E.y0 + i * G, yb = E.yPalier - i * G;
+    ch.boite(E.xE0, ya - 0.006, E.xE1, ya, i * R, (i + 1) * R, M.contremarche, { ombre: false });
+    ch.boite(E.xO0, yb, E.xO1, yb + 0.006, HP + i * R, HP + (i + 1) * R, M.contremarche, { ombre: false });
+  }
   // ---- le palier du 1er étage (dalle sur le hall, x 1,6-4,75, y 12,45-14,2) ----
   ch.boite(1.6, 12.45, 4.75, E.y0, H_DALLE, 2 * HP - 0.02, M.beton);
   ch.boite(E.xO0, 12.6, E.xE1, E.y0, 2 * HP - 0.02, 2 * HP, M.solEtage);
@@ -554,9 +573,11 @@ function construireEntree(ch) {
   ch.sortie(15.25, 0.45, 2.45, 'N');
 }
 // LA PAROI DU PASSAGE (photos 07, 19) : à y = 5,0, toute la largeur (x 1,75-4,75) en aluminium laqué blanc — deux fixes
-// pleine hauteur, la double porte de 2 x 0,9 m (automatique), l'imposte vitrée jusqu'au plafond (2,60).
+// pleine hauteur, la double porte de 2 x 0,9 m (automatique), et au-dessus, jusqu'au plafond (2,60), un bandeau PLEIN
+// d'aluminium blanc. (09/10 : les photos 07 et 19 n'ont pas d'imposte vitrée — la traverse haute des vantaux, à 2,30,
+// est juste sous ce bandeau ; les vantaux, plus hauts, passent de 2,20 à 2,30.)
 function construireParoiPassage(ch) {
-  const { M, C } = ch, Y = 5.0, z = -Y, hP = 2.2, hT = 2.6;
+  const { M, C } = ch, Y = 5.0, z = -Y, hP = 2.3, hT = 2.6;
   const montant = (x) => ch.boite(x - 0.035, Y - 0.04, x + 0.035, Y + 0.04, 0, hT, M.alu);
   for (const x of [1.785, 2.3, 4.1, 4.715]) montant(x);
   ch.boite(1.75, Y - 0.04, 4.75, Y + 0.04, hP, hP + 0.08, M.alu);
@@ -566,9 +587,12 @@ function construireParoiPassage(ch) {
     const v = new THREE.Mesh(new THREE.PlaneGeometry(b - a, hP - 0.08), M.verre); v.position.set((a + b) / 2, hP / 2 + 0.04, z); ch.decor.add(v);
     C.ajouterBoite(a - 0.06, -(Y + 0.05), b + 0.06, -(Y - 0.05), { y1: hT, vitre: true });
   }
-  const imp = new THREE.Mesh(new THREE.PlaneGeometry(2.93, hT - hP - 0.14), M.verre); imp.position.set(3.25, (hP + 0.08 + hT - 0.06) / 2, z); ch.decor.add(imp);
-  C.ajouterBoite(1.75, -(Y + 0.05), 4.75, -(Y - 0.05), { y0: hP, y1: H_DALLE, vitre: true });
-  ch.porte('x', Y, 3.2, { l: 1.8, h: hP, ep: 0.08, modele: 'vitree2', autocollants: true, etat: 'auto', cote: 'S', huisserie: false, nom: 'passage' });
+  ch.boite(1.75, Y - 0.025, 4.75, Y + 0.025, hP + 0.08, hT - 0.06, M.alu);
+  C.ajouterBoite(1.75, -(Y + 0.05), 4.75, -(Y - 0.05), { y0: hP, y1: H_DALLE });
+  // LES AUTOCOLLANTS « iris » (photos 07, 19) : deux rangées de quatre sur le vantail EST (s = -1 : à droite vu du
+  // passage), un seul au milieu du vantail ouest
+  const rangs = (s) => (s < 0 ? [[0.9, 4], [1.4, 4]] : [[1.25, 1]]);
+  ch.porte('x', Y, 3.2, { l: 1.8, h: hP, ep: 0.08, modele: 'vitree2', autocollants: rangs, etat: 'auto', cote: 'S', huisserie: false, nom: 'passage' });
   ch.sortie(3.2, 5.12, 2.45, 'N');
 }
 
@@ -584,6 +608,15 @@ function construireMurs(ch) {
   ch.porte('y', 1.675, 4.15, { l: 0.9, h: 2.04, modele: 'blanche', etat: 'fermee', cote: 'E', charniere: 'd', nom: 'service (passage)' });
   ch.mur({ de: [1.675, 5.0], a: [1.675, 13.6], mats: B, plinthes: ['E'], ouvertures: [{ c: 9.575, l: 0.95, h: 2.04 }] });
   ch.porte('y', 1.675, 9.575, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'W', nom: 'service (hall)' });
+  // LES DEUX AVANCÉES DU MUR OUEST (photo 06) : la porte grise, l'extincteur et le radiateur sont dans un RENFONCEMENT ;
+  // de part et d'autre, le mur avance de 25 cm — au sud, le pan du plan d'évacuation, au nord, celui de l'affiche jaune
+  // du tri, contre l'angle des portes de l'escalier (09/10). Plinthes de bois sur les faces vues.
+  for (const [ya, yb] of [[7.7, 9.05], [12.75, 13.6]]) {
+    ch.boite(1.75, ya, 2.0, yb, 0, H_DALLE, B, { collision: true });
+    ch.boite(2.0, ya - 0.015, 2.015, yb, 0, 0.08, M.bois, { ombre: false });                    // face est
+    ch.boite(1.75, ya - 0.015, 2.0, ya, 0, 0.08, M.bois, { ombre: false });                      // face sud
+    if (yb < 13.5) ch.boite(1.75, yb, 2.015, yb + 0.015, 0, 0.08, M.bois, { ombre: false });     // face nord
+  }
   // le mur est du passage = l'ouest de la salle A, avec la porte de la salle A côté hall
   ch.mur({ de: [4.825, -0.4], a: [4.825, 5.0], mats: { W: CR, E: B }, plinthes: ['W'] });
   ch.mur({ de: [4.825, 5.0], a: [4.825, 9.0], mats: B, plinthes: ['W', 'E'], ouvertures: [{ c: 6.85, l: 0.93, h: 2.04 }] });
@@ -603,10 +636,11 @@ function construireMurs(ch) {
   // l'est : le mur du fond (présentoir, radiateur) qui continue en mur est du couloir C01 (porte de la gaine)
   ch.mur({ de: [13.575, 7.5], a: [13.575, 20.75], mats: B, plinthes: ['W'], ouvertures: [{ c: 17.0, l: 1.2, h: 2.0 }] });
   ch.porte('y', 13.575, 17.0, { l: 1.2, h: 2.0, modele: 'gaine2', etat: 'fermee', cote: 'W', nom: 'gaine technique' });
-  // (la trappe crème et la grille de ventilation au-dessus de la gaine : posées sur le mur, face ouest)
-  ch.boite(13.49, 16.45, 13.5, 16.9, 2.12, 2.6, M.creme2, { ombre: false });
-  ch.boite(13.49, 17.05, 13.5, 17.5, 2.1, 2.62, M.grille, { ombre: false });
-  for (let h = 2.15; h < 2.6; h += 0.05) ch.boite(13.48, 17.07, 13.49, 17.48, h, h + 0.02, M.noirMat, { ombre: false });
+  // (la trappe crème et la grille de ventilation au-dessus de la gaine : posées sur le mur, face ouest — photo 01 : la
+  // trappe au-dessus du vantail NORD, côté toilettes, la grille au-dessus du vantail sud ; elles étaient inversées, 09/10)
+  ch.boite(13.49, 17.1, 13.5, 17.55, 2.12, 2.6, M.creme2, { ombre: false });
+  ch.boite(13.49, 16.45, 13.5, 16.9, 2.1, 2.62, M.grille, { ombre: false });
+  for (let h = 2.15; h < 2.6; h += 0.05) ch.boite(13.48, 16.47, 13.49, 16.88, h, h + 0.02, M.noirMat, { ombre: false });
   // ---- LE COULOIR C05 ET LE COULOIR C01 ----
   ch.mur({ de: [5.875, 12.15], a: [5.875, 18.6], mats: B, plinthes: ['W'] });
   ch.mur({ de: [11.625, 12.15], a: [11.625, 20.75], mats: B, plinthes: ['E'], ouvertures: [{ c: 13.85, l: 0.93, h: 2.04 }, { c: 19.05, l: 0.93, h: 2.04 }] });
@@ -631,7 +665,9 @@ function construireMurs(ch) {
     ch.boite(x0 - 0.015, y0 - 0.015, x1 + 0.015, y1 + 0.015, 0, 0.08, M.bois, { ombre: false });
   };
   pilier(10.8, 6.0, 11.2, 6.9, B);
-  pilier(10.3, 8.9, 10.9, 9.5, M.pilier);
+  // (09/10/2026 : le pilier gris est DÉTACHÉ du mur de la salle A — photo 21 : planté dans la salle, le fond visible de
+  // part et d'autre ; photo 02 : il frôle le bord gauche de l'image. Il était collé au bout du mur, y 8,9-9,5.)
+  pilier(10.3, 9.75, 10.9, 10.35, M.pilier);
   // ---- LE HALL D'ENTRÉE ----
   ch.mur({ de: [13.5, 7.575], a: [20.1, 7.575], mats: B, plinthes: ['S'], ouvertures: [{ c: 17.0, l: 0.93, h: 2.04 }] });
   ch.porte('x', 7.575, 17.0, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'S', nom: 'bureaux est' });
@@ -730,8 +766,13 @@ export function construireCarte(scene, renderer = null) {
   construirePorteFond(ch);
   construireEscalier(ch);
   construireAccueil(ch);
-  radiateur(ch, 1.75, 12.9, 'E', 0.45, 0.15, 1.3);
-  radiateur(ch, 13.5, 10.2, 'W', 0.45, 0.15, 1.1);
+  // (le radiateur du hall ouest : entre l'extincteur et l'affiche jaune du tri, qui est sur le même mur — photos 02 et
+  // 06, de gauche à droite : porte grise, extincteur, radiateur, affiche, portes de l'escalier ; y 12,9 -> 12,45, 09/10)
+  radiateur(ch, 1.75, 12.45, 'E', 0.45, 0.15, 1.3);
+  // le mur du fond de la salle d'attente : le radiateur à côté du présentoir (photo 21), et celui du bout du mur, près
+  // de l'angle du hall d'entrée, sous le haut-parleur et l'affichette WIFI (photo 03) (09/10)
+  radiateur(ch, 13.5, 10.5, 'W', 0.45, 0.15, 1.1);
+  radiateur(ch, 13.5, 8.4, 'W', 0.5, 0.12, 1.15);
   // la caméra de surveillance du hall ouest et son haut-parleur ; le déclencheur manuel rouge
   const dome = maille(new THREE.SphereGeometry(0.06, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.boitier, 4.2, 2.4, -12.9, 0, ch.decor, { ombre: false });
   dome.userData.horsAOSol = true;
@@ -744,7 +785,10 @@ export function construireCarte(scene, renderer = null) {
   ch.plafond(1.75, 9.0, 5.3, 13.6, 2.4, 'platre');
   ch.plafond(5.3, 12.0, 5.8, 13.6, 2.4, 'platre');
   ch.plafond(4.6, 13.6, 5.8, 18.6, 2.4, 'platre');                   // C05
-  ch.plafond(5.3, 9.0, 13.5, 12.0, 2.6, 'plateaux');                 // la salle d'attente
+  // la salle d'attente : les plateaux perforés, sauf au bout ouest, devant le couloir C05, où ce sont des dalles lisses
+  // de 60 x 60 sur ossature (photos 04, 05 : au-dessus du photographe ; 09/10)
+  ch.plafond(6.5, 9.0, 13.5, 12.0, 2.6, 'plateaux');
+  ch.plafond(5.3, 9.0, 6.5, 12.0, 2.6, 'dalles', { retombees: false });
   ch.plafond(9.9, 4.8, 13.5, 9.0, 2.6, 'plateaux');                  // le cou
   ch.plafond(11.7, 12.0, 13.5, 20.6, 2.45, 'platre');                // C01
   ch.plafond(13.35, 0.3, 19.8, 7.5, 2.6, 'platre');                  // le hall d'entrée
@@ -789,8 +833,9 @@ export function construireCarte(scene, renderer = null) {
   // d'environnement reprise dans chaque pièce : js/ecole_lumieres.js.
   // (le bas de l'hémisphère : la lumière que le sol et les murs renvoient vers les plafonds — sur les photos, les plafonds
   // sont presque aussi clairs que les murs)
-  const hemi = new THREE.HemisphereLight(0xfff3e2, 0x9a948b, 0.5); scene.add(hemi);
-  const sun = new THREE.DirectionalLight(0xfff1de, 2.0);
+  // (09/10 : un rien moins chaudes — #FFF3E2 / #FFF1DE -> #FFF6EC / #FFF4E6 : les blancs viraient au crème)
+  const hemi = new THREE.HemisphereLight(0xfff6ec, 0x9a948b, 0.5); scene.add(hemi);
+  const sun = new THREE.DirectionalLight(0xfff4e6, 2.0);
   const cible = new THREE.Vector3(cx, 0, cz);
   sun.position.copy(DIR_LUMIERE).multiplyScalar(40).add(cible);
   sun.target.position.copy(cible); scene.add(sun.target);
@@ -821,6 +866,8 @@ export function construireCarte(scene, renderer = null) {
   // LA LUMIÈRE CUITE AU SOL (toutes les sources, découpées par les murs)
   const lm = cuireLumiereSol(C, ch.lampes, { x0: RECT.x0, z0: -RECT.y1, W, L }, { tpm: 16 });
   for (const m of [M.sol, M.solPassage]) { m.lightMap = lm; m.lightMapIntensity = 1.4; m.needsUpdate = true; }
+  // (le passage : le jour de la grille et les deux réglettes s'y ajoutent ; à 1,4 son carrelage sortait blanc — 09/10)
+  M.solPassage.lightMapIntensity = 0.85;
 
   scene.userData.interieur = true;
   scene.userData.sunDir = DIR_LUMIERE.clone();
