@@ -252,7 +252,7 @@ function texCannele(copieur) {
   return canvasTex(256, 576, (g, w, h) => {
     const m = h / 2.35;                              // pixels par mètre (le pan fait 2,35 m de haut)
     const fond = g.createLinearGradient(0, 0, 0, h);
-    fond.addColorStop(0, '#dfe6ec'); fond.addColorStop(0.45, '#c6d0d8'); fond.addColorStop(1, '#a9b2b9');
+    fond.addColorStop(0, '#cbd6df'); fond.addColorStop(0.45, '#aebbc6'); fond.addColorStop(1, '#8e99a2');
     g.fillStyle = fond; g.fillRect(0, 0, w, h);
     if (copieur) {
       // (vu du couloir, le photocopieur est contre le jambage de la porte du hall : à droite du pan)
@@ -294,9 +294,12 @@ function matieresEst() {
     orange: std({ map: texPeinture(0xd9782a, 4), roughness: 0.62, side: THREE.DoubleSide }, 'peinture orange (échiffre)'),
     plinthe: std({ color: 0x5a534b, roughness: 0.5 }, 'plinthe gris foncé'),
     poteau: std({ color: 0x8a8580, roughness: 0.62 }, 'poteau gris'),
-    lino: std({ map: texMouchete({ fond: [185, 177, 166], taches: [[[232, 228, 220], 0.9], [[90, 85, 78], 0.85], [[150, 143, 133], 0.7]], n: 9000, graineN: 11 }), roughness: 0.42 }, 'lino moucheté clair'),
-    vinyle: std({ map: texMouchete({ fond: [127, 118, 106], taches: [[[168, 160, 146], 0.85], [[78, 72, 64], 0.85], [[196, 190, 178], 0.6]], n: 8000, graineN: 13 }), roughness: 0.5 }, 'vinyle moucheté du 1er'),
-    giron: std({ map: texMouchete({ fond: [95, 90, 82], taches: [[[150, 145, 136], 0.8], [[60, 56, 50], 0.8]], n: 5000, tuile: 0.5, w: 256, graineN: 17, nuee: 4 }), roughness: 0.62 }, 'giron moucheté'),
+    lino: std({ map: texMouchete({ fond: [158, 152, 143], taches: [[[214, 210, 202], 0.9], [[80, 76, 70], 0.85], [[128, 122, 113], 0.7]], n: 9000, graineN: 11 }), roughness: 0.38 }, 'lino moucheté clair'),
+    vinyle: std({ map: texMouchete({ fond: [86, 79, 70], taches: [[[132, 124, 110], 0.85], [[52, 47, 41], 0.85], [[160, 153, 140], 0.5]], n: 8000, graineN: 13 }), roughness: 0.55 }, 'vinyle moucheté du 1er'),
+    giron: std({ map: texMouchete({ fond: [64, 63, 61], taches: [[[112, 110, 106], 0.75], [[40, 39, 37], 0.8]], n: 5000, tuile: 0.5, w: 256, graineN: 17, nuee: 4 }), roughness: 0.66 }, 'giron moucheté'),
+    // (le béton peint des volées et des paliers : vu d'en dessous, il ne reçoit que le rebond — sur la photo 25, la
+    // sous-face au-dessus de la volée 1 est presque aussi claire que les murs : un léger émissif, comme les plafonds)
+    beton: std({ color: 0xe9e6e0, roughness: 0.88, emissive: 0xd8d4cc, emissiveIntensity: 0.22 }, 'béton peint (escalier est)'),
     contremarche: std({ color: 0x151311, roughness: 0.7 }, 'contremarche noire'),
     nez: std({ color: 0x9a9894, roughness: 0.32, metalness: 0.75 }, 'nez de marche aluminium'),
     bande: std({ color: 0x454443, roughness: 0.92 }, 'bande antidérapante'),
@@ -308,19 +311,19 @@ function matieresEst() {
     tapis: std({ map: texTapis(), roughness: 0.85 }, 'tapis strié noir'),
     tapis1: std({ map: texTapis(true), roughness: 0.9 }, 'tapis strié du 1er'),
     reglette: std({ color: 0xf2f1ed, roughness: 0.4 }, 'réglette'),
-    diffuseur: new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff1d8).multiplyScalar(2.4) }),
+    diffuseur: new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffe4b8).multiplyScalar(2.4) }),
     embout: std({ color: 0xe8701e, roughness: 0.5, emissive: 0xe8701e, emissiveIntensity: 0.5 }, 'embout de réglette'),
   };
   P.diffuseur.name = 'diffuseur de réglette allumé';
   // (les vitres cannelées : opaques ici, éclairées par derrière — le bureau est allumé)
   for (const k of [1, 2]) {
     const t = texCannele(k === 1);
-    P['cannele' + k] = std({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.32, roughness: 0.25, metalness: 0.05 }, 'verre cannelé ' + k);
+    P['cannele' + k] = std({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.16, roughness: 0.25, metalness: 0.05 }, 'verre cannelé ' + k);
   }
   for (const m of [P.jaune, P.orange]) detailPhoto(m, 'beton', 1, 1, { relief: 0.035, grain: 0, rugo: false });
   // (le lino clair : sa lumière cuite est celle du carrelage du rez-de-chaussée, moins forte — il renvoie plus)
-  P.lino.lightMapIntensity = 0.9;
-  P.vinyle.lightMapIntensity = 1.3;
+  P.lino.lightMapIntensity = 0.6;
+  P.vinyle.lightMapIntensity = 0.8;
   return P;
 }
 const matPanneau = (tex, rugo = 0.45) => new THREE.MeshStandardMaterial({ map: tex, roughness: rugo });
@@ -479,7 +482,7 @@ function volee(ch, parent, { x0, sens, y0, y1, b, n, r, g, pleine = false, sous 
     p.push([(n - 1) * g, b + (n - 1) * r - 0.3], [0, b - 0.25]);
   }
   const sh = new THREE.Shape(); p.forEach(([s, h], i) => (i ? sh.lineTo(s, h) : sh.moveTo(s, h)));
-  maille(new THREE.ExtrudeGeometry(sh, { depth: L, bevelEnabled: false }), M.beton, x0, 0, sens > 0 ? -y1 : -y0, sens > 0 ? 0 : Math.PI, parent);
+  maille(new THREE.ExtrudeGeometry(sh, { depth: L, bevelEnabled: false }), X.beton, x0, 0, sens > 0 ? -y1 : -y0, sens > 0 ? 0 : Math.PI, parent);
   const sof = (s) => b - 0.25 + s * ((b + (n - 1) * r - 0.3) - (b - 0.25)) / ((n - 1) * g);
   // les marches : le giron moucheté, le nez ; les contremarches noires (un parement de 6 mm devant le béton)
   for (let i = 0; i < n - 1; i++) {
@@ -618,9 +621,10 @@ export function poserEst(ch, { RECT }) {
   // 1,5 vantail dans la ligne du mur d'échiffre : le vantail ouest (0,85 m, oculus cerclé de bois, bâton de tirage inox,
   // étiquette rouge) s'ouvre tout seul ; le vantail est (0,50 m, lisse) reste entrebâillé vers l'escalier (photo 26)
   mur(ch, D, { de: [14.525, E.yE], a: [E.x0, E.yE], mats: B0, ouvertures: [{ c: 15.375, l: 1.35, h: 2.1 }] });
-  chambranle(ch, D, 'x', E.yE, 14.70, E.x0, 0, 2.06, 0.15, { 1: [false, false], [-1]: [false, true] });
+  // (côté vestibule, le jambage est descend jusqu'au sol : le bout de la 1re marche bute dessus, photo 26)
+  chambranle(ch, D, 'x', E.yE, 14.70, E.x0, 0, 2.06, 0.15, { 1: [false, true], [-1]: [false, true] });
   ch.porte('x', E.yE, 15.125, { l: 0.85, h: 2.06, modele: 'grise', etat: 'auto', cote: 'S', huisserie: false, oculus: 'long', poignee: 'tirant', feu: true, matVantail: X.taupe, nom: 'vestibule est' });
-  ch.porte('x', E.yE, 15.8, { l: 0.5, h: 2.06, modele: 'grise', etat: 'ouverte', angle: 0.5, cote: 'N', charniere: 'd', huisserie: false, oculus: false, poignee: null, matVantail: X.taupe, nom: 'vestibule est (petit vantail)' });
+  ch.porte('x', E.yE, 15.8, { l: 0.5, h: 2.06, modele: 'grise', etat: 'ouverte', angle: 1.2, cote: 'N', charniere: 'd', huisserie: false, oculus: false, poignee: null, matVantail: X.taupe, nom: 'vestibule est (petit vantail)' });
   ch.sortie(15.85, E.yE + 0.12, 2.33, 'N');
   // le mur nord du vestibule (et de la cage) : une porte fermée vers le reste du quart nord-est, jamais vu
   mur(ch, D, { de: [13.65, E.yN], a: [E.xM, E.yN], h: N1, mats: B0, plinthes: ['S'], ouvertures: [{ c: 15.36, l: 0.93, h: 2.04 }] });
@@ -628,7 +632,7 @@ export function poserEst(ch, { RECT }) {
   ch.plafond(14.675, 10.8, E.x0, 12.45, HC, 'platre');
   ch.opale(15.36, 11.62, HC, 'escEst', { r: 0.19 });
   // (le chant de la dalle du 1er au-dessus du vestibule, vu de la volée 1)
-  B(ch, D, E.x0 - 0.1, 9.15, E.x0, 12.45, H_DALLE, N1 - 0.012, M.beton, { ombre: false });
+  B(ch, D, E.x0 - 0.1, 9.15, E.x0, 12.45, H_DALLE, N1 - 0.012, X.beton, { ombre: false });
 
   // =====================================================================
   //  L'ESCALIER, DU REZ-DE-CHAUSSÉE AU 1er (photos 25, 26)
@@ -637,7 +641,7 @@ export function poserEst(ch, { RECT }) {
   mur(ch, D, { de: [19.95, 7.65], a: [19.95, 12.6], ep: 0.3, h: N1, mats: B0, plinthes: ['W'] });
   mur(ch, D, { de: [E.x0, E.yE], a: [E.xP, E.yE], h: N1, mats: B0 });
   // LE PALIER INTERMÉDIAIRE (1,75 m) contre le mitoyen, plein ; ses plinthes ; le monde solide
-  B(ch, D, E.xP, E.bS[0], E.xM, E.bN[1], 0, E.hP1 - 0.02, M.beton);
+  B(ch, D, E.xP, E.bS[0], E.xM, E.bN[1], 0, E.hP1 - 0.02, X.beton);
   B(ch, D, E.xP, E.bS[0], E.xM, E.bN[1], E.hP1 - 0.02, E.hP1, X.giron);
   B(ch, D, E.xM - 0.015, E.bS[0], E.xM, E.bN[1], E.hP1, E.hP1 + 0.08, X.plinthe, { ombre: false });
   B(ch, D, E.xP + 0.05, E.bS[0], E.xM, E.bS[0] + 0.015, E.hP1, E.hP1 + 0.08, X.plinthe, { ombre: false });
@@ -672,8 +676,9 @@ export function poserEst(ch, { RECT }) {
   {
     const r2 = E.r2, sofHaut = (x) => E.hP2 - 0.25 + (E.xP - x) * ((E.hP2 + (E.n - 1) * r2 - 0.3) - (E.hP2 - 0.25)) / fin;
     const sh = new THREE.Shape();
-    sh.moveTo(E.x0, rail(v2, fin) - 0.9 + 0.13); sh.lineTo(E.xP, rail(v2, 0) - 0.9 + 0.13);
-    sh.lineTo(E.xP, sofHaut(E.xP)); sh.lineTo(E.x0, sofHaut(E.x0));
+    const xa = E.x0 + 0.004;                     // (en retrait du chant gris)
+    sh.moveTo(xa, rail(v2, fin) - 0.9 + 0.13); sh.lineTo(E.xP, rail(v2, 0) - 0.9 + 0.13);
+    sh.lineTo(E.xP, sofHaut(E.xP)); sh.lineTo(xa, sofHaut(xa));
     const o = new THREE.Mesh(new THREE.ShapeGeometry(sh), X.orange);
     o.position.z = -(E.bS[1] - 0.003); o.receiveShadow = true; o.userData.horsAOSol = true; D.add(o);
   }
@@ -682,7 +687,7 @@ export function poserEst(ch, { RECT }) {
   reglette(ch, D, E.xM, 10.0, 11.4, E.hP1 + 2.5, 'W');
   ch.lampes.push({ x: E.xM - 0.25, z: -10.7, h: E.hP1 + 2.5, zone: 'escEst', type: 'tube', force: 1.1, base: 0, cuire: false });
   ch.sortie(E.xM - 0.03, 11.0, E.hP1 + 2.85, 'W');
-  ch.panneau(matPanneau(texAfficheIris(), 0.55), 0.45, 0.82, E.xM - 0.004, 10.4, E.hP1 + 1.85, 'W');
+  ch.panneau(matPanneau(texAfficheIris(), 0.55), 0.45, 0.82, E.xM - 0.004, 10.62, E.hP1 + 1.85, 'W');
   // (pour la caméra : le dessous du palier de la volée 3, au-dessus du palier intermédiaire)
   C.plafond(E.xP, -E.bS[0], E.xM, -E.bN[1], E.hP2 - 0.25);
 
@@ -735,7 +740,7 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   // orange côté palier), le vantail de 0,95 m au nord, ouvert vers le couloir (gonds au nord, ferme-porte côté palier)
   mur(ch, G, { de: [13.55, 7.035], a: [13.55, 8.925], ep: 0.12, base: N1, h: DALLE2, mats: B0, plinthes: [['W', M.bois], 'E'], ouvertures: [{ c: 7.835, l: 1.43, h: N1 + 2.1 }] });
   ch.porte('y', 13.55, 7.36, { l: 0.48, h: 2.06, base: N1, ep: 0.12, modele: 'grise', etat: 'fermee', cote: 'E', oculus: false, poignee: null, fermePorte: false, huisserie: false, nom: 'palier est (semi-fixe)' });
-  ch.porte('y', 13.55, 8.075, { l: 0.95, h: 2.06, base: N1, ep: 0.12, modele: 'grise', etat: 'ouverte', angle: 1.5, cote: 'W', charniere: 'd', huisserie: false, nom: 'palier est (couloir du 1er)' });
+  ch.porte('y', 13.55, 8.075, { l: 0.95, h: 2.06, base: N1, ep: 0.12, modele: 'grise', etat: 'ouverte', angle: 1.75, cote: 'W', charniere: 'd', huisserie: false, nom: 'palier est (couloir du 1er)' });
   ch.panneau(matPanneau(texAfficheOrange(), 0.6), 0.21, 0.297, 13.603, 7.36, N1 + 1.4, 'E');
   // l'huisserie (métal blanc) autour des deux vantaux
   for (const [y0, y1] of [[7.08, 7.12], [8.55, 8.59]]) B(ch, G, 13.48, y0, 13.62, y1, N1, N1 + 2.1, M.huisserie, { ombre: false });
@@ -755,6 +760,11 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   // le mitoyen au nord de l'issue de secours (js/ecole_etage1.js le monte jusqu'à y 8,99) ; le mur d'échiffre
   mur(ch, G, { de: [19.95, 8.99], a: [19.95, 12.6], ep: 0.3, base: N1, h: H_CAGE, mats: B0 });
   mur(ch, G, { de: [E.x0, E.yE], a: [E.xP, E.yE], base: N1, h: H_CAGE, mats: B0 });
+  // (les plinthes du palier sont gris foncé, photo 28 : sur la cloison des salles et le mitoyen de js/ecole_etage1.js, qui
+  // portent les plinthes de bois du couloir, une plinthe grise par-dessus)
+  for (const [a, b] of [[13.61, 14.87], [15.83, 16.67], [17.63, E.xM]]) B(ch, G, a, 7.034, b, 7.052, N1, N1 + 0.082, X.plinthe, { ombre: false });
+  B(ch, G, E.xM - 0.017, 7.035, E.xM, 7.47, N1, N1 + 0.082, X.plinthe, { ombre: false });
+  B(ch, G, E.xM - 0.017, 8.43, E.xM, 9.0, N1, N1 + 0.082, X.plinthe, { ombre: false });
   // LE CHANT GRIS du mur d'échiffre (photo 28 : ≈ 10 cm, comme le poteau du rez-de-chaussée)
   B(ch, G, E.x0 - 0.006, E.yE - 0.08, E.x0, E.yE + 0.08, N1, H1, X.poteau, { ombre: false });
   // LES PLAFONDS : le palier (plâtre, 2,50 m), la retombée du renfoncement nord, la bande sud
@@ -804,14 +814,14 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   limon(ch, G, { ...v3, y: E.bN[1], cote: 1 }); limon(ch, G, { ...v3, y: E.bN[0], cote: -1 });
   limon(ch, G, { ...v4, y: E.bS[0], cote: -1 }); limon(ch, G, { ...v4, y: E.bS[1], cote: 1 });
   // le palier à 5,05 m (dalle), ses plinthes ; le palier du 2e (dalle de 6,40 à 6,60), son chant
-  B(ch, G, E.xP, E.bS[0], E.xM, E.bN[1], E.hP2 - 0.25, E.hP2 - 0.02, M.beton);
+  B(ch, G, E.xP, E.bS[0], E.xM, E.bN[1], E.hP2 - 0.25, E.hP2 - 0.02, X.beton);
   B(ch, G, E.xP, E.bS[0], E.xM, E.bN[1], E.hP2 - 0.02, E.hP2, X.giron);
   B(ch, G, E.xM - 0.015, E.bS[0], E.xM, E.bN[1], E.hP2, E.hP2 + 0.08, X.plinthe, { ombre: false });
   C.sol(E.xP, -E.bS[0], E.xM, -E.bN[1], E.hP2);
   C.ajouterBoite(E.xP, -E.bS[0], E.xM, -E.bN[1], { y0: E.hP2 - 0.25, y1: E.hP2, joueur: false });
-  B(ch, G, 14.2, E.bS[0], E.x0, E.bS[1], DALLE2, N2 - 0.02, M.beton);
+  B(ch, G, 14.2, E.bS[0], E.x0, E.bS[1], DALLE2, N2 - 0.02, X.beton);
   B(ch, G, 14.2, E.bS[0], E.x0, E.bS[1], N2 - 0.02, N2, X.vinyle);
-  B(ch, G, E.x0 - 0.1, E.bS[0], E.x0, E.bS[1], H1, DALLE2, M.beton, { ombre: false });
+  B(ch, G, E.x0 - 0.1, E.bS[0], E.x0, E.bS[1], H1, DALLE2, X.beton, { ombre: false });
   C.sol(14.2, -E.bS[0], E.x0, -E.bS[1], N2);
   C.ajouterBoite(14.2, -E.bS[0], E.x0, -E.bS[1], { y0: DALLE2, y1: N2, joueur: false });
   // le palier du 2e : ses murs, sa porte grise (fermée) et sa plaque
