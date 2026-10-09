@@ -5,7 +5,7 @@
 // (CORE), et un fichier lourd corrigé n'est servi frais qu'au lancement suivant sans changement de version. Changer la
 // version purge les anciens caches à l'activation : c'est la seule garantie. (Le numéro est aussi celui qu'affiche
 // l'écran de chargement, js/chargement.js, et le nom du cache qu'il remplit.)
-const VERSION = 'iris-v1.1';
+const VERSION = 'iris-v1.2';
 const CORE = ['./', './index.html', './css/style.css', './manifest.webmanifest', './assets/icons/icon-192.png', './assets/icons/icon-512.png',
   './assets/icons/icon-maskable-192.png', './assets/icons/icon-maskable-512.png', './assets/chargement/logo_iris.webp'];
 

@@ -4,7 +4,7 @@ Un jeu à part, tiré de **LA CAGE** : le même moteur, le même rendu et la mê
 y promène **Haythem**, et rien que lui, dans l'école **IRIS** (MediaSchool) : marcher, courir, sprinter, sauter,
 s'asseoir, danser, sortir son téléphone. Pas de match, pas de score, pas de boutique : une balade libre.
 
-> État actuel : le **rez-de-chaussée de l'école** est construit d'après les 21 photos de Haythem (`references/ecole/`,
+> État actuel : le **rez-de-chaussée de l'école** est construit d'après les 22 photos de Haythem (`references/ecole/`, la 22e une ancienne photo du hall,
 > hors du dépôt) : le passage des étudiants et sa grille, le hall ouest, l'escalier jusqu'au palier du 1er étage, les
 > couloirs C05 et C01, la salle d'attente au mur safran, le hall d'entrée et l'accueil, la porte n° 6 et la façade sur la
 > rue. Les pièces jamais photographiées du rez-de-chaussée (salle A, bureau B, toilettes, local, couloir de service) se
@@ -119,14 +119,14 @@ renvois à l'origine du code, ces fichiers n'existent pas ici.
 | Le hall ouest | plan d'évacuation, porte grise du couloir de service, extincteur, radiateur, affiche jaune du tri, portes coupe-feu (le vantail gauche ouvert) | 06, 20, 04 |
 | L'escalier | deux volées de 10 marches, palier à 1,75 m, garde-corps à barreaux, main courante, palier du 1er étage (double porte ouverte) ; il continue jusqu'au palier du 2e (6,60 m, double porte fermée) | 20, 06 |
 | Le couloir C05 | porte de secours en verre dépoli bleu au fond | 05 |
-| La salle d'attente | mur safran et sa lisse blanche, panneau DAE, écran, chaises coque (on s'y assoit), jours dépolis, borne, pilier, présentoir | 02, 21 |
+| La salle d'attente | mur safran et sa lisse blanche, panneau DAE, écran, chaises coque (on s'y assoit), jours dépolis, borne, pilier (face au cou : la plaque « iris », l'annuaire des salles et l'horloge à diodes rouges, à l'heure de l'ordinateur), présentoir, kakémono des formations (Bac pro, BTS, Bac+3, Bac+5) | 02, 21, 22 |
 | Le couloir C01 | gaine technique, toilettes, local | 01 |
 | La salle A (informatique) * | trois rangées de cinq postes (on s'assoit), bureau de l'enseignant, toile et vidéoprojecteur, tableau blanc, stores, dalles LED | — |
 | Le bureau B * | bureau de chêne, fauteuil et chaises visiteurs (on s'assoit), armoire, bibliothèque, tableau, plante | — |
 | Le couloir de service * | derrière la porte grise du hall ouest et la porte blanche du passage : porte de secours, bacs, chariot de ménage | — |
 | Le local technique * | baies serveurs aux diodes qui clignotent, onduleur, tableau électrique, étagères, photocopieur, établi | — |
 | Les toilettes * | faïence, cabines aux portes safran, cabine PMR ouverte, vasques, grand miroir (un vrai miroir sur PC) | — |
-| Le hall d'entrée | porte n° 6 (automatique) et ses vitrophanies, tapis, comptoir d'accueil, fenêtres à barreaux | 03, 16 |
+| Le hall d'entrée | porte n° 6 (automatique) et ses vitrophanies, tapis, comptoir d'accueil, fenêtres à barreaux, totem noir « 1ère école pour le BTS SIO en France » | 03, 16, 22 |
 | La rue | trottoirs (pavés devant le n° 8), chaussée (reprises, lignes, rond peint, pièce de pavés, plaques), façade de l'école (drapeaux en V, écusson), les deux totems « iris », jardinières de zinc, bambou, palmier, bancs à lattes (on s'y assoit), corbeille, cendrier, bacs roulants, huit voitures garées, motos, scooters (l'un sous sa housse), vélos, station de réparation et arceaux, le 5/7, le jardin derrière sa grille doublée de brande, l'impasse et la marquise du n° 10, le carrefour (trois immeubles, potelets) | 07 à 18 |
 | 1er étage : le palier d'étage | mur safran et panneau de l'étage, banc, plan d'évacuation, extincteur, local ménage (fermé) | *imaginé* |
 | 1er étage : le couloir | portes grises et leurs plaques, tableau de liège, affiches, fontaine à eau, horloge, issue de secours (fermée) | *imaginé* (comme 01) |

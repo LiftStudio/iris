@@ -160,7 +160,8 @@ export function poserMobilier(ch) {
   // (contre le mur est, à l'entrée du C01, tourné vers l'ouest : photo 21)
   ch.boite(13.38, 12.15, 13.42, 12.95, 0, 2.0, M.noir);
   ch.boite(13.3, 12.2, 13.48, 12.9, 0, 0.06, M.aluGris);
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3b3b3b', '#1d1d1d', 6), roughness: 0.6 }), 0.78, 1.9, 13.377, 12.55, 1.02, 'W');
+  // (photo 22 : c'est le panneau des formations — « Initial ou alternance », les bandeaux orange Bac pro, BTS, Bac+3, Bac+5)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texFormations(), roughness: 0.6 }), 0.78, 1.9, 13.377, 12.55, 1.02, 'W');
   C.ajouterBoite(13.28, -12.95, 13.5, -12.15, { y1: 2 });
   // (09/10 : les affichettes du fond suivent le radiateur, juste à gauche du pilier sur la photo 21 ; y 9,55 -> 10,05)
   const wifi = new THREE.MeshStandardMaterial({ map: texWifi(), roughness: 0.45 });
@@ -177,6 +178,12 @@ export function poserMobilier(ch) {
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e8eef8', '#ffffff', 9), roughness: 0.7 }), 0.42, 0.6, 10.294, 10.05, 1.72, 'W');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#f08a3c', '#ffffff', 10), roughness: 0.7 }), 0.3, 0.42, 10.294, 10.05, 1.2, 'W');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3e9b6b', '#ffffff', 11), roughness: 0.7 }), 0.21, 0.42, 10.45, 10.356, 1.55, 'N');
+  // LA FACE SUD DU PILIER, celle qu'on voit en arrivant par le cou (photo 22, l'ancienne photo du hall) : la plaque
+  // « iris » de l'Institut et l'annuaire des salles en dessous, et l'horloge à diodes rouges au-dessus — elle donne
+  // l'heure et le jour de l'ordinateur du joueur
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texPlaqueIris(), roughness: 0.45 }), 10.6, 9.75, 'S', 0.46, 1.02, 1.94, 0.012);
+  ch.boite(10.39, 9.69, 10.81, 9.75, 2.1, 2.34, M.noir);
+  ch.panneau(matHorloge(), 0.4, 0.2, 10.6, 9.6895, 2.22, 'S');
   // les affiches scotchées sur les jours dépolis
   [[6.3, 1.7, '#e07b2a'], [6.95, 1.85, '#2f6fb0'], [8.0, 1.75, '#3e9b6b'], [8.65, 1.9, '#7b2a6e']].forEach(([x, h, c], i) =>
     ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche(c, '#fbfbf8', 20 + i), roughness: 0.7 }), 0.21, 0.297, x, 9.088, h, 'N'));
@@ -261,6 +268,14 @@ export function poserMobilier(ch) {
   ch.boite(18.36, 0.42, 18.84, 0.48, 0.52, 1.1, new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.9 }));   // le manteau moutarde
   // l'affiche bleue étroite sur le trumeau entre les fenêtres de l'accueil
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2b4c9b', '#2b4c9b', 50), roughness: 0.6 }), 0.3, 0.9, 18.15, 0.006, 1.55, 'N');
+  // LE TOTEM NOIR « 1ère école pour le BTS SIO en France » (photo 22 : il était dans la salle d'attente, à la place de
+  // la borne d'aujourd'hui) : contre le mur nord du hall, face à la porte 6 — on le voit en entrant
+  const totem = new THREE.Group(); totem.position.set(14.75, 0, -7.4); ch.decor.add(totem);
+  maille(boiteM(0.86, 0.03, 0.26), M.aluGris, 0, 0.015, 0, 0, totem);
+  maille(boiteM(0.8, 2.0, 0.04), M.noir, 0, 1.03, 0, 0, totem);
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 1.96), new THREE.MeshStandardMaterial({ map: texTotemBTS(), roughness: 0.5 }));
+  face.position.set(0, 1.03, 0.021); face.receiveShadow = true; totem.add(face);
+  C.ajouterBoite(14.3, -7.55, 15.2, -7.25, { y1: 2.05 });
 }
 
 // ---- les petites textures du mobilier ----
@@ -336,4 +351,125 @@ function texToilettes() {
     g.strokeStyle = '#f2f2f2'; g.lineWidth = 4; g.beginPath(); g.arc(48, 92, 10, 0, 7); g.stroke();
     g.font = '600 13px "Segoe UI", sans-serif'; g.fillText('Toilettes', 18, 120);
   }, null, false, 2);
+}
+
+// ---- LA SIGNALÉTIQUE DE L'ÉCOLE (photo 22) ----
+// le logo « iris » : le mot en blanc, la coche orange sur le point du premier i ; (x, y) = le milieu de sa ligne de base
+function logoIris(g, x, y, taille, couleur = '#ffffff') {
+  g.font = `600 ${taille}px "Century Gothic", "Avenir", "Futura", "Segoe UI", sans-serif`;
+  g.textBaseline = 'alphabetic'; g.textAlign = 'left';
+  const w = g.measureText('iris').width, wi = g.measureText('i').width, x0 = x - w / 2;
+  g.fillStyle = couleur; g.fillText('iris', x0, y);
+  g.fillStyle = '#f08a24'; g.fillRect(x0 + wi * 0.12, y - taille * 0.8, wi * 0.76, taille * 0.15);
+}
+// un QR code figuré (blanc, modules noirs, les trois repères)
+function qrFigure(g, x, y, c) {
+  g.fillStyle = '#f4f4f4'; g.fillRect(x, y, c, c);
+  const m = c / 25; g.fillStyle = '#111';
+  for (let i = 1; i < 24; i++) for (let j = 1; j < 24; j++) if (((i * 13 + j * 7 + i * j * 3) % 5) < 2) g.fillRect(x + i * m, y + j * m, m, m);
+  for (const [a, b] of [[1, 1], [17, 1], [1, 17]]) {
+    g.fillStyle = '#111'; g.fillRect(x + a * m, y + b * m, 7 * m, 7 * m);
+    g.fillStyle = '#f4f4f4'; g.fillRect(x + (a + 1) * m, y + (b + 1) * m, 5 * m, 5 * m);
+    g.fillStyle = '#111'; g.fillRect(x + (a + 2) * m, y + (b + 2) * m, 3 * m, 3 * m);
+  }
+}
+// LA PLAQUE DU PILIER : en haut, sur blanc, le logo dans son pavé noir et « Institut supérieur de ressources
+// informatiques » ; en bas, sur noir, l'annuaire (la salle en blanc, le niveau en orange à droite)
+function texPlaqueIris() {
+  return canvasTex(384, 768, (g, w, h) => {
+    g.fillStyle = '#f7f7f4'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#161616'; g.fillRect(84, 44, 216, 128);
+    logoIris(g, w / 2, 140, 86);
+    g.fillStyle = '#3c3c3c'; g.font = '600 21px "Segoe UI", Arial, sans-serif'; g.textAlign = 'center';
+    ['INSTITUT SUPÉRIEUR', 'DE RESSOURCES', 'INFORMATIQUES'].forEach((t, i) => g.fillText(t, w / 2, 222 + i * 28));
+    g.fillStyle = '#161616'; g.fillRect(0, 372, w, h - 372);
+    const salles = [['Accueil - Réception', 'RDC'], ['Salle Tim Berners-Lee', 'B 1'], ['Salle David Clark', 'B 2'], ['Pause extérieure', 'RDC'],
+      ['Nos niveaux 1/2/3/4/5', '▲'], ['Nos niveaux -1/-2', '▼'], ['Direction des Études', '1']];
+    salles.forEach(([s, n], i) => {
+      const y = 418 + i * 48;
+      g.textAlign = 'left'; g.fillStyle = '#f2f2f2'; g.font = '500 20px "Segoe UI", Arial, sans-serif'; g.fillText(s, 22, y);
+      g.textAlign = 'right'; g.fillStyle = '#f08a24'; g.font = '700 20px "Segoe UI", Arial, sans-serif'; g.fillText(n, w - 22, y);
+      g.fillStyle = 'rgba(255,255,255,0.12)'; g.fillRect(22, y + 16, w - 44, 1.5);
+    });
+    g.textAlign = 'left';
+  }, null, false, 8);
+}
+// L'HORLOGE À DIODES ROUGES : l'heure en grand, le jour et la date dessous (« VEN 09 »), sur fond noir ; les segments
+// éteints se devinent. Elle suit l'horloge de l'ordinateur (redessinée toutes les 10 s).
+function matHorloge() {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+  const g = c.getContext('2d'), t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  const JOURS = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
+  const dessiner = () => {
+    const d = new Date(), p2 = (n) => String(n).padStart(2, '0');
+    g.fillStyle = '#0a0a0a'; g.fillRect(0, 0, 256, 128);
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    g.font = '700 66px "Consolas", "Lucida Console", "Courier New", monospace';
+    g.fillStyle = 'rgba(255,40,20,0.1)'; g.fillText('88:88', 128, 66);
+    g.shadowColor = '#ff2a14'; g.shadowBlur = 10; g.fillStyle = '#ff3a22';
+    g.fillText(`${p2(d.getHours())}:${p2(d.getMinutes())}`, 128, 66);
+    g.shadowBlur = 0; g.font = '700 34px "Consolas", "Lucida Console", "Courier New", monospace';
+    g.fillStyle = 'rgba(255,40,20,0.1)'; g.fillText('888 88', 128, 112);
+    g.shadowBlur = 8; g.fillStyle = '#ff3a22'; g.fillText(`${JOURS[d.getDay()]} ${p2(d.getDate())}`, 128, 112);
+    g.shadowBlur = 0;
+    t.needsUpdate = true;
+  };
+  dessiner(); setInterval(dessiner, 10000);
+  return new THREE.MeshBasicMaterial({ map: t, color: new THREE.Color(1.6, 1.6, 1.6) });
+}
+// LE PANNEAU DES FORMATIONS (kakémono noir, photo 22) : le logo, « Initial ou alternance », puis les quatre bandeaux
+// orange (du plus clair au plus soutenu) et leurs formations, l'adresse du site et le QR code au pied
+function texFormations() {
+  return canvasTex(320, 780, (g, w, h) => {
+    g.fillStyle = '#151515'; g.fillRect(0, 0, w, h);
+    logoIris(g, w / 2, 92, 72);
+    g.fillStyle = '#f2f2f2'; g.font = '600 17px "Segoe UI", Arial, sans-serif'; g.textAlign = 'center';
+    g.fillText('INITIAL OU ALTERNANCE', w / 2, 140);
+    const blocs = [['BAC PRO', '#f7a541', ['BAC pro SEN']], ['BTS', '#f39325', ['BTS SIO', 'BTS SN']],
+      ['BAC+3', '#ee7d11', ['DEESIRS', 'DEESINF', 'DEESWEB', 'Traffic Manager', 'Développeur', "  d'applications mobiles"]],
+      ['BAC+5', '#e46510', ['Master européen', '  en informatique', 'Master européen', '  en e-communication']]];
+    let y = 160;
+    g.textAlign = 'left';
+    for (const [titre, teinte, lignes] of blocs) {
+      g.fillStyle = teinte; g.fillRect(16, y, w - 32, 34);
+      g.fillStyle = '#ffffff'; g.font = '800 23px "Segoe UI", Arial, sans-serif'; g.fillText(titre, 28, y + 26);
+      y += 56;
+      g.font = '500 16px "Segoe UI", Arial, sans-serif'; g.fillStyle = '#e8e8e8';
+      for (const l of lignes) { const suite = l.startsWith('  '); g.fillText(suite ? l.trim() : '• ' + l, suite ? 44 : 28, y); y += 21; }
+      y += 6;
+    }
+    g.fillStyle = '#d8d8d8'; g.font = '600 16px "Segoe UI", Arial, sans-serif'; g.fillText('www.ecoleiris.fr', 24, h - 34);
+    qrFigure(g, w - 92, h - 96, 72);
+  }, null, false, 8);
+}
+// LE TOTEM « 1ère école pour le BTS SIO en France » (photo 22) : noir, le logo en haut, l'accroche en grandes capitales,
+// « Bac à Bac+5 » en orange, le site et le QR code au pied
+function texTotemBTS() {
+  return canvasTex(320, 800, (g, w, h) => {
+    const d = g.createLinearGradient(0, 0, 0, h); d.addColorStop(0, '#1b1b1b'); d.addColorStop(1, '#0f0f0f');
+    g.fillStyle = d; g.fillRect(0, 0, w, h);
+    logoIris(g, w / 2, 128, 96);
+    g.textAlign = 'center'; g.fillStyle = '#9a9a9a'; g.font = '600 12px "Segoe UI", Arial, sans-serif';
+    g.fillText('INSTITUT SUPÉRIEUR DE RESSOURCES INFORMATIQUES', w / 2, 162);
+    // « 1ère ÉCOLE » : le « ère » en exposant, la ligne mesurée puis centrée
+    g.fillStyle = '#ffffff'; g.textAlign = 'left';
+    const grand = '800 40px "Segoe UI", Arial, sans-serif', petit = '800 20px "Segoe UI", Arial, sans-serif';
+    g.font = grand; const w1 = g.measureText('1').width, wE = g.measureText(' ÉCOLE').width;
+    g.font = petit; const wr = g.measureText('ère').width;
+    let x = (w - (w1 + wr + wE)) / 2;
+    g.font = grand; g.fillText('1', x, 290); x += w1;
+    g.font = petit; g.fillText('ère', x + 1, 270); x += wr + 1;
+    g.font = grand; g.fillText(' ÉCOLE', x, 290);
+    g.textAlign = 'center';
+    g.font = '700 27px "Segoe UI", Arial, sans-serif';
+    g.fillText('POUR LE BTS SIO', w / 2, 330); g.fillText('EN FRANCE', w / 2, 364);
+    g.fillStyle = '#f08a24'; g.fillRect(w / 2 - 40, 392, 80, 4);
+    g.fillStyle = '#f2f2f2'; g.font = '600 22px "Segoe UI", Arial, sans-serif';
+    ['ÉCOLE', "DE L'INFORMATIQUE", 'ET DU NUMÉRIQUE'].forEach((t, i) => g.fillText(t, w / 2, 444 + i * 30));
+    g.fillStyle = '#f08a24'; g.font = '800 30px "Segoe UI", Arial, sans-serif'; g.fillText('BAC À BAC+5', w / 2, 574);
+    g.fillStyle = '#d8d8d8'; g.font = '600 17px "Segoe UI", Arial, sans-serif'; g.fillText('www.ecoleiris.fr', w / 2 - 36, h - 40);
+    qrFigure(g, w - 88, h - 92, 66);
+    g.textAlign = 'left';
+  }, null, false, 8);
 }
