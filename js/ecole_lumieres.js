@@ -62,8 +62,10 @@ export class LumieresEcole {
     this._choixT -= dt;
     if (this.zone && (this._choixT <= 0 || Math.hypot(px - this._px, pz - this._pz) > 0.4)) {
       this._choixT = 0.2; this._px = px; this._pz = pz;
-      const ok = new Set([this.zone.id, ...(this.zone.voisines || [])]);
-      const cand = this.lampes.filter((L) => ok.has(L.zone) && L.type !== 'aucune');
+      // les lampes de SA pièce, et celles des pièces qui s'y ouvrent — sauf, chez les voisines, celles qui sont plus haut
+      // qu'un plafond ordinaire (la cage d'escalier) : sans ombre, leur cône traverserait les dalles et les murs
+      const vois = new Set(this.zone.voisines || []), ici = this.zone.id;
+      const cand = this.lampes.filter((L) => L.type !== 'aucune' && (L.zone === ici || (vois.has(L.zone) && L.h <= 2.8)));
       cand.sort((a, b) => ((a.x - px) ** 2 + (a.z - pz) ** 2) / (a.poids || 1) - ((b.x - px) ** 2 + (b.z - pz) ** 2) / (b.poids || 1));
       this._cible = new Set(cand.slice(0, N_SPOTS));
     }

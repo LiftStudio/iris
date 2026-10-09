@@ -1498,8 +1498,8 @@ export class PostFX {
     const Z = this.scene.userData.zoneOmbre || { min: [-P.span, 0, -P.span], max: [P.span, 8, P.span] };
     const m = douces ? (q === 'extreme' ? -4 : 0) : 6;          // PCF sans fondu au bord : on couvre plus large
     let x0 = Z.min[0] - m, x1 = Z.max[0] + m, z0 = Z.min[2] - m, z1 = Z.max[2] + m, y1 = Z.max[1];
-    // (au téléphone, la carte est plafonnée à 2048 : c'est à la carte de déclarer une zone serrée — la salle d'essai :
-    // 21 x 21 m, 1 cm par texel)
+    // (au téléphone, la carte est plafonnée à 2048 : c'est à la carte de déclarer une zone serrée — l'école :
+    // 22 x 24 m, rez-de-chaussée et trottoir, 1 cm par texel)
     o.updateMatrixWorld(); o.target.updateMatrixWorld();
     const cible = new THREE.Vector3().setFromMatrixPosition(o.target.matrixWorld);
     const dir = cible.clone().sub(new THREE.Vector3().setFromMatrixPosition(o.matrixWorld)).normalize();

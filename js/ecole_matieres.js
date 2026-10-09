@@ -228,7 +228,7 @@ function texPeinture(hex, nuee = 5) {
 // (#A9A79F) plus fortes en bas. Tuile de dessin : 3,2 x 2,4 m.
 export const PIERRE = { u: 3.2, v: 2.4 };
 function texPierre() {
-  const W = TELEPHONE ? 512 : 1024, H = Math.round(W * 0.75), [br, bg, bb] = octets(0xd9dad5);
+  const W = TELEPHONE ? 512 : 1024, H = Math.round(W * 0.75), [br, bg, bb] = octets(0xd0d0ca);
   return canvasTex(W, H, (g, w, h) => {
     const r2 = graine(1821), pu = w / 4, pv = h / 4;
     for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) {
@@ -322,6 +322,16 @@ export function texSortie() {
     g.lineWidth = 8; g.beginPath(); g.moveTo(26, 48); g.lineTo(70, 48); g.stroke();
     g.beginPath(); g.moveTo(54, 32); g.lineTo(72, 48); g.lineTo(54, 64); g.stroke();
   }, null, false, 4);
+}
+// LE PICTOGRAMME DE L'EXTINCTEUR (photo 06) : rouge, l'extincteur et sa flamme en blanc
+export function texPictoExtincteur() {
+  return canvasTex(64, 64, (g, w, h) => {
+    g.fillStyle = '#d0262d'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#ffffff';
+    g.fillRect(14, 22, 12, 32); g.beginPath(); g.arc(20, 22, 6, Math.PI, 0); g.fill();
+    g.fillRect(18, 10, 4, 8); g.fillRect(20, 10, 14, 3); g.fillRect(31, 10, 3, 14);
+    g.beginPath(); g.moveTo(44, 54); g.quadraticCurveTo(36, 44, 44, 32); g.quadraticCurveTo(46, 40, 50, 36); g.quadraticCurveTo(56, 46, 50, 54); g.closePath(); g.fill();
+  }, null, false, 2);
 }
 // L'AUTOCOLLANT « iris » des portes vitrées du passage (photo 19) : pavé noir, « iris » blanc, la coche orange sur le i
 export function texAutocollantIris() {
@@ -467,7 +477,7 @@ export function materiauxEcole() {
   M.depoli = std({ color: 0xd3e6dd, roughness: 0.55, transparent: true, opacity: 0.86, emissive: 0xc8dcd2, emissiveIntensity: 0.18, depthWrite: true });
   M.depoli.name = 'verre dépoli menthe';
   // la porte de secours du fond (photo 05) : verre dépoli bleu, éclairé par le jour derrière
-  M.depoliBleu = std({ color: 0x5c7ba6, roughness: 0.5, emissive: 0x7d93b4, emissiveIntensity: 0.28 });
+  M.depoliBleu = std({ color: 0x4f6d96, roughness: 0.5, emissive: 0x7d93b4, emissiveIntensity: 0.13 });
   // les vitres de la façade vues de l'intérieur : le jour couvert derrière, un voile clair
   M.vitreJour = std({ color: 0xdeeaf6, roughness: 0.1, transparent: true, opacity: 0.22, depthWrite: false, envMapIntensity: 1.2, side: THREE.DoubleSide });
   // la fente vitrée des portes grises : un verre sombre (on ne voit qu'un reflet)
@@ -490,7 +500,7 @@ export function materiauxEcole() {
   // ---- la façade ----
   M.pierre = std({ map: texPierre(), roughness: 0.82 }); M.pierre.name = 'pierre calcaire de la façade';
   M.etage = std({ map: texEtage(), roughness: 0.7 }); M.etage.name = 'étages de la façade';
-  for (const m of [M.pierre, M.etage]) jourDehors(m, 0.2);
+  for (const m of [M.pierre, M.etage]) jourDehors(m, 0.1);
 
   // ---- ce qui ÉCLAIRE (couleurs au-dessus de 1 : le bloom les fait briller) ----
   const chaud = new THREE.Color(0xffe4be);

@@ -754,7 +754,7 @@ export function construireCarte(scene, renderer = null) {
   for (const [x, y] of [[11.0, 2.4], [12.5, 2.4]]) ch.spot(x, y, 2.6, 'bureauB', { reel: false });
   for (const [x, y] of [[6.1, 2.6], [8.6, 2.6], [6.1, 6.4], [8.6, 6.4]]) ch.spot(x, y, 2.6, 'salleA', { reel: false });
   ch.opale(3.2, 18.6, 3.75, 'escalier', { mur: 'S', r: 0.15 });
-  ch.opale(3.2, 13.4, H_CAGE, 'escalier', { r: 0.18 });
+  ch.opale(3.2, 13.4, H_CAGE, 'palier1', { r: 0.18 });
   ch.opale(3.9, 16.4, H_CAGE, 'escalier', { r: 0.18, cuire: false });
   ch.sortie(11.2, 9.6, 2.4, 'W', { suspendu: true });
   // LE JOUR qui entre (pour les spots : une lampe froide dehors, qui vise l'intérieur ; pour la lumière cuite : la source
@@ -811,7 +811,7 @@ export function construireCarte(scene, renderer = null) {
   const lumieres = new LumieresEcole(scene, { lampes: ch.lampes.filter((l) => l.reel !== false), zones });
   // LA LUMIÈRE CUITE AU SOL (toutes les sources, découpées par les murs)
   const lm = cuireLumiereSol(C, ch.lampes, { x0: RECT.x0, z0: -RECT.y1, W, L }, { tpm: 16 });
-  for (const m of [M.sol, M.solPassage]) { m.lightMap = lm; m.lightMapIntensity = 1.0; m.needsUpdate = true; }
+  for (const m of [M.sol, M.solPassage]) { m.lightMap = lm; m.lightMapIntensity = 1.4; m.needsUpdate = true; }
 
   scene.userData.interieur = true;
   scene.userData.sunDir = DIR_LUMIERE.clone();

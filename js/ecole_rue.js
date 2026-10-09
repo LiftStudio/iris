@@ -56,10 +56,10 @@ function texFacade({ fond, cadre = '#2b282a', verre = '#4d5a66', travee = 1.8, e
 export function poserRue(ch) {
   const { M, C } = ch;
   // (toutes les matières de la rue reçoivent le jour du ciel couvert : js/ecole_matieres.js jourDehors)
-  const std = (o) => jourDehors(new THREE.MeshStandardMaterial(o), 0.22);
+  const std = (o) => jourDehors(new THREE.MeshStandardMaterial(o), 0.12);
   // ---- le sol : trottoir, bordures, chaussée, trottoir d'en face ----
-  const trottoir = std({ map: texEnrobe(0x8f8d8e, 7), roughness: 0.9 });
-  const chaussee = std({ map: texEnrobe(0x7e7d7f, 11), roughness: 0.92 });
+  const trottoir = std({ map: texEnrobe(0x858385, 7), roughness: 0.9 });
+  const chaussee = std({ map: texEnrobe(0x727173, 11), roughness: 0.92 });
   for (const m of [trottoir, chaussee]) detailPhoto(m, 'beton', 4, 4, { relief: 0.5, grain: 0.15, rugo: true });
   const granit = std({ color: 0xa0a09b, roughness: 0.75 });
   const plan = (x0, y0, x1, y1, h, mat) => {

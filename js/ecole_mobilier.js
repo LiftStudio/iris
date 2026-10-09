@@ -12,7 +12,7 @@
 // accueil : 03).
 import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
-import { texAffiche, texConsignes, texTri, texEcran } from './ecole_matieres.js';
+import { texAffiche, texConsignes, texTri, texEcran, texPictoExtincteur } from './ecole_matieres.js';
 import { canvasTex } from './kit_decor.js';
 
 // ---- LES CHAISES COQUE (type Eames DAR) : coque moulée, piètement « tour Eiffel » chromé ----
@@ -143,7 +143,7 @@ export function poserMobilier(ch) {
   maille(new THREE.CylinderGeometry(0.03, 0.045, 0.08, 10), M.noirMat, 0, 1.48, 0, 0, ext);
   maille(boiteM(0.04, 0.06, 0.06), M.noirMat, -0.08, 1.35, 0, 0, ext);
   C.ajouterCercle(1.86, -11.2, 0.09, { y0: 0.9, y1: 1.6 });
-  ch.panneau(new THREE.MeshStandardMaterial({ color: 0xd0262d, roughness: 0.6 }), 0.18, 0.18, 1.755, 11.2, 1.9, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.16, 0.16, 1.755, 11.2, 1.9, 'E');
   // l'affiche jaune du tri, à gauche des portes de l'escalier
   cadreMural(ch, new THREE.MeshStandardMaterial({ map: texTri(), roughness: 0.6 }), 2.2, 13.6, 'S', 0.6, 1.1, 1.95);
 

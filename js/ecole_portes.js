@@ -149,7 +149,7 @@ function texVitrophanie(dos = false) {
       g.fillStyle = '#2a0f2e'; g.beginPath(); g.ellipse(fx, fy - ry * 0.78, rx * 0.95, ry * 0.42, 0, Math.PI, Math.PI * 2); g.fill();
       // les sourcils, les yeux levés (le blanc en bas, l'iris tout en haut), l'ombre du nez, la bouche
       for (const s2 of [-1, 1]) {
-        g.fillStyle = '#3a1438'; g.beginPath(); g.ellipse(fx + s2 * rx * 0.36, fy - ry * 0.36, rx * 0.22, ry * 0.045, s2 * -0.15, 0, Math.PI * 2); g.fill();
+        g.fillStyle = '#3a1438'; g.beginPath(); g.ellipse(fx + s2 * rx * 0.36, fy - ry * 0.43, rx * 0.21, ry * 0.04, s2 * 0.12, 0, Math.PI * 2); g.fill();   // (levés : il regarde en l'air)
         g.fillStyle = '#fbe9ef'; g.beginPath(); g.ellipse(fx + s2 * rx * 0.36, fy - ry * 0.18, rx * 0.16, ry * 0.07, 0, 0, Math.PI * 2); g.fill();
         g.fillStyle = '#2a0f2e'; g.beginPath(); g.arc(fx + s2 * rx * 0.36, fy - ry * 0.235, rx * 0.075, 0, 7); g.fill();
       }

@@ -4,9 +4,11 @@ Un jeu à part, tiré de **LA CAGE** : le même moteur, le même rendu et la mê
 y promène **Haythem**, et rien que lui, dans l'école **IRIS** (MediaSchool) : marcher, courir, sprinter, sauter,
 s'asseoir, danser, sortir son téléphone. Pas de match, pas de score, pas de boutique : une balade libre.
 
-> État actuel : le moteur est prêt et une **salle d'essai** provisoire (`js/carte_ecole.js`) aux couleurs de l'école
-> sert à l'éprouver (collisions, caméra, éclairage intérieur). L'intérieur de l'école, d'après les photos de Haythem
-> (`references/ecole/`, hors du dépôt), viendra la remplacer, pièce par pièce, dans ce même module.
+> État actuel : le **rez-de-chaussée de l'école** est construit d'après les 21 photos de Haythem (`references/ecole/`,
+> hors du dépôt) : le passage des étudiants et sa grille, le hall ouest, l'escalier jusqu'au palier du 1er étage, les
+> couloirs C05 et C01, la salle d'attente au mur safran, le hall d'entrée et l'accueil, la porte n° 6 et la façade sur la
+> rue. Les pièces jamais photographiées (salle A, bureau B, toilettes, bureaux, étages) sont derrière des portes fermées.
+> Le mobilier et la rue ont chacun leur module, dans une première version à compléter.
 
 ## Lancer le jeu
 
@@ -71,8 +73,13 @@ css/style.css         le style des écrans (HUD, options, téléphone, tactile, 
 js/main.js            le démarrage : réglages, jeu, téléphone, tactile, rideau de l'écran de chargement
 js/game.js            la boucle (pas fixe de 1/120 s + interpolation), la caméra, les sièges, la pause
 js/player.js          Haythem : avatar, animations, déplacement (inertie, endurance), saut, emotes, téléphone
-js/carte_ecole.js     LA CARTE : sol, murs, plafond, mobilier, lumières ; déclare les murs aux collisions
-js/collisions.js      le monde solide : murs, portes, piliers, plafonds ; questions du joueur et de la caméra
+js/carte_ecole.js     L'ÉCOLE : murs, portes, sols, plafonds, escalier, façade, lumières ; déclare tout au monde solide
+js/ecole_matieres.js  les matières dessinées (carrelage 60x120, plafonds perforés, peintures, pierre, signalétique)
+js/ecole_portes.js    les portes (fermées, ouvertes, AUTOMATIQUES) et les fenêtres, les vitrophanies de la porte 6
+js/ecole_lumieres.js  les spots qui suivent Haythem, la lumière cuite au sol, la carte d'environnement par pièce
+js/ecole_mobilier.js  le mobilier (chaises coque où l'on s'assoit, écran, borne, présentoir, affiches, accueil)
+js/ecole_rue.js       la rue (trottoir, chaussée, façades voisines et d'en face, impasse, carrefour)
+js/collisions.js      le monde solide : murs, portes, piliers, plafonds, sols et rampes (escalier)
 js/kit_decor.js       les outils de décor repris de LA CAGE : textures dessinées, relief, carte d'environnement
                       prise sur place, ombre cuite au sol, fusion des matériaux, vent des feuillages
 js/fx.js …            le rendu (voir plus haut)
@@ -87,39 +94,54 @@ tools/avatars_tel.py      refait l'avatar allégé des téléphones
 Les commentaires du moteur citent parfois des fichiers de LA CAGE (`js/court.js`, `js/monde_*.js`…) : ce sont des
 renvois à l'origine du code, ces fichiers n'existent pas ici.
 
-## Construire l'école (pour la suite)
+## L'école dans le jeu
 
-Tout se passe dans `js/carte_ecole.js`, dont `construireCarte(scene, renderer)` rend :
+| Pièce | Ce qu'on y trouve | Photos |
+|---|---|---|
+| Le passage des étudiants | grille noire ouverte sur la rue, réglettes fluorescentes, panneaux de liège, porte blanche « Sortie », portes vitrées aux autocollants « iris » (automatiques) | 07, 10, 19 |
+| Le hall ouest | plan d'évacuation, porte grise du couloir de service, extincteur, radiateur, affiche jaune du tri, portes coupe-feu (le vantail gauche ouvert) | 06, 20, 04 |
+| L'escalier | deux volées de 10 marches, palier à 1,75 m, garde-corps à barreaux, main courante, palier du 1er étage (double porte fermée) | 20, 06 |
+| Le couloir C05 | porte de secours en verre dépoli bleu au fond | 05 |
+| La salle d'attente | mur safran et sa lisse blanche, panneau DAE, écran, chaises coque (on s'y assoit), jours dépolis, borne, pilier, présentoir | 02, 21 |
+| Le couloir C01 | gaine technique, toilettes, local | 01 |
+| Le hall d'entrée | porte n° 6 (automatique) et ses vitrophanies, tapis, comptoir d'accueil, fenêtres à barreaux | 03, 16 |
+| La rue | trottoir, chaussée, façade de l'école (drapeaux, encadrements rouges), immeubles voisins et d'en face | 08 à 18 |
+
+Le départ est dans le hall d'entrée, juste passé la porte 6. Pause › **Revenir au départ** y ramène.
+
+## Construire la suite de l'école
+
+**Le plan.** `js/carte_ecole.js` parle en coordonnées du **plan** relevé sur les photos : x le long de la façade (0 =
+mitoyen ouest, côté impasse ; 19,8 = mitoyen est), y depuis le nu intérieur de la façade vers le fond du bâtiment
+(y < 0 : le trottoir et la rue). Dans le jeu : X = x, Z = -y, Y vers le haut, sol du rez-de-chaussée à 0.
+
+**Le chantier** (`ch`, classe `Chantier`) pose tout en coordonnées du plan, géométrie et monde solide ensemble :
 
 ```js
-{ nom, collisions, depart: { x, z, fx, fz }, bornes, sieges: [{ x, z, y, fx, fz, sx, sz, nom }] }
+ch.mur({ de: [x0, y0], a: [x1, y1], ep: 0.15, h: 3.25, mats: { N: M.orange, S: M.blanc }, plinthes: ['S'],
+         ouvertures: [{ c: 6.85, l: 0.93, h: 2.04 }, { c: 8.35, l: 1.3, bas: 0.95, h: 2.3 }] });  // porte, fenêtre
+ch.porte('x', 12.075, 6.85, { l: 0.93, modele: 'grise', etat: 'fermee', cote: 'S' });   // ou 'ouverte', 'auto'
+ch.plafond(x0, y0, x1, y1, 2.6, 'plateaux');           // ou 'platre' ; la caméra s'y arrête, retombées comprises
+ch.boite(x0, y0, x1, y1, h0, h1, M.comptoir, { collision: true });
+ch.spot(x, y, 2.6, 'attente');  ch.opale(x, y, 2.4, 'c05');   // un luminaire = une lampe (spots et lumière cuite)
 ```
 
-**Le repère** : x vers l'est, z vers le sud, y vers le haut, en mètres ; le sol est à y = 0.
+**Le monde solide** (`js/collisions.js`, coordonnées du jeu) : boîtes, boîtes orientées, cercles, murs percés,
+plafonds (`plafondEn(x, z, y)` : ceux qui sont au-dessus de `y`), et maintenant des **sols** — `C.sol(...)` (un
+palier) et `C.rampe(...)` (une volée de marches, pente passant par le milieu des marches) : `solEn(x, z, y)` rend le
+sol sous les pieds, Haythem le suit. Une forme dont `off` vaut vrai n'existe plus (les vantaux des portes automatiques).
+`vitre: true` : la lumière cuite au sol traverse la forme. `?debug=murs` montre tout.
 
-**Les murs** se déclarent au monde solide (`js/collisions.js`) **en même temps** qu'on pose leur géométrie :
+**Les lumières** (`js/ecole_lumieres.js`) : chaque luminaire posé par le chantier est une LAMPE de sa zone (pièce).
+Quatre spots (deux au téléphone) se posent sous les lampes les plus proches de Haythem, dans sa pièce et celles qui s'y
+ouvrent ; toutes les lampes, et le jour qui entre par la porte 6, le passage et les fenêtres, sont peintes une fois dans
+la lumière cuite du carrelage, découpées par les murs. Chaque zone a son point de prise de vue pour la carte
+d'environnement, reprise quand Haythem y entre. Une nouvelle pièce : un rectangle dans `zones`, ses voisines, son point.
 
-```js
-const C = new Collisions();
-// un mur de (x0, z0) à (x1, z1), épais de 20 cm, haut de 2,70 m, percé d'une porte de 1,30 m dont le centre est à
-// 6 m du début du mur, et d'une fenêtre (allège à 0,9 m) :
-const m = C.mur(x0, z0, x1, z1, 0.2, { h: 2.7, ouvertures: [{ a: 6, l: 1.3, h: 2.1 }, { a: 10, l: 2, h: 2.2, bas: 0.9 }] });
-// m.pleins = les morceaux pleins [{ a0, a1, y0, y1 }] (distances le long du mur) : y poser la géométrie
-C.plafond(x0, z0, x1, z1, 2.7);             // la caméra s'y arrête
-C.ajouterBoite(x0, z0, x1, z1, { y1: 0.9 }); // un comptoir (le joueur le contourne)
-C.ajouterCercle(x, z, 0.24);                // un pilier rond
-C.ajouterBoiteOrientee(cx, cz, hx, hz, a);   // un meuble tourné
-```
-
-Options d'une forme : `y0`/`y1` (hauteurs), `joueur: false` (seule la caméra la voit), `camera: false` (la caméra passe
-au travers : une vitre). Le joueur est un disque de 30 cm de rayon qui occupe la hauteur [0,25 ; 1,6] m au-dessus de
-ses pieds : il **glisse** le long des murs, ne traverse jamais un mur même fin (sous-pas d'au plus la moitié du rayon),
-passe sous les linteaux. La caméra recule devant les murs, s'arrête sous le plafond, et cache Haythem quand elle
-arrive dans sa tête. `?debug=murs` montre tout.
-
-**Les lumières et le rendu** : la salle d'essai montre la recette d'un intérieur (une « lumière de plafond » presque
-d'aplomb qui porte les ombres douces, un ciel hémisphérique, des lampes ponctuelles, la carte d'environnement prise sur
-place) et ce qu'elle doit poser dans `scene.userData` (voir l'en-tête de `js/carte_ecole.js`).
+**Les crochets.** `poserMobilier(ch)` (`js/ecole_mobilier.js`) et `poserRue(ch)` (`js/ecole_rue.js`) reçoivent le
+chantier : ils posent ce qu'ils veulent avec les mêmes outils (et `ch.sieges` pour ce où l'on s'assoit). Restent à
+venir, décrits par le relevé : les totems « iris », jardinières, bancs, vélos et voitures de la rue ; l'intérieur des
+pièces fermées (salle A informatique, bureau B, toilettes) ; les étages.
 
 **L'écran de chargement** : après avoir ajouté des fichiers chargés au démarrage, relever les profils
 (`?chargement=trace`, puis `?chargement=trace&tel=1`) et relancer `python tools/liste_chargement.py` (voir son en-tête).
