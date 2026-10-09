@@ -7,8 +7,9 @@ s'asseoir, danser, sortir son téléphone. Pas de match, pas de score, pas de bo
 > État actuel : le **rez-de-chaussée de l'école** est construit d'après les 21 photos de Haythem (`references/ecole/`,
 > hors du dépôt) : le passage des étudiants et sa grille, le hall ouest, l'escalier jusqu'au palier du 1er étage, les
 > couloirs C05 et C01, la salle d'attente au mur safran, le hall d'entrée et l'accueil, la porte n° 6 et la façade sur la
-> rue. Les pièces jamais photographiées (salle A, bureau B, toilettes, bureaux, étages) sont derrière des portes fermées.
-> Le mobilier a son module, dans une première version à compléter. La RUE est complète (photos 07 à 18) : voitures
+> rue. Les pièces jamais photographiées du rez-de-chaussée (salle A, bureau B, toilettes, local, couloir de service) se
+> visitent : leur intérieur est **imaginé** en attendant des photos (voir « Les pièces imaginées »). Les bureaux est,
+> la gaine et les étages restent derrière des portes fermées. La RUE est complète (photos 07 à 18) : voitures
 > garées, totems « iris », jardinières de zinc, bambou et palmier, bancs (on s'y assoit), poubelles, vélos, motos et
 > scooters, grille du jardin doublée de brande, impasse et carrefour.
 
@@ -83,6 +84,8 @@ js/ecole_mobilier.js  le mobilier (chaises coque où l'on s'assoit, écran, born
 js/ecole_rue.js       la rue (trottoirs, chaussée et ses détails, façades voisines et d'en face, jardin, impasse, carrefour)
 js/ecole_rue_mobilier.js  le mobilier de la rue, ses plantes (un atlas de feuillage) et ses deux-roues
 js/ecole_rue_voitures.js  les voitures garées (assets/voitures.glb, repeintes dans leur texture)
+js/ecole_pieces.js    les pièces imaginées (salle A informatique, bureau B, couloir de service, local technique,
+                      toilettes) : murs qui manquaient, mobilier, luminaires, sièges, zones de lumière, miroir
 js/collisions.js      le monde solide : murs, portes, piliers, plafonds, sols et rampes (escalier)
 js/kit_decor.js       les outils de décor repris de LA CAGE : textures dessinées, relief, carte d'environnement
                       prise sur place, ombre cuite au sol, fusion des matériaux, vent des feuillages
@@ -109,10 +112,24 @@ renvois à l'origine du code, ces fichiers n'existent pas ici.
 | Le couloir C05 | porte de secours en verre dépoli bleu au fond | 05 |
 | La salle d'attente | mur safran et sa lisse blanche, panneau DAE, écran, chaises coque (on s'y assoit), jours dépolis, borne, pilier, présentoir | 02, 21 |
 | Le couloir C01 | gaine technique, toilettes, local | 01 |
+| La salle A (informatique) * | trois rangées de cinq postes (on s'assoit), bureau de l'enseignant, toile et vidéoprojecteur, tableau blanc, stores, dalles LED | — |
+| Le bureau B * | bureau de chêne, fauteuil et chaises visiteurs (on s'assoit), armoire, bibliothèque, tableau, plante | — |
+| Le couloir de service * | derrière la porte grise du hall ouest et la porte blanche du passage : porte de secours, bacs, chariot de ménage | — |
+| Le local technique * | baies serveurs aux diodes qui clignotent, onduleur, tableau électrique, étagères, photocopieur, établi | — |
+| Les toilettes * | faïence, cabines aux portes safran, cabine PMR ouverte, vasques, grand miroir (un vrai miroir sur PC) | — |
 | Le hall d'entrée | porte n° 6 (automatique) et ses vitrophanies, tapis, comptoir d'accueil, fenêtres à barreaux | 03, 16 |
 | La rue | trottoirs (pavés devant le n° 8), chaussée (reprises, lignes, rond peint, pièce de pavés, plaques), façade de l'école (drapeaux en V, écusson), les deux totems « iris », jardinières de zinc, bambou, palmier, bancs à lattes (on s'y assoit), corbeille, cendrier, bacs roulants, huit voitures garées, motos, scooters (l'un sous sa housse), vélos, station de réparation et arceaux, le 5/7, le jardin derrière sa grille doublée de brande, l'impasse et la marquise du n° 10, le carrefour (trois immeubles, potelets) | 07 à 18 |
 
 Le départ est dans le hall d'entrée, juste passé la porte 6. Pause › **Revenir au départ** y ramène.
+
+### Les pièces imaginées (*)
+
+Les pièces marquées d'une étoile n'ont **pas encore été photographiées** : leur intérieur est imaginé, plausible pour
+une école de commerce et du numérique parisienne, avec les matières et la lumière du reste de l'école. Elles sont toutes
+dans `js/ecole_pieces.js` (appelé par la carte comme `poserMobilier`) : **quand Haythem enverra des photos de ces
+pièces, c'est ce module qu'on reprend**, pièce par pièce (chaque pièce est une fonction : `salleA`, `bureauB`,
+`couloirService`, `localTechnique`, `toilettes`). Leurs portes s'ouvrent toutes seules (état `'auto'` dans
+`js/carte_ecole.js`) ; chaque pièce a sa zone de lumière (rendue par `poserPieces`), sans voisines.
 
 ## Construire la suite de l'école
 
@@ -145,7 +162,8 @@ d'environnement, reprise quand Haythem y entre. Une nouvelle pièce : un rectang
 
 **Les crochets.** `poserMobilier(ch)` (`js/ecole_mobilier.js`) et `poserRue(ch)` (`js/ecole_rue.js`) reçoivent le
 chantier : ils posent ce qu'ils veulent avec les mêmes outils (et `ch.sieges` pour ce où l'on s'assoit). Restent à
-venir, décrits par le relevé : l'intérieur des pièces fermées (salle A informatique, bureau B, toilettes) ; les étages.
+venir : les étages. Le crochet `poserPieces(ch)` (`js/ecole_pieces.js`) meuble les pièces imaginées et rend leurs zones
+de lumière.
 
 **La rue** (`js/ecole_rue.js` et ses deux modules) : ses cotes sont dans `RUE` (trottoir de 2,4 m, chaussée de 6,4 m
 12 cm plus bas, trottoir d'en face de 1,6 m ; l'impasse à x = -10,5, le carrefour à x = 45). Les pièces opaques du

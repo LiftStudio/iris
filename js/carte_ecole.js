@@ -31,7 +31,8 @@
 //   le couloir C01             x 11,7-13,5   y 12,0-20,6  toilettes, gaine technique (photo 01)
 //   le « cou »                 x 9,9-13,5    y 4,8-9,0    le bureau B vitré, le trumeau (photo 03)
 //   le hall d'entrée, accueil  x 13,35-19,8  y 0,3-7,5    porte n° 6, comptoir (photos 03, 16)
-//   fermés (portes à clé)      la salle A, le bureau B, les WC, les bureaux est, la gaine, le couloir de service
+//   les pièces fermées         la salle A, le bureau B, les WC, le local, le couloir de service : leurs portes s'ouvrent,
+//                              leur intérieur est imaginé (js/ecole_pieces.js) ; fermés : les bureaux est, la gaine
 import * as THREE from 'three';
 import { Collisions } from './collisions.js';
 import { carteLocale, poserSondeLocale, planifierOcclusionSol, optimiserDecor, nePasFusionner, animerVent } from './kit_decor.js';
@@ -40,6 +41,7 @@ import { Portes, boiteM, maille, fenetreFacade, fenetreDepolie, fusionnerLocal, 
 import { LumieresEcole, cuireLumiereSol } from './ecole_lumieres.js';
 import { poserMobilier } from './ecole_mobilier.js';
 import { poserRue } from './ecole_rue.js';
+import { poserPieces } from './ecole_pieces.js';
 
 // ---- les hauteurs ----
 const H_DALLE = 3.25;            // le dessous de la dalle du 1er étage (les cloisons montent jusque-là)
@@ -605,9 +607,9 @@ function construireMurs(ch) {
   // ---- LE PASSAGE ET LE HALL OUEST ----
   // le mur ouest (couloir de service derrière) : la porte blanche « Sortie » côté passage, la porte grise en retrait côté hall
   ch.mur({ de: [1.675, -0.4], a: [1.675, 5.0], mats: { E: CR, W: B }, plinthes: ['E'], ouvertures: [{ c: 4.15, l: 0.9, h: 2.04 }] });
-  ch.porte('y', 1.675, 4.15, { l: 0.9, h: 2.04, modele: 'blanche', etat: 'fermee', cote: 'E', charniere: 'd', nom: 'service (passage)' });
+  ch.porte('y', 1.675, 4.15, { l: 0.9, h: 2.04, modele: 'blanche', etat: 'auto', cote: 'E', charniere: 'd', nom: 'service (passage)' });
   ch.mur({ de: [1.675, 5.0], a: [1.675, 13.6], mats: B, plinthes: ['E'], ouvertures: [{ c: 9.575, l: 0.95, h: 2.04 }] });
-  ch.porte('y', 1.675, 9.575, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'W', nom: 'service (hall)' });
+  ch.porte('y', 1.675, 9.575, { l: 0.93, h: 2.04, modele: 'grise', etat: 'auto', cote: 'W', nom: 'service (hall)' });
   // LES DEUX AVANCÉES DU MUR OUEST (photo 06) : la porte grise, l'extincteur et le radiateur sont dans un RENFONCEMENT ;
   // de part et d'autre, le mur avance de 25 cm — au sud, le pan du plan d'évacuation, au nord, celui de l'affiche jaune
   // du tri, contre l'angle des portes de l'escalier (09/10). Plinthes de bois sur les faces vues.
@@ -623,7 +625,7 @@ function construireMurs(ch) {
   // le mur est du passage = l'ouest de la salle A, avec la porte de la salle A côté hall
   ch.mur({ de: [4.825, -0.4], a: [4.825, 5.0], mats: { W: CR, E: B }, plinthes: ['W'] });
   ch.mur({ de: [4.825, 5.0], a: [4.825, 9.0], mats: B, plinthes: ['W', 'E'], ouvertures: [{ c: 6.85, l: 0.93, h: 2.04 }] });
-  ch.porte('y', 4.825, 6.85, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'E', nom: 'salle A' });
+  ch.porte('y', 4.825, 6.85, { l: 0.93, h: 2.04, modele: 'grise', etat: 'auto', cote: 'E', nom: 'salle A' });
   // ---- LA SALLE D'ATTENTE ----
   // le sud : le mur de la salle A et ses deux jours dépolis (photos 02, 21)
   ch.mur({ de: [4.75, 9.0], a: [10.05, 9.0], mats: B, plinthes: ['N', 'S'], ouvertures: [{ c: 6.65, l: 1.3, bas: 0.95, h: 2.3 }, { c: 8.35, l: 1.3, bas: 0.95, h: 2.3 }] });
@@ -648,8 +650,8 @@ function construireMurs(ch) {
   ch.mur({ de: [5.875, 12.15], a: [5.875, 18.6], mats: B, plinthes: ['W'] });
   ch.mur({ de: [11.625, 12.15], a: [11.625, 20.75], mats: B, plinthes: ['E'], ouvertures: [{ c: 13.85, l: 0.93, h: 2.04 }, { c: 19.05, l: 0.93, h: 2.04 }] });
   // (les portes du C01 n'ont pas d'oculus, photo 01)
-  ch.porte('y', 11.625, 13.85, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'fermee', cote: 'E', notices: 2, nom: 'local (C01)' });
-  ch.porte('y', 11.625, 19.05, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'fermee', cote: 'E', charniere: 'd', nom: 'toilettes' });
+  ch.porte('y', 11.625, 13.85, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'auto', cote: 'E', notices: 2, nom: 'local (C01)' });
+  ch.porte('y', 11.625, 19.05, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'auto', cote: 'E', charniere: 'd', nom: 'toilettes' });
   ch.mur({ de: [11.55, 20.675], a: [13.65, 20.675], mats: B, plinthes: ['S'], ouvertures: [{ c: 12.6, l: 0.93, h: 2.04 }] });
   ch.porte('x', 20.675, 12.6, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'S', nom: 'fond du C01' });
   // ---- LE « COU » ET LE BUREAU B ----
@@ -658,7 +660,7 @@ function construireMurs(ch) {
   const nordB = new THREE.Group(); nordB.position.set(0, 0, -4.8); ch.decor.add(nordB);
   fenetreDepolie(nordB, M, { x: 10.6, l: 1.0, bas: 1.0, haut: 2.4, ep: 0.12, bandeClaire: 0.2 });
   ch.C.ajouterBoite(10.1, -4.75, 11.1, -4.85, { y0: 1.0, y1: 2.4, vitre: true });
-  ch.porte('x', 4.8, 11.85, { l: 0.9, h: 2.1, ep: 0.12, modele: 'vitree', etat: 'fermee', cote: 'S', tirant: 'court', nom: 'bureau B' });
+  ch.porte('x', 4.8, 11.85, { l: 0.9, h: 2.1, ep: 0.12, modele: 'vitree', etat: 'auto', cote: 'S', tirant: 'court', nom: 'bureau B' });
   // le mur est du bureau B : tableau noir du portail n° 6 jusqu'à y = 0,3, puis le hall
   ch.mur({ de: [13.275, -0.4], a: [13.275, 0.3], mats: { E: M.noirMat, W: B } });
   ch.mur({ de: [13.275, 0.3], a: [13.275, 4.875], mats: B, plinthes: ['E', 'W'] });
@@ -796,8 +798,8 @@ export function construireCarte(scene, renderer = null) {
   ch.plafond(9.9, 4.8, 13.5, 9.0, 2.6, 'plateaux');                  // le cou
   ch.plafond(11.7, 12.0, 13.5, 20.6, 2.45, 'platre');                // C01
   ch.plafond(13.35, 0.3, 19.8, 7.5, 2.6, 'platre');                  // le hall d'entrée
-  ch.plafond(9.9, 0, 13.35, 4.8, 2.6, 'plateaux', { camera: false });  // le bureau B (vu par sa porte vitrée)
-  ch.plafond(4.75, 0, 9.9, 9.0, 2.6, 'plateaux', { camera: false });   // la salle A (vue par ses fenêtres)
+  ch.plafond(9.9, 0, 13.35, 4.8, 2.6, 'plateaux');                    // le bureau B (visitable : js/ecole_pieces.js)
+  ch.plafond(4.75, 0, 9.9, 9.0, 2.6, 'plateaux');                      // la salle A (visitable : js/ecole_pieces.js)
 
   // ---- les luminaires (et les lampes : ce sont les mêmes) ----
   ch.tube(1.75, 1.5, 3.0, 2.35, 1, 'passage'); ch.tube(4.75, 1.5, 3.0, 2.35, -1, 'passage');
@@ -808,8 +810,8 @@ export function construireCarte(scene, renderer = null) {
   for (const [x, y] of [[12.3, 7.8], [11.9, 5.7]]) ch.spot(x, y, 2.6, 'cou');
   for (const [x, y] of [[12.6, 16.0], [12.6, 19.4]]) ch.opale(x, y, 2.45, 'c01');
   for (const [x, y] of [[16.4, 1.4], [18.6, 1.4], [14.9, 3.7], [17.3, 3.7], [19.0, 3.9], [15.8, 6.0], [18.2, 6.0]]) ch.spot(x, y, 2.6, 'hall');
-  for (const [x, y] of [[11.0, 2.4], [12.5, 2.4]]) ch.spot(x, y, 2.6, 'bureauB', { reel: false });
-  for (const [x, y] of [[6.1, 2.6], [8.6, 2.6], [6.1, 6.4], [8.6, 6.4]]) ch.spot(x, y, 2.6, 'salleA', { reel: false });
+  for (const [x, y] of [[11.0, 2.4], [12.5, 2.4]]) ch.spot(x, y, 2.6, 'bureauB');
+  // (la salle A : ses six dalles LED sont posées avec son mobilier, js/ecole_pieces.js)
   ch.opale(3.2, 18.6, 3.75, 'escalier', { mur: 'S', r: 0.15 });
   ch.opale(3.2, 13.4, H_CAGE, 'palier1', { r: 0.18 });
   ch.opale(3.9, 16.4, H_CAGE, 'escalier', { r: 0.18, cuire: false });
@@ -827,6 +829,8 @@ export function construireCarte(scene, renderer = null) {
   // ---- LES CROCHETS : le mobilier, la rue ----
   poserMobilier(ch);
   poserRue(ch);
+  // les pièces qu'on peut maintenant visiter (salle A, bureau B, couloir de service, local, toilettes) et leurs zones
+  const pieces = poserPieces(ch);
 
   // =====================================================================
   //  LA LUMIÈRE
@@ -865,6 +869,7 @@ export function construireCarte(scene, renderer = null) {
     { id: 'cou', rects: [zr(9.9, 4.8, 13.5, 9.0)], voisines: ['attente', 'hall'], env: { x: 11.9, y: 1.6, z: -7.2 } },
     { id: 'hall', rects: [zr(13.3, -0.45, 20.1, 7.6)], voisines: ['cou', 'rue'], env: { x: 15.8, y: 1.6, z: -4.0 } },
     { id: 'rue', rects: [zr(-25, -12, 50, -0.4)], voisines: ['hall', 'passage'], env: { x: 9.5, y: 1.7, z: 3.4 } },
+    ...pieces.zones,
   ];
   const lumieres = new LumieresEcole(scene, { lampes: ch.lampes.filter((l) => l.reel !== false), zones });
   // LA LUMIÈRE CUITE AU SOL (toutes les sources, découpées par les murs)
