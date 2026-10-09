@@ -302,6 +302,37 @@ function texHorloge() {
     g.strokeStyle = '#d0262d'; aiguille(0.6, c * 0.8, 2);
   }, null, true, 4);
 }
+// LE LUMINAIRE À GRILLE DE DÉFILEMENT, vu de dessous, allumé (photos 11 et 12 : par la grande baie, des barres jaunes
+// de tubes au plafond ; par la 2e fenêtre, une grille argentée à alvéoles). Quatre tubes dans la longueur, les
+// réflecteurs en V entre eux, huit lames en travers ; chaque alvéole s'éclaire au droit de son tube. Les teintes
+// tiennent compte du matériau (sans éclairage, sa couleur multipliée par 1,75) : seuls les tubes passent le seuil du
+// halo, la grille reste d'un gris d'aluminium.
+function texGrille() {
+  const W = TELEPHONE ? 256 : 512;
+  return canvasTex(W, W, (g, w, h) => {
+    const bord = w * 0.045, i0 = bord, i1 = w - bord, L = i1 - i0;
+    g.fillStyle = '#e9e8e4'; g.fillRect(0, 0, w, h);                      // le cadre blanc
+    g.fillStyle = '#5c5d60'; g.fillRect(i0, i0, L, L);                     // le fond du caisson
+    // les tubes et leur lueur sur le réflecteur (dégradé de part et d'autre)
+    for (let k = 0; k < 4; k++) {
+      const cx = i0 + L * (k + 0.5) / 4, lg = L / 4;
+      const gr = g.createLinearGradient(cx - lg / 2, 0, cx + lg / 2, 0);
+      gr.addColorStop(0, 'rgba(150,148,144,1)'); gr.addColorStop(0.32, 'rgba(214,210,200,1)');
+      gr.addColorStop(0.5, 'rgba(255,253,246,1)'); gr.addColorStop(0.68, 'rgba(214,210,200,1)'); gr.addColorStop(1, 'rgba(150,148,144,1)');
+      g.fillStyle = gr; g.fillRect(cx - lg / 2, i0, lg, L);
+      g.fillStyle = '#ffffff'; g.fillRect(cx - w * 0.022, i0, w * 0.044, L);
+    }
+    // les réflecteurs longitudinaux (arêtes des V, vues par la tranche)
+    for (let k = 1; k < 4; k++) { const x = i0 + L * k / 4; g.fillStyle = '#b9b9b6'; g.fillRect(x - w * 0.009, i0, w * 0.018, L); g.fillStyle = '#7d7e80'; g.fillRect(x - w * 0.002, i0, w * 0.004, L); }
+    // les lames transversales (la grille) : dessus mat, une arête claire
+    for (let k = 0; k <= 8; k++) {
+      const y = i0 + L * k / 8;
+      g.fillStyle = '#8c8d8f'; g.fillRect(i0, y - w * 0.012, L, w * 0.024);
+      g.fillStyle = '#c4c4c1'; g.fillRect(i0, y - w * 0.003, L, w * 0.006);
+    }
+    g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = w * 0.006; g.strokeRect(i0, i0, L, L);
+  }, null, false, 8);
+}
 // LES CLASSEURS d'une étagère (dos de couleur, étiquettes)
 function texClasseurs() {
   return canvasTex(512, 128, (g, w, h) => {
@@ -467,9 +498,10 @@ export function poserEtage1(ch, renderer = null) {
   const noter = () => lampes.push(ch.lampes[ch.lampes.length - 1]);
   const opale = (x, y, h, zone, o = {}) => { ch.opale(x, y, h, zone, opts(o)); noter(); };
   const spot = (x, y, h, zone, o = {}) => { ch.spot(x, y, h, zone, opts(o)); noter(); };
-  // LA DALLE LED de 60 x 60 encastrée dans le faux plafond des salles (le plafonnier des salles de cours d'aujourd'hui :
-  // photo 12, par la grande baie, on devine ces carrés lumineux)
-  const matDalle = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff3e4).multiplyScalar(1.75) }); matDalle.name = 'dalle LED allumée';
+  // LE LUMINAIRE À GRILLE de 60 x 60 encastré dans le faux plafond des salles : quatre tubes sous une grille de
+  // défilement d'aluminium (photo 12 : par la grande baie, des barres de tubes allumés, jaunâtres ; photo 11 : une grille
+  // argentée à alvéoles au plafond, derrière la 2e fenêtre)
+  const matDalle = new THREE.MeshBasicMaterial({ map: texGrille(), color: new THREE.Color(0xfff1dc).multiplyScalar(1.75) }); matDalle.name = 'luminaire à grille allumé';
   const dalle = (x, y, zone) => {
     B(x - 0.31, y - 0.31, x + 0.31, y + 0.31, H_SALLE - 0.012, H_SALLE + 0.02, M.boitier, { ombre: false });
     const d = maille(new THREE.PlaneGeometry(0.58, 0.58), matDalle, x, H_SALLE - 0.0125, -y, 0, groupe, { ombre: false, recoit: false });
@@ -627,7 +659,7 @@ export function poserEtage1(ch, renderer = null) {
   //  LES FAUX PLAFONDS ET LES LUMINAIRES
   // =====================================================================
   function construirePlafondsEtLumieres() {
-    // les salles et les bureaux : plateaux perforés (comme la salle d'attente, photos 02, 21), dalles LED
+    // les salles et les bureaux : plateaux perforés (comme la salle d'attente, photos 02, 21), luminaires à grille
     ch.plafond(0, 0, 6.6, Y_SALLES, H_SALLE, 'plateaux');
     ch.plafond(6.6, 0, 13.2, Y_SALLES, H_SALLE, 'plateaux');
     ch.plafond(13.2, 0, 16.5, Y_SALLES, H_SALLE, 'plateaux');
@@ -937,7 +969,8 @@ export function poserEtage1(ch, renderer = null) {
   function meublerSalle101() {
     tableauBlanc(0.0, 2.3, 'E', 2.4, 'swot');
     ecranProjection(0.04, 4.75, 'E', 1.9, 1.2, 'marketing');
-    projecteur(3.4, 4.75, 'W');
+    // (le vidéoprojecteur entre deux luminaires, à 4,20 m de l'écran — pas pendu au milieu d'un luminaire)
+    projecteur(4.2, 4.75, 'W');
     horloge(0.0, 2.3, N1 + 2.45, 'E');
     // le bureau de l'enseignant (tourné vers la classe), son fauteuil, son portable — devant l'écran, le tableau libre
     // (70 cm de passage entre le bureau et le premier rang : on va de l'avant de la classe au fond par là)
@@ -962,6 +995,11 @@ export function poserEtage1(ch, renderer = null) {
     plante(0.35, 0.4);
     affiche('#2f6fb0', '#fbfbf8', 61, 0.6, 0.85, 3.4, Y_SALLES - EP / 2, 1.55, 'S');
     affiche('#f08a24', '#fbfbf8', 62, 0.6, 0.85, 4.3, Y_SALLES - EP / 2, 1.55, 'S');
+    // au fond de la classe (mur est), le tableau de liège des annonces (celui du couloir, retourné)
+    B(6.52, 2.5, 6.54, 4.3, N1 + 0.98, N1 + 1.92, M.aluGris, { ombre: false });
+    const liege2 = X.liege.clone(); liege2.map = X.liege.map.clone();
+    liege2.map.wrapS = THREE.RepeatWrapping; liege2.map.repeat.set(-1, 1); liege2.map.needsUpdate = true;
+    panneau(liege2, 1.76, 0.9, 6.518, 3.4, N1 + 1.45, 'W');
     // les patères et la poubelle
     for (let k = 0; k < 5; k++) B(2.0 + k * 0.25, Y_SALLES - EP / 2 - 0.06, 2.03 + k * 0.25, Y_SALLES - EP / 2, N1 + 1.62, N1 + 1.65, M.inox, { ombre: false });
     B(1.9, Y_SALLES - EP / 2 - 0.02, 3.25, Y_SALLES - EP / 2, N1 + 1.6, N1 + 1.7, X.armoire, { ombre: false });
@@ -977,7 +1015,7 @@ export function poserEtage1(ch, renderer = null) {
   function meublerSalle102() {
     tableauBlanc(6.66, 2.6, 'E', 2.0, 'reseau');
     ecranProjection(6.7, 4.85, 'E', 1.8, 1.15, 'web');
-    projecteur(10.1, 4.85, 'W');
+    projecteur(10.8, 4.85, 'W');           // (entre deux luminaires)
     horloge(6.66, 2.6, N1 + 2.42, 'E');
     table(7.55, 1.6, 0.7, 1.4, { mat: X.blancTable });
     fauteuil(7.0, 1.6, 'E', { sortie: [7.1, 2.75], nom: 'le fauteuil du professeur' });
@@ -1214,8 +1252,11 @@ export function poserEtage1(ch, renderer = null) {
   // (un rectangle qui demande des pieds à 2,60 m au moins : le joueur du rez-de-chaussée, dessous, n'y est pas)
   const zr = (x0, y0, x1, y1) => [x0, -y1, x1, -y0, 2.6];
   const env = (x, y) => ({ x, y: N1 + 1.6, z: -y });
+  // (la carte du palier d'étage est prise à son débouché sur le couloir, pas au milieu : à 1,50 m du mur safran, il
+  // emplissait la moitié de la carte, et le mur blanc d'en face, éclairé par lui, virait au saumon — mesuré : rouge
+  // moins bleu de 92 contre 35 à 45 pour les autres murs blancs ; d'ici, 62, comme un reflet de couleur)
   const zones = [
-    { id: 'e1hall', rects: [zr(1.6, Y_COUR, 4.75, 12.6)], voisines: ['palier1', 'e1couloir'], env: env(3.2, 10.6) },
+    { id: 'e1hall', rects: [zr(1.6, Y_COUR, 4.75, 12.6)], voisines: ['palier1', 'e1couloir'], env: env(3.9, 8.3) },
     { id: 'e1couloir', rects: [zr(1.6, Y_SALLES, 20.0, Y_COUR)], voisines: ['e1hall', 'e101', 'e102', 'e103', 'e104', 'e1wc'], env: env(10.6, 7.95) },
     { id: 'e101', rects: [zr(-0.3, -0.2, 6.6, Y_SALLES)], voisines: ['e1couloir'], env: env(3.3, 3.6) },
     { id: 'e102', rects: [zr(6.6, -0.2, 13.2, Y_SALLES)], voisines: ['e1couloir'], env: env(9.9, 3.6) },

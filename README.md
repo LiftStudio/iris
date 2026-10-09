@@ -15,8 +15,10 @@ s'asseoir, danser, sortir son téléphone. Pas de match, pas de score, pas de bo
 >
 > **Le 1er étage est IMAGINÉ**, en attendant des photos de Haythem (`js/ecole_etage1.js`) : seules la double porte du
 > palier (photos 06, 20) et la façade (photos 11, 12, 16 à 18 : le rythme des fenêtres, la grande baie et la fenêtre
-> étroite dans leurs encadrements rouges, les pastilles des pompiers) sont relevées ; les salles sont posées derrière ces
-> fenêtres, le reste est une distribution courante d'étage d'école. À refaire d'après les photos quand elles viendront.
+> étroite dans leurs encadrements rouges, les pastilles des pompiers) sont relevées, ainsi que les plafonniers des salles,
+> devinés par les vitres (photo 12 : des barres de tubes allumés ; photo 11 : une grille argentée à alvéoles — des
+> luminaires à grille de défilement) ; les salles sont posées derrière ces fenêtres, le reste est une distribution
+> courante d'étage d'école. À refaire d'après les photos quand elles viendront.
 
 ## Lancer le jeu
 
@@ -128,7 +130,7 @@ renvois à l'origine du code, ces fichiers n'existent pas ici.
 | La rue | trottoirs (pavés devant le n° 8), chaussée (reprises, lignes, rond peint, pièce de pavés, plaques), façade de l'école (drapeaux en V, écusson), les deux totems « iris », jardinières de zinc, bambou, palmier, bancs à lattes (on s'y assoit), corbeille, cendrier, bacs roulants, huit voitures garées, motos, scooters (l'un sous sa housse), vélos, station de réparation et arceaux, le 5/7, le jardin derrière sa grille doublée de brande, l'impasse et la marquise du n° 10, le carrefour (trois immeubles, potelets) | 07 à 18 |
 | 1er étage : le palier d'étage | mur safran et panneau de l'étage, banc, plan d'évacuation, extincteur, local ménage (fermé) | *imaginé* |
 | 1er étage : le couloir | portes grises et leurs plaques, tableau de liège, affiches, fontaine à eau, horloge, issue de secours (fermée) | *imaginé* (comme 01) |
-| Salle 101 (cours) | derrière les travées 1 à 4 (la grande baie rouge) : 9 tables pour deux, tableau blanc, vidéoprojecteur, écran déroulé | façade 12 |
+| Salle 101 (cours) | derrière les travées 1 à 4 (la grande baie rouge) : 9 tables pour deux, tableau blanc, vidéoprojecteur, écran déroulé, liège au fond, luminaires à grille (comme toutes les salles et bureaux de l'étage) | façade 12 (et 11 : la grille) |
 | Salle 102 (informatique) | travées 5 à 8 : 18 postes (sous les fenêtres, contre le couloir, îlot central), baie de brassage | façade 11, 17 |
 | Bureau 103, salle 104 | travées 9-10 (pédagogie : bureaux, armoires, table ronde) et 11-12 (enseignants : table de réunion, casiers, coin café, la fenêtre rouge des pompiers) | façade 16, 18 |
 | Les toilettes de l'étage | faïence blanche, trois cabines (la première ouverte), deux lavabos, miroir, sèche-mains | *imaginé* |
