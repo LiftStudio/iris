@@ -815,8 +815,8 @@ export function construireCarte(scene, renderer = null) {
   ch.plafond(1.75, 5.0, 4.75, 9.0, 2.4, 'platre');                   // le hall ouest
   ch.plafond(1.75, 9.0, 5.3, 13.6, 2.4, 'platre');
   ch.plafond(5.3, 12.0, 5.8, 13.6, 2.4, 'platre');
-  // C05 : à mi-longueur, une RETOMBÉE — le fond du couloir est plus bas, l'imposte de la porte bleue vient juste sous
-  // son plafond (photos 05 et 23 : le premier hublot avant le ressaut, le second après ; 09/10)
+  // C05 : au premier tiers (y 15,2), une RETOMBÉE — le fond du couloir est plus bas (2,30), l'imposte de la porte bleue
+  // vient juste sous son plafond (photos 05 et 23 : le premier hublot avant le ressaut, le second après ; 09/10)
   ch.plafond(4.6, 13.6, 5.8, 15.2, 2.4, 'platre');
   ch.plafond(4.6, 15.2, 5.8, 18.6, 2.3, 'platre');
   // la salle d'attente : les plateaux perforés, sauf au bout ouest, devant le couloir C05, où ce sont des dalles lisses
