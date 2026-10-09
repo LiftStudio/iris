@@ -303,7 +303,8 @@ function matieresEst() {
     plinthe: std({ color: 0x5a534b, roughness: 0.5 }, 'plinthe gris foncé'),
     poteau: std({ color: 0x8a8580, roughness: 0.62 }, 'poteau gris'),
     lino: std({ map: texMouchete({ fond: [158, 152, 143], taches: [[[214, 210, 202], 0.9], [[80, 76, 70], 0.85], [[128, 122, 113], 0.7]], n: 9000, graineN: 11 }), roughness: 0.38 }, 'lino moucheté clair'),
-    vinyle: std({ map: texMouchete({ fond: [86, 79, 70], taches: [[[132, 124, 110], 0.85], [[52, 47, 41], 0.85], [[160, 153, 140], 0.5]], n: 8000, graineN: 13 }), roughness: 0.55 }, 'vinyle moucheté du 1er'),
+    // (relecture du 09/10 : mouchetures adoucies — sur les photos 27 et 28, de près, le vinyle paraît presque uni)
+    vinyle: std({ map: texMouchete({ fond: [86, 79, 70], taches: [[[118, 111, 99], 0.7], [[58, 53, 46], 0.7], [[138, 131, 119], 0.35]], n: 8000, graineN: 13 }), roughness: 0.55 }, 'vinyle moucheté du 1er'),
     giron: std({ map: texMouchete({ fond: [64, 63, 61], taches: [[[112, 110, 106], 0.75], [[40, 39, 37], 0.8]], n: 5000, tuile: 0.5, w: 256, graineN: 17, nuee: 4 }), roughness: 0.66 }, 'giron moucheté'),
     // (le béton peint des volées et des paliers : vu d'en dessous, il ne reçoit que le rebond — sur la photo 25, la
     // sous-face au-dessus de la volée 1 est presque aussi claire que les murs : un léger émissif, comme les plafonds)
