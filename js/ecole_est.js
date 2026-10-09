@@ -765,8 +765,12 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   mur(ch, G, { de: [13.2, 11.025], a: [13.2, 12.6], base: N1, h: DALLE2, mats: B0, plinthes: ['E'] });
   B(ch, G, 14.06, 12.3, 14.22, 12.45, N1, H1, B0, { collision: true, ombre: false });
   B(ch, G, 14.05, 12.29, 14.23, 12.3, N1, N1 + 0.08, X.plinthe, { ombre: false });
-  // le mur nord (au-dessus des volées 1 et 3, il monte jusqu'au plafond de la cage) ; le mur sud de la cage, côté bande
-  mur(ch, G, { de: [13.125, E.yN], a: [E.x0, E.yN], base: N1, h: H_CAGE, mats: B0, plinthes: ['S'] });
+  // le mur nord (au-dessus des volées 1 et 3, il monte jusqu'au plafond de la cage) et, au fond du palier, la porte de
+  // la salle 106 (« Salle de cours B 1.6 » du panneau, fermée ; non vue : derrière le chant gris sur la photo 28, au-dessus
+  // de la porte du local du vestibule) ; le mur sud de la cage, côté bande
+  mur(ch, G, { de: [13.125, E.yN], a: [E.x0, E.yN], base: N1, h: H_CAGE, mats: B0, plinthes: ['S'], ouvertures: [{ c: 15.2, l: 0.95, h: N1 + 2.04 }] });
+  ch.porte('x', E.yN, 15.2, { l: 0.95, h: 2.04, base: N1, modele: 'grise', etat: 'fermee', cote: 'N', notices: 1, nom: 'salle 106' });
+  ch.panneau(matPanneau(texPlaqueSalle('Salle', 'de cours', 'B 1.6'), 0.4), 0.15, 0.09, 15.86, E.yN - 0.078, N1 + 1.6, 'S', G);
   mur(ch, G, { de: [E.x0, E.yN], a: [E.xM, E.yN], base: N1, h: H_CAGE, mats: B0 });
   mur(ch, G, { de: [E.x0, E.yS], a: [E.xM, E.yS], base: N1, h: H_CAGE, mats: B0, plinthes: ['S'] });
   // le mitoyen au nord de l'issue de secours (js/ecole_etage1.js le monte jusqu'à y 8,99) ; le mur d'échiffre

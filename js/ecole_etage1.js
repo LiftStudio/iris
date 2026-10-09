@@ -21,7 +21,7 @@
 //   les toilettes                        x 4,75-8,45 y 9,0-12,6
 //   le palier est et l'escalier est      x 13,55-19,8 y 7,0-12,45 (photos 27 à 29 : js/ecole_est.js poserPalierEst) ; les
 //                                        portes du 103 et de la 104 s'ouvrent sur lui, l'issue de secours est au bout
-//   fermés : 105, 106 (B 1.6) côté cour, le local ménage, l'issue de secours, le 2e étage
+//   fermés : 105 côté cour, 106 (B 1.6) au fond du palier est, le local ménage, l'issue de secours, le 2e étage
 // L'ESCALIER CONTINUE : deux volées de 10 marches de 15,5 cm (3,10 m d'étage, comme la façade), le palier intermédiaire
 // à 5,05 m, le palier du 2e (6,60 m) devant sa double porte, fermée.
 //
@@ -194,6 +194,22 @@ function texTableau(sujet) {
       const lignes = [[150, 190, 'image de marque'], [150, 225, 'réseau d\'entreprises'], [560, 190, 'coûts fixes'], [560, 225, 'peu de digital'],
         [150, 370, 'marché en hausse'], [150, 405, 'alternance'], [560, 370, 'concurrence'], [560, 405, 'prix bas en ligne']];
       for (const [x, y, t] of lignes) ecrire('– ' + t, x, y, 24, '#2a2a2a');
+    } else if (sujet === 'moore') {
+      // (la salle Gordon Earle Moore, 104 : sa loi, au feutre — le nombre de transistors d'une puce, échelle logarithmique)
+      ecrire('BTS SIO — Archi.', 30, 50, 26, '#1f3e8a');
+      ecrire('La loi de Moore : × 2 tous les 2 ans', 360, 60, 36, '#1f3e8a');
+      feutre('#1f3e8a', 5); g.beginPath(); g.moveTo(360, 74); g.lineTo(960, 70); g.stroke();
+      feutre('#2a2a2a', 4);
+      g.beginPath(); g.moveTo(110, 110); g.lineTo(110, 460); g.lineTo(960, 460); g.stroke();
+      ecrire('transistors', 30, 100, 22, '#2a2a2a'); ecrire('années', 870, 446, 22, '#2a2a2a');
+      const pts = [[1971, 2300, '4004 : 2 300'], [1989, 1.2e6, '486 : 1,2 M'], [2006, 2.91e8, 'Core 2 : 291 M'], [2022, 1.14e11, 'M1 Ultra : 114 Md']];
+      const px = (a) => 130 + (a - 1970) * 15.5, py = (n) => 450 - (Math.log10(n) - 3) * 42;
+      feutre('#c22a2a', 4); g.beginPath(); g.moveTo(px(1970), py(1500)); g.lineTo(px(2024), py(1500 * 2 ** 27)); g.stroke();
+      for (const [a, n, t] of pts) {
+        feutre('#1b7a3c', 4); g.beginPath(); g.arc(px(a), py(n), 9, 0, 7); g.fill();
+        ecrire(t, px(a) + (a > 2010 ? -250 : 16), py(n) + (a > 2010 ? 40 : 8), 22, '#2a2a2a');
+        ecrire(String(a), px(a) - 24, 486, 20, '#2a2a2a');
+      }
     } else {
       ecrire('BTS SIO — Réseaux', 40, 56, 38, '#1f3e8a');
       ecrire('VLAN 10 : 192.168.10.0/24', 560, 56, 26, '#2a2a2a');
@@ -601,14 +617,14 @@ export function poserEtage1(ch, renderer = null) {
     // les blocs de sortie au-dessus des portes des deux salles de cours, côté salle
     for (const x of [5.75, 12.35]) ch.sortie(x, Y_SALLES - EP / 2 - 0.03, N1 + 2.3, 'S');
     // LA CLOISON NORD DU COULOIR : les toilettes (ouvertes), les salles côté cour (fermées) — jusqu'au bout du couloir, x
-    // 13,55 (au-delà, le palier et la cage de l'escalier est : js/ecole_est.js ; la porte de la 106 recule de 13,4 à 13,0,
-    // la 107 « Archives » est tombée dans la cage)
-    mur({ de: [4.6, Y_COUR], a: [13.55, Y_COUR], mats: B0, plinthes: ['S'], ouvertures: [5.4, 9.6, 13.0].map((c) => ({ c, l: 0.95 })) });
+    // 13,55 (au-delà, le palier et la cage de l'escalier est : js/ecole_est.js ; la 107 « Archives » est tombée dans la
+    // cage ; la porte de la 106, B 1.6, est passée au fond du palier est — le vantail ouvert de la porte du palier,
+    // photo 28, se rabat ici contre le mur, de x 12,55 à 13,5)
+    mur({ de: [4.6, Y_COUR], a: [13.55, Y_COUR], mats: B0, plinthes: ['S'], ouvertures: [5.4, 9.6].map((c) => ({ c, l: 0.95 })) });
     // (côté toilettes, la faïence double le mur, de part et d'autre de la porte)
     for (const [a, b] of [[4.75, 4.9], [5.9, 8.44]]) B(a, Y_COUR + EP / 2, b, Y_COUR + EP / 2 + 0.006, N1, H_COUL, X.faience, { ombre: false });
     porte('x', Y_COUR, 5.4, { etat: 'ouverte', angle: 1.45, cote: 'N', charniere: 'd', oculus: false, nom: 'toilettes' });
     porte('x', Y_COUR, 9.6, { etat: 'fermee', cote: 'N', notices: 2, nom: 'salle 105' });
-    porte('x', Y_COUR, 13.0, { etat: 'fermee', cote: 'N', nom: 'salle 106' });
     // l'issue de secours au bout du couloir (fermée) et son bloc vert
     porte('y', 19.95, 7.95, { etat: 'fermee', cote: 'E', ep: 0.3, notices: 1, nom: 'issue de secours (étage)' });
     ch.sortie(19.78, 7.95, N1 + 2.3, 'W');
@@ -1083,31 +1099,20 @@ export function poserEtage1(ch, renderer = null) {
   }
 
   // =====================================================================
-  //  LA SALLE 104 : la salle des enseignants (travées 11 et 12, la fenêtre des pompiers)
+  //  LA SALLE 104 : « Salle Gordon Earle Moore », B 1.5 (travées 11 et 12, la fenêtre des pompiers)
   // =====================================================================
+  // (09/10 : le panneau d'étage du palier est, photo 28, la range parmi les salles de cours — ce n'est plus la salle des
+  // enseignants. Étroite, 3,30 m : une salle de TD en deux îlots de six, le tableau blanc au mur nord, à côté de la porte
+  // ; des allées de 65 à 70 cm tout autour des îlots)
   function meublerSalle104() {
-    // la grande table de réunion et six chaises, les casiers des enseignants, le coin café
-    // (des allées de 65 à 70 cm de part et d'autre)
-    table(18.2, 3.3, 1.0, 2.2, { mat: X.chene });
-    for (const yy of [2.6, 3.3, 4.0]) {
-      chaise(17.45, yy, 'E', { sortie: [16.95, yy] });
-      chaise(18.95, yy, 'W', { sortie: [19.45, yy] });
+    for (const yc of [1.85, 4.55]) {
+      table(18.2, yc, 1.0, 2.0, { mat: X.chene });
+      for (const d of [-0.6, 0, 0.6]) {
+        chaise(17.45, yc + d, 'E', { sortie: [16.95, yc + d] });
+        chaise(18.95, yc + d, 'W', { sortie: [19.45, yc + d] });
+      }
     }
-    // les casiers (douze portes grises) contre la cloison du couloir
-    const g = new THREE.Group(); g.position.set(18.4, N1, -(Y_SALLES - EP / 2)); g.rotation.y = 0; groupe.add(g);
-    maille(boiteM(1.6, 1.8, 0.45), X.gris, 0, 0.9, 0.225, 0, g);
-    const matCasier = new THREE.MeshStandardMaterial({ color: 0xb4bbc2, roughness: 0.4, metalness: 0.4 });
-    for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) {
-      maille(boiteM(0.38, 0.56, 0.01), matCasier, -0.6 + i * 0.4, 0.31 + j * 0.59, 0.455, 0, g, { ombre: false });
-      maille(boiteM(0.04, 0.02, 0.02), M.noirMat, -0.5 + i * 0.4, 0.5 + j * 0.59, 0.465, 0, g, { ombre: false });
-    }
-    C.ajouterBoite(17.6, -(Y_SALLES - EP / 2), 19.2, -(Y_SALLES - EP / 2 - 0.47), { y0: N1, y1: N1 + 1.8 });
-    // le coin café : un meuble bas, la machine, la bouilloire
-    B(19.2, 5.2, 19.8, 6.9, N1, N1 + 0.88, X.armoire, { collision: true });
-    B(19.18, 5.18, 19.8, 6.9, N1 + 0.88, N1 + 0.91, X.chene);
-    B(19.4, 5.5, 19.72, 5.8, N1 + 0.91, N1 + 1.3, M.noirMat);
-    B(19.45, 5.52, 19.6, 5.6, N1 + 1.0, N1 + 1.08, M.inox, { ombre: false });
-    maille(new THREE.CylinderGeometry(0.07, 0.08, 0.22, 16), M.inox, 19.55, N1 + 1.02, -6.3, 0, groupe);
+    tableauBlanc(18.75, Y_SALLES - EP / 2, 'S', 1.6, 'moore');
     for (const k of [11]) radiateur(centreTravee(k), 0.0, 'N', 1.0);
     plante(16.95, 0.5);
     affiche('#e07b2a', '#fbfbf8', 66, 0.42, 0.6, 19.795, 2.2, 1.5, 'W');
@@ -1182,13 +1187,11 @@ export function poserEtage1(ch, renderer = null) {
     // les plaques des portes
     plaque('101', 'Salle de cours', 4.95, Y_SALLES + EP / 2 + 0.003, 'N');
     plaque('102', 'Salle informatique', 11.6, Y_SALLES + EP / 2 + 0.003, 'N');
-    // (à l'est du couloir, le palier est : les plaques à trois lignes de la photo 23 et les noms du panneau d'étage,
-    // photo 28 ; celle de la 106 est sur son vantail, le bout du couloir ne laisse pas de place à côté)
-    const plaqueSalle = (l2, l3, x, y, h, face) => panneau(new THREE.MeshStandardMaterial({ map: texPlaqueSalle('Salle', l2, l3), roughness: 0.4 }), 0.15, 0.09, x, y, N1 + h, face);
+    // (à l'est du couloir, le palier est : la plaque à trois lignes de la photo 23 et le nom du panneau d'étage, photo 28 ;
+    // celle de la 106, B 1.6, est au fond du palier, js/ecole_est.js)
     plaque('103', 'Pédagogie', 16.0, Y_SALLES + EP / 2 + 0.003, 'N');
-    plaqueSalle('Gordon Earle Moore', 'B 1.5', 17.84, Y_SALLES + EP / 2 + 0.003, 1.6, 'N');
+    panneau(new THREE.MeshStandardMaterial({ map: texPlaqueSalle('Salle', 'Gordon Earle Moore', 'B 1.5'), roughness: 0.4 }), 0.15, 0.09, 17.84, Y_SALLES + EP / 2 + 0.003, N1 + 1.6, 'N');
     plaque('105', 'Salle de cours', 10.27, Y_COUR - EP / 2 - 0.003, 'S');
-    plaqueSalle('de cours', 'B 1.6', 13.2, Y_COUR + 0.007, 1.55, 'S');
     panneau(new THREE.MeshStandardMaterial({ map: texPlaqueWC(), roughness: 0.4 }), 0.16, 0.2, 6.05, Y_COUR - EP / 2 - 0.003, N1 + 1.6, 'S');
     // le tableau de liège (cadre d'aluminium) et les affiches entre les portes côté cour
     B(11.0, Y_COUR - EP / 2 - 0.02, 12.82, Y_COUR - EP / 2, N1 + 0.98, N1 + 1.92, M.aluGris);
