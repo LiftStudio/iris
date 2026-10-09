@@ -13,13 +13,13 @@
 // LE PLAN DE L'ÉTAGE (repère du plan de js/carte_ecole.js : x le long de la façade, y vers le fond ; plancher à 3,50 m,
 // dessous de la dalle du 2e à 6,40 m) :
 //   salle 101 « Salle de cours » B 1.1   x 0-6,6     y 0-6,9     travées 1 à 4 (la grande baie rouge)
-//   salle 102 « Salle Robert Kahn » B 1.4 (informatique)  x 6,6-13,2  y 0-6,9     travées 5 à 8
+//   salle 102 « Robert Kahn » B 1.4      x 6,6-13,2  y 0-6,9     travées 5 à 8 (informatique)
 //   bureau 103 (pédagogie)               x 13,2-16,5 y 0-6,9     travées 9 et 10 (au-dessus de la porte 6)
 //   salle 104 (enseignants)              x 16,5-19,8 y 0-6,9     travées 11 et 12 (la fenêtre rouge des pompiers)
 //   le couloir                           x 1,75-19,8 y 7,0-8,9
 //   le palier d'étage                    x 1,75-4,6  y 8,9-12,45  devant la double porte de l'escalier, ouverte
 //   les toilettes                        x 4,75-8,45 y 9,0-12,6
-//   l'espace pause (la porte 105)        x 8,55-12,45 y 9,0-12,6  côté cour, ses deux fenêtres sur la cour
+//   l'espace pause (la porte 105)        x 8,55-12,45 y 9,0-12,6  côté cour : deux fenêtres sur la cour (imaginé)
 //   fermés : 106, 107 (côté cour), le local ménage, l'issue de secours au bout du couloir, le 2e étage
 // LES VRAIS NOMS (09/10) : le panneau d'étage de la photo 28 (au palier de l'escalier est) annonce au 1er « Salle de
 // cours B 1.?, Salle Robert Kahn B 1.4, Salle Gordon Earle Moore B 1.5, Espace pause, Salle de cours B 1.? » ; la 101
@@ -1239,7 +1239,7 @@ export function poserEtage1(ch, renderer = null) {
   const plaqueSalle = (l1, l2, l3, x, y, face, picto = null) => panneau(new THREE.MeshStandardMaterial({ map: texPlaqueSalle(l1, l2, l3, picto), roughness: 0.35 }), 0.18, 0.108, x, y, N1 + 1.65, face);
 
   // =====================================================================
-  //  LA SALLE 101 : salle de cours (travées 1 à 4, la grande baie rouge)
+  //  LA SALLE 101 : la « Salle de cours » B 1.1 (travées 1 à 4, la grande baie rouge)
   // =====================================================================
   // Le tableau au mur ouest (le mitoyen) : la lumière des fenêtres arrive par la gauche des élèves, comme il se doit.
   // Trois rangs de trois tables pour deux (18 places), deux allées de 70 cm entre les tables : chaque chaise se
@@ -1287,7 +1287,7 @@ export function poserEtage1(ch, renderer = null) {
   }
 
   // =====================================================================
-  //  LA SALLE 102 : salle informatique (travées 5 à 8)
+  //  LA SALLE 102 : la « Salle Robert Kahn » B 1.4, salle informatique (travées 5 à 8)
   // =====================================================================
   // Une école du numérique : des postes tout autour (sous les fenêtres et contre la cloison du couloir, tournés vers le
   // mur), un îlot de quatre postes au milieu, le tableau blanc et l'écran au mur ouest, le poste de l'enseignant devant.
