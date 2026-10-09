@@ -416,20 +416,27 @@ function construireFacade(ch) {
   const six = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.22), new THREE.MeshStandardMaterial({ map: texNumero('6'), transparent: true, roughness: 0.5 }));
   six.position.set(16.85, 2.3, 0.405); ch.decor.add(six);
   for (const x of [6.9, 16.8]) { ch.boite(x - 0.13, -0.58, x + 0.13, -0.4, 3.58, 3.76, M.noirMat); }
-  // LES DRAPEAUX (photos 16, 31) : le français et l'européen sur des hampes inclinées à 45° au-dessus de la porte 6, et
-  // l'écusson tricolore « Liberté Égalité Fraternité » entre les deux. Temps sans vent : les drapeaux pendent.
-  const drapeau = (x, tex) => {
-    const g = new THREE.Group(); g.position.set(x, 3.6, 0.41); ch.decor.add(g);
-    const hampe = maille(new THREE.CylinderGeometry(0.014, 0.014, 1.5, 8), M.inox, 0, 0.53, 0.53, 0, g, { ombre: false }); hampe.rotation.x = Math.PI / 4;
-    maille(boiteM(0.08, 0.12, 0.04), M.noirMat, 0, 0, 0.02, 0, g, { ombre: false });
-    // la toile : de 0,45 à 1,35 m le long de la hampe, qui retombe de 0,55 m (un peu de drapé : trois plis)
+  // LES DRAPEAUX (photos 16 à 18) : le français à gauche, l'européen à droite, sur deux hampes qui sortent de derrière
+  // l'écusson tricolore « Liberté Égalité Fraternité » et s'ouvrent EN V (25° de part et d'autre de la verticale, un peu
+  // penchées vers la rue), pommeau doré. Temps sans vent : chaque toile pend le long du haut de sa hampe, drapée, presque
+  // parallèle à la façade — on la voit de la rue, le bleu (ou les étoiles) contre la hampe.
+  // (lot rue, 09/10/2026 : les hampes étaient à 45° droit vers la rue, les toiles vues par la tranche)
+  const dorure = new THREE.MeshStandardMaterial({ color: 0xc9a24a, roughness: 0.35, metalness: 0.8 });
+  const drapeau = (x, tex, cote) => {
+    const g = new THREE.Group(); g.position.set(x, 3.48, 0.41); ch.decor.add(g);
+    const d = new THREE.Vector3(cote * 0.42, 0.87, 0.26).normalize(), L = 1.3;
+    const hampe = maille(new THREE.CylinderGeometry(0.012, 0.012, L, 8), M.noirMat, d.x * L / 2, d.y * L / 2, d.z * L / 2, 0, g, { ombre: false });
+    hampe.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d);
+    maille(new THREE.SphereGeometry(0.025, 10, 8), dorure, d.x * (L + 0.02), d.y * (L + 0.02), d.z * (L + 0.02), 0, g, { ombre: false });
+    // la toile : accrochée de 0,5 à 1,25 m le long de la hampe, elle retombe de 0,6 m ; trois plis, le bas un peu rentré
     const pts = [], uvs = [], idx = [], n = 8;
     for (let i = 0; i <= n; i++) {
-      const t = i / n, sp = 0.45 + 0.9 * t, px = Math.sin(t * Math.PI * 3) * 0.035;
-      for (const [v, dy] of [[1, 0], [0, -0.55 - 0.08 * Math.sin(t * Math.PI)]]) {
-        pts.push(px * (1 - v * 0.6), sp * Math.SQRT1_2 + dy, sp * Math.SQRT1_2); uvs.push(t, v);
+      const t = i / n, sp = 0.5 + 0.75 * t, pli = Math.sin(t * Math.PI * 3) * 0.03;
+      for (const [v, dy] of [[1, 0], [0.5, -0.31], [0, -0.58 - 0.06 * Math.sin(t * Math.PI)]]) {
+        pts.push(d.x * sp - cote * (1 - v) * 0.05, d.y * sp + dy, d.z * sp + pli * (1 - v * 0.7) + (1 - v) * 0.02);
+        uvs.push(1 - v, t);                       // (le bleu — u = 0 — contre la hampe)
       }
-      if (i < n) { const b = i * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); }
+      if (i < n) for (let k = 0; k < 2; k++) { const b = i * 3 + k; idx.push(b, b + 1, b + 3, b + 1, b + 4, b + 3); }
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
@@ -437,9 +444,9 @@ function construireFacade(ch) {
     const toile = new THREE.Mesh(geo, jourDehors(new THREE.MeshStandardMaterial({ map: tex, side: THREE.DoubleSide, roughness: 0.9 }), 0.3));
     toile.userData.nofuse = true; g.add(toile);
   };
-  drapeau(14.3, texDrapeau('fr')); drapeau(15.2, texDrapeau('eu'));
-  const ecusson = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.6), jourDehors(new THREE.MeshStandardMaterial({ map: texDrapeau('ecusson'), transparent: true, roughness: 0.5 }), 0.3));
-  ecusson.position.set(14.75, 3.3, 0.415); ch.decor.add(ecusson);
+  drapeau(14.8, texDrapeau('fr'), -1); drapeau(15.05, texDrapeau('eu'), 1);
+  const ecusson = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.56), jourDehors(new THREE.MeshStandardMaterial({ map: texDrapeau('ecusson'), transparent: true, roughness: 0.5 }), 0.3));
+  ecusson.position.set(14.925, 3.24, 0.43); ch.decor.add(ecusson);
 
   // ---- LES ÉTAGES (pierre et fenêtres dessinées, une travée par tuile), la corniche, l'attique en retrait ----
   // (centrée sur x = 9,9 : la tuile de 1,65 m tombe juste sur les travées ; débordant de 30 cm sur les mitoyens)
@@ -477,7 +484,7 @@ function texDrapeau(q) {
     c.width = 100; c.height = 120; g.clearRect(0, 0, 100, 120);
     g.beginPath(); g.moveTo(4, 4); g.lineTo(96, 4); g.lineTo(96, 70); g.quadraticCurveTo(96, 104, 50, 116); g.quadraticCurveTo(4, 104, 4, 70); g.closePath();
     g.save(); g.clip(); g.fillStyle = '#0055a4'; g.fillRect(0, 0, 34, 120); g.fillStyle = '#f4f4f2'; g.fillRect(34, 0, 32, 120); g.fillStyle = '#ef4135'; g.fillRect(66, 0, 34, 120);
-    g.fillStyle = '#1a1a1a'; g.font = '700 9px "Segoe UI", Arial, sans-serif'; g.textAlign = 'center';
+    g.fillStyle = '#e9c25a'; g.font = '700 9px "Segoe UI", Arial, sans-serif'; g.textAlign = 'center';     // (lettres dorées, photo 16)
     g.fillText('LIBERTÉ', 50, 30); g.fillText('ÉGALITÉ', 50, 44); g.fillText('FRATERNITÉ', 50, 58); g.restore();
     g.strokeStyle = '#c9a24a'; g.lineWidth = 3; g.stroke();
   }

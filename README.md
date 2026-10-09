@@ -8,7 +8,9 @@ s'asseoir, danser, sortir son téléphone. Pas de match, pas de score, pas de bo
 > hors du dépôt) : le passage des étudiants et sa grille, le hall ouest, l'escalier jusqu'au palier du 1er étage, les
 > couloirs C05 et C01, la salle d'attente au mur safran, le hall d'entrée et l'accueil, la porte n° 6 et la façade sur la
 > rue. Les pièces jamais photographiées (salle A, bureau B, toilettes, bureaux, étages) sont derrière des portes fermées.
-> Le mobilier et la rue ont chacun leur module, dans une première version à compléter.
+> Le mobilier a son module, dans une première version à compléter. La RUE est complète (photos 07 à 18) : voitures
+> garées, totems « iris », jardinières de zinc, bambou et palmier, bancs (on s'y assoit), poubelles, vélos, motos et
+> scooters, grille du jardin doublée de brande, impasse et carrefour.
 
 ## Lancer le jeu
 
@@ -78,7 +80,9 @@ js/ecole_matieres.js  les matières dessinées (carrelage 60x120, plafonds perfo
 js/ecole_portes.js    les portes (fermées, ouvertes, AUTOMATIQUES) et les fenêtres, les vitrophanies de la porte 6
 js/ecole_lumieres.js  les spots qui suivent Haythem, la lumière cuite au sol, la carte d'environnement par pièce
 js/ecole_mobilier.js  le mobilier (chaises coque où l'on s'assoit, écran, borne, présentoir, affiches, accueil)
-js/ecole_rue.js       la rue (trottoir, chaussée, façades voisines et d'en face, impasse, carrefour)
+js/ecole_rue.js       la rue (trottoirs, chaussée et ses détails, façades voisines et d'en face, jardin, impasse, carrefour)
+js/ecole_rue_mobilier.js  le mobilier de la rue, ses plantes (un atlas de feuillage) et ses deux-roues
+js/ecole_rue_voitures.js  les voitures garées (assets/voitures.glb, repeintes dans leur texture)
 js/collisions.js      le monde solide : murs, portes, piliers, plafonds, sols et rampes (escalier)
 js/kit_decor.js       les outils de décor repris de LA CAGE : textures dessinées, relief, carte d'environnement
                       prise sur place, ombre cuite au sol, fusion des matériaux, vent des feuillages
@@ -89,6 +93,7 @@ js/ui.js, emotes.js, phone.js, audio.js, chargement.js, demarrage.js
 tools/icones.py           refait le logo « iris » et les icônes
 tools/liste_chargement.py refait assets/chargement.json (la liste de l'écran de chargement)
 tools/avatars_tel.py      refait l'avatar allégé des téléphones
+tools/voitures_glb.py     compacte assets/voitures.glb et refait sa version téléphone (assets/tel/)
 ```
 
 Les commentaires du moteur citent parfois des fichiers de LA CAGE (`js/court.js`, `js/monde_*.js`…) : ce sont des
@@ -105,7 +110,7 @@ renvois à l'origine du code, ces fichiers n'existent pas ici.
 | La salle d'attente | mur safran et sa lisse blanche, panneau DAE, écran, chaises coque (on s'y assoit), jours dépolis, borne, pilier, présentoir | 02, 21 |
 | Le couloir C01 | gaine technique, toilettes, local | 01 |
 | Le hall d'entrée | porte n° 6 (automatique) et ses vitrophanies, tapis, comptoir d'accueil, fenêtres à barreaux | 03, 16 |
-| La rue | trottoir, chaussée, façade de l'école (drapeaux, encadrements rouges), immeubles voisins et d'en face | 08 à 18 |
+| La rue | trottoirs (pavés devant le n° 8), chaussée (reprises, lignes, rond peint, pièce de pavés, plaques), façade de l'école (drapeaux en V, écusson), les deux totems « iris », jardinières de zinc, bambou, palmier, bancs à lattes (on s'y assoit), corbeille, cendrier, bacs roulants, huit voitures garées, motos, scooters, vélos, station de réparation et arceaux, le 5/7, le jardin derrière sa grille doublée de brande, l'impasse, le carrefour | 07 à 18 |
 
 Le départ est dans le hall d'entrée, juste passé la porte 6. Pause › **Revenir au départ** y ramène.
 
@@ -140,8 +145,16 @@ d'environnement, reprise quand Haythem y entre. Une nouvelle pièce : un rectang
 
 **Les crochets.** `poserMobilier(ch)` (`js/ecole_mobilier.js`) et `poserRue(ch)` (`js/ecole_rue.js`) reçoivent le
 chantier : ils posent ce qu'ils veulent avec les mêmes outils (et `ch.sieges` pour ce où l'on s'assoit). Restent à
-venir, décrits par le relevé : les totems « iris », jardinières, bancs, vélos et voitures de la rue ; l'intérieur des
-pièces fermées (salle A informatique, bureau B, toilettes) ; les étages.
+venir, décrits par le relevé : l'intérieur des pièces fermées (salle A informatique, bureau B, toilettes) ; les étages.
+
+**La rue** (`js/ecole_rue.js` et ses deux modules) : ses cotes sont dans `RUE` (trottoir de 2,4 m, chaussée de 6,4 m
+12 cm plus bas, trottoir d'en face de 1,6 m ; l'impasse à x = -10,5, le carrefour à x = 45). Les pièces opaques du
+mobilier passent par un `Atelier` qui les coud (les matières sans image sont des TEINTES posées sur les sommets de
+quatre matériaux de classe : mat, satiné, laqué, métal) ; toutes les feuilles sont des cartes d'UN atlas dessiné
+(bambou, palme, olivier, arbuste, thuya, fleurs, choisya, couronne), balancées par le vent ; sous ce qui est posé
+dehors, des taches d'ombre douces (la carte d'ombre du soleil ne couvre que le trottoir de l'école). Les voitures
+(`VOITURES`) : une carrosserie du fichier, une teinte, une place sur la file ; le monde solide et les taches sont posés
+tout de suite, les carrosseries quand `assets/voitures.glb` arrive.
 
 **L'écran de chargement** : après avoir ajouté des fichiers chargés au démarrage, relever les profils
 (`?chargement=trace`, puis `?chargement=trace&tel=1`) et relancer `python tools/liste_chargement.py` (voir son en-tête).

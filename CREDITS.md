@@ -24,12 +24,23 @@ fichier liste ce qui vient de tiers dans ce qui a été gardé.
   - « Gangnam Style » — **reizibarrientos** (`dance_gangnam.glb`)
   - « Ymca Dance Bani » — **Shivay gaming** (`dance_ymca.glb`)
 
+## Véhicules
+
+- `assets/voitures.glb`, `assets/tel/voitures.glb` : extrait (quatre carrosseries : citadine, compacte, berline, SUV)
+  du « Generic passenger car pack » de **Comrade1280** (Sketchfab), licence **Creative Commons Attribution (CC BY
+  4.0)**, http://creativecommons.org/licenses/by/4.0/ — modifié : carrosseries extraites et recentrées, tampon
+  compacté, textures réduites à 256 px pour les téléphones (`tools/voitures_glb.py`) ; dans le jeu, chaque voiture est
+  repeinte dans sa texture (`js/ecole_rue_voitures.js`).
+- Les motos, scooters, vélos, la trottinette et tout le mobilier de la rue sont modelés par le code
+  (`js/ecole_rue_mobilier.js`) : aucun fichier.
+
 ## Textures
 
 - `assets/tex/beton_*` : **Poly Haven** — *Concrete Wall 003* (https://polyhaven.com), licence **CC0 1.0** (domaine
   public). Le relief discret des murs peints.
-- Tout le reste du décor (carrelage, dalles du plafond, peintures, affiches, écran) est dessiné par le code
-  (`js/carte_ecole.js`, `js/kit_decor.js`) : aucun fichier.
+- Tout le reste du décor (carrelage, dalles du plafond, peintures, affiches, écran ; dehors : enrobé, pavés, brande,
+  façades, feuillages, totems) est dessiné par le code (`js/carte_ecole.js`, `js/kit_decor.js`, `js/ecole_rue*.js`) :
+  aucun fichier.
 
 ## Logiciels et polices
 
