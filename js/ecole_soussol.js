@@ -563,9 +563,10 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   // entre le mur sud (au ras du jambage de la porte, js/ecole_pieces.js) et le bord de la volée ; au fond, le mitoyen. Au
   // nord de y = 10,1, le mur ouest AVANCE de 20 cm (l'arête verticale de v_004 à v_006, l'interrupteur juste après) et la
   // volée descend le long de lui ; plus bas encore, le mur du sous-sol, plus épais, fait le ressaut. Le panneau « 0 » est
-  // en haut du mur du fond, près de cette arête (v_004, photo 06) ; le hublot opale plus au sud, plus haut.
-  // (Doute : le relevé de la vidéo met le « 0 » sur le mur sud ; v_004 et l'oculus de la photo 06 le montrent sur le mur
-  // du fond. On suit les images.)
+  // en haut du mur du fond, près de cette arête (v_004, photo 06) ; le hublot opale est sur le mur qui avance, au-dessus
+  // de l'interrupteur (v_014), sous le départ du rampant.
+  // (Doute : le relevé de la vidéo met le « 0 » sur le mur sud et le hublot sur le mur ouest ; v_004, v_012, v_014 et
+  // l'oculus de la photo 06 s'accordent mieux avec cette disposition-ci. On suit les images.)
   function construirePalier() {
     // le mitoyen et le mur ouest de la volée (doublé de 20 cm au nord du palier) ; pleins pour le joueur et la caméra
     B(-0.3, 9.1, 0.0, 10.1, 0, 3.25, M.blanc, { ombre: false, collision: true });
@@ -584,13 +585,19 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // le plafond (plâtre, 2,50 m), et la petite retombée au-dessus du bord : le rampant part de 2,20 m
     ch.plafond(0.0, 9.1, 1.6, 10.1, H_PALIER, 'platre', { retombees: false });
     B(0.2, 10.1, 1.35, 10.14, rampant(ESC.y0), H_PALIER, M.platre, { ombre: false }).userData.horsAOSol = true;
-    // LE PANNEAU « 0 », LE HUBLOT, L'INTERRUPTEUR À VOYANT (minuterie)
-    panneau(new THREE.MeshStandardMaterial({ map: texPanneauNiveau('0'), roughness: 0.45 }), 0.2, 0.2, 0.0, 9.86, 1.9, 'E', 0.003);
-    ch.opale(0.0, 9.4, 2.25, 'palierSS', { mur: 'E', r: 0.16, cuireForce: 0.7 });
-    ch.lampes[ch.lampes.length - 1].x = 0.12;          // (la source de sa lumière cuite, un rien devant le mur)
-    B(0.2, 10.31, 0.21, 10.39, 1.16, 1.24, X.blancMat, { ombre: false });
-    const v = maille(new THREE.CircleGeometry(0.006, 10), L_.voyant, 0.2145, 1.215, -10.35, Math.PI / 2, decor0, { ombre: false, recoit: false }); void v;
-    B(0.21, 10.33, 0.216, 10.37, 1.17, 1.215, X.blancMat, { ombre: false });
+    // LE PANNEAU « 0 » au mur du fond ; LE HUBLOT et, dessous, L'INTERRUPTEUR À VOYANT vert (minuterie) sur le mur qui
+    // avance, juste après l'arête (v_014 : le hublot en haut à gauche de l'interrupteur, l'arête à gauche ; v_012 : le
+    // « 0 » à gauche du hublot)
+    panneau(new THREE.MeshStandardMaterial({ map: texPanneauNiveau('0'), roughness: 0.45 }), 0.2, 0.2, 0.0, 9.82, 1.8, 'E', 0.003);
+    ch.opale(0.2, 10.27, 1.9, 'palierSS', { mur: 'E', r: 0.135, cuireForce: 0.7 });
+    ch.lampes[ch.lampes.length - 1].x = 0.32;          // (la source de sa lumière cuite, un rien devant le mur)
+    B(0.2, 10.38, 0.21, 10.46, 1.16, 1.24, X.blancMat, { ombre: false });
+    const v = maille(new THREE.CircleGeometry(0.006, 10), L_.voyant, 0.2145, 1.215, -10.42, Math.PI / 2, decor0, { ombre: false, recoit: false }); void v;
+    B(0.21, 10.4, 0.216, 10.44, 1.17, 1.215, X.blancMat, { ombre: false });
+    // L'OCULUS de la porte du hall ouest est un verre clair (photo 06 : on y voit le hublot et le panneau jaune ; v_001 :
+    // « le vitrage, lui, est clair ») — celui des autres portes grises reste sombre, leurs pièces derrière aussi
+    const porteHall = decor0.getObjectByName('porte service (hall)');
+    if (porteHall) porteHall.traverse((o) => { if (o.isMesh && o.material === M.vitreFente) o.material = M.verre; });
   }
 
   // =====================================================================
@@ -606,21 +613,22 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   function construireEscalier() {
     const { x0, x1, G, R } = ESC;
     // les marches (dessus de tôle, UV du monde) et les contremarches
+    // (côté mur, les marches vont jusqu'au nu du ressaut : on n'y voit pas de limon, v_008 à v_021)
     for (let k = 1; k <= 16; k++) {
       const ya = nez(k - 1), yb = nez(k), h = -R * k;
-      B(x0 + 0.03, ya - 0.012, x1 - 0.03, yb, h - 0.035, h, X.tole, { monde: true });
-      B(x0 + 0.03, ya - 0.012, x1 - 0.03, ya - 0.006, h - 0.035, h + R - 0.035, X.tole, { ombre: false, monde: true });
+      B(x0, ya - 0.012, x1 - 0.03, yb, h - 0.035, h, X.tole, { monde: true });
+      B(x0, ya - 0.012, x1 - 0.03, ya - 0.006, h - 0.035, h + R - 0.035, X.tole, { ombre: false, monde: true });
       // la caméra ne passe pas sous la volée
       C.ajouterBoite(x0, -ya, x1, -yb, { y0: Y_SS, y1: h - 0.02, joueur: false });
     }
     // la dernière contremarche, sur le sol du -1
-    B(x0 + 0.03, ESC.yPied - 0.006, x1 - 0.03, ESC.yPied, Y_SS, Y_SS + R, X.tole, { ombre: false, monde: true });
-    // les deux limons (fers en U, gris) : des plats inclinés le long de la volée
+    B(x0, ESC.yPied - 0.006, x1 - 0.03, ESC.yPied, Y_SS, Y_SS + R, X.tole, { ombre: false, monde: true });
+    // le limon côté vide (fer en U, gris) : un plat incliné qui dépasse de 5 cm la ligne des nez
     const pente = Math.atan2(R, G), Lv = Math.hypot(ESC.yPied - ESC.y0, 16 * R);
-    for (const x of [x0 + 0.015, x1 - 0.015]) {
-      const m = maille(boiteM(0.03, 0.24, Lv), X.limon, x, -R * 8.5 - 0.06, -(ESC.y0 + ESC.yPied) / 2, 0, ch.decor);
-      m.rotation.x = -pente;
-    }
+    // (raccourci de 15 cm en haut : son bout ne dépasse pas du palier)
+    const dl = 0.075, limon = maille(boiteM(0.03, 0.24, Lv - 2 * dl), X.limon, x1 - 0.015, -R * 8 + 0.05 - 0.12 / Math.cos(pente) - dl * Math.sin(pente),
+      -((ESC.y0 + ESC.yPied) / 2 + dl * Math.cos(pente)), 0, ch.decor);
+    limon.rotation.x = -pente;
     // LE RESSAUT du mitoyen (x 0,2-0,4) : le mur du sous-sol, du sol du -1 à son rebord (de 0 à -0,30), extrudé
     const sh = new THREE.Shape();
     sh.moveTo(0, Y_SS); sh.lineTo(0, 0); sh.lineTo(13.6 - ESC.y0, -0.3); sh.lineTo(14.3 - ESC.y0, -0.3); sh.lineTo(14.3 - ESC.y0, Y_SS); sh.closePath();
@@ -792,6 +800,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     for (const [c, nom, libre] of [[PORTE_PAUSE, 'espace pause', 1], [PORTE_HALL, 'hall -1 → pause', 0]]) {
       const P = ch.porte('y', X_MUR, c, { l: L_PORTE, h: 2.04, ep: EP_MUR, base: Y_SS, modele: 'grise', poignee: 'tirant', etat: 'auto', cote: 'E', libre: libre || null, nom });
       papiers(P, c > 13 ? 2 : 1);
+      // (par l'oculus, l'espace pause : v_043, v_055 — un verre clair)
+      P.g.traverse((o) => { if (o.isMesh && o.material === M.vitreFente) o.material = M.verre; });
       // le ferme-porte à glissière, côté couloir : le rail et le boîtier, en haut de l'huisserie
       B(X_MUR - EP_MUR / 2 - 0.04, c - 0.45, X_MUR - EP_MUR / 2 - 0.01, c + 0.1, Y_SS + 2.09, Y_SS + 2.12, M.ferme, { ombre: false });
     }
