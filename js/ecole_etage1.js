@@ -1590,13 +1590,12 @@ export function poserEtage1(ch, renderer = null) {
     // tabourets tournés vers la cour
     const ty0 = 12.23;
     B(8.95, ty0, 12.0, y1, N1 + 1.02, N1 + 1.05, X.stratifieGris);
-    // (09/10, relecture : deux pieds, aux bouts ; au milieu, une console vissée au mur et sa jambe de force — un pied
-    // en x 10,475 passait au travers des tibias de qui s'assied sur le tabouret du milieu)
-    for (const x of [9.0, 10.475, 11.95]) {
-      if (x !== 10.475) B(x - 0.02, ty0 + 0.04, x + 0.02, ty0 + 0.08, N1, N1 + 1.02, X.acierGris);
-      else tige(groupe, X.acierGris, [x, N1 + 0.62, -(y1 - 0.005)], [x, N1 + 0.97, -(ty0 + 0.1)], 0.012);
-      B(x - 0.02, ty0 + 0.04, x + 0.02, y1, N1 + 0.97, N1 + 1.02, X.acierGris, { ombre: false });
-    }
+    // (09/10, relecture : deux pieds, aux bouts ; entre les tabourets, deux consoles vissées au mur et leurs jambes de
+    // force — un pied en x 10,475 passait au travers des tibias de qui s'assied sur le tabouret du milieu, et une console
+    // au même endroit lui passait entre les genoux)
+    for (const x of [9.0, 11.95]) B(x - 0.02, ty0 + 0.04, x + 0.02, ty0 + 0.08, N1, N1 + 1.02, X.acierGris);
+    for (const x of [9.9, 11.0]) tige(groupe, X.acierGris, [x, N1 + 0.62, -(y1 - 0.005)], [x, N1 + 0.97, -(ty0 + 0.1)], 0.012);
+    for (const x of [9.0, 9.9, 11.0, 11.95]) B(x - 0.02, ty0 + 0.04, x + 0.02, y1, N1 + 0.97, N1 + 1.02, X.acierGris, { ombre: false });
     C.ajouterBoite(8.95, -ty0, 12.0, -y1, { y0: N1, y1: N1 + 1.06 });
     tabouretNoir(9.35, 11.88, 'N', { sortie: [9.65, 11.2] }); tolix(10.45, 11.88, 'N'); tabouretNoir(11.55, 11.88, 'N');
     // LES DISTRIBUTEURS contre le mur est (0,85 x 0,80 x 1,83) : friandises, boissons chaudes ; leur façade éclaire
