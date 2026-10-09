@@ -36,12 +36,13 @@ const KITS = {
   suv: { L: 4.62, l: 2.08, h: 1.73, peinture: { gris: true, vMin: 0.035, vMax: 0.36, vRef: 0.2 } },
 };
 // LES VOITURES : x (centre, plan), file ('sud' ou 'nord'), sens (+1 : le nez vers l'est), teinte, échelle
+// (relecture du 09/10/2026 : la Fiat est le vert d'eau pâle mesuré sur la photo 09, presque aussi bleu que vert)
 export const VOITURES = [
   { nom: 'Peugeot 207 blanche', kit: 'compacte', x: -2.15, file: 'sud', sens: -1, teinte: 0xe6e7e4, e: 1.02 },
-  { nom: 'Fiat 500 vert d\'eau', kit: 'citadine', x: 3.4, file: 'sud', sens: 1, teinte: 0xbdeedb, e: 1.06 },
-  { nom: 'la rouge', kit: 'compacte', x: 7.75, file: 'sud', sens: -1, teinte: 0x8a1520, e: 1.0 },
+  { nom: 'Fiat 500 vert d\'eau', kit: 'citadine', x: 3.4, file: 'sud', sens: 1, teinte: 0xb4dbd5, e: 1.06 },
+  { nom: 'la rouge', kit: 'compacte', x: 7.75, file: 'sud', sens: -1, teinte: 0x7a1420, e: 1.0 },
   { nom: 'Kia Niro gris anthracite', kit: 'berline', x: 12.6, file: 'sud', sens: -1, teinte: 0x3b4049, e: 1.0 },
-  { nom: 'la grise', kit: 'berline', x: 26.4, file: 'nord', sens: 1, teinte: 0xaeb3b8, e: 1.0 },
+  { nom: 'la grise', kit: 'berline', x: 26.4, file: 'nord', sens: 1, teinte: 0x9fa4a9, e: 1.0 },
   { nom: 'la blanche du bout', kit: 'compacte', x: 28.4, file: 'sud', sens: -1, teinte: 0xeeeeec, e: 1.08 },
   { nom: 'le SUV noir', kit: 'suv', x: 33.5, file: 'sud', sens: -1, teinte: 0x16171a, e: 0.92 },
   { nom: 'la bleu nuit', kit: 'compacte', x: 38.6, file: 'sud', sens: 1, teinte: 0x26385a, e: 1.0 },
@@ -116,8 +117,10 @@ function repeindre(image, kit, teinte) {
   const g = c.getContext('2d', { willReadFrequently: true });
   g.drawImage(image, 0, 0);
   const img = g.getImageData(0, 0, W, H), d = img.data, P = KITS[kit].peinture;
-  const cible = new THREE.Color(teinte);           // (en sRGB, comme la texture)
-  const tr = cible.r, tg = cible.g, tb = cible.b;
+  // la teinte voulue, en sRGB comme la texture (relecture du 09/10/2026 : `new THREE.Color(hex)` la convertissait en
+  // LINÉAIRE ; écrite telle quelle dans l'image sRGB, chaque voiture sortait plus sombre et plus saturée que sa teinte —
+  // la Fiat vert d'eau était vert menthe, la Kia gris anthracite presque noire)
+  const tr = ((teinte >> 16) & 255) / 255, tg = ((teinte >> 8) & 255) / 255, tb = (teinte & 255) / 255;
   const lisse = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
   for (let i = 0; i < d.length; i += 4) {
     const r = d[i] / 255, gg = d[i + 1] / 255, b = d[i + 2] / 255;

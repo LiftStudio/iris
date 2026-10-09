@@ -417,23 +417,25 @@ function construireFacade(ch) {
   six.position.set(16.85, 2.3, 0.405); ch.decor.add(six);
   for (const x of [6.9, 16.8]) { ch.boite(x - 0.13, -0.58, x + 0.13, -0.4, 3.58, 3.76, M.noirMat); }
   // LES DRAPEAUX (photos 16 à 18) : le français à gauche, l'européen à droite, sur deux hampes qui sortent de derrière
-  // l'écusson tricolore « Liberté Égalité Fraternité » et s'ouvrent EN V (25° de part et d'autre de la verticale, un peu
+  // l'écusson tricolore « Liberté Égalité Fraternité » et s'ouvrent EN V (17° de part et d'autre de la verticale, un peu
   // penchées vers la rue), pommeau doré. Temps sans vent : chaque toile pend le long du haut de sa hampe, drapée, presque
   // parallèle à la façade — on la voit de la rue, le bleu (ou les étoiles) contre la hampe.
-  // (lot rue, 09/10/2026 : les hampes étaient à 45° droit vers la rue, les toiles vues par la tranche)
+  // (lot rue, 09/10/2026 : les hampes étaient à 45° droit vers la rue, les toiles vues par la tranche ; relecture : le V
+  // resserré, et chaque toile pend vers l'EXTÉRIEUR, à côté de l'écusson, son bas à mi-hauteur de celui-ci — photo 16)
   const dorure = new THREE.MeshStandardMaterial({ color: 0xc9a24a, roughness: 0.35, metalness: 0.8 });
   const drapeau = (x, tex, cote) => {
     const g = new THREE.Group(); g.position.set(x, 3.48, 0.41); ch.decor.add(g);
-    const d = new THREE.Vector3(cote * 0.42, 0.87, 0.26).normalize(), L = 1.3;
+    const d = new THREE.Vector3(cote * 0.29, 0.92, 0.26).normalize(), L = 1.3;
     const hampe = maille(new THREE.CylinderGeometry(0.012, 0.012, L, 8), M.noirMat, d.x * L / 2, d.y * L / 2, d.z * L / 2, 0, g, { ombre: false });
     hampe.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d);
     maille(new THREE.SphereGeometry(0.025, 10, 8), dorure, d.x * (L + 0.02), d.y * (L + 0.02), d.z * (L + 0.02), 0, g, { ombre: false });
-    // la toile : accrochée de 0,5 à 1,25 m le long de la hampe, elle retombe de 0,6 m ; trois plis, le bas un peu rentré
+    // la toile : accrochée de 0,55 à 1,15 m le long de la hampe (la hauteur du drapeau), elle retombe de 0,8 m (sa
+    // longueur) en s'écartant un peu vers l'extérieur ; trois plis
     const pts = [], uvs = [], idx = [], n = 8;
     for (let i = 0; i <= n; i++) {
-      const t = i / n, sp = 0.5 + 0.75 * t, pli = Math.sin(t * Math.PI * 3) * 0.03;
-      for (const [v, dy] of [[1, 0], [0.5, -0.31], [0, -0.58 - 0.06 * Math.sin(t * Math.PI)]]) {
-        pts.push(d.x * sp - cote * (1 - v) * 0.05, d.y * sp + dy, d.z * sp + pli * (1 - v * 0.7) + (1 - v) * 0.02);
+      const t = i / n, sp = 0.55 + 0.6 * t, pli = Math.sin(t * Math.PI * 3) * 0.035;
+      for (const [v, dy] of [[1, 0], [0.5, -0.42], [0, -0.82 - 0.06 * Math.sin(t * Math.PI)]]) {
+        pts.push(d.x * sp + cote * (1 - v) * 0.12, d.y * sp + dy, d.z * sp + pli * (1 - v * 0.7) + (1 - v) * 0.02);
         uvs.push(1 - v, t);                       // (le bleu — u = 0 — contre la hampe)
       }
       if (i < n) for (let k = 0; k < 2; k++) { const b = i * 3 + k; idx.push(b, b + 1, b + 3, b + 1, b + 4, b + 3); }

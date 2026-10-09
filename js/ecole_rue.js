@@ -228,10 +228,12 @@ export function poserRue(ch) {
   const taches = new Taches();
   // ---- le sol : trottoirs, bordures, caniveaux, chaussée ----
   const trottoir = std({ map: texEnrobe(0x625f5f, 7), roughness: 0.9 }, 0.05);
-  const chaussee = std({ map: texEnrobe(0x4d4c4f, 11), roughness: 0.92 }, 0.04);
+  // (relecture du 09/10/2026 : mesurés sur les photos 08, 09, 13 et 15, l'enrobé de la chaussée est presque aussi clair
+  // que le trottoir — un gris moyen, ~0,66 de la façade de l'école ; il en faisait 0,45 et paraissait mouillé)
+  const chaussee = std({ map: texEnrobe(0x5e5d61, 11), roughness: 0.92 }, 0.04);
   for (const m of [trottoir, chaussee]) detailPhoto(m, 'beton', 4, 4, { relief: 0.5, grain: 0.15, rugo: true });
   const paves = std({ map: texPaves(5), roughness: 0.85 }, 0.05);
-  const granit = std({ color: 0x9a9a95, roughness: 0.72 }, 0.08);
+  const granit = std({ color: 0x7b7b77, roughness: 0.72 }, 0.06);      // (photo 08 : la bordure n'est qu'un quart plus claire que le trottoir)
   const caniveau = std({ color: 0x6c6a66, roughness: 0.85 }, 0.05);
   // (les sols : des rectangles aux UV en mètres du plan, rangés par matière puis cousus en un maillage par matière — à la
   // fin de poserRue ; leurs matières ont le grain photographique, la couture du décor ne les toucherait pas)
@@ -257,7 +259,7 @@ export function poserRue(ch) {
 
   // ---- LES DÉTAILS DE LA CHAUSSÉE (photos 08, 09, 13, 15) ----
   // les REPRISES d'enrobé : des rectangles plus sombres et plus lisses, surtout côté école
-  const reprise = std({ map: texEnrobe(0x403f42, 29), roughness: 0.78 }, 0.04);
+  const reprise = std({ map: texEnrobe(0x4f4e52, 29), roughness: 0.78 }, 0.04);
   const r = alea(77);
   for (const [x0, y0, x1, y1] of [[5.6, -3.4, 8.4, -4.4], [7.2, -5.0, 10.6, -6.6], [11.2, -4.0, 13.4, -5.1], [9.8, -3.25, 11.4, -3.75], [14.6, -3.5, 16.0, -4.6],
     [-2.5, -4.2, 0.6, -5.6], [18.2, -6.0, 20.4, -7.2], [25.5, -4.6, 28.0, -6.0], [2.0, -5.8, 3.4, -6.7], [-8.5, -5.0, -6.2, -6.6]])
@@ -287,8 +289,10 @@ export function poserRue(ch) {
   const piece = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.03, 0.72), std({ map: texPaves(41), roughness: 0.8 }, 0.1));
   piece.geometry.attributes.uv.array.forEach((v, i, a) => { a[i] = v * (i % 2 ? 0.72 : 0.95); });
   piece.position.set(16.7, H_CHAUSSEE + 0.004, 5.9); ch.decor.add(piece);
-  // L'ARCEAU DE PARKING rabattu (photo 09), rayé orange et blanc, couché sur la chaussée
-  const arceauP = new THREE.Group(); arceauP.position.set(1.45, H_CHAUSSEE + 0.03, 5.95); arceauP.rotation.y = 0.12; ch.decor.add(arceauP);
+  // L'ARCEAU DE PARKING rabattu (photo 09), rayé orange et blanc, couché sur la chaussée EN TRAVERS de la rue : la barre
+  // du côté du passage (est), les deux bras vers l'impasse, jusqu'à la charnière (relecture du 09/10/2026 : il était
+  // couché dans le sens de la rue)
+  const arceauP = new THREE.Group(); arceauP.position.set(1.45, H_CHAUSSEE + 0.03, 5.95); arceauP.rotation.y = Math.PI / 2 + 0.1; ch.decor.add(arceauP);
   const orangeP = std({ color: 0xdf6a1c, roughness: 0.5 }, 0.12), blancP = std({ color: 0xe9e7e2, roughness: 0.5 }, 0.15);
   for (let i = 0; i < 6; i++) {
     const t = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.13, 8), i % 2 ? blancP : orangeP); t.rotation.z = Math.PI / 2; t.position.set(-0.36 + i * 0.14, 0, 0.22); arceauP.add(t);
@@ -340,7 +344,9 @@ export function poserRue(ch) {
   const creme = std({ map: texFacade({ fond: '#e3dccf', cadre: '#f2efe8', verre: '#56626e', travee: 1.9, etage: 3.0, balcon: true, joints: true, encadrement: '#ece6da', rideaux: true }), roughness: 0.85 });
   const pierre4 = std({ map: texFacade({ fond: '#cdc3b6', cadre: '#efece6', verre: '#505c68', travee: 2.0, etage: 3.1, balcon: true, joints: true, encadrement: '#ddd4c6', rideaux: true, graine: 4 }), roughness: 0.85 });
   const blanc = std({ map: texFacade({ fond: '#efefe8', cadre: '#ffffff', verre: '#56626e', travee: 1.9, etage: 2.9, persiennes: '#dfe3d8', fleurs: true, graine: 5 }), roughness: 0.85 });
-  const cremeFond = std({ map: texFacade({ fond: '#ece5d2', cadre: '#f6f3ea', verre: '#5a6672', travee: 2.1, etage: 2.9, balcon: true, persiennes: '#6f8a5a', graine: 6 }), roughness: 0.85 });
+  // (photos 08, 15 : l'immeuble du coin est en pierre claire, à balcons et toit mansardé ; les volets verts du premier jet
+  // n'y sont pas)
+  const cremeFond = std({ map: texFacade({ fond: '#e4dccb', cadre: '#f3efe6', verre: '#5a6672', travee: 2.1, etage: 2.9, balcon: true, joints: true, encadrement: '#ece5d6', rideaux: true, graine: 6 }), roughness: 0.85 });
   facade(X0 - 6, -0.4, -0.3, 14, 19, creme);
   rdc(-7.5, -0.3, -0.4, 3.4, { fond: '#ddd5c6', socle: '#b9b1a3', joints: true, graine: 10, elements: [
     { t: 'porte', x0: -6.5, x1: -5.3, h: 2.9, bois: '#6b4226', arc: true, imposte: true, vantaux: 2, pierre: '#e6dfd1' },
@@ -350,11 +356,25 @@ export function poserRue(ch) {
   ] });
   rdc(X0, -7.5, -0.4, 3.4, { fond: '#d9d0bf', socle: '#b6ad9e', joints: true, graine: 11, elements: [
     { t: 'porte', x0: -9.9, x1: -8.9, h: 2.8, bois: '#5d3a22', vantaux: 2 },
-    { t: 'auvent', x0: -10.15, x1: -8.65, h: 3.2, couleur: '#c9a63a' },
     { t: 'plaque', x0: -8.55, x1: -8.33, bas: 2.55, h: 2.75, texte: '10' },
     { t: 'fenetre', x0: -8.1, x1: -7.6, bas: 1.0, h: 2.6 },
   ] });
   toit(X0 - 6, -0.3, -0.4, 4.5, 19);
+  // LA MARQUISE du n° 10 (photo 09) : un auvent de verre cannelé ambré sur une armature noire, au-dessus de la porte,
+  // qui penche vers la rue (relecture du 09/10/2026 : ce n'était qu'un trapèze jaune peint sur la façade)
+  {
+    const g = new THREE.Group(); g.position.set(-9.4, 3.3, 0.4); ch.decor.add(g);
+    const verre = std({ map: texMarquise(), roughness: 0.3, metalness: 0.1 }, 0.35);
+    const v = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.025, 0.85), verre); v.position.set(0, -0.12, 0.42); v.rotation.x = 0.28; g.add(v);
+    const noir = ch.M.acierNoir;
+    for (const x of [-0.78, 0.78]) {
+      const c = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.9), noir); c.position.set(x, -0.1, 0.42); c.rotation.x = 0.28; g.add(c);
+      // (le tirant : du mur, 20 cm plus haut, au bord de la marquise)
+      const t = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.018, 0.94), noir); t.position.set(x, -0.02, 0.415); t.rotation.x = 0.49; g.add(t);
+    }
+    const f = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.04, 0.03), noir); f.position.set(0, -0.24, 0.83); g.add(f);
+    g.traverse((o) => { o.userData.horsAOSol = true; });
+  }
   // CÔTÉ ÉCOLE, À L'EST : le n° 4 (pierre, sa porte au numéro bleu : photo 16), l'immeuble blanc aux géraniums, les
   // immeubles crème jusqu'au carrefour
   facade(20.1, -0.4, 30, 14, 20, pierre4);
@@ -426,23 +446,53 @@ export function poserRue(ch) {
   // LE CARREFOUR (est, photos 08, 15) : la rue transversale (chaussée de x1 + 2 à x1 + 11, trottoirs de part et d'autre),
   // l'immeuble crème d'en face, six étages, une brasserie au rez-de-chaussée sous son store sombre ; on s'arrête au bord
   const XT = X1 + 13.5;
+  // (relecture du 09/10/2026 : la rue transversale va plus loin — de y = -34 à 22 —, pour qu'aucun bord du sol ne se
+  // voie en biais depuis le bout de la rue ; ses trottoirs ont leurs bordures, et celles de la rue tournent au coin)
+  const YS = -34, YN = 22;
   plan(X1, Y_CHAUSSEE, X1 + 11, Y_TROTTOIR - 0.15, H_CHAUSSEE, chaussee);
-  plan(X1 + 2, -30, X1 + 11, Y_CHAUSSEE, H_CHAUSSEE, chaussee);
-  plan(X1 + 2, Y_TROTTOIR - 0.15, X1 + 11, 14, H_CHAUSSEE, chaussee);
-  plan(X1, Y_TROTTOIR, X1 + 2, 14, 0, trottoir);
-  plan(X1, -30, X1 + 2, Y_CHAUSSEE - 0.15, 0, trottoir);
-  plan(X1 + 11, -30, XT, 14, 0, trottoir);
-  ch.boite(X1 + 10.85, -30, X1 + 11, 14, H_CHAUSSEE, 0, granit, { ombre: false });
+  plan(X1 + 2, YS, X1 + 11, Y_CHAUSSEE, H_CHAUSSEE, chaussee);
+  plan(X1 + 2, Y_TROTTOIR - 0.15, X1 + 11, YN, H_CHAUSSEE, chaussee);
+  plan(X1, Y_TROTTOIR, X1 + 2, YN, 0, trottoir);
+  plan(X1, YS, X1 + 2, Y_CHAUSSEE - 0.15, 0, trottoir);
+  plan(X1 + 11, YS, XT, YN, 0, trottoir);
+  ch.boite(X1 + 10.85, YS, X1 + 11, YN, H_CHAUSSEE, 0, granit, { ombre: false });
+  for (const y of [Y_TROTTOIR, Y_CHAUSSEE]) ch.boite(X1, y - 0.15, X1 + 2.15, y, H_CHAUSSEE, 0, granit, { ombre: false });
+  ch.boite(X1 + 2, Y_TROTTOIR - 0.15, X1 + 2.15, YN, H_CHAUSSEE, 0, granit, { ombre: false });
+  ch.boite(X1 + 2, YS, X1 + 2.15, Y_CHAUSSEE, H_CHAUSSEE, 0, granit, { ombre: false });
+  // EN FACE, TROIS IMMEUBLES (photos 08, 15) : au milieu l'immeuble crème de six étages et sa brasserie ; au sud un
+  // immeuble de pierre plus haut ; au nord un immeuble blanc aux persiennes grises. Chacun a son rez-de-chaussée dessiné :
+  // aucune fenêtre d'étage ne descend jusqu'au trottoir (un seul mur de 50 m, avant la relecture).
   const fondRue = std({ map: texFacade({ fond: '#eee6cf', cadre: '#f6f2e6', verre: '#5a6672', travee: 1.9, etage: 2.85, balcon: true, rideaux: true, graine: 16 }), roughness: 0.85 });
-  facade(XT, -30, XT + 10, 20, 19.5, fondRue, { collision: false });
-  const brasserie = new THREE.Mesh(new THREE.PlaneGeometry(16, 3.6), std({ map: texRezDeChaussee(16, 3.6, { fond: '#e6dcc4', socle: '#3b3430', graine: 17, elements: [
+  const fondSud = std({ map: texFacade({ fond: '#ddd3c2', cadre: '#efe9de', verre: '#56626e', travee: 2.0, etage: 3.0, balcon: true, joints: true, encadrement: '#e6ddcc', rideaux: true, graine: 21 }), roughness: 0.85 });
+  const fondNord = std({ map: texFacade({ fond: '#efede6', cadre: '#ffffff', verre: '#56626e', travee: 1.8, etage: 2.9, persiennes: '#c3c8c2', graine: 22 }), roughness: 0.85 });
+  facade(XT, -14, XT + 10, 4, 19.5, fondRue, { collision: false });
+  facade(XT, YS, XT + 10, -14, 22.5, fondSud, { collision: false });
+  facade(XT, 4, XT + 10, YN + 2, 17, fondNord, { collision: false });
+  // un rez-de-chaussée tourné vers la rue (vers l'ouest), de yN (au nord : à gauche vu de la rue) à yS
+  const rdcO = (yN, yS, H, o) => {
+    const L = yN - yS, m = new THREE.Mesh(new THREE.PlaneGeometry(L, H), std({ map: texRezDeChaussee(L, H, o), roughness: 0.8 }, 0.12));
+    m.position.set(XT - 0.02, H / 2, -(yN + yS) / 2); m.rotation.y = -Math.PI / 2; m.userData.horsAOSol = true; ch.decor.add(m);
+  };
+  rdcO(4, -14, 3.6, { fond: '#e6dcc4', socle: '#3b3430', graine: 17, elements: [
     { t: 'fenetre', x0: 1.0, x1: 2.2, bas: 1.0, h: 2.6 }, { t: 'fenetre', x0: 3.3, x1: 4.5, bas: 1.0, h: 2.6 },
     { t: 'plaque', x0: 5.6, x1: 6.4, bas: 2.9, h: 3.15, texte: 'RUE' },
     { t: 'porte', x0: 7.3, x1: 8.5, h: 2.8, bois: '#3a2a20', vantaux: 2 },
     { t: 'vitrine', x0: 9.5, x1: 15.0, h: 2.8, cadre: '#2b2422', vantaux: 4, chaud: true },
     { t: 'auvent', x0: 9.3, x1: 15.2, h: 3.4, couleur: '#2a2e2b', texte: 'CAFÉ · BRASSERIE' },
-  ] }), roughness: 0.8 }, 0.12));
-  brasserie.position.set(XT - 0.02, 1.8, 6.0); brasserie.rotation.y = -Math.PI / 2; brasserie.userData.horsAOSol = true; ch.decor.add(brasserie);
+    { t: 'fenetre', x0: 16.2, x1: 17.4, bas: 1.0, h: 2.6 },
+  ] });
+  rdcO(-14, YS, 3.9, { fond: '#d8cdbb', socle: '#a99e8c', joints: true, graine: 23, elements: [
+    { t: 'vitrine', x0: 1.5, x1: 6.5, h: 3.0, cadre: '#1f3a2e', vantaux: 3, chaud: true },
+    { t: 'auvent', x0: 1.3, x1: 6.7, h: 3.6, couleur: '#1f3a2e' },
+    { t: 'porte', x0: 8.2, x1: 9.6, h: 3.1, bois: '#4a3322', vantaux: 2, arc: true, pierre: '#e3d9c8' },
+    { t: 'fenetre', x0: 11.5, x1: 12.7, bas: 1.0, h: 2.8 }, { t: 'fenetre', x0: 14.0, x1: 15.2, bas: 1.0, h: 2.8 }, { t: 'fenetre', x0: 16.5, x1: 17.7, bas: 1.0, h: 2.8 },
+  ] });
+  rdcO(YN + 2, 4, 3.3, { fond: '#ecebe4', socle: '#c9c6bd', graine: 24, elements: [
+    { t: 'fenetre', x0: 1.5, x1: 2.7, bas: 0.9, h: 2.5 }, { t: 'fenetre', x0: 4.0, x1: 5.2, bas: 0.9, h: 2.5 },
+    { t: 'porte', x0: 7.0, x1: 8.3, h: 2.7, bois: '#e9e9e4', vantaux: 2 },
+    { t: 'garage', x0: 10.5, x1: 13.0, h: 2.5, bois: '#6d6f70' },
+    { t: 'fenetre', x0: 15.0, x1: 16.2, bas: 0.9, h: 2.5 },
+  ] });
   C.ajouterBoite(X1 - 0.5, -(-0.4), X1, -Y_FACE, { y1: 3 });
   // (les façades d'en face et des voisins sont solides : la rue est fermée de partout)
 
@@ -501,6 +551,7 @@ function jardin(ch, x0, x1, yF) {
   for (const h of [0.68, 2.42]) ch.boite(x0, yF + 0.19, x1, yF + 0.23, h, h + 0.04, M.barreaux, { ombre: false });
   for (let x = x0; x <= x1 + 0.01; x += 2.6) ch.boite(x - 0.04, yF + 0.17, x + 0.04, yF + 0.25, 0.55, 2.55, M.barreaux, { ombre: false });
   C.ajouterBoite(x0, -(yF + 0.62), x1, -yF, { y1: 0.12 });
+  C.sol(x0, -(yF + 0.62), x1, -(yF + 0.32), 0.12);          // (on monte sur la banquette au lieu d'y enfoncer les pieds)
   C.ajouterBoite(x0, -(yF + 0.32), x1, -yF, { y1: 2.6 });
 }
 
@@ -531,6 +582,13 @@ function texRondInterdit() {
     for (let k = 0; k < 260; k++) { g.fillStyle = `rgba(0,0,0,${0.3 + r() * 0.6})`; g.fillRect(r() * w, r() * w, 2 + r() * 4, 1 + r() * 3); }
     g.globalCompositeOperation = 'source-over';
   }, null, true, 4);
+}
+// LE VERRE CANNELÉ DE LA MARQUISE (n° 10, photo 09) : des bandes ambrées, claires et foncées, dans le sens de la pente
+function texMarquise() {
+  return canvasTex(128, 64, (g, w, h) => {
+    g.fillStyle = '#c8a24e'; g.fillRect(0, 0, w, h);
+    for (let x = 0; x < w; x += 8) { g.fillStyle = 'rgba(255,236,170,0.55)'; g.fillRect(x, 0, 3, h); g.fillStyle = 'rgba(90,64,20,0.25)'; g.fillRect(x + 5, 0, 2, h); }
+  }, null, false, 4);
 }
 // LA FONTE DES REGARDS : un quadrillage en relief, sombre
 function texFonte() {

@@ -12,7 +12,8 @@
 //   - les DEUX-ROUES : la trottinette contre la grille du passage (photo 13), la moto noire à top-case devant le n° 4
 //     (photos 15, 16), les vélos contre la station de réparation orange et ses arceaux blancs (photos 15, 16), les motos
 //     et scooters garés devant le jardin, contre le bac de béton (photos 08, 15) ;
-//   - les plantes de l'IMPASSE et du n° 8 (photos 09, 10) : pots alignés devant le muret, jardinières de terre cuite.
+//   - les plantes de l'IMPASSE et du n° 8 (photos 09, 10) : pots alignés devant le muret, jardinières de terre cuite ;
+//   - les POTELETS de fonte brune au carrefour (photo 15), là où la balade s'arrête.
 //
 // LE BUDGET. Une rue, ce sont des centaines de petites pièces. Toutes les pièces opaques sont rangées dans un ATELIER qui
 // les coud en un seul maillage par matériau (et par « porte une ombre ou non ») ; TOUTES les feuilles de la rue (bambous,
@@ -24,7 +25,7 @@
 // Coordonnées du PLAN (js/carte_ecole.js) : x le long de la façade, y < 0 dehors ; un cap `a` (radians) dans le plan
 // tourne de +x vers +y — c'est aussi la rotation.y du monde (X = x, Z = -y).
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries, toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { canvasTex, windify } from './kit_decor.js';
 import { jourDehors } from './ecole_matieres.js';
@@ -143,7 +144,7 @@ export function matieresRue() {
   M.bacVert = teinte(0x2f8a3a, 'satin');
   M.caoutchouc = teinte(0x141414, 'mat');
   M.alu = teinte(0xb4b7b9, 'metal');
-  M.chrome = teinte(0xd8dbde, 'metal');
+  M.chrome = teinte(0xc4c8cc, 'metal');          // (un peu moins blanc : sous le ciel couvert il ne doit pas briller comme une peinture blanche)
   M.noirMat = teinte(0x18181a, 'mat');
   M.noirBrillant = teinte(0x111214, 'laque');
   M.grisMoteur = teinte(0x55585c, 'metal');
@@ -156,6 +157,21 @@ export function matieresRue() {
   M.cadreGris = teinte(0x6d7276, 'laque');
   M.selle = teinte(0x1a1a1a, 'satin');
   M.vitreFumee = teinte(0x23282c, 'laque');
+  // (les motos : l'acier des disques de frein, le carter du moteur, le bras oscillant clair de la trail, les optiques,
+  // les feux rouges, les plaques, la housse du scooter)
+  M.acierDisque = teinte(0x7e8286, 'metal');
+  M.moteur = teinte(0x2c2e31, 'satin');
+  M.aluMoteur = teinte(0x84888c, 'metal');
+  M.brasOscillant = teinte(0x6f7377, 'satin');
+  M.optique = teinte(0xd6dce2, 'laque');
+  M.feuRouge = teinte(0x8a1010, 'laque');
+  M.plaque = teinte(0xe6e6df, 'satin');
+  M.housse = teinte(0x2a2d31, 'mat');
+  M.fonteBrune = teinte(0x3e342c, 'satin');
+  M.betonBac = teinte(0x6c6f71, 'mat');          // (le bac de béton du jardin, photo 15 : un gris moyen, pas le gris clair des pots)
+  // LES BULLES des motos et des scooters : un plexiglas fumé, transparent (une seule matière pour toutes : un appel)
+  M.bulle = jourDehors(new THREE.MeshStandardMaterial({ color: 0x15191d, roughness: 0.06, metalness: 0.1, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide }), 0.02);
+  M.bulle.name = 'bulles des motos';
   M.tige = teinte(0x7c8a46, 'satin');
   M.ecorce = teinte(0x5f5448, 'mat');
   M.ecorceClaire = teinte(0x8a8476, 'mat');
@@ -524,7 +540,7 @@ export function arbre(F, A, M, x, y, H, R, r, { tronc = 0.22, n = 160, hFut = 0.
     const b = c.clone().add(V(Math.cos(az) * Math.sin(el) * R * d, Math.cos(el) * R * applati * d, -Math.sin(az) * Math.sin(el) * R * d));
     const dir = b.clone().sub(c).normalize().add(V((r() - 0.5) * 0.8, -0.2, (r() - 0.5) * 0.8)).normalize();
     const L = 1.1 + r() * 0.8;
-    F.carteVers(b.addScaledVector(dir, -L * 0.45), dir, L, L, c, planche, r, { pli: 0.1, teinte: 0.75 + r() * 0.4 });
+    F.carteVers(b.addScaledVector(dir, -L * 0.45), dir, L, L, c, planche, r, { pli: 0.1, teinte: 0.62 + r() * 0.36 });
   }
 }
 
@@ -582,11 +598,17 @@ const CONTINENTS = [
   [[-5, 50], [-3, 51], [1, 51], [1.7, 52.7], [0, 53.5], [-2, 55.5], [-3, 58.5], [-5, 58.5], [-6, 56.5], [-5, 55], [-3, 54], [-4.5, 53], [-4.3, 51.7]],
   [[36, 36], [36, 32], [34, 28], [39, 22], [43, 13], [45, 13], [52, 16], [56, 18], [59, 22], [56, 25], [51, 24], [48, 30], [44, 37]],
   [[43, -12], [50, -15], [49, -25], [44, -24]],
+  // (relecture du 09/10/2026 : le globe des photos 10 et 13 est vu au-dessus de l'Atlantique — l'Amérique du Sud à gauche,
+  // le Groenland, l'Islande, la côte est de l'Amérique du Nord en haut)
+  [[-77, 8], [-72, 12], [-62, 11], [-52, 5], [-50, 0], [-44, -2], [-35, -6], [-38, -13], [-40, -22], [-48, -26], [-53, -34], [-58, -38], [-65, -42], [-68, -52], [-74, -50], [-72, -40], [-71, -30], [-70, -18], [-76, -14], [-81, -5], [-80, 0], [-78, 3]],
+  [[-55, 60], [-45, 60], [-38, 65], [-22, 70], [-18, 76], [-20, 82], [-40, 83], [-60, 80], [-70, 77], [-58, 70], [-52, 66]],
+  [[-24, 64], [-22, 66], [-15, 66.5], [-13, 65], [-18, 63.4]],
+  [[-97, 26], [-90, 30], [-84, 30], [-81, 25], [-80, 27], [-81, 32], [-76, 35], [-75, 39], [-70, 41], [-70, 44], [-66, 45], [-64, 44], [-61, 46], [-56, 47], [-56, 52], [-61, 56], [-65, 60], [-78, 62], [-82, 58], [-92, 58], [-95, 62], [-110, 62], [-112, 40]],
 ];
 function texTotem(face) {
   const W = 512, H = Math.round(W * TOTEM.h / TOTEM.l);
   return canvasTex(W, H, (g) => {
-    const haut = Math.round(H * 0.33);
+    const haut = Math.round(H * 0.27);              // (le panneau clair : un quart de la hauteur, photo 10)
     // le panneau haut, gris clair, et la partie noire
     g.fillStyle = '#d6d7d4'; g.fillRect(0, 0, W, haut);
     g.fillStyle = '#0f1011'; g.fillRect(0, haut, W, H - haut);
@@ -600,15 +622,26 @@ function texTotem(face) {
       logo(30, 60, W - 60, 200, 210, false);
       g.fillStyle = '#121212'; g.font = '700 38px "Arial Narrow", "Roboto Condensed", Arial, sans-serif'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
       ['INSTITUT SUPÉRIEUR', 'DE RESSOURCES', 'INFORMATIQUES'].forEach((t, i) => g.fillText(t, 32, 330 + i * 52));
-      // LA CARTE DU MONDE : un globe vu au-dessus de l'Afrique, en trame grise ; les traces du circuit imprimé
-      const R = W * 0.95, cx = W * 0.62, cy = H * 0.86, l0 = 18 * Math.PI / 180, p0 = 18 * Math.PI / 180;
+      // LA CARTE DU MONDE (photos 08, 10, 13) : un grand globe vu au-dessus de l'Atlantique, au milieu de la partie noire
+      // (centré à 61 % de la hauteur, rayon d'un quart de la hauteur), coupé par le bord gauche : l'Amérique du Sud à gauche,
+      // l'Afrique et l'Europe à droite contre le bord du globe ; en trame grise, sous les traces du circuit imprimé.
+      // (relecture du 09/10/2026 : le globe était posé tout en bas du panneau, à moitié hors du cadre)
+      const R = H * 0.235, cx = W * 0.1, cy = H * 0.61, l0 = -38 * Math.PI / 180, p0 = 18 * Math.PI / 180;
+      // la projection orthographique ; z < 0 : la face cachée, rabattue sur le bord du globe (les contours qui y passent)
       const proj = ([lo, la]) => {
         const a = lo * Math.PI / 180 - l0, b = la * Math.PI / 180;
-        return [cx + R * Math.cos(b) * Math.sin(a), cy - R * (Math.cos(p0) * Math.sin(b) - Math.sin(p0) * Math.cos(b) * Math.cos(a))];
+        let x = Math.cos(b) * Math.sin(a), y = Math.cos(p0) * Math.sin(b) - Math.sin(p0) * Math.cos(b) * Math.cos(a);
+        const z = Math.sin(p0) * Math.sin(b) + Math.cos(p0) * Math.cos(b) * Math.cos(a);
+        if (z < 0) { const n = Math.hypot(x, y) || 1; x /= n; y /= n; }
+        return [cx + R * x, cy - R * y, z];
       };
       g.save(); g.beginPath(); g.rect(0, haut + 4, W, H - haut); g.clip();
       g.strokeStyle = 'rgba(150,152,156,0.35)'; g.lineWidth = 2;
-      for (let la = -60; la <= 75; la += 15) { g.beginPath(); for (let lo = -60; lo <= 100; lo += 4) { const [x, y] = proj([lo, la]); lo === -60 ? g.moveTo(x, y) : g.lineTo(x, y); } g.stroke(); }
+      // les parallèles et les méridiens, sur la face visible seulement ; le contour du globe
+      const ligne = (f) => { g.beginPath(); let lev = true; for (let t = 0; t <= 1.0001; t += 1 / 60) { const [x, y, z] = proj(f(t)); if (z < 0) { lev = true; continue; } if (lev) g.moveTo(x, y); else g.lineTo(x, y); lev = false; } g.stroke(); };
+      for (let la = -60; la <= 75; la += 15) ligne((t) => [-180 + 360 * t, la]);
+      for (let lo = -180; lo < 180; lo += 30) ligne((t) => [lo, -85 + 170 * t]);
+      g.strokeStyle = 'rgba(185,188,191,0.8)'; g.lineWidth = 2.6; g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.stroke();
       for (const poly of CONTINENTS) {
         g.beginPath(); poly.forEach((p, i) => { const [x, y] = proj(p); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.closePath();
         g.fillStyle = '#7d8084'; g.fill();
@@ -774,68 +807,200 @@ export function trottinette(A, M, x, y, a, { penche = 0, couchee = false, sol = 
     A.ajouter(new THREE.CylinderGeometry(0.05, 0.05, 0.055, 10).rotateX(Math.PI / 2), M.alu, dans(b, xr, 0.1, 0), false);
   }
 }
-// LA MOTO (photos 15, 16) : 'routiere' (la noire du n° 4 : demi-carénage, bulle, top-case), 'roadster' (la rouge,
-// phare rond, échappements chromés), 'scooter' (le gros scooter noir : roues de 14 pouces, tablier, selle haute).
-// Des volumes LISSES (sphères et boîtes arrondies étirées), des pneus de vraie section. Repère : l'avant en +x, la
-// moto penche sur sa béquille, à gauche (-z).
-const _boule = new THREE.SphereGeometry(1, 16, 10);
-export function moto(ch, A, M, x, y, a, type, corps, { penche = -0.1, sol = 0 } = {}) {
-  const b = pose(x, y, sol, a).multiply(new THREE.Matrix4().makeRotationX(penche));
-  const sc = type === 'scooter';
-  const R = sc ? 0.2 : 0.255, r0 = sc ? 0.062 : 0.058, h = R + r0, af = sc ? 0.74 : 0.72, ar = sc ? -0.8 : -0.73;
-  const boule = (mat, px, py, pz, sx, sy, sz, rz = 0, ombre = false) => A.ajouter(_boule, mat, dans(b, px, py, pz, 0, 0, rz, V(sx, sy, sz)), ombre);
-  // les roues : pneu (tore élargi), jante, moyeu ; le disque de frein devant
-  for (const ax of [af, ar]) {
-    A.ajouter(new THREE.TorusGeometry(R, r0, 10, 30).scale(1, 1, 1.3), M.caoutchouc, dans(b, ax, h, 0), false);
-    A.ajouter(new THREE.CylinderGeometry(R - 0.03, R - 0.03, 0.04, 22).rotateX(Math.PI / 2), M.noirBrillant, dans(b, ax, h, 0), false);
-    A.ajouter(new THREE.CylinderGeometry(0.045, 0.045, 0.1, 10).rotateX(Math.PI / 2), M.grisMoteur, dans(b, ax, h, 0), false);
+// LES MOTOS ET LES SCOOTERS (photos 15, 16) : 'routiere' (la noire du n° 4 : une trail routière à demi-carénage, bulle
+// fumée, top-case), 'roadster' (la rouge contre le bac de béton : réservoir rond, phare rond chromé, moteur à ailettes,
+// deux silencieux, deux amortisseurs), 'scooter' (les gros scooters noirs : tablier, plancher, tunnel, selle à dosseret ;
+// `housse` : celui du bac est couvert d'une housse, photo 15).
+// (relecture du 09/10/2026 : les volumes étaient des boules étirées et des pneus de jouet. Les carrosseries sont
+// maintenant des PROFILS de côté relevés sur des modèles réels — une trail 700, un roadster 1100, un maxi-scooter 530 —,
+// extrudés et arrondis ; les pneus sont tournés sur une vraie section, les jantes ont leurs bâtons, les disques de frein
+// sont des couronnes d'acier.)
+// Repère : l'avant en +x, y vers le haut, la droite en +z ; la moto penche sur sa béquille, à gauche (-z).
+// Cotes : empattement ; rayon de la roue (pneu monté), rayon de la jante, largeur du pneu (avant, arrière).
+const MOTOS = {
+  routiere: { emp: 1.46, av: [0.30, 0.215, 0.12], ar: [0.31, 0.215, 0.17] },
+  roadster: { emp: 1.49, av: [0.32, 0.229, 0.11], ar: [0.33, 0.229, 0.14] },
+  scooter: { emp: 1.58, av: [0.275, 0.19, 0.12], ar: [0.285, 0.19, 0.16] },
+};
+// un PROFIL de côté (x vers l'avant, y vers le haut) extrudé sur la largeur `ep`, centré en z, arêtes arrondies (`bt`) ;
+// les normales lissées, sauf aux arêtes vives
+// `effile` : [[x, k], ...] — la largeur multipliée par k selon x (vue de dessus : un nez qui s'affine, une selle qui
+// s'élargit sous le pilote, une coque qui finit en pointe), interpolée entre les points
+function profil(pts, ep, bt = 0.025, effile = null) {
+  const sh = new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y)));
+  const g = new THREE.ExtrudeGeometry(sh, { depth: ep, bevelEnabled: bt > 0, bevelThickness: bt, bevelSize: bt * 0.8, bevelSegments: 2, curveSegments: 4 });
+  g.translate(0, 0, -ep / 2);
+  if (effile) {
+    const p = g.attributes.position, T = effile;
+    const k = (x) => {
+      if (x <= T[0][0]) return T[0][1];
+      for (let i = 1; i < T.length; i++) if (x <= T[i][0]) return T[i - 1][1] + (T[i][1] - T[i - 1][1]) * (x - T[i - 1][0]) / (T[i][0] - T[i - 1][0]);
+      return T[T.length - 1][1];
+    };
+    for (let i = 0; i < p.count; i++) p.setZ(i, p.getZ(i) * k(p.getX(i)));
   }
-  A.ajouter(new THREE.CylinderGeometry(R * 0.62, R * 0.62, 0.006, 20).rotateX(Math.PI / 2), M.chrome, dans(b, af, h, -0.07), false);
-  if (!sc) {
-    // la fourche, le cadre, le moteur, le bras oscillant, l'échappement
-    for (const z of [-0.08, 0.08]) A.ajouter(tube(V(af, h, z), V(af - 0.24, h + 0.66, z), 0.024, 0.028, 8), type === 'roadster' ? M.chrome : M.noirMat, b, false);
-    for (const z of [-0.11, 0.11]) {
-      A.ajouter(tube(V(0.48, 0.98, z * 0.6), V(-0.18, 0.74, z), 0.022, 0.022, 6), M.grisMoteur, b, false);
-      A.ajouter(tube(V(-0.12, 0.42, z), V(ar, h, z * 0.9), 0.03, 0.022, 6), M.grisMoteur, b, false);
+  return toCreasedNormals(g, 0.75);
+}
+// LE PNEU : une section arrondie (flancs et bande de roulement) tournée autour de l'axe de la roue (z)
+const _pneus = new Map();
+function pneu(R, rJ, l) {
+  const cle = R + ':' + rJ + ':' + l;
+  if (!_pneus.has(cle)) {
+    const pts = [];
+    for (let i = 0; i <= 10; i++) {
+      const t = -Math.PI / 2 + (i / 10) * Math.PI, c = Math.cos(t);
+      pts.push(new THREE.Vector2(rJ - 0.004 + (R - rJ + 0.004) * Math.pow(Math.max(0, c), 0.45), (l / 2) * Math.sin(t)));
     }
-    A.ajouter(new RoundedBoxGeometry(0.44, 0.34, 0.27, 2, 0.05), M.grisMoteur, dans(b, 0.06, 0.45, 0), false);
-    A.ajouter(new RoundedBoxGeometry(0.2, 0.16, 0.34, 2, 0.04), M.grisMoteur, dans(b, 0.2, 0.66, 0, 0, 0, -0.35), false);
-    A.ajouter(tube(V(0.12, 0.3, 0.13), V(-0.42, 0.42, 0.17), 0.035, 0.035, 8), type === 'roadster' ? M.chrome : M.noirMat, b, false);
-    A.ajouter(tube(V(-0.42, 0.42, 0.17), V(-0.78, 0.6, 0.18), 0.06, 0.05, 10), type === 'roadster' ? M.chrome : M.noirMat, b, false);
-    // le réservoir, les écopes, la selle, la coque arrière, le garde-boue
-    boule(corps, 0.2, 0.9, 0, 0.3, 0.15, 0.19, -0.12);
-    for (const z of [-0.13, 0.13]) boule(corps, 0.34, 0.74, z, 0.2, 0.15, 0.05, -0.3);
-    A.ajouter(new RoundedBoxGeometry(0.62, 0.08, 0.28, 2, 0.035), M.selle, dans(b, -0.3, 0.88, 0, 0, 0, 0.07), false);
-    boule(corps, -0.66, 0.92, 0, 0.32, 0.075, 0.12, 0.16);
-    A.ajouter(new THREE.BoxGeometry(0.22, 0.012, 0.16), M.noirMat, dans(b, -0.86, 0.78, 0, 0, 0, -0.7), false);
-    // le guidon, les rétroviseurs, le phare
-    A.ajouter(tube(V(0.47, 1.07, -0.36), V(0.47, 1.07, 0.36), 0.012, 0.012, 6), M.noirMat, b, false);
-    for (const z of [-0.3, 0.3]) { A.ajouter(tube(V(0.47, 1.07, z * 0.8), V(0.45, 1.27, z), 0.006, 0.006, 4), M.noirMat, b, false); boule(M.noirBrillant, 0.45, 1.29, z * 1.05, 0.03, 0.05, 0.075); }
-    if (type === 'routiere') {
-      // le demi-carénage autour du phare, la bulle fumée, le top-case
-      boule(corps, 0.6, 1.0, 0, 0.26, 0.22, 0.25, -0.35);
-      A.ajouter(new THREE.BoxGeometry(0.02, 0.34, 0.34), M.vitreFumee, dans(b, 0.55, 1.26, 0, 0, 0, -0.55), false);
-      A.ajouter(new RoundedBoxGeometry(0.42, 0.3, 0.38, 3, 0.08), M.noirBrillant, dans(b, -0.84, 1.1, 0), false);
-      A.ajouter(new THREE.BoxGeometry(0.42, 0.03, 0.26), M.noirMat, dans(b, -0.8, 0.95, 0, 0, 0, 0.12), false);
-      boule(corps, -0.55, 0.9, 0, 0.36, 0.09, 0.14, 0.14);
-    } else {
-      A.ajouter(new THREE.CylinderGeometry(0.085, 0.07, 0.09, 16).rotateZ(Math.PI / 2), M.chrome, dans(b, 0.58, 0.98, 0), false);
+    _pneus.set(cle, new THREE.LatheGeometry(pts, TELEPHONE ? 20 : 30).rotateX(Math.PI / 2));     // (moins de facettes au téléphone)
+  }
+  return _pneus.get(cle);
+}
+// UNE ROUE au point (ax, R) : pneu, jante (rebord des deux côtés, cinq bâtons doubles, moyeu), disques de frein
+// (`disques` : 2 = de part et d'autre, 1 = à droite seulement) et leurs étriers
+function roue(A, M, b, ax, [R, rJ, l], { disques = 1, jante = M.noirBrillant, rebord = M.alu } = {}) {
+  A.ajouter(pneu(R, rJ, l), M.caoutchouc, dans(b, ax, R, 0), false);
+  // le rebord de la jante, tourné vers l'extérieur de chaque côté (le liseré clair des jantes usinées)
+  for (const s of [-1, 1]) A.ajouter(new THREE.RingGeometry(rJ - 0.024, rJ + 0.002, 30), rebord, dans(b, ax, R, s * l * 0.4, 0, s > 0 ? 0 : Math.PI, 0), false);
+  A.ajouter(new THREE.CylinderGeometry(rJ - 0.02, rJ - 0.02, l * 0.78, 30, 1, true).rotateX(Math.PI / 2), jante, dans(b, ax, R, 0), false);
+  for (let k = 0; k < 5; k++) {
+    const t = (k / 5) * Math.PI * 2;
+    for (const d of [-0.12, 0.12]) {
+      const a = t + d, L = rJ - 0.065;
+      A.ajouter(new THREE.BoxGeometry(L, 0.022, l * 0.32), jante, dans(b, ax + Math.cos(a) * (0.05 + L / 2), R + Math.sin(a) * (0.05 + L / 2), 0, 0, 0, a), false);
+    }
+  }
+  A.ajouter(new THREE.CylinderGeometry(0.055, 0.055, l * 0.62, 14).rotateX(Math.PI / 2), M.grisMoteur, dans(b, ax, R, 0), false);
+  const rD = rJ * 0.7;
+  for (const s of disques === 2 ? [-1, 1] : [1]) {
+    A.ajouter(new THREE.RingGeometry(rD * 0.55, rD, 28), M.acierDisque, dans(b, ax, R, s * (l * 0.33 + 0.012), 0, s > 0 ? 0 : Math.PI, 0), false);
+    A.ajouter(new RoundedBoxGeometry(0.1, 0.06, 0.035, 2, 0.012), M.noirMat, dans(b, ax - rD * 0.62, R + rD * 0.62, s * (l * 0.33 + 0.03), 0, 0, -0.8), false);
+  }
+}
+// LE GARDE-BOUE : une bande cintrée au-dessus de la roue, de l'angle a0 à a1 (radians, depuis l'avant, vers le haut)
+function gardeBoue(A, b, ax, R, a0, a1, larg, mat) {
+  const g = new THREE.TorusGeometry(R + 0.035, 0.012, 4, 14, a1 - a0).scale(1, 1, larg / 0.024).rotateZ(a0);
+  A.ajouter(g, mat, dans(b, ax, R, 0), false);
+}
+const _boule = new THREE.SphereGeometry(1, 18, 12);
+export function moto(ch, A, M, x, y, a, type, corps, { penche = -0.1, sol = 0, housse = false } = {}) {
+  const b = pose(x, y, sol, a).multiply(new THREE.Matrix4().makeRotationX(penche));
+  const K = MOTOS[type], af = K.emp / 2, ar = -K.emp / 2, Rf = K.av[0], Rr = K.ar[0];
+  const P = (geo, mat, px, py, pz, rx = 0, ry = 0, rz = 0, s = null) => A.ajouter(geo, mat, dans(b, px, py, pz, rx, ry, rz, s), false);
+  const T = (p, q, r0, r1, mat, seg = 8) => A.ajouter(tube(V(...p), V(...q), r0, r1, seg), mat, b, false);
+  const RB = (w, h, d, r, mat, px, py, pz, rz = 0) => P(new RoundedBoxGeometry(w, h, d, 2, r), mat, px, py, pz, 0, 0, rz);
+  const boule = (mat, px, py, pz, sx, sy, sz, rz = 0) => P(_boule, mat, px, py, pz, 0, 0, rz, V(sx, sy, sz));
+  // la fourche (chasse de 25°) : le point à la distance d de l'axe de la roue avant, le long des fourreaux
+  const fo = (d, z) => [af - 0.423 * d, Rf + 0.906 * d, z];
+  roue(A, M, b, af, K.av, { disques: type === 'scooter' ? 1 : 2, rebord: type === 'roadster' ? M.chrome : M.alu });
+  roue(A, M, b, ar, K.ar, { disques: 1, rebord: type === 'roadster' ? M.chrome : M.alu });
+  // les repose-pieds, la béquille latérale (son pied touche le sol une fois la moto penchée)
+  if (type !== 'scooter') for (const s of [-1, 1]) { P(new THREE.BoxGeometry(0.03, 0.02, 0.11), M.noirMat, -0.14, 0.36, s * 0.2); P(new THREE.BoxGeometry(0.03, 0.02, 0.1), M.noirMat, -0.44, 0.47, s * 0.2); }
+  T([-0.04, 0.34, -0.15], [0.07, 0.035, -0.34], 0.012, 0.012, M.noirMat, 5);
+
+  if (type === 'routiere') {
+    // LA TRAIL ROUTIÈRE NOIRE du n° 4 (photos 15, 16) : fourche, cadre, bras oscillant clair, moteur bicylindre
+    for (const z of [-0.085, 0.085]) { T(fo(0, z), fo(0.4, z), 0.033, 0.033, M.noirMat); T(fo(0.38, z), fo(0.74, z), 0.024, 0.024, M.alu); }
+    P(new THREE.BoxGeometry(0.1, 0.05, 0.26), M.noirMat, ...fo(0.72, 0), 0, 0, 0.44);
+    gardeBoue(A, b, af, Rf, 0.55, 2.0, 0.13, M.noirBrillant);
+    for (const z of [-0.12, 0.12]) { T([0.4, 0.98, z * 0.7], [-0.16, 0.52, z], 0.026, 0.026, M.noirMat, 6); T([-0.18, 0.47, z], [ar, Rr, z * 0.95], 0.032, 0.022, M.brasOscillant, 6); }
+    T([-0.3, 0.48, 0], [-0.13, 0.78, 0], 0.03, 0.03, M.noirMat, 6);
+    RB(0.46, 0.3, 0.34, 0.05, M.moteur, 0.08, 0.46, 0);
+    RB(0.22, 0.24, 0.32, 0.04, M.moteur, 0.3, 0.66, 0, -0.35);
+    P(new THREE.BoxGeometry(0.05, 0.3, 0.34), M.noirMat, 0.45, 0.63, 0, 0, 0, -0.15);
+    for (const z of [-0.06, 0.06]) { T([0.4, 0.56, z], [0.42, 0.3, z], 0.022, 0.022, M.grisMoteur, 6); T([0.42, 0.3, z], [0.12, 0.17, z * 0.6], 0.022, 0.024, M.grisMoteur, 6); }
+    RB(0.42, 0.14, 0.26, 0.04, M.noirMat, -0.1, 0.19, 0.05);
+    // le réservoir et le demi-carénage, ses flancs plus larges, la bulle fumée, les deux optiques
+    P(profil([[0.66, 0.8], [0.7, 0.86], [0.66, 0.96], [0.58, 1.05], [0.48, 1.1], [0.36, 1.06], [0.22, 1.08], [0.06, 1.05], [-0.06, 0.98], [-0.1, 0.88], [-0.04, 0.77], [0.14, 0.73], [0.36, 0.71], [0.52, 0.73]], 0.28, 0.04, [[-0.1, 0.75], [0.1, 0.95], [0.4, 1.25], [0.6, 1.2], [0.7, 0.55]]), corps, 0, 0, 0);
+    P(profil([[0.6, 0.74], [0.69, 0.85], [0.61, 1.0], [0.47, 1.05], [0.37, 0.86], [0.41, 0.72]], 0.44, 0.035, [[0.37, 1.0], [0.55, 0.95], [0.69, 0.45]]), corps, 0, 0, 0);
+    P(profil([[0.57, 1.04], [0.47, 1.33], [0.43, 1.32], [0.5, 1.06]], 0.3, 0.01, [[0.43, 0.8], [0.57, 1.0]]), M.bulle, 0, 0, 0);
+    for (const z of [-0.075, 0.075]) P(new THREE.BoxGeometry(0.03, 0.035, 0.085), M.optique, 0.705, 0.86, z, 0, 0, -0.5);
+    // la selle à deux niveaux, la coque arrière, le feu, le support de plaque et la plaque, le top-case sur son porte-bagages
+    P(profil([[-0.05, 0.9], [-0.1, 0.94], [-0.42, 0.91], [-0.5, 0.97], [-0.8, 0.99], [-0.82, 0.94], [-0.5, 0.9], [-0.1, 0.86]], 0.25, 0.03, [[-0.82, 0.7], [-0.5, 0.95], [-0.3, 1.1], [-0.1, 0.85], [0, 0.6]]), M.selle, 0, 0, 0);
+    P(profil([[-0.4, 0.8], [-0.5, 0.9], [-0.84, 0.94], [-0.95, 0.9], [-0.9, 0.84], [-0.6, 0.78]], 0.18, 0.025, [[-0.95, 0.45], [-0.6, 0.95], [-0.4, 1.0]]), corps, 0, 0, 0);
+    P(new THREE.BoxGeometry(0.03, 0.04, 0.14), M.feuRouge, -0.965, 0.885, 0);
+    P(new THREE.BoxGeometry(0.24, 0.012, 0.14), M.noirMat, -0.99, 0.75, 0, 0, 0, 0.9);
+    P(new THREE.BoxGeometry(0.008, 0.13, 0.21), M.plaque, -1.065, 0.6, 0);
+    P(new THREE.BoxGeometry(0.36, 0.02, 0.24), M.noirMat, -0.92, 0.985, 0);
+    P(new RoundedBoxGeometry(0.4, 0.3, 0.42, 3, 0.07), M.noirBrillant, -0.95, 1.14, 0);
+    // le guidon, ses protège-mains, les rétroviseurs
+    T([0.36, 1.08, -0.36], [0.36, 1.08, 0.36], 0.013, 0.013, M.noirMat, 6);
+    for (const s of [-1, 1]) {
+      RB(0.12, 0.08, 0.05, 0.02, M.noirBrillant, 0.42, 1.08, s * 0.35);
+      T([0.37, 1.08, s * 0.24], [0.41, 1.26, s * 0.3], 0.007, 0.007, M.noirMat, 4);
+      RB(0.04, 0.07, 0.13, 0.015, M.noirBrillant, 0.41, 1.28, s * 0.31);
+    }
+  } else if (type === 'roadster') {
+    // LE ROADSTER ROUGE (photo 15) : fourche chromée, moteur quatre cylindres à ailettes, deux silencieux, deux
+    // amortisseurs, réservoir rond, phare rond chromé
+    for (const z of [-0.09, 0.09]) { T(fo(0, z), fo(0.38, z), 0.03, 0.03, M.alu); T(fo(0.36, z), fo(0.78, z), 0.022, 0.022, M.chrome); }
+    P(new THREE.BoxGeometry(0.1, 0.05, 0.28), M.chrome, ...fo(0.74, 0), 0, 0, 0.44);
+    gardeBoue(A, b, af, Rf, 0.4, 2.1, 0.12, corps);
+    gardeBoue(A, b, ar, Rr, 1.2, 2.5, 0.15, M.noirBrillant);
+    for (const z of [-0.1, 0.1]) {
+      T([0.46, 1.0, z * 0.6], [-0.12, 0.84, z], 0.022, 0.022, M.noirMat, 6);
+      T([0.44, 0.97, z * 0.6], [0.36, 0.3, z * 1.2], 0.022, 0.022, M.noirMat, 6);
+      T([-0.16, 0.44, z * 1.1], [ar, Rr, z], 0.03, 0.024, M.noirMat, 6);
+      T([-0.6, 0.4, z * 1.25], [-0.5, 0.82, z * 1.2], 0.022, 0.022, M.chrome, 6);
+      T([-0.58, 0.46, z * 1.25], [-0.52, 0.74, z * 1.2], 0.034, 0.034, M.chrome, 8);
+    }
+    // le moteur : carter, bloc à ailettes alternées, les quatre collecteurs, deux silencieux chromés
+    RB(0.44, 0.24, 0.42, 0.05, M.aluMoteur, 0.08, 0.38, 0);
+    for (let k = 0; k < 7; k++) P(new THREE.BoxGeometry(0.26 - k * 0.006, 0.014, 0.44 - k * 0.01), k % 2 ? M.moteur : M.aluMoteur, 0.2 + k * 0.012, 0.53 + k * 0.034, 0, 0, 0, -0.22);
+    RB(0.2, 0.08, 0.38, 0.03, M.aluMoteur, 0.29, 0.79, 0, -0.22);
+    for (const z of [-0.12, -0.04, 0.04, 0.12]) T([0.36, 0.52, z], [0.42, 0.28, z * 1.1], 0.019, 0.019, M.chrome, 6);
+    for (const s of [-1, 1]) {
+      T([0.42, 0.28, s * 0.1], [-0.2, 0.3, s * 0.16], 0.026, 0.026, M.chrome, 6);
+      T([-0.2, 0.3, s * 0.16], [-0.86, 0.48, s * 0.18], 0.05, 0.046, M.chrome, 12);
+      P(new THREE.CircleGeometry(0.044, 12), M.noirMat, -0.865, 0.482, s * 0.18, 0, -Math.PI / 2, 0.27);
+    }
+    // le réservoir rond (une goutte), les caches latéraux, la selle plate, le feu, la plaque
+    boule(corps, 0.17, 0.93, 0, 0.31, 0.135, 0.17, -0.07);
+    for (const z of [-0.13, 0.13]) boule(corps, -0.2, 0.74, z, 0.13, 0.09, 0.025, 0.1);
+    P(profil([[0.04, 0.92], [-0.02, 0.97], [-0.7, 0.96], [-0.75, 0.91], [-0.7, 0.87], [0.0, 0.86]], 0.24, 0.03, [[-0.75, 0.8], [-0.3, 1.05], [0.04, 0.75]]), M.selle, 0, 0, 0);
+    P(profil([[-0.62, 0.86], [-0.9, 0.85], [-1.0, 0.76], [-0.98, 0.72], [-0.86, 0.79], [-0.6, 0.81]], 0.13, 0.02, [[-1.0, 0.6], [-0.6, 1.0]]), corps, 0, 0, 0);
+    P(new THREE.BoxGeometry(0.05, 0.05, 0.09), M.feuRouge, -0.99, 0.78, 0, 0, 0, 0.5);
+    P(new THREE.BoxGeometry(0.008, 0.13, 0.21), M.plaque, -1.0, 0.62, 0);
+    // le phare rond (boîtier chromé, verre), les deux compteurs, le guidon relevé et ses rétroviseurs ronds
+    P(new THREE.CylinderGeometry(0.098, 0.085, 0.13, 22).rotateZ(Math.PI / 2), M.chrome, 0.6, 1.0, 0);
+    P(new THREE.CircleGeometry(0.09, 22), M.optique, 0.667, 1.0, 0, 0, Math.PI / 2, 0);
+    for (const z of [-0.065, 0.065]) P(new THREE.CylinderGeometry(0.048, 0.048, 0.05, 16), M.noirBrillant, 0.5, 1.1, z, 0, 0, 0.5);
+    T([0.4, 1.12, -0.36], [0.42, 1.08, 0], 0.012, 0.012, M.chrome, 6); T([0.42, 1.08, 0], [0.4, 1.12, 0.36], 0.012, 0.012, M.chrome, 6);
+    for (const s of [-1, 1]) {
+      T([0.4, 1.12, s * 0.3], [0.38, 1.33, s * 0.33], 0.006, 0.006, M.chrome, 4);
+      P(new THREE.CylinderGeometry(0.055, 0.055, 0.02, 16).rotateZ(Math.PI / 2), M.chrome, 0.38, 1.36, s * 0.34);
     }
   } else {
-    // le scooter : la fourche courte, le tablier, le nez, le tunnel, la coque arrière, la selle, la bulle
-    for (const z of [-0.07, 0.07]) A.ajouter(tube(V(af, h, z), V(af - 0.2, h + 0.45, z), 0.022, 0.026, 6), M.noirMat, b, false);
-    boule(corps, 0.48, 0.74, 0, 0.11, 0.36, 0.19, -0.35);
-    boule(corps, 0.6, 0.98, 0, 0.2, 0.13, 0.18, -0.25);
-    A.ajouter(new THREE.BoxGeometry(0.5, 0.05, 0.36), M.noirMat, dans(b, 0.1, 0.4, 0), false);
-    boule(corps, 0.06, 0.5, 0, 0.28, 0.1, 0.09);
-    boule(corps, -0.42, 0.62, 0, 0.5, 0.2, 0.17, 0.08);
-    boule(corps, -0.78, 0.74, 0, 0.2, 0.09, 0.13, 0.3);
-    A.ajouter(new RoundedBoxGeometry(0.7, 0.08, 0.28, 2, 0.035), M.selle, dans(b, -0.36, 0.84, 0, 0, 0, 0.06), false);
-    A.ajouter(new THREE.BoxGeometry(0.015, 0.26, 0.32), M.vitreFumee, dans(b, 0.58, 1.18, 0, 0, 0, -0.45), false);
-    A.ajouter(tube(V(0.44, 1.06, -0.34), V(0.44, 1.06, 0.34), 0.013, 0.013, 6), M.noirMat, b, false);
-    A.ajouter(tube(V(-0.35, 0.32, 0.16), V(-0.9, 0.4, 0.17), 0.05, 0.045, 10), M.grisMoteur, b, false);
+    // LE MAXI-SCOOTER (photos 08, 15) : tablier et nez, plancher et tunnel, coque arrière, selle à dosseret, bulle
+    for (const z of [-0.075, 0.075]) T(fo(0, z), fo(0.42, z), 0.026, 0.026, M.noirMat, 6);
+    gardeBoue(A, b, af, Rf, 0.5, 2.0, 0.13, corps);
+    P(profil([[0.89, 0.79], [0.84, 0.9], [0.66, 1.02], [0.52, 1.06], [0.44, 0.98], [0.4, 0.62], [0.34, 0.44], [0.34, 0.33], [0.45, 0.33], [0.5, 0.52], [0.62, 0.63], [0.86, 0.7]], 0.4, 0.05, [[0.34, 1.0], [0.5, 1.12], [0.66, 1.0], [0.89, 0.5]]), corps, 0, 0, 0);
+    P(profil([[0.62, 1.03], [0.52, 1.36], [0.47, 1.35], [0.55, 1.05]], 0.3, 0.01, [[0.47, 0.8], [0.62, 1.0]]), M.bulle, 0, 0, 0);
+    for (const z of [-0.12, 0.12]) P(new THREE.BoxGeometry(0.03, 0.04, 0.12), M.optique, 0.895, 0.8, z, 0, z > 0 ? 0.3 : -0.3, -0.6);
+    P(new THREE.BoxGeometry(0.44, 0.06, 0.44), M.noirMat, 0.17, 0.36, 0);
+    P(profil([[0.4, 0.6], [0.06, 0.58], [0.0, 0.4], [0.4, 0.4]], 0.15, 0.03), corps, 0, 0, 0);
+    P(profil([[0.06, 0.4], [0.06, 0.66], [-0.18, 0.8], [-0.75, 0.88], [-0.97, 0.84], [-0.94, 0.74], [-0.7, 0.66], [-0.4, 0.52], [-0.1, 0.38]], 0.34, 0.04, [[-0.97, 0.55], [-0.75, 0.9], [-0.4, 1.1], [0.06, 0.9]]), corps, 0, 0, 0);
+    P(profil([[0.02, 0.82], [-0.04, 0.88], [-0.4, 0.86], [-0.47, 0.97], [-0.52, 0.98], [-0.56, 0.92], [-0.84, 0.95], [-0.86, 0.89], [-0.5, 0.82], [-0.04, 0.76]], 0.3, 0.03, [[-0.86, 0.75], [-0.6, 1.0], [-0.3, 1.1], [0.02, 0.75]]), M.selle, 0, 0, 0);
+    P(new THREE.BoxGeometry(0.03, 0.05, 0.2), M.feuRouge, -0.975, 0.8, 0, 0, 0, 0.4);
+    P(new THREE.BoxGeometry(0.008, 0.13, 0.21), M.plaque, -0.98, 0.6, 0);
+    // le moteur et le carter de transmission (à gauche), le silencieux (à droite)
+    RB(0.36, 0.26, 0.3, 0.05, M.moteur, -0.1, 0.3, 0);
+    RB(0.64, 0.2, 0.08, 0.04, M.alu, -0.44, 0.33, -0.13, 0.12);
+    T([-0.28, 0.26, 0.15], [-0.88, 0.42, 0.18], 0.056, 0.05, M.noirMat, 12);
+    P(new THREE.CircleGeometry(0.035, 10), M.chrome, -0.885, 0.421, 0.18, 0, -Math.PI / 2, 0.26);
+    // le guidon et les rétroviseurs
+    T([0.45, 1.06, -0.34], [0.45, 1.06, 0.34], 0.014, 0.014, M.noirMat, 6);
+    for (const s of [-1, 1]) { T([0.45, 1.06, s * 0.26], [0.48, 1.24, s * 0.32], 0.007, 0.007, M.noirMat, 4); RB(0.04, 0.07, 0.13, 0.015, M.noirBrillant, 0.48, 1.26, s * 0.33); }
+    // LA HOUSSE (photo 15) : une bâche sombre posée sur la selle et la coque, qui retombe sur les flancs
+    if (housse) P(profil([[0.12, 0.86], [0.02, 0.95], [-0.45, 0.99], [-0.88, 1.0], [-1.0, 0.86], [-0.97, 0.6], [-0.6, 0.56], [-0.1, 0.66]], 0.42, 0.035, [[-1.0, 0.7], [-0.5, 1.05], [0.12, 0.8]]), M.housse, 0, 0, 0);
   }
   ch.C.ajouterBoiteOrientee(x, -y, 1.05, 0.33, -a, { y0: sol, y1: sol + 1.2, camera: false });
+}
+// LE POTELET DE PARIS (photo 15 : au coin du carrefour) : une borne de fonte brun sombre, une bague, une tête ronde.
+// Ils bordent les trottoirs au carrefour, là où la balade s'arrête.
+const _potelet = new THREE.LatheGeometry([[0, 0], [0.055, 0], [0.055, 0.04], [0.045, 0.06], [0.045, 0.82], [0.055, 0.84], [0.055, 0.88], [0.045, 0.9], [0.045, 0.98], [0.035, 1.02], [0, 1.04]].map(([x, y]) => new THREE.Vector2(x, y)), 14);
+export function potelet(ch, A, M, x, y) {
+  A.ajouter(_potelet, M.fonteBrune, pose(x, y));
+  ch.C.ajouterCercle(x, -y, 0.07, { y1: 1.04, camera: false });
 }
 // LA STATION DE RÉPARATION orange (photos 15, 16) et SES ARCEAUX BLANCS
 export function stationVelo(ch, A, M, x, y, a, h0 = 0) {
@@ -880,8 +1045,14 @@ export function poserMobilierRue(ch, R) {
   cendrier(ch, A, M, 9.95, -1.98);
   // le second banc, plus court, au droit du bureau B ; le totem de l'entrée n° 6 ; le bambou ; la jardinière en treillis
   banc(ch, A, M, 10.95, -1.25, 1.05, 0, { lattesDos: 6 });
+  // (les recoins trop étroits pour Haythem — 30 à 55 cm entre le totem, les jardinières, les bancs, la corbeille et le
+  // cendrier — sont bouchés : il s'y coinçait en tremblant entre deux obstacles. Relecture du 09/10/2026.)
+  ch.C.ajouterBoite(6.0, 0.95, 10.38, 1.4, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(6.0, 1.4, 6.78, 1.85, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(9.0, 1.4, 10.38, 1.95, { y1: 0.9, camera: false });
   totem(ch, A, M, 12.05, -0.8, 'ouest');
-  h = potRond(ch, A, M, 12.62, -1.55, 0.31, 0.23, 0.78, M.anthracite); bambou(F, A, M, 12.62, -1.55, h, 2.1, r, 26);
+  // (le bambou monte jusqu'aux appuis des fenêtres du 1er étage, photos 16 et 17 : 2,6 m au-dessus du pot)
+  h = potRond(ch, A, M, 12.62, -1.55, 0.31, 0.23, 0.78, M.anthracite); bambou(F, A, M, 12.62, -1.55, h, 2.6, r, 28);
   const tb = pose(13.08, -1.3);
   A.ajouter(new THREE.BoxGeometry(0.44, 0.58, 0.44), M.treillis, dans(tb, 0, 0.29, 0));
   A.ajouter(new THREE.BoxGeometry(0.4, 0.01, 0.4), M.terre, dans(tb, 0, 0.55, 0), false);
@@ -921,8 +1092,9 @@ export function poserMobilierRue(ch, R) {
     else arbuste(F, A, M, xi, y, hh, 0.5 + r() * 0.2, 1.1 + r() * 0.7, pl, r, 40);
   }
   // sur le trottoir pavé du n° 10 : la terre cuite et le grand pot rond gris au thuya
-  h = potRond(ch, A, M, R.X0 + 0.8, -1.9, 0.27, 0.2, 0.42, M.terreCuite); arbuste(F, A, M, R.X0 + 0.8, -1.9, h, 0.35, 0.9, PLANCHE.choisya, r, 22);
-  h = potRond(ch, A, M, R.X0 + 1.9, -1.15, 0.27, 0.19, 0.72, M.potGris); cypres(F, A, M, R.X0 + 1.9, -1.15, h, 1.6, 0.26, r);
+  // (le premier contre le muret : entre les deux, un passage de 50 cm où Haythem se coinçait — relecture du 09/10/2026)
+  h = potRond(ch, A, M, R.X0 + 0.32, -1.9, 0.27, 0.2, 0.42, M.terreCuite); arbuste(F, A, M, R.X0 + 0.32, -1.9, h, 0.35, 0.9, PLANCHE.choisya, r, 22);
+  h = potRond(ch, A, M, R.X0 + 1.9, -0.75, 0.27, 0.19, 0.72, M.potGris); cypres(F, A, M, R.X0 + 1.9, -0.75, h, 1.6, 0.26, r);
 
   // ---------------------------------------------------------------- les deux-roues
   // devant le n° 4 (photos 15, 16) : la moto routière noire sur le trottoir, le nez vers la façade
@@ -936,29 +1108,40 @@ export function poserMobilierRue(ch, R) {
   velo(A, M, 21.7, -3.85, 0.15, M.cadreGris, { penche: -0.22, style: 'route', h: hC });
   trottinette(A, M, 22.4, -4.25, 0.5, { couchee: true, sol: hC });
   ch.C.ajouterBoite(20.6, 3.0, 23.8, 4.4, { y0: hC, y1: hC + 1.1, camera: false });        // (les vélos, en bloc)
-  // devant le jardin, contre le bac de béton (photos 08, 15) : la rouge, deux scooters noirs
+  // devant le jardin, contre le bac de béton (photos 08, 15) : la rouge, deux scooters noirs (celui du bac sous sa housse)
   // (le bac de béton gris, 1,4 x 0,55 x 0,55, contre la bordure ; ses bords chanfreinés, l'étiquette)
   const bb = pose(19.7, R.Y_CHAUSSEE + 0.38, hC);
-  A.ajouter(new RoundedBoxGeometry(1.4, 0.55, 0.55, 2, 0.03), M.potGris, dans(bb, 0, 0.275, 0));
+  A.ajouter(new RoundedBoxGeometry(1.4, 0.55, 0.55, 2, 0.03), M.betonBac, dans(bb, 0, 0.275, 0));
   A.ajouter(new THREE.BoxGeometry(1.3, 0.01, 0.45), M.terre, dans(bb, 0, 0.552, 0), false);
   A.ajouter(new THREE.BoxGeometry(0.18, 0.06, 0.005), M.noirMat, dans(bb, 0.35, 0.38, -0.278), false);
   ch.C.ajouterBoite(19.0, -(R.Y_CHAUSSEE + 0.66), 20.4, -(R.Y_CHAUSSEE + 0.1), { y0: hC, y1: hC + 0.56, camera: false });
   arbuste(F, A, M, 19.4, R.Y_CHAUSSEE + 0.38, hC + 0.55, 0.25, 0.3, PLANCHE.arbuste, r, 8);
   const ys = R.Y_CHAUSSEE + 1.0;
-  moto(ch, A, M, 20.95, ys, Math.PI / 2 - 0.08, 'scooter', M.noirBrillant, { penche: -0.1, sol: hC });
+  moto(ch, A, M, 20.95, ys, Math.PI / 2 - 0.08, 'scooter', M.noirBrillant, { penche: -0.1, sol: hC, housse: true });
   moto(ch, A, M, 22.05, ys, Math.PI / 2 + 0.15, 'roadster', M.rougeMoto, { penche: -0.1, sol: hC });
   moto(ch, A, M, 23.35, ys, Math.PI / 2 + 0.05, 'scooter', M.noirBrillant, { penche: -0.1, sol: hC });
+  // (les trois en bloc, comme les vélos : entre deux guidons il reste 40 à 60 cm, où Haythem se coinçait en tremblant)
+  ch.C.ajouterBoite(20.6, -(ys - 1.07), 23.7, -(ys + 1.07), { y0: hC, y1: hC + 1.2, camera: false });
   // les plantes un peu plus loin, contre la façade du n° 4 et de l'immeuble blanc (photo 15 : palmier, arbustes)
   h = potRond(ch, A, M, 27.6, -0.75, 0.3, 0.22, 0.55, M.anthracite); palmier(F, A, M, 27.6, -0.75, h, r);
   h = potRond(ch, A, M, 28.6, -0.7, 0.26, 0.2, 0.5, M.terreCuite); arbuste(F, A, M, 28.6, -0.7, h, 0.45, 0.9, PLANCHE.choisya, r, 26);
 
+  // ---------------------------------------------------------------- les potelets du carrefour (photo 15)
+  // au bout des deux trottoirs, là où la balade s'arrête, et le long du trottoir d'en face de la rue transversale
+  // (sur la ligne où le monde solide arrête Haythem : js/ecole_rue.js, la boîte de x1 - 0,5 à x1)
+  for (const y of [-0.85, -1.7, -2.5]) potelet(ch, A, M, R.X1 - 0.45, y);
+  for (const y of [R.Y_CHAUSSEE - 0.3, R.Y_CHAUSSEE - 1.1]) potelet(ch, A, M, R.X1 - 0.45, y);
+  for (let y = -13; y <= 1; y += 2.8) potelet(ch, A, M, R.X1 + 11.3, y);
+
   // ---------------------------------------------------------------- les arbres du jardin et de l'impasse
   // (photos 08, 09, 15 : de grands arbres débordent de la grille du jardin ; derrière le muret de l'impasse, une masse
   // de verdure). Loin de l'école : sans ombre portée (la carte d'ombre ne couvre pas le fond de la rue).
-  for (const [x, y, H, Rr, n] of [[17.0, R.Y_FACE - 3.0, 12.5, 3.5, 210], [22.5, R.Y_FACE - 2.8, 10, 3.0, 170], [28.0, R.Y_FACE - 3.2, 11, 3.3, 180], [37.5, R.Y_FACE - 3.0, 10.5, 3.2, 170]])
+  // (relecture du 09/10/2026 : plus grands, plus denses et plus sombres — sur les photos 08 et 15, ils débordent
+  // largement de la grille et ferment le haut de la rue côté jardin)
+  for (const [x, y, H, Rr, n] of [[17.0, R.Y_FACE - 3.0, 14, 4.3, 290], [22.5, R.Y_FACE - 2.8, 12, 3.8, 240], [28.0, R.Y_FACE - 3.2, 12.5, 4.0, 250], [37.5, R.Y_FACE - 3.0, 12, 3.8, 240]])
     arbre(Floin, A, M, x, y, H, Rr, r, { n: TELEPHONE ? Math.round(n * 0.6) : n });
   // le peuplier élancé du fond (photo 08, au-dessus du jardin)
-  arbre(Floin, A, M, 32.5, R.Y_FACE - 6, 17, 2.4, r, { n: TELEPHONE ? 110 : 170, hFut: 0.3, applati: 2.4 });
+  arbre(Floin, A, M, 32.5, R.Y_FACE - 6, 20, 2.8, r, { n: TELEPHONE ? 130 : 210, hFut: 0.3, applati: 2.4 });
   for (const [y, H, Rr] of [[-2.0, 7, 2.8], [-5.5, 8.5, 3.4], [-9.0, 7.5, 3.0]]) arbre(Floin, A, M, R.X0 - 2.8, y, H, Rr, r, { n: TELEPHONE ? 110 : 200, applati: 1.1 });
   for (let k = 0; k < 6; k++) bambou(Floin, A, M, R.X0 - 0.9, -3.6 - k * 1.1, 0, 2.6 + r() * 0.8, r, 8);
 
