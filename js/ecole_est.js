@@ -752,7 +752,9 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   const opale = (x, y, zone) => { ch.opale(x, y, H1, zone, { r: 0.19, base: N1, cuire: false }); lampes.push(ch.lampes[ch.lampes.length - 1]); };
 
   // ---- LE SOL : le vinyle moucheté foncé (photos 27, 28), sur la lumière et l'ombre cuites du 1er ----
-  const sol = new THREE.Mesh(geoDalles([[13.55, 7.035, E.x0, 8.6], [14.2, 8.6, E.x0, 11.1], [13.2, 11.1, E.x0, E.bN[1]], [E.x0, 7.035, E.xM, 9.0]], N1, R1), X.vinyle);
+  // (relecture du 09/10 : depuis l'axe de la cloison des salles, 6,975, et non sa face, 7,035 — sur les seuils du 103 et
+  // de la 104, entre leur carrelage et le vinyle, une fente de 6 cm laissait voir le rez-de-chaussée)
+  const sol = new THREE.Mesh(geoDalles([[13.55, 6.975, E.x0, 8.6], [14.2, 8.6, E.x0, 11.1], [13.2, 11.1, E.x0, E.bN[1]], [E.x0, 6.975, E.xM, 9.0]], N1, R1), X.vinyle);
   sol.receiveShadow = true; sol.castShadow = false; sol.name = 'vinyle du palier est'; sol.userData.solEtage = true;
   G.add(sol);
 
