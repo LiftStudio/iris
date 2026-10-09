@@ -242,10 +242,7 @@ export function poserMobilier(ch) {
     a.position.set(0.38, 1.45, -0.004); a.rotation.y = Math.PI; a.castShadow = false; a.userData.vitre = true; vo.g.add(a);
   }
 
-  // =====================================================================
-  //  LE COULOIR C01 (photo 01) : la plaque « Toilettes »
-  // =====================================================================
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texToilettes(), roughness: 0.4 }), 0.15, 0.2, 11.706, 18.3, 1.6, 'E');
+  // (la plaque « Toilettes » du C01, photo 01 — le fauteuil roulant : avec les toilettes PMR, js/ecole_pieces.js ; 09/10)
 
   // =====================================================================
   //  L'ACCUEIL (photo 03) : deux écrans, un téléphone, des papiers, deux fauteuils noirs
@@ -341,16 +338,6 @@ function texWifi() {
     g.fillStyle = '#f2f2f2'; g.fillRect(98, 48, 50, 50); g.fillStyle = '#121212';
     for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) if ((i * 7 + j * 3 + i * j) % 3 === 0) g.fillRect(101 + i * 6.5, 51 + j * 6.5, 6, 6);
   }, null, false, 4);
-}
-function texToilettes() {
-  return canvasTex(96, 128, (g, w, h) => {
-    g.fillStyle = '#1a1a1a'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#f2f2f2';
-    g.beginPath(); g.arc(30, 30, 7, 0, 7); g.fill(); g.fillRect(24, 40, 12, 30);
-    g.beginPath(); g.arc(64, 30, 7, 0, 7); g.fill(); g.beginPath(); g.moveTo(64, 40); g.lineTo(74, 70); g.lineTo(54, 70); g.fill();
-    g.strokeStyle = '#f2f2f2'; g.lineWidth = 4; g.beginPath(); g.arc(48, 92, 10, 0, 7); g.stroke();
-    g.font = '600 13px "Segoe UI", sans-serif'; g.fillText('Toilettes', 18, 120);
-  }, null, false, 2);
 }
 
 // ---- LA SIGNALÉTIQUE DE L'ÉCOLE (photo 22) ----

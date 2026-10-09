@@ -26,13 +26,16 @@
 //   le passage des étudiants   x 1,75-4,75   y -0,4-5,0   grille sur rue, portes vitrées au fond (photos 07, 10, 19)
 //   le hall ouest (escalier)   x 1,75-5,8    y 5,0-13,6   plan d'évacuation, extincteur, portes coupe-feu (06, 20, 04)
 //   l'escalier                 x 1,75-4,6    y 13,6-18,6  deux volées de 10 marches, palier à 1,75 m, 1er étage fermé
-//   le couloir C05             x 4,6-5,8     y 12,0-18,6  porte de secours dépolie au fond (photo 05)
+//   le couloir C05             x 4,6-5,8     y 12,0-18,6  deux portes de toilettes, au fond la porte bleue de la salle
+//                                                         David Clark (photos 05, 23)
 //   la salle d'attente         x 5,8-13,5    y 9,0-12,0   le mur safran, les chaises coque, l'écran (photos 02, 21)
 //   le couloir C01             x 11,7-13,5   y 12,0-20,6  toilettes, gaine technique (photo 01)
 //   le « cou »                 x 9,9-13,5    y 4,8-9,0    le bureau B vitré, le trumeau (photo 03)
 //   le hall d'entrée, accueil  x 13,35-19,8  y 0,3-7,5    porte n° 6, comptoir (photos 03, 16)
-//   les pièces fermées         la salle A, le bureau B, les WC, le local, le couloir de service : leurs portes s'ouvrent,
-//                              leur intérieur est imaginé (js/ecole_pieces.js) ; fermés : les bureaux est, la gaine
+//   les pièces fermées         la salle A, le bureau B, les toilettes (femmes et hommes par le C05, PMR par le C01), le
+//                              local, le couloir de service, la salle David Clark (au nord du C05, y 18,75-24,35) : leurs
+//                              portes s'ouvrent, leur intérieur est imaginé (js/ecole_pieces.js) ; fermés : les
+//                              bureaux est, la gaine
 //   le 1er étage (3,50 m)      js/ecole_etage1.js : salles sur rue, couloir, toilettes, bureaux, l'escalier vers le 2e
 import * as THREE from 'three';
 import { Collisions } from './collisions.js';
@@ -58,8 +61,9 @@ ESC.yPalier = ESC.y0 + (ESC.n - 1) * ESC.giron;      // 16,72 : le bord du palie
 ESC.hPalier = ESC.n * ESC.haut;                     // 1,75
 // la lumière principale (l'ensemble des plafonniers) : presque d'aplomb, elle porte les ombres douces
 const DIR_LUMIERE = new THREE.Vector3(0.16, 1, 0.22).normalize();
-// le rectangle du sol (ombre cuite, lumière cuite) : x -0,6-20,4, y -0,6-21,0
-const RECT = { x0: -0.6, x1: 20.4, y0: -0.6, y1: 21.0 };
+// le rectangle du sol (ombre cuite, lumière cuite) : x -0,6-20,4, y -0,6-25,0 (09/10 : jusqu'à 25 — la salle David
+// Clark, derrière la porte bleue du C05, dépasse le fond du bâtiment de 20,75 jusqu'à 24,5)
+const RECT = { x0: -0.6, x1: 20.4, y0: -0.6, y1: 25.0 };
 
 // =====================================================================
 //  LE CHANTIER : des outils qui parlent en coordonnées du plan
@@ -652,12 +656,19 @@ function construireMurs(ch) {
   ch.boite(13.49, 16.45, 13.5, 16.9, 2.1, 2.62, M.grille, { ombre: false });
   for (let h = 2.15; h < 2.6; h += 0.05) ch.boite(13.48, 16.47, 13.49, 16.88, h, h + 0.02, M.noirMat, { ombre: false });
   // ---- LE COULOIR C05 ET LE COULOIR C01 ----
-  ch.mur({ de: [5.875, 12.15], a: [5.875, 18.6], mats: B, plinthes: ['W'] });
+  // LES DEUX PORTES DES TOILETTES DU C05 (photo 23, 09/10) : femmes près de l'entrée (y 13,325-14,175), hommes aux deux
+  // tiers (y 16,425-17,275) ; vantaux gris de 0,85, huisserie blanche, gonds au sud, béquille au nord, la fente vitrée
+  // haute et étroite cerclée de bois foncé côté serrure (0,55-1,85 m, 10 cm de verre). Les plaques et les affiches :
+  // js/ecole_pieces.js (les toilettes).
+  const WC_C05 = [[13.75, 'toilettes femmes'], [16.85, 'toilettes hommes']];
+  ch.mur({ de: [5.875, 12.15], a: [5.875, 18.6], mats: B, plinthes: ['W'], ouvertures: WC_C05.map(([c]) => ({ c, l: 0.85, h: 2.04 })) });
+  for (const [c, nom] of WC_C05) ch.porte('y', 5.875, c, { l: 0.85, h: 2.04, modele: 'grise', etat: 'auto', cote: 'W', oculus: { bas: 0.55, haut: 1.85, l: 0.1 }, nom });
   ch.mur({ de: [11.625, 12.15], a: [11.625, 20.75], mats: B, plinthes: ['E'], ouvertures: [{ c: 13.85, l: 0.93, h: 2.04 }, { c: 19.05, l: 0.93, h: 2.04 }] });
   // (les portes du C01 n'ont pas d'oculus, photo 01)
   // (le local : gonds au nord, poignée au sud, photo 01)
   ch.porte('y', 11.625, 13.85, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'auto', cote: 'E', charniere: 'd', notices: 2, nom: 'local (C01)' });
-  ch.porte('y', 11.625, 19.05, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'auto', cote: 'E', charniere: 'd', nom: 'toilettes' });
+  // (la porte des toilettes PMR : sa plaque montre un fauteuil roulant, photo 01 ; 09/10)
+  ch.porte('y', 11.625, 19.05, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'auto', cote: 'E', charniere: 'd', nom: 'toilettes PMR' });
   ch.mur({ de: [11.55, 20.675], a: [13.65, 20.675], mats: B, plinthes: ['S'], ouvertures: [{ c: 12.6, l: 0.93, h: 2.04 }] });
   ch.porte('x', 20.675, 12.6, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'S', nom: 'fond du C01' });
   // ---- LE « COU » ET LE BUREAU B ----
@@ -688,7 +699,9 @@ function construireMurs(ch) {
   ch.mur({ de: [1.6, 13.675], a: [4.75, 13.675], mats: B, plinthes: ['S', 'N'], ouvertures: [{ c: 3.5, l: 1.8, h: 2.1 }] });
   ch.mur({ de: [4.675, 13.6], a: [4.675, 18.75], h: H_CAGE, mats: B, plinthes: ['E'] });
   ch.mur({ de: [1.675, 13.6], a: [1.675, 18.75], h: H_CAGE, mats: B });
-  ch.mur({ de: [1.6, 18.675], a: [5.95, 18.675], h: H_CAGE, mats: B, plinthes: ['S'], ouvertures: [{ c: 5.2, l: 0.9, h: 2.1 }] });
+  // (le mur nord de la cage, et au bout du C05 le mur de la salle David Clark : sa porte bleue et son imposte, x 4,75-5,6
+  // jusqu'à 2,28 m ; la face nord est dans la salle — 09/10)
+  ch.mur({ de: [1.6, 18.675], a: [5.95, 18.675], h: H_CAGE, mats: B, plinthes: ['S', 'N'], ouvertures: [{ c: 5.175, l: 0.85, h: 2.28 }] });
   // au 1er étage : le mur sud du palier (avec sa double porte coupe-feu, fermée) et ses retours
   ch.mur({ de: [1.6, 12.525], a: [4.75, 12.525], base: H_DALLE, h: H_CAGE, mats: B, ouvertures: [{ c: 3.5, l: 1.8, bas: 2 * ESC.hPalier, h: 2 * ESC.hPalier + 2.1 }] });
   ch.mur({ de: [1.675, 12.45], a: [1.675, 13.6], base: H_DALLE, h: H_CAGE, mats: B });
@@ -701,18 +714,21 @@ function construireMurs(ch) {
   void P;
 }
 
-// LA PORTE DE SECOURS DU FOND DE C05 (photo 05) : cadre blanc, verre dépoli bleu allumé par le jour, imposte dépolie,
-// béquille argent, bloc de sortie au-dessus. Fermée.
+// LA PORTE DU FOND DE C05 (photos 05, 23) : ce n'est PAS une issue de secours (09/10) — c'est celle d'une salle de
+// cours, « Salle David Clark — B 0.2 » (sa plaque à droite de la porte, js/ecole_pieces.js) ; sur la photo 23 un
+// étudiant en sort en la poussant : elle s'ouvre VERS LE COULOIR, gonds à l'ouest. Huisserie blanche, vantail de verre
+// dépoli bleu (le jour des fenêtres de la salle le traverse : il « s'allume » sur la photo 05), béquille inox à droite,
+// pastille rouge en haut ; au-dessus, l'imposte dépolie, plus claire, jusque sous le plafond. Plus de bloc de sortie :
+// ni la photo 05 ni la 23 n'en montrent. Automatique, toujours ouverte du côté du couloir (`libre`).
 function construirePorteFond(ch) {
-  const { M, C } = ch, y = 18.6 - 0.02, x0 = 4.75, x1 = 5.65, h = 2.1;
-  ch.boite(x0, y - 0.04, x0 + 0.06, y, 0, 2.4, M.alu); ch.boite(x1 - 0.06, y - 0.04, x1, y, 0, 2.4, M.alu);
-  ch.boite(x0, y - 0.04, x1, y, h - 0.03, h + 0.03, M.alu); ch.boite(x0, y - 0.04, x1, y, 0, 0.08, M.alu);
-  ch.boite(x0 + 0.06, y - 0.025, x1 - 0.06, y - 0.015, 0.08, h - 0.03, M.depoliBleu, { ombre: false });
-  ch.boite(x0 + 0.06, y - 0.025, x1 - 0.06, y - 0.015, h + 0.03, 2.36, M.depoliBleu, { ombre: false });
-  ch.boite(x1 - 0.2, y - 0.08, x1 - 0.08, y - 0.06, 1.03, 1.05, M.inox, { ombre: false });
-  ch.boite(x1 - 0.1, y - 0.06, x1 - 0.08, y - 0.04, 0.98, 1.1, M.inox, { ombre: false });
-  C.ajouterBoite(x0, -(y + 0.05), x1, -(y - 0.06), { y1: 2.4, vitre: true });   // (le jour la traverse : lumière cuite)
-  ch.sortie(5.2, 18.5, 2.3, 'S');
+  const { M, C } = ch, y0 = 18.6, y1 = 18.75, x0 = 4.75, x1 = 5.6, hv = 2.0, hT = 2.28, c = 0.04;
+  // l'huisserie sur toute l'épaisseur du mur (elle déborde d'un centimètre), la traverse sous l'imposte, le linteau
+  ch.boite(x0, y0 - 0.01, x0 + c, y1 + 0.01, 0, hT, M.alu); ch.boite(x1 - c, y0 - 0.01, x1, y1 + 0.01, 0, hT, M.alu);
+  ch.boite(x0, y0 - 0.01, x1, y1 + 0.01, hv, hv + 0.05, M.alu); ch.boite(x0, y0 - 0.01, x1, y1 + 0.01, hT - c, hT, M.alu);
+  const imposte = M.depoliBleu.clone(); imposte.color.set(0x6b7d99); imposte.emissiveIntensity = 0.2;
+  ch.boite(x0 + c, 18.669, x1 - c, 18.681, hv + 0.05, hT - c, imposte, { ombre: false });
+  C.ajouterBoite(x0, -y1, x1, -y0, { y0: hv, y1: hT, vitre: true });
+  ch.porte('x', 18.675, (x0 + x1) / 2, { l: x1 - x0 - 2 * c, h: hv, modele: 'bleue', etat: 'auto', cote: 'S', huisserie: false, libre: 1, nom: 'salle David Clark' });
 }
 
 // L'ACCUEIL (photo 03) : comptoir de stratifié gris clair le long de la façade, sous les fenêtres 11-12 — face avant à
@@ -759,6 +775,7 @@ export function construireCarte(scene, renderer = null) {
     [-0.3, -0.4, 1.6, 20.75, 'ns', 1.75, 0], [1.6, 5.0, 4.9, 20.75, 'ns', 1.75, 0], [4.9, -0.4, 5.3, 20.75, 'ns', 1.75, 0],
     [5.3, -0.4, 13.5, 9.0, 'ns', 1.75, 0], [5.3, 9.0, 13.5, 12.0, 'ew', 5.8, 9.0], [5.3, 12.0, 13.5, 20.75, 'ns', 1.75, 0],
     [13.5, -0.4, 20.1, 20.75, 'ns', 1.75, 0],
+    [1.6, 20.75, 9.0, 24.5, 'ns', 1.75, 0],          // la salle David Clark, au-delà du fond du bâtiment (09/10)
   ];
   const sol = new THREE.Mesh(geoSol(RN), M.sol); sol.receiveShadow = true; sol.name = 'carrelage'; nePasFusionner(sol);
   scene.add(sol);
@@ -798,7 +815,10 @@ export function construireCarte(scene, renderer = null) {
   ch.plafond(1.75, 5.0, 4.75, 9.0, 2.4, 'platre');                   // le hall ouest
   ch.plafond(1.75, 9.0, 5.3, 13.6, 2.4, 'platre');
   ch.plafond(5.3, 12.0, 5.8, 13.6, 2.4, 'platre');
-  ch.plafond(4.6, 13.6, 5.8, 18.6, 2.4, 'platre');                   // C05
+  // C05 : à mi-longueur, une RETOMBÉE — le fond du couloir est plus bas, l'imposte de la porte bleue vient juste sous
+  // son plafond (photos 05 et 23 : le premier hublot avant le ressaut, le second après ; 09/10)
+  ch.plafond(4.6, 13.6, 5.8, 15.5, 2.4, 'platre');
+  ch.plafond(4.6, 15.5, 5.8, 18.6, 2.3, 'platre');
   // la salle d'attente : les plateaux perforés, sauf au bout ouest, devant le couloir C05, où ce sont des dalles lisses
   // de 60 x 60 sur ossature (photos 04, 05 : au-dessus du photographe ; 09/10)
   ch.plafond(6.5, 9.0, 13.5, 12.0, 2.6, 'plateaux');
@@ -813,7 +833,9 @@ export function construireCarte(scene, renderer = null) {
   ch.tube(1.75, 1.5, 3.0, 2.35, 1, 'passage'); ch.tube(4.75, 1.5, 3.0, 2.35, -1, 'passage');
   ch.sortie(3.25, 0.12, 2.3, 'N');
   for (const [x, y] of [[3.2, 7.1], [3.3, 11.0], [5.2, 12.9]]) ch.opale(x, y, 2.4, 'hallO');
-  for (const [x, y] of [[5.2, 15.0], [5.2, 17.4]]) ch.opale(x, y, 2.4, 'c05');
+  // (les deux hublots du C05, photo 23 : le premier juste passé la porte des toilettes femmes, le second au droit de
+  // celle des hommes, sous le plafond bas — Ø 38 cm ; 09/10)
+  ch.opale(5.25, 14.45, 2.4, 'c05', { r: 0.18 }); ch.opale(5.25, 16.75, 2.3, 'c05', { r: 0.18 });
   for (const [x, y] of [[6.6, 9.9], [9.0, 9.9], [11.4, 9.9], [7.8, 11.1], [10.2, 11.1], [12.6, 11.1]]) ch.spot(x, y, 2.6, 'attente');
   for (const [x, y] of [[12.3, 7.8], [11.9, 5.7]]) ch.spot(x, y, 2.6, 'cou');
   for (const [x, y] of [[12.6, 16.0], [12.6, 19.4]]) ch.opale(x, y, 2.45, 'c01');
@@ -833,12 +855,14 @@ export function construireCarte(scene, renderer = null) {
   for (const x of [17.33, 18.98]) ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.4, sx: x, sz: -0.4, ox: x, oz: 0.5, zone: 'hall', reel: false, cuireForce: 0.55 });
   for (const x of [5.78, 7.43, 9.08]) ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.4, sx: x, sz: -0.4, ox: x, oz: 0.5, zone: 'salleA', reel: false, cuireForce: 0.8 });
   for (const x of [10.73, 12.38]) ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.4, sx: x, sz: -0.6, ox: x, oz: 0.5, zone: 'bureauB', reel: false, cuireForce: 0.5 });
-  ch.lampes.push({ type: 'jour', x: 5.2, z: -19.2, h: 2.4, sx: 5.2, sz: -18.3, ox: 5.2, oz: -18.9, zone: 'c05', reel: false, cuireForce: 0.3 });
+  // (le jour des fenêtres de la salle David Clark, à travers la porte bleue : une nappe froide au bout du C05)
+  ch.lampes.push({ type: 'jour', x: 5.175, z: -19.2, h: 2.4, sx: 5.175, sz: -18.3, ox: 5.175, oz: -18.5, zone: 'c05', reel: false, cuireForce: 0.3 });
 
   // ---- LES CROCHETS : le mobilier, la rue ----
   poserMobilier(ch);
   poserRue(ch);
-  // les pièces qu'on peut maintenant visiter (salle A, bureau B, couloir de service, local, toilettes) et leurs zones
+  // les pièces qu'on peut maintenant visiter (salle A, bureau B, couloir de service, local, toilettes, salle David
+  // Clark) et leurs zones
   const pieces = poserPieces(ch);
   // le 1er étage (IMAGINÉ en attendant des photos : salles derrière les fenêtres de la façade, couloir, toilettes,
   // bureaux, l'escalier vers le 2e) : ses zones de lumière et sa mise à jour reviennent ici
@@ -897,7 +921,8 @@ export function construireCarte(scene, renderer = null) {
   scene.userData.sunDir = DIR_LUMIERE.clone();
   scene.userData.env = { sun, hemi, fill, clouds: [], court, wetMats: [] };
   // l'ombre ne couvre que l'école et le trottoir : ses texels vont là où l'on marche
-  scene.userData.zoneOmbre = { min: [-1, 0, -21.2], max: [21, H_CAGE, 3.2] };
+  // (09/10 : jusqu'à y 24,8 — la salle David Clark)
+  scene.userData.zoneOmbre = { min: [-1, 0, -24.8], max: [21, H_CAGE, 3.2] };
   scene.userData.albedoSol = false;
   // la carte d'environnement : prise d'abord dans le hall d'entrée (le départ), puis reprise de pièce en pièce
   scene.userData.pointEnv = { x: 15.8, y: 1.6, z: -4.0 };
