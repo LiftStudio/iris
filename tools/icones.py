@@ -16,11 +16,15 @@ Ce qu'il fabrique :
                                                           carré jaune plein (iOS arrondit lui-même les coins)
     icon-maskable-192.png, icon-maskable-512.png          le mot dans la zone sûre (cercle de 80 %) sur le jaune
   assets/chargement/
-    logo_iris.webp   480 x 300, transparent autour de la plaque : le logo de l'écran de chargement (index.html, #boot).
-                     Il sert aussi de MASQUE au reflet qui passe dessus (.boot-reflet) : la plaque doit donc être
-                     opaque et nette, le reste vraiment transparent.
+    logo_iris.webp   le LOGO OFFICIEL de l'école (tools/logo_iris_officiel.png, envoyé par Haythem le 10/10/2026 :
+                     le pavé noir #1d1d1d, le « ı » jaune #faae09 et le carré jaune qui déborde en haut à gauche,
+                     « ris » en blanc), recadré, son fond blanc rendu transparent, agrandi 2 fois : le logo de l'écran
+                     de chargement (index.html, #boot, sur fond blanc). Il sert aussi de MASQUE au reflet qui passe
+                     dessus (.boot-reflet) : le logo opaque et net, le reste vraiment transparent.
 
-Chaque image est dessinée 4 fois plus grande puis réduite (Lanczos) : des bords lisses sans flou.
+    python tools/icones.py --chargement     ne refait que ce logo-là
+
+Chaque icône est dessinée 4 fois plus grande puis réduite (Lanczos) : des bords lisses sans flou.
 """
 import os
 from PIL import Image, ImageDraw, ImageFont
@@ -93,16 +97,62 @@ def main():
     for n in (192, 512):
         sauver(plaque(n, mot=0.56, fond=JAUNE + (255,)).convert('RGB'), os.path.join(ICONES, f'icon-maskable-{n}.png'), optimize=True)
 
-    # le logo de l'écran de chargement : 480 x 300, la plaque arrondie, transparent autour
-    W, H = 480, 300
-    S = SUR
-    im = Image.new('RGBA', (W * S, H * S), (0, 0, 0, 0))
-    d = ImageDraw.Draw(im)
-    m = 10 * S
-    d.rounded_rectangle([m, m, W * S - 1 - m, H * S - 1 - m], radius=46 * S, fill=JAUNE + (255,))
-    mot_centre(d, W * S, H * S, (W - 2 * 10) * S * 0.74, (H - 2 * 10) * S * 0.62)
-    sauver(im.resize((W, H), Image.LANCZOS), os.path.join(CHARGEMENT, 'logo_iris.webp'), lossless=True, quality=100, method=6)
+    logo_chargement()
+
+
+def logo_chargement():
+    """Le logo de l'écran de chargement, tiré du logo officiel : recadré au plus juste (marge de 6 px), le fond blanc
+    rendu transparent depuis les bords (remplissage : on ne touche pas au blanc des lettres, enfermé dans le pavé noir),
+    les pixels de bord « démêlés » du blanc (alpha et couleur recalculés) pour qu'aucun liseré blanc ne reste, puis
+    agrandi 2 fois (Lanczos) pour les écrans denses."""
+    src = Image.open(os.path.join(RACINE, 'tools', 'logo_iris_officiel.png')).convert('RGB')
+    W, H = src.size
+    px = src.load()
+    clair = lambda c: min(c) >= 232                              # le fond (blanc, à peine cassé par la compression)
+    fond = bytearray(W * H)
+    pile = [(x, y) for x in range(W) for y in (0, H - 1)] + [(x, y) for y in range(H) for x in (0, W - 1)]
+    while pile:
+        x, y = pile.pop()
+        i = y * W + x
+        if fond[i] or not clair(px[x, y]):
+            continue
+        fond[i] = 1
+        if x > 0: pile.append((x - 1, y))
+        if x < W - 1: pile.append((x + 1, y))
+        if y > 0: pile.append((x, y - 1))
+        if y < H - 1: pile.append((x, y + 1))
+    xs = [x for y in range(H) for x in range(W) if not fond[y * W + x]]
+    ys = [y for y in range(H) for x in range(W) if not fond[y * W + x]]
+    m = 6
+    x0, y0, x1, y1 = max(0, min(xs) - m), max(0, min(ys) - m), min(W, max(xs) + 1 + m), min(H, max(ys) + 1 + m)
+    out = Image.new('RGBA', (x1 - x0, y1 - y0), (0, 0, 0, 0))
+    po = out.load()
+    for y in range(y0, y1):
+        for x in range(x0, x1):
+            if fond[y * W + x]:
+                continue
+            r, g, b = px[x, y]
+            # un pixel de bord mêle la couleur du logo au blanc du fond : alpha = 1 - (part de blanc), estimée sur la
+            # composante la plus sombre (le bleu du jaune vaut 9, le noir 29) ; le cœur du logo reste opaque
+            bord = any(fond[(y + dy) * W + (x + dx)] for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1))
+                       if 0 <= x + dx < W and 0 <= y + dy < H)
+            if bord:
+                a = max(0.0, min(1.0, (255 - min(r, g, b)) / 240))
+                if a < 0.04:
+                    continue
+                r, g, b = (max(0, min(255, round((c - (1 - a) * 255) / a))) for c in (r, g, b))
+                po[x - x0, y - y0] = (r, g, b, round(a * 255))
+            else:
+                po[x - x0, y - y0] = (r, g, b, 255)
+    out = out.resize((out.width * 2, out.height * 2), Image.LANCZOS)
+    sauver(out, os.path.join(CHARGEMENT, 'logo_iris.webp'), lossless=True, quality=100, method=6)
+    print(f'  logo de chargement : {out.width} x {out.height}')
+    return out.size
 
 
 if __name__ == '__main__':
-    main()
+    import sys
+    if '--chargement' in sys.argv:
+        logo_chargement()
+    else:
+        main()
