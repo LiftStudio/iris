@@ -33,7 +33,8 @@ const FONDU = 3.2;                 // /s : vitesse d'allumage et d'extinction d'
 const CHAUD = new THREE.Color(0xffe9cc), JOUR = new THREE.Color(0xdde8f4);
 
 export class LumieresEcole {
-  // lampes : [{ x, z, h, zone, type ('spot' | 'opale' | 'tube' | 'jour'), force, cx, cz (visée du jour) }] en monde
+  // lampes : [{ x, z, h, zone, type ('spot' | 'opale' | 'tube' | 'dalle' | 'jour'), force, cx, cz (visée du jour),
+  //            base (le plancher sous la lampe, 0 au rez-de-chaussée) }] en monde
   // zones  : [{ id, rects: [[x0, z0, x1, z1]], voisines: [id], env: { x, y, z } }]
   constructor(scene, { lampes, zones }) {
     this.scene = scene; this.lampes = lampes; this.zones = zones;
@@ -66,8 +67,9 @@ export class LumieresEcole {
       this._choixT = 0.2; this._px = px; this._pz = pz;
       // les lampes de SA pièce, et celles des pièces qui s'y ouvrent — sauf, chez les voisines, celles qui sont plus haut
       // qu'un plafond ordinaire (la cage d'escalier) : sans ombre, leur cône traverserait les dalles et les murs
+      // (`base` : le plancher sous la lampe — celles de l'étage se comptent depuis le leur)
       const vois = new Set(this.zone.voisines || []), ici = this.zone.id;
-      const cand = this.lampes.filter((L) => L.type !== 'aucune' && (L.zone === ici || (vois.has(L.zone) && L.h <= 2.8)));
+      const cand = this.lampes.filter((L) => L.type !== 'aucune' && (L.zone === ici || (vois.has(L.zone) && L.h - (L.base || 0) <= 2.8)));
       cand.sort((a, b) => ((a.x - px) ** 2 + (a.z - pz) ** 2) / (a.poids || 1) - ((b.x - px) ** 2 + (b.z - pz) ** 2) / (b.poids || 1));
       this._cible = new Set(cand.slice(0, N_SPOTS));
     }
@@ -80,10 +82,10 @@ export class LumieresEcole {
       S.lampe = L; S.k = 0; S.sortir = false;
       const l = S.l;
       if (L.type === 'jour') {
-        l.position.set(L.x, L.h, L.z); l.target.position.set(L.cx, 0, L.cz);
+        l.position.set(L.x, L.h, L.z); l.target.position.set(L.cx, L.base || 0, L.cz);
         l.color.copy(JOUR); l.angle = 1.0; l.penumbra = 1; l.distance = 9;
       } else {
-        l.position.set(L.x, L.h - 0.04, L.z); l.target.position.set(L.x, 0, L.z);
+        l.position.set(L.x, L.h - 0.04, L.z); l.target.position.set(L.x, L.base || 0, L.z);
         l.color.copy(CHAUD); l.angle = L.type === 'tube' ? 1.3 : 1.12; l.penumbra = 0.85; l.distance = 7.5;
       }
       l.target.updateMatrixWorld();

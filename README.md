@@ -9,9 +9,14 @@ s'asseoir, danser, sortir son téléphone. Pas de match, pas de score, pas de bo
 > couloirs C05 et C01, la salle d'attente au mur safran, le hall d'entrée et l'accueil, la porte n° 6 et la façade sur la
 > rue. Les pièces jamais photographiées du rez-de-chaussée (salle A, bureau B, toilettes, local, couloir de service) se
 > visitent : leur intérieur est **imaginé** en attendant des photos (voir « Les pièces imaginées »). Les bureaux est,
-> la gaine et les étages restent derrière des portes fermées. La RUE est complète (photos 07 à 18) : voitures
+> la gaine et les étages au-dessus du 1er restent derrière des portes fermées. La RUE est complète (photos 07 à 18) : voitures
 > garées, totems « iris », jardinières de zinc, bambou et palmier, bancs (on s'y assoit), poubelles, vélos, motos et
 > scooters, grille du jardin doublée de brande, impasse et carrefour.
+>
+> **Le 1er étage est IMAGINÉ**, en attendant des photos de Haythem (`js/ecole_etage1.js`) : seules la double porte du
+> palier (photos 06, 20) et la façade (photos 11, 12, 16 à 18 : le rythme des fenêtres, la grande baie et la fenêtre
+> étroite dans leurs encadrements rouges, les pastilles des pompiers) sont relevées ; les salles sont posées derrière ces
+> fenêtres, le reste est une distribution courante d'étage d'école. À refaire d'après les photos quand elles viendront.
 
 ## Lancer le jeu
 
@@ -86,6 +91,8 @@ js/ecole_rue_mobilier.js  le mobilier de la rue, ses plantes (un atlas de feuill
 js/ecole_rue_voitures.js  les voitures garées (assets/voitures.glb, repeintes dans leur texture)
 js/ecole_pieces.js    les pièces imaginées (salle A informatique, bureau B, couloir de service, local technique,
                       toilettes) : murs qui manquaient, mobilier, luminaires, sièges, zones de lumière, miroir
+js/ecole_etage1.js    le 1er ÉTAGE (imaginé) : sa façade percée, salles, couloir, toilettes, bureaux, mobilier, l'escalier
+                      jusqu'au 2e ; sa lumière et son ombre cuites, sa visibilité et ses ombres selon l'étage de Haythem
 js/collisions.js      le monde solide : murs, portes, piliers, plafonds, sols et rampes (escalier)
 js/kit_decor.js       les outils de décor repris de LA CAGE : textures dessinées, relief, carte d'environnement
                       prise sur place, ombre cuite au sol, fusion des matériaux, vent des feuillages
@@ -108,7 +115,7 @@ renvois à l'origine du code, ces fichiers n'existent pas ici.
 |---|---|---|
 | Le passage des étudiants | grille noire ouverte sur la rue, réglettes fluorescentes, panneaux de liège, porte blanche « Sortie », portes vitrées aux autocollants « iris » (automatiques) | 07, 10, 19 |
 | Le hall ouest | plan d'évacuation, porte grise du couloir de service, extincteur, radiateur, affiche jaune du tri, portes coupe-feu (le vantail gauche ouvert) | 06, 20, 04 |
-| L'escalier | deux volées de 10 marches, palier à 1,75 m, garde-corps à barreaux, main courante, palier du 1er étage (double porte fermée) | 20, 06 |
+| L'escalier | deux volées de 10 marches, palier à 1,75 m, garde-corps à barreaux, main courante, palier du 1er étage (double porte ouverte) ; il continue jusqu'au palier du 2e (6,60 m, double porte fermée) | 20, 06 |
 | Le couloir C05 | porte de secours en verre dépoli bleu au fond | 05 |
 | La salle d'attente | mur safran et sa lisse blanche, panneau DAE, écran, chaises coque (on s'y assoit), jours dépolis, borne, pilier, présentoir | 02, 21 |
 | Le couloir C01 | gaine technique, toilettes, local | 01 |
@@ -119,6 +126,13 @@ renvois à l'origine du code, ces fichiers n'existent pas ici.
 | Les toilettes * | faïence, cabines aux portes safran, cabine PMR ouverte, vasques, grand miroir (un vrai miroir sur PC) | — |
 | Le hall d'entrée | porte n° 6 (automatique) et ses vitrophanies, tapis, comptoir d'accueil, fenêtres à barreaux | 03, 16 |
 | La rue | trottoirs (pavés devant le n° 8), chaussée (reprises, lignes, rond peint, pièce de pavés, plaques), façade de l'école (drapeaux en V, écusson), les deux totems « iris », jardinières de zinc, bambou, palmier, bancs à lattes (on s'y assoit), corbeille, cendrier, bacs roulants, huit voitures garées, motos, scooters (l'un sous sa housse), vélos, station de réparation et arceaux, le 5/7, le jardin derrière sa grille doublée de brande, l'impasse et la marquise du n° 10, le carrefour (trois immeubles, potelets) | 07 à 18 |
+| 1er étage : le palier d'étage | mur safran et panneau de l'étage, banc, plan d'évacuation, extincteur, local ménage (fermé) | *imaginé* |
+| 1er étage : le couloir | portes grises et leurs plaques, tableau de liège, affiches, fontaine à eau, horloge, issue de secours (fermée) | *imaginé* (comme 01) |
+| Salle 101 (cours) | derrière les travées 1 à 4 (la grande baie rouge) : 9 tables pour deux, tableau blanc, vidéoprojecteur, écran déroulé | façade 12 |
+| Salle 102 (informatique) | travées 5 à 8 : 18 postes (sous les fenêtres, contre le couloir, îlot central), baie de brassage | façade 11, 17 |
+| Bureau 103, salle 104 | travées 9-10 (pédagogie : bureaux, armoires, table ronde) et 11-12 (enseignants : table de réunion, casiers, coin café, la fenêtre rouge des pompiers) | façade 16, 18 |
+| Les toilettes de l'étage | faïence blanche, trois cabines (la première ouverte), deux lavabos, miroir, sèche-mains | *imaginé* |
+| Salles 105 à 107 (côté cour), le 2e étage | portes fermées | — |
 
 Le départ est dans le hall d'entrée, juste passé la porte 6. Pause › **Revenir au départ** y ramène.
 
@@ -167,7 +181,7 @@ d'environnement, reprise quand Haythem y entre. Une nouvelle pièce : un rectang
 
 **Les crochets.** `poserMobilier(ch)` (`js/ecole_mobilier.js`) et `poserRue(ch)` (`js/ecole_rue.js`) reçoivent le
 chantier : ils posent ce qu'ils veulent avec les mêmes outils (et `ch.sieges` pour ce où l'on s'assoit). Restent à
-venir : les étages. Le crochet `poserPieces(ch)` (`js/ecole_pieces.js`) meuble les pièces imaginées et rend leurs zones
+venir : les étages au-dessus du 1er. Le crochet `poserPieces(ch)` (`js/ecole_pieces.js`) meuble les pièces imaginées et rend leurs zones
 de lumière.
 
 **La rue** (`js/ecole_rue.js` et ses deux modules) : ses cotes sont dans `RUE` (trottoir de 2,4 m, chaussée de 6,4 m
@@ -182,6 +196,19 @@ extrudés (`profil`, avec `effile` pour la largeur vue de dessus), sur des pneus
 (`roue`). Au carrefour, une boîte invisible arrête Haythem à x = 44,5 : les potelets de fonte en marquent la ligne sur
 les trottoirs. Les recoins trop étroits pour lui (moins de 60 cm entre deux obstacles) sont bouchés dans le monde
 solide : il s'y coinçait en tremblant.
+
+**Le 1er étage et les deux niveaux.** `poserEtage1(ch, renderer)` (`js/ecole_etage1.js`, imaginé en attendant des
+photos) rend ses zones de lumière (rangées AVANT celles du rez-de-chaussée) et sa mise à jour (appelée par la carte).
+Plancher à 3,50 m, dessous de la dalle du 2e à 6,40 m, étages courants de 3,10 m (la tuile de la façade). Ce qu'il faut
+savoir pour bâtir en hauteur :
+- le monde solide : une DALLE (`C.sol`) sous tout ce qu'on foule à l'étage, seuils compris (sinon on retombe au
+  rez-de-chaussée), des murs à leurs hauteurs absolues, le dessous du plancher en forme « caméra seule » ;
+- une lampe d'étage porte `base` (son plancher : visée des spots, tri des pièces voisines) et `cuire: false` (elle est
+  cuite sur le carrelage de l'étage, pas sur celui d'en bas) ; un rectangle de zone porte une hauteur minimale (2,60) ;
+- un siège d'étage porte `sol` (3,50) : seuls ceux de l'étage de Haythem sont proposés ;
+- tout ce qui est à l'étage porte `horsAOSol` (l'ombre cuite du rez-de-chaussée ne le voit pas) ; le groupe de l'étage
+  n'est dessiné que si la caméra peut le voir, et ne porte ombre que si Haythem y est.
+`?debug=murs` dessine les formes de l'étage à leur hauteur et les sols (dalles, rampes) en magenta.
 
 **L'écran de chargement** : après avoir ajouté des fichiers chargés au démarrage, relever les profils
 (`?chargement=trace`, puis `?chargement=trace&tel=1`) et relancer `python tools/liste_chargement.py` (voir son en-tête).

@@ -45,6 +45,10 @@
 // les pieds actuels de plus d'une marche (45 cm) : sous un palier, on reste au rez-de-chaussée ; sur une volée, on la suit.
 // Les plafonds se lisent de même à une hauteur donnée (plafondEn(x, z, y)) : sur le palier du 1er étage, le plafond du
 // hall en dessous ne compte plus.
+// DEUX NIVEAUX (le 1er étage, js/ecole_etage1.js) : tout se superpose dans la même grille, chaque forme à ses hauteurs
+// absolues. L'étage est une dalle à 3,50 m qui couvre tout ce qu'on y foule (un trou dans les dalles ferait retomber au
+// rez-de-chaussée) ; ses murs partent de 3,50 m (le joueur d'en bas passe dessous) ; le dessous de son plancher est une
+// forme pour la caméra seule (à l'étage, elle ne passe pas au travers du sol).
 //
 // DÉBOGAGE : ?debug=murs dans l'adresse dessine toutes les formes en fil de fer (js/game.js, afficherDebug).
 
@@ -338,13 +342,22 @@ export class Collisions {
   }
 
   // ------------------------------------------------------------------ débogage
-  // Toutes les formes en fil de fer (vert : murs du joueur ; bleu : caméra seule — plafonds)
+  // Toutes les formes en fil de fer (vert : murs du joueur ; bleu : caméra seule — plafonds ; magenta : les sols, dalles
+  // et rampes). Une forme sans hauteur (y1 infini) est coupée à `hMax` au-dessus de son pied : celles de l'étage se
+  // dessinent à leur étage.
   afficherDebug(scene, hMax = 3.2) {
     const g = new THREE.Group(); g.name = 'collisions (débogage)';
     const mJ = new THREE.LineBasicMaterial({ color: 0x33ff66, depthTest: false, transparent: true, opacity: 0.8 });
     const mC = new THREE.LineBasicMaterial({ color: 0x3399ff, depthTest: false, transparent: true, opacity: 0.6 });
+    const mS = new THREE.LineBasicMaterial({ color: 0xff44cc, depthTest: false, transparent: true, opacity: 0.7 });
+    for (const r of this.sols) {
+      // (une dalle : son rectangle à sa hauteur ; une rampe : le rectangle incliné, du bas au haut de la volée)
+      const h = (x, z) => this._hSol(r, x, z), p = [[r.x0, r.z0], [r.x1, r.z0], [r.x1, r.z1], [r.x0, r.z1], [r.x0, r.z0]];
+      const geo = new THREE.BufferGeometry().setFromPoints(p.map(([x, z]) => new THREE.Vector3(x, h(x, z) + 0.01, z)));
+      const l = new THREE.Line(geo, mS); l.renderOrder = 999; g.add(l);
+    }
     for (const s of this.formes) {
-      const y0 = Math.max(-0.05, s.y0), y1 = Math.min(hMax, s.y1), h = Math.max(0.02, y1 - y0);
+      const y0 = Math.max(-0.05, s.y0), y1 = Math.min(Math.max(hMax, y0 + hMax), s.y1), h = Math.max(0.02, y1 - y0);
       let geo, m;
       if (s.t === 'c') { geo = new THREE.CylinderGeometry(s.r, s.r, h, 16, 1, true); m = new THREE.Object3D(); m.position.set(s.x, y0 + h / 2, s.z); }
       else if (s.t === 'b') { geo = new THREE.BoxGeometry(s.x1 - s.x0, h, s.z1 - s.z0); m = new THREE.Object3D(); m.position.set((s.x0 + s.x1) / 2, y0 + h / 2, (s.z0 + s.z1) / 2); }

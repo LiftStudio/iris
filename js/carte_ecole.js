@@ -33,6 +33,7 @@
 //   le hall d'entrée, accueil  x 13,35-19,8  y 0,3-7,5    porte n° 6, comptoir (photos 03, 16)
 //   les pièces fermées         la salle A, le bureau B, les WC, le local, le couloir de service : leurs portes s'ouvrent,
 //                              leur intérieur est imaginé (js/ecole_pieces.js) ; fermés : les bureaux est, la gaine
+//   le 1er étage (3,50 m)      js/ecole_etage1.js : salles sur rue, couloir, toilettes, bureaux, l'escalier vers le 2e
 import * as THREE from 'three';
 import { Collisions } from './collisions.js';
 import { carteLocale, poserSondeLocale, planifierOcclusionSol, optimiserDecor, nePasFusionner, animerVent } from './kit_decor.js';
@@ -42,6 +43,7 @@ import { LumieresEcole, cuireLumiereSol } from './ecole_lumieres.js';
 import { poserMobilier } from './ecole_mobilier.js';
 import { poserRue } from './ecole_rue.js';
 import { poserPieces } from './ecole_pieces.js';
+import { poserEtage1 } from './ecole_etage1.js';
 
 // ---- les hauteurs ----
 const H_DALLE = 3.25;            // le dessous de la dalle du 1er étage (les cloisons montent jusque-là)
@@ -316,6 +318,7 @@ function construireEscalier(ch) {
   ch.boite(1.6, 12.45, 4.75, E.y0, H_DALLE, 2 * HP - 0.02, M.beton);
   ch.boite(E.xO0, 12.6, E.xE1, E.y0, 2 * HP - 0.02, 2 * HP, M.solEtage);
   ch.boite(E.xO1, E.y0 - 0.04, E.xE1, E.y0, 2 * HP, 2 * HP + 0.004, M.nez, { ombre: false });
+  // (au-dessus, l'escalier continue vers le 2e étage : volées 3 et 4, js/ecole_etage1.js)
   // ---- sous la volée 2 : l'espace reste ouvert (photos 06, 20 : on y voit le sol filer sous la paillasse) ----
   const sof = (s) => HP - 0.25 + s * ((HP + (N - 1) * R - 0.3 - (HP - 0.25)) / ((N - 1) * G));
 
@@ -342,10 +345,8 @@ function construireEscalier(ch) {
   poteau(xi1, E.y0 + 0.03, R, R + 0.98); poteau(xi1, E.yPalier - 0.03, HP, HP + 0.98);
   poteau(xi2, E.yPalier - 0.03, HP, HP + 0.98); poteau(xi2, E.y0 + 0.03, 2 * HP - R, 2 * HP + 0.98);
   ch.boite(xi2, E.yPalier - 0.05, xi1, E.yPalier - 0.01, HP + 0.92, HP + 0.97, M.garde);
-  // le garde-corps du palier du 1er étage, au-dessus de la volée 1
-  for (let x = E.xO1 + 0.1; x < E.xE1 - 0.05; x += 0.11) barre(x, E.y0 - 0.03, 2 * HP, 2 * HP + 0.95);
-  ch.boite(E.xO1, E.y0 - 0.055, E.xE1, E.y0 - 0.005, 2 * HP + 0.95, 2 * HP + 0.99, M.garde);
-  poteau(E.xE1 - 0.03, E.y0 - 0.03, 2 * HP, 2 * HP + 0.99);
+  // (au palier du 1er étage, pas de garde-corps au-dessus de la volée 1 : la volée 3, vers le 2e, part de là —
+  // js/ecole_etage1.js)
   // la main courante ronde, au mur, de chaque volée (supports tous les 80 cm)
   const mainCourante = (x, ya, ha, yb, hb) => {
     const L = Math.hypot(yb - ya, hb - ha), t = maille(new THREE.CylinderGeometry(0.02, 0.02, L, 10), M.garde, x, (ha + hb) / 2, -(ya + yb) / 2, 0, ch.decor);
@@ -362,8 +363,6 @@ function construireEscalier(ch) {
   C.sol(E.xO0, -E.y0, E.xE1, -12.6, 2 * HP);
   // entre les deux volées (barreaux et limons) : un mur pour le joueur, à toutes les hauteurs
   C.ajouterBoite(E.xO1, -E.yPalier, E.xE0, -E.y0, { y0: 0, y1: 5.2 });
-  // le garde-corps du 1er étage
-  C.ajouterBoite(E.xO1, -(E.y0 - 0.06), E.xE1, -E.y0, { y0: 2 * HP, y1: 2 * HP + 1.1 });
   // sous la volée 2, là où la paillasse descend sous 1,95 m : on ne s'y glisse plus (on s'y cognerait la tête)
   const sBas = (1.95 - sof(0)) / ((sof(1) - sof(0)));
   C.ajouterBoite(E.xO0, -E.yPalier, E.xO1, -(E.yPalier - sBas), { y0: 0, y1: 1.95 });
@@ -375,9 +374,10 @@ function construireEscalier(ch) {
     C.ajouterBoite(E.xO0, -yb, E.xO1, -(yb + G), { y0: sof((i + 0.5) * G), y1: HP + (i + 1) * R, joueur: false });
   }
   C.ajouterBoite(E.xO0, -E.yPalier, E.xE1, -18.6, { y0: 0, y1: HP, joueur: false });
-  // les plafonds : sous la dalle du 1er étage (pour qui est au rez-de-chaussée), puis celui de la cage
+  // les plafonds : sous la dalle du 1er étage (pour qui est au rez-de-chaussée), puis celui du palier du 1er (le
+  // dessous du palier du 2e ; au-dessus des volées, la cage monte jusqu'au 2e : js/ecole_etage1.js)
   C.plafond(E.xO0, -E.y0, E.xE1, -13.6, H_DALLE);
-  ch.plafond(E.xO0, 12.6, E.xE1, 18.6, H_CAGE, 'platre', { retombees: false });
+  ch.plafond(E.xO0, 12.6, E.xE1, E.y0, H_CAGE, 'platre', { retombees: false });
 }
 
 // =====================================================================
@@ -473,7 +473,11 @@ function construireFacade(ch) {
 
   // ---- LES ÉTAGES (pierre et fenêtres dessinées, une travée par tuile), la corniche, l'attique en retrait ----
   // (centrée sur x = 9,9 : la tuile de 1,65 m tombe juste sur les travées ; débordant de 30 cm sur les mitoyens)
-  const etages = maille(boiteM(20.4, 4 * 3.1, 0.4), M.etage, 9.9, H_RDC + 2 * 3.1, 0.2, 0, ch.decor, { ombre: false });
+  // (le 1er étage a sa façade à lui, percée de vraies fenêtres : js/ecole_etage1.js ; les étages dessinés partent du 2e,
+  // à 6,60 m — la hauteur de la boîte, trois étages, décale la tuile d'un demi-étage : on la recale)
+  const geoEtages = boiteM(20.4, 3 * 3.1, 0.4);
+  for (let i = 0, uv = geoEtages.attributes.uv; i < uv.count; i++) uv.setY(i, uv.getY(i) + 1.55);
+  const etages = maille(geoEtages, M.etage, 9.9, H_RDC + 3.1 + 1.5 * 3.1, 0.2, 0, ch.decor, { ombre: false });
   etages.userData.horsAOSol = true;
   const hT = H_RDC + 4 * 3.1;
   ch.boite(-0.3, -0.55, 20.1, 0.8, hT, hT + 0.15, M.pierre, { ombre: false });
@@ -689,7 +693,8 @@ function construireMurs(ch) {
   ch.mur({ de: [1.6, 12.525], a: [4.75, 12.525], base: H_DALLE, h: H_CAGE, mats: B, ouvertures: [{ c: 3.5, l: 1.8, bas: 2 * ESC.hPalier, h: 2 * ESC.hPalier + 2.1 }] });
   ch.mur({ de: [1.675, 12.45], a: [1.675, 13.6], base: H_DALLE, h: H_CAGE, mats: B });
   ch.mur({ de: [4.675, 12.45], a: [4.675, 13.6], base: H_DALLE, h: H_CAGE, mats: B });
-  ch.porte('x', 12.525, 3.5, { l: 1.8, h: 2.1, base: 2 * ESC.hPalier, modele: 'grise2', feu: true, etat: 'fermee', cote: 'N', notices: 1, nom: '1er étage' });
+  // (ouverte à demeure, ses deux vantaux rabattus côté étage, comme celle du hall ouest : le 1er étage, js/ecole_etage1.js)
+  ch.porte('x', 12.525, 3.5, { l: 1.8, h: 2.1, base: 2 * ESC.hPalier, modele: 'grise2', feu: true, etat: 'ouverte', ouverts: [true, true], angle: 1.6, cote: 'S', notices: 1, nom: '1er étage' });
   // LES PORTES COUPE-FEU DE L'ESCALIER (photos 04, 06, 20) : le vantail ouest ouvert à demeure vers le hall, l'est fermé
   // (deux affichettes) ; une huisserie et un rail de ferme-porte pour les deux
   const P = ch.porte('x', 13.675, 3.5, { l: 1.8, h: 2.1, modele: 'grise2', feu: true, etat: 'ouverte', ouverts: [true, false], angle: 1.62, cote: 'S', notices: 0, noticesD: 2, nom: 'escalier' });
@@ -816,8 +821,9 @@ export function construireCarte(scene, renderer = null) {
   for (const [x, y] of [[11.0, 2.4], [12.5, 2.4]]) ch.spot(x, y, 2.6, 'bureauB');
   // (la salle A : ses six dalles LED sont posées avec son mobilier, js/ecole_pieces.js)
   ch.opale(3.2, 18.6, 3.75, 'escalier', { mur: 'S', r: 0.15 });
-  ch.opale(3.2, 13.4, H_CAGE, 'palier1', { r: 0.18 });
-  ch.opale(3.9, 16.4, H_CAGE, 'escalier', { r: 0.18, cuire: false });
+  ch.opale(3.2, 13.4, H_CAGE, 'palier1', { r: 0.18, base: 2 * ESC.hPalier });
+  // (la volée 3 passe maintenant au-dessus de la volée 1 : sa lumière est une applique au mur est, sous la volée 3)
+  ch.opale(4.6, 15.5, 2.95, 'escalier', { r: 0.15, mur: 'W', cuire: false });
   ch.sortie(11.2, 9.6, 2.4, 'W', { suspendu: true });
   // LE JOUR qui entre (pour les spots : une lampe froide dehors, qui vise l'intérieur ; pour la lumière cuite : la source
   // au pied de l'ouverture, `ox/oz` le point d'où l'on découpe sa visibilité, dehors)
@@ -834,6 +840,9 @@ export function construireCarte(scene, renderer = null) {
   poserRue(ch);
   // les pièces qu'on peut maintenant visiter (salle A, bureau B, couloir de service, local, toilettes) et leurs zones
   const pieces = poserPieces(ch);
+  // le 1er étage (IMAGINÉ en attendant des photos : salles derrière les fenêtres de la façade, couloir, toilettes,
+  // bureaux, l'escalier vers le 2e) : ses zones de lumière et sa mise à jour reviennent ici
+  const etage1 = poserEtage1(ch, renderer);
 
   // =====================================================================
   //  LA LUMIÈRE
@@ -862,7 +871,7 @@ export function construireCarte(scene, renderer = null) {
   // son point de prise de vue pour la carte d'environnement. Rectangles en monde : [x0, z0, x1, z1, hauteur mini].
   const zr = (x0, y0, x1, y1, hmin = -1) => [x0, -y1, x1, -y0, hmin];
   const zones = [
-    { id: 'palier1', rects: [zr(1.6, 12.45, 4.75, 18.75, 2.6)], voisines: ['escalier'], env: { x: 3.2, y: 4.9, z: -13.6 } },
+    { id: 'palier1', rects: [zr(1.6, 12.45, 4.75, 18.75, 2.6)], voisines: ['escalier', 'e1hall'], env: { x: 3.2, y: 4.9, z: -13.6 } },
     { id: 'escalier', rects: [zr(1.6, 13.6, 4.75, 18.75)], voisines: ['hallO', 'palier1'], env: { x: 3.4, y: 2.4, z: -16.0 } },
     { id: 'passage', rects: [zr(1.6, -0.45, 4.9, 5.0)], voisines: ['hallO', 'rue'], env: { x: 3.25, y: 1.6, z: -2.6 } },
     { id: 'c05', rects: [zr(4.6, 13.6, 5.9, 18.75)], voisines: ['hallO'], env: { x: 5.2, y: 1.5, z: -15.8 } },
@@ -876,6 +885,7 @@ export function construireCarte(scene, renderer = null) {
     { id: 'rue', rects: [zr(-25, -12, 50, -0.4)], voisines: ['hall', 'passage'], env: { x: 9.5, y: 1.7, z: 3.4 } },
     ...pieces.zones,
   ];
+  zones.unshift(...etage1.zones);      // (celles de l'étage d'abord : leurs rectangles couvrent ceux du rez-de-chaussée)
   const lumieres = new LumieresEcole(scene, { lampes: ch.lampes.filter((l) => l.reel !== false), zones });
   // LA LUMIÈRE CUITE AU SOL (toutes les sources, découpées par les murs)
   const lm = cuireLumiereSol(C, ch.lampes, { x0: RECT.x0, z0: -RECT.y1, W, L }, { tpm: 16 });
@@ -906,6 +916,7 @@ export function construireCarte(scene, renderer = null) {
     const u = jeu.user.pos, cam = jeu.camera.position;
     ch.portes.maj(dt, u.x, u.z, cam.x, cam.z);
     lumieres.maj(dt, u.x, u.z, jeu.renderer, u.y);
+    etage1.maj(dt, jeu);
     // l'ombre cuite au sol vaut aussi pour le carrelage du passage (elle est posée sur le matériau du « terrain »)
     if ((scene.userData.solCuit || 0) !== cuit && M.sol.aoMap) {
       cuit = scene.userData.solCuit || 0;
