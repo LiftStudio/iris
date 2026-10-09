@@ -421,7 +421,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     noir: nommer(std({ color: 0x1c1c1a, roughness: 0.62 }), 'mobilier noir mat'),
     plateauNoir: std({ color: 0x1e1e1c, roughness: 0.38 }),
     tolix: nommer(std({ color: 0x3f7f3a, roughness: 0.3, metalness: 0.45 }), 'tabouret Tolix vert'),
-    tablette: std({ color: 0xbdbab2, roughness: 0.42 }),
+    tablette: std({ color: 0xb1aea6, roughness: 0.42 }),
     acierGris: std({ color: 0x8e8f8c, roughness: 0.45, metalness: 0.5 }),
     bois: std({ color: 0xc9b08a, roughness: 0.5 }),
     pareChoc: std({ color: 0xd0502a, roughness: 0.45 }),
@@ -958,7 +958,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     mangeDebout(9.2, 13.85, 'trepied'); autour(9.2, 13.85, 0.5, [30, 150], ['tolix', 'miura']);
     // ---- la table grise du retour sud, à droite de l'entrée ----
     B(3.85, 11.62, 5.0, 12.2, Y_SS + 0.92, Y_SS + 0.95, X.tablette, { collision: true });
-    for (const x of [3.95, 4.9]) B(x - 0.02, 11.66, x + 0.02, 12.16, Y_SS, Y_SS + 0.92, X.noir);
+    B(3.85, 11.62, 5.0, 12.2, Y_SS + 0.915, Y_SS + 0.92, X.acierGris, { ombre: false });
+    for (const x of [3.9, 4.95]) for (const y of [11.67, 12.15]) B(x - 0.02, y - 0.02, x + 0.02, y + 0.02, Y_SS, Y_SS + 0.915, X.noir);
     tabouret(4.15, 12.6, 0, 1); tabouret(4.75, 12.6, 0, 1);
     // ---- le baby-foot et les deux grandes tables en X ----
     babyFoot(9.9, 12.25);
