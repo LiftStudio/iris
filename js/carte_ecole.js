@@ -658,11 +658,12 @@ function construireMurs(ch) {
   // ---- LE COULOIR C05 ET LE COULOIR C01 ----
   // LES DEUX PORTES DES TOILETTES DU C05 (photo 23, 09/10) : femmes près de l'entrée (y 13,325-14,175), hommes aux deux
   // tiers (y 16,425-17,275) ; vantaux gris de 0,85, huisserie blanche, gonds au sud, béquille au nord, la fente vitrée
-  // haute et étroite cerclée de bois foncé côté serrure (0,55-1,85 m, 10 cm de verre). Les plaques et les affiches :
-  // js/ecole_pieces.js (les toilettes).
+  // haute cerclée de bois foncé côté serrure (0,55-1,85 m ; relecture du 09/10, mesurée sur la porte des femmes de la
+  // photo 23 contre la largeur des affiches A4 : 14 cm de verre et non 10, un noyer de 3,5 cm, la fente presque contre la
+  // béquille — son axe à 20 cm du chant). Les plaques et les affiches : js/ecole_pieces.js (les toilettes).
   const WC_C05 = [[13.75, 'toilettes femmes'], [16.85, 'toilettes hommes']];
   ch.mur({ de: [5.875, 12.15], a: [5.875, 18.6], mats: B, plinthes: ['W'], ouvertures: WC_C05.map(([c]) => ({ c, l: 0.85, h: 2.04 })) });
-  for (const [c, nom] of WC_C05) ch.porte('y', 5.875, c, { l: 0.85, h: 2.04, modele: 'grise', etat: 'auto', cote: 'W', oculus: { bas: 0.55, haut: 1.85, l: 0.1 }, nom });
+  for (const [c, nom] of WC_C05) ch.porte('y', 5.875, c, { l: 0.85, h: 2.04, modele: 'grise', etat: 'auto', cote: 'W', oculus: { bas: 0.55, haut: 1.85, l: 0.14, bord: 0.2, cadre: 0.035 }, nom });
   ch.mur({ de: [11.625, 12.15], a: [11.625, 20.75], mats: B, plinthes: ['E'], ouvertures: [{ c: 13.85, l: 0.93, h: 2.04 }, { c: 19.05, l: 0.93, h: 2.04 }] });
   // (les portes du C01 n'ont pas d'oculus, photo 01)
   // (le local : gonds au nord, poignée au sud, photo 01)

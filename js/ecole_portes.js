@@ -194,21 +194,22 @@ export class Portes {
   // ---------------------------------------------------------------- les vantaux
   // UN VANTAIL GRIS (photos 04, 06, 20) : `w` de large, `h` de haut, `s` = +1 (gonds à gauche, le vantail part vers +x)
   // ou -1. `feu` : étiquette rouge « porte coupe-feu » ; `oculus` : la fente vitrée cerclée de noyer (true, ou ses
-  // cotes { bas, haut, l } : la fente haute et étroite des toilettes du C05, photo 23) ; `poignee` : 'bequille' |
-  // 'tirant' | null ; `notices` : affichettes A4 (face +z).
+  // cotes { bas, haut, l, bord, cadre } : la fente haute des toilettes du C05, photo 23 — `bord` : de l'axe de la fente
+  // au chant libre, `cadre` : la largeur du noyer) ; `poignee` : 'bequille' | 'tirant' | null ; `notices` : affichettes
+  // A4 (face +z).
   _vantailGris(w, h, s, { feu = false, oculus = true, poignee = 'bequille', notices = 0, mat = null } = {}) {
     const M = this.M, g = new THREE.Group(), e = 0.04;
     const cx = s * w / 2;
     maille(boiteM(w - 0.012, h - 0.012, e), mat || M.porte, cx, h / 2, 0, 0, g);
     if (oculus) {
       // la fente : 0,12 x 0,85 à partir de 1 m, côté poignée ; cadre de noyer de 3 cm
-      const O = oculus === true ? { bas: 1.0, haut: 1.85, l: 0.12 } : { bas: 1.0, haut: 1.85, l: 0.12, ...oculus };
-      const ox = s * (w - 0.24), oy = (O.bas + O.haut) / 2, oh = O.haut - O.bas, ol = O.l;
+      const D = { bas: 1.0, haut: 1.85, l: 0.12, bord: 0.24, cadre: 0.03 }, O = oculus === true ? D : { ...D, ...oculus };
+      const ox = s * (w - O.bord), oy = (O.bas + O.haut) / 2, oh = O.haut - O.bas, ol = O.l, c = O.cadre;
       for (const z of [e / 2 + 0.004, -e / 2 - 0.004]) {
-        maille(boiteM(ol + 0.06, 0.03, 0.01), M.noyer, ox, oy + oh / 2 + 0.015, z, 0, g, { ombre: false });
-        maille(boiteM(ol + 0.06, 0.03, 0.01), M.noyer, ox, oy - oh / 2 - 0.015, z, 0, g, { ombre: false });
-        maille(boiteM(0.03, oh + 0.06, 0.01), M.noyer, ox - ol / 2 - 0.015, oy, z, 0, g, { ombre: false });
-        maille(boiteM(0.03, oh + 0.06, 0.01), M.noyer, ox + ol / 2 + 0.015, oy, z, 0, g, { ombre: false });
+        maille(boiteM(ol + 2 * c, c, 0.01), M.noyer, ox, oy + oh / 2 + c / 2, z, 0, g, { ombre: false });
+        maille(boiteM(ol + 2 * c, c, 0.01), M.noyer, ox, oy - oh / 2 - c / 2, z, 0, g, { ombre: false });
+        maille(boiteM(c, oh + 2 * c, 0.01), M.noyer, ox - ol / 2 - c / 2, oy, z, 0, g, { ombre: false });
+        maille(boiteM(c, oh + 2 * c, 0.01), M.noyer, ox + ol / 2 + c / 2, oy, z, 0, g, { ombre: false });
       }
       maille(boiteM(ol, oh, e + 0.004), M.vitreFente, ox, oy, 0, 0, g, { ombre: false });
     }
