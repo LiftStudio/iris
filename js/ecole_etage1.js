@@ -677,8 +677,12 @@ export function poserEtage1(ch, renderer = null) {
     eau: std({ color: 0x9fc7e0, roughness: 0.05, transparent: true, opacity: 0.55 }),
     liege: std({ map: texLiege(), roughness: 0.9 }),
     // (l'espace pause, 09/10 : les teintes relevées sur la vidéo du sous-sol, corrigées de son éclairage)
-    anis: std({ color: 0xa8c34a, roughness: 0.88 }),
-    gresPause: std({ map: texGresPause(), roughness: 0.32 }),
+    // (09/10, relecture : #a8c34a sortait olive sous la lumière chaude du jeu — vert 168,179,54 contre 160,178,85 sur la
+    // vidéo, image 64 ; un vert anis plus vert, plus clair : 156,178,66 rendu)
+    anis: std({ color: 0xa4d455, roughness: 0.88 }),
+    // (09/10, relecture : le grès sortait crème, presque aussi clair que les murs — 191,183,163 contre 206,194,175 ; la
+    // vidéo le montre grège, nettement plus sombre que les murs : sa teinte assombrie, 174,163,134 rendu)
+    gresPause: std({ map: texGresPause(), color: 0xd6d6d6, roughness: 0.32 }),
     plintheGrise: std({ color: 0x6e6f6a, roughness: 0.5 }),
     plateauNoir: std({ color: 0x1f1f1d, roughness: 0.38 }),
     noirMat: std({ color: 0x1c1c1a, roughness: 0.62, metalness: 0.2 }),
@@ -1610,8 +1614,10 @@ export function poserEtage1(ch, renderer = null) {
     B(12.02, 11.25, 12.42, 11.65, N1, N1 + 0.6, X.bleuMarine, { collision: true });
     B(12.0, 11.23, 12.43, 11.67, N1 + 0.6, N1 + 0.64, X.bleuMarine);
     B(12.1, 11.35, 12.33, 11.55, N1 + 0.64, N1 + 0.642, M.noirMat, { ombre: false });
-    B(x1 - 0.015, 11.17, x1, 11.73, N1 + 1.26, N1 + 1.98, M.aluGris, { ombre: false });
-    panneau(new THREE.MeshStandardMaterial({ map: texTrombi(), roughness: 0.5 }), 0.52, 0.7, x1 - 0.016, 11.45, N1 + 1.62, 'W');
+    // (09/10, relecture : à la taille de la vidéo, 0,66 x 0,88 cadre compris, plus haut et plus au nord — plus petit et
+    // plus bas, depuis la porte, seul son bandeau dépassait du distributeur, comme une étiquette posée dessus)
+    B(x1 - 0.015, 11.29, x1, 11.95, N1 + 1.33, N1 + 2.21, M.aluGris, { ombre: false });
+    panneau(new THREE.MeshStandardMaterial({ map: texTrombi(), roughness: 0.5 }), 0.6, 0.825, x1 - 0.016, 11.62, N1 + 1.77, 'W');
     // les affiches encadrées du mur vert, au-dessus des mange-debout
     for (const [y, n] of [[10.05, 1], [11.25, 2]]) {
       B(x0, y - 0.2, x0 + 0.015, y + 0.2, N1 + 1.45, N1 + 1.98, M.noirMat, { ombre: false });
@@ -1707,7 +1713,7 @@ export function poserEtage1(ch, renderer = null) {
     try { cuireOcclusionEtage(renderer, groupe, matSol); } catch (e) { console.warn('[étage] ombre du sol non cuite :', e); }
   }
   // (le grès de l'espace pause reçoit la même lumière et la même ombre cuites que le carrelage : uv1 sur R1)
-  X.gresPause.lightMap = lm; X.gresPause.lightMapIntensity = 1.15;
+  X.gresPause.lightMap = lm; X.gresPause.lightMapIntensity = 0.95;
   if (matSol.aoMap) { X.gresPause.aoMap = matSol.aoMap; X.gresPause.aoMapIntensity = matSol.aoMapIntensity; }
   X.gresPause.needsUpdate = true;
   // LA FUSION : les maillages opaques de l'étage cousus en un maillage par matériau (quelques dizaines d'appels de
