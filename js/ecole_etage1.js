@@ -1086,13 +1086,15 @@ export function poserEtage1(ch, renderer = null) {
     fauteuil(15.55, 0.6, 'N', { sortie: [16.05, 2.2] });
     armoire(13.26, 3.2, 'E', 1.0); armoire(13.26, 4.2, 'E', 1.0);
     etagere(16.44, 3.6, 'W', 1.6);
-    // la table ronde et ses deux chaises
-    maille(new THREE.CylinderGeometry(0.45, 0.45, 0.025, 32), X.blancTable, 15.0, N1 + 0.73, -5.3, 0, groupe);
-    maille(new THREE.CylinderGeometry(0.03, 0.03, 0.72, 10), X.anthracite, 15.0, N1 + 0.36, -5.3, 0, groupe);
-    maille(new THREE.CylinderGeometry(0.25, 0.25, 0.015, 24), X.anthracite, 15.0, N1 + 0.008, -5.3, 0, groupe);
-    C.ajouterCercle(15.0, -5.3, 0.46, { y0: N1, y1: N1 + 0.75 });
-    chaise(15.0, 4.55, 'N', { sortie: [14.4, 4.3] });
-    chaise(15.75, 5.3, 'W', { sortie: [15.9, 4.4] });
+    // la table ronde et ses deux chaises — (relecture du 09/10 : la porte est passée en x 15,35 ; la table, restée devant
+    // elle avec sa chaise, fermait le bureau : Haythem butait sur le seuil. Elle va dans l'angle nord-ouest, à côté du
+    // vantail ouvert)
+    maille(new THREE.CylinderGeometry(0.45, 0.45, 0.025, 32), X.blancTable, 14.25, N1 + 0.73, -5.55, 0, groupe);
+    maille(new THREE.CylinderGeometry(0.03, 0.03, 0.72, 10), X.anthracite, 14.25, N1 + 0.36, -5.55, 0, groupe);
+    maille(new THREE.CylinderGeometry(0.25, 0.25, 0.015, 24), X.anthracite, 14.25, N1 + 0.008, -5.55, 0, groupe);
+    C.ajouterCercle(14.25, -5.55, 0.46, { y0: N1, y1: N1 + 0.75 });
+    chaise(14.25, 4.8, 'N', { sortie: [14.85, 4.5] });
+    chaise(15.05, 5.55, 'W', { sortie: [15.55, 5.0] });
     plante(16.05, 6.5, { h: 1.1 });
     for (const k of [9, 10]) radiateur(centreTravee(k), 0.0, 'N', 1.0);
     affiche('#2b4c9b', '#fbfbf8', 65, 0.42, 0.6, 16.43, 1.8, 1.5, 'W');
@@ -1288,8 +1290,10 @@ export function poserEtage1(ch, renderer = null) {
   const maj = (dt, jeu) => {
     const u = jeu.user.pos, cam = jeu.camera.position;
     // VISIBLE quand la caméra peut le voir : dans la cage, au-dessus des plafonds du rez-de-chaussée, ou dehors
-    // (et la cage de l'escalier est, depuis le couloir est : par la porte du vestibule, on voit monter la volée 1)
-    const cage = (cam.x > 1.4 && cam.x < 5.0 && cam.z < -12.2 && cam.z > -19.0) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -7.5 && cam.z > -12.7);
+    // (et la cage de l'escalier est, depuis le vestibule : on y voit monter la volée 1 jusqu'au 1er. Pas depuis le
+    // couloir est : par la porte du vestibule, le regard ne passe pas 2,3 m — relecture du 09/10, tout l'étage n'y est
+    // plus dessiné pour rien)
+    const cage = (cam.x > 1.4 && cam.x < 5.0 && cam.z < -12.2 && cam.z > -19.0) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7);
     const vis = cage || cam.y > 2.7 || cam.z > -0.05 || u.y > 2.0;
     if (vis !== groupe.visible) groupe.visible = vis;
     // SON OMBRE quand Haythem y est (au-delà de la moitié de la volée 2 ; il redescend sous 2 m) — reposée à chaque
