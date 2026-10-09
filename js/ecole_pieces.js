@@ -1217,6 +1217,9 @@ function localTechnique(ch, P) {
   };
   chemin(9.15, 16.88, 11.3, 16.88);
   chemin(11.2, 12.4, 11.2, 16.73);
+  // (intégration du 10/10 : pour la caméra, un plafond sous les chemins et les réglettes — vue plongeante depuis
+  // l'établi, à 2,91 m, elle entrait dans le chemin du nord)
+  ch.C.plafond(LT.x0, -LT.y0, LT.x1, -LT.y1, 2.85, 0.4);
   for (const x of [9.45, 10.1]) for (const [dx, dy, m] of [[-0.03, 0, P.bleu], [0.0, 0.03, P.bleu], [0.03, -0.01, P.jaune], [0.0, -0.03, P.bleu]]) {
     CY(ch.decor, m, 0.009, 0.86, x + dx, 2.43, -(16.88 + dy), 6, { ombre: false });
   }

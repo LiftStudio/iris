@@ -1767,8 +1767,8 @@ export function poserEtage1(ch, renderer = null) {
     // VISIBLE quand la caméra peut le voir : dans la cage, au-dessus des plafonds du rez-de-chaussée, ou dehors
     // (et la cage de l'escalier est, depuis le vestibule : on y voit monter la volée 1 jusqu'au 1er. Pas depuis le
     // couloir est : par la porte du vestibule, le regard ne passe pas 2,3 m — relecture du 09/10, tout l'étage n'y est
-    // plus dessiné pour rien)
-    const cage = (cam.x > 1.4 && cam.x < 5.0 && cam.z < -12.2 && cam.z > -19.0) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7);
+    // plus dessiné pour rien ; ni depuis le hall du -1, sous la cage principale — intégration du 10/10)
+    const cage = (cam.x > 1.4 && cam.x < 5.0 && cam.z < -12.2 && cam.z > -19.0 && cam.y > -0.3) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7);
     const vis = cage || cam.y > 2.7 || cam.z > -0.05 || u.y > 2.0;
     if (vis !== groupe.visible) groupe.visible = vis;
     // SON OMBRE quand Haythem y est (au-delà de la moitié de la volée 2 ; il redescend sous 2 m) — reposée à chaque

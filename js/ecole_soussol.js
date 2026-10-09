@@ -1062,7 +1062,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       maille(boiteM(0.12, 0.02, 0.02), M.inox, 0.3, 1.02, 0.05, 0, g, { ombre: false });
     };
     porteWC(12.9, 14.3, 'W'); porteWC(11.7, 14.95, 'S');
-    B(12.62, 12.95, 12.9, 13.55, Y_SS + 1.0, Y_SS + 1.9, X.blancMat);
+    // (intégration du 10/10 : solide — la caméra, tournée vers l'est depuis l'îlot, entrait dans le meuble)
+    B(12.62, 12.95, 12.9, 13.55, Y_SS + 1.0, Y_SS + 1.9, X.blancMat, { collision: true });
     panneau(new THREE.MeshStandardMaterial({ map: texCasiers(), roughness: 0.6 }), 0.56, 0.88, 12.62, 13.25, Y_SS + 1.45, 'W', 0.001);
     poubelle(12.72, 13.25, X.grisPoubelle, 0.3);
     // ---- LE MUR VERT : la cloison vitrée dépolie et sa porte (x 3,9-5,5), les deux affiches encadrées, l'affiche

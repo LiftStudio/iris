@@ -55,20 +55,22 @@
 ["vendor/three/examples/jsm/postprocessing/MaskPass.js", 2231],
 ["js/ombres_soleil.js", 8566],
 ["js/input.js", 6311],
-["js/carte_ecole.js", 69573],
-["js/ecole_etage1.js", 96548],
-["js/ecole_lumieres.js", 11793],
-["js/ecole_matieres.js", 45265],
+["js/carte_ecole.js", 75636],
+["js/ecole_est.js", 71318],
+["js/ecole_matieres.js", 45272],
 ["js/kit_decor.js", 37210],
 ["js/sonde_ciel.js", 8156],
-["js/ecole_portes.js", 29931],
-["js/ecole_pieces.js", 94241],
+["js/ecole_portes.js", 32892],
+["js/ecole_soussol.js", 94969],
+["js/ecole_lumieres.js", 12223],
+["js/ecole_etage1.js", 134418],
+["js/ecole_pieces.js", 130139],
 ["vendor/three/examples/jsm/geometries/RoundedBoxGeometry.js", 4625],
 ["js/ecole_rue.js", 47351],
 ["js/ecole_rue_voitures.js", 15614],
 ["js/ecole_rue_mobilier.js", 82091],
-["js/ecole_mobilier.js", 34964],
-["js/collisions.js", 20855],
+["js/ecole_mobilier.js", 34334],
+["js/collisions.js", 20997],
 ["js/chargement.js", 35352],
 ["vendor/es-module-shims.js", 62818],
 ["assets/voitures.glb", 1782156],
@@ -106,9 +108,9 @@
 ["assets/tex/beton_rugo_1k.jpg", 148671],
 ["assets/tex/beton_grain_1k.jpg", 375291]
 ],
-"js": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69],
+"js": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71],
 "profils": {
-"ecole/pc": [70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98],
-"ecole/tel": [99, 100, 101, 102, 103, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98]
+"ecole/pc": [72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100],
+"ecole/tel": [101, 102, 103, 104, 105, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100]
 }
 }
