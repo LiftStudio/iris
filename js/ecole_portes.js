@@ -323,6 +323,14 @@ export class Portes {
       vantaux.forEach((v, i) => { if (ouverts[i]) v.g.rotation.y = -v.s * cote * A; });
       // (le vantail resté fermé d'une double porte : il ferme sa moitié de l'ouverture)
       vantaux.forEach((v, i) => { if (!ouverts[i]) this._formeVantail(o, v, l / 2, ep, h); });
+      // (relecture du 09/10 : le vantail OUVERT n'avait pas de forme — Haythem le traversait, la caméra aussi, et contre
+      // l'avancée du hall ouest il restait planté dedans ; une boîte mince le suit maintenant, de son gond à son bord)
+      g.updateMatrixWorld(true);
+      vantaux.forEach((v, i) => {
+        if (!ouverts[i]) return;
+        const w = double ? l / 2 : l, a = v.g.localToWorld(new THREE.Vector3(0, 0, 0)), b = v.g.localToWorld(new THREE.Vector3(v.s * w, 0, 0));
+        C.ajouterBoiteOrientee((a.x + b.x) / 2, (a.z + b.z) / 2, w / 2, 0.035, Math.atan2(b.z - a.z, b.x - a.x), { y0: base, y1: base + h });
+      });
     }
     if (etat === 'auto') {
       nePasFusionner(g);

@@ -611,11 +611,14 @@ function construireMurs(ch) {
   // LES DEUX AVANCÉES DU MUR OUEST (photo 06) : la porte grise, l'extincteur et le radiateur sont dans un RENFONCEMENT ;
   // de part et d'autre, le mur avance de 25 cm — au sud, le pan du plan d'évacuation, au nord, celui de l'affiche jaune
   // du tri, contre l'angle des portes de l'escalier (09/10). Plinthes de bois sur les faces vues.
-  for (const [ya, yb] of [[7.7, 9.05], [12.75, 13.6]]) {
-    ch.boite(1.75, ya, 2.0, yb, 0, H_DALLE, B, { collision: true });
-    ch.boite(2.0, ya - 0.015, 2.015, yb, 0, 0.08, M.bois, { ombre: false });                    // face est
-    ch.boite(1.75, ya - 0.015, 2.0, ya, 0, 0.08, M.bois, { ombre: false });                      // face sud
-    if (yb < 13.5) ch.boite(1.75, yb, 2.015, yb + 0.015, 0, 0.08, M.bois, { ombre: false });     // face nord
+  // (Relecture du 09/10, photos 06 et 02 agrandies : l'avancée NORD est bien plus longue et plus profonde — elle part à
+  // 1,3 m de la porte grise (y 11,35, pas 12,75), avance de 60 cm, et porte le radiateur sur sa face SUD, vu de chant
+  // depuis la salle d'attente ; le renfoncement ne garde que la porte et l'extincteur.)
+  for (const [ya, yb, xa] of [[7.7, 9.05, 2.0], [11.35, 13.6, 2.35]]) {
+    ch.boite(1.75, ya, xa, yb, 0, H_DALLE, B, { collision: true });
+    ch.boite(xa, ya - 0.015, xa + 0.015, yb, 0, 0.08, M.bois, { ombre: false });                   // face est
+    ch.boite(1.75, ya - 0.015, xa, ya, 0, 0.08, M.bois, { ombre: false });                         // face sud
+    if (yb < 13.5) ch.boite(1.75, yb, xa + 0.015, yb + 0.015, 0, 0.08, M.bois, { ombre: false });  // face nord
   }
   // le mur est du passage = l'ouest de la salle A, avec la porte de la salle A côté hall
   ch.mur({ de: [4.825, -0.4], a: [4.825, 5.0], mats: { W: CR, E: B }, plinthes: ['W'] });
@@ -766,9 +769,10 @@ export function construireCarte(scene, renderer = null) {
   construirePorteFond(ch);
   construireEscalier(ch);
   construireAccueil(ch);
-  // (le radiateur du hall ouest : entre l'extincteur et l'affiche jaune du tri, qui est sur le même mur — photos 02 et
-  // 06, de gauche à droite : porte grise, extincteur, radiateur, affiche, portes de l'escalier ; y 12,9 -> 12,45, 09/10)
-  radiateur(ch, 1.75, 12.45, 'E', 0.45, 0.15, 1.3);
+  // (le radiateur du hall ouest : entre l'extincteur et l'affiche jaune du tri — photos 02 et 06, de gauche à droite :
+  // porte grise, extincteur, radiateur, affiche, portes de l'escalier. Relecture du 09/10 : il est fixé sur la face SUD
+  // de l'avancée nord, perpendiculaire au mur — la photo 02 le montre de chant, la photo 06 de trois quarts)
+  radiateur(ch, 2.06, 11.35, 'S', 0.45, 0.15, 1.3);
   // le mur du fond de la salle d'attente : le radiateur à côté du présentoir (photo 21), et celui du bout du mur, près
   // de l'angle du hall d'entrée, sous le haut-parleur et l'affichette WIFI (photo 03) (09/10)
   radiateur(ch, 13.5, 10.5, 'W', 0.45, 0.15, 1.1);

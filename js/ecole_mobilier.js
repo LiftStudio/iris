@@ -186,8 +186,9 @@ export function poserMobilier(ch) {
   // =====================================================================
   // (sur l'avancée sud du mur ouest, x 2,0 : js/carte_ecole.js ; 09/10)
   cadreMural(ch, new THREE.MeshStandardMaterial({ map: texConsignes(), roughness: 0.5 }), 2.0, 8.45, 'E', 0.45, 1.3, 1.92);
-  // l'extincteur rouge sur sa console (h 0,95-1,55) et ses pictogrammes
-  const ext = new THREE.Group(); ext.position.set(1.86, 0, -11.2); ch.decor.add(ext);
+  // l'extincteur rouge sur sa console (h 0,95-1,55) et ses pictogrammes (relecture du 09/10 : à 0,9 m de la porte grise,
+  // au fond du renfoncement raccourci — photos 02 et 06 ; y 11,2 -> 10,95)
+  const ext = new THREE.Group(); ext.position.set(1.86, 0, -10.95); ch.decor.add(ext);
   maille(new THREE.CylinderGeometry(0.075, 0.075, 0.48, 16), M.rougeEtiquette, 0, 1.2, 0, 0, ext);
   maille(new THREE.SphereGeometry(0.075, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.rougeEtiquette, 0, 1.44, 0, 0, ext);
   maille(new THREE.CylinderGeometry(0.03, 0.045, 0.08, 10), M.noirMat, 0, 1.5, 0, 0, ext);
@@ -199,12 +200,19 @@ export function poserMobilier(ch) {
   void etiq;
   const tuyau = new THREE.CatmullRomCurve3([[0.03, 1.5, 0.02], [0.11, 1.45, 0.05], [0.12, 1.2, 0.07], [0.1, 1.0, 0.06], [0.06, 0.97, 0.06]].map((p) => new THREE.Vector3(...p)));
   maille(new THREE.TubeGeometry(tuyau, 24, 0.009, 6), M.noirMat, 0, 0, 0, 0, ext, { ombre: false });
-  C.ajouterCercle(1.86, -11.2, 0.09, { y0: 0.9, y1: 1.6 });
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.16, 0.16, 1.755, 11.2, 1.9, 'E');
+  C.ajouterCercle(1.86, -10.95, 0.09, { y0: 0.9, y1: 1.6 });
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.16, 0.16, 1.755, 10.95, 1.9, 'E');
   // l'affiche jaune du tri, à gauche des portes de l'escalier : sur l'avancée nord du mur OUEST, dans l'angle (09/10 :
   // elle était sur le mur des portes, cachée par le vantail ouvert ; photos 04, 20 : on la voit à gauche du vantail, sur
-  // le mur en fuite)
-  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texTri(), roughness: 0.6 }), 2.0, 13.17, 'E', 0.6, 1.1, 1.95);
+  // le mur en fuite). (Relecture du 09/10 : l'avancée, plus longue, avance jusqu'à x 2,35 ; l'affiche est à 45 cm de
+  // son angle sud, juste à gauche du vantail ouvert sur les photos 06 et 04 — à y 13,17, le vantail la cachait encore.)
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texTri(), roughness: 0.6 }), 2.35, 12.1, 'E', 0.6, 1.1, 1.95);
+  // le diffuseur d'alarme blanc, sur la retombée au-dessus de l'entrée du couloir C05, contre l'angle (photos 04 et 05 :
+  // un boîtier carré à grille ronde ; relecture du 09/10)
+  const diff = new THREE.Group(); diff.position.set(5.39, 2.49, -11.965); ch.decor.add(diff);
+  maille(boiteM(0.12, 0.13, 0.07), M.boitier, 0, 0, 0, 0, diff, { ombre: false });
+  maille(new THREE.CylinderGeometry(0.035, 0.035, 0.01, 16), M.grille, 0, -0.005, 0.038, 0, diff, { ombre: false }).rotation.x = Math.PI / 2;
+  diff.traverse((m) => { m.userData.horsAOSol = true; });
 
   // =====================================================================
   //  LE PASSAGE (photos 07, 19)
@@ -218,6 +226,14 @@ export function poserMobilier(ch) {
   ['#2f6fb0', '#d6542b', '#f08a3c'].forEach((c, i) => ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche(c, '#fbfbf8', 30 + i), roughness: 0.7 }), 0.3, 0.42, 4.715, 2.55 + i * 0.6, 1.45 + (i % 2) * 0.15, 'W'));
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e0e0e0', '#ffffff', 40), roughness: 0.7 }), 0.42, 0.3, 1.756, 4.75, 1.55, 'E');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#ffffff', 41), roughness: 0.7 }), 0.42, 0.6, 1.756, 3.2, 1.5, 'E');
+  // L'AFFICHETTE SCOTCHÉE sur le vantail OUEST de la porte automatique, juste au-dessus de son autocollant « iris »
+  // (photo 07 côté hall, photo 19 côté passage, en transparence ; relecture du 09/10) : elle part avec le vantail
+  const pp = ch.portes.auto.find((P) => Math.abs(P.cx - 3.2) < 0.01 && Math.abs(P.cz + 5.0) < 0.01);
+  const vo = pp && pp.vantaux.find((v) => v.s > 0);
+  if (vo) {
+    const a = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.2), new THREE.MeshStandardMaterial({ map: texAffiche('#c98f3e', '#efe9df', 60), roughness: 0.75, side: THREE.DoubleSide }));
+    a.position.set(0.38, 1.45, -0.004); a.rotation.y = Math.PI; a.castShadow = false; a.userData.vitre = true; vo.g.add(a);
+  }
 
   // =====================================================================
   //  LE COULOIR C01 (photo 01) : la plaque « Toilettes »

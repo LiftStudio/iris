@@ -81,17 +81,24 @@ function poserFlou(g, src, x, y, r, alpha) {
 // fines et floues groupées en amas (certaines dalles en sont couvertes, d'autres presque nues), quelques taches plus
 // sombres et un grain fin. Le premier dessin (traits nets réguliers sur fond gris-beige) donnait de loin un « métal
 // brossé » beige : les traits nets sont devenus des mèches floutées, et la densité change d'une dalle à l'autre.
+// (Relecture du 09/10 : les mèches en amas faisaient de grosses traînées de craie ; ce sont maintenant des STRIES fines
+// groupées en bandes, sur le même fond sombre — voir 2. plus bas.)
 function texCarrelageCouleur() {
   const px = TELEPHONE ? 1024 : 2048;
-  const [br, bg, bb] = octets(0x545352);
+  // (relecture du 09/10 : #545352 -> #504F4E, les stries fines éclaircissent la dalle ; rapport sol / mur blanc du C01
+  // ramené de 0,55 vers les 0,45 de la photo 01)
+  const [br, bg, bb] = octets(0x504f4e);
   // un calque de travail, réutilisé d'une dalle à l'autre (mèches dessinées nettes puis floutées)
   const calque = document.createElement('canvas');
   return canvasTex(px, px, (g, w, h) => {
     g.fillStyle = rgb(br, bg, bb); g.fillRect(0, 0, w, h);
     const flou = w / 2048;                                   // (le flou suit la résolution : même aspect au téléphone)
-    const dalle = (fx, fy, fw, fh, n) => {
+    const dalle = (fx, fy, fw, fh) => {
       const x0 = fx * w, y0 = fy * h, dw = fw * w, dh = fh * h;
-      const r2 = graine(911 + n * 37);
+      // (la graine suit la place de la dalle dans la tuile, RAMENÉE dans [0, 1[ : la dalle à cheval sur le bord de la
+      // répétition est dessinée deux fois, à gauche et à droite, et doit l'être à l'identique — avec deux graines, elle
+      // changeait de ton et de veinage en son milieu, un faux joint ; relecture du 09/10)
+      const r2 = graine(911 + (Math.round((((fx % 1) + 1) % 1) * 8) + Math.round(fy * 4) * 8) * 37);
       g.save(); g.beginPath(); g.rect(x0, y0, dw, dh); g.clip();
       // le ton de la dalle (lot de fabrication) et sa « charge » de mèches (0,25 : presque nue ; 1 : très veinée)
       const t = (r2() - 0.5) * 12, charge = 0.25 + 0.75 * Math.pow(r2(), 0.8);
@@ -100,35 +107,40 @@ function texCarrelageCouleur() {
       for (let k = 0; k < 16; k++) {
         const cx = x0 + r2() * dw, cy = y0 + r2() * dh, rx = dw * (0.18 + r2() * 0.45), ry = dh * (0.06 + r2() * 0.22);
         const sombre = r2() < 0.35, v = sombre ? [64, 63, 62] : [112, 110, 107];
-        const a = sombre ? 0.12 + r2() * 0.2 : (0.05 + r2() * 0.16) * (0.6 + charge * 0.6);
+        // (relecture du 09/10 : les nappes claires un peu plus franches — sur la photo 01 de près, la dalle a de grandes
+        // plages plus claires et d'autres plus sombres ; à côté, celles du jeu sortaient d'un gris uni)
+        const a = sombre ? 0.12 + r2() * 0.2 : (0.07 + r2() * 0.2) * (0.6 + charge * 0.6);
         const gr = g.createRadialGradient(0, 0, 0, 0, 0, 1);
         gr.addColorStop(0, rgb(v[0], v[1], v[2], a)); gr.addColorStop(0.6, rgb(v[0], v[1], v[2], a * 0.5)); gr.addColorStop(1, rgb(v[0], v[1], v[2], 0));
         g.save(); g.translate(cx, cy); g.scale(rx, ry); g.fillStyle = gr; g.fillRect(-1, -1, 2, 2); g.restore();
       }
-      // 2. LES MÈCHES : tracées nettes sur un calque transparent, en AMAS (des centres tirés au hasard, les mèches
-      // autour), puis floutées et posées sur la dalle. Blanc cassé #B4B1AC, longues dans le sens de la dalle.
+      // 2. LES STRIES (relecture du 09/10, la photo 01 de près à côté du jeu : les « mèches » en amas flous faisaient de
+      // grosses traînées de craie posées sur une dalle lisse ; le grès des photos est STRIÉ partout, finement) : des
+      // centaines de fils clairs très fins, courts ou moyens, couchés dans la longueur de la dalle et groupés en BANDES
+      // — des bandes chargées, d'autres presque nues —, et des points blancs le long des fils. Tracés sur un calque, posés
+      // avec un flou d'un pixel (un fil net scintillerait de loin), puis une seconde fois très flous et légers : vue de
+      // loin, une bande chargée devient la nuée un peu plus claire des photos 02 et 21.
       calque.width = Math.ceil(dw); calque.height = Math.ceil(dh);
       const q = calque.getContext('2d');
       q.clearRect(0, 0, calque.width, calque.height);
-      const nAmas = 2 + Math.round(charge * 5);
-      for (let a = 0; a < nAmas; a++) {
-        const ax = r2() * dw, ay = r2() * dh, ex = dw * (0.15 + r2() * 0.4), ey = dh * (0.04 + r2() * 0.12);
-        const nM = Math.round((60 + r2() * 140) * charge * (w / 2048));
-        for (let k = 0; k < nM; k++) {
-          // (une gaussienne grossière autour du centre de l'amas)
-          const gx = (r2() + r2() + r2() - 1.5) / 1.5, gy = (r2() + r2() + r2() - 1.5) / 1.5;
-          const x = ax + gx * ex, y = ay + gy * ey, L = dw * (0.02 + Math.pow(r2(), 2) * 0.2);
-          const v = 122 + r2() * 26, al = 0.05 + r2() * 0.16, ep = (0.8 + r2() * 2.2) * flou;
-          const gr = q.createLinearGradient(x, 0, x + L, 0);
-          gr.addColorStop(0, rgb(v, v - 2, v - 5, 0)); gr.addColorStop(0.3, rgb(v, v - 2, v - 5, al));
-          gr.addColorStop(0.75, rgb(v, v - 2, v - 5, al * 0.7)); gr.addColorStop(1, rgb(v, v - 2, v - 5, 0));
-          q.fillStyle = gr; q.fillRect(x, y + Math.sin(k) * 0.5, L, ep);
-        }
+      const nB = 3 + Math.round(charge * 4), bandes = [];
+      for (let b = 0; b < nB; b++) bandes.push({ y: r2() * dh, e: dh * (0.03 + r2() * 0.13), d: 0.35 + r2() * 0.65 });
+      const nS = Math.round(dw * dh / 300 * (0.35 + charge * 0.65));
+      for (let k = 0; k < nS; k++) {
+        const b = bandes[Math.floor(r2() * nB)], gy = (r2() + r2() + r2() - 1.5) / 1.5;   // (une gaussienne grossière)
+        const y = b.y + gy * b.e, x = -dw * 0.05 + r2() * dw * 1.1, L = dw * (0.012 + Math.pow(r2(), 2.5) * 0.22);
+        const v = 126 + r2() * 44, al = (0.05 + r2() * 0.15) * b.d, ep = (0.55 + r2() * 1.3) * flou;
+        const gr = q.createLinearGradient(x, 0, x + L, 0);
+        gr.addColorStop(0, rgb(v, v - 1, v - 4, 0)); gr.addColorStop(0.25, rgb(v, v - 1, v - 4, al));
+        gr.addColorStop(0.7, rgb(v, v - 1, v - 4, al * 0.8)); gr.addColorStop(1, rgb(v, v - 1, v - 4, 0));
+        q.fillStyle = gr; q.fillRect(x, y, L, ep);
       }
-      // (deux passes : une nappe très floue, qui fait le nuage clair, puis la même un peu moins floue, qui y dessine les
-      // fils ; vues de loin, les fils nets faisaient des rayures de craie, 09/10)
-      poserFlou(g, calque, x0, y0, 5 * flou, 0.9); poserFlou(g, calque, x0, y0, 5 * flou, 0.9);
-      poserFlou(g, calque, x0, y0, 1.8 * flou, 0.45);
+      for (let k = 0; k < 110 * charge * (w / 2048); k++) {                // les paillettes blanches, menues
+        const b = bandes[Math.floor(r2() * nB)], y = b.y + (r2() - 0.5) * 2 * b.e, R = (0.5 + r2() * 0.8) * flou;
+        q.fillStyle = rgb(180 + r2() * 30, 178 + r2() * 30, 173 + r2() * 30, 0.12 + r2() * 0.22);
+        q.beginPath(); q.ellipse(r2() * dw, y, R * (2 + r2() * 4), R, 0, 0, 7); q.fill();
+      }
+      poserFlou(g, calque, x0, y0, 0.6 * flou, 1); poserFlou(g, calque, x0, y0, 7 * flou, 0.55);
       // 3. de petites taches sombres (les inclusions de la « pierre »), discrètes
       for (let k = 0; k < 25; k++) {
         const cx = x0 + r2() * dw, cy = y0 + r2() * dh, R = (2 + r2() * 6) * flou;
@@ -142,12 +154,14 @@ function texCarrelageCouleur() {
       g.restore();
     };
     dallesCarrelage(dalle);
-    // les JOINTS (2 mm, #2E2D2C) et le chanfrein des arêtes, un peu plus clair d'un côté (la lumière vient d'en haut)
+    // les JOINTS (2 mm, #2E2D2C), bordés d'un filet un peu sombre : sur les photos 01, 02 et 21, le joint est un trait
+    // fin plus FONCÉ que la dalle (relecture du 09/10 : le chanfrein éclairé qui le bordait le faisait sortir en filet
+    // clair, argenté)
     const jx = Math.max(2, w / CARRELAGE.m * 0.0022), [jr, jg, jb] = octets(0x2e2d2c);
     dallesCarrelage((fx, fy, fw, fh) => {
       const x0 = fx * w, y0 = fy * h, dw = fw * w, dh = fh * h;
       g.fillStyle = rgb(jr, jg, jb); g.fillRect(x0 - jx / 2, y0, jx, dh); g.fillRect(x0, y0 - jx / 2, dw, jx);
-      g.fillStyle = 'rgba(140,138,135,0.2)'; g.fillRect(x0 + jx / 2, y0 + jx / 2, dw - jx, 1.2); g.fillRect(x0 + jx / 2, y0 + jx / 2, 1.2, dh - jx);
+      g.fillStyle = 'rgba(46,45,44,0.3)'; g.fillRect(x0 + jx / 2, y0 + jx / 2, dw - jx, 1.2); g.fillRect(x0 + jx / 2, y0 + jx / 2, 1.2, dh - jx);
     });
   }, [1 / CARRELAGE.m, 1 / CARRELAGE.m], false, 16);
 }
@@ -164,7 +178,9 @@ function texCarrelageRugosite() {
       gr.addColorStop(0, rgb(v, v, v, 0.4)); gr.addColorStop(1, rgb(v, v, v, 0));
       g.save(); g.translate(cx, cy); g.scale(R * 3, R); g.fillStyle = gr; g.fillRect(-1, -1, 2, 2); g.restore();
     }
-    const jx = Math.max(2, w / CARRELAGE.m * 0.004);
+    // (le joint MAT déborde sur l'arête adoucie des dalles — 8 mm : satinée, elle renvoyait le plafond éclairé, et le
+    // joint sortait en filet argenté ; relecture du 09/10)
+    const jx = Math.max(3, w / CARRELAGE.m * 0.008);
     dallesCarrelage((fx, fy, fw, fh) => {
       g.fillStyle = 'rgb(235,235,235)'; g.fillRect(fx * w - jx / 2, fy * h, jx, fh * h); g.fillRect(fx * w, fy * h - jx / 2, fw * w, jx);
     });
@@ -180,9 +196,11 @@ function normalesCarrelage() {
 
 // LE CARRELAGE DU PASSAGE : gris moyen, 30 x 60 en pose droite (u = le petit côté). Tuile de dessin : 1,2 x 1,2 m.
 // (09/10 : #9A9893 -> #6A6865 ; sous le jour de la grille et la lumière cuite, il sortait presque blanc — photo 07 : gris
-// moyen sous le jour, photo 19 : gris sombre au pied des portes)
+// moyen sous le jour, photo 19 : gris sombre au pied des portes. Relecture du même jour : #6A6865 -> #5E5C59, et le
+// joint, resté #6E6C69, était devenu PLUS CLAIR que la dalle — une grille de traits blancs ; il passe à #3E3C3A, plus
+// foncé, comme sur les photos.)
 function texPassage() {
-  const px = TELEPHONE ? 512 : 1024, nU = 4, nV = 2, [br, bg, bb] = octets(0x6a6865);
+  const px = TELEPHONE ? 512 : 1024, nU = 4, nV = 2, [br, bg, bb] = octets(0x5e5c59);
   return canvasTex(px, px, (g, w, h) => {
     const r2 = graine(303), cw = w / nU, ch = h / nV;
     for (let j = 0; j < nV; j++) for (let i = 0; i < nU; i++) {
@@ -196,7 +214,7 @@ function texPassage() {
       }
       for (let k = 0; k < 900; k++) { const v = 110 + (r2() - 0.5) * 60; g.fillStyle = rgb(v, v - 1, v - 3, 0.25); g.fillRect(x0 + r2() * cw, y0 + r2() * ch, 1.2, 1.2); }
     }
-    const [jr, jg, jb] = octets(0x6e6c69);
+    const [jr, jg, jb] = octets(0x3e3c3a);
     g.fillStyle = rgb(jr, jg, jb);
     for (let i = 0; i <= nU; i++) g.fillRect(i * cw - 1.5, 0, 3, h);
     for (let j = 0; j <= nV; j++) g.fillRect(0, j * ch - 1.5, w, 3);
@@ -222,24 +240,28 @@ export const PLATEAU = { u: 0.6, v: 1.2 };
 // plus gris que la bordure lisse de 3 cm qui encadre chaque plateau. Les premières fentes, très serrées et pâles, se
 // fondaient en un aplat uni : un plafond de plâtre. Le joint creux est souligné d'un filet clair (l'arête du plateau
 // voisin, éclairée) et d'un filet d'ombre.
+// (Relecture du 09/10, la photo 02 agrandie trois fois au-dessus du photographe : les trous sont CARRÉS, ~6 mm, alignés
+// en files serrées dans le sens est-ouest (pas de 11 mm) et séparées par des nervures pleines plus larges (pas de 17 mm
+// en travers) — de près, des lignes de tirets ; et la bordure lisse est LARGE aux deux bouts du plateau (5,5 cm : entre
+// deux rangées de plateaux, une bande claire de 12 cm), plus étroite le long des grands côtés (3 cm).)
 function texPlateaux() {
   const W = TELEPHONE ? 512 : 1024, H = W;
   return canvasTex(W, H, (g, w, h) => {
-    const mm = w / 1200, pu = w / 2, pv = h, bord = 30 * mm, joint = Math.max(2, 5 * mm);
+    const mm = w / 1200, pu = w / 2, pv = h, bord = 30 * mm, bu = 55 * mm, joint = Math.max(2, 5 * mm);
     g.fillStyle = '#ebe8e1'; g.fillRect(0, 0, w, h);
     for (let i = 0; i < 2; i++) {
       const x0 = i * pu;
       // le champ perforé, un rien plus gris que la bordure (la tôle est emboutie autour des trous)
-      g.fillStyle = 'rgba(205,200,190,0.35)'; g.fillRect(x0 + bord, bord, pu - 2 * bord, pv - 2 * bord);
-      // les trous : Ø 4 mm au pas de 12 mm, en quinconce
-      g.fillStyle = 'rgba(62,58,54,0.78)';
-      const pas = 12 * mm, r = Math.max(0.7, 2 * mm);
-      for (let y = bord + pas / 2, rg = 0; y < pv - bord; y += pas, rg++) {
-        for (let x = x0 + bord + pas / 2 + (rg % 2) * pas / 2; x < x0 + pu - bord; x += pas) { g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+      g.fillStyle = 'rgba(205,200,190,0.35)'; g.fillRect(x0 + bu, bord, pu - 2 * bu, pv - 2 * bord);
+      // les trous : carrés de 6 mm, au pas de 11 mm dans la file (u), de 17 mm d'une file à l'autre (v)
+      g.fillStyle = 'rgba(58,54,50,0.8)';
+      const pu1 = 11 * mm, pv1 = 17 * mm, c = Math.max(1, 6 * mm);
+      for (let y = bord + pv1 / 2; y < pv - bord - c / 2; y += pv1) {
+        for (let x = x0 + bu + pu1 / 2; x < x0 + pu - bu - c / 2; x += pu1) g.fillRect(x - c / 2, y - c / 2, c, c);
       }
       // la bordure lisse, plus claire (elle est bombée vers le bas : elle prend la lumière)
       g.fillStyle = 'rgba(255,254,250,0.45)';
-      g.fillRect(x0 + joint, 0, bord * 0.6, pv); g.fillRect(x0 + pu - bord * 0.6, 0, bord * 0.6 - joint / 2, pv);
+      g.fillRect(x0 + joint, 0, bu * 0.6, pv); g.fillRect(x0 + pu - bu * 0.6, 0, bu * 0.6 - joint / 2, pv);
       g.fillRect(x0, joint, pu, bord * 0.6); g.fillRect(x0, pv - bord * 0.6, pu, bord * 0.6 - joint / 2);
     }
     // les joints creux (5 mm), un filet d'ombre d'un côté et un filet clair de l'autre
@@ -472,12 +494,16 @@ export function texEcran() {
 
 // L'AURÉOLE d'un plafonnier : noire au centre (le disque lumineux est un autre maillage), un anneau clair juste autour,
 // puis une décroissance rapide (exponentielle) jusqu'au bord. Lue en mélange additif : le noir n'ajoute rien.
+// (Relecture du 09/10 : l'anneau clair commençait à 13,5 cm du centre, la couronne du spot s'arrête à 10,5 cm — entre les
+// deux, une bande de plafond NON éclairée faisait un cerne sombre autour de chaque spot, puis l'anneau un second cercle
+// lumineux. L'auréole part maintenant du bord de la couronne (t = 0,21 pour le spot ; sous le corps des hublots opales,
+// plus larges, rien ne change) et s'éteint en douceur, sans anneau.)
 function texHalo() {
   return canvasTex(128, 128, (g, w, h) => {
     g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
     const gr = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
-    gr.addColorStop(0, 'rgb(0,0,0)'); gr.addColorStop(0.22, 'rgb(0,0,0)'); gr.addColorStop(0.27, 'rgb(255,255,255)');
-    for (let k = 1; k <= 8; k++) { const t = 0.27 + k * 0.73 / 8, v = Math.round(255 * Math.exp(-k * 0.62) * (1 - k / 8.5)); gr.addColorStop(Math.min(1, t), `rgb(${v},${v},${v})`); }
+    gr.addColorStop(0, 'rgb(0,0,0)'); gr.addColorStop(0.195, 'rgb(0,0,0)'); gr.addColorStop(0.215, 'rgb(220,220,220)');
+    for (let k = 1; k <= 8; k++) { const t = 0.215 + k * 0.785 / 8, v = Math.round(220 * Math.exp(-k * 0.6) * (1 - k / 8.4)); gr.addColorStop(Math.min(1, t), `rgb(${v},${v},${v})`); }
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
   }, null, false, 1);
 }
@@ -505,7 +531,8 @@ export function materiauxEcole() {
   const carr = texCarrelageCouleur();
   M.sol = std({ map: carr, roughnessMap: texCarrelageRugosite(), roughness: 0.95, metalness: 0 });
   M.sol.roughnessMap.repeat.copy(carr.repeat);
-  avecRelief(M.sol, normalesCarrelage(), 0.55);
+  // (relief des joints 0,55 -> 0,3 : à 0,55, l'arête des dalles accrochait les plafonniers ; relecture du 09/10)
+  avecRelief(M.sol, normalesCarrelage(), 0.3);
   M.sol.name = 'carrelage anthracite 60x120';
   const pas = texPassage();
   M.solPassage = std({ map: pas, roughness: 0.5 });
@@ -568,8 +595,10 @@ export function materiauxEcole() {
   // verre dépoli menthe des jours de souffrance (salle d'attente, bureau B) : la lumière de la pièce derrière le traverse
   M.depoli = std({ color: 0xd3e6dd, roughness: 0.55, transparent: true, opacity: 0.86, emissive: 0xc8dcd2, emissiveIntensity: 0.18, depthWrite: true });
   M.depoli.name = 'verre dépoli menthe';
-  // la porte de secours du fond (photo 05) : verre dépoli bleu, éclairé par le jour derrière
-  M.depoliBleu = std({ color: 0x4f6d96, roughness: 0.5, emissive: 0x7d93b4, emissiveIntensity: 0.13 });
+  // la porte de secours du fond (photo 05) : verre dépoli bleu, éclairé par le jour derrière (relecture du 09/10 : un
+  // gris-bleu éteint — mesuré sur la photo, rapporté au mur blanc voisin, R 0,40 V 0,50 B 0,70 ; il sortait d'un bleu
+  // franc, 0,40 / 0,57 / 0,83 : #4F6D96 -> #546479)
+  M.depoliBleu = std({ color: 0x546479, roughness: 0.5, emissive: 0x848ea0, emissiveIntensity: 0.13 });
   // les vitres de la façade vues de l'intérieur : le jour couvert derrière, un voile clair
   M.vitreJour = std({ color: 0xdeeaf6, roughness: 0.1, transparent: true, opacity: 0.22, depthWrite: false, envMapIntensity: 1.2, side: THREE.DoubleSide });
   // la fente vitrée des portes grises : un verre sombre (on ne voit qu'un reflet)
