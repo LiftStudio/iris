@@ -1268,7 +1268,7 @@ export function poserEtage1(ch, renderer = null) {
   // =====================================================================
   //  L'ÉTAGE VIVANT (js/carte_ecole.js maj, à chaque image)
   // =====================================================================
-  let tous = null, niveau = -1, haut = false;
+  let tous = null, niveau = null, haut = false;
   const maj = (dt, jeu) => {
     const u = jeu.user.pos, cam = jeu.camera.position;
     // VISIBLE quand la caméra peut le voir : dans la cage, au-dessus des plafonds du rez-de-chaussée, ou dehors
@@ -1279,13 +1279,15 @@ export function poserEtage1(ch, renderer = null) {
     // image : le cache de l'ombre du décor (js/ombre_cache.js) rallume ce qu'il a éteint le temps d'un rendu
     if (u.y > 2.5) haut = true; else if (u.y < 2.0) haut = false;
     for (const o of ombrants) o.castShadow = haut;
-    // LES SIÈGES de son étage seulement (la liste est celle du jeu, js/game.js : on la remplit sur place)
+    // LES SIÈGES de son étage seulement (la liste est celle du jeu, js/game.js : on la remplit sur place) — trois niveaux
+    // depuis le sous-sol (09/10, js/ecole_soussol.js : -1, 0, 1)
     if (!tous) tous = ch.sieges.slice();
-    const n = u.y > 2.0 ? 1 : 0;
+    const lv = (h) => (h < -1.5 ? -1 : h > 2 ? 1 : 0);
+    const n = u.y < -1.5 ? -1 : u.y > 2.0 ? 1 : 0;
     if (n !== niveau) {
       niveau = n;
       ch.sieges.length = 0;
-      for (const s of tous) if (((s.sol || 0) > 2) === (n === 1)) ch.sieges.push(s);
+      for (const s of tous) if (lv(s.sol || 0) === n) ch.sieges.push(s);
     }
   };
   console.info('[étage] 1er étage : %d sièges, %d lampes, %d ombrants', sieges.length, lampes.length, ombrants.length);
