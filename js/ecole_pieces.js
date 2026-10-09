@@ -1625,10 +1625,11 @@ function solGres(ch, R) {
 // cours sobre, comme la salle A et la salle 101. Elle déborde le fond du bâtiment (y 20,75) jusqu'à 24,5 : ses trois
 // fenêtres donnent au nord sur une cour éclairée par le jour — c'est ce jour qui allume le verre bleu de sa porte sur la
 // photo 05.
-//   Le tableau blanc et l'écran au mur est : la lumière des fenêtres arrive par la gauche des élèves. Quatre rangs de
-//   deux tables pour deux (16 places) ; trois allées est-ouest (le long du mur sud, où arrive la porte, au milieu, et le
-//   long des fenêtres) d'où l'on rejoint chaque chaise. Le bureau de l'enseignant devant l'écran.
-const RANGS_DC = [2.6, 3.95, 5.3, 6.65], TABLES_DC = [20.2, 22.35];
+//   Le tableau blanc et l'écran au mur est : la lumière des fenêtres arrive par la gauche des élèves. Trois rangs de
+//   deux tables pour deux (12 places) ; trois allées est-ouest (le long du mur sud, où arrive la porte, au milieu, et le
+//   long des fenêtres) d'où l'on rejoint chaque chaise, et une allée au fond (mur ouest) qui les relie. Le bureau de
+//   l'enseignant devant l'écran, à 1,15 m du premier rang.
+const RANGS_DC = [3.15, 4.5, 5.85], TABLES_DC = [20.2, 22.35];
 function salleDavidClark(ch, P) {
   const { M, C } = ch;
   // ---- la coque : le mur ouest, le mur nord (30 cm) et ses trois fenêtres sur la cour, le plafond à plateaux ----
@@ -1662,14 +1663,14 @@ function salleDavidClark(ch, P) {
   maille(new THREE.CircleGeometry(0.03, 18), P.led, 0.07, -0.29, 0.153, 0, vp, { ombre: false, recoit: false });
   vp.traverse((m) => { m.userData.horsAOSol = true; });
   // ---- le bureau de l'enseignant (tourné vers la classe), son fauteuil, son portable ----
-  tableEleve(ch, P, 7.95, 23.45, 0.7, 1.4);
-  chaiseBureau(ch, P, 8.58, 23.45, 'W', { accoudoirs: true, nom: 'le fauteuil de l’enseignant', sortie: [0, -0.95] });
-  const lp = groupe(ch, 7.98, 23.6, 'E', 0.745);
+  tableEleve(ch, P, 7.65, 22.85, 0.7, 1.4);
+  chaiseBureau(ch, P, 8.3, 22.85, 'W', { accoudoirs: true, nom: 'le fauteuil de l’enseignant', sortie: [0, 1.0] });
+  const lp = groupe(ch, 7.68, 23.0, 'E', 0.745);
   R(lp, P.alu, 0.32, 0.016, 0.22, 0.006, 0, 0.008, 0, { ombre: false });
   const ecl = new THREE.Group(); ecl.position.set(0, 0.016, -0.11); ecl.rotation.x = -0.25; lp.add(ecl);
   B(ecl, P.alu, 0.32, 0.21, 0.007, 0, 0.105, 0);
   plan(ecl, P.ecrans[4], 0.3, 0.18, 0, 0.108, 0.004);
-  const docs = groupe(ch, 7.85, 23.0, 'E', 0.745); docs.rotation.y += 0.2; B(docs, P.blancMat, 0.21, 0.015, 0.297, 0, 0.0075, 0, { ombre: false });
+  const docs = groupe(ch, 7.55, 22.4, 'E', 0.745); docs.rotation.y += 0.2; B(docs, P.blancMat, 0.21, 0.015, 0.297, 0, 0.0075, 0, { ombre: false });
   // ---- les tables des élèves et leurs chaises (tournées vers l'est) ; quelques coques jaunes ----
   let n = 0;
   for (const xr of RANGS_DC) for (const yc of TABLES_DC) {
@@ -1680,9 +1681,9 @@ function salleDavidClark(ch, P) {
     }
   }
   // un cahier, une trousse, une gourde : la classe vient de sortir
-  const cahier = groupe(ch, 5.25, 22.0, 'E', 0.745); cahier.rotation.y += 0.25; B(cahier, P.bleu, 0.21, 0.012, 0.29, 0, 0.006, 0, { ombre: false });
-  const gourde = groupe(ch, 3.95, 20.5, 'E', 0.745); CY(gourde, P.vert, 0.035, 0.22, 0, 0.11, 0, 14); CY(gourde, P.chrome, 0.025, 0.03, 0, 0.235, 0, 10);
-  const trousse = groupe(ch, 6.65, 19.85, 'E', 0.745); trousse.rotation.y += 0.6; R(trousse, P.rouge, 0.2, 0.06, 0.08, 0.025, 0, 0.03, 0, { ombre: false });
+  const cahier = groupe(ch, 5.85, 22.0, 'E', 0.745); cahier.rotation.y += 0.25; B(cahier, P.bleu, 0.21, 0.012, 0.29, 0, 0.006, 0, { ombre: false });
+  const gourde = groupe(ch, 4.55, 20.5, 'E', 0.745); CY(gourde, P.vert, 0.035, 0.22, 0, 0.11, 0, 14); CY(gourde, P.chrome, 0.025, 0.03, 0, 0.235, 0, 10);
+  const trousse = groupe(ch, 3.15, 19.85, 'E', 0.745); trousse.rotation.y += 0.6; R(trousse, P.rouge, 0.2, 0.06, 0.08, 0.025, 0, 0.03, 0, { ombre: false });
   // ---- le fond de la classe (mur ouest) : deux affiches, les patères ; la plante, la corbeille, l'extincteur ----
   cadre(ch, P, new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#fbfbf8', 71), roughness: 0.6 }), DC.x0, 20.3, 'E', 0.52, 0.72, 1.6);
   cadre(ch, P, new THREE.MeshStandardMaterial({ map: texAffiche('#e9a01c', '#fbfbf8', 72), roughness: 0.6 }), DC.x0, 21.2, 'E', 0.52, 0.72, 1.6);
@@ -1693,10 +1694,11 @@ function salleDavidClark(ch, P) {
   plante(ch, P, 2.05, 23.95, { h: 1.4, graineN: 7 });
   corbeille(ch, P, 4.45, 18.98);
   C.ajouterCercle(4.45, -18.98, 0.16, { y1: 0.4 });
-  const ex = groupe(ch, 6.25, DC.y0 + 0.09, 'N');
+  // (l'extincteur dans l'angle sud-est, au mur du tableau : dans l'allée sud, il la bouchait)
+  const ex = groupe(ch, DC.x1 - 0.09, 19.05, 'W');
   CY(ex, P.rouge, 0.075, 0.48, 0, 1.2, 0, 16); CY(ex, P.noirMat, 0.04, 0.08, 0, 1.48, 0, 10);
-  C.ajouterCercle(6.25, -(DC.y0 + 0.09), 0.09, { y0: 0.9, y1: 1.6 });
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 6.25, DC.y0, 'N', 0.16, 0.16, 1.85, { ep: 0.004 });
+  C.ajouterCercle(DC.x1 - 0.09, -19.05, 0.09, { y0: 0.9, y1: 1.6 });
+  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), DC.x1, 19.05, 'W', 0.16, 0.16, 1.85, { ep: 0.004 });
   // le point d'accès wifi et le détecteur de fumée
   const ap = groupe(ch, 5.3, 21.55, 'S', 2.6); CY(ap, P.blancMat, 0.1, 0.035, 0, -0.018, 0, 24, { ombre: false }); maille(new THREE.CircleGeometry(0.012, 10), P.led, 0, -0.0365, 0.05, 0, ap, { recoit: false }).rotation.x = Math.PI / 2;
   const df = groupe(ch, 2.9, 21.55, 'S', 2.6); CY(df, P.blancMat, 0.055, 0.045, 0, -0.023, 0, 18, { ombre: false });

@@ -817,8 +817,8 @@ export function construireCarte(scene, renderer = null) {
   ch.plafond(5.3, 12.0, 5.8, 13.6, 2.4, 'platre');
   // C05 : à mi-longueur, une RETOMBÉE — le fond du couloir est plus bas, l'imposte de la porte bleue vient juste sous
   // son plafond (photos 05 et 23 : le premier hublot avant le ressaut, le second après ; 09/10)
-  ch.plafond(4.6, 13.6, 5.8, 15.5, 2.4, 'platre');
-  ch.plafond(4.6, 15.5, 5.8, 18.6, 2.3, 'platre');
+  ch.plafond(4.6, 13.6, 5.8, 15.2, 2.4, 'platre');
+  ch.plafond(4.6, 15.2, 5.8, 18.6, 2.3, 'platre');
   // la salle d'attente : les plateaux perforés, sauf au bout ouest, devant le couloir C05, où ce sont des dalles lisses
   // de 60 x 60 sur ossature (photos 04, 05 : au-dessus du photographe ; 09/10)
   ch.plafond(6.5, 9.0, 13.5, 12.0, 2.6, 'plateaux');
@@ -832,10 +832,12 @@ export function construireCarte(scene, renderer = null) {
   // ---- les luminaires (et les lampes : ce sont les mêmes) ----
   ch.tube(1.75, 1.5, 3.0, 2.35, 1, 'passage'); ch.tube(4.75, 1.5, 3.0, 2.35, -1, 'passage');
   ch.sortie(3.25, 0.12, 2.3, 'N');
-  for (const [x, y] of [[3.2, 7.1], [3.3, 11.0], [5.2, 12.9]]) ch.opale(x, y, 2.4, 'hallO');
-  // (les deux hublots du C05, photo 23 : le premier juste passé la porte des toilettes femmes, le second au droit de
-  // celle des hommes, sous le plafond bas — Ø 38 cm ; 09/10)
-  ch.opale(5.25, 14.45, 2.4, 'c05', { r: 0.18 }); ch.opale(5.25, 16.75, 2.3, 'c05', { r: 0.18 });
+  // (09/10 : plus de hublot en (5,2 ; 12,9), à l'entrée du C05 — ni la photo 05 ni la photo 23 n'en montrent : les deux
+  // qu'on y voit sont ceux du C05)
+  for (const [x, y] of [[3.2, 7.1], [3.3, 11.0]]) ch.opale(x, y, 2.4, 'hallO');
+  // (les deux hublots du C05, photos 23 et 05 : le premier au droit de la porte des toilettes femmes, avant la
+  // retombée, le second passé la retombée, sous le plafond bas — Ø 38 cm ; 09/10)
+  ch.opale(5.25, 14.2, 2.4, 'c05', { r: 0.18 }); ch.opale(5.25, 16.5, 2.3, 'c05', { r: 0.18 });
   for (const [x, y] of [[6.6, 9.9], [9.0, 9.9], [11.4, 9.9], [7.8, 11.1], [10.2, 11.1], [12.6, 11.1]]) ch.spot(x, y, 2.6, 'attente');
   for (const [x, y] of [[12.3, 7.8], [11.9, 5.7]]) ch.spot(x, y, 2.6, 'cou');
   for (const [x, y] of [[12.6, 16.0], [12.6, 19.4]]) ch.opale(x, y, 2.45, 'c01');
@@ -954,7 +956,8 @@ export function construireCarte(scene, renderer = null) {
     nom: 'IRIS — rez-de-chaussée',
     collisions: C,
     depart: { x: d.x, z: -d.y, fx: v.x / n, fz: -v.y / n },
-    bornes: { xMin: -22, xMax: 47, zMin: -22, zMax: 11 },
+    // (zMin -22 -> -25 : la salle David Clark va jusqu'à y 24,35 — 09/10)
+    bornes: { xMin: -22, xMax: 47, zMin: -25, zMax: 11 },
     sieges: ch.sieges,
     maj,
     lumieres, portes: ch.portes, chantier: ch,
