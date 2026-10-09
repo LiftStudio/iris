@@ -176,7 +176,8 @@ function texPanneauNiveau(txt) {
   return canvasTex(128, 128, (g, w, h) => {
     g.fillStyle = '#dcae2c'; g.fillRect(0, 0, w, h);
     g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(0, 0, w, h * 0.5);
-    g.fillStyle = '#ffffff'; g.font = '300 92px "Segoe UI", "Arial Rounded MT Bold", Arial, sans-serif';
+    // (le chiffre épais et rond de v_013 : un trait d'un septième de sa hauteur)
+    g.fillStyle = '#ffffff'; g.font = '600 88px "Arial Rounded MT Bold", "Segoe UI", Arial, sans-serif';
     g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, w / 2 + (txt.length > 1 ? -4 : 0), h / 2 + 5);
   }, null, false, 4);
 }
@@ -400,7 +401,7 @@ function tube(parent, mat, a, b, r, seg = 10, ombre = true) {
 const P3 = (x, h, y) => new THREE.Vector3(x, h, -y);     // un point du plan (x, y) à la hauteur h, en monde
 
 export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4, y0: -0.6, y1: 21.0 } } = {}) {
-  const { C, M } = ch;
+  const { C, M } = ch, t0 = performance.now();
   const groupe = new THREE.Group(); groupe.name = 'sous-sol';
   ch.scene.add(groupe);
   // (le décor fixe du -1 dans un sous-groupe, cousu à la fin ; les portes automatiques à côté, qui tournent)
@@ -635,6 +636,11 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // du rez-de-chaussée : au palier, le joueur d'en haut ne passe pas)
     C.ajouterBoite(x1, -ESC.y0, 1.5, -ESC.yPied, { y0: Y_SS, y1: 3.25 });
     C.ajouterBoite(0.0, -ESC.y0, x0, -14.3, { y0: Y_SS, y1: 3.25 });
+    // (la volée n'a que 85 cm : deux guides en biais, invisibles, au bord du palier — qui arrive de travers glisse
+    // dans la volée au lieu de buter contre le ressaut ou le mur est)
+    const biais = (xa, ya, xb, yb) => C.ajouterBoiteOrientee((xa + xb) / 2, -(ya + yb) / 2, Math.hypot(xb - xa, yb - ya) / 2, 0.02, Math.atan2(-(yb - ya), xb - xa), { y0: 0, y1: 1.9, camera: false });
+    biais(0.0, 9.74, 0.43, 10.13);
+    biais(1.22, 10.13, 1.62, 10.0);
     // LE GARDE-CORPS (x 1,28) : départ au nez 0, arrivée au nez 16, montants aux nez 3, 7, 11, 15
     const xg = x1 + 0.03, hn = (y) => -R * (y - ESC.y0) / G;     // la ligne des nez
     const yA = ESC.y0 - 0.05, yB = ESC.yPied + 0.05;
@@ -744,6 +750,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     ch.plafond(2.55, 13.55, 10.45, 15.8, H_PAUSE, 'dalles', { retombees: false });
     ch.plafond(5.0, 6.5, 12.9, 11.6, H_PAUSE, 'dalles', { retombees: false });
     ch.plafond(10.55, 13.65, 12.9, 14.95, H_SAS, 'platre', { retombees: false });
+    B(10.45, 13.6, 10.55, 15.0, H_SAS, H_PAUSE + 0.01, M.platre, { ombre: false });       // (le linteau du sas)
     const ret = (x0, y0, x1, y1) => {
       B(x0, y0, x1, y1, H_RET, H_PAUSE + 0.01, M.platre, { ombre: false });
       C.plafond(x0, -y1, x1, -y0, H_RET, H_PAUSE - H_RET + 0.3);
@@ -1036,6 +1043,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     mangeDebout(6.6, 8.2, 'trepied'); autour(6.6, 8.2, 0.5, [0, 180]);
     mangeDebout(9.3, 7.4, 'trepied'); autour(9.3, 7.4, 0.5, [90, 270]);
     panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#7b2a6e', '#fbfbf8', 5), roughness: 0.7 }), 0.42, 0.594, 8.2, 6.5, Y_SS + 1.55, 'N');
+    // (un radiateur sous l'affiche, comme ceux du rez-de-chaussée)
+    B(7.6, 6.5, 8.8, 6.58, Y_SS + 0.15, Y_SS + 0.75, M.radiateur, { collision: true });
+    B(7.61, 6.51, 8.79, 6.57, Y_SS + 0.75, Y_SS + 0.755, M.grille, { ombre: false });
   }
 
   // =====================================================================
@@ -1137,7 +1147,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     for (const o of dalles) o.castShadow = !bas;
     for (const o of ombrants) o.castShadow = bas;
   };
-  console.info('[sous-sol] %d sièges, %d lampes, %d ombrants', sieges.length, lampes.length, ombrants.length);
+  console.info('[sous-sol] %d sièges, %d lampes, %d ombrants, construit en %d ms', sieges.length, lampes.length, ombrants.length, Math.round(performance.now() - t0));
   return { zones, maj, groupe, solsRDC: [matPalier] };
 }
 
