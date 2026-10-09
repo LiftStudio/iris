@@ -10,7 +10,8 @@
 //     autocollants « iris » sur deux rangs ; et celle du bureau B (photo 03) ;
 //   - la PORTE D'ENTRÉE n° 6 (photos 03, 16) : double porte vitrée en aluminium gris, imposte, fixe à gauche, les
 //     vitrophanies de l'école (arcs, nuage, visage) — vues à l'envers depuis le hall ;
-//   - la porte de SECOURS du fond du couloir C05 (photo 05) : verre dépoli bleu qui s'allume du jour de la cour ;
+//   - la porte BLEUE du fond du couloir C05 (photos 05, 23) : celle de la salle David Clark (B 0.2), verre dépoli bleu
+//     qui s'allume du jour de ses fenêtres (ce n'était pas une issue de secours, 09/10) ;
 //   - les FENÊTRES de la façade (barreaux noirs, menuiserie brun-noir, imposte) et les jours de souffrance dépolis.
 //
 // TROIS ÉTATS d'une porte :
@@ -192,22 +193,25 @@ export class Portes {
 
   // ---------------------------------------------------------------- les vantaux
   // UN VANTAIL GRIS (photos 04, 06, 20) : `w` de large, `h` de haut, `s` = +1 (gonds à gauche, le vantail part vers +x)
-  // ou -1. `feu` : étiquette rouge « porte coupe-feu » ; `oculus` : la fente vitrée cerclée de noyer ; `poignee` :
-  // 'bequille' | 'tirant' | null ; `notices` : affichettes A4 (face +z).
+  // ou -1. `feu` : étiquette rouge « porte coupe-feu » ; `oculus` : la fente vitrée cerclée de noyer (true, ou ses
+  // cotes { bas, haut, l, bord, cadre } : la fente haute des toilettes du C05, photo 23 — `bord` : de l'axe de la fente
+  // au chant libre, `cadre` : la largeur du noyer) ; `poignee` : 'bequille' | 'tirant' | null ; `notices` : affichettes
+  // A4 (face +z).
   _vantailGris(w, h, s, { feu = false, oculus = true, poignee = 'bequille', notices = 0, mat = null } = {}) {
     const M = this.M, g = new THREE.Group(), e = 0.04;
     const cx = s * w / 2;
     maille(boiteM(w - 0.012, h - 0.012, e), mat || M.porte, cx, h / 2, 0, 0, g);
     if (oculus) {
       // la fente : 0,12 x 0,85 à partir de 1 m, côté poignée ; cadre de noyer de 3 cm
-      const ox = s * (w - 0.24), oy = 1.0 + 0.425;
+      const D = { bas: 1.0, haut: 1.85, l: 0.12, bord: 0.24, cadre: 0.03 }, O = oculus === true ? D : { ...D, ...oculus };
+      const ox = s * (w - O.bord), oy = (O.bas + O.haut) / 2, oh = O.haut - O.bas, ol = O.l, c = O.cadre;
       for (const z of [e / 2 + 0.004, -e / 2 - 0.004]) {
-        maille(boiteM(0.18, 0.03, 0.01), M.noyer, ox, oy + 0.44, z, 0, g, { ombre: false });
-        maille(boiteM(0.18, 0.03, 0.01), M.noyer, ox, oy - 0.44, z, 0, g, { ombre: false });
-        maille(boiteM(0.03, 0.91, 0.01), M.noyer, ox - 0.075, oy, z, 0, g, { ombre: false });
-        maille(boiteM(0.03, 0.91, 0.01), M.noyer, ox + 0.075, oy, z, 0, g, { ombre: false });
+        maille(boiteM(ol + 2 * c, c, 0.01), M.noyer, ox, oy + oh / 2 + c / 2, z, 0, g, { ombre: false });
+        maille(boiteM(ol + 2 * c, c, 0.01), M.noyer, ox, oy - oh / 2 - c / 2, z, 0, g, { ombre: false });
+        maille(boiteM(c, oh + 2 * c, 0.01), M.noyer, ox - ol / 2 - c / 2, oy, z, 0, g, { ombre: false });
+        maille(boiteM(c, oh + 2 * c, 0.01), M.noyer, ox + ol / 2 + c / 2, oy, z, 0, g, { ombre: false });
       }
-      maille(boiteM(0.12, 0.85, e + 0.004), M.vitreFente, ox, oy, 0, 0, g, { ombre: false });
+      maille(boiteM(ol, oh, e + 0.004), M.vitreFente, ox, oy, 0, 0, g, { ombre: false });
     }
     if (poignee === 'bequille') {
       for (const z of [1, -1]) {
@@ -259,6 +263,27 @@ export class Portes {
     }
     return g;
   }
+  // LE VANTAIL BLEU de la salle David Clark, au fond du C05 (photos 05, 23) : cadre d'aluminium laqué blanc, verre
+  // dépoli bleu (le jour des fenêtres de la salle le traverse), béquille inox et cylindre côté serrure, la pastille
+  // rouge en haut du montant de serrure (09/10)
+  _vantailBleu(w, h, s) {
+    const M = this.M, g = new THREE.Group(), c = 0.06, e = 0.045, cb = 0.1;
+    const cx = s * w / 2;
+    maille(boiteM(w - 0.01, cb, e), M.alu, cx, cb / 2, 0, 0, g);
+    maille(boiteM(w - 0.01, c, e), M.alu, cx, h - c / 2, 0, 0, g);
+    maille(boiteM(c, h, e), M.alu, s * c / 2, h / 2, 0, 0, g);
+    maille(boiteM(c, h, e), M.alu, s * (w - c / 2 - 0.005), h / 2, 0, 0, g);
+    maille(boiteM(w - 2 * c, h - c - cb, 0.012), M.depoliBleu, cx, cb + (h - c - cb) / 2, 0, 0, g, { ombre: false });
+    const xs = s * (w - 0.035);
+    for (const z of [1, -1]) {
+      maille(boiteM(0.04, 0.15, 0.012), M.inox, xs, 1.02, z * (e / 2 + 0.006), 0, g, { ombre: false });
+      maille(boiteM(0.13, 0.02, 0.02), M.inox, xs - s * 0.05, 1.06, z * (e / 2 + 0.05), 0, g, { ombre: false });
+      maille(boiteM(0.02, 0.02, 0.05), M.inox, xs, 1.06, z * (e / 2 + 0.025), 0, g, { ombre: false });
+      maille(new THREE.CylinderGeometry(0.012, 0.012, 0.01, 12), M.inox, xs, 0.94, z * (e / 2 + 0.005), 0, g, { ombre: false }).rotation.x = Math.PI / 2;
+      maille(boiteM(0.045, 0.07, 0.003), M.rougeEtiquette, s * (w - 0.032), h - 0.13, z * (e / 2 + 0.002), 0, g, { ombre: false });
+    }
+    return g;
+  }
   // UN VANTAIL AFFLEURANT de gaine technique (photo 01) : gris, sans oculus, petite serrure
   _vantailGaine(w, h, s) {
     const M = this.M, g = new THREE.Group();
@@ -269,7 +294,7 @@ export class Portes {
 
   // ---------------------------------------------------------------- une porte
   // o = { cx, cz, rot, ep, l, h, modele, etat, cote, charniere, angle, feu, notices, nom }
-  //  modele : 'grise' | 'grise2' (double) | 'gaine2' | 'vitree' | 'vitree2' | 'blanche'
+  //  modele : 'grise' | 'grise2' (double) | 'gaine2' | 'vitree' | 'vitree2' | 'blanche' | 'bleue' (fond du C05)
   //  etat   : 'fermee' | 'ouverte' | 'auto' ; `angle` : l'ouverture d'un vantail 'ouverte' (rad)
   //  cote   : la face du mur (repère de la porte : +1 = +z) où se pose le vantail fermé
   //  ouverts : pour une double porte 'ouverte', lesquels des deux vantaux le sont ([true, false] : le gauche)
@@ -289,8 +314,9 @@ export class Portes {
     const zf = cote * (ep / 2 - 0.03);                     // le plan du vantail fermé, dans l'épaisseur du mur
     const vantaux = [];
     const faire = (w, s) => {
-      if (o.modele.startsWith('grise')) return this._vantailGris(w, h, s, { feu: o.feu, oculus: o.oculus !== false, notices: s > 0 ? (o.notices || 0) : (o.noticesD ?? o.notices ?? 0), poignee: o.poignee ?? (double ? 'tirant' : 'bequille') });
+      if (o.modele.startsWith('grise')) return this._vantailGris(w, h, s, { feu: o.feu, oculus: o.oculus === false ? false : (o.oculus || true), notices: s > 0 ? (o.notices || 0) : (o.noticesD ?? o.notices ?? 0), poignee: o.poignee ?? (double ? 'tirant' : 'bequille') });
       if (o.modele.startsWith('gaine')) return this._vantailGaine(w, h, s);
+      if (o.modele === 'bleue') return this._vantailBleu(w, h, s);
       if (o.modele === 'blanche') return this._vantailGris(w, h, s, { oculus: false, mat: M.alu, poignee: 'bequille' });
       if (o.modele === 'noire') return this._vantailGris(w, h, s, { oculus: false, mat: M.acierNoir, poignee: null });
       // (`autocollants` : une fonction du vantail, s => rangées, quand les deux vantaux n'en portent pas autant)
