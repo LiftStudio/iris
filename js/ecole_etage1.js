@@ -432,7 +432,7 @@ function texGresPause() {
     const r2 = graine(1959), c = w / 2;
     for (let j = 0; j < 2; j++) for (let i = 0; i < 2; i++) {
       const t = (r2() - 0.5) * 7;
-      g.fillStyle = rgb(188 + t, 180 + t, 157 + t); g.fillRect(i * c, j * c, c, c);
+      g.fillStyle = rgb(186 + t, 181 + t, 158 + t); g.fillRect(i * c, j * c, c, c);
       g.save(); g.beginPath(); g.rect(i * c, j * c, c, c); g.clip();
       for (let k = 0; k < 36; k++) {
         const x = i * c + r2() * c, y = j * c + r2() * c, r = c * (0.06 + r2() * 0.2), v = r2() < 0.5 ? [178, 170, 148] : [216, 209, 189];
@@ -1577,10 +1577,10 @@ export function poserEtage1(ch, renderer = null) {
     mangeDebout(9.0, 10.05); mangeDebout(9.0, 11.25);
     tabouretNoir(8.84, 9.45, 'E', { sortie: [9.5, 9.4] });
     tolix(8.84, 10.65, 'E', { sortie: [9.5, 10.65] });
-    // au milieu, le trépied et deux tabourets
-    mangeDebout(10.6, 10.5, { d: 0.66, trepied: true });
-    tolix(10.03, 10.5, 'E');
-    tabouretNoir(10.6, 9.92, 'N');
+    // au milieu, le trépied et son tabouret (65 cm au moins de chaque côté : le passage vers les distributeurs et vers
+    // la tablette ; plus étroit, Haythem s'y coincerait)
+    mangeDebout(10.69, 10.5, { trepied: true });
+    tolix(10.18, 10.5, 'E');
     // LA TABLETTE HAUTE (la vidéo : stratifié gris clair sur pieds d'acier gris, 1,05 m) sous les fenêtres, trois
     // tabourets tournés vers la cour
     const ty0 = 12.23;
@@ -1590,7 +1590,7 @@ export function poserEtage1(ch, renderer = null) {
       B(x - 0.02, ty0 + 0.04, x + 0.02, y1, N1 + 0.97, N1 + 1.02, X.acierGris, { ombre: false });
     }
     C.ajouterBoite(8.95, -ty0, 12.0, -y1, { y0: N1, y1: N1 + 1.06 });
-    tabouretNoir(9.5, 11.88, 'N'); tolix(10.45, 11.88, 'N'); tabouretNoir(11.4, 11.88, 'N');
+    tabouretNoir(9.35, 11.88, 'N', { sortie: [9.65, 11.2] }); tolix(10.45, 11.88, 'N'); tabouretNoir(11.55, 11.88, 'N');
     // LES DISTRIBUTEURS contre le mur est (0,85 x 0,80 x 1,83) : friandises, boissons chaudes ; leur façade éclaire
     const faceLumineuse = (tex, k) => new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: k, roughness: 0.22, metalness: 0.1 });
     for (const [y, tex, k] of [[9.65, texFriandises(), 0.55], [10.55, texCafe(), 0.4]]) {
@@ -1598,7 +1598,7 @@ export function poserEtage1(ch, renderer = null) {
       B(xa, y - 0.42, x1 - 0.02, y + 0.42, N1 + 0.03, N1 + 1.83, X.caisse, { collision: true });
       for (const s of [-1, 1]) {
         B(xa + 0.05, y + s * 0.36 - 0.03, xa + 0.12, y + s * 0.36 + 0.03, N1, N1 + 0.03, M.noirMat, { ombre: false });
-        B(xa - 0.004, y + s * 0.415 - 0.01, x1 - 0.02, y + s * 0.415 + 0.01, N1 + 0.03, N1 + 1.835, X.acierGris, { ombre: false });   // (les montants gris)
+        B(xa - 0.004, y + s * 0.415 - 0.01, xa + 0.06, y + s * 0.415 + 0.01, N1 + 0.03, N1 + 1.835, X.acierGris, { ombre: false });   // (les montants gris)
       }
       panneau(faceLumineuse(tex, k), 0.84, 1.78, xa - 0.003, y, N1 + 0.93, 'W');
     }
