@@ -193,17 +193,18 @@ export class Portes {
 
   // ---------------------------------------------------------------- les vantaux
   // UN VANTAIL GRIS (photos 04, 06, 20) : `w` de large, `h` de haut, `s` = +1 (gonds à gauche, le vantail part vers +x)
-  // ou -1. `feu` : étiquette rouge « porte coupe-feu » ; `oculus` : la fente vitrée cerclée de noyer (true, ou ses
-  // cotes { bas, haut, l, bord, cadre } : la fente haute des toilettes du C05, photo 23 — `bord` : de l'axe de la fente
-  // au chant libre, `cadre` : la largeur du noyer) ; `poignee` : 'bequille' | 'tirant' | null ; `notices` : affichettes
-  // A4 (face +z).
+  // ou -1. `feu` : étiquette rouge « porte coupe-feu » ; `oculus` : la fente vitrée cerclée de noyer (true ; 'long' :
+  // la fente de 10 x 125 cm des portes de l'escalier est, photos 23, 24 ; ou ses cotes { bas, haut, l, bord, cadre } :
+  // la fente haute des toilettes du C05, photo 23 — `bord` : de l'axe de la fente au chant libre, `cadre` : la largeur
+  // du noyer) ; `poignee` : 'bequille' | 'tirant' | null ; `notices` : affichettes A4 (face +z).
   _vantailGris(w, h, s, { feu = false, oculus = true, poignee = 'bequille', notices = 0, mat = null } = {}) {
     const M = this.M, g = new THREE.Group(), e = 0.04;
     const cx = s * w / 2;
     maille(boiteM(w - 0.012, h - 0.012, e), mat || M.porte, cx, h / 2, 0, 0, g);
     if (oculus) {
-      // la fente : 0,12 x 0,85 à partir de 1 m, côté poignée ; cadre de noyer de 3 cm
-      const D = { bas: 1.0, haut: 1.85, l: 0.12, bord: 0.24, cadre: 0.03 }, O = oculus === true ? D : { ...D, ...oculus };
+      // la fente : 0,12 x 0,85 à partir de 1 m, côté poignée ; cadre de noyer de 3 cm ('long' : 0,10 x 1,25 dès 0,6 m)
+      const D = { bas: 1.0, haut: 1.85, l: 0.12, bord: 0.24, cadre: 0.03 };
+      const O = oculus === true ? D : oculus === 'long' ? { ...D, bas: 0.6, l: 0.1 } : { ...D, ...oculus };
       const ox = s * (w - O.bord), oy = (O.bas + O.haut) / 2, oh = O.haut - O.bas, ol = O.l, c = O.cadre;
       for (const z of [e / 2 + 0.004, -e / 2 - 0.004]) {
         maille(boiteM(ol + 2 * c, c, 0.01), M.noyer, ox, oy + oh / 2 + c / 2, z, 0, g, { ombre: false });
@@ -314,7 +315,8 @@ export class Portes {
     const zf = cote * (ep / 2 - 0.03);                     // le plan du vantail fermé, dans l'épaisseur du mur
     const vantaux = [];
     const faire = (w, s) => {
-      if (o.modele.startsWith('grise')) return this._vantailGris(w, h, s, { feu: o.feu, oculus: o.oculus === false ? false : (o.oculus || true), notices: s > 0 ? (o.notices || 0) : (o.noticesD ?? o.notices ?? 0), poignee: o.poignee ?? (double ? 'tirant' : 'bequille') });
+      // (`matVantail` : un autre stratifié — le gris taupe des portes de l'escalier est ; `poignee: null` : un semi-fixe)
+      if (o.modele.startsWith('grise')) return this._vantailGris(w, h, s, { feu: o.feu, oculus: o.oculus ?? true, notices: s > 0 ? (o.notices || 0) : (o.noticesD ?? o.notices ?? 0), poignee: o.poignee !== undefined ? o.poignee : (double ? 'tirant' : 'bequille'), mat: o.matVantail || null });
       if (o.modele.startsWith('gaine')) return this._vantailGaine(w, h, s);
       if (o.modele === 'bleue') return this._vantailBleu(w, h, s);
       if (o.modele === 'blanche') return this._vantailGris(w, h, s, { oculus: false, mat: M.alu, poignee: 'bequille' });

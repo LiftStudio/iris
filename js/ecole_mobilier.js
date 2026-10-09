@@ -266,13 +266,14 @@ export function poserMobilier(ch) {
   // l'affiche bleue étroite sur le trumeau entre les fenêtres de l'accueil
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2b4c9b', '#2b4c9b', 50), roughness: 0.6 }), 0.3, 0.9, 18.15, 0.006, 1.55, 'N');
   // LE TOTEM NOIR « 1ère école pour le BTS SIO en France » (photo 22 : il était dans la salle d'attente, à la place de
-  // la borne d'aujourd'hui) : contre le mur nord du hall, face à la porte 6 — on le voit en entrant
-  const totem = new THREE.Group(); totem.position.set(14.75, 0, -7.4); ch.decor.add(totem);
+  // la borne d'aujourd'hui) : contre le mur nord du hall, face à la porte 6 — on le voit en entrant. (09/10 : poussé dans
+  // l'angle nord-ouest du hall, x 13,65-14,45 — la porte du couloir est s'ouvre maintenant en x 14,70-16,10, photo 24)
+  const totem = new THREE.Group(); totem.position.set(14.05, 0, -7.4); ch.decor.add(totem);
   maille(boiteM(0.86, 0.03, 0.26), M.aluGris, 0, 0.015, 0, 0, totem);
   maille(boiteM(0.8, 2.0, 0.04), M.noir, 0, 1.03, 0, 0, totem);
   const face = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 1.96), new THREE.MeshStandardMaterial({ map: texTotemBTS(), roughness: 0.5 }));
   face.position.set(0, 1.03, 0.021); face.receiveShadow = true; totem.add(face);
-  C.ajouterBoite(14.3, -7.55, 15.2, -7.25, { y1: 2.05 });
+  C.ajouterBoite(13.6, -7.55, 14.5, -7.25, { y1: 2.05 });
 }
 
 // ---- les petites textures du mobilier ----
