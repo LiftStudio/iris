@@ -562,7 +562,7 @@ export function poserEst(ch, { RECT }) {
   for (const [xc, mat] of [[16.85, X.cannele1], [18.0, X.cannele2]]) for (const f of ['N', 'S']) ch.panneau(mat, 1.1, 2.35, xc, yv + (f === 'N' ? 0.006 : -0.006), 1.225, f);
   B(ch, D, 16.25, yv - 0.075, 18.6, yv + 0.075, 2.46, H_DALLE, B0, { ombre: false });
   C.ajouterBoite(16.25, -(yv - 0.075), 18.6, -(yv + 0.075), { y1: H_DALLE });
-  // (la feuille A4 scotchée côté couloir, photo 24 ; une autre côté bureau)
+  // (la feuille A4 scotchée côté couloir, photo 24)
   ch.panneau(matPanneau(texAffiche('#e8e6df', '#f4f3ee', 90), 0.8), 0.21, 0.297, 16.62, yv + 0.006, 1.55, 'N');
   mur(ch, D, { de: [18.6, yv], a: [E.xM, yv], mats: B0, plinthes: ['N'], ouvertures: [{ c: 19.08, l: 0.93, h: 2.04 }] });
   ch.porte('x', yv, 19.08, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'N', oculus: false, matVantail: X.taupe, nom: 'bureau du photocopieur' });
@@ -570,7 +570,6 @@ export function poserEst(ch, { RECT }) {
   // garde le comptoir, ses spots et tout ce que montrent les photos 03 et 16
   mur(ch, D, { de: [16.325, 5.85], a: [16.325, 7.5], mats: B0, plinthes: [['W', M.bois]] });
   mur(ch, D, { de: [16.25, 5.85], a: [E.xM, 5.85], ep: 0.12, mats: B0, plinthes: [['S', M.bois]] });
-  ch.plafond(16.4, 5.91, E.xM, 7.5, 2.6, 'platre');
   // deux affiches encadrées côté hall (le planning des formations, les entreprises partenaires)
   ch.panneau(matPanneau(texAffiche('#2b4c9b', '#fbfbf8', 91), 0.5), 0.6, 0.85, 17.3, 5.781, 1.55, 'S');
   ch.panneau(matPanneau(texAffiche('#e07b2a', '#fbfbf8', 92), 0.5), 0.6, 0.85, 18.6, 5.781, 1.55, 'S');
@@ -588,7 +587,8 @@ export function poserEst(ch, { RECT }) {
   // le bloc de sortie en drapeau sur le mur jaune, près de la porte du vestibule (photo 24, en haut à droite)
   ch.sortie(14.9, 10.5, 2.41, 'S');
   // LE POTEAU GRIS (x 16,2-16,35, y 9,0-9,15) : l'angle du bloc de l'escalier, peint, éraflé ; son butoir noir
-  B(ch, D, 16.2, 9.0, 16.35, 9.15, 0, H_DALLE, X.poteau, { collision: true });
+  B(ch, D, 16.2, 9.0, 16.35, 9.15, 0, N1, X.poteau, { collision: true });
+  B(ch, D, E.x0, 9.0, 16.2, 9.15, HC, N1, B0, { ombre: false });       // (au-dessus du plafond, vu de la volée 2)
   B(ch, D, 16.19, 8.99, 16.36, 9.16, 0, 0.08, X.plinthe, { ombre: false });
   const butoir = maille(new THREE.CylinderGeometry(0.02, 0.02, 0.03, 12), M.noirMat, 16.31, 0.8, -(9.15 + 0.015), 0, D, { ombre: false });
   butoir.rotation.x = Math.PI / 2;
@@ -601,8 +601,7 @@ export function poserEst(ch, { RECT }) {
   B(ch, D, 16.4, 9.15, 16.48, 9.162, 1.03, 1.11, M.boitier, { ombre: false });
   B(ch, D, 16.425, 9.162, 16.455, 9.17, 1.05, 1.09, M.boitier, { ombre: false });
   for (const [xa, xb, ha, hb] of [[16.6, 16.87, 0.93, 0.95], [16.6, 16.87, 0.5, 0.52], [16.6, 16.62, 0.5, 0.95], [16.85, 16.87, 0.5, 0.95]]) B(ch, D, xa, 9.205, xb, 9.212, ha, hb, M.acierNoir);
-  const gond = maille(new THREE.CylinderGeometry(0.026, 0.026, 0.07, 14), M.acierNoir, 16.89, 0.92, -9.2, 0, D);
-  void gond;
+  maille(new THREE.CylinderGeometry(0.026, 0.026, 0.07, 14), M.acierNoir, 16.89, 0.92, -9.2, 0, D);
   B(ch, D, 16.88, 9.15, 16.9, 9.2, 0.6, 0.95, M.acierNoir);
   C.ajouterBoite(16.58, -9.15, 16.93, -9.24, { y1: 0.96 });
   // LES PLAFONDS de plâtre à 2,55 m : le couloir, le dégagement, le bord de la niche (la sous-face de la volée 2 descend
@@ -614,6 +613,7 @@ export function poserEst(ch, { RECT }) {
   det.userData.horsAOSol = true;
   ch.opale(15.4, 8.3, HC, 'couloirEst', { r: 0.19 });
   ch.opale(15.4, 9.75, HC, 'couloirEst', { r: 0.19 });
+  ch.opale(18.0, 8.3, HC, 'couloirEst', { r: 0.19 });             // (le dégagement : non vu, mais il n'est pas noir)
 
   // =====================================================================
   //  LA PORTE DU VESTIBULE ET LE VESTIBULE (photos 24 à 26)
@@ -698,7 +698,9 @@ export function poserEst(ch, { RECT }) {
   // celle-ci, la niche reste au couloir ; au-dessus de 2,60 m, c'est la cage du 1er, zonesHaut)
   const zones = [
     { id: 'escEst', rects: [zr(E.xJ, E.yE, E.xM, E.bN[1]), zr(E.x0, E.bS[0], E.xM, E.bN[1], 0.3)], voisines: ['couloirEst', 'escEst2'], env: { x: 15.6, y: 1.6, z: -11.6 } },
-    { id: 'couloirEst', rects: [zr(E.xJ, E.yH, 16.2, E.yE), zr(16.2, E.yH, E.xM, E.yS), zr(16.2, E.yS, E.xP, E.yE)], voisines: ['hall', 'escEst'], env: { x: 15.4, y: 1.6, z: -9.2 } },
+    // (la carte du couloir est prise dans le dégagement, pas contre le mur jaune : à 0,7 m de lui, elle teintait de pêche
+    // le mur blanc de la niche et le vitrage)
+    { id: 'couloirEst', rects: [zr(E.xJ, E.yH, 16.2, E.yE), zr(16.2, E.yH, E.xM, E.yS), zr(16.2, E.yS, E.xP, E.yE)], voisines: ['hall', 'escEst'], env: { x: 16.3, y: 1.6, z: -8.3 } },
   ];
   const zonesHaut = [
     { id: 'escEst2', rects: [zr(14.2, E.bS[0], E.x0, E.bS[1], N2 - 0.6), zr(E.x0, E.bS[0], E.xM, E.bN[1], 2.6)], voisines: ['escEst', 'e1est'], env: { x: 17.2, y: 4.8, z: -10.0 } },
@@ -746,10 +748,10 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   for (const [y0, y1] of [[7.08, 7.12], [8.55, 8.59]]) B(ch, G, 13.48, y0, 13.62, y1, N1, N1 + 2.1, M.huisserie, { ombre: false });
   B(ch, G, 13.48, 7.08, 13.62, 8.59, N1 + 2.06, N1 + 2.1, M.huisserie, { ombre: false });
   // le retour du mur du panneau (y 8,65) et LE MUR DU PANNEAU (face est en x 14,225, de y 8,6 à 11,1)
-  mur(ch, G, { de: [13.49, 8.65], a: [14.225, 8.65], ep: 0.12, base: N1, h: DALLE2, mats: B0, plinthes: ['S'] });
+  mur(ch, G, { de: [13.61, 8.65], a: [14.075, 8.65], ep: 0.12, base: N1, h: DALLE2, mats: B0, plinthes: ['S'] });
   mur(ch, G, { de: [14.15, 8.59], a: [14.15, 11.175], base: N1, h: DALLE2, mats: B0, plinthes: ['E'] });
   // le renfoncement nord (x 13,2-14,2, y 11,1-12,45) sous sa retombée, son pilastre
-  mur(ch, G, { de: [13.125, 11.1], a: [14.225, 11.1], base: N1, h: DALLE2, mats: B0, plinthes: ['N'] });
+  mur(ch, G, { de: [13.275, 11.1], a: [14.075, 11.1], base: N1, h: DALLE2, mats: B0, plinthes: ['N'] });
   mur(ch, G, { de: [13.2, 11.025], a: [13.2, 12.6], base: N1, h: DALLE2, mats: B0, plinthes: ['E'] });
   B(ch, G, 14.06, 12.3, 14.22, 12.45, N1, H1, B0, { collision: true, ombre: false });
   B(ch, G, 14.05, 12.29, 14.23, 12.3, N1, N1 + 0.08, X.plinthe, { ombre: false });
@@ -793,11 +795,10 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   B(ch, G, xf + 0.02, 9.83, xf + 0.024, 9.87, N1 + 1.08, N1 + 1.12, M.noirMat, { ombre: false });
   B(ch, G, xf, 9.81, xf + 0.018, 9.89, N1 + 0.21, N1 + 0.29, M.boitier, { ombre: false });
   B(ch, G, 14.35, 9.05, 14.95, 10.65, N1, N1 + 0.008, X.tapis1, { ombre: false });
-  // (sur le mur sud du renfoncement, la petite photo encadrée sombre et brillante, à 1,7-1,9 m)
+  // (sur le mur sud du palier, près du renfoncement, la petite photo encadrée sombre et brillante, à 1,7-1,9 m)
   B(ch, G, 14.17, 7.035, 14.45, 7.045, N1 + 1.64, N1 + 1.96, M.noirMat, { ombre: false });
-  const photo = ch.panneau(new THREE.MeshStandardMaterial({ map: texPhotoNuit(), roughness: 0.08, metalness: 0.1 }), 0.25, 0.29, 14.31, 7.047, N1 + 1.8, 'N', G);
-  void photo;
-  // les plaques des salles de la bande et le bureau 103 (js/ecole_etage1.js garnirCouloir)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texPhotoNuit(), roughness: 0.08, metalness: 0.1 }), 0.25, 0.29, 14.31, 7.047, N1 + 1.8, 'N', G);
+  // (les plaques du bureau 103 et de la salle 104, sur la bande sud : js/ecole_etage1.js garnirCouloir)
   // LES LUMIÈRES du palier : la réglette (plus haut), un hublot au nord (non vu), deux dans la bande qui file à l'est
   opale(15.1, 11.75, 'e1est');
   opale(17.3, 8.0, 'e1est');
@@ -806,7 +807,6 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   // =====================================================================
   //  LA CAGE AU-DESSUS DU 1er (IMAGINÉE) : volée 3, palier à 5,05 m, volée 4, palier du 2e (fermé)
   // =====================================================================
-  const v2 = { x0: E.xP, sens: -1, y0: E.bS[0], y1: E.bS[1], b: E.hP1, n: E.n, r: E.r1, g: E.g };
   const v3 = { x0: E.x0, sens: 1, y0: E.bN[0], y1: E.bN[1], b: N1, n: E.n, r: E.r2, g: E.g };
   const v4 = { x0: E.xP, sens: -1, y0: E.bS[0], y1: E.bS[1], b: E.hP2, n: E.n, r: E.r2, g: E.g };
   volee(ch, G, v3);
@@ -851,8 +851,7 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   reglette(ch, G, E.xM, 10.0, 11.4, E.hP2 + 2.5, 'W');
   lampe({ x: E.xM - 0.25, z: -10.7, h: E.hP2 + 2.5, zone: 'escEst2', type: 'tube', force: 1.1, cuireEtage: false });
   ch.sortie(E.xM - 0.03, 11.0, E.hP2 + 2.85, 'W');
-  // l'orange de l'échiffre est posé par poserEst (du rez-de-chaussée à la sous-face de la volée 4) ; la main courante de
-  // la volée 2, aussi (elle monte jusqu'au 1er)
-  void v2;
+  // (l'orange de l'échiffre est posé par poserEst, du rez-de-chaussée à la sous-face de la volée 4 ; la main courante de
+  // la volée 2 aussi : elle monte jusqu'au 1er)
   console.info('[escalier est] palier du 1er et cage au-dessus posés');
 }
