@@ -532,10 +532,10 @@ function texCadre(n) {
     if (n === 1) {
       g.font = '700 24px "Segoe UI", sans-serif'; g.fillText('L\'espace pause', w / 2, 58);
       g.font = '500 17px "Segoe UI", sans-serif'; g.fillText('mode d\'emploi', w / 2, 84);
-      g.fillStyle = '#a8c34a'; g.fillRect(w / 2 - 30, 98, 60, 4);
+      g.fillStyle = '#a4d455'; g.fillRect(w / 2 - 30, 98, 60, 4);   // (le vert du mur)
       g.fillStyle = '#2a2a2a'; g.textAlign = 'left'; g.font = '500 16px "Segoe UI", sans-serif';
       ['Je trie mes déchets', 'Je range mon tabouret', 'Je laisse la table propre', 'Je parle doucement'].forEach((t, i) => {
-        g.fillStyle = '#a8c34a'; g.fillRect(34, 140 + i * 36 - 9, 8, 8); g.fillStyle = '#2a2a2a'; g.fillText(t, 52, 140 + i * 36);
+        g.fillStyle = '#a4d455'; g.fillRect(34, 140 + i * 36 - 9, 8, 8); g.fillStyle = '#2a2a2a'; g.fillText(t, 52, 140 + i * 36);
       });
       g.textAlign = 'center'; g.font = '600 18px "Segoe UI", sans-serif'; g.fillText('Bonne pause !', w / 2, 300);
     } else {
