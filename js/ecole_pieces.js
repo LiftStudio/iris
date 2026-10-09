@@ -1335,10 +1335,11 @@ function signaletiqueC05(ch, P, yPorte, picto) {
   const v = porte && porte.vantaux[0];
   if (!v) return;
   // (dans le repère du vantail : le gond en x = 0, le vantail vers +x — le nord —, la face du C05 en -z ; la fente
-  // vitrée est à 0,24 du bord libre : la première affiche juste à côté, la seconde vers les gonds)
+  // vitrée est à 0,24 du bord libre : la première affiche juste à côté, la seconde vers les gonds ; de 1,27 à 1,57 m,
+  // juste au-dessus de la béquille, photo 23)
   [[0.41, 0], [0.185, 1]].forEach(([x, k]) => {
     const a = new THREE.Mesh(new THREE.PlaneGeometry(0.205, 0.29), _affichesWC[k]);
-    a.position.set(x, 1.6 - k * 0.015, -0.0235); a.rotation.y = Math.PI; a.rotation.z = (k ? -0.012 : 0.008); a.castShadow = false;
+    a.position.set(x, 1.42 + k * 0.012, -0.0235); a.rotation.y = Math.PI; a.rotation.z = (k ? -0.012 : 0.008); a.castShadow = false;
     v.g.add(a);
   });
 }
@@ -1662,6 +1663,7 @@ function salleDavidClark(ch, P) {
   maille(new THREE.CylinderGeometry(0.035, 0.04, 0.025, 18), P.plastique, 0.07, -0.29, 0.14, 0, vp).rotation.x = Math.PI / 2;
   maille(new THREE.CircleGeometry(0.03, 18), P.led, 0.07, -0.29, 0.153, 0, vp, { ombre: false, recoit: false });
   vp.traverse((m) => { m.userData.horsAOSol = true; });
+  C.ajouterBoite(4.0, -22.65, 4.4, -23.05, { y0: 2.2, y1: 2.6, joueur: false });     // (la caméra ne le traverse pas)
   // ---- le bureau de l'enseignant (tourné vers la classe), son fauteuil, son portable ----
   tableEleve(ch, P, 7.65, 22.85, 0.7, 1.4);
   chaiseBureau(ch, P, 8.3, 22.85, 'W', { accoudoirs: true, nom: 'le fauteuil de l’enseignant', sortie: [0, 1.0] });
@@ -1775,7 +1777,12 @@ function matCour() {
     crepi: jourDehors(std({ color: 0xd8d0c0, roughness: 0.95 }), 0.3),
     pignon: jourDehors(std({ color: 0xcfc7b8, roughness: 0.95 }), 0.28),
     bac: jourDehors(std({ color: 0x6f6d68, roughness: 0.8 }), 0.25),
-    buis: jourDehors(std({ color: 0x3d5a31, roughness: 0.9 }), 0.2),
+    // le buis taillé : un feuillage serré, des points clairs et sombres (pas un coussin lisse)
+    buis: jourDehors(std({ roughness: 0.95, map: canvasTex(128, 128, (q, w, h) => {
+      q.fillStyle = '#34502b'; q.fillRect(0, 0, w, h);
+      const r = graine(5150);
+      for (let k = 0; k < 1400; k++) { const c = r(); q.fillStyle = c < 0.45 ? 'rgba(20,38,16,0.55)' : c < 0.8 ? 'rgba(88,122,64,0.5)' : 'rgba(140,160,90,0.45)'; q.fillRect(r() * w, r() * h, 2 + r() * 3, 2 + r() * 2); }
+    }, [2, 2], false, 4) }), 0.16),
   };
   return _cour;
 }
@@ -1787,9 +1794,14 @@ function cour(ch) {
   ch.boite(13.65, 24.65, 14.0, 31.4, 0, 15, K.facade, { ombre: false });
   for (const x of [3.4, 8.4]) {
     ch.boite(x - 0.6, 29.85, x + 0.6, 30.45, 0, 0.5, K.bac, { ombre: false });
-    maille(geoRonde(1.12, 0.55, 0.52, 0.2), K.buis, x, 0.74, -30.15, 0, ch.decor, { ombre: false });
+    maille(geoRonde(1.12, 0.5, 0.52, 0.2), K.buis, x, 0.72, -30.15, 0, ch.decor, { ombre: false });
+    maille(geoRonde(0.7, 0.36, 0.44, 0.16), K.buis, x + (x < 5 ? 0.18 : -0.2), 0.98, -30.12, 0.3, ch.decor, { ombre: false });
   }
+  // la grille d'évacuation, la descente d'eau pluviale du pignon, le seuil et la porte de service de l'immeuble d'en face
   ch.boite(5.1, 27.3, 5.5, 27.7, 0, 0.004, ch.M.grille, { ombre: false });
+  ch.boite(-0.3, 30.7, -0.2, 30.8, 0, 15, K.bac, { ombre: false });
+  ch.boite(6.17, 30.96, 7.13, 31.0, 0, 2.15, ch.M.acierNoir, { ombre: false });
+  ch.boite(6.07, 30.86, 7.23, 31.0, 0, 0.04, K.bac, { ombre: false });
 }
 
 // =====================================================================
