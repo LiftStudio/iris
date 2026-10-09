@@ -1,0 +1,34 @@
+{
+  "_comment": "IRIS : les clips de LA CAGE qui servent hors du terrain (marche, course, saut, danses, célébrations). Clips Mixamo (FBX Binary, Without Skin, 30 fps, In Place) ; arms:'procedural' = le clip anime jambes/buste, les bras gardent la pose du jeu.",
+  "_cmu": "Clips mocap CMU (dossier cmu/, convertis par tools/cmu_convert.py dans LA CAGE). Marche 143_32, marche arrière 143_39, marche latérale 143_40. loco:true = clip de locomotion : sa FOULÉE (speedRef x durée) cale la phase sur la distance réellement parcourue, et plusieurs clips loco se mélangent selon la vitesse. Base : mocap.cs.cmu.edu, NSF EIA-0196217.",
+  "_saut": "saut = le saut sur place de Mixamo (« Jump »). departSet : le clip part de son impulsion (le point bas des hanches), la flexion d'avant le saut ne se joue pas en l'air ; l'apogée du clip est calée sur celle du saut physique (Player._driveAnim). Sans lui, le jeu reprend « block » (Defender, le saut de contre de LA CAGE).",
+  "clips": {
+    "idle":        { "file": "Idle.fbx",              "loop": true },
+    "run":         { "file": "Fast Run.fbx",          "loop": true,  "speedRef": 5.2, "loco": true },
+    "run_alt":     { "file": "Running.fbx",           "loop": true,  "speedRef": 4.5, "loco": true },
+    "sprint":      { "file": "Sprint.fbx",            "loop": true,  "speedRef": 6.5, "loco": true },
+    "def_slide_l": { "file": "Jog Strafe Left.fbx",   "loop": true,  "speedRef": 3.5, "loco": true },
+    "def_slide_r": { "file": "Jog Strafe Right.fbx",  "loop": true,  "speedRef": 3.5, "loco": true },
+    "def_back":    { "file": "Slow Jog Backwards.fbx", "loop": true, "speedRef": 2.6, "loco": true },
+
+    "walk":        { "file": "cmu/walk.json",       "loop": true,  "autoTiming": false, "range": [0.50, 1.07], "speedRef": 2.15, "loco": true },
+    "walk_back":   { "file": "cmu/walk_back.json",  "loop": true,  "autoTiming": false, "range": [0.40, 1.03], "speedRef": 1.31, "loco": true },
+    "walk_side":   { "file": "cmu/walk_side.json",  "loop": true,  "autoTiming": false, "range": [0.87, 1.53], "speedRef": 1.37, "loco": true },
+    "walk_side_m": { "file": "cmu/walk_side_m.json","loop": true,  "autoTiming": false, "range": [0.87, 1.53], "speedRef": 1.37, "loco": true },
+
+    "saut":        { "file": "Jump.fbx",              "loop": false, "departSet": true },
+    "block":       { "file": "Defender.fbx",          "loop": false, "range": [0.0, 0.8], "_src": "les 0,8 premières secondes de Defender : impulsion, bras levés, retombée (secours du saut)" },
+
+    "spin_alt":    { "file": "Soccer Spin.fbx",       "loop": false, "fit": 1.2 },
+    "victory":     { "file": "Victory.fbx",           "loop": false },
+    "celebrate_2": { "file": "Clapping.fbx",          "loop": false, "autoTiming": false, "fit": 2.2 },
+    "celebrate_3": { "file": "Cheering.fbx",          "loop": false, "autoTiming": false, "fit": 2.4 },
+    "taunt":       { "file": "Taunt.fbx",             "loop": false, "autoTiming": false, "fit": 1.4 },
+    "dance_hiphop": { "file": "dance_hiphop.glb",     "loop": true,  "autoTiming": false, "_src": "Sketchfab « Hip Hop Dance by Sarwar (3D scan) » Muhammad Rahman, CC-BY, rig Mixamo" },
+    "dance_break":  { "file": "dance_break.glb",      "loop": true,  "autoTiming": false, "_src": "Sketchfab « 654230005 Josh Breakdance 1990 » (Mixamo), CC-BY" },
+    "dance_chicken": { "file": "dance_chicken.glb",   "loop": true,  "autoTiming": false, "_src": "Sketchfab « 614230008 Kachujin G Rosales Chicken Dance » (Mixamo), CC-BY" },
+    "dance_gangnam": { "file": "dance_gangnam.glb",   "loop": true,  "autoTiming": false, "_src": "Sketchfab « Gangnam Style » reizibarrientos, CC-BY" },
+    "dance_ymca":    { "file": "dance_ymca.glb",      "loop": true,  "autoTiming": false, "index": 1, "_src": "Sketchfab « Ymca Dance Bani (1) » Shivay gaming (Mixamo), CC-BY" },
+    "dance_ymca_a":  { "file": "dance_ymca.glb",      "loop": true,  "autoTiming": false, "index": 0, "_src": "le MÊME fichier contient plusieurs animations ; anim.js le met en cache par URL, donc zéro octet de plus" }
+  }
+}

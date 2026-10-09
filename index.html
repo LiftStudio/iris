@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0e14">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<!-- le logo « iris » (tools/icones.py) : favicons, icônes d'écran d'accueil iPhone / iPad -->
+<link rel="icon" href="assets/icons/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/icon-16.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/icon-180.png">
+<link rel="apple-touch-icon" sizes="167x167" href="assets/icons/icon-167.png">
+<link rel="apple-touch-icon" sizes="152x152" href="assets/icons/icon-152.png">
+<meta name="apple-mobile-web-app-title" content="IRIS">
+<title>IRIS · l'école</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<!-- L'ÉCRAN DE CHARGEMENT (#boot, js/chargement.js) : ses styles restent ICI, en ligne, pour qu'il se peigne dès la
+     première image, avant que le moindre module ne se charge. Les animations ne touchent qu'à transform et opacity :
+     elles continuent de tourner pendant que le fil principal construit l'école. -->
+<style>
+#boot{position:fixed;inset:0;z-index:999;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(30px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
+  background:#07090d;color:#e8edf4;font:400 14px/1.4 Oswald,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;transition:opacity .5s ease,visibility .5s}
+#boot *,#boot *::before,#boot *::after{box-sizing:border-box}
+#boot.boot-sortie{opacity:0;visibility:hidden;pointer-events:none}
+#boot.boot-pret{cursor:pointer}
+.boot-fond{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(60% 46% at 50% 34%,rgba(240,164,23,.15),rgba(240,164,23,0) 70%),radial-gradient(80% 50% at 50% 115%,rgba(120,140,170,.12),rgba(120,140,170,0) 70%),linear-gradient(180deg,#0b0e14 0%,#06080b 100%)}
+.boot-fond::before{content:"";position:absolute;inset:-10%;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 34px),repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 34px);
+  -webkit-mask-image:radial-gradient(closest-side at 50% 40%,#000 0%,rgba(0,0,0,.5) 55%,transparent 100%);mask-image:radial-gradient(closest-side at 50% 40%,#000 0%,rgba(0,0,0,.5) 55%,transparent 100%)}
+.boot-fond::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(0,0,0,.6) 100%)}
+.boot-scene{position:relative;display:flex;flex-direction:column;align-items:center;gap:clamp(18px,4.6vh,42px);width:100%;max-width:620px}
+.boot-marque{display:flex;flex-direction:column;align-items:center;text-align:center}
+.boot-logo{position:relative;width:clamp(150px,30vh,270px);aspect-ratio:480/300}
+.boot-logo img,.boot-reflet{position:absolute;inset:0;width:100%;height:100%}
+.boot-plaque{animation:boot-plaque 1s cubic-bezier(.2,.8,.2,1) both}
+.boot-lueur{position:absolute;left:-6%;top:-10%;width:112%;height:120%;border-radius:50%;opacity:.4;
+  background:radial-gradient(closest-side,rgba(255,196,70,.5),rgba(240,164,23,.18) 55%,rgba(240,164,23,0) 100%);animation:boot-lueur 3.4s ease-in-out 1.2s infinite}
+.boot-reflet{overflow:hidden;pointer-events:none;-webkit-mask:url(assets/chargement/logo_iris.webp) center/100% 100% no-repeat;mask:url(assets/chargement/logo_iris.webp) center/100% 100% no-repeat}
+.boot-reflet i{position:absolute;top:-20%;bottom:-20%;left:0;width:30%;background:linear-gradient(90deg,rgba(255,250,230,0),rgba(255,246,214,.45),rgba(255,250,230,0));transform:translateX(-140%) skewX(-18deg);animation:boot-reflet 4.4s cubic-bezier(.45,.05,.3,1) 1.5s infinite}
+.boot-titre{margin-top:clamp(10px,2vh,18px);padding-left:.14em;font:400 clamp(34px,6.4vh,56px)/1 "Bebas Neue",Impact,"Arial Narrow",sans-serif;letter-spacing:.14em;color:#fff6e4;text-shadow:0 2px 18px rgba(240,164,23,.28);animation:boot-monte .9s ease .45s both}
+.boot-sous{margin-top:6px;padding-left:.32em;font:500 clamp(10px,1.5vh,12px)/1.2 Oswald,system-ui,sans-serif;letter-spacing:.32em;color:#8a97a8;animation:boot-monte .9s ease .6s both}
+.boot-etat{position:relative;width:min(100%,520px);animation:boot-monte .8s ease .3s both}
+.boot-ligne{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:9px}
+#boot-etape{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font:500 12px/1.2 Oswald,system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#c9d2de}
+#boot-pct{flex:none;min-width:3.4em;text-align:right;font:400 22px/1 "Bebas Neue",Impact,sans-serif;letter-spacing:.06em;color:#ffc04d;font-variant-numeric:tabular-nums}
+.boot-barre{position:relative;height:6px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.07);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+#boot-rempli{position:absolute;inset:0;overflow:hidden;border-radius:inherit;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,#e8870f 0%,#f0a417 60%,#ffd166 100%);transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+#boot-rempli::after{content:"";position:absolute;top:0;bottom:0;left:0;width:45%;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));transform:translateX(-100%);animation:boot-brille 1.5s linear infinite}
+.boot-details{min-height:16px;margin-top:8px;font:400 12px/16px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;letter-spacing:.02em;color:#7f8b9b;font-variant-numeric:tabular-nums}
+.boot-go{display:none;margin-top:16px;padding-left:.14em;text-align:center;font:400 clamp(17px,min(3.4vh,5.2vw),28px)/1.1 "Bebas Neue",Impact,sans-serif;letter-spacing:.14em;color:#fff;animation:boot-pulse 1.7s ease-in-out infinite}
+.boot-astuce{margin-top:clamp(12px,3vh,26px);min-height:4.1em;padding:9px 14px 10px;border-left:2px solid #f0a417;background:linear-gradient(90deg,rgba(240,164,23,.09),rgba(240,164,23,0))}
+.boot-astuce.boot-change span{animation:boot-astuce .6s ease both}
+.boot-astuce b{display:block;margin-bottom:4px;font:500 10px/1.2 Oswald,system-ui,sans-serif;letter-spacing:.28em;color:#ffb83d}
+#boot-astuce-texte{display:block;font:400 13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#b9c2cd}
+.boot-erreur{display:none;margin-top:14px;padding:13px 16px 15px;border-radius:10px;border:1px solid rgba(255,96,64,.35);background:rgba(255,70,40,.08)}
+.boot-erreur b{display:block;font:400 22px/1 "Bebas Neue",Impact,sans-serif;letter-spacing:.1em;color:#ff7a5c}
+.boot-erreur p{margin:6px 0 12px;font:400 13px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#c5ccd6}
+.boot-boutons{display:flex;flex-wrap:wrap;gap:10px}
+.boot-boutons button{min-height:44px;padding:0 22px;border:0;border-radius:8px;cursor:pointer;font:400 20px/1 "Bebas Neue",Impact,sans-serif;letter-spacing:.12em}
+#boot-reessayer{background:linear-gradient(180deg,#f5b335,#e8870f);color:#1a0b02}
+#boot-continuer{background:rgba(255,255,255,.08);color:#d5dce6;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.boot-alerte{display:none;max-width:30em;text-align:center}
+.boot-alerte b{display:block;margin-bottom:8px;font:400 30px/1.1 "Bebas Neue",Impact,sans-serif;letter-spacing:.06em;color:#f0a417}
+.boot-alerte p{margin:0;font:400 15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#b6c0cc}
+.boot-pied{position:absolute;left:max(18px,env(safe-area-inset-left));right:max(18px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;gap:12px;pointer-events:none;font:500 10px/1 Oswald,system-ui,sans-serif;letter-spacing:.28em;color:#4f5a68}
+#boot.boot-pret .boot-go{display:block}
+#boot.boot-pret .boot-details{display:none}
+#boot.boot-en-erreur .boot-erreur{display:block}
+#boot.boot-en-erreur .boot-details,#boot.boot-en-erreur .boot-astuce{display:none}
+#boot.boot-en-erreur #boot-rempli{background:#9c3b29}
+#boot.boot-en-erreur #boot-rempli::after{animation:none;opacity:0}
+#boot.boot-fatal .boot-etat{display:none}
+#boot.boot-fatal .boot-alerte{display:block}
+@media (min-width:1600px) and (min-height:900px){
+  .boot-etat{width:min(100%,600px)}
+  #boot-etape{font-size:14px}
+  #boot-pct{font-size:26px}
+  .boot-barre{height:7px}
+  .boot-details{font-size:13px}
+  .boot-astuce b{font-size:11px}
+  #boot-astuce-texte{font-size:15px}
+}
+/* téléphone en paysage : le logo à gauche, la barre à droite */
+@media (orientation:landscape) and (max-height:520px){
+  .boot-scene{flex-direction:row;justify-content:center;gap:clamp(22px,6vw,64px);max-width:880px}
+  .boot-logo{width:clamp(120px,40vh,210px)}
+  .boot-titre{font-size:clamp(28px,9vh,44px)}
+  .boot-etat{flex:1 1 0;width:auto;max-width:430px}
+  .boot-astuce{min-height:0}
+}
+@keyframes boot-plaque{0%{opacity:0;transform:translateY(7%) scale(.96)}100%{opacity:1;transform:none}}
+@keyframes boot-lueur{0%,100%{opacity:.3;transform:scale(.94)}50%{opacity:.75;transform:scale(1.04)}}
+@keyframes boot-reflet{0%{transform:translateX(-140%) skewX(-18deg)}45%,100%{transform:translateX(380%) skewX(-18deg)}}
+@keyframes boot-brille{0%{transform:translateX(-100%)}100%{transform:translateX(230%)}}
+@keyframes boot-monte{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
+@keyframes boot-pulse{0%,100%{opacity:.45}50%{opacity:1}}
+@keyframes boot-astuce{0%{opacity:0;transform:translateY(5px)}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  #boot,#boot *,#boot *::before,#boot *::after{animation:none!important;transition:none!important}
+  .boot-reflet{display:none}
+}
+</style>
+</head>
+<body>
+<!-- ÉCRAN DE CHARGEMENT (js/chargement.js) : le logo « iris », la barre, l'étape en cours, les astuces ;
+     « APPUIE POUR COMMENCER » quand l'école est prête. Le script du bas (appareil trop ancien, jeu qui ne démarre pas)
+     écrit dans #boot-alerte. -->
+<div id="boot" aria-busy="true">
+  <div class="boot-fond" aria-hidden="true"></div>
+  <div class="boot-scene">
+    <div class="boot-marque">
+      <div class="boot-logo" aria-hidden="true">
+        <div class="boot-lueur"></div>
+        <img class="boot-plaque" src="assets/chargement/logo_iris.webp" alt="" width="480" height="300" decoding="async">
+        <div class="boot-reflet"><i></i></div>
+      </div>
+      <div class="boot-titre">IRIS</div>
+      <div class="boot-sous">L'ÉCOLE · BALADE LIBRE</div>
+    </div>
+    <div class="boot-etat" role="status" aria-live="polite">
+      <div class="boot-ligne"><span id="boot-etape">Chargement…</span><span id="boot-pct">0&#8239;%</span></div>
+      <div class="boot-barre" id="boot-barre" role="progressbar" aria-label="Chargement" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="boot-rempli"></i></div>
+      <div class="boot-details" id="boot-details"></div>
+      <div class="boot-go" id="boot-go"></div>
+      <div class="boot-erreur" role="alert">
+        <b id="boot-erreur-titre">TÉLÉCHARGEMENT INTERROMPU</b>
+        <p id="boot-erreur-texte"></p>
+        <div class="boot-boutons"><button id="boot-reessayer" type="button">RÉESSAYER</button><button id="boot-continuer" type="button">CONTINUER</button></div>
+      </div>
+      <div class="boot-astuce" id="boot-astuce"><b>ASTUCE</b><span id="boot-astuce-texte">Clique dans l'image pour tourner la caméra à la souris ; ÉCHAP la libère.</span></div>
+    </div>
+    <div class="boot-alerte" id="boot-alerte" role="alert"></div>
+  </div>
+  <div class="boot-pied" aria-hidden="true"><span>LIFTSTUDIO</span><span id="boot-version"></span></div>
+</div>
+<div id="game"></div>
+<!-- iPHONE / iPAD : Safari ne sait pas verrouiller le paysage. En jeu, un téléphone tenu en portrait voit ce panneau ;
+     il ne BLOQUE pas : « JOUER QUAND MÊME » le ferme pour la session (js/game.js). -->
+<div id="tourner">
+  <div class="tourner-ico">📱↻</div>
+  <div>Tourne ton téléphone en paysage</div>
+  <small>L'écran ne tourne pas ? Ouvre le <b>Centre de contrôle</b> (glisse depuis le coin en haut à droite) et désactive le <b>verrou de rotation</b> 🔒, puis tourne le téléphone.</small>
+  <button id="tourner-ok" class="btn-primary">JOUER QUAND MÊME</button>
+</div>
+<div id="touch" class="touch-ui" hidden></div>
+
+<!-- ===== TÉLÉPHONE (groupe de messages « IRIS ») ===== -->
+<div id="phone" hidden>
+  <div class="phone-body">
+    <i class="ph-btn ph-vol1"></i><i class="ph-btn ph-vol2"></i><i class="ph-btn ph-power"></i>
+    <div class="phone-screen">
+      <div class="phone-status">
+        <span id="phone-clock">12:00</span>
+        <div class="phone-island"></div>
+        <span class="ph-icons">
+          <svg viewBox="0 0 18 12" width="17" height="11"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+          <svg viewBox="0 0 16 12" width="15" height="11"><path d="M8 11.5 5.6 9a3.4 3.4 0 0 1 4.8 0zM3.5 7a6.4 6.4 0 0 1 9 0l1.5-1.5a8.5 8.5 0 0 0-12 0zM.5 4a10.6 10.6 0 0 1 15 0L16 3.4a11.7 11.7 0 0 0-16 0z"/></svg>
+          <i class="ph-batt"><i id="phone-batt"></i></i>
+        </span>
+      </div>
+      <header class="phone-head">
+        <button id="phone-close" title="Ranger le téléphone" aria-label="Ranger le téléphone"><svg viewBox="0 0 12 20" width="11" height="18"><path d="M10 2 2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="phone-av">IR</div>
+        <div class="phone-title"><b>IRIS 📚</b><span id="phone-sub">groupe · 10 membres</span></div>
+        <span class="ph-act"><svg viewBox="0 0 24 16" width="22" height="15"><rect x="1" y="2" width="15" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="m17 6 6-3.5v11L17 10z" fill="currentColor"/></svg></span>
+        <span class="ph-act"><svg viewBox="0 0 20 20" width="18" height="18"><path d="M5.2 1.8 7.8 5c.5.6.4 1.4-.1 2L6.2 8.4a11.5 11.5 0 0 0 5.4 5.4l1.4-1.5c.6-.5 1.4-.6 2-.1l3.2 2.6c.7.6.8 1.6.2 2.3l-1.4 1.6c-.8.8-2 1.1-3.1.7A18 18 0 0 1 1.5 5c-.4-1.1-.1-2.3.7-3.1L3.8.5c.4-.4 1-.3 1.4.1z" fill="currentColor"/></svg></span>
+      </header>
+      <div class="phone-msgs" id="phone-msgs"></div>
+      <div class="phone-quick" id="phone-quick"></div>
+      <div class="phone-bar">
+        <span class="ph-plus">+</span>
+        <input id="phone-input" maxlength="140" placeholder="Message" autocomplete="off">
+        <button id="phone-send" aria-label="Envoyer"><svg viewBox="0 0 20 20" width="17" height="17"><path d="M10 17V4M4 9.5 10 3.5l6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="phone-home"></div>
+    </div>
+    <div class="phone-glare"></div>
+  </div>
+</div>
+
+<!-- ===== OPTIONS (pause) ===== -->
+<div id="options" class="screen options" hidden>
+  <div class="options-box">
+    <header class="screen-head"><h2>OPTIONS</h2><button class="back" id="opt-close">FERMER ✕</button></header>
+    <nav class="tabs" id="opt-tabs">
+      <button data-tab="graphics" class="on">GRAPHISMES</button>
+      <button data-tab="audio">AUDIO</button>
+      <button data-tab="controls">COMMANDES</button>
+      <button data-tab="emotes">EMOTES</button>
+    </nav>
+    <div class="tab-panels" id="opt-panels"></div>
+    <footer class="screen-foot"><button class="btn-secondary" id="opt-reset">Réinitialiser cet onglet</button><button class="btn-primary" id="opt-ok">OK</button></footer>
+  </div>
+</div>
+
+<!-- ===== HUD ===== -->
+<div id="hud" hidden>
+  <div class="streak" id="hud-streak"></div>
+  <div class="feedback" id="hud-feedback"></div>
+  <div class="hint" id="hud-hint"></div>
+  <div class="stamina"><div class="stamina-label">ENDURANCE</div><div class="stamina-bar"><div class="stamina-fill" id="stamina-fill"></div></div></div>
+  <div class="keys" id="hud-keys"></div>
+  <div class="fps" id="hud-fps" hidden>60 FPS</div>
+  <div class="phone-badge" id="phone-badge" hidden>0</div>
+  <div class="emote-wheel" id="emote-wheel" hidden></div>
+</div>
+
+<!-- ===== PAUSE ===== -->
+<div id="overlay" class="screen" hidden>
+  <div class="overlay-box">
+    <h2 id="overlay-title">PAUSE</h2>
+    <p id="overlay-text"></p>
+    <div class="row" id="overlay-buttons"></div>
+  </div>
+</div>
+
+<!-- APPAREILS PLUS ANCIENS. 1. Les « import maps » n'existent dans Safari que depuis iOS 16.4 : es-module-shims (MIT,
+     vendor/) les ajoute là où elles manquent. 2. Sans WebGL2, le jeu ne PEUT pas tourner : on le dit, au lieu d'un
+     chargement sans fin. Même chose si rien n'a démarré au bout de 90 s ou si un module ne se charge pas. -->
+<script>
+(function () {
+  function dire(titre, texte) {
+    var b = document.getElementById('boot'), a = document.getElementById('boot-alerte'); if (!b || !a) return;
+    a.innerHTML = '<b></b><p></p>';
+    a.firstChild.textContent = titre; a.lastChild.textContent = texte;
+    b.className += ' boot-fatal';
+  }
+  var gl2 = false;
+  try { var c = document.createElement('canvas'); gl2 = !!(window.WebGL2RenderingContext && c.getContext('webgl2')); } catch (e) { gl2 = false; }
+  var SOLUTION = 'Sur iPhone et iPad : iOS 16.4 ou plus récent (Réglages → Général → Mise à jour logicielle). Sur Android : mets à jour Chrome (ou l’application « Android System WebView ») depuis le Play Store. Sur ordinateur : Chrome, Edge ou Firefox à jour.';
+  if (!gl2) {
+    window.__incompatible = true;
+    document.addEventListener('DOMContentLoaded', function () {
+      dire('Appareil trop ancien', 'IRIS a besoin de WebGL 2 pour la 3D, et ce navigateur ne l’a pas (ou l’a désactivé). ' + SOLUTION);
+    });
+    return;
+  }
+  // garde-fou : un module qui ne se charge pas (syntaxe trop récente pour ce navigateur), ou rien de démarré après 90 s
+  var vu = false;
+  function bloque(detail) {
+    if (vu || window.__game) return; vu = true;
+    dire('Le jeu ne démarre pas', 'Ce navigateur n’arrive pas à lancer IRIS' + (detail ? ' (' + detail + ')' : '') + '. ' + SOLUTION
+      + ' Si ta connexion est lente, attends encore un peu puis recharge la page.');
+  }
+  window.addEventListener('error', function (e) {
+    var t = e && e.target;
+    if (t && t.tagName === 'SCRIPT') bloque('script non chargé');
+    else if (e && e.message && /SyntaxError|import|module/i.test(e.message) && !window.__game) bloque(e.message.slice(0, 80));
+  }, true);
+  (function veille() {
+    setTimeout(function () {
+      if (window.__game || !document.getElementById('boot')) return;
+      var ch = window.__chargement;
+      if (ch && (ch.enErreur() || Date.now() - ch.actif() < 60000)) return veille();
+      bloque('');
+    }, 90000);
+  })();
+})();
+</script>
+<script src="js/chargement.js"></script>
+<script async src="vendor/es-module-shims.js"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three/build/three.module.js",
+  "three/addons/": "./vendor/three/examples/jsm/"
+} }
+</script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

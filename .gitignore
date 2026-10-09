@@ -1,0 +1,9 @@
+# Photos de l'école envoyées par Haythem (références pour modéliser l'intérieur) : elles restent dans le dossier,
+# mais hors du dépôt (lourdes, et ce sont des photos d'un lieu réel : rien à publier par accident).
+references/
+
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store
+Thumbs.db
