@@ -242,16 +242,18 @@ function texAfficheIris() {
     g.fillStyle = '#f08a24'; g.fillRect(169, h - 42, 6, 4);
   }, null, false, 4);
 }
-// UNE PLAQUE DE SALLE (photo 23 : noire, trois lignes blanches « Salle / nom / B 0.x ») — exportée pour le 1er étage
+// UNE PLAQUE DE SALLE (photo 23 : noire, trois lignes blanches CENTRÉES « Salle / nom / B 0.x », sans liseré — celle
+// de la salle David Clark ; intégration du 10/10 : le même dessin que les plaques du couloir du 1er, js/ecole_etage1.js)
 export function texPlaqueSalle(l1, l2, l3) {
   return canvasTex(256, 154, (g, w, h) => {
     g.fillStyle = '#2a2826'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#f08a24'; g.fillRect(14, 16, 5, h - 32);
-    g.fillStyle = '#f4f4f2'; g.font = '500 24px "Segoe UI", Arial, sans-serif'; g.fillText(l1, 32, 44);
-    let t = 30; g.font = `600 ${t}px "Segoe UI", Arial, sans-serif`;
-    while (g.measureText(l2).width > w - 46 && t > 16) { t--; g.font = `600 ${t}px "Segoe UI", Arial, sans-serif`; }
-    g.fillText(l2, 32, 88);
-    g.font = '700 30px "Segoe UI", Arial, sans-serif'; g.fillStyle = '#ffffff'; g.fillText(l3, 32, 132);
+    g.fillStyle = '#f2f1ee'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    const ligne = (t, y, poids, taille) => {
+      let s = taille;
+      do { g.font = `${poids} ${s}px "Segoe UI", Arial, sans-serif`; s -= 1; } while (g.measureText(t).width > w * 0.86 && s > 12);
+      g.fillText(t, w / 2, y);
+    };
+    ligne(l1, h * 0.34, 400, 32); ligne(l2, h * 0.6, 600, 34); if (l3) ligne(l3, h * 0.86, 400, 32);
   }, null, false, 4);
 }
 // LE VERRE CANNELÉ de la cloison du bureau (photos 24, 26) : des côtes verticales, la lumière du bureau derrière (plus
