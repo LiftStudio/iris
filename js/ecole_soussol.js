@@ -186,8 +186,9 @@ function normalesCarreaux() {
 // UN PANNEAU D'ÉTAGE (v_004, v_012, v_013 ; « -1 » sur l'image 4K à 11 s) : carré jaune, le chiffre blanc arrondi
 function texPanneauNiveau(txt) {
   return canvasTex(128, 128, (g, w, h) => {
-    g.fillStyle = '#dcae2c'; g.fillRect(0, 0, w, h);
-    g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(0, 0, w, h * 0.5);
+    // (un léger dégradé, pas la demi-bande claire à bord franc qui coupait le panneau en deux)
+    const dg = g.createLinearGradient(0, 0, 0, h); dg.addColorStop(0, '#e0b232'); dg.addColorStop(1, '#d6a826');
+    g.fillStyle = dg; g.fillRect(0, 0, w, h);
     // (le chiffre de v_013 : un ovale haut et étroit, les deux tiers de la hauteur du panneau, un trait d'un huitième)
     g.fillStyle = '#ffffff'; g.font = '500 92px "Segoe UI", Arial, sans-serif';
     g.textAlign = 'center'; g.textBaseline = 'middle';
