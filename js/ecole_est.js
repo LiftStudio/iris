@@ -107,12 +107,19 @@ function texMouchete({ fond, taches, n, tuile = 1, w = 512, graineN = 7, nuee = 
   }, [1 / tuile, 1 / tuile], false, 8);
   return t;
 }
-// LE TAPIS DE CAOUTCHOUC STRIÉ (la niche, photo 24 ; le palier du 1er, photos 27, 28) : des côtes fines. Tuile : 0,25 m.
+// LE TAPIS DE CAOUTCHOUC (la niche, photo 24 ; le palier du 1er, photos 27, 28) : à pastilles en « tôle larmée » —
+// des grains oblongs tous les 3 cm, couchés à ±45° en alternance, leur arête claire. Tuile : 0,25 m.
 function texTapis(clair = false) {
   return canvasTex(128, 128, (g, w, h) => {
-    const b = clair ? 62 : 54;
-    g.fillStyle = rgb(b, b - 2, b - 5); g.fillRect(0, 0, w, h);
-    for (let y = 0; y < h; y += 8) { g.fillStyle = rgb(b + 14, b + 12, b + 9); g.fillRect(0, y, w, 3); g.fillStyle = rgb(b - 14, b - 15, b - 17); g.fillRect(0, y + 3, w, 1); }
+    const b = clair ? 60 : 50, p = 16;
+    g.fillStyle = rgb(b, b, b + 2); g.fillRect(0, 0, w, h);
+    for (let j = 0; j < h / p; j++) for (let i = 0; i < w / p; i++) {
+      const a = ((i + j) % 2 ? 1 : -1) * Math.PI / 4;
+      g.save(); g.translate(i * p + p / 2, j * p + p / 2); g.rotate(a);
+      g.fillStyle = rgb(b - 16, b - 16, b - 14); g.fillRect(-5, 0.5, 10, 2.5);
+      g.fillStyle = rgb(b + 22, b + 22, b + 24); g.fillRect(-5, -2.5, 10, 2.5);
+      g.restore();
+    }
   }, [4, 4], false, 4);
 }
 // UN QR CODE FIGURÉ (les affichettes WIFI et POINT ÉCOUTE) : trois repères, des modules au hasard
@@ -305,7 +312,7 @@ function matieresEst() {
     bande: std({ color: 0x454443, roughness: 0.92 }, 'bande antidérapante'),
     limon: std({ color: 0x1b1918, roughness: 0.55, side: THREE.DoubleSide }, 'plinthe rampante noire'),
     rail: std({ color: 0x1e1c1a, roughness: 0.36, metalness: 0.35 }, 'main courante noire'),
-    taupe: std({ color: 0xa1998e, roughness: 0.45 }, 'vantail gris taupe'),
+    taupe: std({ color: 0x9d978f, roughness: 0.45 }, 'vantail gris taupe'),
     bois: std({ color: 0xe4dccb, roughness: 0.5 }, 'huisserie de bois crème'),
     cadre: std({ color: 0xeeece6, roughness: 0.4 }, 'cadre de la cloison vitrée'),
     tapis: std({ map: texTapis(), roughness: 0.85 }, 'tapis strié noir'),
@@ -676,7 +683,7 @@ export function poserEst(ch, { RECT }) {
   {
     const r2 = E.r2, sofHaut = (x) => E.hP2 - 0.25 + (E.xP - x) * ((E.hP2 + (E.n - 1) * r2 - 0.3) - (E.hP2 - 0.25)) / fin;
     const sh = new THREE.Shape();
-    const xa = E.x0 + 0.004;                     // (en retrait du chant gris)
+    const xa = E.x0 + 0.1;                       // (derrière le retour du chant gris)
     sh.moveTo(xa, rail(v2, fin) - 0.9 + 0.13); sh.lineTo(E.xP, rail(v2, 0) - 0.9 + 0.13);
     sh.lineTo(E.xP, sofHaut(E.xP)); sh.lineTo(xa, sofHaut(xa));
     const o = new THREE.Mesh(new THREE.ShapeGeometry(sh), X.orange);
@@ -702,9 +709,12 @@ export function poserEst(ch, { RECT }) {
     // le mur blanc de la niche et le vitrage)
     { id: 'couloirEst', rects: [zr(E.xJ, E.yH, 16.2, E.yE), zr(16.2, E.yH, E.xM, E.yS), zr(16.2, E.yS, E.xP, E.yE)], voisines: ['hall', 'escEst'], env: { x: 16.3, y: 1.6, z: -8.3 } },
   ];
+  // (09/10 : les cartes de la cage et du palier prises là où l'on ne voit pas la face orange de l'échiffre — au-dessus
+  // de la moitié nord du palier intermédiaire, au nord du palier du 1er ; prises devant elle, elles teintaient de saumon
+  // les murs blancs qui regardent le nord)
   const zonesHaut = [
-    { id: 'escEst2', rects: [zr(14.2, E.bS[0], E.x0, E.bS[1], N2 - 0.6), zr(E.x0, E.bS[0], E.xM, E.bN[1], 2.6)], voisines: ['escEst', 'e1est'], env: { x: 17.2, y: 4.8, z: -10.0 } },
-    { id: 'e1est', rects: [zr(13.55, 6.975, E.x0, 11.1, 2.6), zr(13.2, 11.1, E.x0, E.bN[1], 2.6), zr(E.x0, 6.975, E.xM, E.bS[0], 2.6)], voisines: ['escEst2', 'e1couloir', 'e103', 'e104'], env: { x: 15.1, y: N1 + 1.6, z: -9.9 } },
+    { id: 'escEst2', rects: [zr(14.2, E.bS[0], E.x0, E.bS[1], N2 - 0.6), zr(E.x0, E.bS[0], E.xM, E.bN[1], 2.6)], voisines: ['escEst', 'e1est'], env: { x: 19.05, y: 3.3, z: -11.6 } },
+    { id: 'e1est', rects: [zr(13.55, 6.975, E.x0, 11.1, 2.6), zr(13.2, 11.1, E.x0, E.bN[1], 2.6), zr(E.x0, 6.975, E.xM, E.bS[0], 2.6)], voisines: ['escEst2', 'e1couloir', 'e103', 'e104'], env: { x: 15.0, y: N1 + 1.5, z: -11.3 } },
   ];
 
   // LA MISE À JOUR (js/carte_ecole.js maj) : l'ombre douce cuite du rez-de-chaussée et la lumière et l'ombre cuites du
@@ -767,8 +777,9 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   for (const [a, b] of [[13.61, 14.87], [15.83, 16.67], [17.63, E.xM]]) B(ch, G, a, 7.034, b, 7.052, N1, N1 + 0.082, X.plinthe, { ombre: false });
   B(ch, G, E.xM - 0.017, 7.035, E.xM, 7.47, N1, N1 + 0.082, X.plinthe, { ombre: false });
   B(ch, G, E.xM - 0.017, 8.43, E.xM, 9.0, N1, N1 + 0.082, X.plinthe, { ombre: false });
-  // LE CHANT GRIS du mur d'échiffre (photo 28 : ≈ 10 cm, comme le poteau du rez-de-chaussée)
-  B(ch, G, E.x0 - 0.006, E.yE - 0.08, E.x0, E.yE + 0.08, N1, H1, X.poteau, { ombre: false });
+  // LE CHANT GRIS du mur d'échiffre (photo 28 : ≈ 10 cm, comme le poteau du rez-de-chaussée) : il retourne sur la face
+  // sud — vu du haut de la volée 2, c'est une bande grise de 11 cm avant l'orange
+  B(ch, G, E.x0 - 0.006, E.yE - 0.081, E.x0 + 0.11, E.yE + 0.081, N1, 6.1, X.poteau, { ombre: false });
   // LES PLAFONDS : le palier (plâtre, 2,50 m), la retombée du renfoncement nord, la bande sud
   ch.plafond(13.55, 7.035, E.x0, 11.1, H1, 'platre');
   ch.plafond(14.2, 11.1, E.x0, E.bN[1], H1, 'platre');
@@ -788,12 +799,14 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   B(ch, G, xf, 8.97, xf + 0.005, 9.63, N1 + 1.425, N1 + 1.775, M.noirMat, { ombre: false });
   ch.panneau(matPanneau(texWifiIris(), 0.4), 0.22, 0.16, xf + 0.004, 9.95, N1 + 1.6, 'E', G);
   ch.panneau(matPanneau(texPointEcoute(), 0.6), 0.21, 0.297, xf + 0.003, 10.25, N1 + 1.65, 'E', G);
-  // la réglette au-dessus des affichettes (≈ 2,1 m), son bouton de minuterie, la prise ; le tapis gris anthracite
-  reglette(ch, G, xf, 9.1, 10.55, N1 + 2.1, 'E');
-  lampe({ x: xf + 0.25, z: -9.82, h: N1 + 2.1, zone: 'e1est', type: 'tube', force: 1.1 });
-  B(ch, G, xf, 9.81, xf + 0.02, 9.89, N1 + 1.06, N1 + 1.14, M.boitier, { ombre: false });
-  B(ch, G, xf + 0.02, 9.83, xf + 0.024, 9.87, N1 + 1.08, N1 + 1.12, M.noirMat, { ombre: false });
-  B(ch, G, xf, 9.81, xf + 0.018, 9.89, N1 + 0.21, N1 + 0.29, M.boitier, { ombre: false });
+  // la réglette au-dessus des affichettes (≈ 2,1 m ; photo 28 : de la moitié du panneau à 30 cm au-delà de l'affiche
+  // violette), son bouton de minuterie et la prise à l'aplomb de l'affichette WIFI ; le tapis gris anthracite
+  reglette(ch, G, xf, 9.22, 10.62, N1 + 2.1, 'E');
+  lampe({ x: xf + 0.25, z: -9.92, h: N1 + 2.1, zone: 'e1est', type: 'tube', force: 1.1 });
+  B(ch, G, xf, 9.91, xf + 0.02, 9.99, N1 + 1.06, N1 + 1.14, M.boitier, { ombre: false });
+  B(ch, G, xf + 0.02, 9.93, xf + 0.024, 9.97, N1 + 1.08, N1 + 1.12, M.noirMat, { ombre: false });
+  B(ch, G, xf, 9.91, xf + 0.018, 9.99, N1 + 0.21, N1 + 0.29, M.boitier, { ombre: false });
+  B(ch, G, xf + 0.018, 9.935, xf + 0.021, 9.965, N1 + 0.235, N1 + 0.265, M.noirMat, { ombre: false });
   B(ch, G, 14.35, 9.05, 14.95, 10.65, N1, N1 + 0.008, X.tapis1, { ombre: false });
   // (sur le mur sud du palier, près du renfoncement, la petite photo encadrée sombre et brillante, à 1,7-1,9 m)
   B(ch, G, 14.17, 7.035, 14.45, 7.045, N1 + 1.64, N1 + 1.96, M.noirMat, { ombre: false });
