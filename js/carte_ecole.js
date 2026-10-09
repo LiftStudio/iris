@@ -31,8 +31,9 @@
 //   le couloir C01             x 11,7-13,5   y 12,0-20,6  toilettes, gaine technique (photo 01)
 //   le « cou »                 x 9,9-13,5    y 4,8-9,0    le bureau B vitré, le trumeau (photo 03)
 //   le hall d'entrée, accueil  x 13,35-19,8  y 0,3-7,5    porte n° 6, comptoir (photos 03, 16)
+//   le couloir est, l'escalier x 14,6-19,8   y 7,575-12,45 derrière la porte nord du hall : js/ecole_est.js (photos 24-29)
 //   les pièces fermées         la salle A, le bureau B, les WC, le local, le couloir de service : leurs portes s'ouvrent,
-//                              leur intérieur est imaginé (js/ecole_pieces.js) ; fermés : les bureaux est, la gaine
+//                              leur intérieur est imaginé (js/ecole_pieces.js) ; fermés : le bureau du photocopieur, la gaine
 //   le 1er étage (3,50 m)      js/ecole_etage1.js : salles sur rue, couloir, toilettes, bureaux, l'escalier vers le 2e
 import * as THREE from 'three';
 import { Collisions } from './collisions.js';
@@ -44,6 +45,7 @@ import { poserMobilier } from './ecole_mobilier.js';
 import { poserRue } from './ecole_rue.js';
 import { poserPieces } from './ecole_pieces.js';
 import { poserEtage1 } from './ecole_etage1.js';
+import { poserEst } from './ecole_est.js';
 
 // ---- les hauteurs ----
 const H_DALLE = 3.25;            // le dessous de la dalle du 1er étage (les cloisons montent jusque-là)
@@ -681,8 +683,10 @@ function construireMurs(ch) {
   // part et d'autre ; photo 02 : il frôle le bord gauche de l'image. Il était collé au bout du mur, y 8,9-9,5.)
   pilier(10.3, 9.75, 10.9, 10.35, M.pilier);
   // ---- LE HALL D'ENTRÉE ----
-  ch.mur({ de: [13.5, 7.575], a: [20.1, 7.575], mats: B, plinthes: ['S'], ouvertures: [{ c: 17.0, l: 0.93, h: 2.04 }] });
-  ch.porte('x', 7.575, 17.0, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'S', nom: 'bureaux est' });
+  // (09/10, photo 24 : la porte du mur nord n'est pas en x 17 mais en face de la porte 6 — 1,5 vantail, x 14,70-16,10 ;
+  // à l'est, la cloison vitrée cannelée du bureau du photocopieur. Les vantaux, la cloison, le couloir et l'escalier qui
+  // suivent : js/ecole_est.js)
+  ch.mur({ de: [13.5, 7.575], a: [16.25, 7.575], mats: B, plinthes: ['S'], ouvertures: [{ c: 15.4, l: 1.4, h: 2.1 }] });
   ch.mur({ de: [19.95, -0.4], a: [19.95, 7.65], ep: 0.3, mats: B, plinthes: ['W'] });
   // ---- L'ESCALIER : la cage (jusqu'au plafond de l'étage), les portes coupe-feu ----
   ch.mur({ de: [1.6, 13.675], a: [4.75, 13.675], mats: B, plinthes: ['S', 'N'], ouvertures: [{ c: 3.5, l: 1.8, h: 2.1 }] });
@@ -758,7 +762,8 @@ export function construireCarte(scene, renderer = null) {
   const RN = [
     [-0.3, -0.4, 1.6, 20.75, 'ns', 1.75, 0], [1.6, 5.0, 4.9, 20.75, 'ns', 1.75, 0], [4.9, -0.4, 5.3, 20.75, 'ns', 1.75, 0],
     [5.3, -0.4, 13.5, 9.0, 'ns', 1.75, 0], [5.3, 9.0, 13.5, 12.0, 'ew', 5.8, 9.0], [5.3, 12.0, 13.5, 20.75, 'ns', 1.75, 0],
-    [13.5, -0.4, 20.1, 20.75, 'ns', 1.75, 0],
+    // (le hall ; au nord, le lino du couloir est et de l'escalier est remplace le carrelage : js/ecole_est.js)
+    [13.5, -0.4, 20.1, 7.575, 'ns', 1.75, 0], [13.5, 7.575, 14.6, 20.75, 'ns', 1.75, 0], [14.6, 12.45, 20.1, 20.75, 'ns', 1.75, 0],
   ];
   const sol = new THREE.Mesh(geoSol(RN), M.sol); sol.receiveShadow = true; sol.name = 'carrelage'; nePasFusionner(sol);
   scene.add(sol);
@@ -817,7 +822,8 @@ export function construireCarte(scene, renderer = null) {
   for (const [x, y] of [[6.6, 9.9], [9.0, 9.9], [11.4, 9.9], [7.8, 11.1], [10.2, 11.1], [12.6, 11.1]]) ch.spot(x, y, 2.6, 'attente');
   for (const [x, y] of [[12.3, 7.8], [11.9, 5.7]]) ch.spot(x, y, 2.6, 'cou');
   for (const [x, y] of [[12.6, 16.0], [12.6, 19.4]]) ch.opale(x, y, 2.45, 'c01');
-  for (const [x, y] of [[16.4, 1.4], [18.6, 1.4], [14.9, 3.7], [17.3, 3.7], [19.0, 3.9], [15.8, 6.0], [18.2, 6.0]]) ch.spot(x, y, 2.6, 'hall');
+  // (09/10 : le spot nord-est du hall, 18,2 ; 6,0, tombait dans le bureau du photocopieur — js/ecole_est.js — : avancé)
+  for (const [x, y] of [[16.4, 1.4], [18.6, 1.4], [14.9, 3.7], [17.3, 3.7], [19.0, 3.9], [15.8, 6.0], [18.1, 4.85]]) ch.spot(x, y, 2.6, 'hall');
   for (const [x, y] of [[11.0, 2.4], [12.5, 2.4]]) ch.spot(x, y, 2.6, 'bureauB');
   // (la salle A : ses six dalles LED sont posées avec son mobilier, js/ecole_pieces.js)
   ch.opale(3.2, 18.6, 3.75, 'escalier', { mur: 'S', r: 0.15 });
@@ -840,8 +846,12 @@ export function construireCarte(scene, renderer = null) {
   poserRue(ch);
   // les pièces qu'on peut maintenant visiter (salle A, bureau B, couloir de service, local, toilettes) et leurs zones
   const pieces = poserPieces(ch);
+  // le couloir est et l'escalier est (photos 24 à 29) : la porte nord du hall, la cloison vitrée, le couloir, le
+  // vestibule, les volées 1 et 2 jusqu'au 1er ; leurs zones (celles de la cage du 1er à part : en tête) et leur sol
+  const est = poserEst(ch, { RECT });
   // le 1er étage (IMAGINÉ en attendant des photos : salles derrière les fenêtres de la façade, couloir, toilettes,
-  // bureaux, l'escalier vers le 2e) : ses zones de lumière et sa mise à jour reviennent ici
+  // bureaux, l'escalier vers le 2e ; son palier est, d'après les photos 27 à 29, par js/ecole_est.js) : ses zones de
+  // lumière et sa mise à jour reviennent ici
   const etage1 = poserEtage1(ch, renderer);
 
   // =====================================================================
@@ -881,15 +891,18 @@ export function construireCarte(scene, renderer = null) {
     { id: 'c01', rects: [zr(11.6, 12.0, 13.6, 20.75)], voisines: ['attente'], env: { x: 12.6, y: 1.5, z: -16.5 } },
     { id: 'attente', rects: [zr(5.8, 9.0, 13.6, 12.0)], voisines: ['hallO', 'cou', 'c01'], env: { x: 9.2, y: 1.6, z: -10.5 } },
     { id: 'cou', rects: [zr(9.9, 4.8, 13.5, 9.0)], voisines: ['attente', 'hall'], env: { x: 11.9, y: 1.6, z: -7.2 } },
-    { id: 'hall', rects: [zr(13.3, -0.45, 20.1, 7.6)], voisines: ['cou', 'rue'], env: { x: 15.8, y: 1.6, z: -4.0 } },
+    { id: 'hall', rects: [zr(13.3, -0.45, 20.1, 7.6)], voisines: ['cou', 'rue', 'couloirEst'], env: { x: 15.8, y: 1.6, z: -4.0 } },
     { id: 'rue', rects: [zr(-25, -12, 50, -0.4)], voisines: ['hall', 'passage'], env: { x: 9.5, y: 1.7, z: 3.4 } },
     ...pieces.zones,
+    ...est.zones,
   ];
   zones.unshift(...etage1.zones);      // (celles de l'étage d'abord : leurs rectangles couvrent ceux du rez-de-chaussée)
+  zones.unshift(...est.zonesHaut);     // (et devant elles, la cage de l'escalier est et son palier du 1er)
   const lumieres = new LumieresEcole(scene, { lampes: ch.lampes.filter((l) => l.reel !== false), zones });
   // LA LUMIÈRE CUITE AU SOL (toutes les sources, découpées par les murs)
   const lm = cuireLumiereSol(C, ch.lampes, { x0: RECT.x0, z0: -RECT.y1, W, L }, { tpm: 16 });
   for (const m of [M.sol, M.solPassage]) { m.lightMap = lm; m.lightMapIntensity = 1.4; m.needsUpdate = true; }
+  for (const m of est.sols) { m.lightMap = lm; m.needsUpdate = true; }      // (le lino : son intensité est la sienne)
   // (le passage : le jour de la grille et les deux réglettes s'y ajoutent ; à 1,4 son carrelage sortait blanc — 09/10)
   M.solPassage.lightMapIntensity = 0.85;
 
@@ -917,6 +930,7 @@ export function construireCarte(scene, renderer = null) {
     ch.portes.maj(dt, u.x, u.z, cam.x, cam.z);
     lumieres.maj(dt, u.x, u.z, jeu.renderer, u.y);
     etage1.maj(dt, jeu);
+    est.maj(dt, jeu);
     // l'ombre cuite au sol vaut aussi pour le carrelage du passage (elle est posée sur le matériau du « terrain »)
     if ((scene.userData.solCuit || 0) !== cuit && M.sol.aoMap) {
       cuit = scene.userData.solCuit || 0;

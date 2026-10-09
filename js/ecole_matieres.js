@@ -308,7 +308,7 @@ function normalesPlateaux() {
 //  LES PEINTURES (murs) et la PIERRE DE LA FAÇADE
 // =====================================================================
 // Un enduit peint : presque uni, une très légère nuée de rouleau. Tuile de dessin : 2 m.
-function texPeinture(hex, nuee = 5) {
+export function texPeinture(hex, nuee = 5) {
   const [r, gg, b] = octets(hex);
   return canvasTex(256, 256, (g, w, h) => {
     g.fillStyle = rgb(r, gg, b); g.fillRect(0, 0, w, h);

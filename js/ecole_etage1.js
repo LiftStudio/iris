@@ -15,11 +15,13 @@
 //   salle 101 (cours)                    x 0-6,6     y 0-6,9     travées 1 à 4 (la grande baie rouge)
 //   salle 102 (informatique)             x 6,6-13,2  y 0-6,9     travées 5 à 8
 //   bureau 103 (pédagogie)               x 13,2-16,5 y 0-6,9     travées 9 et 10 (au-dessus de la porte 6)
-//   salle 104 (enseignants)              x 16,5-19,8 y 0-6,9     travées 11 et 12 (la fenêtre rouge des pompiers)
-//   le couloir                           x 1,75-19,8 y 7,0-8,9
+//   salle 104 (Gordon Earle Moore, B 1.5) x 16,5-19,8 y 0-6,9    travées 11 et 12 (la fenêtre rouge des pompiers)
+//   le couloir                           x 1,75-13,55 y 7,0-8,9  il finit sur la porte à 1,5 vantail du palier est
 //   le palier d'étage                    x 1,75-4,6  y 8,9-12,45  devant la double porte de l'escalier, ouverte
 //   les toilettes                        x 4,75-8,45 y 9,0-12,6
-//   fermés : 105, 106, 107 (côté cour), le local ménage, l'issue de secours au bout du couloir, le 2e étage
+//   le palier est et l'escalier est      x 13,55-19,8 y 7,0-12,45 (photos 27 à 29 : js/ecole_est.js poserPalierEst) ; les
+//                                        portes du 103 et de la 104 s'ouvrent sur lui, l'issue de secours est au bout
+//   fermés : 105, 106 (B 1.6) côté cour, le local ménage, l'issue de secours, le 2e étage
 // L'ESCALIER CONTINUE : deux volées de 10 marches de 15,5 cm (3,10 m d'étage, comme la façade), le palier intermédiaire
 // à 5,05 m, le palier du 2e (6,60 m) devant sa double porte, fermée.
 //
@@ -46,6 +48,7 @@ import { canvasTex, nePasFusionner } from './kit_decor.js';
 import { jourDehors, texAffiche, texConsignes, texPictoExtincteur } from './ecole_matieres.js';
 import { cuireLumiereSol } from './ecole_lumieres.js';
 import { TELEPHONE } from './appareil.js';
+import { poserPalierEst, texPlaqueSalle } from './ecole_est.js';
 
 // ---- les hauteurs ----
 const N1 = 3.5;                     // le plancher du 1er étage (H_RDC de js/carte_ecole.js)
@@ -585,24 +588,27 @@ export function poserEtage1(ch, renderer = null) {
     // les cloisons entre les salles, sur les limites de travées (entre deux fenêtres)
     for (const x of [6.6, 13.2, 16.5]) mur({ de: [x, 0], a: [x, Y_SALLES - EP / 2], mats: B0, plinthes: ['E', 'W'] });
     // LA CLOISON NORD DES SALLES (le mur sud du couloir) et ses quatre portes
-    const PORTES_SALLES = [5.75, 12.35, 13.95, 17.15];
+    // (09/10 : celle du bureau 103, 13,95 -> 15,35 — le couloir finit en x 13,55, photo 28, et le mur sud du palier est,
+    // entre la porte du couloir et x 14,5, n'a pas de porte)
+    const PORTES_SALLES = [5.75, 12.35, 15.35, 17.15];
     mur({ de: [-0.3, Y_SALLES], a: [19.8, Y_SALLES], mats: B0, plinthes: ['N', 'S'], ouvertures: PORTES_SALLES.map((c) => ({ c, l: 0.95 })) });
     // (ouvertes dans la salle, contre la cloison : le gond côté cloison ; celle de la 101, rabattue à plat contre le mur
     // — l'allée du fond de la salle passe là)
     porte('x', Y_SALLES, 5.75, { etat: 'ouverte', angle: 2.95, cote: 'S', nom: 'salle 101' });
     porte('x', Y_SALLES, 12.35, { etat: 'ouverte', angle: 1.5, cote: 'S', charniere: 'd', nom: 'salle 102' });
-    porte('x', Y_SALLES, 13.95, { etat: 'ouverte', angle: 1.5, cote: 'S', nom: 'bureau 103', notices: 1 });
+    porte('x', Y_SALLES, 15.35, { etat: 'ouverte', angle: 1.5, cote: 'S', nom: 'bureau 103', notices: 1 });
     porte('x', Y_SALLES, 17.15, { etat: 'ouverte', angle: 1.5, cote: 'S', nom: 'salle 104' });
     // les blocs de sortie au-dessus des portes des deux salles de cours, côté salle
     for (const x of [5.75, 12.35]) ch.sortie(x, Y_SALLES - EP / 2 - 0.03, N1 + 2.3, 'S');
-    // LA CLOISON NORD DU COULOIR : les toilettes (ouvertes), les salles côté cour (fermées)
-    mur({ de: [4.6, Y_COUR], a: [19.8, Y_COUR], mats: B0, plinthes: ['S'], ouvertures: [5.4, 9.6, 13.4, 17.6].map((c) => ({ c, l: 0.95 })) });
+    // LA CLOISON NORD DU COULOIR : les toilettes (ouvertes), les salles côté cour (fermées) — jusqu'au bout du couloir, x
+    // 13,55 (au-delà, le palier et la cage de l'escalier est : js/ecole_est.js ; la porte de la 106 recule de 13,4 à 13,0,
+    // la 107 « Archives » est tombée dans la cage)
+    mur({ de: [4.6, Y_COUR], a: [13.55, Y_COUR], mats: B0, plinthes: ['S'], ouvertures: [5.4, 9.6, 13.0].map((c) => ({ c, l: 0.95 })) });
     // (côté toilettes, la faïence double le mur, de part et d'autre de la porte)
     for (const [a, b] of [[4.75, 4.9], [5.9, 8.44]]) B(a, Y_COUR + EP / 2, b, Y_COUR + EP / 2 + 0.006, N1, H_COUL, X.faience, { ombre: false });
     porte('x', Y_COUR, 5.4, { etat: 'ouverte', angle: 1.45, cote: 'N', charniere: 'd', oculus: false, nom: 'toilettes' });
     porte('x', Y_COUR, 9.6, { etat: 'fermee', cote: 'N', notices: 2, nom: 'salle 105' });
-    porte('x', Y_COUR, 13.4, { etat: 'fermee', cote: 'N', notices: 1, nom: 'salle 106' });
-    porte('x', Y_COUR, 17.6, { etat: 'fermee', cote: 'N', charniere: 'd', nom: 'salle 107' });
+    porte('x', Y_COUR, 13.0, { etat: 'fermee', cote: 'N', nom: 'salle 106' });
     // l'issue de secours au bout du couloir (fermée) et son bloc vert
     porte('y', 19.95, 7.95, { etat: 'fermee', cote: 'E', ep: 0.3, notices: 1, nom: 'issue de secours (étage)' });
     ch.sortie(19.78, 7.95, N1 + 2.3, 'W');
@@ -622,7 +628,7 @@ export function poserEtage1(ch, renderer = null) {
   function construireSols() {
     // le carrelage : les salles (grand côté est-ouest), le couloir (est-ouest), le palier et les toilettes (nord-sud)
     const rects = [
-      [-0.3, 0, 19.95, Y_SALLES, 'ew'], [1.6, Y_SALLES, 19.95, Y_COUR, 'ew'],
+      [-0.3, 0, 19.95, Y_SALLES, 'ew'], [1.6, Y_SALLES, 13.55, Y_COUR, 'ew'],
       [1.6, Y_COUR, 4.675, 12.6, 'ns'], [4.675, Y_COUR, 8.56, 12.75, 'ns'],
     ];
     const pos = [], nor = [], uv = [], uv1 = [], idx = [];
@@ -648,7 +654,10 @@ export function poserEtage1(ch, renderer = null) {
     // LE MONDE SOLIDE : le plancher de l'étage (une dalle à 3,50 m qui couvre tout ce qu'on peut y fouler, seuils des
     // portes compris : là où aucune dalle ne couvre, solEn rendrait le rez-de-chaussée), et pour la caméra seule, le
     // dessous du plancher (hors de la cage d'escalier)
-    C.sol(-0.3, 0, 19.95, -12.6, N1);                      // (x -0,3-19,95, y 0-12,6 : salles, couloir, palier d'étage)
+    // (x -0,3-19,95, y 0-12,6 : salles, couloir, palier d'étage — sauf au-dessus des volées de l'escalier est, x 16,05-19,95
+    // y 9,075-12,6 : on y retomberait sur un plancher invisible)
+    C.sol(-0.3, 0, 19.95, -9.075, N1);
+    C.sol(-0.3, -9.075, 16.05, -12.6, N1);
     C.sol(4.6, -8.8, 8.6, -12.8, N1);                       // les toilettes, jusqu'à leur mur nord
     C.ajouterBoite(-0.3, 0, 19.95, -Y_COUR - 0.1, { y0: N1 - 0.32, y1: N1 - 0.02, joueur: false });
     C.ajouterBoite(1.6, -Y_COUR, 8.6, -12.45, { y0: N1 - 0.32, y1: N1 - 0.02, joueur: false });
@@ -668,11 +677,11 @@ export function poserEtage1(ch, renderer = null) {
     for (const x of [8.1, 9.9, 11.7]) for (const y of [1.8, 4.8]) dalle(x, y, 'e102');
     for (const y of [1.8, 4.8]) { dalle(14.85, y, 'e103'); dalle(18.15, y, 'e104'); }
     // le couloir, le palier d'étage, les toilettes : plâtre et hublots opales (comme les couloirs C01 et C05, photos 01, 05)
-    ch.plafond(1.75, Y_SALLES, 19.8, Y_COUR, H_COUL, 'platre');
+    ch.plafond(1.75, Y_SALLES, 13.55, Y_COUR, H_COUL, 'platre');
     ch.plafond(1.75, Y_COUR, 4.6, 12.45, H_COUL, 'platre');
     ch.plafond(4.75, Y_COUR, 8.44, 12.63, H_COUL, 'platre');
-    for (const x of [3.2, 5.6, 8.0, 10.4, 12.8, 15.2, 17.6]) opale(x, 7.95, H_COUL, 'e1couloir');
-    opale(19.3, 7.95, H_COUL, 'e1couloir', { r: 0.15 });
+    // (les hublots au-delà du bout du couloir, x 13,55, sont maintenant ceux du palier est : js/ecole_est.js)
+    for (const x of [3.2, 5.6, 8.0, 10.4, 12.8]) opale(x, 7.95, H_COUL, 'e1couloir');
     for (const y of [10.0, 11.7]) opale(3.2, y, H_COUL, 'e1hall');
     for (const [x, y] of [[5.7, 9.9], [7.4, 9.9], [7.0, 11.8]]) spot(x, y, H_COUL, 'e1wc');
   }
@@ -1173,17 +1182,18 @@ export function poserEtage1(ch, renderer = null) {
     // les plaques des portes
     plaque('101', 'Salle de cours', 4.95, Y_SALLES + EP / 2 + 0.003, 'N');
     plaque('102', 'Salle informatique', 11.6, Y_SALLES + EP / 2 + 0.003, 'N');
-    plaque('103', 'Pédagogie', 14.62, Y_SALLES + EP / 2 + 0.003, 'N');
-    plaque('104', 'Enseignants', 17.82, Y_SALLES + EP / 2 + 0.003, 'N');
+    // (à l'est du couloir, le palier est : les plaques à trois lignes de la photo 23 et les noms du panneau d'étage,
+    // photo 28 ; celle de la 106 est sur son vantail, le bout du couloir ne laisse pas de place à côté)
+    const plaqueSalle = (l2, l3, x, y, h, face) => panneau(new THREE.MeshStandardMaterial({ map: texPlaqueSalle('Salle', l2, l3), roughness: 0.4 }), 0.15, 0.09, x, y, N1 + h, face);
+    plaque('103', 'Pédagogie', 16.0, Y_SALLES + EP / 2 + 0.003, 'N');
+    plaqueSalle('Gordon Earle Moore', 'B 1.5', 17.84, Y_SALLES + EP / 2 + 0.003, 1.6, 'N');
     plaque('105', 'Salle de cours', 10.27, Y_COUR - EP / 2 - 0.003, 'S');
-    plaque('106', 'Salle de cours', 14.07, Y_COUR - EP / 2 - 0.003, 'S');
-    plaque('107', 'Archives', 16.9, Y_COUR - EP / 2 - 0.003, 'S');
+    plaqueSalle('de cours', 'B 1.6', 13.2, Y_COUR + 0.007, 1.55, 'S');
     panneau(new THREE.MeshStandardMaterial({ map: texPlaqueWC(), roughness: 0.4 }), 0.16, 0.2, 6.05, Y_COUR - EP / 2 - 0.003, N1 + 1.6, 'S');
     // le tableau de liège (cadre d'aluminium) et les affiches entre les portes côté cour
     B(11.0, Y_COUR - EP / 2 - 0.02, 12.82, Y_COUR - EP / 2, N1 + 0.98, N1 + 1.92, M.aluGris);
     panneau(X.liege, 1.78, 0.9, 11.91, Y_COUR - EP / 2 - 0.021, N1 + 1.45, 'S');
     affiche('#f2b705', '#1d1d1d', 70, 0.5, 0.7, 7.4, Y_COUR - EP / 2 - 0.003, 1.55, 'S');
-    affiche('#2f6fb0', '#fbfbf8', 71, 0.5, 0.7, 15.6, Y_COUR - EP / 2 - 0.003, 1.55, 'S');
     affiche('#d6542b', '#fbfbf8', 72, 0.42, 0.6, 8.9, Y_SALLES + EP / 2 + 0.003, 1.55, 'N');
     // la fontaine à eau près des toilettes (colonne blanche, bonbonne bleue)
     B(7.9, Y_COUR - EP / 2 - 0.34, 8.22, Y_COUR - EP / 2 - 0.02, N1, N1 + 1.0, M.boitier, { collision: true });
@@ -1215,6 +1225,9 @@ export function poserEtage1(ch, renderer = null) {
     meublerSalle104();
     construireToilettes();
     garnirCouloir();
+    // LE PALIER EST ET LA CAGE DE L'ESCALIER EST (photos 27 à 29) : dans le groupe de l'étage, ses lampes cuites avec les
+    // nôtres, son vinyle sur notre lumière et notre ombre cuites (js/ecole_est.js)
+    poserPalierEst(ch, { groupe, lampes, matSol, R1 });
   } finally {
     ch.decor = decor0; ch.portes.decor = portes0;
   }
@@ -1257,11 +1270,11 @@ export function poserEtage1(ch, renderer = null) {
   // moins bleu de 92 contre 35 à 45 pour les autres murs blancs ; d'ici, 62, comme un reflet de couleur)
   const zones = [
     { id: 'e1hall', rects: [zr(1.6, Y_COUR, 4.75, 12.6)], voisines: ['palier1', 'e1couloir'], env: env(3.9, 8.3) },
-    { id: 'e1couloir', rects: [zr(1.6, Y_SALLES, 20.0, Y_COUR)], voisines: ['e1hall', 'e101', 'e102', 'e103', 'e104', 'e1wc'], env: env(10.6, 7.95) },
+    { id: 'e1couloir', rects: [zr(1.6, Y_SALLES, 13.55, Y_COUR)], voisines: ['e1hall', 'e101', 'e102', 'e103', 'e104', 'e1wc', 'e1est'], env: env(10.6, 7.95) },
     { id: 'e101', rects: [zr(-0.3, -0.2, 6.6, Y_SALLES)], voisines: ['e1couloir'], env: env(3.3, 3.6) },
     { id: 'e102', rects: [zr(6.6, -0.2, 13.2, Y_SALLES)], voisines: ['e1couloir'], env: env(9.9, 3.6) },
-    { id: 'e103', rects: [zr(13.2, -0.2, 16.5, Y_SALLES)], voisines: ['e1couloir'], env: env(14.85, 3.6) },
-    { id: 'e104', rects: [zr(16.5, -0.2, 20.0, Y_SALLES)], voisines: ['e1couloir'], env: env(18.15, 3.6) },
+    { id: 'e103', rects: [zr(13.2, -0.2, 16.5, Y_SALLES)], voisines: ['e1est'], env: env(14.85, 3.6) },
+    { id: 'e104', rects: [zr(16.5, -0.2, 20.0, Y_SALLES)], voisines: ['e1est'], env: env(18.15, 3.6) },
     { id: 'e1wc', rects: [zr(4.75, Y_COUR, 8.6, 12.8)], voisines: ['e1couloir'], env: env(6.6, 10.2) },
   ];
 
@@ -1272,7 +1285,8 @@ export function poserEtage1(ch, renderer = null) {
   const maj = (dt, jeu) => {
     const u = jeu.user.pos, cam = jeu.camera.position;
     // VISIBLE quand la caméra peut le voir : dans la cage, au-dessus des plafonds du rez-de-chaussée, ou dehors
-    const cage = cam.x > 1.4 && cam.x < 5.0 && cam.z < -12.2 && cam.z > -19.0;
+    // (et la cage de l'escalier est, depuis le couloir est : par la porte du vestibule, on voit monter la volée 1)
+    const cage = (cam.x > 1.4 && cam.x < 5.0 && cam.z < -12.2 && cam.z > -19.0) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -7.5 && cam.z > -12.7);
     const vis = cage || cam.y > 2.7 || cam.z > -0.05 || u.y > 2.0;
     if (vis !== groupe.visible) groupe.visible = vis;
     // SON OMBRE quand Haythem y est (au-delà de la moitié de la volée 2 ; il redescend sous 2 m) — reposée à chaque
