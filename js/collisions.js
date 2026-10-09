@@ -34,6 +34,18 @@
 // UNE GRILLE de cases de 2 m range les formes : une question ne regarde que les formes des cases qu'elle touche
 // (quelques-unes), même quand la carte en compte des centaines — toute une école.
 //
+// LES FORMES MOBILES (les vantaux des portes qui s'ouvrent toutes seules, js/ecole_portes.js) : une forme dont `off`
+// vaut vrai n'existe plus, ni pour le joueur ni pour la caméra. La porte la rallume quand elle se referme. Les hauteurs
+// des formes sont ABSOLUES (au-dessus du sol du rez-de-chaussée, y = 0) : le joueur les compare à ses pieds réels, palier
+// et marches compris.
+//
+// LES SOLS (l'escalier) : par défaut, le sol est à y = 0 partout. Une carte peut déclarer des DALLES (un palier à 1,75 m)
+// et des RAMPES (une volée de marches, dont la pente passe par le milieu des marches : les pieds ne s'enfoncent ni ne
+// flottent de plus d'une demi-contremarche). solEn(x, z, y) rend le sol le plus HAUT sous le point qui ne dépasse pas
+// les pieds actuels de plus d'une marche (45 cm) : sous un palier, on reste au rez-de-chaussée ; sur une volée, on la suit.
+// Les plafonds se lisent de même à une hauteur donnée (plafondEn(x, z, y)) : sur le palier du 1er étage, le plafond du
+// hall en dessous ne compte plus.
+//
 // DÉBOGAGE : ?debug=murs dans l'adresse dessine toutes les formes en fil de fer (js/game.js, afficherDebug).
 
 import * as THREE from 'three';
@@ -49,6 +61,7 @@ export class Collisions {
     this.formes = [];
     this.grille = new Map();
     this.plafonds = [];            // { x0, z0, x1, z1, y } : le dessous de chaque plafond déclaré
+    this.sols = [];                // { x0, z0, x1, z1, h } ou une rampe { ..., axe, a0, h0, a1, h1 } (voir solEn)
     this._tour = 0;
     this.stats = { requetes: 0 };
   }
@@ -131,11 +144,43 @@ export class Collisions {
     this.ajouterBoite(r.x0, r.z0, r.x1, r.z1, { y0: y, y1: y + ep, joueur: false });
     return r;
   }
-  // la hauteur du plafond au-dessus de (x, z) — le plus bas de ceux qui le couvrent —, ou l'infini (dehors)
-  plafondEn(x, z) {
+  // la hauteur du plafond au-dessus de (x, z) — le plus bas de ceux qui le couvrent et qui sont plus haut que `yMin`
+  // (les pieds du joueur : sur un palier, le plafond de l'étage du dessous ne compte pas) —, ou l'infini (dehors)
+  plafondEn(x, z, yMin = -Infinity) {
     let y = Infinity;
-    for (const p of this.plafonds) if (x >= p.x0 && x <= p.x1 && z >= p.z0 && z <= p.z1 && p.y < y) y = p.y;
+    for (const p of this.plafonds) if (x >= p.x0 && x <= p.x1 && z >= p.z0 && z <= p.z1 && p.y < y && p.y > yMin) y = p.y;
     return y;
+  }
+
+  // ------------------------------------------------------------------ les sols
+  // une DALLE à la hauteur h sur le rectangle
+  sol(x0, z0, x1, z1, h) {
+    const r = { x0: Math.min(x0, x1), z0: Math.min(z0, z1), x1: Math.max(x0, x1), z1: Math.max(z0, z1), h, axe: null };
+    this.sols.push(r);
+    return r;
+  }
+  // une RAMPE sur le rectangle : la hauteur va de h0 (à la coordonnée a0 le long de `axe`, 'x' ou 'z') à h1 (en a1),
+  // bornée entre les deux
+  rampe(x0, z0, x1, z1, axe, a0, h0, a1, h1) {
+    const r = { x0: Math.min(x0, x1), z0: Math.min(z0, z1), x1: Math.max(x0, x1), z1: Math.max(z0, z1), axe, a0, h0, a1, h1 };
+    this.sols.push(r);
+    return r;
+  }
+  _hSol(r, x, z) {
+    if (!r.axe) return r.h;
+    const a = r.axe === 'x' ? x : z, t = Math.max(0, Math.min(1, (a - r.a0) / (r.a1 - r.a0)));
+    return r.h0 + (r.h1 - r.h0) * t;
+  }
+  // le sol sous (x, z) pour des pieds à `y` : le plus haut de ceux qui le couvrent sans dépasser y + `marche` ; là où
+  // aucun ne le couvre, le rez-de-chaussée (0). (Une dalle peut être plus basse que 0 : la chaussée, sous le trottoir.)
+  solEn(x, z, y = 0, marche = 0.45) {
+    let h = null;
+    for (const r of this.sols) {
+      if (x < r.x0 || x > r.x1 || z < r.z0 || z > r.z1) continue;
+      const v = this._hSol(r, x, z);
+      if (v <= y + marche && (h === null || v > h)) h = v;
+    }
+    return h ?? 0;
   }
 
   // les formes des cases qui touchent le rectangle (x0, z0)-(x1, z1), chacune une fois (rappel f(forme))
@@ -159,14 +204,15 @@ export class Collisions {
 
   // ------------------------------------------------------------------ le joueur
   // Le disque (pos.x, pos.z, r) sorti de toutes les formes qui le touchent. `vel` (facultatif) perd ce qui rentre dans
-  // les murs. `pieds` : la hauteur des pieds au-dessus du sol (un saut). Rend vrai s'il y a eu contact.
+  // les murs. `pieds` : la hauteur ABSOLUE des pieds (le sol sous le joueur — une marche, un palier — plus le saut).
+  // Rend vrai s'il y a eu contact.
   resoudre(pos, r, vel = null, pieds = 0) {
     const yb = pieds + BAS_CORPS, yh = pieds + HAUT_CORPS;
     let touche = false;
     for (let passe = 0; passe < PASSES; passe++) {
       let bouge = false;
       this._parcourir(pos.x - r, pos.z - r, pos.x + r, pos.z + r, (s) => {
-        if (!s.joueur || s.y0 >= yh || s.y1 <= yb) return;
+        if (s.off || !s.joueur || s.y0 >= yh || s.y1 <= yb) return;
         const n = this._sortir(s, pos, r);
         if (!n) return;
         bouge = true; touche = true;
@@ -239,7 +285,7 @@ export class Collisions {
     let tMin = 1;
     const dx = bx - ax, dy = by - ay, dz = bz - az;
     this._parcourir(Math.min(ax, bx) - r, Math.min(az, bz) - r, Math.max(ax, bx) + r, Math.max(az, bz) + r, (s) => {
-      if (!s.camera) return;
+      if (!s.camera || s.off) return;
       const t = this._segment(s, ax, ay, az, dx, dy, dz, r);
       if (t < tMin) tMin = t;
     });

@@ -1,508 +1,856 @@
 // =====================================================================
-//  LA CARTE : L'ÉCOLE IRIS — pour l'instant une SALLE D'ESSAI (provisoire)
+//  LA CARTE : L'ÉCOLE IRIS — le rez-de-chaussée, l'escalier et la façade sur rue
 // =====================================================================
-// Ce module a le rôle qu'avait buildArena dans LA CAGE (js/court.js) : il construit TOUT ce que la scène contient de
-// fixe — sol, murs, plafond, mobilier —, l'éclairage et la carte d'environnement, et il déclare les MURS au monde solide
-// (js/collisions.js) que le joueur et la caméra interrogent. Le jeu (js/game.js) ne connaît que ce qu'il rend :
-//   construireCarte(scene, renderer) -> { nom, collisions, depart: { x, z, fx, fz }, bornes, sieges }
-// et ce qu'il pose dans scene.userData, que le rendu (js/fx.js), la météo (js/weather.js) et les ombres de contact
-// (js/ombres_contact.js) lisent comme ils lisaient ceux des terrains :
-//   env { sun, hemi, fill, clouds, court, wetMats }   les lumières que la météo règle ; `court` = le sol (reflet, ombre cuite)
-//   sunDir                                            la direction de la lumière principale (rayons, ombres de contact)
-//   zoneOmbre { min, max }                            ce que la carte d'ombre doit couvrir (js/fx.js _cadrerOmbre)
-//   envTerrain, envLocale, sondeCiel, gainSonde       la carte d'environnement prise sur place et sa sonde (js/kit_decor.js)
-//   solContact, solCuit                               le plan des ombres de contact et de l'ombre cuite au sol
-//   interieur                                         vrai : la météo prend son réglage « intérieur » (ni pluie ni soleil)
-//   animate(t)                                        appelé à chaque image (le vent des feuillages)
+// Reconstruit d'après les 21 photos de Haythem (references/ecole/, hors du dépôt) et leur relevé : plan coté, couleurs
+// mesurées puis rééquilibrées, position de chaque prise de vue. Les longueurs sont tirées de photos au grand angle
+// (± 10 à 15 %) ; ce qui est sûr, c'est ce qui mène à quoi.
 //
-// LA SALLE D'ESSAI (en attendant l'école d'après les photos de Haythem, references/ecole/) : une pièce de 20 x 12 m
-// et 2,70 m sous plafond, aux couleurs de l'école — carrelage gris foncé en grandes dalles, murs blancs à plinthes de
-// bois, un mur d'accent jaune avec sa lisse blanche et sa rangée de chaises coque (on peut s'y asseoir), un pilier jaune
-// à bande blanche et son panneau DAE, un pilier rond, des portes grises fermées, un écran, des affiches, une plante —
-// et UNE VRAIE OUVERTURE de porte qui mène à un bout de couloir en impasse. Plafond en dalles acoustiques perforées
-// sur ossature, spots ronds encastrés. De quoi éprouver le moteur : collisions (murs droits, coins rentrants, piliers
-// carré et rond, ouverture étroite, mobilier), caméra dans un couloir de 2,4 m, éclairage intérieur.
-// REPÈRE : x vers l'est (le mur jaune), z vers le sud ; la porte ouverte est au nord (z = -6), le couloir va vers -z.
+// CE QUE LE MODULE CONSTRUIT (il a le rôle de buildArena dans LA CAGE) : les murs avec leurs portes, les sols, les
+// plafonds, l'escalier, la façade, les lumières ; il déclare tout ce qui est solide au monde solide (js/collisions.js).
+// Le jeu (js/game.js) ne connaît que ce qu'il rend :
+//   construireCarte(scene, renderer) -> { nom, collisions, depart: { x, z, fx, fz }, bornes, sieges, maj(dt, jeu) }
+// et ce qu'il pose dans scene.userData (lu par js/fx.js, js/weather.js, js/ombres_contact.js comme sur les terrains de
+// LA CAGE) : env { sun, hemi, fill, clouds, court, wetMats }, sunDir, zoneOmbre, envTerrain, envLocale, sondeCiel,
+// gainSonde, solContact, solCuit, interieur, animate, aoCanal, pointEnv.
+//
+// LES CROCHETS pour la suite : le MOBILIER (chaises, écran, présentoirs, affiches : js/ecole_mobilier.js) et la RUE
+// (trottoir, chaussée, immeubles d'en face : js/ecole_rue.js) sont posés par leurs modules, qui reçoivent le chantier
+// (`ch` : la scène, le décor, le monde solide, les matières, la conversion du plan, les sièges, les lampes).
+//
+// ---------------------------------------------------------------------------------------------------------------------
+// LE PLAN (le repère du relevé, « entrée en bas ») : x le long de la façade, de 0 (nu intérieur du mitoyen ouest, côté
+// impasse) à 19,8 (mitoyen est, côté n° 4) ; y depuis le nu intérieur de la façade vers le fond du bâtiment (y < 0 : le
+// trottoir puis la rue). Dans le jeu : X = x, Z = -y (z vers la rue = le sud du jeu), Y vers le haut, sol du
+// rez-de-chaussée à 0. Tout ce fichier parle en coordonnées du PLAN.
+//
+//   le passage des étudiants   x 1,75-4,75   y -0,4-5,0   grille sur rue, portes vitrées au fond (photos 07, 10, 19)
+//   le hall ouest (escalier)   x 1,75-5,8    y 5,0-13,6   plan d'évacuation, extincteur, portes coupe-feu (06, 20, 04)
+//   l'escalier                 x 1,75-4,6    y 13,6-18,6  deux volées de 10 marches, palier à 1,75 m, 1er étage fermé
+//   le couloir C05             x 4,6-5,8     y 12,0-18,6  porte de secours dépolie au fond (photo 05)
+//   la salle d'attente         x 5,8-13,5    y 9,0-12,0   le mur safran, les chaises coque, l'écran (photos 02, 21)
+//   le couloir C01             x 11,7-13,5   y 12,0-20,6  toilettes, gaine technique (photo 01)
+//   le « cou »                 x 9,9-13,5    y 4,8-9,0    le bureau B vitré, le trumeau (photo 03)
+//   le hall d'entrée, accueil  x 13,35-19,8  y 0,3-7,5    porte n° 6, comptoir (photos 03, 16)
+//   fermés (portes à clé)      la salle A, le bureau B, les WC, les bureaux est, la gaine, le couloir de service
 import * as THREE from 'three';
 import { Collisions } from './collisions.js';
-import { canvasTex, normalesDepuisGrille, avecRelief, detailPhoto, carteLocale, poserSondeLocale, planifierOcclusionSol,
-  optimiserDecor, nePasFusionner, windify, transmissionSoleil, animerVent, rnd } from './kit_decor.js';
-import { TELEPHONE } from './appareil.js';
+import { carteLocale, poserSondeLocale, planifierOcclusionSol, optimiserDecor, nePasFusionner, animerVent } from './kit_decor.js';
+import { materiauxEcole, texDAE, jourDehors } from './ecole_matieres.js';
+import { Portes, boiteM, maille, fenetreFacade, fenetreDepolie, fusionnerLocal, vitrophanies } from './ecole_portes.js';
+import { LumieresEcole, cuireLumiereSol } from './ecole_lumieres.js';
+import { poserMobilier } from './ecole_mobilier.js';
+import { poserRue } from './ecole_rue.js';
 
-const H = 2.7;                 // hauteur sous plafond
-const EP = 0.2;                // épaisseur des murs
-const SALLE = { x0: -10, x1: 10, z0: -6, z1: 6 };
-const PORTE = { x: 6, l: 1.3, h: 2.1 };            // l'ouverture du mur nord
-const COULOIR = { x0: PORTE.x - 1.2, x1: PORTE.x + 1.2, z0: -14, z1: -6 };
-const DIR_LUMIERE = new THREE.Vector3(0.16, 1, 0.22).normalize();   // la lumière des plafonniers, presque d'aplomb
+// ---- les hauteurs ----
+const H_DALLE = 3.25;            // le dessous de la dalle du 1er étage (les cloisons montent jusque-là)
+const H_RDC = 3.5;               // d'un plancher à l'autre au rez-de-chaussée
+const H_CAGE = 6.4;              // le plafond de la cage d'escalier au-dessus du palier du 1er étage
+const EP = 0.15;                 // les cloisons
+// ---- l'escalier (photos 06, 20, 04) ----
+// (la volée 1 est la plus large : par le vantail ouvert, côté ouest, on voit ses premières marches et son garde-corps,
+// photo 20 — son bord intérieur passe donc à l'ouest du milieu de la porte)
+const ESC = { xE0: 3.02, xE1: 4.6, xO0: 1.75, xO1: 2.9, y0: 14.2, giron: 0.28, haut: 0.175, n: 10 };
+ESC.yPalier = ESC.y0 + (ESC.n - 1) * ESC.giron;      // 16,72 : le bord du palier intermédiaire
+ESC.hPalier = ESC.n * ESC.haut;                     // 1,75
+// la lumière principale (l'ensemble des plafonniers) : presque d'aplomb, elle porte les ombres douces
+const DIR_LUMIERE = new THREE.Vector3(0.16, 1, 0.22).normalize();
+// le rectangle du sol (ombre cuite, lumière cuite) : x -0,6-20,4, y -0,6-21,0
+const RECT = { x0: -0.6, x1: 20.4, y0: -0.6, y1: 21.0 };
 
 // =====================================================================
-//  MATIÈRES
+//  LE CHANTIER : des outils qui parlent en coordonnées du plan
 // =====================================================================
-// Une boîte dont les UV sont en MÈTRES (u le long de la face, v vers le haut) : un même matériau à texture répétée
-// habille ainsi des murs de toutes longueurs, et l'optimisation du décor peut les coudre en un seul maillage.
-function boiteM(w, h, d) {
-  const g = new THREE.BoxGeometry(w, h, d);
-  const p = g.attributes.position, n = g.attributes.normal, uv = g.attributes.uv;
-  for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i), y = p.getY(i), z = p.getZ(i), ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i));
-    if (ax > 0.5) uv.setXY(i, z, y); else if (ay > 0.5) uv.setXY(i, x, z); else uv.setXY(i, x, y);
+class Chantier {
+  constructor(scene) {
+    this.scene = scene;
+    this.C = new Collisions();
+    this.M = materiauxEcole();
+    this.decor = new THREE.Group(); this.decor.name = 'école IRIS';
+    scene.add(this.decor);
+    this.portes = new Portes(this.C, this.M, this.decor);
+    this.lampes = [];            // les plafonniers et le jour (js/ecole_lumieres.js)
+    this.sieges = [];
+    // plan -> monde
+    this.X = (x) => x; this.Z = (y) => -y;
   }
-  return g;
-}
-function maille(geo, mat, x, y, z, rotY = 0, parent = null, { ombre = true, recoit = true } = {}) {
-  const m = new THREE.Mesh(geo, mat);
-  m.position.set(x, y, z); m.rotation.y = rotY;
-  m.castShadow = ombre; m.receiveShadow = recoit;
-  if (parent) parent.add(m);
-  return m;
-}
 
-// LE CARRELAGE (photos 01 à 05) : grandes dalles de grès gris foncé, 60 x 60, un peu marbrées, joints fins plus sombres,
-// pose droite. Satiné : les spots s'y reflètent (photo 02). Une tuile de dessin = 4 x 4 dalles = 2,4 m.
-const DALLE = 0.6;
-function texCarrelage() {
-  const N = 4, px = 1024, c = px / N;
-  const t = canvasTex(px, px, (g) => {
-    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
-      const base = 74 + rnd(-6, 6), x0 = i * c, y0 = j * c;
-      g.fillStyle = `rgb(${base},${base + 1},${base + 4})`; g.fillRect(x0, y0, c, c);
-      // la marbrure de la pierre reconstituée : des nuages doux et quelques veines claires
-      for (let k = 0; k < 26; k++) {
-        const r = rnd(c * 0.08, c * 0.35), cx = x0 + rnd(0, c), cy = y0 + rnd(0, c), v = base + rnd(-14, 16);
-        const gr = g.createRadialGradient(cx, cy, 0, cx, cy, r);
-        gr.addColorStop(0, `rgba(${v},${v + 1},${v + 3},0.22)`); gr.addColorStop(1, `rgba(${v},${v},${v},0)`);
-        g.save(); g.beginPath(); g.rect(x0, y0, c, c); g.clip(); g.fillStyle = gr; g.fillRect(cx - r, cy - r, 2 * r, 2 * r); g.restore();
+  // UNE BOÎTE posée en coordonnées du plan : x0-x1, y0-y1, h0-h1 (matériau, ombre, collision)
+  boite(x0, y0, x1, y1, h0, h1, mat, { ombre = true, collision = false, camera = true, horsAO = false, parent = null } = {}) {
+    const m = maille(boiteM(Math.abs(x1 - x0), h1 - h0, Math.abs(y1 - y0)), mat, (x0 + x1) / 2, (h0 + h1) / 2, -(y0 + y1) / 2, 0, parent || this.decor, { ombre });
+    if (horsAO) m.userData.horsAOSol = true;
+    if (collision) this.C.ajouterBoite(x0, -y0, x1, -y1, { y0: h0, y1: h1, camera });
+    return m;
+  }
+  // UN PLAN (affiche, panneau) collé contre une face : `face` = 'N' | 'S' | 'E' | 'W' (la direction où il regarde)
+  panneau(mat, w, h, x, y, hc, face, parent = null) {
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+    p.position.set(x, hc, -y);
+    p.rotation.y = { S: 0, N: Math.PI, E: Math.PI / 2, W: -Math.PI / 2 }[face];
+    p.receiveShadow = true;
+    (parent || this.decor).add(p);
+    return p;
+  }
+
+  // UN MUR de (x0, y0) à (x1, y1) — toujours parallèle à un axe —, épais de `ep`, de `base` à `h` (hauteurs absolues).
+  //   mats : un matériau, ou { N, S } (mur est-ouest) / { E, W } (mur nord-sud) : chaque face a le sien (le mur est
+  //          alors fait de deux demi-épaisseurs)
+  //   plinthes : les faces qui reçoivent la plinthe de bois verni (8 cm), au pied de chaque morceau qui part du sol
+  //   ouvertures : [{ c, l, h, bas }] — c = le centre le long du mur (x pour un mur est-ouest, y pour un nord-sud),
+  //          l = la largeur, h = la hauteur du linteau (absolue), bas = l'allège (absolue) : une fenêtre
+  // Le monde solide reçoit exactement les mêmes morceaux pleins que la géométrie.
+  mur({ de, a, ep = EP, h = H_DALLE, base = 0, mats, plinthes = [], ouvertures = [], camera = true, ombre = false }) {
+    const M = this.M, [x0, y0] = de, [x1, y1] = a;
+    const axeX = Math.abs(x1 - x0) >= Math.abs(y1 - y0);
+    const debut = axeX ? Math.min(x0, x1) : Math.min(y0, y1), fin = axeX ? Math.max(x0, x1) : Math.max(y0, y1);
+    const ligne = axeX ? y0 : x0;
+    const ouv = ouvertures.map((o) => ({ a0: Math.max(debut, o.c - o.l / 2), a1: Math.min(fin, o.c + o.l / 2), bas: o.bas ?? base, haut: Math.min(h, o.h ?? base + 2.1) }))
+      .sort((p, q) => p.a0 - q.a0);
+    const pleins = [];
+    let a0 = debut;
+    for (const o of ouv) {
+      if (o.a0 > a0 + 1e-3) pleins.push({ a0, a1: o.a0, y0: base, y1: h });
+      if (o.haut < h - 1e-3) pleins.push({ a0: o.a0, a1: o.a1, y0: o.haut, y1: h });
+      if (o.bas > base + 1e-3) pleins.push({ a0: o.a0, a1: o.a1, y0: base, y1: o.bas });
+      a0 = Math.max(a0, o.a1);
+    }
+    if (fin > a0 + 1e-3) pleins.push({ a0, a1: fin, y0: base, y1: h });
+    const cotes = axeX ? ['N', 'S'] : ['E', 'W'];
+    const mat = (c) => (mats && mats.isMaterial ? mats : (mats && mats[c]) || M.blanc);
+    const deux = mat(cotes[0]) !== mat(cotes[1]);
+    for (const p of pleins) {
+      // le rectangle au sol, en plan : u le long du mur, v à travers
+      const R = (v0, v1) => (axeX ? [p.a0, ligne + v0, p.a1, ligne + v1] : [ligne + v0, p.a0, ligne + v1, p.a1]);
+      const [bx0, by0, bx1, by1] = R(-ep / 2, ep / 2);
+      this.C.ajouterBoite(bx0, -by0, bx1, -by1, { y0: p.y0, y1: p.y1, camera });
+      if (!deux) this.boite(bx0, by0, bx1, by1, p.y0, p.y1, mat(cotes[0]), { ombre });
+      else {
+        // N (ou E) : la demi-épaisseur côté +v ; S (ou W) : côté -v
+        const [ax0, ay0, ax1, ay1] = R(0, ep / 2), [cx0, cy0, cx1, cy1] = R(-ep / 2, 0);
+        this.boite(ax0, ay0, ax1, ay1, p.y0, p.y1, mat(cotes[0]), { ombre });
+        this.boite(cx0, cy0, cx1, cy1, p.y0, p.y1, mat(cotes[1]), { ombre });
       }
-      g.save(); g.beginPath(); g.rect(x0, y0, c, c); g.clip();
-      g.strokeStyle = 'rgba(150,150,154,0.10)'; g.lineWidth = 1.2;
-      for (let k = 0; k < 3; k++) {
-        g.beginPath(); let x = x0 + rnd(0, c), y = y0 + rnd(0, c); g.moveTo(x, y);
-        for (let s = 0; s < 8; s++) { x += rnd(-18, 18); y += rnd(-18, 18); g.lineTo(x, y); }
-        g.stroke();
-      }
-      // le grain : de minuscules éclats
-      for (let k = 0; k < 900; k++) { const v = base + rnd(-22, 22); g.fillStyle = `rgba(${v},${v},${v + 2},0.5)`; g.fillRect(x0 + rnd(0, c), y0 + rnd(0, c), 1.4, 1.4); }
-      g.restore();
-    }
-    // les joints
-    g.fillStyle = '#3c3d40';
-    for (let k = 0; k <= N; k++) { g.fillRect(k * c - 1.5, 0, 3, px); g.fillRect(0, k * c - 1.5, px, 3); }
-  }, [1, 1], false, 16);
-  return t;
-}
-let _normCarrelage = null;
-function normalesCarrelage() {
-  return _normCarrelage || (_normCarrelage = normalesDepuisGrille(512, 512, (g, w) => {
-    const N = 4, c = w / N;
-    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) g.fillRect(i * c + 1.5, j * c + 1.5, c - 3, c - 3);
-  }, 1.4, 1.2));
-}
-
-// LE PLAFOND (photos 02, 03, 21) : dalles acoustiques blanc cassé de 60 x 60, percées d'un semis régulier de petits trous,
-// posées sur une ossature en T blanche. Une tuile de dessin = 2 x 2 dalles = 1,2 m.
-function texPlafond() {
-  const N = 2, px = 512, c = px / N;
-  return canvasTex(px, px, (g) => {
-    g.fillStyle = '#e8e3d6'; g.fillRect(0, 0, px, px);
-    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
-      const x0 = i * c, y0 = j * c, b = 14;
-      g.fillStyle = `rgb(${229 + rnd(-3, 3)},${224 + rnd(-3, 3)},${212 + rnd(-3, 3)})`; g.fillRect(x0 + 4, y0 + 4, c - 8, c - 8);
-      g.fillStyle = 'rgba(120,112,98,0.55)';
-      for (let y = y0 + b; y < y0 + c - b; y += 7) for (let x = x0 + b; x < x0 + c - b; x += 7) g.fillRect(x, y, 2, 2);
-    }
-    // l'ossature : un T blanc, légèrement plus clair, ombré d'un côté
-    g.fillStyle = '#f6f4ee';
-    for (let k = 0; k <= N; k++) { g.fillRect(k * c - 4, 0, 8, px); g.fillRect(0, k * c - 4, px, 8); }
-    g.fillStyle = 'rgba(0,0,0,0.10)';
-    for (let k = 0; k <= N; k++) { g.fillRect(k * c + 4, 0, 2, px); g.fillRect(0, k * c + 4, px, 2); }
-  }, [1, 1], false, 8);
-}
-
-// UN ENDUIT PEINT : presque uni, une très légère nuée (rouleau), en mètres (1 tuile = 2 m)
-function texPeinture(hex) {
-  // (les octets sRGB tels quels : THREE.Color(hex) rendrait des valeurs LINÉAIRES, que la texture sRGB convertirait
-  // une seconde fois — un jaune #f0a417 sortait rouge orangé, le blanc sortait beige)
-  const r = (hex >> 16) & 255, gg = (hex >> 8) & 255, b = hex & 255;
-  return canvasTex(256, 256, (g, w, h) => {
-    g.fillStyle = `rgb(${r},${gg},${b})`; g.fillRect(0, 0, w, h);
-    for (let k = 0; k < 60; k++) {
-      const R = rnd(20, 70), x = rnd(0, w), y = rnd(0, h), d = rnd(-5, 5);
-      const gr = g.createRadialGradient(x, y, 0, x, y, R);
-      gr.addColorStop(0, `rgba(${r + d},${gg + d},${b + d},0.35)`); gr.addColorStop(1, `rgba(${r},${gg},${b},0)`);
-      g.fillStyle = gr; g.fillRect(x - R, y - R, 2 * R, 2 * R);
-    }
-  }, [0.5, 0.5], false, 8);
-}
-
-function materiaux() {
-  const M = {};
-  const carr = texCarrelage(); carr.repeat.set(1 / (4 * DALLE), 1 / (4 * DALLE));     // (UV en mètres : boiteM / sol)
-  M.sol = new THREE.MeshStandardMaterial({ map: carr, roughness: 0.38, metalness: 0 });
-  avecRelief(M.sol, normalesCarrelage(), 0.6);
-  M.blanc = new THREE.MeshStandardMaterial({ map: texPeinture(0xeeebe3), roughness: 0.86 });
-  // (le jaune des photos mesure ~ 229/167/37 ; l'étalonnage « photo » sature les jaunes vers l'orange, d'où une peinture
-  // un peu plus verte que lui, qui ressort à la bonne teinte)
-  M.jaune = new THREE.MeshStandardMaterial({ map: texPeinture(0xf2b936), roughness: 0.78 });
-  // un peu de relief et de rugosité variée sur les murs peints (béton photographié, sans grain : la couleur reste)
-  for (const m of [M.blanc, M.jaune]) detailPhoto(m, 'beton', 1, 1, { relief: 0.12, grain: 0, rugo: true });
-  const tp = texPlafond(); tp.repeat.set(1 / 1.2, 1 / 1.2);
-  M.plafond = new THREE.MeshStandardMaterial({ map: tp, roughness: 0.92 });
-  M.bois = new THREE.MeshStandardMaterial({ color: 0xb98a55, roughness: 0.55 });       // plinthes, chambranles clairs
-  M.porte = new THREE.MeshStandardMaterial({ color: 0x8e959b, roughness: 0.5, metalness: 0.15 });
-  M.cadre = new THREE.MeshStandardMaterial({ color: 0x5e6266, roughness: 0.45, metalness: 0.3 });
-  M.vitre = new THREE.MeshStandardMaterial({ color: 0x1d262c, roughness: 0.08, metalness: 0.4 });
-  M.inox = new THREE.MeshStandardMaterial({ color: 0xc9ccd0, roughness: 0.25, metalness: 0.9 });
-  M.noir = new THREE.MeshStandardMaterial({ color: 0x17181a, roughness: 0.4 });
-  M.rouge = new THREE.MeshStandardMaterial({ color: 0xc8231b, roughness: 0.35, metalness: 0.1 });
-  M.lisse = new THREE.MeshStandardMaterial({ color: 0xf4f2ec, roughness: 0.5 });
-  M.pot = new THREE.MeshStandardMaterial({ color: 0x55595d, roughness: 0.6, metalness: 0.2 });
-  M.terre = new THREE.MeshStandardMaterial({ color: 0x3a2c22, roughness: 1 });
-  M.tige = new THREE.MeshStandardMaterial({ color: 0x6f8a3c, roughness: 0.7 });
-  // les spots : un disque qui ÉCLAIRE (valeurs au-dessus de 1 : le bloom les fait briller en haute)
-  M.spot = new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 0.95, 0.86).multiplyScalar(2.6) });
-  M.spotBord = new THREE.MeshStandardMaterial({ color: 0xf2f2f0, roughness: 0.3, metalness: 0.6 });
-  return M;
-}
-
-// =====================================================================
-//  LES MURS : collisions et géométrie au même endroit
-// =====================================================================
-// Un mur déclaré aux collisions (`C.mur`) rend ses morceaux pleins ; on y pose exactement la même géométrie, des
-// plinthes de bois au pied de chaque face (seulement au pied d'un morceau qui part du sol), et un chambranle autour de
-// chaque ouverture. Les murs ne PROJETTENT pas d'ombre : la lumière de la carte d'ombre figure les plafonniers, et un
-// mur de 2,70 m y jetterait une bande d'ombre nette que des plafonniers ne font pas.
-function poserMur(groupe, C, M, x0, z0, x1, z1, mat, o = {}) {
-  const w = C.mur(x0, z0, x1, z1, EP, { h: o.h ?? H, ouvertures: o.ouvertures || [] });
-  const rot = -Math.atan2(w.uz, w.ux);
-  const faces = o.faces || [1, -1];                  // les côtés qui reçoivent des plinthes (1 = à gauche du trait)
-  for (const p of w.pleins) {
-    const L = p.a1 - p.a0, am = (p.a0 + p.a1) / 2, cx = w.x0 + w.ux * am, cz = w.z0 + w.uz * am;
-    maille(boiteM(L, p.y1 - p.y0, EP), mat, cx, (p.y0 + p.y1) / 2, cz, rot, groupe, { ombre: false });
-    if (p.y0 < 1e-3) {
-      for (const s of faces) {
-        const nx = -w.uz * s, nz = w.ux * s, d = EP / 2 + 0.008;
-        maille(boiteM(L, 0.08, 0.016), M.bois, cx + nx * d, 0.04, cz + nz * d, rot, groupe, { ombre: false });
+      if (p.y0 <= 0.001) {
+        for (const c of plinthes) {
+          const s = c === cotes[0] ? 1 : -1, v = s * (ep / 2 + 0.0075);
+          const [px0, py0, px1, py1] = R(v - 0.0075, v + 0.0075);
+          this.boite(px0, py0, px1, py1, 0, 0.08, M.bois, { ombre: false });
+        }
       }
     }
+    return { axeX, ligne, debut, fin, pleins };
   }
-  // le chambranle autour des ouvertures (bois clair, comme les plinthes)
-  for (const ov of w.ouvertures) {
-    const am = (ov.a0 + ov.a1) / 2, cx = w.x0 + w.ux * am, cz = w.z0 + w.uz * am, l = ov.a1 - ov.a0;
-    for (const s of [-1, 1]) {
-      const ax = cx + w.ux * s * (l / 2 + 0.03), az = cz + w.uz * s * (l / 2 + 0.03);
-      maille(boiteM(0.06, ov.haut, EP + 0.04), M.bois, ax, ov.haut / 2, az, rot, groupe, { ombre: false });
+
+  // UNE PORTE dans un mur : `axe` 'x' (mur est-ouest à y = ligne) ou 'y' (mur nord-sud à x = ligne), `c` le centre le
+  // long du mur, `cote` la face où se pose le vantail ('N' | 'S' | 'E' | 'W'). Le reste : js/ecole_portes.js ajouter.
+  porte(axe, ligne, c, o) {
+    const cx = axe === 'x' ? c : ligne, cz = axe === 'x' ? -ligne : -c;
+    const rot = axe === 'x' ? 0 : Math.PI / 2;
+    const cote = { S: 1, N: -1, E: 1, W: -1 }[o.cote || (axe === 'x' ? 'S' : 'E')];
+    return this.portes.ajouter({ ...o, cx, cz, rot, cote });
+  }
+
+  // ---------------------------------------------------------------- les plafonds
+  // UN PLAFOND sur le rectangle du plan, à la hauteur h : son dessous (plateaux perforés ou plâtre, le calepinage part
+  // de l'angle x0, y0 de la pièce) et ses quatre RETOMBÉES jusqu'à la dalle (là où un plafond plus haut le borde, elles
+  // dessinent les soffites des photos 01 et 04). La caméra s'y arrête.
+  plafond(x0, y0, x1, y1, h, type = 'platre', { camera = true, retombees = true } = {}) {
+    const M = this.M, w = x1 - x0, d = y1 - y0;
+    if (camera) this.C.plafond(x0, -y1, x1, -y0, h);
+    const g = new THREE.PlaneGeometry(w, d);
+    g.rotateX(Math.PI / 2);                                    // tourné vers le bas
+    const p = g.attributes.position, uv = g.attributes.uv;
+    for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) + w / 2, p.getZ(i) + d / 2);
+    const m = maille(g, type === 'plateaux' ? M.plateaux : M.platre, (x0 + x1) / 2, h, -(y0 + y1) / 2, 0, this.decor, { ombre: false });
+    m.userData.horsAOSol = true;
+    if (retombees && h < H_DALLE - 0.01) {
+      const hr = H_DALLE - h, ym = h + hr / 2;
+      for (const [ax, ay, bx, by, n] of [[x0, y0, x1, y0, 'S'], [x0, y1, x1, y1, 'N'], [x0, y0, x0, y1, 'W'], [x1, y0, x1, y1, 'E']]) {
+        const L = Math.hypot(bx - ax, by - ay), q = this.panneau(M.platre, L, hr, (ax + bx) / 2, (ay + by) / 2, ym, n);
+        q.userData.horsAOSol = true; q.castShadow = false;
+      }
     }
-    maille(boiteM(l + 0.12, 0.06, EP + 0.04), M.bois, cx, ov.haut + 0.03, cz, rot, groupe, { ombre: false });
+    return m;
   }
-  return w;
+
+  // ---------------------------------------------------------------- les luminaires
+  // LE SPOT ENCASTRÉ (photos 02, 03, 21) : disque lumineux de 20 cm dans une couronne blanche, à fleur du plafond
+  spot(x, y, h, zone, o = {}) {
+    const M = this.M;
+    const c = maille(new THREE.CylinderGeometry(0.12, 0.12, 0.012, 28), M.couronne, x, h - 0.006, -y, 0, this.decor, { ombre: false, recoit: false });
+    const d = maille(new THREE.CircleGeometry(0.095, 28), M.spot, x, h - 0.0125, -y, 0, this.decor, { ombre: false, recoit: false });
+    d.rotation.x = Math.PI / 2;
+    c.userData.horsAOSol = d.userData.horsAOSol = true;
+    this.lampes.push({ x, z: -y, h, zone, type: 'spot', ...o });
+  }
+  // LE HUBLOT OPALE EN APPLIQUE (photos 01, 05) : une galette blanche lumineuse de 30 à 35 cm. `mur` : posé sur une face
+  // (son axe regarde alors dans la direction donnée, 'S' ou 'N'…), sinon au plafond.
+  opale(x, y, h, zone, { r = 0.17, mur = null, ...o } = {}) {
+    const M = this.M, g = new THREE.Group(); g.position.set(x, h, -y);
+    const corps = maille(new THREE.CylinderGeometry(r, r * 0.92, 0.07, 36), M.opale, 0, -0.035, 0, 0, g, { ombre: false, recoit: false });
+    maille(new THREE.CylinderGeometry(r * 1.03, r * 1.03, 0.012, 36), M.couronne, 0, -0.006, 0, 0, g, { ombre: false, recoit: false });
+    void corps;
+    // (en applique : l'axe de la galette, qui pend vers -y au plafond, regarde vers `mur`)
+    if (mur) { g.rotation.x = -Math.PI / 2; g.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), { S: 0, N: Math.PI, E: Math.PI / 2, W: -Math.PI / 2 }[mur]); }
+    g.traverse((m) => { m.userData.horsAOSol = true; });
+    this.decor.add(g);
+    this.lampes.push({ x, z: -y, h: mur ? h - 0.1 : h, zone, type: 'opale', ...o });
+  }
+  // LA RÉGLETTE FLUORESCENTE DU PASSAGE (photos 07, 19) : tube de 1,5 m sous une réglette blanche à embouts orange,
+  // fixée haut sur le mur et penchée vers le milieu. `x` : le nu du mur, `s` : +1 si le passage est vers +x.
+  tube(x, y0, y1, h, s, zone) {
+    const M = this.M, g = new THREE.Group(), L = y1 - y0;
+    g.position.set(x + s * 0.06, h, -(y0 + y1) / 2); g.rotation.z = -s * 0.5;
+    maille(boiteM(0.05, 0.04, L), M.boitier, 0, 0.02, 0, 0, g, { ombre: false });
+    const t = maille(new THREE.CylinderGeometry(0.018, 0.018, L - 0.08, 12), M.tube, 0, -0.012, 0, 0, g, { ombre: false, recoit: false });
+    t.rotation.x = Math.PI / 2;
+    for (const sz of [-1, 1]) maille(boiteM(0.055, 0.05, 0.05), M.embout, 0, 0, sz * (L / 2 - 0.02), 0, g, { ombre: false });
+    // les deux suspentes au mur
+    for (const sz of [-0.3, 0.3]) maille(boiteM(0.012, 0.012, 0.012), M.boitier, -s * 0.05, 0.03, sz * L, 0, g, { ombre: false });
+    g.traverse((m) => { m.userData.horsAOSol = true; });
+    this.decor.add(g);
+    this.lampes.push({ x: x + s * 0.25, z: -(y0 + y1) / 2, h, zone, type: 'tube', force: 1.1 });
+  }
+  // LE BLOC DE SORTIE (vert, autonome, il éclaire) : regarde vers `face`. `suspendu` : sous deux tiges (près du pilier).
+  sortie(x, y, h, face, { suspendu = false } = {}) {
+    const M = this.M, g = new THREE.Group(); g.position.set(x, h, -y);
+    g.rotation.y = { S: 0, N: Math.PI, E: Math.PI / 2, W: -Math.PI / 2 }[face];
+    maille(boiteM(0.36, 0.13, 0.05), M.boitier, 0, 0, 0, 0, g, { ombre: false });
+    for (const z of [0.026, -0.026]) {
+      const p = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.11), M.sortie); p.position.z = z; if (z < 0) p.rotation.y = Math.PI; g.add(p);
+    }
+    if (suspendu) for (const sx of [-0.12, 0.12]) maille(new THREE.CylinderGeometry(0.004, 0.004, 0.25, 6), M.inox, sx, 0.19, 0, 0, g, { ombre: false });
+    g.traverse((m) => { m.userData.horsAOSol = true; });
+    this.decor.add(g);
+  }
 }
 
-// UNE PORTE FERMÉE posée contre un mur (décor) : vantail gris, cadre sombre, oculus vertical, poignée inox
-// (photos 01, 04, 05). `x, z` : centre au sol, `nx, nz` : la normale du mur vers la pièce.
-function porteFermee(groupe, M, x, z, nx, nz, { l = 0.93, h = 2.04, double = false } = {}) {
-  const rot = Math.atan2(nx, nz), g = new THREE.Group();
-  g.position.set(x + nx * (EP / 2), 0, z + nz * (EP / 2)); g.rotation.y = rot;
-  const L = double ? l * 2 : l;
-  maille(boiteM(L + 0.1, 0.06, 0.05), M.cadre, 0, h + 0.03, 0.01, 0, g);
-  for (const s of [-1, 1]) maille(boiteM(0.05, h, 0.05), M.cadre, s * (L / 2 + 0.025), h / 2, 0.01, 0, g);
-  const vantaux = double ? [-l / 2, l / 2] : [0];
-  for (const vx of vantaux) {
-    maille(boiteM(l - 0.01, h - 0.01, 0.04), M.porte, vx, h / 2, 0.02, 0, g);
-    maille(boiteM(0.1, 0.62, 0.045), M.vitre, vx + (double ? 0 : -0.18), 1.35, 0.022, 0, g);
-    maille(boiteM(0.14, 0.022, 0.02), M.inox, vx + (double ? (vx < 0 ? 0.3 : -0.3) : 0.33), 1.02, 0.06, 0, g);
-  }
-  groupe.add(g);
-  return g;
-}
-
-// LES CHAISES COQUE (photo 02) : coque moulée d'une seule pièce sur un piètement chromé en fils, en couleurs mêlées.
-// On s'y assoit (`sieges`). Le groupe regarde vers +z local (là où regarde l'assis).
-const COULEURS_COQUES = [0xf1efe8, 0x5f8f97, 0xcbb8a6, 0xb6c43a, 0x9c9d9b, 0x2b2c2e];
-// LA COQUE, une surface paramétrée : une assise creusée dont le bord REMONTE autour de l'assis — à peine devant (le
-// bord qui retombe sous les genoux), à mi-hauteur sur les côtés (les accoudoirs), haut derrière (le dossier) —, et
-// s'évase vers l'extérieur en montant. Une seule géométrie pour toutes les chaises.
-let _coque = null;
-function geoCoque() {
-  if (_coque) return _coque;
-  const NA = 36, NR = 12, A = 0.3, P = 0.27, Y = 0.43;
-  const pos = [], idx = [];
-  const lisse = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-  for (let j = 0; j <= NR; j++) {
-    const t = j / NR, mont = Math.pow(lisse(0.38, 1, t), 1.5);
-    for (let i = 0; i <= NA; i++) {
-      const phi = i / NA * Math.PI * 2, sx = Math.sin(phi), cz = Math.cos(phi);
-      const dos = (1 - cz) / 2;                                    // 0 devant, 1 derrière
-      const bord = 0.035 + 0.33 * Math.pow(dos, 1.25);              // hauteur du bord au-dessus de l'assise
-      const r = t * (1 + 0.12 * mont);                               // l'évasement en montant
-      const creux = -0.025 * (1 - t * t);                            // l'assise creusée
-      const devant = cz > 0 ? -0.05 * Math.pow(cz, 3) * lisse(0.75, 1, t) : 0;   // le bord avant qui retombe
-      pos.push(sx * A * r, Y + creux + bord * mont + devant, cz * P * r - 0.03 * mont * dos);
+// =====================================================================
+//  LES SOLS
+// =====================================================================
+// Le carrelage, en un seul maillage pour tout le rez-de-chaussée : des rectangles dont les UV (en mètres) tournent avec
+// la pièce — le grand côté des dalles dans l'axe nord-sud des couloirs et des halls, est-ouest dans la salle d'attente —
+// et dont la seconde couche d'UV (uv1, de 0 à 1 sur le rectangle RECT, v = 1 au nord) porte l'ombre et la lumière cuites.
+function geoSol(rects) {
+  const pos = [], nor = [], uv = [], uv1 = [], idx = [];
+  const W = RECT.x1 - RECT.x0, L = RECT.y1 - RECT.y0;
+  for (const r of rects) {
+    const [x0, y0, x1, y1, sens, u0 = 0, v0 = 0] = r, b = pos.length / 3;
+    for (const [x, y] of [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]) {
+      pos.push(x, 0, -y); nor.push(0, 1, 0);
+      // 'ns' : u = y (le grand côté nord-sud), v = -x ; 'ew' : u = x, v = y ; 'droit' : u = x, v = y (passage)
+      if (sens === 'ns') uv.push(y - v0, -(x - u0)); else uv.push(x - u0, y - v0);
+      uv1.push((x - RECT.x0) / W, (y - RECT.y0) / L);
     }
-  }
-  for (let j = 0; j < NR; j++) for (let i = 0; i < NA; i++) {
-    const a0 = j * (NA + 1) + i, a1 = a0 + 1, b0 = a0 + NA + 1, b1 = b0 + 1;
-    idx.push(a0, b0, a1, a1, b0, b1);
+    idx.push(b, b + 1, b + 2, b, b + 2, b + 3);           // (tournés vers le haut)
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.setIndex(idx); g.computeVertexNormals();
-  return (_coque = g);
-}
-function chaiseCoque(groupe, M, x, z, fx, fz, couleur) {
-  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = Math.atan2(fx, fz);
-  const mat = new THREE.MeshStandardMaterial({ color: couleur, roughness: 0.32, side: THREE.DoubleSide });
-  maille(geoCoque(), mat, 0, 0, 0, 0, g);
-  // le piètement : quatre pieds inclinés vers l'extérieur, l'entretoise en croix et les patins
-  for (const [px, pz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-    const p = maille(new THREE.CylinderGeometry(0.008, 0.008, 0.44, 6), M.inox, px * 0.17, 0.21, pz * 0.15, 0, g);
-    p.rotation.z = -px * 0.2; p.rotation.x = pz * 0.2;
-    maille(new THREE.CylinderGeometry(0.014, 0.014, 0.012, 8), M.noir, px * 0.215, 0.006, pz * 0.195, 0, g);
-  }
-  for (const s of [-1, 1]) {
-    const e = maille(new THREE.CylinderGeometry(0.006, 0.006, 0.5, 5), M.inox, 0, 0.2, 0, 0, g);
-    e.rotation.z = Math.PI / 2; e.rotation.y = s * 0.72;
-  }
-  maille(boiteM(0.22, 0.012, 0.2), M.inox, 0, 0.37, -0.01, 0, g);
-  groupe.add(g);
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setAttribute('uv1', new THREE.Float32BufferAttribute(uv1, 2));
+  g.setIndex(idx);
   return g;
 }
 
-// L'ÉCRAN D'ACCUEIL (photo 02) : un écran plat au mur, qui éclaire (le logo de l'école, le message du jour)
-function texEcran() {
-  return canvasTex(512, 288, (g, w, h) => {
-    const d = g.createLinearGradient(0, 0, w, h); d.addColorStop(0, '#1c5d8f'); d.addColorStop(1, '#0e2a44');
-    g.fillStyle = d; g.fillRect(0, 0, w, h);
-    g.fillStyle = 'rgba(255,255,255,0.08)';
-    for (let i = 0; i < 9; i++) { g.beginPath(); g.arc(rnd(0, w), rnd(0, h), rnd(20, 90), 0, 7); g.fill(); }
-    g.fillStyle = '#ffffff'; g.font = '600 96px "Century Gothic", "Avenir", "Futura", "Segoe UI", sans-serif';
-    g.textBaseline = 'middle'; g.fillText('iris', 36, 112);
-    g.font = '500 26px "Segoe UI", sans-serif'; g.fillStyle = '#d6e6f5';
-    g.fillText('Bienvenue', 40, 196); g.fillText('Bonne journée à toutes et à tous', 40, 232);
-  }, null, false, 4);
+// =====================================================================
+//  L'ESCALIER (photos 06, 20, 04)
+// =====================================================================
+// Un escalier en U de béton : la volée 1 monte vers le nord dans la moitié est (10 contremarches de 17,5 cm, girons de
+// 28 cm), le palier intermédiaire à 1,75 m, la volée 2 revient vers le sud dans la moitié ouest jusqu'au palier du
+// 1er étage (3,50 m), fermé par une double porte coupe-feu (l'étage n'a pas été photographié). Marches gris clair à nez
+// sombre, contremarches et limons blanc cassé, garde-corps d'acier gris à barreaux (11 cm) et lisse plate, main courante
+// ronde au mur. Pour le joueur, chaque volée est une RAMPE passant par le milieu des marches (js/collisions.js rampe).
+function construireEscalier(ch) {
+  const { C, M } = ch, E = ESC, G = E.giron, R = E.haut, N = E.n, HP = E.hPalier;
+  const extru = (pts, prof, mat, x, z, rotY) => {
+    const sh = new THREE.Shape(); pts.forEach(([s, h], i) => (i ? sh.lineTo(s, h) : sh.moveTo(s, h)));
+    const geo = new THREE.ExtrudeGeometry(sh, { depth: prof, bevelEnabled: false });
+    const m = maille(geo, mat, x, 0, z, rotY, ch.decor);
+    return m;
+  };
+  // ---- la volée 1 (est), pleine jusqu'au sol ----
+  const p1 = [[0, 0], [0, R]];
+  for (let i = 1; i < N - 1; i++) p1.push([i * G, i * R], [i * G, (i + 1) * R]);
+  p1.push([(N - 1) * G, (N - 1) * R], [(N - 1) * G, 0]);
+  extru(p1, E.xE1 - E.xE0, M.beton, E.xE0, -E.y0, Math.PI / 2);
+  // ---- le palier intermédiaire, plein ----
+  ch.boite(E.xO0, E.yPalier, E.xE1, 18.6, 0, HP - 0.02, M.beton);
+  ch.boite(E.xO0, E.yPalier, E.xE1, 18.6, HP - 0.02, HP, M.solEtage);
+  // ---- la volée 2 (ouest) : une dalle à paillasse inclinée, qui part du palier ----
+  const p2 = [[0, HP]];
+  for (let i = 0; i < N - 1; i++) p2.push([i * G, HP + (i + 1) * R], [(i + 1) * G, HP + (i + 1) * R]);
+  p2.push([(N - 1) * G, HP + (N - 1) * R - 0.3], [0, HP - 0.25]);
+  extru(p2, E.xO1 - E.xO0, M.beton, E.xO1, -E.yPalier, -Math.PI / 2);
+  // ---- les marches (dessus gris, nez sombre) ----
+  for (let i = 0; i < N - 1; i++) {
+    const h = (i + 1) * R, ya = E.y0 + i * G;
+    ch.boite(E.xE0, ya, E.xE1, ya + G, h, h + 0.012, M.marche);
+    ch.boite(E.xE0, ya, E.xE1, ya + 0.04, h + 0.012, h + 0.016, M.nez, { ombre: false });
+    const h2 = HP + (i + 1) * R, yb = E.yPalier - (i + 1) * G;
+    ch.boite(E.xO0, yb, E.xO1, yb + G, h2, h2 + 0.012, M.marche);
+    ch.boite(E.xO0, yb + G - 0.04, E.xO1, yb + G, h2 + 0.012, h2 + 0.016, M.nez, { ombre: false });
+  }
+  ch.boite(E.xE0, E.yPalier, E.xE1, E.yPalier + 0.04, HP, HP + 0.004, M.nez, { ombre: false });
+  // ---- le palier du 1er étage (dalle sur le hall, x 1,6-4,75, y 12,45-14,2) ----
+  ch.boite(1.6, 12.45, 4.75, E.y0, H_DALLE, 2 * HP - 0.02, M.beton);
+  ch.boite(E.xO0, 12.6, E.xE1, E.y0, 2 * HP - 0.02, 2 * HP, M.solEtage);
+  ch.boite(E.xO1, E.y0 - 0.04, E.xE1, E.y0, 2 * HP, 2 * HP + 0.004, M.nez, { ombre: false });
+  // ---- sous la volée 2 : l'espace reste ouvert (photos 06, 20 : on y voit le sol filer sous la paillasse) ----
+  const sof = (s) => HP - 0.25 + s * ((HP + (N - 1) * R - 0.3 - (HP - 0.25)) / ((N - 1) * G));
+
+  // ---- LES GARDE-CORPS ----
+  const barre = (x, y, h0, h1) => ch.boite(x - 0.007, y - 0.007, x + 0.007, y + 0.007, h0, h1, M.garde);
+  const poteau = (x, y, h0, h1) => ch.boite(x - 0.025, y - 0.025, x + 0.025, y + 0.025, h0, h1, M.garde);
+  const pente = Math.atan(R / G), Lv = (N - 1) * G / Math.cos(pente);
+  // la lisse : une barre plate qui suit la pente (x, du bas (ya, ha) au haut (yb, hb))
+  const lisse = (x, ya, ha, yb, hb) => {
+    const L = Math.hypot(yb - ya, hb - ha), m = maille(boiteM(0.05, 0.012, L), M.garde, x, (ha + hb) / 2, -(ya + yb) / 2, 0, ch.decor);
+    m.rotation.x = Math.atan2(hb - ha, yb - ya);
+  };
+  void Lv;
+  // volée 1, bord intérieur (x 3,25) : un barreau tous les 11 cm, posé sur la marche, jusqu'à la ligne des nez + 0,9
+  const xi1 = E.xE0 + 0.03, xi2 = E.xO1 - 0.03;
+  for (let s = 0.12; s < (N - 1) * G - 0.05; s += 0.11) {
+    const i = Math.floor(s / G), hm = (i + 1) * R + 0.012, hn = R + s * R / G;
+    barre(xi1, E.y0 + s, hm, hn + 0.9);
+    const h2 = HP + (i + 1) * R + 0.012, hn2 = HP + R + s * R / G;
+    barre(xi2, E.yPalier - s, h2, hn2 + 0.9);
+  }
+  lisse(xi1, E.y0, R + 0.92, E.yPalier, HP + 0.92);
+  lisse(xi2, E.yPalier, HP + R + 0.92, E.y0, 2 * HP + 0.92);
+  poteau(xi1, E.y0 + 0.03, R, R + 0.98); poteau(xi1, E.yPalier - 0.03, HP, HP + 0.98);
+  poteau(xi2, E.yPalier - 0.03, HP, HP + 0.98); poteau(xi2, E.y0 + 0.03, 2 * HP - R, 2 * HP + 0.98);
+  ch.boite(xi2, E.yPalier - 0.05, xi1, E.yPalier - 0.01, HP + 0.92, HP + 0.97, M.garde);
+  // le garde-corps du palier du 1er étage, au-dessus de la volée 1
+  for (let x = E.xO1 + 0.1; x < E.xE1 - 0.05; x += 0.11) barre(x, E.y0 - 0.03, 2 * HP, 2 * HP + 0.95);
+  ch.boite(E.xO1, E.y0 - 0.055, E.xE1, E.y0 - 0.005, 2 * HP + 0.95, 2 * HP + 0.99, M.garde);
+  poteau(E.xE1 - 0.03, E.y0 - 0.03, 2 * HP, 2 * HP + 0.99);
+  // la main courante ronde, au mur, de chaque volée (supports tous les 80 cm)
+  const mainCourante = (x, ya, ha, yb, hb) => {
+    const L = Math.hypot(yb - ya, hb - ha), t = maille(new THREE.CylinderGeometry(0.02, 0.02, L, 10), M.garde, x, (ha + hb) / 2, -(ya + yb) / 2, 0, ch.decor);
+    t.rotation.x = -Math.atan2(yb - ya, hb - ha);
+    for (let k = 0.2; k < 1; k += 0.3) ch.boite(x - 0.01, ya + (yb - ya) * k - 0.01, x + (x > 3 ? 0.06 : -0.06), ya + (yb - ya) * k + 0.01, ha + (hb - ha) * k - 0.08, ha + (hb - ha) * k - 0.02, M.garde, { ombre: false });
+  };
+  mainCourante(E.xE1 - 0.06, E.y0, R + 0.85, E.yPalier, HP + 0.85);
+  mainCourante(E.xO0 + 0.06, E.yPalier, HP + R + 0.85, E.y0, 2 * HP + 0.85);
+
+  // ---- LE MONDE SOLIDE ----
+  C.rampe(E.xE0, -(E.yPalier + G / 2), E.xE1, -(E.y0 - G / 2), 'z', -(E.y0 - G / 2), 0, -(E.yPalier + G / 2), HP);
+  C.sol(E.xO0, -18.6, E.xE1, -E.yPalier, HP);
+  C.rampe(E.xO0, -(E.yPalier + G / 2), E.xO1, -(E.y0 - G / 2), 'z', -(E.yPalier + G / 2), HP, -(E.y0 - G / 2), 2 * HP);
+  C.sol(E.xO0, -E.y0, E.xE1, -12.6, 2 * HP);
+  // entre les deux volées (barreaux et limons) : un mur pour le joueur, à toutes les hauteurs
+  C.ajouterBoite(E.xO1, -E.yPalier, E.xE0, -E.y0, { y0: 0, y1: 5.2 });
+  // le garde-corps du 1er étage
+  C.ajouterBoite(E.xO1, -(E.y0 - 0.06), E.xE1, -E.y0, { y0: 2 * HP, y1: 2 * HP + 1.1 });
+  // sous la volée 2, là où la paillasse descend sous 1,95 m : on ne s'y glisse plus (on s'y cognerait la tête)
+  const sBas = (1.95 - sof(0)) / ((sof(1) - sof(0)));
+  C.ajouterBoite(E.xO0, -E.yPalier, E.xO1, -(E.yPalier - sBas), { y0: 0, y1: 1.95 });
+  // la caméra ne passe pas dans les volées ni sous le palier
+  for (let i = 0; i < N - 1; i++) {
+    const ya = E.y0 + i * G;
+    C.ajouterBoite(E.xE0, -ya, E.xE1, -(ya + G), { y0: 0, y1: (i + 1) * R, joueur: false });
+    const yb = E.yPalier - (i + 1) * G;
+    C.ajouterBoite(E.xO0, -yb, E.xO1, -(yb + G), { y0: sof((i + 0.5) * G), y1: HP + (i + 1) * R, joueur: false });
+  }
+  C.ajouterBoite(E.xO0, -E.yPalier, E.xE1, -18.6, { y0: 0, y1: HP, joueur: false });
+  // les plafonds : sous la dalle du 1er étage (pour qui est au rez-de-chaussée), puis celui de la cage
+  C.plafond(E.xO0, -E.y0, E.xE1, -13.6, H_DALLE);
+  ch.plafond(E.xO0, 12.6, E.xE1, 18.6, H_CAGE, 'platre', { retombees: false });
 }
-// UNE AFFICHE : un bloc de couleur, un titre, des lignes de texte figurées
-function texAffiche(teinte) {
-  return canvasTex(256, 362, (g, w, h) => {
-    g.fillStyle = '#f7f6f1'; g.fillRect(0, 0, w, h);
-    g.fillStyle = teinte; g.fillRect(0, 0, w, h * 0.34);
-    g.fillStyle = 'rgba(255,255,255,0.85)'; g.fillRect(18, 34, w * 0.55, 16); g.fillRect(18, 60, w * 0.4, 10);
-    g.fillStyle = '#9aa0a6';
-    for (let y = h * 0.42; y < h - 30; y += 15) g.fillRect(18, y, rnd(w * 0.4, w - 36), 6);
-  }, null, false, 4);
-}
-// LE PANNEAU DAE (photos 04, 05) : vert, le cœur et l'éclair, « DAE »
-function texDAE() {
-  return canvasTex(256, 96, (g, w, h) => {
-    g.fillStyle = '#0d8a4a'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#ffffff'; g.beginPath();
-    g.moveTo(52, 30); g.bezierCurveTo(52, 16, 26, 16, 26, 36); g.bezierCurveTo(26, 52, 52, 66, 52, 76);
-    g.bezierCurveTo(52, 66, 78, 52, 78, 36); g.bezierCurveTo(78, 16, 52, 16, 52, 30); g.fill();
-    g.fillStyle = '#0d8a4a'; g.beginPath(); g.moveTo(56, 26); g.lineTo(44, 50); g.lineTo(54, 50); g.lineTo(48, 70); g.lineTo(62, 44); g.lineTo(52, 44); g.closePath(); g.fill();
-    g.fillStyle = '#ffffff'; g.font = '700 50px "Segoe UI", Arial, sans-serif'; g.textBaseline = 'middle'; g.fillText('DAE', 100, 50);
-  }, null, false, 4);
-}
-// UNE FEUILLE de bambou (découpe alpha) : une bande de quelques feuilles lancéolées sur une tige
-function texFeuilles() {
-  return canvasTex(256, 256, (g, w, h) => {
-    g.clearRect(0, 0, w, h);
-    for (let i = 0; i < 9; i++) {
-      const x = rnd(30, w - 30), y = rnd(30, h - 30), a = rnd(-0.9, 0.9) + (i % 2 ? Math.PI : 0), L = rnd(70, 110), l = rnd(9, 14);
-      g.save(); g.translate(x, y); g.rotate(a);
-      const v = Math.round(rnd(70, 120));
-      g.fillStyle = `rgb(${v - 30},${v + 40},${v - 50})`;
-      g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(L * 0.45, -l, L, 0); g.quadraticCurveTo(L * 0.45, l, 0, 0); g.fill();
-      g.strokeStyle = 'rgba(40,60,20,0.5)'; g.lineWidth = 1; g.beginPath(); g.moveTo(0, 0); g.lineTo(L, 0); g.stroke();
-      g.restore();
+
+// =====================================================================
+//  LA FAÇADE (photos 10 à 18)
+// =====================================================================
+// Douze travées de 1,65 m. Au rez-de-chaussée, d'ouest en est : la porte de secours noire sous sa ventilation, le
+// passage des étudiants (grille noire ouverte), trois grandes fenêtres à barreaux (salle A), deux fenêtres hautes
+// (bureau B), le portail noir de l'entrée n° 6 en retrait (drapeaux, numéro), deux grandes fenêtres (accueil). Au-dessus,
+// quatre étages de pierre claire à une fenêtre par travée, quelques encadrements rouges en saillie, l'attique en retrait.
+const BAIES_HAUTES = [5.78, 7.43, 9.08, 17.33, 18.98];      // fenêtres de 1,2 m, allège 0,95, linteau 2,50
+const BAIES_BUREAU = [10.73, 12.38];                       // allège 1,75
+function construireFacade(ch) {
+  const { M } = ch;
+  // le mur de façade du rez-de-chaussée (40 cm : enduit blanc dedans, pierre dehors)
+  ch.mur({
+    de: [-0.3, -0.2], a: [20.1, -0.2], ep: 0.4, h: H_RDC, mats: { N: M.blanc, S: M.pierre }, plinthes: ['N'],
+    ouvertures: [
+      { c: 0.8, l: 1.0, h: 2.2 },                              // porte de secours (travée 1)
+      { c: 3.25, l: 3.3, h: 2.45 },                            // le passage des étudiants (ses murs font les tableaux)
+      ...BAIES_HAUTES.map((c) => ({ c, l: 1.2, bas: 0.95, h: 2.5 })),
+      ...BAIES_BUREAU.map((c) => ({ c, l: 1.2, bas: 1.75, h: 2.5 })),
+      { c: 14.925, l: 3.45, h: 2.9 },                          // le portail de l'entrée n° 6 (tableaux noirs, sous-face à 2,80)
+    ],
+  });
+  // les fenêtres (repère du mur : +z vers l'intérieur = le nord du plan, donc tourné de PI)
+  const fac = new THREE.Group(); fac.position.set(0, 0, 0.2); fac.rotation.y = Math.PI; ch.decor.add(fac);
+  // (dans ce groupe tourné, x local = -x du plan : on passe -x)
+  for (const c of BAIES_HAUTES) fenetreFacade(fac, M, { x: -c, l: 1.2, bas: 0.95, haut: 2.5, stores: c > 17 });
+  for (const c of BAIES_BUREAU) fenetreFacade(fac, M, { x: -c, l: 1.2, bas: 1.75, haut: 2.5, imposte: false });
+  // (les vitres arrêtent la caméra ; la lumière du jour, elle, passe : `vitre`)
+  for (const c of BAIES_HAUTES) ch.C.ajouterBoite(c - 0.6, 0.4, c + 0.6, 0, { y0: 0.95, y1: 2.5, vitre: true });
+  for (const c of BAIES_BUREAU) ch.C.ajouterBoite(c - 0.6, 0.4, c + 0.6, 0, { y0: 1.75, y1: 2.5, vitre: true });
+  // la porte de secours (vantail d'acier noir, fermée, côté rue), son panneau rouge et la ventilation au-dessus
+  ch.porte('x', -0.2, 0.8, { l: 1.0, h: 2.2, ep: 0.4, modele: 'noire', etat: 'fermee', cote: 'S', huisserie: false });
+  ch.boite(0.1, -0.44, 1.6, -0.4, 2.25, 2.75, M.noirMat);
+  for (let h = 2.29; h < 2.74; h += 0.045) ch.boite(0.12, -0.47, 1.58, -0.44, h, h + 0.012, M.acierNoir, { ombre: false });
+  ch.panneau(new THREE.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.6 }), 0.3, 0.2, 0.8, -0.45, 1.75, 'S');
+  // le linteau d'acier noir du passage (35 cm) et ses deux boîtiers de contact
+  ch.boite(1.75, -0.44, 4.75, -0.4, 2.45, 2.8, M.acierNoir);
+  for (const x of [2.4, 4.1]) ch.boite(x - 0.06, -0.48, x + 0.06, -0.44, 2.38, 2.45, M.noirMat, { ombre: false });
+  // la grille d'égout en fonte en travers du seuil du passage
+  ch.boite(1.75, -0.4, 4.75, -0.1, 0, 0.006, M.acierNoir, { ombre: false });
+  // LA GRILLE DU PASSAGE (photos 10, 13) : deux vantaux de barreaux noirs de 1,5 x 2,4 m, ouverts à 90° sur le trottoir
+  for (const x of [1.72, 4.78]) {
+    ch.boite(x - 0.025, -1.9, x + 0.025, -0.42, 0.05, 0.11, M.acierNoir);
+    ch.boite(x - 0.025, -1.9, x + 0.025, -0.42, 2.34, 2.42, M.acierNoir);
+    ch.boite(x - 0.025, -1.9, x + 0.025, -0.42, 1.2, 1.24, M.acierNoir);
+    for (const y of [-1.9, -0.44]) ch.boite(x - 0.025, y, x + 0.025, y + 0.04, 0.05, 2.42, M.acierNoir);
+    for (let y = -1.78; y < -0.45; y += 0.13) ch.boite(x - 0.012, y, x + 0.012, y + 0.024, 0.11, 2.34, M.acierNoir);
+    ch.C.ajouterBoite(x - 0.04, 1.92, x + 0.04, 0.4, { y1: 2.42 });
+  }
+  // LE PORTAIL N° 6 : tableaux noirs (le mur du bureau B à l'ouest, un retour à l'est), sous-face noire à 2,80 m
+  ch.mur({ de: [16.575, -0.4], a: [16.575, 0.3], ep: 0.15, h: H_DALLE, mats: { W: M.noirMat, E: M.blanc } });
+  // (en retrait de 2 cm du nu de la façade : sa face avant ne double pas celle du linteau de pierre)
+  ch.boite(13.35, -0.38, 16.5, 0.3, 2.8, H_DALLE, M.noirMat, { ombre: false });
+  // le numéro 6, noir, sur la pierre à droite du portail ; les deux projecteurs et l'écusson tricolore au-dessus
+  const six = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.22), new THREE.MeshStandardMaterial({ map: texNumero('6'), transparent: true, roughness: 0.5 }));
+  six.position.set(16.85, 2.3, 0.405); ch.decor.add(six);
+  for (const x of [6.9, 16.8]) { ch.boite(x - 0.13, -0.58, x + 0.13, -0.4, 3.58, 3.76, M.noirMat); }
+  // LES DRAPEAUX (photos 16, 31) : le français et l'européen sur des hampes inclinées à 45° au-dessus de la porte 6, et
+  // l'écusson tricolore « Liberté Égalité Fraternité » entre les deux. Temps sans vent : les drapeaux pendent.
+  const drapeau = (x, tex) => {
+    const g = new THREE.Group(); g.position.set(x, 3.6, 0.41); ch.decor.add(g);
+    const hampe = maille(new THREE.CylinderGeometry(0.014, 0.014, 1.5, 8), M.inox, 0, 0.53, 0.53, 0, g, { ombre: false }); hampe.rotation.x = Math.PI / 4;
+    maille(boiteM(0.08, 0.12, 0.04), M.noirMat, 0, 0, 0.02, 0, g, { ombre: false });
+    // la toile : de 0,45 à 1,35 m le long de la hampe, qui retombe de 0,55 m (un peu de drapé : trois plis)
+    const pts = [], uvs = [], idx = [], n = 8;
+    for (let i = 0; i <= n; i++) {
+      const t = i / n, sp = 0.45 + 0.9 * t, px = Math.sin(t * Math.PI * 3) * 0.035;
+      for (const [v, dy] of [[1, 0], [0, -0.55 - 0.08 * Math.sin(t * Math.PI)]]) {
+        pts.push(px * (1 - v * 0.6), sp * Math.SQRT1_2 + dy, sp * Math.SQRT1_2); uvs.push(t, v);
+      }
+      if (i < n) { const b = i * 2; idx.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); }
     }
-  }, null, true, 4);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    geo.setIndex(idx); geo.computeVertexNormals();
+    const toile = new THREE.Mesh(geo, jourDehors(new THREE.MeshStandardMaterial({ map: tex, side: THREE.DoubleSide, roughness: 0.9 }), 0.3));
+    toile.userData.nofuse = true; g.add(toile);
+  };
+  drapeau(14.3, texDrapeau('fr')); drapeau(15.2, texDrapeau('eu'));
+  const ecusson = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.6), jourDehors(new THREE.MeshStandardMaterial({ map: texDrapeau('ecusson'), transparent: true, roughness: 0.5 }), 0.3));
+  ecusson.position.set(14.75, 3.3, 0.415); ch.decor.add(ecusson);
+
+  // ---- LES ÉTAGES (pierre et fenêtres dessinées, une travée par tuile), la corniche, l'attique en retrait ----
+  // (centrée sur x = 9,9 : la tuile de 1,65 m tombe juste sur les travées ; débordant de 30 cm sur les mitoyens)
+  const etages = maille(boiteM(20.4, 4 * 3.1, 0.4), M.etage, 9.9, H_RDC + 2 * 3.1, 0.2, 0, ch.decor, { ombre: false });
+  etages.userData.horsAOSol = true;
+  const hT = H_RDC + 4 * 3.1;
+  ch.boite(-0.3, -0.55, 20.1, 0.8, hT, hT + 0.15, M.pierre, { ombre: false });
+  ch.boite(0, 0.8, 19.8, 6, hT + 0.15, hT + 2.9, M.menuiserie, { ombre: false });
+  for (let x = 0.4; x < 19.8; x += 1.65) ch.boite(x, 0.79, x + 0.85, 0.8, hT + 0.6, hT + 2.4, M.vitreFente, { ombre: false });
+  ch.boite(-0.1, 0.7, 19.9, 6.2, hT + 2.9, hT + 3.05, M.aluGris, { ombre: false });
+  for (let x = 0; x <= 19.8; x += 0.12) ch.boite(x, -0.5, x + 0.012, -0.488, hT + 0.15, hT + 1.1, M.barreaux, { ombre: false });
+  ch.boite(0, -0.52, 19.8, -0.48, hT + 1.08, hT + 1.12, M.barreaux, { ombre: false });
+  // les descentes d'eau pluviale, noires, aux deux bouts
+  for (const x of [-0.18, 19.98]) ch.boite(x - 0.06, -0.52, x + 0.06, -0.4, 0, hT + 0.15, M.noirMat, { ombre: false });
+  // LES ENCADREMENTS ROUGES en saillie (25 cm), autour de quelques fenêtres
+  const cadre = (travee, etage, w, h) => {
+    const x = 0.825 + (travee - 1) * 1.65, hc = H_RDC + (etage - 1) * 3.1 + 1.575, f = 0.2, y0 = -0.65, y1 = -0.4;
+    ch.boite(x - w / 2, y0, x + w / 2, y1, hc + h / 2 - f, hc + h / 2, M.rougeCadre, { ombre: false });
+    ch.boite(x - w / 2, y0, x + w / 2, y1, hc - h / 2, hc - h / 2 + f, M.rougeCadre, { ombre: false });
+    ch.boite(x - w / 2, y0, x - w / 2 + f, y1, hc - h / 2, hc + h / 2, M.rougeCadre, { ombre: false });
+    ch.boite(x + w / 2 - f, y0, x + w / 2, y1, hc - h / 2, hc + h / 2, M.rougeCadre, { ombre: false });
+  };
+  cadre(1, 1, 2.3, 2.0); cadre(12, 1, 1.5, 1.9); cadre(7, 2, 1.6, 1.55); cadre(11, 2, 1.6, 1.55); cadre(9, 3, 1.6, 1.55);
+  cadre(3, 4, 1.6, 1.55); cadre(8, 4, 1.6, 1.55);
 }
-function planteBambou(groupe, M, x, z) {
-  const g = new THREE.Group(); g.position.set(x, 0, z);
-  maille(new THREE.CylinderGeometry(0.3, 0.26, 0.55, 24), M.pot, 0, 0.275, 0, 0, g);
-  maille(new THREE.CylinderGeometry(0.27, 0.27, 0.02, 24), M.terre, 0, 0.54, 0, 0, g, { ombre: false });
-  const feuille = new THREE.MeshStandardMaterial({ map: texFeuilles(), alphaTest: 0.45, side: THREE.DoubleSide, roughness: 0.75 });
-  windify(feuille, (sh) => transmissionSoleil(sh, 0.35), 0.7, 2.0);
-  const prof = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: feuille.map, alphaTest: 0.45, side: THREE.DoubleSide });
-  windify(prof, null, 0.7, 2.0);
-  for (let i = 0; i < 7; i++) {
-    const a = (i / 7) * Math.PI * 2 + rnd(0, 0.6), r = rnd(0.04, 0.16), hT = rnd(1.5, 2.15);
-    const t = maille(new THREE.CylinderGeometry(0.012, 0.016, hT, 6), M.tige, Math.cos(a) * r, 0.54 + hT / 2, Math.sin(a) * r, 0, g);
-    t.rotation.z = rnd(-0.08, 0.08); t.rotation.x = rnd(-0.08, 0.08);
+// les drapeaux et l'écusson (dessinés)
+function texDrapeau(q) {
+  const c = document.createElement('canvas'); c.width = 192; c.height = 128;
+  const g = c.getContext('2d');
+  if (q === 'fr') { g.fillStyle = '#0055a4'; g.fillRect(0, 0, 64, 128); g.fillStyle = '#f4f4f2'; g.fillRect(64, 0, 64, 128); g.fillStyle = '#ef4135'; g.fillRect(128, 0, 64, 128); }
+  else if (q === 'eu') {
+    g.fillStyle = '#003399'; g.fillRect(0, 0, 192, 128); g.fillStyle = '#ffcc00';
+    for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; g.beginPath(); g.arc(96 + Math.cos(a) * 40, 64 + Math.sin(a) * 40, 5, 0, 7); g.fill(); }
+  } else {
+    c.width = 100; c.height = 120; g.clearRect(0, 0, 100, 120);
+    g.beginPath(); g.moveTo(4, 4); g.lineTo(96, 4); g.lineTo(96, 70); g.quadraticCurveTo(96, 104, 50, 116); g.quadraticCurveTo(4, 104, 4, 70); g.closePath();
+    g.save(); g.clip(); g.fillStyle = '#0055a4'; g.fillRect(0, 0, 34, 120); g.fillStyle = '#f4f4f2'; g.fillRect(34, 0, 32, 120); g.fillStyle = '#ef4135'; g.fillRect(66, 0, 34, 120);
+    g.fillStyle = '#1a1a1a'; g.font = '700 9px "Segoe UI", Arial, sans-serif'; g.textAlign = 'center';
+    g.fillText('LIBERTÉ', 50, 30); g.fillText('ÉGALITÉ', 50, 44); g.fillText('FRATERNITÉ', 50, 58); g.restore();
+    g.strokeStyle = '#c9a24a'; g.lineWidth = 3; g.stroke();
   }
-  // les feuillages : des plans croisés qui montent le long des tiges (dans le repère de la plante : le vent les y suit)
-  for (let i = 0; i < 16; i++) {
-    const y = rnd(1.0, 2.35), s = rnd(0.45, 0.7);
-    const p = maille(new THREE.PlaneGeometry(s, s), feuille, rnd(-0.18, 0.18), y, rnd(-0.18, 0.18), rnd(0, Math.PI), g);
-    p.rotation.x = rnd(-0.4, 0.4); p.customDepthMaterial = prof;
-  }
-  nePasFusionner(g);
-  groupe.add(g);
-  return g;
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+function texNumero(t) {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 88;
+  const g = c.getContext('2d'); g.fillStyle = '#111'; g.font = '700 80px "Segoe UI", Arial, sans-serif'; g.textBaseline = 'middle'; g.textAlign = 'center';
+  g.fillText(t, 32, 46);
+  const x = new THREE.CanvasTexture(c); x.colorSpace = THREE.SRGBColorSpace; return x;
 }
 
-// UN SPOT ENCASTRÉ (photos 01, 02, 21) : un disque lumineux dans une couronne métallique, à fleur du plafond
-function spot(groupe, M, x, z, y = H) {
-  const c = maille(new THREE.CylinderGeometry(0.13, 0.13, 0.012, 24), M.spotBord, x, y - 0.006, z, 0, groupe, { ombre: false, recoit: false });
-  const d = maille(new THREE.CircleGeometry(0.105, 24), M.spot, x, y - 0.014, z, 0, groupe, { ombre: false, recoit: false });
-  d.rotation.x = Math.PI / 2;
-  c.userData.horsAOSol = true; d.userData.horsAOSol = true;
+// =====================================================================
+//  LA PORTE N° 6 ET LA PAROI VITRÉE DU PASSAGE
+// =====================================================================
+// LA PORTE 6 (photos 03, 16, 31) : la ligne des vitrages à y = 0,3. Un fixe à gauche (x 13,35-14,3), la double porte de
+// 2 x 0,95 m (automatique ici), un petit fixe à droite, l'imposte vitrée jusqu'au plafond ; aluminium gris. Les
+// vitrophanies (une texture pour toute la largeur) sont découpées en morceaux qui suivent les vantaux.
+function construireEntree(ch) {
+  const { M, C } = ch, Y = 0.3, z = -Y, hP = 2.25, hT = 2.6;
+  const vit = vitrophanies();
+  const matRue = new THREE.MeshStandardMaterial({ map: vit.rue, alphaTest: 0.5, roughness: 0.4 });
+  const matHall = new THREE.MeshStandardMaterial({ map: vit.hall, alphaTest: 0.5, roughness: 0.6 });
+  // un morceau de vitrophanie : la bande x a-b de la texture (13,45 -> 16,35), collée des deux côtés d'un vitrage
+  const morceau = (parent, a, b, xl, zl) => {
+    for (const [mat, s] of [[matRue, 1], [matHall, -1]]) {
+      const g = new THREE.PlaneGeometry(b - a, hP);
+      const uv = g.attributes.uv;
+      for (let i = 0; i < uv.count; i++) {
+        const u = uv.getX(i), uu = ((a + u * (b - a)) - 13.45) / 2.9;
+        uv.setX(i, s > 0 ? uu : uu);
+      }
+      const m = new THREE.Mesh(g, mat);
+      m.position.set(xl, hP / 2, zl + s * 0.008);
+      if (s < 0) { m.rotation.y = Math.PI; m.scale.x = -1; }
+      m.castShadow = false; parent.add(m);
+    }
+  };
+  // le cadre fixe : montants, traverse au-dessus de la porte, imposte
+  const fixe = (x0, x1) => {
+    ch.boite(x0, Y - 0.03, x1, Y + 0.03, 0, 0.06, M.aluGris);
+    ch.boite(x0, Y - 0.03, x0 + 0.06, Y + 0.03, 0, hT, M.aluGris);
+    ch.boite(x1 - 0.06, Y - 0.03, x1, Y + 0.03, 0, hT, M.aluGris);
+    const v = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0 - 0.12, hP - 0.06), M.verre); v.position.set((x0 + x1) / 2, (hP + 0.06) / 2, z); ch.decor.add(v);
+    C.ajouterBoite(x0, -(Y + 0.04), x1, -(Y - 0.04), { y1: hT, vitre: true });
+  };
+  fixe(13.35, 14.3); fixe(16.2, 16.5);
+  ch.boite(13.35, 0.27, 16.5, 0.29, 2.6, 2.8, M.noirMat, { ombre: false });       // le bandeau noir au-dessus de l'imposte
+  morceau(ch.decor, 13.45, 14.24, (13.45 + 14.24) / 2, z);
+  morceau(ch.decor, 16.24, 16.35, (16.24 + 16.35) / 2, z);
+  ch.boite(13.35, Y - 0.04, 16.5, Y + 0.04, hP, hP + 0.06, M.aluGris);
+  ch.boite(13.35, Y - 0.03, 16.5, Y + 0.03, hT - 0.05, hT, M.aluGris);
+  const imp = new THREE.Mesh(new THREE.PlaneGeometry(3.0, hT - hP - 0.11), M.verre); imp.position.set(14.925, (hP + 0.06 + hT - 0.05) / 2, z); ch.decor.add(imp);
+  C.ajouterBoite(13.35, -(Y + 0.04), 16.5, -(Y - 0.04), { y0: hP, y1: H_DALLE, vitre: true });
+  // la double porte automatique : chaque vantail emporte son morceau de vitrophanie
+  const P = ch.porte('x', Y, 15.25, { l: 1.9, h: hP, ep: 0.08, modele: 'vitree2', blanc: false, tirant: 'long', etat: 'auto', cote: 'S', huisserie: false, nom: 'entrée n° 6' });
+  for (const v of P.vantaux) {
+    // le vantail : de son gond (x local 0) vers s * 0,95 ; la bande de texture correspondante
+    const xg = 15.25 - v.s * 0.95;              // le gond, en plan
+    const a = Math.min(xg, xg + v.s * 0.95), b = Math.max(xg, xg + v.s * 0.95);
+    const grp = new THREE.Group(); v.g.add(grp);
+    morceau(grp, a + 0.05, b - 0.05, v.s * 0.475, 0);
+  }
+  // le bloc de sortie au-dessus, côté hall
+  ch.sortie(15.25, 0.45, 2.45, 'N');
+}
+// LA PAROI DU PASSAGE (photos 07, 19) : à y = 5,0, toute la largeur (x 1,75-4,75) en aluminium laqué blanc — deux fixes
+// pleine hauteur, la double porte de 2 x 0,9 m (automatique), l'imposte vitrée jusqu'au plafond (2,60).
+function construireParoiPassage(ch) {
+  const { M, C } = ch, Y = 5.0, z = -Y, hP = 2.2, hT = 2.6;
+  const montant = (x) => ch.boite(x - 0.035, Y - 0.04, x + 0.035, Y + 0.04, 0, hT, M.alu);
+  for (const x of [1.785, 2.3, 4.1, 4.715]) montant(x);
+  ch.boite(1.75, Y - 0.04, 4.75, Y + 0.04, hP, hP + 0.08, M.alu);
+  ch.boite(1.75, Y - 0.04, 4.75, Y + 0.04, hT - 0.06, hT, M.alu);
+  ch.boite(1.75, Y - 0.04, 2.3, Y + 0.04, 0, 0.08, M.alu); ch.boite(4.1, Y - 0.04, 4.75, Y + 0.04, 0, 0.08, M.alu);
+  for (const [a, b] of [[1.82, 2.265], [4.135, 4.68]]) {
+    const v = new THREE.Mesh(new THREE.PlaneGeometry(b - a, hP - 0.08), M.verre); v.position.set((a + b) / 2, hP / 2 + 0.04, z); ch.decor.add(v);
+    C.ajouterBoite(a - 0.06, -(Y + 0.05), b + 0.06, -(Y - 0.05), { y1: hT, vitre: true });
+  }
+  const imp = new THREE.Mesh(new THREE.PlaneGeometry(2.93, hT - hP - 0.14), M.verre); imp.position.set(3.25, (hP + 0.08 + hT - 0.06) / 2, z); ch.decor.add(imp);
+  C.ajouterBoite(1.75, -(Y + 0.05), 4.75, -(Y - 0.05), { y0: hP, y1: H_DALLE, vitre: true });
+  ch.porte('x', Y, 3.2, { l: 1.8, h: hP, ep: 0.08, modele: 'vitree2', autocollants: true, etat: 'auto', cote: 'S', huisserie: false, nom: 'passage' });
+  ch.sortie(3.2, 5.12, 2.45, 'N');
+}
+
+// =====================================================================
+//  LE REZ-DE-CHAUSSÉE
+// =====================================================================
+function construireMurs(ch) {
+  const { M } = ch;
+  const B = M.blanc, CR = M.creme;
+  // ---- LE PASSAGE ET LE HALL OUEST ----
+  // le mur ouest (couloir de service derrière) : la porte blanche « Sortie » côté passage, la porte grise en retrait côté hall
+  ch.mur({ de: [1.675, -0.4], a: [1.675, 5.0], mats: { E: CR, W: B }, plinthes: ['E'], ouvertures: [{ c: 4.15, l: 0.9, h: 2.04 }] });
+  ch.porte('y', 1.675, 4.15, { l: 0.9, h: 2.04, modele: 'blanche', etat: 'fermee', cote: 'E', charniere: 'd', nom: 'service (passage)' });
+  ch.mur({ de: [1.675, 5.0], a: [1.675, 13.6], mats: B, plinthes: ['E'], ouvertures: [{ c: 9.575, l: 0.95, h: 2.04 }] });
+  ch.porte('y', 1.675, 9.575, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'W', nom: 'service (hall)' });
+  // le mur est du passage = l'ouest de la salle A, avec la porte de la salle A côté hall
+  ch.mur({ de: [4.825, -0.4], a: [4.825, 5.0], mats: { W: CR, E: B }, plinthes: ['W'] });
+  ch.mur({ de: [4.825, 5.0], a: [4.825, 9.0], mats: B, plinthes: ['W', 'E'], ouvertures: [{ c: 6.85, l: 0.93, h: 2.04 }] });
+  ch.porte('y', 4.825, 6.85, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'E', nom: 'salle A' });
+  // ---- LA SALLE D'ATTENTE ----
+  // le sud : le mur de la salle A et ses deux jours dépolis (photos 02, 21)
+  ch.mur({ de: [4.75, 9.0], a: [10.05, 9.0], mats: B, plinthes: ['N', 'S'], ouvertures: [{ c: 6.65, l: 1.3, bas: 0.95, h: 2.3 }, { c: 8.35, l: 1.3, bas: 0.95, h: 2.3 }] });
+  const sud = new THREE.Group(); sud.position.set(0, 0, -9.0); ch.decor.add(sud);
+  for (const c of [6.65, 8.35]) { fenetreDepolie(sud, M, { x: c, l: 1.3, bas: 0.95, haut: 2.3, ep: EP }); ch.C.ajouterBoite(c - 0.65, -8.95, c + 0.65, -9.05, { y0: 0.95, y1: 2.3, vitre: true }); }
+  // la double lisse gris clair du mur sud, à 0,85 et 1,00
+  for (const h of [0.82, 0.94]) ch.boite(4.9, 9.075, 9.9, 9.1, h, h + 0.04, M.lisseGrise, { ombre: false });
+  // le nord : LE MUR SAFRAN (de x 5,8 à 11,7), sa lisse de PVC blanc, son panneau DAE
+  ch.mur({ de: [5.8, 12.075], a: [11.7, 12.075], mats: { S: M.orange, N: B }, plinthes: ['S'] });
+  ch.boite(5.8, 11.99, 11.7, 12.0, 0.85, 1.05, M.lissePVC, { ombre: false });
+  for (const h of [0.85, 1.048]) ch.boite(5.8, 11.985, 11.7, 11.99, h, h + 0.004, M.lisseGrise, { ombre: false });
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texDAE(), roughness: 0.4 }), 0.4, 0.1, 6.1, 11.994, 2.01, 'S');
+  // l'est : le mur du fond (présentoir, radiateur) qui continue en mur est du couloir C01 (porte de la gaine)
+  ch.mur({ de: [13.575, 7.5], a: [13.575, 20.75], mats: B, plinthes: ['W'], ouvertures: [{ c: 17.0, l: 1.2, h: 2.0 }] });
+  ch.porte('y', 13.575, 17.0, { l: 1.2, h: 2.0, modele: 'gaine2', etat: 'fermee', cote: 'W', nom: 'gaine technique' });
+  // (la trappe crème et la grille de ventilation au-dessus de la gaine : posées sur le mur, face ouest)
+  ch.boite(13.49, 16.45, 13.5, 16.9, 2.12, 2.6, M.creme2, { ombre: false });
+  ch.boite(13.49, 17.05, 13.5, 17.5, 2.1, 2.62, M.grille, { ombre: false });
+  for (let h = 2.15; h < 2.6; h += 0.05) ch.boite(13.48, 17.07, 13.49, 17.48, h, h + 0.02, M.noirMat, { ombre: false });
+  // ---- LE COULOIR C05 ET LE COULOIR C01 ----
+  ch.mur({ de: [5.875, 12.15], a: [5.875, 18.6], mats: B, plinthes: ['W'] });
+  ch.mur({ de: [11.625, 12.15], a: [11.625, 20.75], mats: B, plinthes: ['E'], ouvertures: [{ c: 13.85, l: 0.93, h: 2.04 }, { c: 19.05, l: 0.93, h: 2.04 }] });
+  // (les portes du C01 n'ont pas d'oculus, photo 01)
+  ch.porte('y', 11.625, 13.85, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'fermee', cote: 'E', notices: 2, nom: 'local (C01)' });
+  ch.porte('y', 11.625, 19.05, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'fermee', cote: 'E', charniere: 'd', nom: 'toilettes' });
+  ch.mur({ de: [11.55, 20.675], a: [13.65, 20.675], mats: B, plinthes: ['S'], ouvertures: [{ c: 12.6, l: 0.93, h: 2.04 }] });
+  ch.porte('x', 20.675, 12.6, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'S', nom: 'fond du C01' });
+  // ---- LE « COU » ET LE BUREAU B ----
+  ch.mur({ de: [9.975, 0], a: [9.975, 9.075], mats: B, plinthes: ['W', 'E'] });
+  ch.mur({ de: [10.05, 4.8], a: [13.2, 4.8], ep: 0.12, mats: B, plinthes: ['N', 'S'], ouvertures: [{ c: 10.6, l: 1.0, bas: 1.0, h: 2.4 }, { c: 11.85, l: 0.9, h: 2.1 }] });
+  const nordB = new THREE.Group(); nordB.position.set(0, 0, -4.8); ch.decor.add(nordB);
+  fenetreDepolie(nordB, M, { x: 10.6, l: 1.0, bas: 1.0, haut: 2.4, ep: 0.12, bandeClaire: 0.2 });
+  ch.C.ajouterBoite(10.1, -4.75, 11.1, -4.85, { y0: 1.0, y1: 2.4, vitre: true });
+  ch.porte('x', 4.8, 11.85, { l: 0.9, h: 2.1, ep: 0.12, modele: 'vitree', etat: 'fermee', cote: 'S', tirant: 'court', nom: 'bureau B' });
+  // le mur est du bureau B : tableau noir du portail n° 6 jusqu'à y = 0,3, puis le hall
+  ch.mur({ de: [13.275, -0.4], a: [13.275, 0.3], mats: { E: M.noirMat, W: B } });
+  ch.mur({ de: [13.275, 0.3], a: [13.275, 4.875], mats: B, plinthes: ['E', 'W'] });
+  // le trumeau blanc du cou, le pilier gris de la salle d'attente (plinthes de bois tout autour)
+  const pilier = (x0, y0, x1, y1, mat) => {
+    ch.boite(x0, y0, x1, y1, 0, H_DALLE, mat, { collision: true });
+    ch.boite(x0 - 0.015, y0 - 0.015, x1 + 0.015, y1 + 0.015, 0, 0.08, M.bois, { ombre: false });
+  };
+  pilier(10.8, 6.0, 11.2, 6.9, B);
+  pilier(10.3, 8.9, 10.9, 9.5, M.pilier);
+  // ---- LE HALL D'ENTRÉE ----
+  ch.mur({ de: [13.5, 7.575], a: [20.1, 7.575], mats: B, plinthes: ['S'], ouvertures: [{ c: 17.0, l: 0.93, h: 2.04 }] });
+  ch.porte('x', 7.575, 17.0, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'S', nom: 'bureaux est' });
+  ch.mur({ de: [19.95, -0.4], a: [19.95, 7.65], ep: 0.3, mats: B, plinthes: ['W'] });
+  // ---- L'ESCALIER : la cage (jusqu'au plafond de l'étage), les portes coupe-feu ----
+  ch.mur({ de: [1.6, 13.675], a: [4.75, 13.675], mats: B, plinthes: ['S', 'N'], ouvertures: [{ c: 3.5, l: 1.8, h: 2.1 }] });
+  ch.mur({ de: [4.675, 13.6], a: [4.675, 18.75], h: H_CAGE, mats: B, plinthes: ['E'] });
+  ch.mur({ de: [1.675, 13.6], a: [1.675, 18.75], h: H_CAGE, mats: B });
+  ch.mur({ de: [1.6, 18.675], a: [5.95, 18.675], h: H_CAGE, mats: B, plinthes: ['S'], ouvertures: [{ c: 5.2, l: 0.9, h: 2.1 }] });
+  // au 1er étage : le mur sud du palier (avec sa double porte coupe-feu, fermée) et ses retours
+  ch.mur({ de: [1.6, 12.525], a: [4.75, 12.525], base: H_DALLE, h: H_CAGE, mats: B, ouvertures: [{ c: 3.5, l: 1.8, bas: 2 * ESC.hPalier, h: 2 * ESC.hPalier + 2.1 }] });
+  ch.mur({ de: [1.675, 12.45], a: [1.675, 13.6], base: H_DALLE, h: H_CAGE, mats: B });
+  ch.mur({ de: [4.675, 12.45], a: [4.675, 13.6], base: H_DALLE, h: H_CAGE, mats: B });
+  ch.porte('x', 12.525, 3.5, { l: 1.8, h: 2.1, base: 2 * ESC.hPalier, modele: 'grise2', feu: true, etat: 'fermee', cote: 'N', notices: 1, nom: '1er étage' });
+  // LES PORTES COUPE-FEU DE L'ESCALIER (photos 04, 06, 20) : le vantail ouest ouvert à demeure vers le hall, l'est fermé
+  // (deux affichettes) ; une huisserie et un rail de ferme-porte pour les deux
+  const P = ch.porte('x', 13.675, 3.5, { l: 1.8, h: 2.1, modele: 'grise2', feu: true, etat: 'ouverte', ouverts: [true, false], angle: 1.62, cote: 'S', notices: 0, noticesD: 2, nom: 'escalier' });
+  void P;
+}
+
+// LA PORTE DE SECOURS DU FOND DE C05 (photo 05) : cadre blanc, verre dépoli bleu allumé par le jour, imposte dépolie,
+// béquille argent, bloc de sortie au-dessus. Fermée.
+function construirePorteFond(ch) {
+  const { M, C } = ch, y = 18.6 - 0.02, x0 = 4.75, x1 = 5.65, h = 2.1;
+  ch.boite(x0, y - 0.04, x0 + 0.06, y, 0, 2.4, M.alu); ch.boite(x1 - 0.06, y - 0.04, x1, y, 0, 2.4, M.alu);
+  ch.boite(x0, y - 0.04, x1, y, h - 0.03, h + 0.03, M.alu); ch.boite(x0, y - 0.04, x1, y, 0, 0.08, M.alu);
+  ch.boite(x0 + 0.06, y - 0.025, x1 - 0.06, y - 0.015, 0.08, h - 0.03, M.depoliBleu, { ombre: false });
+  ch.boite(x0 + 0.06, y - 0.025, x1 - 0.06, y - 0.015, h + 0.03, 2.36, M.depoliBleu, { ombre: false });
+  ch.boite(x1 - 0.2, y - 0.08, x1 - 0.08, y - 0.06, 1.03, 1.05, M.inox, { ombre: false });
+  ch.boite(x1 - 0.1, y - 0.06, x1 - 0.08, y - 0.04, 0.98, 1.1, M.inox, { ombre: false });
+  C.ajouterBoite(x0, -(y + 0.05), x1, -(y - 0.06), { y1: 2.4, vitre: true });   // (le jour la traverse : lumière cuite)
+  ch.sortie(5.2, 18.5, 2.3, 'S');
+}
+
+// L'ACCUEIL (photo 03) : comptoir de stratifié gris clair le long de la façade, sous les fenêtres 11-12 — face avant à
+// y = 2,3, 70 cm de profondeur, 1,10 m de haut, tablette haute en saillie, socle sombre en retrait souligné de bois ;
+// derrière, le plan de travail du personnel à 0,75 m. (Les écrans, le téléphone, les fauteuils : js/ecole_mobilier.js)
+function construireAccueil(ch) {
+  const { M, C } = ch, x0 = 16.0, x1 = 19.6, yA = 2.3, yR = 1.6;
+  ch.boite(x0 + 0.05, yR + 0.05, x1 - 0.05, yA - 0.06, 0, 0.1, M.socle);
+  ch.boite(x0 + 0.05, yA - 0.07, x1 - 0.05, yA - 0.05, 0.03, 0.06, M.bois, { ombre: false });
+  ch.boite(x0, yR, x1, yA, 0.1, 1.02, M.comptoir);
+  ch.boite(x0 - 0.02, yA - 0.32, x1 + 0.0, yA + 0.06, 1.02, 1.1, M.comptoirDessus);
+  ch.boite(x0, yR, x0 + 0.03, yA, 0.1, 1.02, M.comptoirDessus);
+  // le plan de travail du personnel
+  ch.boite(x0 + 0.03, 0.95, x1 - 0.05, yR, 0.72, 0.75, M.comptoirDessus);
+  ch.boite(x0 + 0.03, yR - 0.02, x1 - 0.05, yR, 0.1, 0.72, M.comptoir);
+  for (const x of [x0 + 0.08, (x0 + x1) / 2, x1 - 0.1]) ch.boite(x - 0.025, 0.97, x + 0.025, 1.05, 0, 0.72, M.comptoir);
+  C.ajouterBoite(x0 - 0.02, -(yA + 0.06), x1, -yR, { y1: 1.1 });
+  // le tapis d'entrée bleu-gris foncé
+  ch.boite(13.6, 0.4, 16.2, 1.9, 0, 0.012, M.tapis, { ombre: false });
+}
+
+// LES RADIATEURS (photos 03, 06, 21) : panneaux blancs, grille sur le dessus
+function radiateur(ch, x, y, face, l, h0, h1) {
+  const { M } = ch, e = 0.08;
+  const [ax0, ay0, ax1, ay1] = face === 'E' ? [x, y - l / 2, x + e, y + l / 2] : face === 'W' ? [x - e, y - l / 2, x, y + l / 2] : face === 'S' ? [x - l / 2, y - e, x + l / 2, y] : [x - l / 2, y, x + l / 2, y + e];
+  ch.boite(ax0, ay0, ax1, ay1, h0, h1, M.radiateur, { collision: true });
+  ch.boite(ax0 + 0.01, ay0 + 0.01, ax1 - 0.01, ay1 - 0.01, h1, h1 + 0.005, M.grille, { ombre: false });
 }
 
 // =====================================================================
 //  LA CARTE
 // =====================================================================
 export function construireCarte(scene, renderer = null) {
-  const C = new Collisions();
-  const M = materiaux();
-  const decor = new THREE.Group(); decor.name = 'salle d\'essai';
-  scene.add(decor);
-  scene.background = new THREE.Color(0x0b0d10);
-  scene.fog = null;                                    // (à l'intérieur : pas de brume)
+  const ch = new Chantier(scene);
+  const { C, M } = ch;
+  // (une copie du carrelage pour les paliers : sans l'ombre ni la lumière cuites du rez-de-chaussée)
+  // (une rugosité à peine différente : l'optimisation du décor ne doit pas la confondre avec celui du rez-de-chaussée)
+  M.solEtage = M.sol.clone(); M.solEtage.roughness = 0.94;
+  scene.background = new THREE.Color(0xdeeaf6);         // le ciel couvert, vu par la porte 6 et le passage
+  scene.fog = null;
 
-  // ---- le sol : UN plan sous la salle et le couloir (le reflet du sol mouillé et l'ombre cuite s'y posent) ----
-  const SX0 = SALLE.x0 - 0.3, SX1 = SALLE.x1 + 0.3, SZ0 = COULOIR.z0 - 0.3, SZ1 = SALLE.z1 + 0.3;
-  const W = SX1 - SX0, L = SZ1 - SZ0, cx = (SX0 + SX1) / 2, cz = (SZ0 + SZ1) / 2;
-  const geoSol = new THREE.PlaneGeometry(W, L);
-  // UV en mètres pour le carrelage ; la carte d'ombre cuite (aoMap) garde ses propres UV de 0 à 1 (channel 1)
-  const uv = geoSol.attributes.uv, uv1 = uv.clone();
-  for (let i = 0; i < uv.count; i++) uv.setXY(i, cx + (uv.getX(i) - 0.5) * W, -(cz + (0.5 - uv.getY(i)) * L));
-  geoSol.setAttribute('uv1', uv1);
-  const sol = new THREE.Mesh(geoSol, M.sol);
-  sol.rotation.x = -Math.PI / 2; sol.position.set(cx, 0, cz); sol.receiveShadow = true; sol.name = 'sol';
-  scene.add(sol); nePasFusionner(sol);
+  // ---- les sols du rez-de-chaussée ----
+  const RN = [
+    [-0.3, -0.4, 1.6, 20.75, 'ns', 1.75, 0], [1.6, 5.0, 4.9, 20.75, 'ns', 1.75, 0], [4.9, -0.4, 5.3, 20.75, 'ns', 1.75, 0],
+    [5.3, -0.4, 13.5, 9.0, 'ns', 1.75, 0], [5.3, 9.0, 13.5, 12.0, 'ew', 5.8, 9.0], [5.3, 12.0, 13.5, 20.75, 'ns', 1.75, 0],
+    [13.5, -0.4, 20.1, 20.75, 'ns', 1.75, 0],
+  ];
+  const sol = new THREE.Mesh(geoSol(RN), M.sol); sol.receiveShadow = true; sol.name = 'carrelage'; nePasFusionner(sol);
+  scene.add(sol);
+  const solP = new THREE.Mesh(geoSol([[1.6, -0.4, 4.9, 5.0, 'droit', 1.75, 0]]), M.solPassage); solP.receiveShadow = true; nePasFusionner(solP);
+  scene.add(solP);
+  // LE « TERRAIN » que lisent le rendu et l'ombre cuite (js/fx.js setReflet, js/kit_decor.js) : un plan invisible qui
+  // couvre RECT, du même matériau que le carrelage (l'ombre cuite posée sur son matériau vaut pour tout le carrelage)
+  const W = RECT.x1 - RECT.x0, L = RECT.y1 - RECT.y0, cx = (RECT.x0 + RECT.x1) / 2, cz = -(RECT.y0 + RECT.y1) / 2;
+  const court = new THREE.Mesh(new THREE.PlaneGeometry(W, L), M.sol);
+  court.rotation.x = -Math.PI / 2; court.position.set(cx, -0.002, cz); court.visible = false; court.name = 'sol (repère)';
+  nePasFusionner(court); scene.add(court);
 
-  // ---- les murs de la salle (le nord percé de la porte ouverte) ----
-  // (les murs sont posés SUR les traits x = ±10, z = ±6 : la face intérieure est à 10 cm du trait)
-  const t = EP / 2;
-  poserMur(decor, C, M, SALLE.x0 - t, SALLE.z0, SALLE.x1 + t, SALLE.z0, M.blanc,
-    { ouvertures: [{ a: PORTE.x - (SALLE.x0 - t), l: PORTE.l, h: PORTE.h }], faces: [-1, 1] });
-  poserMur(decor, C, M, SALLE.x0 - t, SALLE.z1, SALLE.x1 + t, SALLE.z1, M.blanc, { faces: [-1] });
-  poserMur(decor, C, M, SALLE.x0, SALLE.z0 + t, SALLE.x0, SALLE.z1 - t, M.blanc, { faces: [-1] });
-  poserMur(decor, C, M, SALLE.x1, SALLE.z0 + t, SALLE.x1, SALLE.z1 - t, M.jaune, { faces: [1] });
-  // ---- le couloir en impasse derrière la porte ----
-  poserMur(decor, C, M, COULOIR.x0, COULOIR.z0, COULOIR.x0, SALLE.z0 - t, M.blanc, { faces: [-1] });
-  poserMur(decor, C, M, COULOIR.x1, COULOIR.z0, COULOIR.x1, SALLE.z0 - t, M.blanc, { faces: [1] });
-  poserMur(decor, C, M, COULOIR.x0 - t, COULOIR.z0, COULOIR.x1 + t, COULOIR.z0, M.blanc, { faces: [1] });
+  // ---- les murs, les portes, la façade, l'escalier ----
+  construireFacade(ch);
+  construireMurs(ch);
+  construireEntree(ch);
+  construireParoiPassage(ch);
+  construirePorteFond(ch);
+  construireEscalier(ch);
+  construireAccueil(ch);
+  radiateur(ch, 1.75, 12.9, 'E', 0.45, 0.15, 1.3);
+  radiateur(ch, 13.5, 10.2, 'W', 0.45, 0.15, 1.1);
+  // la caméra de surveillance du hall ouest et son haut-parleur ; le déclencheur manuel rouge
+  const dome = maille(new THREE.SphereGeometry(0.06, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.boitier, 4.2, 2.4, -12.9, 0, ch.decor, { ombre: false });
+  dome.userData.horsAOSol = true;
+  ch.boite(4.48, 13.53, 4.62, 13.6, 2.2, 2.32, M.boitier, { ombre: false });
+  ch.boite(4.9, 9.075, 5.0, 9.11, 1.25, 1.35, M.rougeEtiquette, { ombre: false });
 
-  // ---- la lisse blanche du mur jaune (photo 02 : à hauteur de dossier) ----
-  maille(boiteM(0.03, 0.14, SALLE.z1 - SALLE.z0 - 0.4), M.lisse, SALLE.x1 - t - 0.015, 0.86, 0, 0, decor);
+  // ---- les plafonds ----
+  ch.plafond(1.75, 0, 4.75, 5.0, 2.6, 'platre');                     // le passage
+  ch.plafond(1.75, 5.0, 4.75, 9.0, 2.4, 'platre');                   // le hall ouest
+  ch.plafond(1.75, 9.0, 5.3, 13.6, 2.4, 'platre');
+  ch.plafond(5.3, 12.0, 5.8, 13.6, 2.4, 'platre');
+  ch.plafond(4.6, 13.6, 5.8, 18.6, 2.4, 'platre');                   // C05
+  ch.plafond(5.3, 9.0, 13.5, 12.0, 2.6, 'plateaux');                 // la salle d'attente
+  ch.plafond(9.9, 4.8, 13.5, 9.0, 2.6, 'plateaux');                  // le cou
+  ch.plafond(11.7, 12.0, 13.5, 20.6, 2.45, 'platre');                // C01
+  ch.plafond(13.35, 0.3, 19.8, 7.5, 2.6, 'platre');                  // le hall d'entrée
+  ch.plafond(9.9, 0, 13.35, 4.8, 2.6, 'plateaux', { camera: false });  // le bureau B (vu par sa porte vitrée)
+  ch.plafond(4.75, 0, 9.9, 9.0, 2.6, 'plateaux', { camera: false });   // la salle A (vue par ses fenêtres)
 
-  // ---- les plafonds (la caméra s'y arrête ; pas d'ombre : la lumière principale vient de plus haut) ----
-  const plafond = (x0, z0, x1, z1) => {
-    C.plafond(x0, z0, x1, z1, H);
-    const g = boiteM(x1 - x0, 0.04, z1 - z0);
-    const m = maille(g, M.plafond, (x0 + x1) / 2, H + 0.02, (z0 + z1) / 2, 0, decor, { ombre: false });
-    m.userData.horsAOSol = true;
-  };
-  plafond(SALLE.x0 - 0.2, SALLE.z0 - 0.2, SALLE.x1 + 0.2, SALLE.z1 + 0.2);
-  plafond(COULOIR.x0 - 0.2, COULOIR.z0 - 0.2, COULOIR.x1 + 0.2, SALLE.z0 - 0.1);
+  // ---- les luminaires (et les lampes : ce sont les mêmes) ----
+  ch.tube(1.75, 1.5, 3.0, 2.35, 1, 'passage'); ch.tube(4.75, 1.5, 3.0, 2.35, -1, 'passage');
+  ch.sortie(3.25, 0.12, 2.3, 'N');
+  for (const [x, y] of [[3.2, 7.1], [3.3, 11.0], [5.2, 12.9]]) ch.opale(x, y, 2.4, 'hallO');
+  for (const [x, y] of [[5.2, 15.0], [5.2, 17.4]]) ch.opale(x, y, 2.4, 'c05');
+  for (const [x, y] of [[6.6, 9.9], [9.0, 9.9], [11.4, 9.9], [7.8, 11.1], [10.2, 11.1], [12.6, 11.1]]) ch.spot(x, y, 2.6, 'attente');
+  for (const [x, y] of [[12.3, 7.8], [11.9, 5.7]]) ch.spot(x, y, 2.6, 'cou');
+  for (const [x, y] of [[12.6, 16.0], [12.6, 19.4]]) ch.opale(x, y, 2.45, 'c01');
+  for (const [x, y] of [[16.4, 1.4], [18.6, 1.4], [14.9, 3.7], [17.3, 3.7], [19.0, 3.9], [15.8, 6.0], [18.2, 6.0]]) ch.spot(x, y, 2.6, 'hall');
+  for (const [x, y] of [[11.0, 2.4], [12.5, 2.4]]) ch.spot(x, y, 2.6, 'bureauB', { reel: false });
+  for (const [x, y] of [[6.1, 2.6], [8.6, 2.6], [6.1, 6.4], [8.6, 6.4]]) ch.spot(x, y, 2.6, 'salleA', { reel: false });
+  ch.opale(3.2, 18.6, 3.75, 'escalier', { mur: 'S', r: 0.15 });
+  ch.opale(3.2, 13.4, H_CAGE, 'escalier', { r: 0.18 });
+  ch.opale(3.9, 16.4, H_CAGE, 'escalier', { r: 0.18, cuire: false });
+  ch.sortie(11.2, 9.6, 2.4, 'W', { suspendu: true });
+  // LE JOUR qui entre (pour les spots : une lampe froide dehors, qui vise l'intérieur ; pour la lumière cuite : la source
+  // au pied de l'ouverture, `ox/oz` le point d'où l'on découpe sa visibilité, dehors)
+  const jour = (x, y, cible, zone, o = {}) => ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.6, cx: cible[0], cz: -cible[1], sx: x, sz: -(y + 0.3), ox: x, oz: -(y - 0.5), zone, ...o });
+  jour(15.25, 0.3, [15.25, 3.2], 'hall', { poids: 1.6 });
+  jour(3.25, -0.4, [3.25, 2.6], 'passage', { poids: 1.4 });
+  for (const x of [17.33, 18.98]) ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.4, sx: x, sz: -0.4, ox: x, oz: 0.5, zone: 'hall', reel: false, cuireForce: 0.55 });
+  for (const x of [5.78, 7.43, 9.08]) ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.4, sx: x, sz: -0.4, ox: x, oz: 0.5, zone: 'salleA', reel: false, cuireForce: 0.8 });
+  for (const x of [10.73, 12.38]) ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.4, sx: x, sz: -0.6, ox: x, oz: 0.5, zone: 'bureauB', reel: false, cuireForce: 0.5 });
+  ch.lampes.push({ type: 'jour', x: 5.2, z: -19.2, h: 2.4, sx: 5.2, sz: -18.3, ox: 5.2, oz: -18.9, zone: 'c05', reel: false, cuireForce: 0.3 });
 
-  // ---- les piliers : un carré jaune à bande blanche (et son DAE), un rond blanc ----
-  const P1 = { x: -3, z: 0.5, c: 0.5 };
-  C.ajouterBoite(P1.x - P1.c / 2, P1.z - P1.c / 2, P1.x + P1.c / 2, P1.z + P1.c / 2);
-  maille(boiteM(P1.c, H, P1.c), M.jaune, P1.x, H / 2, P1.z, 0, decor);
-  maille(boiteM(P1.c + 0.01, 0.22, P1.c + 0.01), M.lisse, P1.x, 1.2, P1.z, 0, decor);
-  const dae = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.11), new THREE.MeshStandardMaterial({ map: texDAE(), roughness: 0.4 }));
-  dae.position.set(P1.x, 1.62, P1.z + P1.c / 2 + 0.006); decor.add(dae);
-  const P2 = { x: 3.5, z: 1.8, r: 0.24 };
-  C.ajouterCercle(P2.x, P2.z, P2.r);
-  maille(new THREE.CylinderGeometry(P2.r, P2.r, H, 28), M.blanc, P2.x, H / 2, P2.z, 0, decor);
-  maille(new THREE.CylinderGeometry(P2.r + 0.012, P2.r + 0.012, 0.08, 28), M.bois, P2.x, 0.04, P2.z, 0, decor, { ombre: false });
-
-  // ---- les chaises coque le long du mur jaune, où l'on peut s'asseoir ----
-  const sieges = [];
-  const xChaise = SALLE.x1 - t - 0.42;
-  const zs = [-4.2, -3.45, -2.7, -1.95, -1.2, -0.45, 0.3];
-  zs.forEach((z, i) => {
-    chaiseCoque(decor, M, xChaise, z, -1, 0, COULEURS_COQUES[i % COULEURS_COQUES.length]);
-    // l'assise (le jeu y pose les hanches), et d'où l'on se relève : 60 cm devant
-    sieges.push({ x: xChaise + 0.02, z, y: 0.45, fx: -1, fz: 0, sx: xChaise - 0.7, sz: z, nom: 'la chaise' });
-  });
-  C.ajouterBoite(xChaise - 0.33, zs[0] - 0.36, SALLE.x1 - t, zs[zs.length - 1] + 0.36);
-  // l'écran au-dessus des chaises
-  const ecran = new THREE.Mesh(new THREE.PlaneGeometry(1.16, 0.66), new THREE.MeshBasicMaterial({ map: texEcran(), color: new THREE.Color(1.15, 1.15, 1.15) }));
-  ecran.position.set(SALLE.x1 - t - 0.045, 1.95, -1.5); ecran.rotation.y = -Math.PI / 2; decor.add(ecran);
-  maille(boiteM(0.04, 0.72, 1.24), M.noir, SALLE.x1 - t - 0.02, 1.95, -1.5, 0, decor);
-
-  // ---- les portes fermées (décor) ----
-  porteFermee(decor, M, SALLE.x0, -2.5, 1, 0);                              // mur ouest
-  porteFermee(decor, M, -5.5, SALLE.z1, 0, -1, { double: true });          // mur sud : la double porte
-  porteFermee(decor, M, PORTE.x, COULOIR.z0, 0, 1);                         // le fond du couloir
-  porteFermee(decor, M, COULOIR.x0, -10.5, 1, 0);                           // une porte de salle dans le couloir
-
-  // ---- les affiches du mur ouest, l'extincteur du couloir ----
-  ['#2f6fb0', '#d6542b', '#3e9b6b'].forEach((c, i) => {
-    const a = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.594), new THREE.MeshStandardMaterial({ map: texAffiche(c), roughness: 0.7 }));
-    a.position.set(SALLE.x0 + t + 0.006, 1.55, 1.2 + i * 0.6); a.rotation.y = Math.PI / 2; decor.add(a);
-  });
-  const ext = new THREE.Group(); ext.position.set(COULOIR.x1 - t - 0.12, 0, -9.2);
-  maille(new THREE.CylinderGeometry(0.075, 0.075, 0.5, 16), M.rouge, 0, 1.0, 0, 0, ext);
-  maille(new THREE.CylinderGeometry(0.03, 0.04, 0.08, 10), M.noir, 0, 1.29, 0, 0, ext);
-  decor.add(ext);
-  C.ajouterCercle(ext.position.x, ext.position.z, 0.09, { y0: 0.7, y1: 1.4 });
-
-  // ---- la plante du coin ----
-  const pl = planteBambou(decor, M, SALLE.x0 + 0.55, SALLE.z1 - 0.55);
-  C.ajouterCercle(pl.position.x, pl.position.z, 0.3);
-
-  // ---- les spots du plafond ----
-  const spots = [];
-  for (let x = -7.5; x <= 7.5; x += 2.5) for (const z of [-3, 0.5, 3.5]) spots.push([x, z]);
-  for (let z = -7.5; z >= -13; z -= 2.2) spots.push([PORTE.x, z]);
-  for (const [x, z] of spots) spot(decor, M, x, z);
+  // ---- LES CROCHETS : le mobilier, la rue ----
+  poserMobilier(ch);
+  poserRue(ch);
 
   // =====================================================================
   //  LA LUMIÈRE
   // =====================================================================
-  // La lumière principale est une directionnelle presque d'aplomb : elle figure l'ensemble des plafonniers, avec la
-  // carte d'ombre du moteur (ombres douces, cadrées sur la carte). L'hémisphère est le rebond des murs et du sol ; le
-  // remplissage, une lumière douce de biais qui modèle les visages ; et quelques LAMPES PONCTUELLES sous les spots les
-  // plus proches du centre font les flaques de lumière et les reflets sur le carrelage (sans ombre : elles sont là pour
-  // le modelé). La carte d'environnement prise sur place (haute et au-dessus) et sa sonde (ailleurs) font le reste.
-  const hemi = new THREE.HemisphereLight(0xfff3e2, 0x5a5650, 0.5); scene.add(hemi);
-  const sun = new THREE.DirectionalLight(0xfff1de, 2.2);
-  sun.position.copy(DIR_LUMIERE).multiplyScalar(30).add(new THREE.Vector3(cx, 0, cz));
-  sun.target.position.set(cx, 0, cz); scene.add(sun.target);
+  // La lumière principale, une directionnelle presque d'aplomb, figure l'ensemble des plafonniers (et dehors, le ciel
+  // couvert) : c'est elle qui porte les ombres douces du moteur. L'hémisphère est le rebond des murs ; le remplissage,
+  // une lumière douce de biais qui modèle les visages. Les spots qui suivent Haythem, la lumière cuite au sol et la carte
+  // d'environnement reprise dans chaque pièce : js/ecole_lumieres.js.
+  // (le bas de l'hémisphère : la lumière que le sol et les murs renvoient vers les plafonds — sur les photos, les plafonds
+  // sont presque aussi clairs que les murs)
+  const hemi = new THREE.HemisphereLight(0xfff3e2, 0x9a948b, 0.5); scene.add(hemi);
+  const sun = new THREE.DirectionalLight(0xfff1de, 2.0);
+  const cible = new THREE.Vector3(cx, 0, cz);
+  sun.position.copy(DIR_LUMIERE).multiplyScalar(40).add(cible);
+  sun.target.position.copy(cible); scene.add(sun.target);
   sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
-  const sc = sun.shadow.camera; sc.left = -16; sc.right = 16; sc.top = 16; sc.bottom = -16; sc.near = 1; sc.far = 60;
+  const sc = sun.shadow.camera; sc.left = -16; sc.right = 16; sc.top = 16; sc.bottom = -16; sc.near = 1; sc.far = 80;
   sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.025;
   scene.add(sun);
   const fill = new THREE.DirectionalLight(0xe8eef8, 0.25);
-  fill.position.set(cx - 18, 9, cz + 14); fill.target.position.set(cx, 0, cz); scene.add(fill.target);
+  fill.position.set(cx - 18, 9, cz + 14); fill.target.position.copy(cible); scene.add(fill.target);
   fill.castShadow = false; fill.userData.sansOmbre = true; scene.add(fill);
-  const nLampes = TELEPHONE ? 2 : 6;
-  const choix = spots.slice().sort((a, b) => Math.hypot(a[0], a[1]) - Math.hypot(b[0], b[1])).slice(0, nLampes);
-  for (const [x, z] of choix) {
-    const l = new THREE.PointLight(0xffe2c2, 3.2, 7.5, 2);
-    l.position.set(x, H - 0.25, z); l.castShadow = false;
-    scene.add(l);
-  }
+
+  // LES ZONES (pièces) : les spots ne s'allument que dans la pièce de Haythem et celles qui s'y ouvrent ; chaque zone a
+  // son point de prise de vue pour la carte d'environnement. Rectangles en monde : [x0, z0, x1, z1, hauteur mini].
+  const zr = (x0, y0, x1, y1, hmin = -1) => [x0, -y1, x1, -y0, hmin];
+  const zones = [
+    { id: 'palier1', rects: [zr(1.6, 12.45, 4.75, 18.75, 2.6)], voisines: ['escalier'], env: { x: 3.2, y: 4.9, z: -13.6 } },
+    { id: 'escalier', rects: [zr(1.6, 13.6, 4.75, 18.75)], voisines: ['hallO', 'palier1'], env: { x: 3.4, y: 2.4, z: -16.0 } },
+    { id: 'passage', rects: [zr(1.6, -0.45, 4.9, 5.0)], voisines: ['hallO', 'rue'], env: { x: 3.25, y: 1.6, z: -2.6 } },
+    { id: 'c05', rects: [zr(4.6, 13.6, 5.9, 18.75)], voisines: ['hallO'], env: { x: 5.2, y: 1.5, z: -15.8 } },
+    { id: 'hallO', rects: [zr(1.6, 5.0, 5.8, 13.6)], voisines: ['attente', 'passage', 'c05', 'escalier'], env: { x: 3.4, y: 1.6, z: -9.8 } },
+    { id: 'c01', rects: [zr(11.6, 12.0, 13.6, 20.75)], voisines: ['attente'], env: { x: 12.6, y: 1.5, z: -16.5 } },
+    { id: 'attente', rects: [zr(5.8, 9.0, 13.6, 12.0)], voisines: ['hallO', 'cou', 'c01'], env: { x: 9.2, y: 1.6, z: -10.5 } },
+    { id: 'cou', rects: [zr(9.9, 4.8, 13.5, 9.0)], voisines: ['attente', 'hall'], env: { x: 11.9, y: 1.6, z: -7.2 } },
+    { id: 'hall', rects: [zr(13.3, -0.45, 20.1, 7.6)], voisines: ['cou', 'rue'], env: { x: 15.8, y: 1.6, z: -4.0 } },
+    { id: 'rue', rects: [zr(-25, -12, 50, -0.4)], voisines: ['hall', 'passage'], env: { x: 9.5, y: 1.7, z: 3.4 } },
+  ];
+  const lumieres = new LumieresEcole(scene, { lampes: ch.lampes.filter((l) => l.reel !== false), zones });
+  // LA LUMIÈRE CUITE AU SOL (toutes les sources, découpées par les murs)
+  const lm = cuireLumiereSol(C, ch.lampes, { x0: RECT.x0, z0: -RECT.y1, W, L }, { tpm: 16 });
+  for (const m of [M.sol, M.solPassage]) { m.lightMap = lm; m.lightMapIntensity = 1.0; m.needsUpdate = true; }
 
   scene.userData.interieur = true;
   scene.userData.sunDir = DIR_LUMIERE.clone();
-  scene.userData.env = { sun, hemi, fill, clouds: [], court: sol, wetMats: [] };
-  // l'ombre ne couvre que la carte (à 50 cm près) : ses texels vont là où l'on marche
-  scene.userData.zoneOmbre = { min: [SX0 - 0.5, 0, SZ0 - 0.5], max: [SX1 + 0.5, H, SZ1 + 0.5] };
-  scene.userData.albedoSol = false;                    // le rebond du sol est réglé à la main (hémisphère)
-  scene.userData.pointEnv = { x: 0, y: 1.6, z: 0.5 };
-  scene.userData.envTerrain = carteLocale(scene); scene.userData.envLocale = true;
+  scene.userData.env = { sun, hemi, fill, clouds: [], court, wetMats: [] };
+  // l'ombre ne couvre que l'école et le trottoir : ses texels vont là où l'on marche
+  scene.userData.zoneOmbre = { min: [-1, 0, -21.2], max: [21, H_CAGE, 3.2] };
+  scene.userData.albedoSol = false;
+  // la carte d'environnement : prise d'abord dans le hall d'entrée (le départ), puis reprise de pièce en pièce
+  scene.userData.pointEnv = { x: 15.8, y: 1.6, z: -4.0 };
+  scene.userData.envTerrain = carteLocale(scene, ['#ece8e0', '#f2eee6', '#6d6a64', '#4d4a46']); scene.userData.envLocale = true;
   poserSondeLocale(scene, 1.25, 1.15);
-  // les ombres de contact sous le joueur et le mobilier, le pied des murs : un peu plus marquées qu'en plein air
   scene.userData.ombreContact = { contact: 0.5, occlusion: 1.8, borne: 0.65 };
   scene.userData.occlusionSol = { rayon: 1.6, intensite: 1.0 };
   scene.userData.animate = (tps) => animerVent(tps);
-
-  // (l'ombre cuite se lit sur la deuxième couche d'UV : la première est en mètres, pour le carrelage)
   scene.userData.aoCanal = 1;
   optimiserDecor(scene);
-  planifierOcclusionSol(scene, renderer, sol, W, L, { cx, cz });
+  planifierOcclusionSol(scene, renderer, court, W, L, { cx, cz });
 
+  // ---- LA CARTE VIVANTE (js/game.js, à chaque image) ----
+  let cuit = -1;
+  const maj = (dt, jeu) => {
+    const u = jeu.user.pos, cam = jeu.camera.position;
+    ch.portes.maj(dt, u.x, u.z, cam.x, cam.z);
+    lumieres.maj(dt, u.x, u.z, jeu.renderer, u.y);
+    // l'ombre cuite au sol vaut aussi pour le carrelage du passage (elle est posée sur le matériau du « terrain »)
+    if ((scene.userData.solCuit || 0) !== cuit && M.sol.aoMap) {
+      cuit = scene.userData.solCuit || 0;
+      M.solPassage.aoMap = M.sol.aoMap; M.solPassage.aoMapIntensity = M.sol.aoMapIntensity; M.solPassage.needsUpdate = true;
+    }
+  };
+  // le départ : dans le hall d'entrée, juste passé la porte 6, tourné vers le cou et la salle d'attente
+  const d = { x: 15.3, y: 2.9 }, v = { x: 11.6 - d.x, y: 8.4 - d.y }, n = Math.hypot(v.x, v.y);
   return {
-    nom: 'Salle d\'essai',
+    nom: 'IRIS — rez-de-chaussée',
     collisions: C,
-    depart: { x: -1, z: 1.2, fx: 0.15, fz: -1 },
-    bornes: { xMin: SX0, xMax: SX1, zMin: SZ0, zMax: SZ1 },
-    sieges,
+    depart: { x: d.x, z: -d.y, fx: v.x / n, fz: -v.y / n },
+    bornes: { xMin: -22, xMax: 47, zMin: -22, zMax: 11 },
+    sieges: ch.sieges,
+    maj,
+    lumieres, portes: ch.portes, chantier: ch,
   };
 }

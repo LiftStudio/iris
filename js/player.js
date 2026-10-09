@@ -218,6 +218,8 @@ export class Player {
     this.rig = { torso, head, thighL: L.thigh, kneeL: L.knee, thighR: R.thigh, kneeR: R.knee,
       armL: AL.sh, elbowL: AL.el, handL: AL.hand, armR: AR.sh, elbowR: AR.el, handR: AR.hand };
     scene.add(root); this.mesh = root; this.body = body;
+    // (hors des « photos » du décor : la carte d'environnement prise sur place ne doit pas garder Haythem dans ses reflets)
+    root.userData.dynamique = true;
     root.userData.dynamique = true;             // bouge : exclu des photos du décor (carte d'environnement, ombres cuites)
   }
 
@@ -687,9 +689,14 @@ export class Player {
     if (this.vel.lengthSq() < 1e-4) this.vel.set(0, 0, 0);
     // LES MURS (js/collisions.js) : le pas est découpé et chaque morceau sorti des murs ; la vitesse perd ce qui
     // rentrait dedans — on glisse le long d'un mur, et l'animation court à la vitesse réelle du glissement
+    // (les pieds RÉELS : le sol sous le joueur — une marche, un palier — plus le saut)
     const C = Player.collisions, dx = this.vel.x * dt, dz = this.vel.z * dt;
-    if (C) C.deplacer(this.pos, dx, dz, RAYON_JOUEUR, this.vel, this.jumpY);
-    else { this.pos.x += dx; this.pos.z += dz; }
+    if (C) {
+      C.deplacer(this.pos, dx, dz, RAYON_JOUEUR, this.vel, this.pos.y + this.jumpY);
+      // LE SOL sous les pieds (js/collisions.js solEn) : les volées de l'escalier sont des rampes continues, les paliers
+      // des dalles ; le joueur les suit (son saut reste compté au-dessus de ce sol)
+      this.pos.y = C.solEn(this.pos.x, this.pos.z, this.pos.y);
+    } else { this.pos.x += dx; this.pos.z += dz; }
     // (filet de sécurité : la zone de la carte)
     const B = this.bounds;
     this.pos.x = Math.max(B.xMin, Math.min(B.xMax, this.pos.x));

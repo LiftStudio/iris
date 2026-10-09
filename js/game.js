@@ -267,13 +267,14 @@ export class Game {
     const u = this.user, D = this.carte.depart;
     u.stopEmote(); u.assis = null; u.tel = null;
     u.pos.set(D.x, 0, D.z); u.vel.set(0, 0, 0); u.setFacing(D.fx, D.fz);
+    u.pos.y = this.collisions.solEn(D.x, D.z, D.y || 0);   // (un départ sur un palier de l'escalier)
     u.airborne = false; u.jumpY = 0; u.jumpVel = 0;
     u.memoriser();
-    this.collisions.resoudre(u.pos, 0.3);             // (un départ mal posé contre un mur en est sorti)
+    this.collisions.resoudre(u.pos, 0.3, null, u.pos.y);   // (un départ mal posé contre un mur en est sorti)
     this.camYaw = Math.atan2(-D.fx, -D.fz); this.camPitch = 0.22;
     this.camera.fov = 58; this.camera.updateProjectionMatrix();
-    this.camPos.set(u.pos.x + Math.sin(this.camYaw) * 2, 2.1, u.pos.z + Math.cos(this.camYaw) * 2);
-    this.camera.position.copy(this.camPos); this.lookCur.set(u.pos.x, 1.4, u.pos.z);
+    this.camPos.set(u.pos.x + Math.sin(this.camYaw) * 2, u.pos.y + 2.1, u.pos.z + Math.cos(this.camYaw) * 2);
+    this.camera.position.copy(this.camPos); this.lookCur.set(u.pos.x, u.pos.y + 1.4, u.pos.z);
     this._camLibre = undefined;
   }
 
@@ -374,6 +375,9 @@ export class Game {
     // AVANT la caméra : elle suit la position AFFICHÉE, pas celle du dernier pas simulé
     this.interpoler();
     this.updateCamera(this.paused ? 0 : dt);
+    // LA CARTE VIVANTE (js/carte_ecole.js maj) : les portes qui s'ouvrent devant Haythem, les lampes qui le suivent,
+    // la carte d'environnement reprise dans la pièce où il entre
+    this.carte.maj?.(this.paused ? 0 : dt, this);
     this.weather.update(dt, this.camera.position);
     this.cb.onTick?.(dt);
     this.scene.userData.animate?.(this.time);
@@ -473,7 +477,9 @@ export class Game {
   _cibleCam(p, u, ox, oz, h, dt) {
     const C = this.collisions, tete = p.solAff + p.h * 0.93;
     let tx = u.x + ox, tz = u.z + oz, ty = p.solAff + h;
-    const plaf = Math.min(C.plafondEn(u.x, u.z), C.plafondEn(tx, tz));
+    // (les plafonds AU-DESSUS du joueur : sur le palier de l'étage, celui du hall en dessous ne compte pas)
+    const yMin = p.solAff + 0.5;
+    const plaf = Math.min(C.plafondEn(u.x, u.z, yMin), C.plafondEn(tx, tz, yMin));
     if (Number.isFinite(plaf)) ty = Math.min(ty, Math.max(tete + 0.05, plaf - 0.28));
     const libre = C.rayonLibre(u.x, tete, u.z, tx, ty, tz, RAYON_CAM);
     const L = Math.max(0.3, Math.hypot(tx - u.x, ty - tete, tz - u.z));
