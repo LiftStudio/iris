@@ -1,6 +1,7 @@
 {
   "_comment": "IRIS : les clips de LA CAGE qui servent hors du terrain (marche, course, saut, danses, célébrations). Clips Mixamo (FBX Binary, Without Skin, 30 fps, In Place) ; arms:'procedural' = le clip anime jambes/buste, les bras gardent la pose du jeu.",
   "_cmu": "Clips mocap CMU (dossier cmu/, convertis par tools/cmu_convert.py dans LA CAGE). Marche 143_32, marche arrière 143_39, marche latérale 143_40. loco:true = clip de locomotion : sa FOULÉE (speedRef x durée) cale la phase sur la distance réellement parcourue, et plusieurs clips loco se mélangent selon la vitesse. Base : mocap.cs.cmu.edu, NSF EIA-0196217.",
+  "_copieDirecte": "copieDirecte : le clip ne part pas d'une T-pose, le reciblage est impossible et la copie directe des rotations (comme dans LA CAGE) est la bonne ; ça évite l'avertissement de js/anim.js.",
   "_saut": "saut = le saut sur place de Mixamo (« Jump »). departSet : le clip part de son impulsion (le point bas des hanches), la flexion d'avant le saut ne se joue pas en l'air ; l'apogée du clip est calée sur celle du saut physique (Player._driveAnim). Sans lui, le jeu reprend « block » (Defender, le saut de contre de LA CAGE).",
   "clips": {
     "idle":        { "file": "Idle.fbx",              "loop": true },
@@ -28,7 +29,7 @@
     "dance_break":  { "file": "dance_break.glb",      "loop": true,  "autoTiming": false, "_src": "Sketchfab « 654230005 Josh Breakdance 1990 » (Mixamo), CC-BY" },
     "dance_chicken": { "file": "dance_chicken.glb",   "loop": true,  "autoTiming": false, "_src": "Sketchfab « 614230008 Kachujin G Rosales Chicken Dance » (Mixamo), CC-BY" },
     "dance_gangnam": { "file": "dance_gangnam.glb",   "loop": true,  "autoTiming": false, "_src": "Sketchfab « Gangnam Style » reizibarrientos, CC-BY" },
-    "dance_ymca":    { "file": "dance_ymca.glb",      "loop": true,  "autoTiming": false, "index": 1, "_src": "Sketchfab « Ymca Dance Bani (1) » Shivay gaming (Mixamo), CC-BY" },
-    "dance_ymca_a":  { "file": "dance_ymca.glb",      "loop": true,  "autoTiming": false, "index": 0, "_src": "le MÊME fichier contient plusieurs animations ; anim.js le met en cache par URL, donc zéro octet de plus" }
+    "dance_ymca":    { "file": "dance_ymca.glb",      "loop": true,  "autoTiming": false, "index": 1, "copieDirecte": true, "_src": "Sketchfab « Ymca Dance Bani (1) » Shivay gaming (Mixamo), CC-BY" },
+    "dance_ymca_a":  { "file": "dance_ymca.glb",      "loop": true,  "autoTiming": false, "index": 0, "copieDirecte": true, "_src": "le MÊME fichier contient plusieurs animations ; anim.js le met en cache par URL, donc zéro octet de plus" }
   }
 }

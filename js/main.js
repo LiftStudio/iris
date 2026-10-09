@@ -70,7 +70,8 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 }
 // MANETTE (js/manette.js) : quand on passe du clavier à la manette ou l'inverse, les aides à l'écran changent de langue
 document.addEventListener('hoops-entree', () => {
-  if (game.mode === 'lobby') { game.hud.setLobby(); if (!game._presSiege) game.hud.hint(game.lobbyHint()); }
+  // (l'aide des touches revient quelques secondes, dans la langue de la nouvelle entrée)
+  if (game.mode === 'lobby') { game.hud.setLobby(); game._aideT = Math.max(game._aideT || 0, 8); game._aideMin = 0; game.majAide(); }
 });
 // branchée / débranchée : l'onglet Commandes des options montre l'état et les bons boutons
 document.addEventListener('hoops-manette', () => options.rafraichir());

@@ -121,7 +121,9 @@ function texPlafond() {
 
 // UN ENDUIT PEINT : presque uni, une très légère nuée (rouleau), en mètres (1 tuile = 2 m)
 function texPeinture(hex) {
-  const c = new THREE.Color(hex), r = c.r * 255, gg = c.g * 255, b = c.b * 255;
+  // (les octets sRGB tels quels : THREE.Color(hex) rendrait des valeurs LINÉAIRES, que la texture sRGB convertirait
+  // une seconde fois — un jaune #f0a417 sortait rouge orangé, le blanc sortait beige)
+  const r = (hex >> 16) & 255, gg = (hex >> 8) & 255, b = hex & 255;
   return canvasTex(256, 256, (g, w, h) => {
     g.fillStyle = `rgb(${r},${gg},${b})`; g.fillRect(0, 0, w, h);
     for (let k = 0; k < 60; k++) {
@@ -139,7 +141,9 @@ function materiaux() {
   M.sol = new THREE.MeshStandardMaterial({ map: carr, roughness: 0.38, metalness: 0 });
   avecRelief(M.sol, normalesCarrelage(), 0.6);
   M.blanc = new THREE.MeshStandardMaterial({ map: texPeinture(0xeeebe3), roughness: 0.86 });
-  M.jaune = new THREE.MeshStandardMaterial({ map: texPeinture(0xf0a417), roughness: 0.78 });
+  // (le jaune des photos mesure ~ 229/167/37 ; l'étalonnage « photo » sature les jaunes vers l'orange, d'où une peinture
+  // un peu plus verte que lui, qui ressort à la bonne teinte)
+  M.jaune = new THREE.MeshStandardMaterial({ map: texPeinture(0xf2b936), roughness: 0.78 });
   // un peu de relief et de rugosité variée sur les murs peints (béton photographié, sans grain : la couleur reste)
   for (const m of [M.blanc, M.jaune]) detailPhoto(m, 'beton', 1, 1, { relief: 0.12, grain: 0, rugo: true });
   const tp = texPlafond(); tp.repeat.set(1 / 1.2, 1 / 1.2);
@@ -213,24 +217,53 @@ function porteFermee(groupe, M, x, z, nx, nz, { l = 0.93, h = 2.04, double = fal
 }
 
 // LES CHAISES COQUE (photo 02) : coque moulée d'une seule pièce sur un piètement chromé en fils, en couleurs mêlées.
-// La coque est un morceau de sphère aplati, creusé ; on s'y assoit (`sieges`). `cap` : la direction où regarde l'assis.
+// On s'y assoit (`sieges`). Le groupe regarde vers +z local (là où regarde l'assis).
 const COULEURS_COQUES = [0xf1efe8, 0x5f8f97, 0xcbb8a6, 0xb6c43a, 0x9c9d9b, 0x2b2c2e];
+// LA COQUE, une surface paramétrée : une assise creusée dont le bord REMONTE autour de l'assis — à peine devant (le
+// bord qui retombe sous les genoux), à mi-hauteur sur les côtés (les accoudoirs), haut derrière (le dossier) —, et
+// s'évase vers l'extérieur en montant. Une seule géométrie pour toutes les chaises.
+let _coque = null;
+function geoCoque() {
+  if (_coque) return _coque;
+  const NA = 36, NR = 12, A = 0.3, P = 0.27, Y = 0.43;
+  const pos = [], idx = [];
+  const lisse = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  for (let j = 0; j <= NR; j++) {
+    const t = j / NR, mont = Math.pow(lisse(0.38, 1, t), 1.5);
+    for (let i = 0; i <= NA; i++) {
+      const phi = i / NA * Math.PI * 2, sx = Math.sin(phi), cz = Math.cos(phi);
+      const dos = (1 - cz) / 2;                                    // 0 devant, 1 derrière
+      const bord = 0.035 + 0.33 * Math.pow(dos, 1.25);              // hauteur du bord au-dessus de l'assise
+      const r = t * (1 + 0.12 * mont);                               // l'évasement en montant
+      const creux = -0.025 * (1 - t * t);                            // l'assise creusée
+      const devant = cz > 0 ? -0.05 * Math.pow(cz, 3) * lisse(0.75, 1, t) : 0;   // le bord avant qui retombe
+      pos.push(sx * A * r, Y + creux + bord * mont + devant, cz * P * r - 0.03 * mont * dos);
+    }
+  }
+  for (let j = 0; j < NR; j++) for (let i = 0; i < NA; i++) {
+    const a0 = j * (NA + 1) + i, a1 = a0 + 1, b0 = a0 + NA + 1, b1 = b0 + 1;
+    idx.push(a0, b0, a1, a1, b0, b1);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setIndex(idx); g.computeVertexNormals();
+  return (_coque = g);
+}
 function chaiseCoque(groupe, M, x, z, fx, fz, couleur) {
   const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = Math.atan2(fx, fz);
-  const mat = new THREE.MeshStandardMaterial({ color: couleur, roughness: 0.32 });
-  // la coque : une demi-sphère écrasée (dossier et accoudoirs remontent), vue de l'intérieur aussi
-  const coque = new THREE.SphereGeometry(0.34, 22, 12, 0, Math.PI * 2, Math.PI * 0.52, Math.PI * 0.48);
-  coque.scale(1.05, 0.95, 0.95); coque.rotateX(-0.12);
-  const m = maille(coque, mat, 0, 0.74, 0.02, 0, g);
-  m.material.side = THREE.DoubleSide;
-  // l'assise : le fond plat de la coque
-  maille(new THREE.CylinderGeometry(0.26, 0.24, 0.03, 20), mat, 0, 0.44, 0.03, 0, g);
-  // le piètement : quatre pieds inclinés et l'entretoise
-  for (const [px, pz] of [[-0.2, -0.17], [0.2, -0.17], [-0.2, 0.2], [0.2, 0.2]]) {
-    const p = maille(new THREE.CylinderGeometry(0.009, 0.009, 0.45, 6), M.inox, px * 0.85, 0.215, pz * 0.85, 0, g);
-    p.rotation.z = -px * 0.35; p.rotation.x = pz * 0.35;
+  const mat = new THREE.MeshStandardMaterial({ color: couleur, roughness: 0.32, side: THREE.DoubleSide });
+  maille(geoCoque(), mat, 0, 0, 0, 0, g);
+  // le piètement : quatre pieds inclinés vers l'extérieur, l'entretoise en croix et les patins
+  for (const [px, pz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+    const p = maille(new THREE.CylinderGeometry(0.008, 0.008, 0.44, 6), M.inox, px * 0.17, 0.21, pz * 0.15, 0, g);
+    p.rotation.z = -px * 0.2; p.rotation.x = pz * 0.2;
+    maille(new THREE.CylinderGeometry(0.014, 0.014, 0.012, 8), M.noir, px * 0.215, 0.006, pz * 0.195, 0, g);
   }
-  maille(boiteM(0.34, 0.012, 0.3), M.inox, 0, 0.42, 0.02, 0, g);
+  for (const s of [-1, 1]) {
+    const e = maille(new THREE.CylinderGeometry(0.006, 0.006, 0.5, 5), M.inox, 0, 0.2, 0, 0, g);
+    e.rotation.z = Math.PI / 2; e.rotation.y = s * 0.72;
+  }
+  maille(boiteM(0.22, 0.012, 0.2), M.inox, 0, 0.37, -0.01, 0, g);
   groupe.add(g);
   return g;
 }

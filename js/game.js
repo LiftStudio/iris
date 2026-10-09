@@ -283,9 +283,20 @@ export class Game {
     this.fx.reAdapter();          // l'œil repart de la vue de balade (js/fx.js)
     this.hud.show(); this.hud.setLobby();
     this.hud.feedback(this.carte.nom ? this.carte.nom.toUpperCase() : 'IRIS', 'info');
-    this.hud.hint(this.lobbyHint());
+    // L'AIDE DES TOUCHES au milieu de l'écran : le temps de la lire (14 s, dont 6 s au moins après le premier pas), puis
+    // elle s'efface — le rappel en bas à droite (.keys) reste, et Options › Commandes a tout.
+    this.hud.hint(this.lobbyHint()); this._aideT = 14; this._aideMin = 6;
     this.input.blocked = false;
   }
+
+  // L'AIDE AU MILIEU DE L'ÉCRAN quand rien de particulier ne se passe : la proposition de siège s'il y en a une, sinon
+  // l'aide des touches tant qu'elle n'est pas effacée (_aideT), sinon rien
+  aideRepos() {
+    if (this._presSiege === 'assis') return `${actionKey('interact')} : se lever · ou bouge pour te lever`;
+    if (this._presSiege) return `${actionKey('interact')} : s’asseoir sur ${this._presSiege.nom || 'le siège'}`;
+    return this._aideT > 0 ? this.lobbyHint() : '';
+  }
+  majAide() { this.hud.hint(this.aideRepos()); }
 
   lobbyHint() {
     if (manetteActive()) return aideBalade();
@@ -317,7 +328,7 @@ export class Game {
   doEmote(i) {
     const e = (this.wheel.emotes || [])[i], u = this.user;
     if (!e || !this.canEmote()) return;
-    if (u.startEmote(e)) { this.hud.streak(`${e.icon} ${e.label.toUpperCase()}`); this.hud.hint(`${e.label} · bouge pour arrêter`); }
+    if (u.startEmote(e)) { this.hud.streak(`${e.icon} ${e.label.toUpperCase()}`); this.hud.hint(`${e.label} · bouge pour arrêter`); this._aideEmote = true; }
   }
 
   togglePause() {
@@ -404,6 +415,14 @@ export class Game {
       _dir.addScaledVector(_v, a.y).addScaledVector(_v2, a.x).normalize();
     }
     if (u.emote && (a.x || a.y)) u.stopEmote();
+    if (this._aideT > 0) {
+      // (le compte ne file qu'une fois qu'on bouge : qui lit l'aide sans toucher à rien la garde)
+      this._aideMin -= (a.x || a.y) ? dt : 0; this._aideT -= dt;
+      if (this._aideT <= 0 && this._aideMin > 0) this._aideT = 0.001;
+      if (this._aideT <= 0 && !this._presSiege && this.hud.hintTxt === this.lobbyHint()) this.hud.hint('');
+    }
+    // l'emote finie (ou interrompue), son aide s'en va
+    if (this._aideEmote && !u.emote) { this._aideEmote = false; this.majAide(); }
     this.updateSieges(u, a);
     // ALLURE : la touche de marche, ou un manche à peine poussé (comme sur une manette). Le sprint gagne toujours.
     u.marche = !inp.sprint() && (inp.down('walk') || (() => { const amp = inp.amplitude(); return amp > 0.02 && amp < 0.58; })());
@@ -423,7 +442,7 @@ export class Game {
     if (u.assis) {
       const bouge = Math.hypot(a.x, a.y) > 0.45;
       if (this.input.pressed('interact') || this.input.pressed('jump') || bouge) u.seLever();
-      if (u.assisPose && this._presSiege !== 'assis') { this._presSiege = 'assis'; this.hud.hint(`${actionKey('interact')} : se lever · ou bouge pour te lever`); }
+      if (u.assisPose && this._presSiege !== 'assis') { this._presSiege = 'assis'; this.majAide(); }
       return;
     }
     let best = null, bd = 1.1;
@@ -436,8 +455,7 @@ export class Game {
     if (best !== this._presSiege) {
       const avant = this._presSiege;
       this._presSiege = best;
-      if (best) this.hud.hint(`${actionKey('interact')} : s’asseoir sur ${best.nom || 'le siège'}`);
-      else if (avant) this.hud.hint(this.lobbyHint());
+      if (best || avant) this.majAide();
       window.__touch?.refresh();
     }
     if (best && this.input.pressed('interact')) u.sasseoir(best);

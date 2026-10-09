@@ -286,7 +286,8 @@ async function chargerClip(url, name, def, hipsY, rig = null) {
   const tracks = [];
   const sameRig = def.dm || /\/dm\//.test(path);                       // clip DeepMotion généré sur l'avatar lui-même
   const rt = !sameRig && rig ? retargetClip(fbx, src, rig) : null;
-  if (rt) tracks.push(...rt); else if (!sameRig && rig && rig.tpose && rig.tpose.Hips) console.warn('Retarget impossible (repos source ≠ T-pose), copie directe :', url);
+  // (`copieDirecte` dans le manifeste : on le sait, et la copie directe y est bonne — pas d'avertissement)
+  if (rt) tracks.push(...rt); else if (!sameRig && rig && rig.tpose && rig.tpose.Hips && !def.copieDirecte) console.warn('Retarget impossible (repos source ≠ T-pose), copie directe :', url);
   for (const t of src.tracks) {
     const dot = t.name.lastIndexOf('.');
     const node = boneName(t.name.slice(0, dot)), prop = t.name.slice(dot + 1);
