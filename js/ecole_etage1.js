@@ -1578,15 +1578,19 @@ export function poserEtage1(ch, renderer = null) {
     tabouretNoir(8.84, 9.45, 'E', { sortie: [9.5, 9.4] });
     tolix(8.84, 10.65, 'E', { sortie: [9.5, 10.65] });
     // au milieu, le trépied et son tabouret (65 cm au moins de chaque côté : le passage vers les distributeurs et vers
-    // la tablette ; plus étroit, Haythem s'y coincerait)
+    // la tablette ; plus étroit, Haythem s'y coincerait). (09/10, relecture : le tabouret de côté, tourné vers les
+    // fenêtres — face au trépied, à 51 cm, les pieds de qui s'y assied tombaient dans le moyeu, au travers des pieds)
     mangeDebout(10.69, 10.5, { trepied: true });
-    tolix(10.18, 10.5, 'E');
+    tolix(10.18, 10.5, 'N');
     // LA TABLETTE HAUTE (la vidéo : stratifié gris clair sur pieds d'acier gris, 1,05 m) sous les fenêtres, trois
     // tabourets tournés vers la cour
     const ty0 = 12.23;
     B(8.95, ty0, 12.0, y1, N1 + 1.02, N1 + 1.05, X.stratifieGris);
+    // (09/10, relecture : deux pieds, aux bouts ; au milieu, une console vissée au mur et sa jambe de force — un pied
+    // en x 10,475 passait au travers des tibias de qui s'assied sur le tabouret du milieu)
     for (const x of [9.0, 10.475, 11.95]) {
-      B(x - 0.02, ty0 + 0.04, x + 0.02, ty0 + 0.08, N1, N1 + 1.02, X.acierGris);
+      if (x !== 10.475) B(x - 0.02, ty0 + 0.04, x + 0.02, ty0 + 0.08, N1, N1 + 1.02, X.acierGris);
+      else tige(groupe, X.acierGris, [x, N1 + 0.62, -(y1 - 0.005)], [x, N1 + 0.97, -(ty0 + 0.1)], 0.012);
       B(x - 0.02, ty0 + 0.04, x + 0.02, y1, N1 + 0.97, N1 + 1.02, X.acierGris, { ombre: false });
     }
     C.ajouterBoite(8.95, -ty0, 12.0, -y1, { y0: N1, y1: N1 + 1.06 });
