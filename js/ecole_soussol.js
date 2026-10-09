@@ -109,8 +109,9 @@ const nuees = (g, w, h, r2, n, base, ecart, a = 0.3, rmin = 10, rmax = 60) => {
 function texTole() {
   return canvasTex(256, 1024, (g, w, h) => {
     const r2 = graine(1717);
-    g.fillStyle = '#8b8a84'; g.fillRect(0, 0, w, h);
-    nuees(g, w, h, r2, 90, [139, 138, 132], 22, 0.35, 12, 70);
+    // (relecture du 09/10 : #8b8a84 sortait moitié trop clair à côté de v_020 — la tôle est d'un gris moyen terne)
+    g.fillStyle = '#6e6d68'; g.fillRect(0, 0, w, h);
+    nuees(g, w, h, r2, 90, [110, 109, 104], 18, 0.35, 12, 70);
     // l'usure au milieu de la marche (plus claire) et la crasse sur les bords
     const gr = g.createLinearGradient(0, 0, w, 0);
     gr.addColorStop(0, 'rgba(60,58,52,0.35)'); gr.addColorStop(0.18, 'rgba(60,58,52,0)'); gr.addColorStop(0.5, 'rgba(190,188,180,0.12)');
@@ -187,9 +188,10 @@ function texPanneauNiveau(txt) {
   return canvasTex(128, 128, (g, w, h) => {
     g.fillStyle = '#dcae2c'; g.fillRect(0, 0, w, h);
     g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(0, 0, w, h * 0.5);
-    // (le chiffre épais et rond de v_013 : un trait d'un septième de sa hauteur)
-    g.fillStyle = '#ffffff'; g.font = '600 88px "Arial Rounded MT Bold", "Segoe UI", Arial, sans-serif';
-    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, w / 2 + (txt.length > 1 ? -4 : 0), h / 2 + 5);
+    // (le chiffre de v_013 : un ovale haut et étroit, les deux tiers de la hauteur du panneau, un trait d'un huitième)
+    g.fillStyle = '#ffffff'; g.font = '500 92px "Segoe UI", Arial, sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.save(); g.translate(w / 2 + (txt.length > 1 ? -4 : 0), h / 2 + 6); g.scale(txt.length > 1 ? 0.78 : 0.86, 1.18); g.fillText(txt, 0, 0); g.restore();
   }, null, false, 4);
 }
 // LE TROMBINOSCOPE (v_065 à v_067) : seize médaillons ovales sur fond pêche, le titre en haut
@@ -435,7 +437,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   const std = (o) => new THREE.MeshStandardMaterial(o);
   const nommer = (m, n) => { m.name = n; return m; };
   const X = {
-    tole: nommer(std({ map: texTole(), roughness: 0.52, metalness: 0.55 }), 'tôle larmée'),
+    tole: nommer(std({ map: texTole(), roughness: 0.56, metalness: 0.45 }), 'tôle larmée'),
     // (le garde-corps est d'un gris d'acier satiné, terni — v_009 à v_036 ; plus clair, il sortait crème)
     inox: nommer(std({ color: 0xa19f98, roughness: 0.34, metalness: 0.55 }), 'garde-corps inox terni'),
     limon: std({ color: 0x77766f, roughness: 0.5, metalness: 0.5 }),
@@ -484,7 +486,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     couloir: nommer(std({ map: texCarreaux([88, 89, 88], '#3f4040', 909, 6), roughness: 0.47 }), 'carreaux gris foncé du couloir'),
     // (relecture du 09/10 : #c6bfa6 sortait presque blanc sous les plafonniers ; mesuré sur v_063, le carrelage est d'un
     // tiers plus sombre que les murs)
-    pause: nommer(std({ map: texCarreaux([160, 155, 136], '#88837a', 512, 14), roughness: 0.33 }), 'carrelage beige 60x60'),
+    pause: nommer(std({ map: texCarreaux([150, 145, 127], '#827d72', 512, 14), roughness: 0.33 }), 'carrelage beige 60x60'),
   };
   for (const m of [SOL.couloir, SOL.pause]) avecRelief(m, normalesCarreaux(), 0.35);
   const solsSS = Object.values(SOL);
@@ -498,9 +500,11 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   // chauds, le blanc du -1 sortait beige ; la vidéo le montre d'un blanc neutre)
   const FROID = new THREE.Color(0.96, 0.99, 1.03);
   const plafondsSS = new Map();
-  for (const [m, k] of [[M.platre, 0.3], [M.dalles, 0.3], [M.blanc, null]]) {
+  for (const [m, k] of [[M.platre, 0.3], [M.dalles, 0.3], [M.blanc, null], [M.porte, null]]) {
     const c = m.clone(); if (k !== null) c.emissiveIntensity = k; c.color.multiply(FROID); c.name = m.name + ' (sous-sol)'; plafondsSS.set(m, c);
   }
+  // (les huisseries des portes du -1 sont peintes en blanc, v_041 à v_055 — celles du rez-de-chaussée, crème)
+  { const c = M.huisserie.clone(); c.color.set(0xe2e5e5); c.name = 'huisserie blanche (sous-sol)'; plafondsSS.set(M.huisserie, c); }
 
   const lampes = [];                 // les lampes du -1 (cuites sur son sol)
   const sieges = [];
@@ -1143,14 +1147,14 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   const lm = cuireLumiereSol(proxy, aCuire, { x0: R_SS.x0, z0: -R_SS.y1, W, L: Lg }, { tpm: 16 });
   // (relecture du 09/10 : à 1,4 partout, la résine du hall et le carrelage beige sortaient presque blancs, aussi clairs
   // que les murs ; sur la vidéo, le sol est nettement plus sombre qu'eux — le couloir, lui, est bien gris foncé)
-  for (const m of solsSS) { m.lightMap = lm; m.lightMapIntensity = m === SOL.couloir ? 1.4 : 0.9; }
+  for (const m of solsSS) { m.lightMap = lm; m.lightMapIntensity = m === SOL.couloir ? 1.4 : m === SOL.hall ? 0.75 : 0.55; }
   groupe.traverse((o) => { o.userData.horsAOSol = true; });
   if (renderer) {
     try { cuireOcclusionNiveau(renderer, groupe, solsSS, Y_SS, R_SS); } catch (e) { console.warn('[sous-sol] ombre du sol non cuite :', e); }
   }
   // LA FUSION : le décor fixe cousu en un maillage par matériau ; le groupe hors de l'optimisation du décor (sa
   // visibilité et ses ombres changent avec le niveau de Haythem)
-  fixe.traverse((o) => { if (o.isMesh && plafondsSS.has(o.material)) o.material = plafondsSS.get(o.material); });
+  groupe.traverse((o) => { if (o.isMesh && plafondsSS.has(o.material)) o.material = plafondsSS.get(o.material); });
   fusionnerLocal(fixe);
   nePasFusionner(groupe);
   groupe.traverse((o) => { o.userData.horsAOSol = true; if (o.isMesh && o.castShadow) ombrants.push(o); });
@@ -1165,7 +1169,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   const zr = (x0, y0, x1, y1, hmax = -1.5) => [x0, -y1, x1, -y0, -10, hmax];
   const env = (x, y, h = 1.6) => ({ x, y: Y_SS + h, z: -y });
   const zones = [
-    { id: 'palierSS', rects: [[0.0, -ESC.y0, 1.6, -9.1, -10]], voisines: ['escalierSS'], env: { x: 0.9, y: 1.5, z: -9.6 } },
+    // (le palier s'ouvre sur le hall ouest : ses plafonniers restent allumés quand Haythem passe la porte — sans eux, le
+    // hall s'éteignait derrière lui d'un coup, relecture du 09/10)
+    { id: 'palierSS', rects: [[0.0, -ESC.y0, 1.6, -9.1, -10]], voisines: ['escalierSS', 'hallO'], env: { x: 0.9, y: 1.5, z: -9.6 } },
     { id: 'escalierSS', rects: [[0.2, -ESC.yPied, 1.5, -ESC.y0, -10]], voisines: ['palierSS', 'hallSS'], env: { x: 0.85, y: -1.1, z: -12.0 } },
     { id: 'hallSS', rects: [zr(0.4, ESC.yPied, 2.48, Y_FOND)], voisines: ['escalierSS', 'couloirSS'], env: env(1.45, 15.7) },
     { id: 'couloirSS', rects: [zr(1.45, Y_COUL0, 2.48, ESC.yPied)], voisines: ['hallSS'], env: env(1.96, 10.3, 1.5) },
