@@ -69,11 +69,11 @@ function texSolSalle() {
     const r2 = graine(1140), c = w / 2;
     for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) {
       const t = (r2() - 0.5) * 7;
-      g.fillStyle = rgb(124 + t, 125 + t, 128 + t); g.fillRect(a * c, b * c, c, c);
+      g.fillStyle = rgb(116 + t, 116 + t, 118 + t); g.fillRect(a * c, b * c, c, c);
     }
     // le moucheté : des grains sombres et clairs, serrés
     for (let k = 0; k < w * h / 9; k++) {
-      const v = r2() < 0.5 ? 92 + r2() * 22 : 146 + r2() * 22;
+      const v = r2() < 0.5 ? 86 + r2() * 22 : 138 + r2() * 22;
       g.fillStyle = rgb(v, v + 1, v + 3, 0.55); g.fillRect(r2() * w, r2() * h, 1 + r2() * 1.4, 1 + r2() * 1.4);
     }
     // les joints : un filet à peine plus sombre
@@ -289,7 +289,7 @@ export function poserAmphi(ch, K) {
   const matSol = std({ map: texSolSalle(), roughness: 0.613 });
   matSol.name = 'dalles grises mouchetées (S -1.14)';
   avecRelief(matSol, normalesSol(), 0.25);
-  matSol.userData.lmi = 0.62;            // (son intensité de lumière cuite : js/ecole_soussol.js)
+  matSol.userData.lmi = 0.52;            // (son intensité de lumière cuite : js/ecole_soussol.js)
 
   // =====================================================================
   //  LES MURS, LE SOL, LE PLAFOND
