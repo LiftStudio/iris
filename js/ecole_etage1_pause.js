@@ -884,7 +884,10 @@ export function poserPause1(ch, ctx) {
   const env = (x, y) => ({ x, y: N1 + 1.6, z: -y });
   // (la carte de l'espace pause prise au milieu, loin de l'orange : près du mur du fond, elle teintait tout de pêche)
   const zones = [
-    { id: 'e1pause', rects: [zr(XF, Y_S, XE, YO), zr(XR, YR, XE, Y_S)], voisines: ['e1salle', 'e1couloir', 'e1est', 'e1kahn'], env: env(9.6, 8.9) },
+    // (vérification du 10/10 : jusqu'au nu nord du mur orange et un peu au-delà — dans l'embrasure de la porte de la Si 1.4,
+    // y 12,9-13,0, aucune zone de l'étage ne prenait : celle du C01 du rez-de-chaussée, dessous, s'allumait au passage ;
+    // la salle Robert Kahn passe avant nous)
+    { id: 'e1pause', rects: [zr(XF, Y_S, XE, YO + 0.1), zr(XR, YR, XE, Y_S)], voisines: ['e1salle', 'e1couloir', 'e1est', 'e1kahn'], env: env(9.6, 8.9) },
     { id: 'e1salle', rects: [zr(1.65, -0.2, 13.2, Y_S)], voisines: ['e1pause'], env: env(7.4, 3.45) },
     { id: 'e1bureau', rects: [zr(-0.3, -0.2, 1.65, Y_S)], voisines: ['e1couloir'], env: env(0.8, 3.4) },
   ];
