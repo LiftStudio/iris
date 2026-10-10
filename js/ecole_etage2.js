@@ -626,10 +626,10 @@ export function poserEtage2(ch, renderer = null) {
     // (relecture du 10/10, 88,0-88,7 s à 25 i/s, contraste poussé : CÔTÉ SAS, ni huisserie de bois ni étiquette rouge ni
     // bâton — le vantail gris clair affleure dans l'enduit blanc, une béquille inox sous l'oculus ; le bâton, l'étiquette
     // et le bois sont côté palier seulement. Le gris taupe sortait brun sous les spots chauds : un gris plus froid)
-    const P = ch.porte('x', Y_PAL, 14.75, { l: 0.95, h: 2.04, base: N2, ep: EP, modele: 'grise', etat: 'auto', cote: 'N', charniere: 'd', libre: -1,
+    const CF = ch.porte('x', Y_PAL, 14.75, { l: 0.95, h: 2.04, base: N2, ep: EP, modele: 'grise', etat: 'auto', cote: 'N', charniere: 'd', libre: -1,
       oculus: { bas: 0.85, haut: 1.85, l: 0.12, bord: 0.2 }, poignee: null, feu: false, notices: 1, huisserie: false, matVantail: X.grisCF, nom: 'coupe-feu du 2e' });
     // (dans le repère du vantail : les gonds en x = 0, le vantail vers s ; +z côté sas, -z côté palier)
-    for (const v of P.vantaux) {
+    for (const v of CF.vantaux) {
       const sv = v.s, w = 0.95, e = 0.04, o = { ombre: false };
       maille(boiteM(0.05, 0.16, 0.012), M.inox, sv * (w - 0.07), 1.02, e / 2 + 0.006, 0, v.g, o);
       maille(boiteM(0.13, 0.02, 0.02), M.inox, sv * (w - 0.12), 1.06, e / 2 + 0.05, 0, v.g, o);
@@ -1137,7 +1137,10 @@ export function poserEtage2(ch, renderer = null) {
     // blancs viraient au saumon — la leçon du 1er, js/ecole_est.js)
     { id: 'e2palier', rects: [zr(13.5, Y_PAL, E.x0, Y_ARR), zr(E.x0, Y_VEST, X_ASC, 9.05)], voisines: ['escEst3', 'e2sas'], env: env(15.1, 11.7, 1.5) },
     { id: 'e2sas', rects: [zr(X_SAS0, Y_COUR, X_SAS1, Y_PAL)], voisines: ['e2palier', 'e2couloir'], env: env(14.75, 7.2) },
-    { id: 'e2couloir', rects: [zr(X_FOND, Y_RUE, X_BOUT, Y_COUR)], voisines: ['e2sas', 'e2s1', 'e2s2'], env: env(11.0, 5.575) },
+    // (relecture du 10/10 : prise à 0,9 m du mur rouge, la carte — et la sonde qui en sort, en basse et au téléphone — virait
+    // tous les blancs du couloir au saumon, #c5987f à côté de la photo turquoise, et la photo au brun ; prise au bout est,
+    // contre le mur sud, le mur rouge n'y est plus qu'une bande : #b8aa94, la photo #789a8b — VO q_0293 #e5d4bf, #7aa29d)
+    { id: 'e2couloir', rects: [zr(X_FOND, Y_RUE, X_BOUT, Y_COUR)], voisines: ['e2sas', 'e2s1', 'e2s2'], env: env(13.6, 4.95) },
     { id: 'e2s1', rects: [zr(X_S1, Y_COUR, X_S1E, Y_ARR)], voisines: ['e2couloir'], env: env(9.0, 9.6) },
     { id: 'e2s2', rects: [zr(X_S2, -0.2, X_S2E, Y_RUE)], voisines: ['e2couloir'], env: env(14.0, 2.3) },
   ];
