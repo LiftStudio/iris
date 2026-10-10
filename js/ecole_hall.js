@@ -328,15 +328,16 @@ export function poserHall(ch) {
   // (16,55 ; 2,54). D'où : le comptoir de y 1,1 à 2,45, la tablette PMR jusqu'à 2,95, le pupitre jusqu'à 3,55 ; derrière
   // lui le fauteuil rayé (≈ 17,95 ; 3,1), et le présentoir de bois plus au nord, vers (17,2 ; 4,9), qui se voit au bord
   // droit à 7,0 s et au bord gauche à 92,6 s.)
-  // le comptoir haut : socle sombre en retrait, caisson de stratifié blanc gris, la rainure à 0,55 m sur la face avant
-  // (ouest) et sur le bout sud, la tablette haute grise qui déborde de 8 cm côté visiteurs
-  B(CPT.x0 + 0.06, CPT.y0 + 0.06, CPT.x1, CPT.y1, 0, 0.1, M.socle);
+  // le comptoir haut : socle de bois verni à peine en retrait (relecture 10/10 : photo 03, la bande brune au pied de la
+  // face blanche, comme les plinthes du hall — pas un socle sombre), caisson de stratifié blanc gris, la rainure à 0,55 m
+  // sur la face avant (ouest) et sur le bout sud, la tablette haute grise qui déborde de 8 cm côté visiteurs
+  B(CPT.x0 + 0.02, CPT.y0 + 0.02, CPT.x1, CPT.y1, 0, 0.1, M.bois);
   B(CPT.x0, CPT.y0, CPT.x1, CPT.y1, 0.1, CPT.h - 0.06, H.comptoir);
   B(CPT.x0 - 0.004, CPT.y0, CPT.x0, CPT.y1, 0.545, 0.56, H.rainure, { ombre: false });
   B(CPT.x0, CPT.y0 - 0.004, CPT.x1, CPT.y0, 0.545, 0.56, H.rainure, { ombre: false });
   B(CPT.x0 - 0.08, CPT.y0 - 0.02, CPT.x1 + 0.02, CPT.y1, CPT.h - 0.06, CPT.h, H.tablette);
   // la tablette PMR : le comptoir abaissé contre le pupitre (le dessus déborde de 25 cm : les genoux d'un fauteuil roulant)
-  B(CPT.x0 + 0.06, PMR.y0, CPT.x1, PMR.y1, 0, 0.1, M.socle);
+  B(CPT.x0 + 0.02, PMR.y0, CPT.x1, PMR.y1, 0, 0.1, M.bois);
   B(CPT.x0, PMR.y0, CPT.x1, PMR.y1, 0.1, PMR.h - 0.035, H.comptoir);
   B(CPT.x0 - 0.25, PMR.y0, CPT.x1, PMR.y1, PMR.h - 0.035, PMR.h, H.tablette);
   // (son flanc sud, de chêne grisé, jusqu'au sol : VO 93,6 s, sous la tablette)
@@ -344,7 +345,7 @@ export function poserHall(ch) {
   B(CPT.x0 - 0.25, PMR.y0 - 0.004, CPT.x0, PMR.y0, 0.79, 0.81, H.rainure, { ombre: false });
   // le pupitre : un bloc à façade nord de chêne grisé (la rainure sombre à 0,8 m), ses faces ouest et sud blanches comme
   // le comptoir (VO 92,6-93,6 s), le dessus gris débordant
-  B(PUP.x0 + 0.05, PUP.y0, PUP.x1, PUP.y1 - 0.05, 0, 0.08, M.socle);
+  B(PUP.x0 + 0.02, PUP.y0, PUP.x1, PUP.y1 - 0.02, 0, 0.08, M.bois);
   B(PUP.x0, PUP.y0, PUP.x1, PUP.y1, 0.08, PUP.h - 0.04, H.chene);
   B(PUP.x0 - 0.004, PUP.y0, PUP.x0, PUP.y1, 0.08, PUP.h - 0.04, H.comptoir, { ombre: false });
   B(PUP.x0, PUP.y0 - 0.004, PUP.x1, PUP.y0, PMR.h, PUP.h - 0.04, H.comptoir, { ombre: false });

@@ -201,14 +201,20 @@ function texVitrophanie(dos = false) {
       g.strokeStyle = '#ef7d22'; g.lineWidth = 0.014 * mx; g.lineCap = 'round';
       g.beginPath(); g.moveTo(X(14.62), Y(1.685)); g.lineTo(X(14.42), Y(1.685)); g.moveTo(X(14.47), Y(1.71)); g.lineTo(X(14.42), Y(1.685)); g.lineTo(X(14.47), Y(1.66)); g.stroke();
     }
-    // ---- L'INTERDICTION DE FUMER (vantail est, x 15,86-16,08, h 1,62-1,90) ----
-    g.fillStyle = dos ? 'rgba(236,236,232,0.95)' : '#f7f6f2'; g.fillRect(X(15.86), Y(1.9), 0.22 * mx, 0.28 * my);
+    // ---- L'INTERDICTION DE FUMER (vantail est, x 15,74-15,96, h 1,62-1,90 — relecture 10/10 : photo 16, 0,48 à 0,70 m du
+    // montant central ; les trois bandes bleues sont à sa droite) ----
+    const xf = 15.74;
+    g.fillStyle = dos ? 'rgba(236,236,232,0.95)' : '#f7f6f2'; g.fillRect(X(xf), Y(1.9), 0.22 * mx, 0.28 * my);
     if (!dos) {
-      g.strokeStyle = '#d0262d'; g.lineWidth = 0.012 * mx; g.beginPath(); g.arc(X(15.97), Y(1.81), 0.055 * mx, 0, 7);
-      g.moveTo(X(15.93), Y(1.85)); g.lineTo(X(16.01), Y(1.77)); g.stroke();
-      g.fillStyle = '#1b1b1d'; g.fillRect(X(15.93), Y(1.825), 0.07 * mx, 0.016 * my);
-      g.fillStyle = '#5a5a5e'; for (let k = 0; k < 3; k++) g.fillRect(X(15.89), Y(1.72 - k * 0.03), 0.16 * mx, 0.01 * my);
+      g.strokeStyle = '#d0262d'; g.lineWidth = 0.012 * mx; g.beginPath(); g.arc(X(xf + 0.11), Y(1.81), 0.055 * mx, 0, 7);
+      g.moveTo(X(xf + 0.07), Y(1.85)); g.lineTo(X(xf + 0.15), Y(1.77)); g.stroke();
+      g.fillStyle = '#1b1b1d'; g.fillRect(X(xf + 0.07), Y(1.825), 0.07 * mx, 0.016 * my);
+      g.fillStyle = '#5a5a5e'; for (let k = 0; k < 3; k++) g.fillRect(X(xf + 0.03), Y(1.72 - k * 0.03), 0.16 * mx, 0.01 * my);
     }
+    // ---- LES TROIS BANDES contre le montant est (relecture 10/10 : photo 16, bleu clair côté rue, à droite de
+    // l'interdiction de fumer ; VO 93,6 et 95,4 s et photo 03, trois traits sombres vus du hall, x 15,97-16,13, 1,45-1,85 m) ----
+    g.fillStyle = dos ? '#3a3b40' : '#86b7da';
+    for (const hb of [1.8, 1.65, 1.5]) g.fillRect(X(15.97), Y(hb + 0.035), 0.16 * mx, 0.07 * my);
     // ---- DEUX FEUILLES A4 et la pastille bleue sur le fixe ouest ----
     g.fillStyle = dos ? 'rgba(245,245,240,0.95)' : 'rgba(250,250,246,0.95)';
     g.fillRect(X(13.48), Y(1.88), 0.23 * mx, 0.28 * my); g.fillRect(X(13.72), Y(1.88), 0.21 * mx, 0.36 * my);
