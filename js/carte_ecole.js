@@ -23,7 +23,7 @@
 // trottoir puis la rue). Dans le jeu : X = x, Z = -y (z vers la rue = le sud du jeu), Y vers le haut, sol du
 // rez-de-chaussée à 0. Tout ce fichier parle en coordonnées du PLAN.
 //
-//   le passage des étudiants   x 2,175-4,425 y -0,4-4,05  grille sur rue, portes vitrées au fond (photos 07, 10, 19)
+//   le passage des étudiants   x 1,75-4,425  y -0,4-4,05  grille sur rue (2,25 m), portes vitrées au fond (07, 10, 19)
 //   le hall ouest (escalier)   x 1,75-5,8    y 4,05-8,925 plan d'évacuation, porte grise, extincteur, portes coupe-feu
 //                                                         (photos 06 = r01, 19, 20, 04 ; plan V2, 11/10)
 //   l'escalier                 x 1,75-4,6    y 9,075-13,925 deux volées de 10 marches, palier à 1,75 m, le 1er au bout
@@ -633,10 +633,10 @@ function construireEntree(ch) {
 // LA PAROI DU PASSAGE (photos 07, 19) : en aluminium laqué blanc, la double porte automatique, et au-dessus, jusqu'au
 // plafond du passage (2,60), un bandeau PLEIN d'aluminium blanc. (09/10 : les photos 07 et 19 n'ont pas d'imposte vitrée
 // — la traverse haute des vantaux, à 2,30, est juste sous ce bandeau.)
-// (plan V2, 11/10 : la paroi passe de la ligne y 5,0 à la ligne y 4,05, le passage de 3,0 à 2,25 m de large. Plus de
-// fixes vitrés — les photos 07, 10 et 19 n'en montrent aucun, les deux vantaux remplissent le fond : la double porte
-// va de la pile du plan d'évacuation (x 2,45) au mur est (x 4,425), deux vantaux de ≈ 0,99. À l'ouest, x 2,175-2,45, le
-// pan plein est le dos de cette pile — crème comme le passage, une affiche (photo 10).)
+// (plan V2, 11/10 : la paroi passe de la ligne y 5,0 à la ligne y 4,05. Plus de fixes vitrés — les photos 07, 10 et 19
+// n'en montrent aucun : la double porte va de la pile du plan d'évacuation (x 2,45) au mur est (x 4,425), deux vantaux
+// de ≈ 0,99. À l'ouest, x 1,75-2,45, le pan plein est le dos de cette pile — crème comme le passage, une affiche et une
+// grille de ventilation basse, photo 10.)
 function construireParoiPassage(ch) {
   const { M, C } = ch, Y = 4.05, hP = 2.3, hT = 2.6, X0 = 2.45, X1 = 4.425;
   const montant = (x) => ch.boite(x - 0.035, Y - 0.04, x + 0.035, Y + 0.04, 0, hT, M.alu);
@@ -646,7 +646,7 @@ function construireParoiPassage(ch) {
   ch.boite(X0, Y - 0.025, X1, Y + 0.025, hP + 0.08, hT - 0.06, M.alu);
   C.ajouterBoite(X0, -(Y + 0.05), X1, -(Y - 0.05), { y0: hP, y1: H_DALLE });
   // le pan plein : le dos de la pile (construireMurs), peint en crème côté passage (son affiche : js/ecole_mobilier.js)
-  ch.panneau(M.creme, X0 - 2.175, hT, (2.175 + X0) / 2, Y - 0.002, hT / 2, 'S');
+  ch.panneau(M.creme, X0 - 1.75, hT, (1.75 + X0) / 2, Y - 0.002, hT / 2, 'S');
   // LES AUTOCOLLANTS « iris » (photos 07, 19) : deux rangées de quatre sur le vantail EST (s = -1 : à droite vu du
   // passage), un seul au milieu du vantail ouest
   const rangs = (s) => (s < 0 ? [[0.9, 4], [1.4, 4]] : [[1.25, 1]]);
@@ -667,10 +667,15 @@ function construireMurs(ch) {
   const B = M.blanc, CR = M.creme;
   // ---- LE PASSAGE ET LE HALL OUEST (plan V2 § 2.2, 11/10 : le hall ouest repris MOT POUR MOT de la photo 06, retour r01
   // de Haythem — de 8,6 m à 4,9 m de long) ----
-  // le mur ouest du passage (ligne x 2,1, le couloir de service derrière) et la porte blanche « Sortie », vers la rue
-  // (photo 07 : à y ≈ 1,6, pas contre la paroi vitrée)
-  ch.mur({ de: [2.1, -0.4], a: [2.1, 4.05], mats: { E: CR, W: B }, plinthes: ['E'], ouvertures: [{ c: 1.6, l: 0.9, h: 2.04 }] });
-  ch.porte('y', 2.1, 1.6, { l: 0.9, h: 2.04, modele: 'blanche', etat: 'auto', cote: 'E', charniere: 'd', nom: 'service (passage)' });
+  // le mur ouest du passage (le couloir de service derrière) et la porte blanche « Sortie », vers la rue (photo 07 : à
+  // y ≈ 1,6, pas contre la paroi vitrée).
+  // (11/10, photo 10 rejouée — un ajustement à 10 mesures, 1,8 px d'écart moyen, quelle que soit la focale : le fond du
+  // passage va de x 1,79 à 4,425, 2,64 m, et non 2,25 ; à x 2,175, le mur ouest laisserait 6,7 px d'écart, 15 au coin.
+  // L'ouverture sur la rue garde ses 2,25 m : à l'ouest, un trumeau de 0,43 m dans l'épaisseur de la façade, noir dehors.
+  // Le mur ouest reste donc sur la ligne x 1,675 de master, et le pan plein du fond est tout le dos de la pile du plan
+  // d'évacuation, 0,70 m — la photo 10 y montre une affiche et une grille de ventilation basse.)
+  ch.mur({ de: [1.675, -0.2], a: [1.675, 4.05], mats: { E: CR, W: B }, plinthes: ['E'], ouvertures: [{ c: 1.6, l: 0.9, h: 2.04 }] });
+  ch.porte('y', 1.675, 1.6, { l: 0.9, h: 2.04, modele: 'blanche', etat: 'auto', cote: 'E', charniere: 'd', nom: 'service (passage)' });
   // le mur ouest du hall (ligne x 1,675), derrière la pile, le renfoncement de la porte grise et l'avancée nord
   ch.mur({ de: [1.675, 4.05], a: [1.675, 8.925], mats: B, plinthes: ['E'], ouvertures: [{ c: 9.575 + DY_SS, l: 0.95, h: 2.04 }] });
   // (09/10, la vidéo du sous-sol : elle ouvre sur le palier de l'escalier du -1, js/ecole_soussol.js ; on la TIRE depuis le
@@ -697,7 +702,7 @@ function construireMurs(ch) {
     if (faces.includes('N')) ch.boite(1.75, yb, xa + 0.015, yb + 0.015, 0, 0.08, M.bois, { ombre: false });
   }
   // (côté passage, au pied du pan plein de la pile)
-  ch.boite(2.175, 4.035, 2.45, 4.05, 0, 0.08, M.bois, { ombre: false });
+  ch.boite(1.75, 4.035, 2.45, 4.05, 0, 0.08, M.bois, { ombre: false });
   // le mur est du passage : la ligne x 4,5 (plan V2 : le trumeau des travées 3 et 4 ; derrière, la Si 0.1), jusqu'au mur
   // sud de la salle d'attente (ligne y 4,8) ; au nord, le hall s'ouvre sur la salle. (La porte de l'ex-salle A n'est plus
   // ici : sur le mur sud de la salle d'attente.)
@@ -857,10 +862,10 @@ export function construireCarte(scene, renderer = null) {
 
   // ---- les sols du rez-de-chaussée ----
   // (09/10 : coupé au droit du palier et de la trémie de l'escalier du sous-sol — le palier a son sol de béton peint,
-  // js/ecole_soussol.js ; plan V2 : la trémie suit la porte grise, x -0,3-1,6, y 4,95-10,175 ; le passage, rétréci à
-  // x 2,175-4,425 et arrêté en y 4,05, a son carrelage à lui — solP)
+  // js/ecole_soussol.js ; plan V2 : la trémie suit la porte grise, x -0,3-1,6, y 4,95-10,175 ; le passage, arrêté en
+  // y 4,05, a son carrelage à lui — solP)
   const RN = [
-    [-0.3, -0.4, 2.1, 4.05, 'ns', 1.75, 0], [-0.3, 4.05, 1.6, 4.95, 'ns', 1.75, 0], [-0.3, 10.175, 1.6, 20.75, 'ns', 1.75, 0],
+    [-0.3, -0.4, 1.6, 4.95, 'ns', 1.75, 0], [-0.3, 10.175, 1.6, 20.75, 'ns', 1.75, 0],
     [1.6, 4.05, 4.9, 20.75, 'ns', 1.75, 0], [4.5, -0.4, 4.9, 4.05, 'ns', 1.75, 0], [4.9, -0.4, 5.3, 20.75, 'ns', 1.75, 0],
     [5.3, -0.4, 13.5, 9.0, 'ns', 1.75, 0], [5.3, 9.0, 13.5, 12.0, 'ew', 5.8, 9.0], [5.3, 12.0, 13.5, 20.75, 'ns', 1.75, 0],
     // (le hall ; au nord, le lino du couloir est et de l'escalier est remplace le carrelage : js/ecole_est.js)
@@ -869,7 +874,7 @@ export function construireCarte(scene, renderer = null) {
   ];
   const sol = new THREE.Mesh(geoSol(RN), M.sol); sol.receiveShadow = true; sol.name = 'carrelage'; nePasFusionner(sol);
   scene.add(sol);
-  const solP = new THREE.Mesh(geoSol([[2.1, -0.4, 4.5, 4.05, 'droit', 2.175, 0]]), M.solPassage); solP.receiveShadow = true; nePasFusionner(solP);
+  const solP = new THREE.Mesh(geoSol([[1.6, -0.4, 4.5, 4.05, 'droit', 1.75, 0]]), M.solPassage); solP.receiveShadow = true; nePasFusionner(solP);
   scene.add(solP);
   // LE « TERRAIN » que lisent le rendu et l'ombre cuite (js/fx.js setReflet, js/kit_decor.js) : un plan invisible qui
   // couvre RECT, du même matériau que le carrelage (l'ombre cuite posée sur son matériau vaut pour tout le carrelage)
@@ -905,7 +910,7 @@ export function construireCarte(scene, renderer = null) {
   ch.boite(4.9, 9.075 + DY_A, 5.0, 9.11 + DY_A, 1.25, 1.35, M.rougeEtiquette, { ombre: false });
 
   // ---- les plafonds ----
-  ch.plafond(2.175, 0, 4.425, 4.05, 2.6, 'platre');                  // le passage
+  ch.plafond(1.75, 0, 4.425, 4.05, 2.6, 'platre');                   // le passage
   // le hall ouest (plan V2 : plâtre à 2,30 — photo 06, 2,25-2,30 ; le jeu avait 2,40) : la gorge derrière la paroi
   // vitrée, le hall jusqu'aux dalles de la salle d'attente (x 5,3), et devant le C05, au nord du mur safran
   ch.plafond(1.75, 4.05, 4.5, 4.875, 2.3, 'platre');
@@ -927,7 +932,7 @@ export function construireCarte(scene, renderer = null) {
 
   // ---- les luminaires (et les lampes : ce sont les mêmes) ----
   // (plan V2 : les deux réglettes au-dessus des lièges, vers la rue — photos 07, 10)
-  ch.tube(2.175, 0.9, 2.4, 2.35, 1, 'passage'); ch.tube(4.425, 0.9, 2.4, 2.35, -1, 'passage');
+  ch.tube(1.75, 0.9, 2.4, 2.35, 1, 'passage'); ch.tube(4.425, 0.9, 2.4, 2.35, -1, 'passage');
   ch.sortie(3.3, 0.12, 2.3, 'N');
   // (09/10 : plus de hublot en (5,2 ; 12,9), à l'entrée du C05 — ni la photo 05 ni la photo 23 n'en montrent : les deux
   // qu'on y voit sont ceux du C05 ; plan V2 : les deux du hall, l'un devant la porte grise, l'autre devant l'escalier)
@@ -1014,10 +1019,10 @@ export function construireCarte(scene, renderer = null) {
   // son point de prise de vue pour la carte d'environnement. Rectangles en monde : [x0, z0, x1, z1, hauteur mini].
   const zr = (x0, y0, x1, y1, hmin = -1) => [x0, -y1, x1, -y0, hmin];
   const zones = [
-    // (plan V2 : la cage décalée de DY_S, le palier du 1er de y 7,775 à 9,525 ; le passage rétréci)
+    // (plan V2 : la cage décalée de DY_S, le palier du 1er de y 7,775 à 9,525 ; le passage arrêté à la paroi, y 4,05)
     { id: 'palier1', rects: [zr(1.6, 7.775, 4.75, 14.075, 2.6)], voisines: ['escalier', 'e1hall'], env: { x: 3.2, y: 4.9, z: -8.7 } },
     { id: 'escalier', rects: [zr(1.6, 9.0, 4.75, 14.075)], voisines: ['hallO', 'palier1'], env: { x: 3.4, y: 2.4, z: -11.3 } },
-    { id: 'passage', rects: [zr(2.1, -0.45, 4.5, 4.05)], voisines: ['hallO', 'rue'], env: { x: 3.3, y: 1.6, z: -2.0 } },
+    { id: 'passage', rects: [zr(1.6, -0.45, 4.5, 4.05)], voisines: ['hallO', 'rue'], env: { x: 3.3, y: 1.6, z: -2.0 } },
     { id: 'c05', rects: [zr(4.6, 13.6, 5.9, 18.75)], voisines: ['hallO'], env: { x: 5.2, y: 1.5, z: -15.8 } },
     // (plan V2 : le hall ouest en trois rectangles — la gorge derrière la paroi vitrée, entre la pile et la ligne x 4,5 ;
     // le hall ouvert sur la salle d'attente jusqu'à x 5,8 ; devant les portes de l'escalier et le C05, au nord du mur

@@ -243,7 +243,7 @@ export function poserMobilier(ch) {
   // =====================================================================
   //  LE PASSAGE (photos 07, 19)
   // =====================================================================
-  // (plan V2, 11/10 : le passage rétréci à x 2,175-4,425 et arrêté à la paroi vitrée en y 4,05 ; les deux lièges du mur
+  // (plan V2, 11/10 : le passage arrêté à la paroi vitrée en y 4,05, son mur est sur la ligne x 4,5 ; les deux lièges du mur
   // est sont vers la rue, y 0,4-1,4 et 1,5-2,6 — photos 07, 10 —, pas contre la paroi)
   const liege = texLiege();
   for (const [y0, y1] of [[0.4, 1.4], [1.5, 2.6]]) {
@@ -253,10 +253,13 @@ export function poserMobilier(ch) {
   }
   [[0.75, '#2f6fb0'], [1.95, '#d6542b'], [2.3, '#f08a3c']].forEach(([y, c], i) => ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche(c, '#fbfbf8', 30 + i), roughness: 0.7 }), 0.3, 0.42, 4.39, y, 1.45 + (i % 2) * 0.15, 'W'));
   // le mur ouest, entre la porte « Sortie » (y 1,15-2,05) et la paroi
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e0e0e0', '#ffffff', 40), roughness: 0.7 }), 0.42, 0.3, 2.181, 3.5, 1.55, 'E');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#ffffff', 41), roughness: 0.7 }), 0.42, 0.6, 2.181, 2.75, 1.5, 'E');
-  // l'affiche du pan plein de la paroi, à gauche de la double porte (le dos de la pile du plan d'évacuation, photo 10)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3e9b6b', '#fbfbf8', 42), roughness: 0.7 }), 0.21, 0.297, 2.3125, 4.046, 1.5, 'S');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e0e0e0', '#ffffff', 40), roughness: 0.7 }), 0.42, 0.3, 1.756, 3.5, 1.55, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#ffffff', 41), roughness: 0.7 }), 0.42, 0.6, 1.756, 2.75, 1.5, 'E');
+  // le pan plein de la paroi, à gauche de la double porte (le dos de la pile du plan d'évacuation, x 1,75-2,45) : photo
+  // 10 rejouée, une affiche de 1,33 à 1,71 et, en bas, une grille de ventilation à lames de 0,45 x 0,7
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3e9b6b', '#fbfbf8', 42), roughness: 0.7 }), 0.3, 0.38, 2.1, 4.046, 1.52, 'S');
+  ch.boite(1.82, 4.03, 2.27, 4.048, 0.14, 0.85, M.alu, { ombre: false });
+  for (let h = 0.18; h < 0.82; h += 0.05) ch.boite(1.85, 4.025, 2.24, 4.03, h, h + 0.025, M.grille, { ombre: false });
   // L'AFFICHETTE SCOTCHÉE sur le vantail OUEST de la porte automatique, juste au-dessus de son autocollant « iris »
   // (photo 07 côté hall, photo 19 côté passage, en transparence ; relecture du 09/10) : elle part avec le vantail
   const pp = ch.portes.auto.find((P) => P.g.name === 'porte passage');

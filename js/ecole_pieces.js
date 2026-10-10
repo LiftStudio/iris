@@ -54,9 +54,9 @@ const H_DALLE = 3.25;                       // le dessous de la dalle du 1er ét
 // ---- les pièces, en plan (le nu intérieur des murs) ----
 const SA = { x0: 4.9, x1: 9.9, y0: 0, y1: 8.925 };          // la salle A
 const BB = { x0: 10.05, x1: 13.2, y0: 0, y1: 4.74 };        // le bureau B
-// le couloir de service (plan V2, 11/10 : x 0-2,025 le long du passage rétréci, x 0-1,6 derrière la pile du hall ouest —
-// de yN à y1 —, arrêté au mur sud du palier « 0 » du sous-sol, ligne 4,95, qui a suivi la porte grise)
-const SV = { x0: 0, x1: 2.025, y0: 0, y1: 4.925, xN: 1.6, yN: 4.05 };
+// le couloir de service (plan V2, 11/10 : arrêté au mur sud du palier « 0 » du sous-sol, ligne 4,95, qui a suivi la
+// porte grise)
+const SV = { x0: 0, x1: 1.6, y0: 0, y1: 4.925 };
 // (09/10 : la bande entre le C05 et le C01 — x 5,95-11,55, y 12,15-20,6 — était un local et des toilettes ; elle est
 // redistribuée d'après la photo 23 : une cloison nord-sud en x 8,925, les toilettes du C05 à l'ouest, le local et les
 // toilettes PMR du C01 à l'est)
@@ -74,7 +74,7 @@ const ZONES = [
   // (10/10 : le bureau B a perdu son angle nord-est — x 12,1-13,2 × y 2,5-4,74 —, le passage au sud-ouest de la pile du hall,
   // js/carte_ecole.js et js/ecole_rdc_centre.js : deux rectangles)
   { ...zone('bureauB', BB, { x: 11.3, y: 1.55, z: -2.6 }), rects: [[BB.x0, -2.425, BB.x1, -BB.y0, -1], [BB.x0, -BB.y1, 12.025, -2.425, -1]] },
-  { ...zone('service', SV, { x: 1.0, y: 1.5, z: -2.6 }), rects: [[0, -4.95, 2.1, 0, -1]] },
+  { ...zone('service', SV, { x: 0.8, y: 1.5, z: -2.6 }), rects: [[0, -4.95, 1.675, 0, -1]] },
   zone('local', LT, { x: 10.2, y: 1.7, z: -14.9 }),
   // (relecture du 09/10 : les deux toilettes du C05 prennent leur vue HAUT, à 2,20 m, et loin des portes safran des
   // cabines — à 50 cm d'elles, à hauteur d'homme, la carte n'était qu'un mur safran : faïence, peinture, embrasure et
@@ -1057,25 +1057,21 @@ function chaiseLuge(ch, P, x, y, face, rot = 0, sortie = null) {
 // =====================================================================
 //  LE COULOIR DE SERVICE
 // =====================================================================
-// Derrière la porte blanche « Sortie » du passage : un couloir le long du mitoyen ouest qui mène à la porte de secours de
-// la façade (travée 1). (Plan V2, 11/10 : 2,0 m de large le long du passage rétréci, 1,6 derrière la pile du plan
-// d'évacuation du hall ouest ; fermé au nord, en y 4,925, par le mur sud du palier « 0 » du sous-sol — la porte grise du
-// hall ouest ouvre sur ce palier : js/ecole_soussol.js, qui pose ce mur.) Au-delà, au-dessus du rampant de l'escalier, la
-// réserve reste close.
+// Derrière la porte blanche « Sortie » du passage : un couloir de 1,6 m le long du mitoyen ouest qui mène à la porte de
+// secours de la façade (travée 1). (Plan V2, 11/10 : fermé au nord, en y 4,925, par le mur sud du palier « 0 » du
+// sous-sol — la porte grise du hall ouest ouvre sur ce palier : js/ecole_soussol.js, qui pose ce mur.) Au-delà, au-dessus
+// du rampant de l'escalier, la réserve reste close.
 function couloirService(ch, P) {
   const { M, C } = ch;
   // le mitoyen ouest (30 cm), jusqu'au mur du palier ; le mur nord de la réserve (sans porte : on ne la voit de nulle
   // part), dans l'alignement du mur nord de la cage de l'escalier principal (plan V2 : la réserve x 0-1,6, y 10,175-13,925)
   ch.mur({ de: [-0.15, 0], a: [-0.15, 5.0], ep: 0.3, mats: M.blanc, plinthes: ['E'] });
   ch.mur({ de: [-0.3, 14.0], a: [1.675, 14.0], mats: M.blanc });
-  // les plinthes du mur du passage (la porte laissée libre), du retour de la pile et du mur du hall, côté couloir
-  for (const [a0, a1] of [[0, 1.15], [2.05, SV.yN]]) plinthe(ch, 'y', SV.x1, a0, a1, -1);
-  plinthe(ch, 'x', SV.yN, SV.xN, SV.x1, -1);
-  plinthe(ch, 'y', SV.xN, SV.yN, SV.y1, -1);
+  // les plinthes du mur du passage et du hall, côté couloir (la porte laissée libre)
+  for (const [a0, a1] of [[0, 1.15], [2.05, SV.y1]]) plinthe(ch, 'y', SV.x1, a0, a1, -1);
   // le plafond de plâtre, les hublots, le bloc de sortie au-dessus de la porte de secours
-  ch.plafond(SV.x0, SV.y0, SV.x1, SV.yN, 2.45, 'platre');
-  ch.plafond(SV.x0, SV.yN, SV.xN, SV.y1, 2.45, 'platre');
-  for (const [x, y] of [[1.0, 1.0], [0.85, 3.6]]) ch.opale(x, y, 2.45, 'service', { r: 0.15 });
+  ch.plafond(SV.x0, SV.y0, SV.x1, SV.y1, 2.45, 'platre');
+  for (const y of [1.0, 3.6]) ch.opale(0.8, y, 2.45, 'service', { r: 0.15 });
   ch.sortie(0.8, 0.12, 2.32, 'N');
   // LA PORTE DE SECOURS, vue de dedans : sa barre anti-panique (le vantail est au nu extérieur, y = -0,35)
   const bp = groupe(ch, 0.8, -0.35, 'N', 0);
