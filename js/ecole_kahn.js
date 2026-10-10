@@ -293,6 +293,16 @@ function texFeuille(n) {
     g.fillStyle = '#7d8288'; for (let y = 34; y < h - 14; y += 8) g.fillRect(12, y, 50 + r2() * 54, 3);
   }, null, false, 2);
 }
+// LE VERRE DIFFUSANT D'UN CAISSON (VO q_0222, plafond_a : un champ blanc éblouissant, à peine plus sombre vers le cadre)
+// — dessiné : une carte à elle seule distingue aussi sa matière (l'optimisation du décor confond deux matières qui
+// éclairent dès que leurs couleurs, ramenées à 255, sont égales : sans carte, le verre froid prenait le jaune des spots)
+function texDiffuseur() {
+  return canvasTex(64, 128, (g, w, h) => {
+    const gr = g.createRadialGradient(w / 2, h / 2, 4, w / 2, h / 2, h * 0.62);
+    gr.addColorStop(0, '#ffffff'); gr.addColorStop(0.7, '#f1f4f8'); gr.addColorStop(1, '#d9dee6');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  }, null, false, 2);
+}
 // LE GRAVIER DU TOIT (vu des fenêtres du 2e) — tuile : 1 m
 function texGravier() {
   return canvasTex(256, 256, (g, w, h) => {
@@ -329,7 +339,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
     facade: nommer(std({ color: 0xc9c6bf, roughness: 0.9 }), 'enduit extérieur de l\'aile'),
     plinthe: nommer(std({ color: 0x3a3f48, roughness: 0.55 }), 'plinthe gris-bleu'),
     moquette: nommer(std({ map: texMoquette(Math.ceil(LARG / 0.5), Math.ceil(LONG / 0.5)), roughness: 0.937 }), 'moquette en dalles (salle Robert Kahn)'),
-    plateau: nommer(std({ color: 0xd9d3c8, roughness: 0.42 }), 'plateau stratifié blanc cassé'),
+    plateau: nommer(std({ color: 0xccc6bb, roughness: 0.42 }), 'plateau stratifié blanc cassé'),
     pied: nommer(std({ color: 0x8e9298, roughness: 0.38, metalness: 0.55 }), 'pied de bureau gris'),
     piedSombre: std({ color: 0x3a3c40, roughness: 0.4, metalness: 0.5 }),
     hetre: nommer(std({ map: texHetre(), roughness: 0.5 }), 'coque de hêtre'),
@@ -369,11 +379,11 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   // (les murs : un léger émissif froid tient lieu du jour diffus des six caissons, qui éclaire toute la salle d'égal — les
   // quatre spots qui suivent Haythem n'en éclairent que le coin où il est ; VO q_0265 : le mur du fond, côté porte, est
   // aussi clair que les autres)
-  K.blanc.color.copy(teinte); K.blanc.emissive = new THREE.Color(0xdfe8f6); K.blanc.emissiveIntensity = 0.16;
-  K.platre.color.multiply(teinte); K.platre.emissive = new THREE.Color(0xe4ecf6); K.platre.emissiveIntensity = 0.2;
-  K.joue.color.multiply(teinte); K.joue.emissive = new THREE.Color(0xeef4ff); K.joue.emissiveIntensity = 1.0;
+  K.blanc.color.copy(teinte); K.blanc.emissive = new THREE.Color(0xdfe8f6); K.blanc.emissiveIntensity = 0.13;
+  K.platre.color.multiply(teinte); K.platre.emissive = new THREE.Color(0xe4ecf6); K.platre.emissiveIntensity = 0.06;
+  K.joue.color.multiply(teinte); K.joue.emissive = new THREE.Color(0xeef4ff); K.joue.emissiveIntensity = 0.32;
   // ce qui éclaire (au-delà de 1, le bloom les fait briller) : le verre diffusant des caissons
-  const diffuseur = nommer(new THREE.MeshBasicMaterial({ color: FROID.clone().multiplyScalar(4.0) }), 'caisson lumineux allumé');
+  const diffuseur = nommer(new THREE.MeshBasicMaterial({ map: texDiffuseur(), color: FROID.clone().multiplyScalar(4.5) }), 'caisson lumineux allumé');
   const consoles = [0, 1, 2].map((n) => new THREE.MeshBasicMaterial({ map: texConsole(n), color: new THREE.Color(0.85, 0.85, 0.85) }));
 
   // ---- les outils ----
@@ -688,8 +698,9 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
         continue;
       }
       // (des ports, une boucle vers l'avant, puis le long du flanc de la pile — pas devant la façade de la tour)
-      const b = b0 + s * (0.06 + r2() * 0.14), hh = h - r2() * 0.03, bL = b0 + s * (0.17 + r2() * 0.05);
-      tube(g, mat, [[b, hh, af], [b + s * 0.02, hh - 0.04, af + 0.05], [bL, hh * 0.55, af + 0.03 + r2() * 0.05], [bL + s * 0.02, 0.014, af - 0.02 + r2() * 0.06], [bS, 0.01, af - 0.2],
+      // (chacun sa boucle : plus ou moins molle, plus ou moins en avant ; certains croisent devant la tour — VO q_0240)
+      const b = b0 + (r2() - 0.4) * s * 0.36, hh = h - r2() * 0.03, bL = b0 + s * (0.13 + r2() * 0.12), avant = 0.06 + r2() * 0.2;
+      tube(g, mat, [[b, hh, af], [b + s * 0.02, hh - 0.03, af + 0.05], [(b + bL) / 2 + (r2() - 0.5) * 0.1, hh * (0.3 + r2() * 0.35), af + avant], [bL, 0.014, af + avant * 0.6], [bS, 0.01, af - 0.2],
         [bS, 0.012, aF + 0.08], [bS + s * 0.03, Math.max(0.012, hF * 0.6), aF + 0.03], [bS + s * 0.05 + (r2() - 0.5) * 0.08, hF, aF]], 0.0026, 24, false);
     }
   };
@@ -713,8 +724,8 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
       }
       ecran(g, -P / 2 + 0.13, bE, ecranMat || K.eteint);
       clavier(g, P / 2 - 0.2, bE);
-      if (cordon) {
-        const [mat, n] = cordon;
+      // (`cordon` : [matière, nombre], ou une liste de ces paires)
+      for (const [mat, n] of cordon ? (Array.isArray(cordon[0]) ? cordon : [cordon]) : []) {
         if (empile.length) cordons(g, mat, n, { b0: bT, af: aT + 0.225, h: h - 0.02, fin });
         else cordons(g, mat, n, { b0: bT, af: aT - 0.225, h: 0.3, fin, dos: true });
       }
@@ -736,7 +747,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
       const empile = nord ? (i === 6 ? ['switch', 'switch', 'borne'] : i % 2 ? ['switch', 'switch'] : ['switch']) : [];
       poste((xa + xb) / 2, Y(vc), 'E', {
         sortie: [X(4.64), Y(vc)], tour: { poignee: i % 3 === 1 }, empile, fin: [-P / 2 + 0.06, 0.37],
-        cordon: nord ? [K.rouge, 5] : [K.cyan, 2], tourCote: i % 2 ? 1 : -1, chaiseTiree: i === 2 ? 0.12 : 0,
+        cordon: nord ? [[K.rouge, 5], [K.cyan, 2]] : [K.cyan, 2], tourCote: i % 2 ? 1 : -1, chaiseTiree: i === 2 ? 0.12 : 0,
       });
     }
     // la goulotte blanche au-dessus des bureaux (1,05-1,17 m), ses étiquettes jaunes et ses prises, des cordons rouges
@@ -783,7 +794,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
       });
       // (côté est : élèves face à l'ouest)
       poste(X(uf + P / 2), Y(vc), 'W', {
-        sortie: [X(4.64), Y(vc)], empile: i % 3 === 1 ? ['routeur', 'routeur', 'routeur'] : i % 3 === 2 ? ['routeur'] : [], fin: [-P / 2 + 0.01, 0.29],
+        sortie: [X(4.64), Y(vc)], empile: [['routeur'], ['routeur', 'switch'], [], ['routeur', 'routeur'], ['switch'], ['routeur'], ['routeur', 'routeur']][i], fin: [-P / 2 + 0.01, 0.29],
         cordon: i % 3 !== 0 ? [K.rouge, 4] : [K.cyan, 2], tour: { poignee: i % 2 === 0 }, tourCote: i % 2 ? -1 : 1,
       });
     }
