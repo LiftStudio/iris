@@ -567,28 +567,23 @@ export function poserEst(ch, { RECT }) {
   ch.porte('x', E.yH, 15.86, { l: 0.48, h: 2.06, modele: 'grise', etat: 'fermee', cote: 'N', huisserie: false, oculus: false, poignee: null, fermePorte: false, matVantail: X.taupe, nom: 'couloir est (semi-fixe)' });
   ch.panneau(matPanneau(texPointEcoute(), 0.6), 0.21, 0.297, 15.85, E.yH + 0.068, 1.6, 'N');
   ch.sortie(15.4, E.yH + 0.1, 2.33, 'N');
-  // LA CLOISON VITRÉE CANNELÉE (photos 24, 26) : du jambage est de la porte jusqu'au mitoyen, dans le plan du mur du hall —
-  // cadre blanc, deux pans de verre cannelé jusqu'à 2,45 m (le bureau allumé derrière, le photocopieur contre la vitre),
-  // la porte du bureau (fermée) au bout du dégagement, la cloison pleine au-dessus
-  const yv = E.yH;
-  for (const x of [16.25, 17.4, 18.55]) B(ch, D, x, yv - 0.035, x + 0.05, yv + 0.035, 0, 2.46, X.cadre, { ombre: false });
-  B(ch, D, 16.25, yv - 0.035, 18.6, yv + 0.035, 0, 0.05, X.cadre, { ombre: false });
-  B(ch, D, 16.25, yv - 0.035, 18.6, yv + 0.035, 2.4, 2.46, X.cadre, { ombre: false });
-  for (const [xc, mat] of [[16.85, X.cannele1], [18.0, X.cannele2]]) for (const f of ['N', 'S']) ch.panneau(mat, 1.1, 2.35, xc, yv + (f === 'N' ? 0.006 : -0.006), 1.225, f);
-  B(ch, D, 16.25, yv - 0.075, 18.6, yv + 0.075, 2.46, H_DALLE, B0, { ombre: false });
-  C.ajouterBoite(16.25, -(yv - 0.075), 18.6, -(yv + 0.075), { y1: H_DALLE });
+  // LA CLOISON VITRÉE CANNELÉE (photos 24, 26 ; VO q_0027-0028, 10/10) : du jambage est de la porte à x 17,1, UN SEUL pan
+  // de verre cannelé jusqu'à 2,45 m dans son cadre blanc (la photo 24 ne le voit que jusqu'à x ≥ 17,0 ; à 7,0 s, mesuré
+  // contre le semi-fixe, il finit en x 17,02), la cloison pleine au-dessus ; le photocopieur est contre lui CÔTÉ HALL
+  // (js/ecole_hall.js). Puis, jusqu'au mitoyen, un MUR BLANC PLEIN : côté hall les étiquettes ocre « INFORMATIQUE »
+  // (js/ecole_hall.js), derrière le dégagement et la gaine de l'ascenseur. (Plus de « bureau du photocopieur » : la vidéo
+  // ne montre ni ses deux murs ni sa porte, l'angle est ouvert sur le hall, et la porte x 19,08 tomberait dans la gaine.)
+  const yv = E.yH, xC = 17.1;
+  for (const x of [16.25, xC - 0.05]) B(ch, D, x, yv - 0.035, x + 0.05, yv + 0.035, 0, 2.46, X.cadre, { ombre: false });
+  B(ch, D, 16.25, yv - 0.035, xC, yv + 0.035, 0, 0.05, X.cadre, { ombre: false });
+  B(ch, D, 16.25, yv - 0.035, xC, yv + 0.035, 2.4, 2.46, X.cadre, { ombre: false });
+  for (const f of ['N', 'S']) ch.panneau(X.cannele1, xC - 16.35, 2.35, (16.3 + xC - 0.05) / 2, yv + (f === 'N' ? 0.006 : -0.006), 1.225, f);
+  B(ch, D, 16.25, yv - 0.075, xC, yv + 0.075, 2.46, H_DALLE, B0, { ombre: false });
+  C.ajouterBoite(16.25, -(yv - 0.075), xC, -(yv + 0.075), { y1: H_DALLE });
   // (la feuille A4 scotchée côté couloir, photo 24)
   ch.panneau(matPanneau(texAffiche('#e8e6df', '#f4f3ee', 90), 0.8), 0.21, 0.297, 16.62, yv + 0.006, 1.55, 'N');
-  mur(ch, D, { de: [18.6, yv], a: [E.xM, yv], mats: B0, plinthes: ['N'], ouvertures: [{ c: 19.08, l: 0.93, h: 2.04 }] });
-  ch.porte('x', yv, 19.08, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'N', oculus: false, matVantail: X.taupe, nom: 'bureau du photocopieur' });
-  // LE BUREAU, côté hall : ses deux murs blancs (plinthes de bois, comme tout le hall) dans l'angle nord-est — le hall
-  // garde le comptoir, ses spots et tout ce que montrent les photos 03 et 16
-  mur(ch, D, { de: [16.325, 5.85], a: [16.325, 7.5], mats: B0, plinthes: [['W', M.bois]] });
-  mur(ch, D, { de: [16.25, 5.85], a: [E.xM, 5.85], ep: 0.12, mats: B0, plinthes: [['S', M.bois]] });
-  // deux affiches encadrées côté hall (le planning des formations, les entreprises partenaires)
-  ch.panneau(matPanneau(texAffiche('#2b4c9b', '#fbfbf8', 91), 0.5), 0.6, 0.85, 17.3, 5.781, 1.55, 'S');
-  ch.panneau(matPanneau(texAffiche('#e07b2a', '#fbfbf8', 92), 0.5), 0.6, 0.85, 18.6, 5.781, 1.55, 'S');
-  for (const x of [17.3, 18.6]) B(ch, D, x - 0.32, 5.783, x + 0.32, 5.79, 1.105, 1.995, M.aluGris, { ombre: false });
+  // le mur plein : plinthe de bois côté hall, gris foncé côté dégagement
+  mur(ch, D, { de: [xC, yv], a: [E.xM, yv], mats: B0, plinthes: ['N', ['S', M.bois]] });
 
   // =====================================================================
   //  LE COULOIR EST (photo 24)
