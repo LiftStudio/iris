@@ -960,9 +960,10 @@ export function poserEtage1(ch, renderer = null) {
     poserPalierEst(ch, { groupe, lampes, matSol, R1 });
     // LA SALLE ROBERT KAHN, Si 1.4 (10/10, la vidéo de visite : derrière le mur orange de l'espace pause ; js/ecole_kahn.js)
     // (intégration du 10/10 : son mur sud est le mur orange de l'espace pause — le nu nord Y_MUR_ORANGE, 12,96 —, sa porte
-    // celle de SI14 ; ce qui fermait la porte en attendant la salle (une forme, un fond sombre) s'efface)
-    poserKahn(ch, { groupe, lampes, renderer, ySud: Y_MUR_ORANGE, xPorte: (SI14.x0 + SI14.x1) / 2 });
+    // celle de SI14 ; ce qui fermait la porte en attendant la salle (une forme, un fond sombre) s'efface — AVANT elle : sa
+    // moquette cuit la lumière des spots de l'espace pause qui passe la porte)
     for (const o of SI14.provisoires) { if (o.isObject3D) o.removeFromParent(); else o.off = true; }
+    poserKahn(ch, { groupe, lampes, renderer, ySud: Y_MUR_ORANGE, xPorte: (SI14.x0 + SI14.x1) / 2 });
   } finally {
     ch.decor = decor0; ch.portes.decor = portes0;
   }

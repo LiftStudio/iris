@@ -121,7 +121,8 @@ export class LumieresEcole {
 function segmentsMurs(C) {
   const seg = [];
   for (const s of C.formes) {
-    if (!s.joueur || s.mobile || s.vitre || s.y0 > 0.3 || s.y1 < 2.0) continue;
+    // (une forme éteinte — off — n'existe plus : la fermeture provisoire d'une porte, intégration du 10/10)
+    if (!s.joueur || s.mobile || s.vitre || s.off || s.y0 > 0.3 || s.y1 < 2.0) continue;
     let pts;
     if (s.t === 'b') pts = [[s.x0, s.z0], [s.x1, s.z0], [s.x1, s.z1], [s.x0, s.z1]];
     else if (s.t === 'o') {
