@@ -1705,10 +1705,11 @@ function salleDavidClark(ch, P) {
       chaiseClasse(ch, P, xr - 0.52, yy, 'E', { sortie: [0, allee - yy], mat: (n++ % 7 === 3) ? P.coqueJaune : P.coque });
     }
   }
-  // un cahier, une trousse, une gourde : la classe vient de sortir
-  const cahier = groupe(ch, 5.85, 22.0, 'E', 0.745); cahier.rotation.y += 0.25; B(cahier, P.bleu, 0.21, 0.012, 0.29, 0, 0.006, 0, { ombre: false });
-  const gourde = groupe(ch, 4.55, 20.5, 'E', 0.745); CY(gourde, P.vert, 0.035, 0.22, 0, 0.11, 0, 14); CY(gourde, P.chrome, 0.025, 0.03, 0, 0.235, 0, 10);
-  const trousse = groupe(ch, 3.15, 19.85, 'E', 0.745); trousse.rotation.y += 0.6; R(trousse, P.rouge, 0.2, 0.06, 0.08, 0.025, 0, 0.03, 0, { ombre: false });
+  // un cahier, une trousse, une gourde : la classe vient de sortir (10/10 : la gourde et la trousse au bord des tables,
+  // entre deux postes ; le cahier sur le bureau de l'enseignant — ils tombaient dans les claviers et les écrans)
+  const cahier = groupe(ch, 7.83, 22.66, 'E', 0.745); cahier.rotation.y += 0.25; B(cahier, P.bleu, 0.21, 0.012, 0.29, 0, 0.006, 0, { ombre: false });
+  const gourde = groupe(ch, 4.27, 20.2, 'E', 0.745); CY(gourde, P.vert, 0.035, 0.22, 0, 0.11, 0, 14); CY(gourde, P.chrome, 0.025, 0.03, 0, 0.235, 0, 10);
+  const trousse = groupe(ch, 2.92, 20.22, 'E', 0.745); trousse.rotation.y += 0.1; R(trousse, P.rouge, 0.2, 0.06, 0.08, 0.025, 0, 0.03, 0, { ombre: false });
   // ---- le fond de la classe (mur ouest) : deux affiches, les patères, la plante ; la corbeille, l'extincteur ----
   cadre(ch, P, new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#fbfbf8', 71), roughness: 0.6 }), DC.x0, 20.3, 'E', 0.52, 0.72, 1.6);
   cadre(ch, P, new THREE.MeshStandardMaterial({ map: texAffiche('#e9a01c', '#fbfbf8', 72), roughness: 0.6 }), DC.x0, 21.2, 'E', 0.52, 0.72, 1.6);
