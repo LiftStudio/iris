@@ -807,7 +807,7 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   // portent les plinthes de bois du couloir, une plinthe grise par-dessus)
   // (10/10 : plus de portes 103 et 104 sur la bande, ni d'issue de secours au bout — le doublage et l'ascenseur, et
   // leurs plinthes : js/ecole_ascenseur.js poserBandeSud)
-  B(ch, G, 13.61, 7.034, 16.25, 7.052, N1, N1 + 0.082, X.plinthe, { ombre: false });
+  B(ch, G, 13.61, 7.034, 16.05, 7.052, N1, N1 + 0.082, X.plinthe, { ombre: false });
   // LE CHANT GRIS du mur d'échiffre (photo 28 : ≈ 10 cm, comme le poteau du rez-de-chaussée) : il retourne sur la face
   // sud — vu du haut de la volée 2, c'est une bande grise de 11 cm avant l'orange
   B(ch, G, E.x0 - 0.006, E.yE - 0.081, E.x0 + 0.11, E.yE + 0.081, N1, 6.1, X.poteau, { ombre: false });
