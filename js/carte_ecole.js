@@ -483,11 +483,11 @@ function construireFacade(ch) {
 
   // ---- LES ÉTAGES (pierre et fenêtres dessinées, une travée par tuile), la corniche, l'attique en retrait ----
   // (centrée sur x = 9,9 : la tuile de 1,65 m tombe juste sur les travées ; débordant de 30 cm sur les mitoyens)
-  // (le 1er étage a sa façade à lui, percée de vraies fenêtres : js/ecole_etage1.js ; les étages dessinés partent du 2e,
-  // à 6,60 m — la hauteur de la boîte, trois étages, décale la tuile d'un demi-étage : on la recale)
-  const geoEtages = boiteM(20.4, 3 * 3.1, 0.4);
-  for (let i = 0, uv = geoEtages.attributes.uv; i < uv.count; i++) uv.setY(i, uv.getY(i) + 1.55);
-  const etages = maille(geoEtages, M.etage, 9.9, H_RDC + 3.1 + 1.5 * 3.1, 0.2, 0, ch.decor, { ombre: false });
+  // (le 1er et le 2e ont leurs façades à eux, percées de vraies fenêtres : js/ecole_etage1.js, js/ecole_etage2.js — 10/10 ;
+  // les étages dessinés partent du 3e, à 9,70 m — la boîte fait deux étages : le bas de sa tuile, à -3,10, tombe déjà
+  // sur un plancher, rien à recaler)
+  const geoEtages = boiteM(20.4, 2 * 3.1, 0.4);
+  const etages = maille(geoEtages, M.etage, 9.9, H_RDC + 2 * 3.1 + 3.1, 0.2, 0, ch.decor, { ombre: false });
   etages.userData.horsAOSol = true;
   const hT = H_RDC + 4 * 3.1;
   ch.boite(-0.3, -0.55, 20.1, 0.8, hT, hT + 0.15, M.pierre, { ombre: false });
