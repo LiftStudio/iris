@@ -3,12 +3,12 @@
 // =====================================================================
 // D'après les photos 24 à 29 de Haythem et leur relevé (09/10 ; cotes tirées de l'ultra grand-angle : ± 0,3 m, ce qui
 // est sûr, c'est ce qui mène à quoi). Derrière le mur nord du hall d'entrée, en face de la porte 6, une porte à 1,5
-// vantail (le semi-fixe porte l'affiche violette « POINT ÉCOUTE ») ouvre sur le COULOIR EST : lino moucheté clair, mur
+// vantail (le semi-fixe porte l'affiche violette « POINT ÉCOUTE ») ouvre sur le COULOIR EST : lino gris-taupe, mur
 // ouest JAUNE et sa plaque directionnelle, plinthes gris foncé, plafond de plâtre à 2,55 m et ses hublots ; à l'est, le
 // dégagement devant la cloison vitrée cannelée (le photocopieur derrière), le poteau gris, la niche sous la volée 2. Au
 // fond, la porte du vestibule (1,5 vantail aussi) et L'ESCALIER EN U contre le mitoyen est : volée 1 de 9 contremarches
 // de 19,4 cm vers l'est, palier intermédiaire à 1,75 m, volée 2 de 9 contremarches vers l'ouest jusqu'au 1er (3,50 m) ;
-// marches sombres à nez d'aluminium, plinthe rampante noire, mains courantes NOIRES rondes sur consoles des deux côtés,
+// marches sombres à nez d'aluminium, plinthe rampante gris foncé, mains courantes NOIRES rondes sur consoles des deux côtés,
 // aucun garde-corps à barreaux, murs blancs, la réglette et le bloc de sortie du palier (photos 25, 26). Au 1er, le
 // PALIER EST (photos 27 à 29) : le mur du panneau d'étage, le mur d'échiffre ORANGE et son chant gris, la porte du
 // couloir du 1er, le renfoncement nord.
@@ -23,8 +23,10 @@
 //   le dégagement                    x 16,2-17,9     y 7,65-9,0     devant le vitrage ; le poteau gris x 16,2-16,35 ; au
 //                                                                  bout, la porte de l'ASCENSEUR (js/ecole_ascenseur.js)
 //   la niche sous la volée 2         x 16,2-18,3     y 9,15-10,65   tapis noir, interrupteur, la boucle noire
-//   la porte du vestibule            x 14,70-16,05   y 10,725   vantail 0,85 (auto) + vantail de 0,50 entrebâillé
-//   le vestibule                     x 14,6-16,05    y 10,8-12,45
+//   la porte du vestibule            x 14,70-16,05   y 10,725   vantail 0,85 (ouvert) + vantail de 0,50 presque fermé
+//   le vestibule                     x 14,6-16,05    y 10,8-12,45   son mur nord est nu (VO q_0156-0161)
+//   le local de 0,9 m (plan V2)      x 13,65-19,8    y 12,6-13,5    fermé, vide, sans accès vu ; son toit à 6,68 m
+//   le mur du fond (plan V2)         x 13,3-20,1     y 13,5-13,8    la fin de la partie est (IGN), du -1 au toit
 //   la volée 1 (vers l'est)          x 16,05-18,29   y 10,8-12,45   9 x 19,4 cm, girons de 28 cm, pleine
 //   le palier intermédiaire          x 18,29-19,8    y 9,15-12,45   à 1,75 m
 //   la volée 2 (vers l'ouest)        x 18,29-16,05   y 9,15-10,65   paillasse ; elle arrive au 1er en x 16,05
@@ -785,7 +787,7 @@ export function poserEst(ch, { RECT }) {
   // ensuite vers l'est) ; le détecteur de fumée ; les deux hublots ronds (comme ceux du C05, photo 05)
   // (plan V2, lot H, 11/10 : la photo 24 rejouée au même point de vue — le plafond du couloir est nettement plus sombre
   // que les murs et chaud, 0,61 du mur, R/V/B au mur 0,91/0,76/0,63 : il ne reçoit que le rebond, et celui du mur jaune ;
-  // le plâtre commun sortait à 0,96, gris-beige. Un plâtre à lui, teinté de ce rebond, pour le couloir et le vestibule)
+  // le plâtre commun sortait à 0,96, gris-beige. Un plâtre à lui, teinté de ce rebond, pour le couloir et le dégagement)
   const platreJaune = M.platre.clone(); platreJaune.name = 'plafond en plâtre (couloir est, rebond du jaune)';
   platreJaune.color.set(0xd2b79a); platreJaune.emissive.set(0xc8ad8c); platreJaune.emissiveIntensity = 0.1;
   // (le dessous seulement : ses retombées restent blanches — celle du vestibule, au-dessus de la volée 1, se voit de la cage)
@@ -842,7 +844,9 @@ export function poserEst(ch, { RECT }) {
     B(ch, v, -0.455, -z - 0.07, -0.33, -z - 0.05, 1.03, 1.05, M.noirMat, { ombre: false });
     B(ch, v, -0.34, -z - 0.07, -0.33, -z - 0.05, 0.99, 1.05, M.noirMat, { ombre: false });
   }
-  ch.sortie(15.85, E.yE + 0.12, 2.33, 'N');
+  // (lot H, 11/10 : le bloc de sortie côté vestibule est au-dessus du milieu de la baie, x ≈ 15,45 — photo 26 à la pose
+  // résolue, en haut à droite ; en x 15,85, au-dessus du petit vantail, il sortait au milieu de l'image)
+  ch.sortie(15.45, E.yE + 0.12, 2.33, 'N');
   // le mur nord du vestibule (et de la cage) : derrière lui, le local de 0,9 m (plan V2 : x 13,65-19,8 × y 12,6-13,5,
   // fermé, laissé vide), puis le mur du fond de la partie est (y 13,5-13,8 : fondPartieEst)
   // (10/10 : sa plinthe s'arrête au vestibule — sous la volée 1, qui n'est plus pleine, elle flottait au-dessus de la
@@ -852,7 +856,8 @@ export function poserEst(ch, { RECT }) {
   // q_0050-0057 était le petit vantail du vestibule, voir plus haut. Le local n'a pas d'accès vu)
   mur(ch, D, { de: [13.65, E.yN], a: [E.x0, E.yN], h: N1, mats: B0, plinthes: ['S'] });
   mur(ch, D, { de: [E.x0, E.yN], a: [E.xM, E.yN], h: N1, mats: B0 });
-  plafondJaune(14.675, 10.8, E.x0, 12.45, HC, 'platre');
+  // (le plafond du vestibule reste le plâtre commun : photo 25, au-dessus de la volée 1 il est clair, pas teinté)
+  ch.plafond(14.675, 10.8, E.x0, 12.45, HC, 'platre');
   // (lot H, 11/10 : les hublots de Ø 0,30 de la photo 24 — r 0,15 ; un peu moins forte, l'opale du vestibule ne fait plus
   // sortir le petit vantail beige clair)
   ch.opale(15.36, 11.62, HC, 'vestEst', { r: 0.15, force: 0.85 });
