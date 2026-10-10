@@ -27,7 +27,9 @@
 // la grande salle derrière le mur vert, js/ecole_amphi.js). Les coordonnées ci-dessous sont celles d'après le décalage.
 // Avec lui : le COULOIR gagne 1,1 m (v_047 à v_051 : la plinthe du fond à 7,1-8,3 m), le REBORD du mitoyen reprend son
 // profil (de niveau, puis plongeant), l'EXTINCTEUR du hall descend et recule, l'espace pause se DÉGAGE (baby-foot
-// nord-sud, îlot de trois tables, l'aile sans meubles imaginés), et la grande salle RENTRE DANS LA PARCELLE.)
+// nord-sud, îlot de trois tables, l'aile sans meubles imaginés), et la grande salle RENTRE DANS LA PARCELLE. Rejoué au
+// jeu aux points de vue des images, trois cotes du plan ont été reprises : l'extincteur du hall (v_010), l'objet jaune du
+// rebord (v_010) et la cloison vitrée du mur vert (v_064 et 20,98 s) — chacune avec sa preuve, là où elle est posée.)
 //
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; dans le jeu X = x, Z = -y) :
 //   le palier (niveau 0)       x 0-1,6      y 5,0-6,01    derrière la porte grise du hall ouest (x 1,675, c 5,485) ; son

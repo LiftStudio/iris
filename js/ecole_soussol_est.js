@@ -469,9 +469,8 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     { id: 'palierSSE', rects: [zr(14.55, 10.725, XA, 12.55)], voisines: ['escEstSS', 'sasSS'], env: { x: 15.9, y: Y_SS + 1.6, z: -11.7 } },
     { id: 'sasSS', rects: [zr(14.55, 7.7, 17.65, 9.05), zr(14.55, 9.05, 16.85, 10.725), zr(14.0, 9.15, 14.55, 10.35)], voisines: ['palierSSE', 'passageSS'], env: { x: 15.6, y: Y_SS + 1.6, z: -9.0 } },
     // (plan V2 : le passage sombre, sa galette faible ; pas de voisine côté espace pause — ses plafonniers, sans ombre,
-    // l'éclaireraient au travers du mur)
-    // (dès x 12,95, le bord de la zone de l'espace pause : sur le seuil de la porte sombre, la zone du rez-de-chaussée,
-    // au-dessus, prenait la main le temps d'un pas — audit des zones au pas de 5 cm, 11/10)
+    // l'éclaireraient au travers du mur. Dès x 12,95, le bord de la zone de l'espace pause : sur le seuil de la porte
+    // sombre, la zone du rez-de-chaussée, au-dessus, prenait la main le temps d'un pas — audit au pas de 5 cm, 11/10)
     { id: 'passageSS', rects: [zr(12.95, 4.95, 14.0, 10.35)], voisines: ['sasSS'], env: { x: 13.525, y: Y_SS + 1.5, z: -7.6 } },
   ];
 
