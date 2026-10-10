@@ -71,6 +71,11 @@
 // jusqu'au palier d'étage ouest et l'escalier ; on entre dans la salle par sa porte, on gagne l'allée centrale et le
 // tableau ; le recoin s'arrête sur sa porte taupe, la Si 1.4 sur sa forme provisoire ; on s'assoit sur les banquettes, les
 // tabourets, les chaises hautes et les chaises de la salle ; la caméra reste dans les pièces (murets, alcôve, recoin).
+// RELU EN JOUANT (10/10, plan en L) : du palier est à la porte du fond par la bande des jours (passage de 0,78 m entre
+// les mange-debout et les jours), de la porte du fond à la niche (0,77 m entre le local et la banquette jaune), du palier
+// à la porte de la Si 1.4 (x 11,45-12,15 libre), dans la salle jusqu'au tableau, l'escalier ouest descendu et remonté ;
+// les 18 sièges de l'espace pause (la rouge assise du seul côté de la table basse) : on s'assoit, on se relève à sa
+// place ; la caméra de troisième personne ne rentre jamais dans le local ; ?tel=1 charge et tourne.
 import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex } from './kit_decor.js';
