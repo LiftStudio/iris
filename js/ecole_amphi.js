@@ -22,6 +22,11 @@
 // dedans n'est pas modélisé. Le mur est (x 15,2, ± 0,6) n'est jamais vu en entier : nu, sous un bandeau, et le mur du
 // tableau y fait un retour (l'arête vers x 13,9). 109 fauteuils et la chaise seule : 110 places. L'état de 2026 de la
 // salle n'est pas connu (aucune photo de Haythem) : tout vient de 2021.
+//   RELECTURE DU 10/10 (captures du jeu aux points de vue de f_0060, f_0082, f_0143, f_0160, f_0185, f_0200, f_0228,
+// f_0250, côte à côte) : les fauteuils vus de face (écu, assise relevée à fente noire, lisse murale du dernier rang), leur
+// ocre ramené à la vidéo, les blancs du -1 au lieu d'un blanc teinté, le 2e portrait en gris doux, le poteau lisible, la
+// porte d'entrée à vrais vitrages dépolis (on devine la salle de la pause, la pause de la salle), et la salle sans
+// voisine (les spots, sans ombre, éclairaient la pause au travers du mur vert, et inversement).
 //
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; X = x, Z = -y ; sol à Y_SS = -3,06) :
 //   la salle            x 2,55-15,2   y 15,95-25,5   moins l'encoche x 10,3-15,2 y 15,95-17,875 ; plafond à 2,70 m
