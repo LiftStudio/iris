@@ -435,7 +435,9 @@ export function poserEtage2(ch, renderer = null) {
     rouge: std({ map: texPeinture(ROUGE_2E, 4), roughness: 0.6 }, 'peinture rouge vermillon (couloir du 2e)'),
     // (les sols : une rugosité à eux — l'optimisation du décor ne doit pas les confondre, ils ont leur lumière cuite)
     // (10/10, côte à côte avec q_0299 : #9a8a7a sortait rose pâle sous les spots chauds — un taupe plus sombre et plus gris)
-    lino: std({ map: texMouchete({ fond: [128, 117, 106], taches: [[[160, 150, 138], 0.7], [[88, 80, 71], 0.75], [[112, 102, 92], 0.6]], n: 8000, graineN: 23 }), roughness: 0.401 }, 'lino taupe du 2e'),
+    // (relecture du 10/10 : la carte d'environnement du couloir ne vire plus au saumon — le lino sortait alors #8d755a, plus
+    // sombre et plus jaune que la vidéo, q_0299 #ae8d7e : un peu plus clair, un peu plus froid)
+    lino: std({ map: texMouchete({ fond: [142, 128, 120], taches: [[[174, 163, 155], 0.7], [[98, 88, 82], 0.75], [[124, 112, 105], 0.6]], n: 8000, graineN: 23 }), roughness: 0.401 }, 'lino taupe du 2e'),
     // (10/10, relecture côte à côte avec q_0283 : le vinyle sortait beige ; il est gris-brun, plus sombre que le lino)
     vinyle: std({ map: texMouchete({ fond: [102, 97, 92], taches: [[[134, 128, 120], 0.6], [[70, 66, 62], 0.7], [[150, 145, 138], 0.3]], n: 8000, graineN: 29 }), roughness: 0.551 }, 'vinyle du palier du 2e'),
     tapis: std({ color: 0x3b3b3d, roughness: 0.92 }, 'tapis anthracite (palier du 2e)'),
@@ -597,7 +599,8 @@ export function poserEtage2(ch, renderer = null) {
     mur({ de: [X_PAN, 8.59], a: [X_PAN, Y_ARR - EP_ARR / 2], ep: 0.15, mats: B0, plinthes: [['E', P]], ouvertures: [{ c: Y_FEN, l: 0.75, bas: N2 + 1.0, h: N2 + 2.25 }] });
     mur({ de: [13.61, 8.65], a: [14.075, 8.65], mats: B0, plinthes: [['S', P]] });
     mur({ de: [13.55, Y_PAL - 0.06], a: [13.55, 8.71], mats: B0, plinthes: [['E', P]] });
-    mur({ de: [13.49, Y_PAL], a: [E.x0 + 0.06, Y_PAL], mats: B0, plinthes: [['N', P], ['S', X.plinthe]], ouvertures: [{ c: 14.75, l: 0.95, h: N2 + 2.09 }] });
+    // (l'ouverture de la porte coupe-feu à 2,05 m : côté sas, le vantail affleure sous l'enduit, sans jour au-dessus)
+    mur({ de: [13.49, Y_PAL], a: [E.x0 + 0.06, Y_PAL], mats: B0, plinthes: [['N', P], ['S', X.plinthe]], ouvertures: [{ c: 14.75, l: 0.95, h: N2 + 2.05 }] });
     // LE VESTIBULE DE L'ASCENSEUR (x 16,05-17,9, y 7,0-9,0 : la bande sud du 1er, au-dessus — non vu) : son mur ouest, son
     // mur sud, et au fond, en x 17,9, UN MUR PROPRE là où viendra la porte palière (lot 7 : à l'intégration, ce mur cède
     // la place à poserAscenseur(ch, { base: N2, groupe }), js/ecole_ascenseur.js)
