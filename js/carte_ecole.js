@@ -646,6 +646,10 @@ function construireMurs(ch) {
   // (gonds au nord : ouverte dans la salle, le vantail longe le bureau de l'enseignant au lieu de barrer l'allée des postes)
   ch.porte('y', 4.825, 6.85, { l: 0.93, h: 2.04, modele: 'grise', etat: 'auto', cote: 'E', charniere: 'd', nom: 'salle A' });
   // ---- LA SALLE D'ATTENTE ----
+  // (10/10, ARBITRAGE de la visite officielle : de la porte 6, en 2021, le bout est du mur jaune et le totem se voient à
+  // gauche de la pile, vers y 7,6 — 4,4 m plus au sud qu'ici ; mais la même vidéo à 11,6 s, les photos 02, 04, 05 de 2026
+  // et l'ancrage du -1 sur la porte « service (hall) » tiennent la salle en y 9,0-12,075, droite. Les photos priment :
+  // elle reste ici ; le détail des poses et des résidus est dans le message du commit.)
   // le sud : le mur de la salle A et ses deux jours dépolis (photos 02, 21)
   ch.mur({ de: [4.75, 9.0], a: [10.05, 9.0], mats: B, plinthes: ['N', 'S'], ouvertures: [{ c: 6.65, l: 1.3, bas: 0.95, h: 2.3 }, { c: 8.35, l: 1.3, bas: 0.95, h: 2.3 }] });
   const sud = new THREE.Group(); sud.position.set(0, 0, -9.0); ch.decor.add(sud);
