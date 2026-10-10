@@ -69,8 +69,14 @@ const H_TOIT = N1 + 3.2;             // le dessus du toit (étanchéité) ; l'ac
 const DALLE2 = 6.4;                  // le dessous de la dalle du 2e (js/ecole_etage1.js) : sous le 2e, les murs s'y arrêtent
 const H_PLAT = 0.74;                 // le dessus des plateaux, au-dessus du plancher
 // ---- la salle (reseau.md § 3.3, recalé : voir l'en-tête) ----
-const LARG = 6.4, LONG = 11.3;       // le nu intérieur
-const U_PORTE = 4.4, L_PORTE = 0.95;
+// (PLAN V2, 11/10 — plan_v2.md § 1.4, option (a) de etage1.md § 5 : la salle sortait du bâtiment, x 7,975-14,375 ×
+// y 12,96-24,26, de 1,0 à 1,1 m à l'est — ses postes du mur est hors du gabarit IGN, rdc_est/v2/dessus_e1.jpg — et de
+// 0,5 m au nord. La porte (x 11,9-12,85) et le mur orange ne bougent pas : la salle glisse à l'ouest, x 6,9-13,3, la porte
+// à 0,45 m de son mur est, et s'arrête au fond du bâtiment, y 23,70 — 6,40 x 10,74, dans la marge de ± 1,2 m du relevé.
+// Le toit, les lanterneaux et ce qui tient au mur du fond suivent : DL, le raccourcissement)
+const LARG = 6.4, LONG = 10.74;      // le nu intérieur
+const U_PORTE = 5.475, L_PORTE = 0.95;
+const DL = LONG - 11.3;              // (−0,56 : le mur du fond avance ; ce qui y tient le suit)
 // le renfoncement nord du palier est (js/ecole_est.js poserPalierEst) : la face ouest de son mur x 13,2, la face nord du
 // mur nord de la cage (y 12,525) ; la façade arrière des étages, au-dessus (le 2e s'arrête là : son nu extérieur,
 // Y_ARR_N — js/ecole_etage2.js, y 12,45, ép. 0,30). Au sud de cette ligne, le 2e est au-dessus de la salle : ses murs
@@ -486,7 +492,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   // =====================================================================
   //  LES MURS (blancs dedans ; l'enduit de l'aile dehors) ET LA PORTE GRISE
   // =====================================================================
-  const yGrise = Y(9.35);
+  const yGrise = Y(9.35 + DL);                          // (V2 : contre l'étagère de l'angle, qui suit le mur du fond)
   // (un mur nord-sud : sous le 2e — au sud de sa façade arrière — il s'arrête sous sa dalle ; au-delà, il monte au toit)
   const murNS = (x, ya, yb, o) => {
     const dans = (p, q) => (o.ouvertures || []).filter((v) => v.c > p && v.c < q);
@@ -807,7 +813,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   // la rangée du MUR OUEST : 8 postes, de v 0,3 à 8,6 ; le routeur Wi-Fi à deux antennes au 3e depuis le fond, un carton
   // sur la tour du dernier (VO q_0250-0258) ; deux boîtiers de prises au mur, branchés en rouge (VO 66 s)
   {
-    const v0 = 0.3, v1 = 8.6, n = 8, pas = (v1 - v0) / n, xa = X(0), xb = X(P);
+    const v0 = 0.3, v1 = 8.6 + DL, n = 8, pas = (v1 - v0) / n, xa = X(0), xb = X(P);   // (V2 : jusqu'à la porte grise)
     bureau(xa, Y(v0), xb, Y(v1));
     C.ajouterBoite(xa, -Y(v0), xb, -Y(v1), { y0: N1, y1: N1 + H_PLAT + 0.02 });
     for (let i = 0; i < n; i++) {
@@ -909,7 +915,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
     for (let k = 0; k < 9; k++) archi(X(5.39 + k * 0.05), yN - 0.092, X(5.41 + k * 0.05), yN - 0.09, N1 + 0.32, N1 + 1.73, M.grille);
     // le porte-câbles : un pied en épingle de tube gris (1,90 m) où pendent des cordons cyan et quelques rouges
     {
-      const g = poser(X(5.15), Y(10.95), ROT.S);
+      const g = poser(X(5.15), Y(10.95 + DL), ROT.S);
       for (const s of [-1, 1]) tige(g, K.pied, [s * 0.12, 0.02, 0], [s * 0.12, 1.88, 0], 0.012);
       tige(g, K.pied, [-0.13, 1.88, 0], [0.13, 1.88, 0], 0.012);
       for (const s of [-1, 1]) tige(g, K.pied, [s * 0.12, 0.012, -0.16], [s * 0.12, 0.012, 0.16], 0.012);
@@ -921,7 +927,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
       C.ajouterCercle(g.position.x, g.position.z, 0.2, { y0: N1, y1: N1 + 1.9 });
     }
     // l'affiche jaune et bleue, au bout nord de la rangée du mur est ; deux feuilles A4 au-dessus des postes
-    panneau(new THREE.MeshStandardMaterial({ map: texAfficheJaune(), roughness: 0.7 }), 0.3, 0.42, X(LARG) - 0.002, Y(10.7), N1 + 1.7, 'W');
+    panneau(new THREE.MeshStandardMaterial({ map: texAfficheJaune(), roughness: 0.7 }), 0.3, 0.42, X(LARG) - 0.002, Y(10.7 + DL), N1 + 1.7, 'W');
     for (const [v, n] of [[6.0, 1], [8.0, 2]]) panneau(new THREE.MeshStandardMaterial({ map: texFeuille(n), roughness: 0.7 }), 0.21, 0.297, X(LARG) - 0.002, Y(v), N1 + 1.8, 'W');
   }
   // ---- l'angle nord-ouest : l'ÉTAGÈRE de bois miel garnie (VO q_0242-0256, f_0204), l'affiche A1 turquoise ----
@@ -959,8 +965,8 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
     maille(new THREE.CylinderGeometry(0.04, 0.04, 0.1, 14), K.noir, -0.5, ht + 0.35, pf - 0.2, 0, g);
     C.ajouterBoite(X(0), -Y(LONG - 0.75 - lg / 2), X(pf), -Y(LONG - 0.75 + lg / 2), { y0: N1, y1: N1 + 2.2 });
     // l'affiche A1 turquoise (v 7,9-8,7, de 1,15 à 2,0 m), la prise double dessous
-    panneau(new THREE.MeshStandardMaterial({ map: texAfficheTurquoise(), roughness: 0.7 }), 0.6, 0.85, X(0) + 0.002, Y(8.3), N1 + 1.575, 'E');
-    archi(X(0), Y(8.3) - 0.07, X(0) + 0.03, Y(8.3) + 0.07, N1 + 1.06, N1 + 1.14, K.plastique);
+    panneau(new THREE.MeshStandardMaterial({ map: texAfficheTurquoise(), roughness: 0.7 }), 0.6, 0.85, X(0) + 0.002, Y(8.3 + DL), N1 + 1.575, 'E');
+    archi(X(0), Y(8.3 + DL) - 0.07, X(0) + 0.03, Y(8.3 + DL) + 0.07, N1 + 1.06, N1 + 1.14, K.plastique);
     // au mur ouest, à hauteur d'œil (VO q_0265 : sur l'horizon de l'appareil, tenu vers 1,5 m — et non vers 1,9 m) : le
     // petit boîtier blanc (sonde) en v 3,9 ; la rangée de quatre étiquettes au-dessus des prises (v 5,0-5,3)
     archi(X(0), Y(3.9) - 0.05, X(0) + 0.025, Y(3.9) + 0.05, N1 + 1.45, N1 + 1.57, K.plastique);

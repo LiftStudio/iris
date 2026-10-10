@@ -12,20 +12,26 @@
 // LE PLAN DE L'ÉTAGE (repère du plan de js/carte_ecole.js : x le long de la façade, y vers le fond ; plancher à 3,50 m,
 // dessous de la dalle du 2e à 6,40 m) — refait le 10/10 d'après la vidéo officielle de visite (2021), qui le parcourt
 // (VO 41-68 s) ; ce qu'elle ne montre pas reste imaginé :
-//   le bureau de la travée 1             x 0-1,59    y 0-6,9     la grande baie rouge (photo 12 : un bureau allumé)
-//   la salle de cours S 1.3              x 1,65-13,2 y 0-6,9     travées 2 à 8, sept fenêtres (VO q_0198-0213)
-//   bureau 103 (pédagogie)               x 13,2-16,5 y 0-6,9     travées 9 et 10 (au-dessus de la porte 6)
-//   salle 104 (Gordon Earle Moore, Si 1.5) x 16,5-19,8 y 0-6,9   travées 11 et 12 (la fenêtre rouge des pompiers)
-//   l'espace pause                       x 4,75-13,5 y 7,0-12,9  derrière la porte du palier est (VO q_0180-0219) ; au
+// (PLAN V2 du 11/10, plan_v2.md § 2.4 — retour de Haythem du 10/10 : « les salles sont trop compressées ». Le mur des
+// jours descend de 2 m, y 6,975 → 4,95 : l'espace pause en prend 2 de plus, la S 1.3 en perd 2, le couloir sombre et le
+// palier d'étage ouest descendent avec lui ; la salle Robert Kahn rentre dans le bâtiment ; le palier est rétrécit au nord)
+//   le bureau de la travée 1             x 0-1,59    y 0-4,89    la grande baie rouge (photo 12 : un bureau allumé)
+//   la salle de cours S 1.3              x 1,71-13,14 y 0-4,89   travées 2 à 8, sept fenêtres (VO q_0198-0213)
+//   bureau 103 (pédagogie)               x 13,61-16,44 y 0-6,9   travées 9 et 10 (au-dessus de la porte 6 ; au sud de
+//                                        y 3,39, il commence en x 13,26, derrière la cloison de la S 1.3)
+//   salle 104 (Gordon Earle Moore, Si 1.5) x 16,56-19,8 y 0-6,9  travées 11 et 12 (la fenêtre rouge des pompiers)
+//   l'espace pause                       x 4,75-13,49 y 5,0-12,9 derrière la porte du palier est (VO q_0180-0219) ; au
 //                                        nord, la porte de la salle Robert Kahn, Si 1.4 (js/ecole_kahn.js) ; au sud-est,
 //                                        le recoin et la seconde porte de la salle ; en L autour du local fermé du coin
-//                                        nord-ouest (x 4,75-7,06 y 9,4-12,96), la niche des distributeurs sur sa face est
-//                                        (relecture 10/10, js/ecole_etage1_pause.js)
-//   le couloir sombre                    x 0-4,6     y 7,0-8,9   derrière la porte du fond de l'espace pause
-//   le palier d'étage                    x 1,75-4,6  y 8,9-12,45  devant la double porte de l'escalier, ouverte
-//   le palier est et l'escalier est      x 13,55-19,8 y 7,0-12,45 (photos 27 à 29 : js/ecole_est.js poserPalierEst) ; les
-//                                        portes du 103 et de la 104 s'ouvrent sur lui, l'issue de secours est au bout
-//   fermés : S 1.6 au fond du palier est, le local ménage, l'issue de secours, le 2e étage
+//                                        nord-ouest (x 4,75-6,94 y 8,66-12,84), la niche des distributeurs sur sa face est
+//                                        (js/ecole_etage1_pause.js)
+//   le couloir sombre                    x 0-4,6     y 5,01-6,79 derrière la porte du fond de l'espace pause
+//   le palier d'étage ouest              x 1,75-4,6  y 6,79-7,775 devant la double porte de l'escalier principal (ligne
+//                                        7,85, js/carte_ecole.js), ouverte
+//   le palier est et l'escalier est      x 13,61-19,8 y 7,0-12,45 (photos 27 à 29 : js/ecole_est.js poserPalierEst) ; le
+//                                        103 et la 104 n'ont pas de porte sur lui (VO q_0274-0281)
+//   fermés : le local au fond du renfoncement nord du palier est, le local ménage et les toilettes (x 0-1,6 y 6,91-13,9),
+//   l'issue de secours, le 103 et la 104
 // LES VRAIS NOMS (10/10) : le panneau d'étage du palier est (VO 43 s, photo 28) — « Salle de cours S 1.3, Salle Robert
 // Kahn Si 1.4, Salle Gordon Earle Moore Si 1.5, Espace pause, Salle de cours S 1.6 » (S : salle de cours, Si : salle
 // informatique) ; les plaques de portes sont celles de la photo 23 : noires, « Salle / nom / Si 1.x ».
@@ -517,6 +523,14 @@ export function poserEtage1(ch, renderer = null) {
   // =====================================================================
   //  LES CLOISONS ET LES PORTES
   // =====================================================================
+  // LE COULOIR SOMBRE ET LE PALIER D'ÉTAGE OUEST (V2, 11/10, plan_v2.md § 2.4 — IMAGINÉS : la VO 47,5-49 s n'y montre que
+  // du noir) : le couloir descend de 2 m avec le mur des jours (js/ecole_etage1_pause.js, Y_S 4,95), qui est son mur sud ;
+  // le palier, devant la double porte de l'escalier principal posée sur la ligne 7,85 (js/carte_ecole.js, lot B : la cage
+  // décalée de DY_S = −4,675), n'a plus que la profondeur d'un palier. Y_COUR (8,925) ne sert plus ici que pour le dessous
+  // du plancher (construireSols, lot B)
+  const Y_C0 = 4.95;                  // l'axe du mur sud du couloir sombre (le mur des jours, Y_S)
+  const Y_C1 = 6.85;                  // l'axe de son mur nord (le local ménage), et la limite couloir / palier
+  const Y_PO = 7.85;                  // l'axe du mur de la double porte de l'escalier principal (lot B)
   function construireMurs() {
     const B0 = M.blanc;
     // les mitoyens (l'ouest du bureau de la travée 1 et du couloir sombre, l'est de la salle 104 et le bout du couloir)
@@ -533,12 +547,13 @@ export function poserEtage1(ch, renderer = null) {
     // pas non plus (VO q_0270) ; leur accès n'est pas vu : ils restent fermés, IMAGINÉS — js/ecole_ascenseur.js)
     mur({ de: [13.61, Y_SALLES], a: [19.8, Y_SALLES], mats: B0, plinthes: ['N', 'S'] });
     // LE COULOIR SOMBRE (VO 47,5-49 s : derrière la porte du fond de l'espace pause, « on n'y voit que du noir » —
-    // IMAGINÉ) : du mitoyen au palier d'étage. Au nord de son bout ouest, le local ménage (porte de gaine fermée)
-    mur({ de: [-0.3, Y_COUR], a: [1.6, Y_COUR], mats: B0, plinthes: ['S'], ouvertures: [{ c: 0.8, l: 0.95 }] });
-    porte('x', Y_COUR, 0.8, { modele: 'gaine', etat: 'fermee', cote: 'S', ep: 0.12, nom: 'local ménage' });
-    // LE PALIER D'ÉTAGE : à l'ouest, le mur safran (comme celui de la salle d'attente, photos 02, 21) ; à l'est, le dos du
-    // mur du fond de l'espace pause (js/ecole_etage1_pause.js)
-    mur({ de: [1.675, Y_COUR - EP / 2], a: [1.675, 12.45], ep: 0.15, mats: { E: M.orange, W: B0 }, plinthes: ['E'] });
+    // IMAGINÉ) : du mitoyen au palier d'étage. Au nord de son bout ouest, le local ménage (porte de gaine fermée ; derrière,
+    // le local et les toilettes, fermés, x 0-1,6 y 6,91-13,9)
+    mur({ de: [-0.3, Y_C1], a: [1.675, Y_C1], mats: B0, plinthes: ['S'], ouvertures: [{ c: 0.8, l: 0.95 }] });
+    porte('x', Y_C1, 0.8, { modele: 'gaine', etat: 'fermee', cote: 'S', ep: 0.12, nom: 'local ménage' });
+    // LE PALIER D'ÉTAGE OUEST : à l'ouest, le mur safran (comme celui de la salle d'attente, photos 02, 21), jusqu'au mur de
+    // la double porte ; à l'est, le dos du mur du fond de l'espace pause (js/ecole_etage1_pause.js)
+    mur({ de: [1.675, Y_C1 - EP / 2], a: [1.675, Y_PO], ep: 0.15, mats: { E: M.orange, W: B0 }, plinthes: ['E'] });
   }
 
   // =====================================================================
@@ -546,10 +561,11 @@ export function poserEtage1(ch, renderer = null) {
   // =====================================================================
   function construireSols() {
     // le carrelage : le bureau 103 et la salle 104 (grand côté est-ouest), le couloir sombre (est-ouest), le palier
-    // d'étage (nord-sud) — la salle S 1.3 a sa moquette, l'espace pause son lino (js/ecole_etage1_pause.js)
+    // d'étage (nord-sud) — la salle S 1.3 a sa moquette, l'espace pause son lino (js/ecole_etage1_pause.js) ; V2 : le 103
+    // derrière le recoin descendu (y 3,39), le couloir et le palier descendus, le palier jusqu'au mur de la double porte
     const rects = [
-      [13.2, 0, 19.95, 5.45, 'ew'], [13.55, 5.45, 19.95, Y_SALLES, 'ew'], [-0.3, Y_SALLES, 4.675, Y_COUR, 'ew'],
-      [1.6, Y_COUR, 4.675, 12.6, 'ns'],
+      [13.2, 0, 19.95, 3.39, 'ew'], [13.55, 3.39, 19.95, Y_SALLES, 'ew'], [-0.3, Y_C0, 4.675, Y_C1, 'ew'],
+      [1.6, Y_C1, 4.675, Y_PO, 'ns'],
     ];
     const pos = [], nor = [], uv = [], uv1 = [], idx = [];
     const W = R1.x1 - R1.x0, L = R1.y1 - R1.y0;
@@ -589,15 +605,18 @@ export function poserEtage1(ch, renderer = null) {
   function construirePlafondsEtLumieres() {
     // le bureau 103 et la salle 104 : plateaux perforés (comme la salle d'attente, photos 02, 21), luminaires à grille
     // (la salle S 1.3 et le bureau de la travée 1 : dalles 60 x 60, js/ecole_etage1_pause.js)
-    ch.plafond(13.2, 0, 16.5, Y_SALLES, H_SALLE, 'plateaux');
+    // (V2 : le 103 derrière le recoin descendu — son mur ouest en x 13,61 au nord de y 3,39)
+    ch.plafond(13.26, 0, 16.5, 3.39, H_SALLE, 'plateaux');
+    ch.plafond(13.61, 3.39, 16.5, Y_SALLES, H_SALLE, 'plateaux');
     ch.plafond(16.5, 0, 19.8, Y_SALLES, H_SALLE, 'plateaux');
     for (const y of [1.8, 4.8]) { dalle(14.85, y, 'e103'); dalle(18.15, y, 'e104'); }
     // le couloir sombre et le palier d'étage : plâtre et hublots opales (comme les couloirs C01 et C05, photos 01, 05) ;
-    // le hublot du couloir éteint (VO 48 s : derrière la porte du fond de l'espace pause, le noir)
-    ch.plafond(0, Y_SALLES, 4.6, Y_COUR, H_COUL, 'platre');
-    ch.plafond(1.75, Y_COUR, 4.6, 12.45, H_COUL, 'platre');
-    maille(new THREE.CylinderGeometry(0.17, 0.156, 0.07, 36), new THREE.MeshStandardMaterial({ color: 0xd9d7d1, roughness: 0.5 }), 1.2, H_COUL - 0.035, -7.95, 0, groupe, { ombre: false });
-    for (const y of [10.0, 11.7]) opale(3.2, y, H_COUL, 'e1hall');
+    // le hublot du couloir éteint (VO 48 s : derrière la porte du fond de l'espace pause, le noir) ; V2 : descendus, le
+    // palier jusqu'au nu du mur de la double porte, une seule opale
+    ch.plafond(0, Y_C0, 4.6, Y_C1, H_COUL, 'platre');
+    ch.plafond(1.75, Y_C1, 4.6, Y_PO - 0.075, H_COUL, 'platre');
+    maille(new THREE.CylinderGeometry(0.17, 0.156, 0.07, 36), new THREE.MeshStandardMaterial({ color: 0xd9d7d1, roughness: 0.5 }), 1.2, H_COUL - 0.035, -(Y_C0 + Y_C1) / 2, 0, groupe, { ombre: false });
+    opale(3.2, (Y_C1 + Y_PO) / 2 - 0.05, H_COUL, 'e1hall');
   }
 
   // =====================================================================
@@ -878,7 +897,9 @@ export function poserEtage1(ch, renderer = null) {
     ordinateur(14.25, 1.15, 'N', 0); ordinateur(15.55, 1.45, 'S', 1);
     fauteuil(14.25, 1.95, 'S', { sortie: [14.25, 2.6] });
     fauteuil(15.55, 0.6, 'N', { sortie: [16.05, 2.2] });
-    armoire(13.26, 3.2, 'E', 1.0); armoire(13.26, 4.2, 'E', 1.0);
+    // (V2, 11/10 : le recoin de l'espace pause est descendu en y 3,51-5,01 — la seconde armoire passe sur le mur est du
+    // recoin, x 13,61, qui est le mur ouest du bureau au nord de y 3,39)
+    armoire(13.26, 2.85, 'E', 1.0); armoire(13.61, 3.95, 'E', 1.0);
     etagere(16.44, 3.6, 'W', 1.6);
     // la table ronde et ses deux chaises — (relecture du 09/10 : la porte est passée en x 15,35 ; la table, restée devant
     // elle avec sa chaise, fermait le bureau : Haythem butait sur le seuil. Elle va dans l'angle nord-ouest, à côté du
@@ -922,21 +943,24 @@ export function poserEtage1(ch, renderer = null) {
     // (10/10 : le panneau de l'étage n'est qu'au palier est — VO 43 s, photo 28 ; sa copie du mur safran, et celles de
     // l'affichette « WIFI IRIS » et de l'affiche « POINT ÉCOUTE », n'ont pas lieu d'être ici) ; le plan d'évacuation,
     // l'extincteur, un tableau d'affichage
-    panneau(new THREE.MeshStandardMaterial({ map: texConsignes(), roughness: 0.5 }), 0.45, 0.62, 1.757, 9.45, N1 + 1.6, 'E');
-    affiche('#2f6fb0', '#fbfbf8', 73, 0.6, 0.85, 1.757, 10.75, 1.55, 'E');
-    affiche('#f2b705', '#1d1d1d', 70, 0.5, 0.7, 1.757, 11.6, 1.55, 'E');
-    extincteur(4.6, 11.2, 'W');
+    // (V2, 11/10 : le palier n'a plus qu'un mètre de profondeur — le plan d'évacuation sur le mur safran, l'extincteur
+    // sur le dos du mur du fond de l'espace pause, les deux affiches et le banc dans le couloir, sur le mur de la salle)
+    panneau(new THREE.MeshStandardMaterial({ map: texConsignes(), roughness: 0.5 }), 0.45, 0.62, 1.757, (Y_C1 + Y_PO) / 2 - 0.05, N1 + 1.6, 'E');
+    affiche('#2f6fb0', '#fbfbf8', 73, 0.6, 0.85, 3.85, Y_C0 + 0.063, 1.55, 'N');
+    affiche('#f2b705', '#1d1d1d', 70, 0.5, 0.7, 1.95, Y_C0 + 0.063, 1.55, 'N');
+    extincteur(4.6, 7.35, 'W');
     // le bloc de sortie au-dessus de la porte de l'escalier, côté étage
-    ch.sortie(3.5, 12.4, N1 + 2.32, 'S');
-    // les plaques des portes de la salle S 1.3, de la Si 1.4 et de l'espace pause : js/ecole_etage1_pause.js ; la S 1.6
-    // est au fond du palier : js/ecole_est.js (10/10 : celles du 103 et de la 104 sont parties avec leurs portes, VO
-    // q_0274-0281)
-    // le banc du palier d'étage (lattes de chêne sur deux piètements), où l'on attend le cours
-    const xb0 = 4.07, xb1 = 4.55, yb0 = 9.25, yb1 = 10.75;
-    for (let k = 0; k < 4; k++) B(xb0 + 0.02 + k * 0.115, yb0, xb0 + 0.11 + k * 0.115, yb1, N1 + 0.42, N1 + 0.45, X.chene);
-    for (const y of [yb0 + 0.12, yb1 - 0.12]) B(xb0 + 0.03, y - 0.02, xb1 - 0.03, y + 0.02, N1, N1 + 0.42, X.anthracite);
+    ch.sortie(3.5, Y_PO - 0.08, N1 + 2.32, 'S');
+    // les plaques des portes de la salle S 1.3, de la Si 1.4 et de l'espace pause : js/ecole_etage1_pause.js (10/10 :
+    // celles du 103 et de la 104 sont parties avec leurs portes, VO q_0274-0281 ; V2 : la porte du fond du renfoncement
+    // nord du palier est n'est plus que celle d'un local, sans plaque — js/ecole_est.js)
+    // le banc (lattes de chêne sur deux piètements), où l'on attend le cours, contre le mur de la S 1.3 (assis, on regarde
+    // le palier)
+    const xb0 = 2.35, xb1 = 3.35, yb0 = Y_C0 + 0.06, yb1 = yb0 + 0.48;
+    for (let k = 0; k < 4; k++) B(xb0, yb0 + 0.02 + k * 0.115, xb1, yb0 + 0.11 + k * 0.115, N1 + 0.42, N1 + 0.45, X.chene);
+    for (const x of [xb0 + 0.12, xb1 - 0.12]) B(x - 0.02, yb0 + 0.03, x + 0.02, yb1 - 0.03, N1, N1 + 0.42, X.anthracite);
     C.ajouterBoite(xb0, -yb0, xb1, -yb1, { y0: N1, y1: N1 + 0.47 });
-    for (const y of [9.6, 10.4]) sieges.push({ x: (xb0 + xb1) / 2, z: -y, y: 0.45, fx: -1, fz: 0, sx: xb0 - 0.5, sz: -y, nom: 'le banc', sol: N1 });
+    for (const x of [2.6, 3.1]) sieges.push({ x, z: -(yb0 + yb1) / 2, y: 0.45, fx: 0, fz: -1, sx: x, sz: -(yb1 + 0.5), nom: 'le banc', sol: N1 });
     // (10/10 : le radiateur de la bande sud, x 19,0, tombait derrière le doublage de l'ascenseur — js/ecole_ascenseur.js)
   }
 
@@ -1017,9 +1041,11 @@ export function poserEtage1(ch, renderer = null) {
   const zones = [
     ...zonesKahn(),   // (en tête, la salle Robert Kahn — js/ecole_kahn.js)
     ...(pause ? pause.zones : []),
-    { id: 'e1hall', rects: [zr(1.6, Y_COUR, 4.75, 12.6)], voisines: ['palier1', 'e1couloir'], env: env(3.9, 8.3) },
-    { id: 'e1couloir', rects: [zr(-0.3, Y_SALLES, 4.75, Y_COUR)], voisines: ['e1hall', 'e1pause', 'e1bureau'], env: env(2.6, 7.95) },
-    { id: 'e103', rects: [zr(13.2, -0.2, 16.5, Y_SALLES)], voisines: ['e1est'], env: env(14.85, 3.6) },
+    // (V2 : le palier d'étage ouest jusqu'au mur de la double porte — au-delà, la cage, `palier1` du lot B —, le couloir
+    // sombre descendu ; le 103 derrière le recoin)
+    { id: 'e1hall', rects: [zr(1.6, Y_C1, 4.75, Y_PO)], voisines: ['palier1', 'e1couloir'], env: env(3.9, (Y_C1 + Y_PO) / 2) },
+    { id: 'e1couloir', rects: [zr(-0.3, Y_C0, 4.75, Y_C1)], voisines: ['e1hall', 'e1pause', 'e1bureau'], env: env(2.6, (Y_C0 + Y_C1) / 2) },
+    { id: 'e103', rects: [zr(13.2, -0.2, 16.5, 3.39), zr(13.55, 3.39, 16.5, Y_SALLES)], voisines: ['e1est'], env: env(14.85, 3.6) },
     { id: 'e104', rects: [zr(16.5, -0.2, 20.0, Y_SALLES)], voisines: ['e1est'], env: env(18.15, 3.6) },
   ];
 
