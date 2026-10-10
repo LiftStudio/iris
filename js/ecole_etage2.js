@@ -5,7 +5,7 @@
 // iris_visite/etage2.md et plan_global.md § 3.4, § 4.8, lot 8 ; 10/10). Aucune photo de Haythem ne montre le 2e : c'est
 // l'état de 2021. La caméra monte la volée 4 de l'escalier est (échiffre ROUGE), arrive sur le PALIER DU 2e — la copie de
 // celui du 1er (photo 28) : le mur du panneau « 2 », sa réglette, son poussoir, sa prise, sans les affichettes ; une
-// fenêtre au nord ; l'extincteur dans le recoin sud-ouest —, le quitte par le sud par une PORTE COUPE-FEU (bâton inox,
+// fenêtre dans ce mur, au nord ; l'extincteur dans le recoin sud-ouest —, le quitte par le sud par une PORTE COUPE-FEU (bâton inox,
 // huisserie de bois brun, oculus étroit), traverse un SAS (dôme de caméra, plan d'évacuation) et tourne dans un COULOIR
 // est-ouest dont le mur nord est ROUGE VERMILLON (lino taupe, plafond lisse, six spots, trois chaises noires, une photo
 // turquoise, deux affiches). Elle entre dans la SALLE 1, côté cour (six fenêtres à stores, moquette marine en damier,
@@ -30,9 +30,11 @@
 //   la salle 2 (rue)        x 9,96-18,15   y 0-4,53     travées 7 à 11 ; porte D1 x 10,05-11,0 (gonds à l'ouest)
 //   fermés                  Si 2.6 (x 0-9,9 côté rue, porte x 4,35), B 2.3 (bout est, x 15,96), le dégagement ouest
 //   la façade arrière       y 12,45 (ép. 0,30) au 2e ; au-dessus, la cage est monte (js/ecole_est.js poserCageHaute)
-// (Cotes de la vidéo à ± 0,4 m en y, ± 0,7 m en x. Deux recalages : la cloison ouest de la salle 2 passe au trumeau entre
-// les travées 6 et 7, x 9,9 — une cloison ne bute pas sur une fenêtre — et la porte D1 la suit, 0,45 m plus à l'est que
-// le relevé ; les fenêtres de la salle 1 sont réparties sur son mur, pas de 1,30 m.)
+// (Cotes de la vidéo à ± 0,4 m en y, ± 0,7 m en x. Recalages sur le relevé, images en grand à l'appui : la cloison ouest
+// de la salle 2 passe au trumeau entre les travées 6 et 7, x 9,9 — une cloison ne bute pas sur une fenêtre — et la porte
+// D1 la suit, 0,45 m plus à l'est ; les fenêtres de la salle 1 sont réparties sur son mur, pas de 1,30 m ; la fenêtre du
+// palier n'est pas dans le mur nord mais dans le mur du panneau (q_0285-0287, vue de face) ; l'extincteur du recoin est
+// contre son mur sud (q_0288, q_0290).)
 //
 // LES PIÈGES D'UN NIVEAU DE PLUS (ceux du 1er, js/ecole_etage1.js, et du sous-sol, js/ecole_soussol.js) :
 //   1. des SOLS (C.sol à 6,60) sous tout ce qu'on foule, la cage exceptée : sinon solEn rendrait le plancher du 1er ;
@@ -554,13 +556,12 @@ export function poserEtage2(ch, renderer = null) {
   };
   // L'EXTINCTEUR (6 kg, rouge) posé bas contre un mur, ses pictogrammes au-dessus
   const extincteur = (x, y, face, h0 = 0.1) => {
-    const [fx, fz] = DIR[face], g = new THREE.Group(); g.position.set(x, N2 + h0, -y); g.rotation.y = ROT[face]; fixe.add(g);
+    const g = new THREE.Group(); g.position.set(x, N2 + h0, -y); g.rotation.y = ROT[face]; fixe.add(g);
     maille(new THREE.CylinderGeometry(0.08, 0.08, 0.5, 16), X.extincteur, 0, 0.25, 0.1, 0, g);
     maille(new THREE.CylinderGeometry(0.03, 0.05, 0.08, 12), M.noirMat, 0, 0.54, 0.1, 0, g, { ombre: false });
     maille(boiteM(0.12, 0.03, 0.03), M.noirMat, 0.03, 0.6, 0.1, 0, g, { ombre: false });
     const t = maille(new THREE.CylinderGeometry(0.008, 0.008, 0.42, 6), M.noirMat, -0.09, 0.32, 0.12, 0, g, { ombre: false }); t.rotation.z = 0.15;
     maille(boiteM(0.06, 0.12, 0.02), M.noirMat, 0, 0.42, 0.01, 0, g, { ombre: false });      // le support mural
-    void fx; void fz;
   };
 
   // =====================================================================
@@ -700,7 +701,7 @@ export function poserEtage2(ch, renderer = null) {
     ch.plafond(X_FOND + EP / 2, Y_RUE + EP / 2, X_BOUT - EP / 2, Y_COUR - EP / 2, H_COUL, 'platre');
     for (const x of [14.75, 12.6, 10.45, 8.3, 6.15, 4.0]) spot(x, 5.575, H_COUL, 'e2couloir');
     B(4.55, 5.0, 4.85, 5.3, H_COUL - 0.01, H_COUL, M.grille, { ombre: false });
-    // la retombée au-dessus de l'ouverture du sas (le sas est plus bas d'un rien)
+    // (au-dessus de l'ouverture du sas, le mur du couloir descend jusqu'à 2,30 m : le linteau du sas)
     // ---- LE MUR SUD, d'est en ouest : la photo turquoise face au sas, la plaque de la salle 2, la porte D1, l'affiche à
     // bandeau rouge, les trois chaises noires ----
     B(14.75 - 0.33, Y_RUE + EP / 2, 14.75 + 0.33, Y_RUE + EP / 2 + 0.02, N2 + 1.05, N2 + 1.95, M.alu, { ombre: false });
@@ -836,6 +837,10 @@ export function poserEtage2(ch, renderer = null) {
     hautParleur(X_S1 + EP / 2, 7.15, 'E');
     B(X_S1 + EP / 2, Y_COUR + EP / 2, X_S1 + 0.36, 6.95, N2, H_SALLE, B0, { ombre: false, collision: true });
     plinthe(X_S1 + 0.36, Y_COUR + EP / 2 + 0.015, X_S1 + 0.375, 6.95, PS); plinthe(X_S1 + EP / 2, 6.95, X_S1 + 0.375, 6.965, PS);
+    // (10/10, q_0310-0313 : un second poteau, plein, contre le mur du couloir à 1,5 m de la porte — au premier plan quand
+    // on entre et qu'on regarde le tableau)
+    B(10.6, Y_COUR + EP / 2, 10.95, 6.95, N2, H_SALLE, B0, { ombre: false, collision: true });
+    plinthe(10.585, Y_COUR + EP / 2, 10.6, 6.965, PS); plinthe(10.95, Y_COUR + EP / 2, 10.965, 6.965, PS); plinthe(10.6, 6.95, 10.95, 6.965, PS);
     extincteur(X_S1 + EP / 2 + 0.02, 7.2, 'E');
     panneau(matPan(texPictoExtincteur(), 0.5), 0.15, 0.15, X_S1 + EP / 2 + 0.003, 7.2, N2 + 2.0, 'E');
     panneau(matPan(texPictoAlarme(), 0.5), 0.1, 0.1, X_S1 + EP / 2 + 0.003, 7.2, N2 + 1.5, 'E');
