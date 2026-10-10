@@ -74,9 +74,9 @@ const Y_COUR = 8.925;               // la cloison nord du couloir
 // ---- la cage de l'escalier principal (les cotes de ESC, js/carte_ecole.js ; plan V2, scratchpad iris_audit/plan_v2.md
 // § 2.1 : elle recule de DY_S avec le bloc ouest du rez-de-chaussée) ----
 const DY_S = -4.675;
-const E = { xE0: 3.02, xE1: 4.6, xO0: 1.75, xO1: 2.9, y0: 14.2 + DY_S, G: 0.28, N: 10 };
-E.yPalier = E.y0 + (E.N - 1) * E.G;         // 12,045
-E.yFond = 18.6 + DY_S;                      // 13,925 : le nu nord de la cage
+// (x : les nus ouest et est de la cage ; y0 : le bord du palier du 1er, 9,525 — au nord, les volées ; yFond : son nu
+// nord, 13,925)
+const E = { xO0: 1.75, xE1: 4.6, y0: 14.2 + DY_S, yFond: 18.6 + DY_S };
 // ---- la façade (js/carte_ecole.js construireFacade) : une fenêtre par travée de 1,65 m ----
 const TRAVEE = 1.65;
 const centreTravee = (k) => 0.825 + (k - 1) * TRAVEE;
@@ -128,17 +128,6 @@ function texChene() {
       g.stroke();
     }
   }, [1 / 1.2, 1 / 0.6], false, 8);
-}
-// UNE PLAQUE DE PORTE (comme la plaque « Toilettes » du C01, photo 01) : gris anthracite, le numéro, la fonction
-function texPlaque(num, libelle) {
-  return canvasTex(256, 128, (g, w, h) => {
-    g.fillStyle = '#26272a'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#f08a24'; g.fillRect(16, 18, 6, h - 36);
-    g.fillStyle = '#f4f4f2'; g.font = '700 54px "Segoe UI", Arial, sans-serif'; g.textBaseline = 'alphabetic';
-    g.fillText(num, 36, 70);
-    g.font = '500 20px "Segoe UI", Arial, sans-serif'; g.fillStyle = '#c9cbcf';
-    g.fillText(libelle, 38, 104);
-  }, null, false, 4);
 }
 // LA PLAQUE DE SALLE (09/10, photo 23 : celle de la salle au fond du C05) : noire, 15 x 9 cm, trois lignes blanches
 // centrées — « Salle », le nom, le numéro. `picto` 'tasse' : une tasse sur sa soucoupe à la place du numéro.
@@ -951,7 +940,9 @@ export function poserEtage1(ch, renderer = null) {
     // dessiné ; de la cage est, on voit la volée 4 et le palier du 1er ; dans la cage ouest, son palier du 2e est le nôtre)
     // (vérification du 10/10 : la cage est, elle aussi, à partir du rez-de-chaussée — sur le palier du -1 et la volée B,
     // sous la paillasse de la volée 1 et le palier intermédiaire, l'étage entier était dessiné pour rien : 352 objets)
-    const cage = (cam.x > 1.4 && cam.x < 5.0 && cam.z < -12.2 && cam.z > -19.0 && cam.y > -0.3) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7 && cam.y > -0.3);
+    // (plan V2 : la cage de l'escalier principal, décalée de DY_S, de y 7,5 à 14,3 — la caméra devant ses portes et au-dessus
+    // des volées, jusqu'au palier du 1er)
+    const cage = (cam.x > 1.4 && cam.x < 5.0 && cam.z < -7.5 && cam.z > -14.3 && cam.y > -0.3) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7 && cam.y > -0.3);
     const au2e = cam.y > 7.0 && u.y > 6.0 && cam.z < -0.05 && !cage && !(cam.x > 13.4 && cam.z < -6.45 && cam.z > -12.75);
     const vis = (cage || cam.y > 2.7 || cam.z > -0.05 || u.y > 2.0) && !au2e;
     if (vis !== groupe.visible) groupe.visible = vis;

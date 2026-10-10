@@ -651,8 +651,12 @@ function construireParoiPassage(ch) {
   // passage), un seul au milieu du vantail ouest
   const rangs = (s) => (s < 0 ? [[0.9, 4], [1.4, 4]] : [[1.25, 1]]);
   ch.porte('x', Y, (X0 + X1) / 2, { l: X1 - X0, h: hP, ep: 0.08, modele: 'vitree2', autocollants: rangs, etat: 'auto', cote: 'S', huisserie: false, nom: 'passage' });
-  // le bloc de sortie, côté hall, sous son plafond à 2,30
-  ch.sortie(3.3, 4.17, 2.22, 'N');
+  // (le bloc de sortie qui était côté hall, en (3,2 ; 5,12) à 2,45, se perdait au-dessus du plafond du hall ; plan V2 :
+  // (3,3 ; 4,17). Mais sous le plafond à 2,30, on le verrait du passage, en haut des vantaux — la photo 19 n'y montre
+  // rien, et la photo 07, prise du hall, montre à sa place, au-dessus des vantaux, le boîtier noir du détecteur de la
+  // porte automatique et son voyant ambre : c'est lui, collé sous le plafond, derrière la traverse haute)
+  ch.boite(3.15, 4.09, 3.45, 4.15, 2.255, 2.3, M.noirMat, { ombre: false });
+  ch.boite(3.37, 4.15, 3.41, 4.152, 2.265, 2.28, M.embout, { ombre: false });
 }
 
 // =====================================================================
