@@ -284,9 +284,11 @@ function texPhotoTurquoise() {
     for (let k = 0; k < 18; k++) { g.fillStyle = `rgba(255,255,255,${0.04 + r2() * 0.06})`; g.beginPath(); g.arc(m + r2() * (w - 2 * m), m + r2() * (h - 2 * m) * 0.55, 6 + r2() * 26, 0, 7); g.fill(); }
     // le bas : des formes sombres floues (des façades, une silhouette lointaine), un liseré clair sur l'horizon
     g.fillStyle = 'rgba(225,235,238,0.55)'; g.fillRect(m, h * 0.6 - 1, w - 2 * m, 2);
+    g.filter = 'blur(3px)';
     for (const [x, y, lw, lh] of [[0.18, 0.66, 0.1, 0.05], [0.33, 0.68, 0.06, 0.08], [0.62, 0.64, 0.05, 0.16], [0.75, 0.7, 0.12, 0.04]]) {
-      g.fillStyle = 'rgba(52,58,78,0.45)'; g.fillRect(w * x, h * y, w * lw, h * lh);
+      g.fillStyle = 'rgba(60,66,88,0.3)'; g.fillRect(w * x, h * y, w * lw, h * lh);
     }
+    g.filter = 'none';
     g.fillStyle = '#ffffff'; g.fillRect(m + 8, h - m - 40, w * 0.42, 30);
     g.fillStyle = '#9aa0a6'; g.fillRect(m + 14, h - m - 32, w * 0.3, 5); g.fillRect(m + 14, h - m - 22, w * 0.22, 5);
     g.fillStyle = '#ffffff'; g.font = '600 15px "Century Gothic", "Segoe UI", sans-serif'; g.fillText('iris', w - m - 34, h - m - 12);
