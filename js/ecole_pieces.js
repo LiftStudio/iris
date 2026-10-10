@@ -88,8 +88,9 @@ const ZONES = [
   // (relecture du 09/10 : les deux toilettes du C05 prennent leur vue HAUT, à 2,20 m, et loin des portes safran des
   // cabines — à 50 cm d'elles, à hauteur d'homme, la carte n'était qu'un mur safran : faïence, peinture, embrasure et
   // jusqu'au mur du C05 vu par la porte sortaient orangés. Femmes : côté porte ; hommes : devant les urinoirs)
-  zone('wcF', WF, { x: 6.5, y: 2.2, z: -8.6 }),
-  zone('wcH', WH, { x: 7.0, y: 2.2, z: -13.1 }),
+  // (V2, 11/10 : la zone prend aussi l'embrasure de la porte, x 6,05-6,125 — elle n'était à personne)
+  { ...zone('wcF', WF, { x: 6.5, y: 2.2, z: -8.6 }), rects: [[6.05, -WF.y1, WF.x1, -WF.y0, -1]] },
+  { ...zone('wcH', WH, { x: 7.0, y: 2.2, z: -13.1 }), rects: [[6.05, -WH.y1, WH.x1, -WH.y0, -1]] },
   zone('pmr', PM, { x: 10.3, y: 1.5, z: -13.2 }),
   // (V2, 11/10 : la salle David Clark et son entrée, ouvertes sur le C05 par la porte bleue — `dc`, plan_v2.md § 2.2)
   { id: 'dc', rects: [[DC.x0 - 0.075, -21.0, 8.925, -14.075, -1], [4.6, -14.075, 6.05, -(Y_ESC + 3.675), -1]], voisines: ['c05'], env: { x: 4.7, y: 1.7, z: -17.6 } },
@@ -1460,8 +1461,9 @@ function toilettesPMR(ch, P) {
   const sav = groupe(ch, PM.x0 + 0.012, yL + 0.41, 'E', 1.05); R(sav, P.blancMat, 0.1, 0.18, 0.09, 0.02, 0, 0.09, 0.045);
   secheMains(ch, P, 10.5, PM.y0 + 0.012, 'N');
   poubelleWC(ch, P, 11.2, 12.4);
-  // la plaque côté C01, au sud de la porte (photo 01 : le fauteuil roulant et « Toilettes »)
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaqueWC('pmr'), roughness: 0.4 }), 11.7, 12.5, 'E', 0.15, 0.2, 1.6, { ep: 0.006 });
+  // la plaque côté C01, au sud de la porte (photo 01 : le fauteuil roulant et « Toilettes » ; recalée sur la photo,
+  // y 12,48-12,62, de 1,40 à 1,53 m)
+  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaqueWC('pmr'), roughness: 0.4 }), 11.7, 12.55, 'E', 0.15, 0.2, 1.47, { ep: 0.006 });
 }
 // UN MIROIR contre un mur, regardant vers `face` : cadre d'aluminium, glace de w x h centrée à la hauteur `h0`.
 //   - le VRAI miroir (`reel`, sur PC) : un miroir planaire (Reflector de three, comme le reflet du sol mouillé de

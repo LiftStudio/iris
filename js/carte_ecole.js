@@ -880,11 +880,13 @@ export function construireCarte(scene, renderer = null) {
   ch.plafond(1.75, 5.0, 4.75, 9.0, 2.4, 'platre');                   // le hall ouest
   ch.plafond(1.75, 9.0, 5.3, 13.6, 2.4, 'platre');
   ch.plafond(5.3, 12.0, 5.8, 13.6, 2.4, 'platre');
-  // C05 : au premier tiers, une RETOMBÉE — le fond du couloir est plus bas (2,30), l'imposte de la porte bleue vient
-  // juste sous son plafond (photos 05 et 23 : le premier hublot avant le ressaut, le second après ; 09/10). (V2, 11/10 :
-  // x 4,75-5,975, de la porte de l'escalier à la porte bleue ; la retombée à 1,525 m de la porte de l'escalier)
-  ch.plafond(4.75, Y_ESC - 0.075, 5.975, Y_ESC + 1.525, 2.4, 'platre');
-  ch.plafond(4.75, Y_ESC + 1.525, 5.975, Y_ESC + 3.6, 2.3, 'platre');
+  // C05 : une RETOMBÉE — le fond du couloir est plus bas (2,30), l'imposte de la porte bleue vient juste sous son
+  // plafond (photos 05 et 23 : le premier hublot avant le ressaut, le second après ; 09/10). (V2, 11/10 : de la porte de
+  // l'escalier à la porte bleue ; la photo 23 recalée — pose de rdc_ouest, f 1 500 — met le bas de la retombée à 0,8 m
+  // du mur des portes de l'escalier, là où elle rejoint le mur est, et non au tiers. Côté ouest, le plafond part du nu de
+  // la cage, x 4,6 : la photo montre le mur ouest du C05 juste derrière l'huisserie de la porte de l'escalier)
+  ch.plafond(4.6, Y_ESC - 0.075, 5.975, Y_ESC + 0.8, 2.4, 'platre');
+  ch.plafond(4.6, Y_ESC + 0.8, 5.975, Y_ESC + 3.6, 2.3, 'platre');
   // la salle d'attente : les plateaux perforés, sauf au bout ouest, devant le couloir C05, où ce sont des dalles lisses
   // de 60 x 60 sur ossature (photos 04, 05 : au-dessus du photographe ; 09/10)
   ch.plafond(6.5, 9.0, 13.5, 12.0, 2.6, 'plateaux');
@@ -902,13 +904,14 @@ export function construireCarte(scene, renderer = null) {
   // qu'on y voit sont ceux du C05)
   for (const [x, y] of [[3.2, 7.1], [3.3, 11.0]]) ch.opale(x, y, 2.4, 'hallO');
   // (les deux hublots du C05, photos 23 et 05 : le premier avant la retombée, le second passé la retombée, sous le
-  // plafond bas — Ø 38 cm ; 09/10. V2, 11/10 : dans l'axe du C05 élargi, à 0,6 et 2,9 m du mur des portes de l'escalier)
-  ch.opale(5.36, Y_ESC + 0.6, 2.4, 'c05', { r: 0.18 }); ch.opale(5.36, Y_ESC + 2.9, 2.3, 'c05', { r: 0.18 });
+  // plafond bas — Ø 38 cm ; 09/10. V2, 11/10 : relevés sur la photo 23 recalée, à 0,4 et 2,0 m du mur des portes de
+  // l'escalier — le premier un peu à l'est de l'axe, le second dans l'axe de la porte bleue)
+  ch.opale(5.5, Y_ESC + 0.4, 2.4, 'c05', { r: 0.18 }); ch.opale(5.15, Y_ESC + 2.0, 2.3, 'c05', { r: 0.18 });
   for (const [x, y] of [[6.6, 9.9], [9.0, 9.9], [11.4, 9.9], [7.8, 11.1], [10.2, 11.1], [12.6, 11.1]]) ch.spot(x, y, 2.6, 'attente');
   for (const [x, y] of [[12.3, 7.8], [11.9, 5.7]]) ch.spot(x, y, 2.6, 'cou');
-  // (V2, 11/10 : la photo 01 recalée met le hublot qu'elle voit en y 10,7, au-dessus du local et de la gaine ; l'autre est
-  // derrière l'appareil, vers le fond)
-  for (const [x, y] of [[12.6, 10.7], [12.6, 13.4]]) ch.opale(x, y, 2.45, 'c01');
+  // (V2, 11/10 : la photo 01 recalée met le hublot qu'elle voit en (12,3 ; 10,7), au-dessus du local et de la gaine, un peu
+  // à l'ouest de l'axe ; l'autre est derrière l'appareil, vers le fond)
+  for (const [x, y] of [[12.3, 10.7], [12.3, 13.4]]) ch.opale(x, y, 2.45, 'c01');
   // (10/10, VO 92,6-94,8 s : les spots ronds du hall relevés depuis la porte nord — une rangée vers y 4,3 au bout des
   // lignes lumineuses, une vers y 3,2 au-dessus du comptoir ; au-dessus de l'open-space et dans l'angle nord-est, rouvert,
   // posés au même pas. Les huit lignes : js/ecole_hall.js)
