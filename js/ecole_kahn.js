@@ -72,7 +72,7 @@ const X_RENF = 13.125, Y_RENF = 12.6, Y_ARRIERE = 12.45, Y_ARR_N = Y_ARRIERE + 0
 // neutre, voire tiède sous le « soleil » chaud qui figure tous les plafonniers ; la vidéo (q_0230, q_0265) montre la salle
 // nettement BLEUTÉE (murs bruts #a6b9d4-#b2cae7, moquette #3d4e6d : bleu moins rouge ≈ +50), face à l'espace pause
 // orange — on en garde une bonne moitié
-const FROID = new THREE.Color(0xd6e3ff);
+const FROID = new THREE.Color(0xccdcff);
 const DIR = { N: [0, 1], S: [0, -1], E: [1, 0], W: [-1, 0] };        // en PLAN (y vers le fond)
 const ROT = { S: 0, N: Math.PI, E: Math.PI / 2, W: -Math.PI / 2 };   // un groupe dont le +z local regarde vers…
 
@@ -106,7 +106,7 @@ function texMoquette(nx, ny) {
     }
     for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
       // (relecture du 10/10 : un rien plus marine — la vidéo, q_0265, #3d4e6d en moyenne ; le jeu sortait gris neutre)
-      const c = clair[j][i] ? [98, 110, 134] : [68, 80, 106], t = (r2() - 0.5) * 6;
+      const c = clair[j][i] ? [104, 118, 146] : [72, 86, 116], t = (r2() - 0.5) * 6;
       const x0 = i * p, y0 = (ny - 1 - j) * p;
       g.fillStyle = rgb(c[0] + t, c[1] + t, c[2] + t); g.fillRect(x0, y0, p, p);
       // les rangs de touffes, dans un sens ou dans l'autre (le quart de tour)
@@ -347,7 +347,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   // des trémies, que le verre éclaire, plus claires que lui — VO q_0222, q_0230 : seuls les verres éblouissent)
   // (relecture du 10/10 : plus froids — voir FROID ; le plafond un peu plus clair, la vidéo le montre gris bleuté clair
   // entre les caissons, le jeu le rendait gris moyen : #94908d contre #b6b1bd, q_0230)
-  const teinte = new THREE.Color(0.82, 0.89, 1.0);
+  const teinte = new THREE.Color(0.78, 0.87, 1.0);
   const K = {
     blanc: nommer(M.blanc.clone(), 'peinture blanche (salle Robert Kahn)'),
     platre: nommer(M.platre.clone(), 'plafond en plâtre (salle Robert Kahn)'),
@@ -398,8 +398,8 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   // (les murs : un léger émissif froid tient lieu du jour diffus des six caissons, qui éclaire toute la salle d'égal — les
   // quatre spots qui suivent Haythem n'en éclairent que le coin où il est ; VO q_0265 : le mur du fond, côté porte, est
   // aussi clair que les autres)
-  K.blanc.color.copy(teinte); K.blanc.emissive = new THREE.Color(0xc9d8f4); K.blanc.emissiveIntensity = 0.14;
-  K.platre.color.multiply(teinte); K.platre.emissive = new THREE.Color(0xd0ddf4); K.platre.emissiveIntensity = 0.13;
+  K.blanc.color.copy(teinte); K.blanc.emissive = new THREE.Color(0xbcd0f4); K.blanc.emissiveIntensity = 0.15;
+  K.platre.color.multiply(teinte); K.platre.emissive = new THREE.Color(0xc4d5f4); K.platre.emissiveIntensity = 0.13;
   K.joue.color.multiply(teinte); K.joue.emissive = new THREE.Color(0xe2ecff); K.joue.emissiveIntensity = 0.34;
   // ce qui éclaire (au-delà de 1, le bloom les fait briller) : le verre diffusant des caissons
   const diffuseur = nommer(new THREE.MeshBasicMaterial({ map: texDiffuseur(), color: FROID.clone().multiplyScalar(4.5) }), 'caisson lumineux allumé');
@@ -596,9 +596,11 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
       const xf = X(uMur + s * (RET - 0.07));
       archi(xf - 0.012, y0 + 0.4, xf + 0.012, y1 - 0.4, H_RET - 0.002, H_RET, K.fente).userData.horsAOSol = true;
     }
-    // LA POUTRE au droit de l'îlot (30 x 15 cm) et ses DEUX POTEAUX (18 x 18, gris très clair : VO q_0222, q_0226)
-    archi(X(uPoutre - 0.15), y0, X(uPoutre + 0.15), y1, H_RET, H_PL, K.platre).userData.horsAOSol = true;
-    for (const v of [0.8, 5.9]) B(X(uPoutre - 0.09), Y(v - 0.09), X(uPoutre + 0.09), Y(v + 0.09), N1, H_RET, K.poteau, { ombre: false, collision: true });
+    // LA POUTRE au droit de l'îlot (30 x 15 cm) et ses DEUX POTEAUX (18 x 18, gris très clair : VO q_0222, q_0226). Le
+    // poteau sud à v 1,45, dans l'épine, et non au bout de l'îlot (v 0,8 du relevé) — relecture du 10/10 : sur VO 55,9 s
+    // (f_0090, caméra au seuil recalée à 1,2 px sur le poteau nord, l'extincteur, le radiateur) et q_0224 (2,1 px), il
+    // tombe à x 82 et 70 de l'image ; à v 0,8 il serait hors champ, à 40 px à gauche du bord
+    for (const v of [1.45, 5.9]) B(X(uPoutre - 0.09), Y(v - 0.09), X(uPoutre + 0.09), Y(v + 0.09), N1, H_RET, K.poteau, { ombre: false, collision: true });
     // pour la caméra : le plafond (sous les retombées)
     for (const [xa, ya, xb, yb] of rects) C.plafond(xa, -yb, xb, -ya, H_RET);
     // un détecteur de fumée, entre les caissons
