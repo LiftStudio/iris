@@ -54,6 +54,7 @@ import { jourDehors, texAffiche, texConsignes, texPictoExtincteur } from './ecol
 import { cuireLumiereSol } from './ecole_lumieres.js';
 import { TELEPHONE } from './appareil.js';
 import { poserPalierEst } from './ecole_est.js';
+import { poserEtage2 } from './ecole_etage2.js';
 
 // ---- les hauteurs ----
 const N1 = 3.5;                     // le plancher du 1er étage (H_RDC de js/carte_ecole.js)
@@ -1758,6 +1759,10 @@ export function poserEtage1(ch, renderer = null) {
     { id: 'e1pause', rects: [zr(8.6, Y_COUR, 12.5, 12.75)], voisines: ['e1couloir'], env: env(10.5, 10.9) },
   ];
 
+  // LE 2e ÉTAGE ET LA CAGE EST AU-DESSUS (10/10, la vidéo officielle : js/ecole_etage2.js) — ses zones passent devant
+  // les nôtres (leurs rectangles couvrent les nôtres, plus haut), sa mise à jour est la nôtre
+  const etage2 = poserEtage2(ch, renderer);
+
   // =====================================================================
   //  L'ÉTAGE VIVANT (js/carte_ecole.js maj, à chaque image)
   // =====================================================================
@@ -1768,26 +1773,31 @@ export function poserEtage1(ch, renderer = null) {
     // (et la cage de l'escalier est, depuis le vestibule : on y voit monter la volée 1 jusqu'au 1er. Pas depuis le
     // couloir est : par la porte du vestibule, le regard ne passe pas 2,3 m — relecture du 09/10, tout l'étage n'y est
     // plus dessiné pour rien ; ni depuis le hall du -1, sous la cage principale — intégration du 10/10)
+    // (10/10, le 2e : au-dessus de ses plafonds, hors de la cage est et du sas, le 1er n'est plus vu — il n'est plus
+    // dessiné ; de la cage est, on voit la volée 4 et le palier du 1er)
     const cage = (cam.x > 1.4 && cam.x < 5.0 && cam.z < -12.2 && cam.z > -19.0 && cam.y > -0.3) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7);
-    const vis = cage || cam.y > 2.7 || cam.z > -0.05 || u.y > 2.0;
+    const au2e = cam.y > 7.0 && u.y > 6.0 && cam.z < -0.05 && !(cam.x > 13.4 && cam.z < -6.45 && cam.z > -12.75);
+    const vis = (cage || cam.y > 2.7 || cam.z > -0.05 || u.y > 2.0) && !au2e;
     if (vis !== groupe.visible) groupe.visible = vis;
-    // SON OMBRE quand Haythem y est (au-delà de la moitié de la volée 2 ; il redescend sous 2 m) — reposée à chaque
-    // image : le cache de l'ombre du décor (js/ombre_cache.js) rallume ce qu'il a éteint le temps d'un rendu
-    if (u.y > 2.5) haut = true; else if (u.y < 2.0) haut = false;
+    // SON OMBRE quand Haythem y est (au-delà de la moitié de la volée 2 ; il redescend sous 2 m ; au 2e, elle ne tomberait
+    // que sous ses pieds, au travers des dalles) — reposée à chaque image : le cache de l'ombre du décor
+    // (js/ombre_cache.js) rallume ce qu'il a éteint le temps d'un rendu
+    if (u.y > 2.5 && u.y < 5.3) haut = true; else if (u.y < 2.0 || u.y > 5.8) haut = false;
     for (const o of ombrants) o.castShadow = haut;
-    // LES SIÈGES de son étage seulement (la liste est celle du jeu, js/game.js : on la remplit sur place) — trois niveaux
-    // depuis le sous-sol (09/10, js/ecole_soussol.js : -1, 0, 1)
+    // LES SIÈGES de son étage seulement (la liste est celle du jeu, js/game.js : on la remplit sur place) — quatre
+    // niveaux depuis le 2e (10/10, js/ecole_etage2.js : -1, 0, 1, 2 ; 09/10, js/ecole_soussol.js)
     if (!tous) tous = ch.sieges.slice();
-    const lv = (h) => (h < -1.5 ? -1 : h > 2 ? 1 : 0);
-    const n = u.y < -1.5 ? -1 : u.y > 2.0 ? 1 : 0;
+    const lv = (h) => (h < -1.5 ? -1 : h > 5 ? 2 : h > 2 ? 1 : 0);
+    const n = u.y < -1.5 ? -1 : u.y > 5.0 ? 2 : u.y > 2.0 ? 1 : 0;
     if (n !== niveau) {
       niveau = n;
       ch.sieges.length = 0;
       for (const s of tous) if (lv(s.sol || 0) === n) ch.sieges.push(s);
     }
+    etage2.maj(dt, jeu);
   };
   console.info('[étage] 1er étage : %d sièges, %d lampes, %d ombrants', sieges.length, lampes.length, ombrants.length);
-  return { zones, maj, groupe };
+  return { zones: [...etage2.zones, ...zones], maj, groupe };
 }
 
 // =====================================================================

@@ -52,7 +52,7 @@ const N1 = 3.5;                     // le plancher du 1er étage
 const N2 = 6.6;                     // celui du 2e
 const H_DALLE = 3.25;               // le dessous de la dalle du 1er (les cloisons du rez-de-chaussée y montent)
 const DALLE2 = 6.4;                 // le dessous de la dalle du 2e
-const H_CAGE = 9.45;                // le plafond de la cage, au-dessus du palier du 2e
+const H_CAGE = N2;                  // le haut des murs de la cage posés avec le 1er (10/10 : la cage monte au 3e — au-dessus du 2e, poserCageHaute)
 const HC = 2.55;                    // le plafond de plâtre du couloir est et du vestibule (photo 24)
 const H1 = N1 + 2.5;                // le plafond du palier est du 1er (photo 27 : ≈ 2,45 à 2,6 m)
 // ---- le plan ----
@@ -727,8 +727,9 @@ export function poserEst(ch, { RECT }) {
   // de la moitié nord du palier intermédiaire, au nord du palier du 1er ; prises devant elle, elles teintaient de saumon
   // les murs blancs qui regardent le nord)
   const zonesHaut = [
-    { id: 'escEst2', rects: [zr(14.2, E.bS[0], E.x0, E.bS[1], N2 - 0.6), zr(E.x0, E.bS[0], E.xM, E.bN[1], 2.6)], voisines: ['escEst', 'e1est'], env: { x: 19.05, y: 3.3, z: -11.6 } },
-    { id: 'e1est', rects: [zr(13.55, 6.975, E.x0, 11.1, 2.6), zr(13.2, 11.1, E.x0, E.bN[1], 2.6), zr(E.x0, 6.975, E.xM, E.bS[0], 2.6)], voisines: ['escEst2', 'e1couloir', 'e103', 'e104'], env: { x: 15.0, y: N1 + 1.5, z: -11.3 } },
+    // (10/10 : une hauteur MAXIMALE — au-dessus, le palier du 2e et la cage haute, js/ecole_etage2.js)
+    { id: 'escEst2', rects: [[...zr(E.x0, E.bS[0], E.xM, E.bN[1], 2.6), N2 - 0.4]], voisines: ['escEst', 'e1est', 'escEst3'], env: { x: 19.05, y: 3.3, z: -11.6 } },
+    { id: 'e1est', rects: [zr(13.55, 6.975, E.x0, 11.1, 2.6), zr(13.2, 11.1, E.x0, E.bN[1], 2.6), zr(E.x0, 6.975, E.xM, E.bS[0], 2.6)].map((r) => [...r, N2 - 0.9]), voisines: ['escEst2', 'e1couloir', 'e103', 'e104'], env: { x: 15.0, y: N1 + 1.5, z: -11.3 } },
   ];
 
   // LA MISE À JOUR (js/carte_ecole.js maj) : l'ombre douce cuite du rez-de-chaussée et la lumière et l'ombre cuites du
@@ -810,7 +811,7 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   ch.plafond(13.275, 11.175, 14.2, E.bN[1], H1 - 0.22, 'platre');
   ch.panneau(B0, 1.275, 0.22, 14.2, 11.81, H1 - 0.11, 'E');
   ch.plafond(E.x0, 7.035, E.xM, 9.0, H1, 'platre');
-  // au-dessus du palier, la cage se ferme : le mur de 6,0 m à 9,45 m au droit des volées 1 et 3
+  // au-dessus du palier, la cage se ferme : le mur de 6,0 m au plancher du 2e (H_CAGE) au droit des volées 1 et 3
   mur(ch, G, { de: [E.x0 - 0.05, E.yE], a: [E.x0 - 0.05, E.yN], ep: 0.1, base: H1, h: H_CAGE, mats: B0 });
   // (la dalle du 1er au-dessus de la volée 1 est posée par js/ecole_etage1.js : C.sol, la caméra)
   C.ajouterBoite(13.2, -9.025, E.x0, -E.bN[1], { y0: N1 - 0.32, y1: N1 - 0.02, joueur: false });
@@ -847,56 +848,155 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   opale(18.9, 8.0, 'e1est');
 
   // =====================================================================
-  //  LA CAGE AU-DESSUS DU 1er (IMAGINÉE) : volée 3, palier à 5,05 m, volée 4, palier du 2e (fermé)
+  //  LA CAGE AU-DESSUS DU 1er : volée 3, palier à 5,05 m, volée 4 (au-dessus du 2e : poserCageHaute)
   // =====================================================================
+  // (10/10, la vidéo officielle, 70 à 71 s et 88,8 à 90 s : la volée 4 arrive au palier du 2e, ouvert à l'ouest — son
+  // mur du panneau « 2 », sa porte coupe-feu au sud, js/ecole_etage2.js. Le « palier du 2e » imaginé, sa porte grise
+  // fermée en x 14,15 et le plafond de la cage à 9,45 sont partis : l'escalier continue vers le 3e)
   const v3 = { x0: E.x0, sens: 1, y0: E.bN[0], y1: E.bN[1], b: N1, n: E.n, r: E.r2, g: E.g };
   const v4 = { x0: E.xP, sens: -1, y0: E.bS[0], y1: E.bS[1], b: E.hP2, n: E.n, r: E.r2, g: E.g };
   volee(ch, G, v3);
   volee(ch, G, v4);
   limon(ch, G, { ...v3, y: E.bN[1], cote: 1 }); limon(ch, G, { ...v3, y: E.bN[0], cote: -1 });
   limon(ch, G, { ...v4, y: E.bS[0], cote: -1 }); limon(ch, G, { ...v4, y: E.bS[1], cote: 1 });
-  // le palier à 5,05 m (dalle), ses plinthes ; le palier du 2e (dalle de 6,40 à 6,60), son chant
+  // le palier à 5,05 m (dalle), ses plinthes ; le chant de la dalle du 2e au-dessus du palier du 1er, au droit de la
+  // volée 4 (de son plafond, 6,00, au dessous de la dalle ; la dalle elle-même est celle du 2e, js/ecole_etage2.js)
   B(ch, G, E.xP, E.bS[0], E.xM, E.bN[1], E.hP2 - 0.25, E.hP2 - 0.02, X.beton);
   B(ch, G, E.xP, E.bS[0], E.xM, E.bN[1], E.hP2 - 0.02, E.hP2, X.giron);
   B(ch, G, E.xM - 0.015, E.bS[0], E.xM, E.bN[1], E.hP2, E.hP2 + 0.08, X.plinthe, { ombre: false });
+  for (const [ya, yb] of [[E.bS[0], E.bS[0] + 0.015], [E.bN[1] - 0.015, E.bN[1]]]) B(ch, G, E.xP + 0.05, ya, E.xM, yb, E.hP2, E.hP2 + 0.08, X.plinthe, { ombre: false });
   C.sol(E.xP, -E.bS[0], E.xM, -E.bN[1], E.hP2);
   C.ajouterBoite(E.xP, -E.bS[0], E.xM, -E.bN[1], { y0: E.hP2 - 0.25, y1: E.hP2, joueur: false });
-  B(ch, G, 14.2, E.bS[0], E.x0, E.bS[1], DALLE2, N2 - 0.02, X.beton);
-  B(ch, G, 14.2, E.bS[0], E.x0, E.bS[1], N2 - 0.02, N2, X.vinyle);
   B(ch, G, E.x0 - 0.1, E.bS[0], E.x0, E.bS[1], H1, DALLE2, X.beton, { ombre: false });
-  C.sol(14.2, -E.bS[0], E.x0, -E.bS[1], N2);
-  C.ajouterBoite(14.2, -E.bS[0], E.x0, -E.bS[1], { y0: DALLE2, y1: N2, joueur: false });
-  // le palier du 2e : ses murs, sa porte grise (fermée) et sa plaque
-  mur(ch, G, { de: [14.15, E.yS], a: [E.x0, E.yS], base: N2, h: H_CAGE, mats: B0, plinthes: ['N'] });
-  mur(ch, G, { de: [14.15, E.yE], a: [E.x0 - 0.1, E.yE], base: N2, h: H_CAGE, mats: B0, plinthes: ['S'] });
-  mur(ch, G, { de: [14.15, E.yS], a: [14.15, E.yE], base: N2, h: H_CAGE, mats: B0, plinthes: ['E'], ouvertures: [{ c: 9.9, l: 0.93, h: N2 + 2.04 }] });
-  ch.porte('y', 14.15, 9.9, { l: 0.93, h: 2.04, base: N2, modele: 'grise', etat: 'fermee', cote: 'E', matVantail: X.taupe, notices: 1, nom: '2e étage (escalier est)' });
-  ch.panneau(matPanneau(texPlaqueSalle('Escalier est', '2e étage', 'fermé'), 0.4), 0.15, 0.09, 14.229, 10.5, N2 + 1.6, 'E', G);
-  // le plafond de la cage
-  ch.plafond(14.2, E.bS[0], E.xM, E.bN[1], H_CAGE, 'platre', { retombees: false });
   // les mains courantes des volées 3 et 4 (comme en bas)
   const rail = (v, s) => v.b + v.r + s * v.r / v.g + 0.9, xv = (v, s) => v.x0 + v.sens * s, fin = (E.n - 1) * E.g;
   const yN1 = E.bN[1] - 0.079, yS1 = E.bN[0] + 0.079, yS2 = E.bS[0] + 0.079, yN2 = E.bS[1] - 0.079;
   const crosse = (v, y) => [[xv(v, -0.02), y, rail(v, -0.02) - 0.15], [xv(v, 0.07), y, rail(v, 0.07)]];
-  mainCourante(ch, G, [...crosse(v3, yN1), [xv(v3, fin), yN1, rail(v3, fin)], [E.xP + 0.06, yN1, rail(v3, fin)], [E.xP + 0.06, E.bN[1], rail(v3, fin)]],
-    [[xv(v3, 0.5), yN1, rail(v3, 0.5), 'N'], [xv(v3, 1.6), yN1, rail(v3, 1.6), 'N']]);
+  // (10/10, VO q_0356-0360 : au palier à 5,05 m, la main courante du mur ne s'arrête pas — elle court à 0,95 m le long du
+  // mur nord, du mitoyen et du mur sud, tourne dans les angles et redescend avec la volée 4 : d'un seul tenant, de la
+  // crosse basse de la volée 3 au haut de la volée 4, où elle revient au mur au bout du pilastre)
+  const hH = E.hP2 + 0.95, xm = E.xM - 0.079;
+  mainCourante(ch, G, [...crosse(v3, yN1), [xv(v3, fin), yN1, rail(v3, fin)], [18.62, yN1, hH], [xm, yN1, hH], [xm, yS2, hH], [18.62, yS2, hH],
+    [xv(v4, 0.07), yS2, rail(v4, 0.07)], [xv(v4, fin), yS2, rail(v4, fin)], [E.x0 + 0.08, yS2, rail(v4, fin)], [E.x0 + 0.08, E.bS[0], rail(v4, fin)]],
+    [[xv(v3, 0.5), yN1, rail(v3, 0.5), 'N'], [xv(v3, 1.6), yN1, rail(v3, 1.6), 'N'], [19.25, yN1, hH, 'N'], [xm, 11.5, hH, 'E'], [xm, 10.1, hH, 'E'],
+      [19.25, yS2, hH, 'S'], [xv(v4, 0.5), yS2, rail(v4, 0.5), 'S'], [xv(v4, 1.6), yS2, rail(v4, 1.6), 'S']]);
   // (celle de l'échiffre, côté volée 3, est la suite de celle de la volée 2 : au palier du 1er, la main courante fait
   // une ÉPINGLE autour du chant gris — photo 28 : elle passe le bout du mur, revient derrière lui — et remonte)
   const h2 = rail({ b: E.hP1, r: E.r1, g: E.g }, fin), h3 = rail(v3, 0);
   mainCourante(ch, G, [[E.x0, yN2, h2], [E.x0 - 0.12, yN2, h2 + 0.02], [E.x0 - 0.18, E.yE, (h2 + h3) / 2], [E.x0 - 0.12, yS1, h3 - 0.02], [E.x0, yS1, h3],
     [xv(v3, fin), yS1, rail(v3, fin)], [E.xP + 0.06, yS1, rail(v3, fin)], [E.xP + 0.06, E.bN[0], rail(v3, fin)]],
     [[xv(v3, 0.5), yS1, rail(v3, 0.5), 'S'], [xv(v3, 1.6), yS1, rail(v3, 1.6), 'S']]);
-  for (const y of [yS2, yN2]) {
-    const f = y < E.yE - 0.5 ? 'S' : 'N';
-    mainCourante(ch, G, [...crosse(v4, y), [xv(v4, fin), y, rail(v4, fin)], [E.x0 - 0.04, y, rail(v4, fin)], [E.x0 - 0.04, f === 'S' ? E.bS[0] : E.bS[1], rail(v4, fin)]],
-      [[xv(v4, 0.5), y, rail(v4, 0.5), f], [xv(v4, 1.6), y, rail(v4, 1.6), f]]);
-  }
+  // (celle de l'échiffre, côté volée 4, fait au 2e l'épingle autour du chant clair et devient celle de la volée 5 :
+  // poserCageHaute)
   // la réglette et le bloc de sortie du palier à 5,05 m, comme au palier du dessous (lampe de la cage du haut : elle ne
-  // se cuit pas sur le sol du 1er, et vue du palier du 1er elle est « trop haut » pour un spot voisin)
-  reglette(ch, G, E.xM, 10.0, 11.4, E.hP2 + 2.5, 'W');
-  lampe({ x: E.xM - 0.25, z: -10.7, h: E.hP2 + 2.5, zone: 'escEst2', type: 'tube', force: 1.1, cuireEtage: false });
-  ch.sortie(E.xM - 0.03, 11.0, E.hP2 + 2.85, 'W');
+  // se cuit pas sur le sol du 1er, et vue du palier du 1er elle est « trop haut » pour un spot voisin) ; 10/10 : un peu
+  // plus bas — le palier à 8,15 m passe au-dessus (dessous à 7,90), le bloc de sortie juste sous lui (VO q_0356-0360) ;
+  // l'affiche iris verticale au milieu du mitoyen, sous la réglette (VO q_0358)
+  reglette(ch, G, E.xM, 10.0, 11.4, E.hP2 + 2.35, 'W');
+  lampe({ x: E.xM - 0.25, z: -10.7, h: E.hP2 + 2.35, zone: 'escEst2', type: 'tube', force: 1.1, cuireEtage: false });
+  ch.sortie(E.xM - 0.03, 11.0, E.hP2 + 2.72, 'W');
+  ch.panneau(matPanneau(texAfficheIris(), 0.55), 0.42, 0.75, E.xM - 0.004, 10.72, E.hP2 + 1.75, 'W', G);
   // (l'orange de l'échiffre est posé par poserEst, du rez-de-chaussée à la sous-face de la volée 4 ; la main courante de
   // la volée 2 aussi : elle monte jusqu'au 1er)
   console.info('[escalier est] palier du 1er et cage au-dessus posés');
+}
+
+// =====================================================================
+//  LA CAGE AU-DESSUS DU 2e (crochet de js/ecole_etage2.js : tout se pose dans le groupe du 2e étage)
+// =====================================================================
+// La vidéo officielle (70-71 s, 88,8-90 s ; plan_global § 2.3, synth/volee_cmp.jpg) : au-dessus du 1er, l'échiffre est
+// ROUGE VERMILLON côté volée 4 (#d0502c, la peinture du mur nord du couloir du 2e), son chant ouest clair ; la cage MONTE —
+// la sous-face de la volée 6 passe en biais au-dessus de la volée 4 (le haut de l'échiffre rouge la suit), le palier à
+// 8,15 m couvre celui à 5,05 m, la volée 5 part du palier du 2e vers l'est dans la bande nord, sa main courante noire à
+// crosse basse sur le mur nord, et celle de l'échiffre fait l'épingle autour du chant (VO q_0356, sheets/z_545).
+// Au-delà, RIEN n'est vu : un portillon fermé au pied de la volée 5 (IMAGINÉ : le jeu s'arrête au 2e), la volée 7 et le
+// palier du 3e réduits à ce qu'on en voit d'en bas.
+//   poserCageHaute(ch, { groupe })      (la lampe du palier à 8,15 m ne se cuit sur aucun sol)
+export function poserCageHaute(ch, { groupe }) {
+  const { C, M } = ch, G = groupe, E = EST, B0 = M.blanc;
+  if (!X) X = matieresEst();
+  const N3 = N2 + (N2 - N1), hP3 = N2 + (N2 - N1) / 2, hP4 = N3 + (N2 - N1) / 2;   // 9,70 ; 8,15 ; 11,25
+  const H_HAUT = hP4 + 0.05;                          // le haut des murs posés ici
+  const fin = (E.n - 1) * E.g, r = E.r2;
+  // ---- LES MURS DE LA CAGE au-dessus du 2e (le bas, jusqu'au plancher du 2e, est posé avec le 1er) ----
+  // le mur nord (la façade arrière, js/ecole_etage2.js, le prolonge à l'ouest), le mur sud (sa face sud : le vestibule
+  // de l'ascenseur du 2e), le mitoyen, le mur d'échiffre
+  mur(ch, G, { de: [E.x0, E.yN], a: [E.xM, E.yN], base: N2, h: H_HAUT, mats: B0 });
+  mur(ch, G, { de: [E.x0, E.yS], a: [E.xM, E.yS], base: N2, h: H_HAUT, mats: B0, plinthes: ['S'] });
+  mur(ch, G, { de: [19.95, 8.99], a: [19.95, 12.6], ep: 0.3, base: N2, h: H_HAUT, mats: B0 });
+  mur(ch, G, { de: [E.x0, E.yE], a: [E.xP, E.yE], base: N2, h: H_HAUT, mats: B0 });
+  // LE ROUGE VERMILLON de l'échiffre côté volée 4 : de la plinthe rampante de la volée 4 à la sous-face de la volée 6
+  // (comme l'orange côté volée 2, poserEst), derrière le chant clair
+  const sof6 = (x) => hP3 - 0.25 + (E.xP - x) * ((hP3 + (E.n - 1) * r - 0.3) - (hP3 - 0.25)) / fin;
+  const pl4 = (x) => E.hP2 + r + (E.xP - x) * r / E.g + 0.13;
+  {
+    const rouge = new THREE.MeshStandardMaterial({ map: texPeinture(0xd0502c, 4), roughness: 0.6, side: THREE.DoubleSide });
+    rouge.name = 'peinture rouge vermillon (échiffre du 2e)';
+    detailPhoto(rouge, 'beton', 1, 1, { relief: 0.035, grain: 0, rugo: false });
+    const xa = E.x0 + 0.11, sh = new THREE.Shape();
+    sh.moveTo(xa, pl4(xa)); sh.lineTo(E.xP, pl4(E.xP)); sh.lineTo(E.xP, sof6(E.xP)); sh.lineTo(xa, sof6(xa));
+    const o = new THREE.Mesh(new THREE.ShapeGeometry(sh), rouge);
+    o.position.z = -(E.bS[1] - 0.003); o.receiveShadow = true; o.userData.horsAOSol = true; G.add(o);
+  }
+  // LE CHANT CLAIR (VO q_0281-0287 : une bande blanc cassé de 11 cm au bout du mur rouge ; le chant gris du 1er s'arrête
+  // à 6,10 m)
+  const chant = new THREE.MeshStandardMaterial({ color: 0xdedbd3, roughness: 0.6 }); chant.name = 'chant clair de l\'échiffre';
+  B(ch, G, E.x0 - 0.006, E.yE - 0.081, E.x0 + 0.11, E.yE + 0.081, 6.1, N3 - 0.25, chant, { ombre: false });
+  // ---- LES VOLÉES 5, 6 et 7, LES PALIERS À 8,15 ET 11,25 m, LE PALIER DU 3e (ce qu'on en voit d'en bas) ----
+  const v4 = { x0: E.xP, sens: -1, b: E.hP2, r, g: E.g };
+  const v5 = { x0: E.x0, sens: 1, y0: E.bN[0], y1: E.bN[1], b: N2, n: E.n, r, g: E.g };
+  const v6 = { x0: E.xP, sens: -1, y0: E.bS[0], y1: E.bS[1], b: hP3, n: E.n, r, g: E.g };
+  const v7 = { x0: E.x0, sens: 1, y0: E.bN[0], y1: E.bN[1], b: N3, n: E.n, r, g: E.g };
+  volee(ch, G, v5); volee(ch, G, v6); volee(ch, G, v7);
+  limon(ch, G, { ...v5, y: E.bN[1], cote: 1 }); limon(ch, G, { ...v5, y: E.bN[0], cote: -1 });
+  limon(ch, G, { ...v6, y: E.bS[0], cote: -1 }); limon(ch, G, { ...v6, y: E.bS[1], cote: 1 });
+  for (const [h, sous] of [[hP3, true], [hP4, false]]) {
+    B(ch, G, E.xP, E.bS[0], E.xM, E.bN[1], h - 0.25, h - 0.02, X.beton);
+    B(ch, G, E.xP, E.bS[0], E.xM, E.bN[1], h - 0.02, h, X.giron);
+    if (!sous) continue;
+    B(ch, G, E.xM - 0.015, E.bS[0], E.xM, E.bN[1], h, h + 0.08, X.plinthe, { ombre: false });
+    C.sol(E.xP, -E.bS[0], E.xM, -E.bN[1], h);
+    C.ajouterBoite(E.xP, -E.bS[0], E.xM, -E.bN[1], { y0: h - 0.25, y1: h, joueur: false });
+  }
+  // (pour la caméra : le dessous du palier à 8,15 m, au-dessus de celui à 5,05 m)
+  C.plafond(E.xP, -E.bS[0], E.xM, -E.bN[1], hP3 - 0.25);
+  // le palier du 3e (sa dalle : vue de la volée 4, son chant ferme le haut de la cage à l'ouest)
+  B(ch, G, 13.55, 7.9, E.x0, E.yN, N3 - 0.25, N3, X.beton, { ombre: false });
+  // ---- LES MAINS COURANTES : celle de l'échiffre, de la volée 4 à la volée 5 par l'épingle autour du chant ; celle du
+  // mur nord de la volée 5, sa crosse basse (VO q_0356, sheets/z_545) ----
+  const rail = (v, s) => v.b + v.r + s * v.r / v.g + 0.9, xv = (v, s) => v.x0 + v.sens * s;
+  const yN1 = E.bN[1] - 0.079, yS1 = E.bN[0] + 0.079, yN2 = E.bS[1] - 0.079;
+  const crosse = (v, y) => [[xv(v, -0.02), y, rail(v, -0.02) - 0.15], [xv(v, 0.07), y, rail(v, 0.07)]];
+  const h4 = rail(v4, fin), h5 = rail(v5, 0);
+  mainCourante(ch, G, [...crosse(v4, yN2), [xv(v4, fin), yN2, h4], [E.x0, yN2, h4], [E.x0 - 0.12, yN2, h4 + 0.02], [E.x0 - 0.18, E.yE, (h4 + h5) / 2],
+    [E.x0 - 0.12, yS1, h5 - 0.02], [E.x0, yS1, h5], [xv(v5, fin), yS1, rail(v5, fin)], [E.xP + 0.06, yS1, rail(v5, fin)], [E.xP + 0.06, E.bN[0], rail(v5, fin)]],
+    [[xv(v4, 0.5), yN2, rail(v4, 0.5), 'N'], [xv(v4, 1.6), yN2, rail(v4, 1.6), 'N'], [xv(v5, 0.5), yS1, rail(v5, 0.5), 'S'], [xv(v5, 1.6), yS1, rail(v5, 1.6), 'S']]);
+  mainCourante(ch, G, [...crosse(v5, yN1), [xv(v5, fin), yN1, rail(v5, fin)], [E.xP + 0.06, yN1, rail(v5, fin)], [E.xP + 0.06, E.bN[1], rail(v5, fin)]],
+    [[xv(v5, 0.5), yN1, rail(v5, 0.5), 'N'], [xv(v5, 1.6), yN1, rail(v5, 1.6), 'N']]);
+  // ---- LE PALIER À 8,15 m : sa réglette, son bloc de sortie, son affiche (comme aux paliers du dessous ; non vus) ----
+  reglette(ch, G, E.xM, 10.0, 11.4, hP3 + 2.35, 'W');
+  ch.lampes.push({ x: E.xM - 0.25, z: -10.7, h: hP3 + 2.35, zone: 'escEst3', type: 'tube', force: 1.0, base: hP3, cuire: false });
+  ch.sortie(E.xM - 0.03, 11.0, hP3 + 2.72, 'W');
+  ch.panneau(matPanneau(texAfficheIris(), 0.55), 0.42, 0.75, E.xM - 0.004, 10.72, hP3 + 1.75, 'W', G);
+  // ---- LE PORTILLON (IMAGINÉ) au pied de la volée 5 : fer plat noir, fermé à clé, son affichette ; on ne monte pas
+  // au 3e (la caméra, elle, regarde par-dessus) ----
+  const xp = E.x0 - 0.06, y0 = E.bN[0] + 0.02, y1 = E.bN[1] - 0.02, hp = N2 + 1.0;
+  for (const y of [y0, y1 - 0.04]) B(ch, G, xp - 0.02, y, xp + 0.02, y + 0.04, N2, hp + 0.05, M.acierNoir);
+  for (const h of [N2 + 0.12, hp - 0.03]) B(ch, G, xp - 0.01, y0 + 0.04, xp + 0.01, y1 - 0.04, h, h + 0.04, M.acierNoir);
+  for (let y = y0 + 0.16; y < y1 - 0.1; y += 0.12) B(ch, G, xp - 0.006, y - 0.006, xp + 0.006, y + 0.006, N2 + 0.16, hp - 0.03, M.acierNoir, { ombre: false });
+  B(ch, G, xp - 0.035, y1 - 0.2, xp - 0.01, y1 - 0.12, N2 + 0.55, N2 + 0.65, M.inox, { ombre: false });
+  ch.panneau(matPanneau(texAccesReserve(), 0.6), 0.21, 0.148, xp - 0.013, (y0 + y1) / 2, N2 + 0.72, 'W', G);
+  C.ajouterBoite(xp - 0.04, -y1, xp + 0.04, -y0, { y0: N2, y1: N2 + 2.6, camera: false });
+  console.info('[escalier est] cage au-dessus du 2e posée');
+}
+// L'AFFICHETTE DU PORTILLON (imaginée) : blanche, bandeau rouge, « Accès réservé »
+function texAccesReserve() {
+  return canvasTex(256, 180, (g, w, h) => {
+    g.fillStyle = '#fbfbf8'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#c8262c'; g.fillRect(0, 0, w, 46);
+    g.fillStyle = '#ffffff'; g.font = '800 26px "Segoe UI", Arial, sans-serif'; g.textAlign = 'center'; g.fillText('ACCÈS RÉSERVÉ', w / 2, 33);
+    g.fillStyle = '#222'; g.font = '600 20px "Segoe UI", Arial, sans-serif'; g.fillText('Étages 3 à 5', w / 2, 92);
+    g.font = '15px "Segoe UI", Arial, sans-serif'; g.fillStyle = '#555'; g.fillText('Merci d’utiliser l’ascenseur', w / 2, 128); g.fillText('ou de vous adresser à l’accueil', w / 2, 150);
+    g.textAlign = 'left';
+  }, null, false, 2);
 }
