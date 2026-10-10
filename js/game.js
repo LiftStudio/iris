@@ -327,7 +327,7 @@ export class Game {
   lobbyHint() {
     if (manetteActive()) return aideBalade();
     if (IS_TOUCH) return 'pouce à gauche = joystick (effleure : marcher, au bord : sprint) · glisse à droite = caméra · SAUT · 🕺 emotes · 📱 téléphone';
-    return `souris = caméra · ${actionKey('camera')} = vue (3e / épaule / 1re personne) · ${actionKey('walk')} = marcher · ${actionKey('sprint')} = sprint · ${actionKey('jump')} = sauter · ${actionKey('emote')} = emotes · ${actionKey('phone')} = téléphone · ${actionKey('pause')} = pause`;
+    return `souris = caméra · ${actionKey('camera')} = vue (3e / épaule / 1re personne / photo) · ${actionKey('walk')} = marcher · ${actionKey('sprint')} = sprint · ${actionKey('jump')} = sauter · ${actionKey('emote')} = emotes · ${actionKey('phone')} = téléphone · ${actionKey('pause')} = pause`;
   }
 
   // ---------- emotes (roue) ----------
