@@ -810,7 +810,9 @@ export function poserPause1(ch, ctx) {
     C.ajouterBoite(2.3, -0.75, 3.0, -2.15, { y0: N1, y1: N1 + 0.76 });
     ordinateur(2.75, 1.45, 'E', 3);
     B(2.4, 1.9, 2.6, 2.1, N1 + 0.745, N1 + 1.17, M.noirMat);
-    fauteuil(2.0, 1.45, 'E', { sortie: [2.0, 2.6], nom: 'le fauteuil du professeur' });
+    // (vérification du 10/10 : la sortie à 30 cm du mur ouest — en x 2,0, Haythem n'y tenait pas, le siège n'était pas
+    // proposé depuis elle)
+    fauteuil(2.0, 1.45, 'E', { sortie: [2.1, 2.55], nom: 'le fauteuil du professeur' });
   }
   // LES TABLES DOUBLES (1,20 x 0,50, hêtre clair, piétement anthracite à patin) et leurs chaises de hêtre percé, face à
   // l'ouest : deux blocs de deux tables par rang, l'allée centrale de 80 cm ; cinq rangs entiers, puis les tables du bloc

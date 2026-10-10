@@ -1639,8 +1639,8 @@ function solGres(ch, R) {
 // (09/10) La photo 23 montre, à droite de la porte bleue, une plaque de salle à trois lignes : « Salle … B 0.? » ; la
 // plaque directionnelle des photos 22 et 24 annonce au rez-de-chaussée « Salle Tim Berners-Lee B 0.1 » et « Salle David
 // Clark B 0.2 » — la longueur de la ligne du milieu désigne plutôt la seconde (10/10 : l'annuaire de la pile, sur la
-// vidéo officielle, lit « Si 0.1 » et « Si 0.2 » — des salles informatiques). L'intérieur est IMAGINÉ : une salle de
-// cours sobre, comme la salle A et la salle 101. Elle déborde le fond du bâtiment (y 20,75) jusqu'à 24,5 : ses trois
+// vidéo officielle, lit « Si 0.1 » et « Si 0.2 » — des salles informatiques). L'intérieur est IMAGINÉ : une salle
+// informatique sobre (un poste par place depuis le 10/10). Elle déborde le fond du bâtiment (y 20,75) jusqu'à 24,5 : ses trois
 // fenêtres donnent au nord sur une cour éclairée par le jour — c'est ce jour qui allume le verre bleu de sa porte sur la
 // photo 05.
 //   Le tableau blanc et l'écran au mur est : la lumière des fenêtres arrive par la gauche des élèves. Trois rangs de
@@ -1691,11 +1691,17 @@ function salleDavidClark(ch, P) {
   plan(ecl, P.ecrans[4], 0.3, 0.18, 0, 0.108, 0.004);
   const docs = groupe(ch, 7.55, 22.4, 'E', 0.745); docs.rotation.y += 0.2; B(docs, P.blancMat, 0.21, 0.015, 0.297, 0, 0.0075, 0, { ombre: false });
   // ---- les tables des élèves et leurs chaises (tournées vers l'est) ; quelques coques jaunes ----
+  // (vérification du 10/10 : « Si 0.2 », une salle INFORMATIQUE — l'annuaire de la pile, VO 7,9-8,1 s ; plan_global
+  // § 4.3 n° 22 — : chaque place a son poste, l'écran au fond de la table, le clavier devant, l'unité centrale dessous,
+  // côté fond ; l'intérieur reste IMAGINÉ)
   let n = 0;
   for (const xr of RANGS_DC) for (const yc of TABLES_DC) {
     tableEleve(ch, P, xr, yc, 0.6, 1.4);
     for (const s of [-1, 1]) {
       const yy = yc + s * 0.35, allee = yc + s * 1.05;
+      ecranPC(ch, P, xr + 0.08, yy, 0.745, 'W', P.ecrans[(n * 3 + 1) % P.ecrans.length]);
+      clavier(ch, P, xr - 0.1, yy + 0.03, 0.745, 'W');
+      unite(ch, P, xr + 0.09, yy + 0.22, 'W');
       chaiseClasse(ch, P, xr - 0.52, yy, 'E', { sortie: [0, allee - yy], mat: (n++ % 7 === 3) ? P.coqueJaune : P.coque });
     }
   }
