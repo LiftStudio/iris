@@ -3,9 +3,9 @@
 // =====================================================================
 // D'après la VIDÉO OFFICIELLE DE VISITE (2021, VO 68,2-70 s, q_0274-0281 ; à 25 i/s e2/f25/f_0031-0055 ; recadrages
 // e2/crops/g038, g056, g074) : au 1er, au bout de la bande sud du palier est, une FAÇADE PALIÈRE tout en inox brossé qui
-// regarde l'ouest (x 17,9) — le montant de 18 cm au nord, les deux vantaux coulissants (0,84 m de passage, 2,03 m de
+// regarde l'ouest (x 17,9) — le montant de 21 cm au nord, les deux vantaux coulissants (0,88 m de passage, 2,0 m de
 // haut), le grand panneau fixe au sud derrière lequel ils s'effacent (porte télescopique à deux vitesses : le joint des
-// vantaux n'est pas au milieu de la façade), le linteau de 22 cm sur toute la largeur et, au droit du passage, son
+// vantaux n'est pas au milieu de la façade), le linteau de 25 cm sur toute la largeur et, au droit du passage, son
 // afficheur à cristaux liquides bleus ; contre la façade, sur le mur sud, la platine du bouton d'appel et l'extincteur ;
 // au-dessus, la réglette murale. Aucune photo de 2026 ne couvre ce coin (x 16-19,8, y 7-9) : on garde la vidéo.
 // Au rez-de-chaussée, la porte n'est pas vue (la photo 24 ne voit le dégagement derrière le cannelé que jusqu'à x 17) :
@@ -32,6 +32,10 @@
 //   poserAscenseur(ch, { base, groupe, ouvert, y0, y1, hMur, zone, bouton }) -> le palier
 //   poserBandeSud(ch, { groupe, lampes })    le 1er : la bande sud du palier est, son décor, le palier de l'ascenseur
 //   majAscenseur(ch, dt, jeu)                à chaque image (js/ecole_est.js, la mise à jour du rez-de-chaussée)
+// Le 2e (js/ecole_etage2.js) : poserAscenseur(ch, { base: 6.6, groupe }) pose un palier FERMÉ (y0 par défaut 7,355,
+// comme au 1er ; son vestibule plus étroit : y0 jusqu'à 7,9) ; avec `ouvert: true` et la `zone` de son vestibule, la
+// cabine y monte aussi (il faut alors que le vestibule soit un sol où marcher et que le groupe de l'étage se montre
+// quand Haythem est à 6,6 : le transport le rend visible pour la première image).
 import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex, nePasFusionner } from './kit_decor.js';
@@ -216,7 +220,7 @@ const libelle = (base) => String(Math.round(base / 3.2));       // -3,06 -> -1 ;
 // =====================================================================
 // `base` : le plancher ; `groupe` : où poser (par défaut ch.decor — un étage passe le sien) ; `ouvert` : desservi (la
 // cabine y vient, les portes s'ouvrent), sinon la porte est un mur ; `y0`, `y1` : la façade (du nu du mur sud au nu du
-// mur nord de la gaine — le passage, lui, ne bouge pas : y 7,98-8,82) ; `hMur` : le haut du mur au-dessus du linteau (le
+// mur nord de la gaine — le passage, lui, ne bouge pas : y 7,91-8,79) ; `hMur` : le haut du mur au-dessus du linteau (le
 // plafond du palier) ; `zone` : la zone de lumière du palier (la lampe de la cabine y prend part) ; `bouton` : le mur qui
 // porte la platine d'appel ('S' : contre le fixe, comme au 1er ; 'N' : sur le mur de la cage).
 export function poserAscenseur(ch, { base = 0, groupe = null, ouvert = false, y0 = 7.355, y1 = ASC.yN, hMur = null, zone = null, bouton = 'S' } = {}) {
@@ -237,11 +241,11 @@ export function poserAscenseur(ch, { base = 0, groupe = null, ouvert = false, y0
   // les seuils d'aluminium (le palier, l'embrasure)
   B(XA - 0.09, yP0, XA, yP1, b, b + 0.005, X.alu);
   B(XA, yP0, XB + 0.05, yP1, b, b + 0.008, X.alu);
-  // L'AFFICHEUR au milieu du passage, dans le linteau (centre à 2,14 m), sa lunette noire
+  // L'AFFICHEUR au milieu du passage, dans le linteau (centre à 2,125 m), sa lunette noire
   const aff = afficheur();
   const matAff = new THREE.MeshBasicMaterial({ map: aff.t, color: new THREE.Color(1.35, 1.35, 1.35) }); matAff.name = 'afficheur ' + b;
   // (f_0041 : la plaque de l'afficheur ≈ 0,2 × 0,09, sa fenêtre bleue ≈ 0,16 × 0,06, au milieu du linteau, au droit du
-  // milieu du passage — le joint des vantaux est 3 cm plus au nord)
+  // milieu du passage — le joint des vantaux est 1,5 cm plus au nord)
   const yA = (yP0 + yP1) / 2;
   B(XA - 0.005, yA - 0.1, XA, yA + 0.1, b + 2.08, b + 2.17, X.lunette);
   ch.panneau(matAff, 0.16, 0.06, XA - 0.0055, yA, b + 2.125, 'W', G);
