@@ -679,26 +679,26 @@ export function poserPause1(ch, ctx) {
   // (VO q_0182-0196, f_015 à 45,4 s, 53,2-54 s : la jaune en S, nord-sud, en avant des distributeurs — à 0,8 m de leur
   // habillage, qu'on y passe — ; la rouge en haricot au nord-est, devant les murets, ouverte au sud-ouest ; la table basse
   // entre les deux ; relecture 10/10 : repoussées vers l'est avec la niche)
-  banquette([[9.15, 8.75], [8.6, 9.35], [8.75, 10.1], [8.4, 10.8]], P.jaune, 'banquette jaune');
-  banquette([[9.05, 11.15], [9.7, 11.45], [10.5, 11.45], [11.05, 11.1], [11.2, 10.55]], P.rouge, 'banquette rouge');
+  banquette([[9.15, 8.75], [8.6, 9.35], [8.75, 10.05], [8.3, 10.6]], P.jaune, 'banquette jaune');
+  banquette([[8.7, 11.1], [9.3, 11.45], [10.05, 11.45], [10.6, 11.15], [10.75, 10.65]], P.rouge, 'banquette rouge');
   {
-    const g = new THREE.Group(); g.position.set(9.75, N1, -10.3); g.rotation.y = 2.04; groupe.add(g);
+    const g = new THREE.Group(); g.position.set(9.85, N1, -10.2); g.rotation.y = 2.04; groupe.add(g);
     const s = new THREE.Shape(), w = 0.7, d = 0.275;
     s.moveTo(-w + d, -d); s.lineTo(w - d, -d); s.absarc(w - d, 0, d, -Math.PI / 2, Math.PI / 2, false); s.lineTo(-w + d, d); s.absarc(-w + d, 0, d, Math.PI / 2, Math.PI * 1.5, false);
     const geo = new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: false, curveSegments: 10 }); geo.rotateX(-Math.PI / 2);
     maille(geo, P.laque, 0, 0.36, 0, 0, g);
     // (le piétement : un socle noir en retrait, sous le plateau)
     const pied = maille(geo.clone().scale(0.62, 1, 0.45), P.noir, 0, 0.0, 0, 0, g, { ombre: false }); pied.scale.y = 9;
-    C.ajouterBoiteOrientee(9.75, -10.3, 0.7, 0.275, -2.04, { y0: N1, y1: N1 + 0.4 });
+    C.ajouterBoiteOrientee(9.85, -10.2, 0.7, 0.275, -2.04, { y0: N1, y1: N1 + 0.4 });
   }
   // les mange-debout et leurs tabourets, les chaises coque (VO : près de la porte du palier, devant les jours, devant la
   // jaune, devant la rouge, deux à l'est, vus à 67 s, et un près de la porte du fond). On y circule : le long des jours, de
   // la porte du palier à celle du fond et à celle de la salle (y 7,04-7,82) ; du palier à la porte de la Si 1.4 (x
   // 11,45-12,15) ; de la porte du fond à la niche (x 7,36-8,13)
-  for (const [x, y] of [[12.75, 9.35], [12.8, 10.9], [9.6, 8.15], [10.85, 9.45], [6.3, 8.55]]) mangeDebout(x, y);
+  for (const [x, y] of [[12.75, 9.35], [12.8, 10.9], [9.6, 8.15], [11.0, 9.6], [6.3, 8.55]]) mangeDebout(x, y);
   miura(13.2, 9.45, 'W', [13.2, 10.05]); miura(12.85, 11.45, 'S', [12.4, 11.75]); miura(9.05, 8.1, 'E', [8.9, 7.55]);
-  miura(10.85, 8.9, 'N', [11.3, 8.35]); miura(6.85, 8.9, 'W', [7.3, 8.5]); miura(5.8, 8.95, 'E', [5.5, 8.4]);
-  coque(10.2, 8.5, 'W', P.coqueOrange, [10.2, 7.8]); coque(10.25, 9.1, 'W', P.coqueMenthe, [9.95, 9.5]);
+  miura(12.35, 9.85, 'E', [12.35, 10.4]); miura(6.85, 8.9, 'W', [7.3, 8.5]); miura(5.8, 8.95, 'E', [5.5, 8.4]);
+  coque(10.2, 8.5, 'W', P.coqueOrange, [10.2, 7.8]); coque(10.5, 9.05, 'W', P.coqueMenthe, [10.95, 8.75]);
   // (la lime contre le muret court, entre la niche et le 1er poteau)
   coque(7.75, 11.45, 'S', P.coqueLime, [7.75, 10.85]);
 

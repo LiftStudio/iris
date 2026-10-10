@@ -18,7 +18,9 @@
 //   salle 104 (Gordon Earle Moore, Si 1.5) x 16,5-19,8 y 0-6,9   travées 11 et 12 (la fenêtre rouge des pompiers)
 //   l'espace pause                       x 4,75-13,5 y 7,0-12,9  derrière la porte du palier est (VO q_0180-0219) ; au
 //                                        nord, la porte de la salle Robert Kahn, Si 1.4 (js/ecole_kahn.js) ; au sud-est,
-//                                        le recoin et la seconde porte de la salle (js/ecole_etage1_pause.js)
+//                                        le recoin et la seconde porte de la salle ; en L autour du local fermé du coin
+//                                        nord-ouest (x 4,75-7,06 y 9,4-12,96), la niche des distributeurs sur sa face est
+//                                        (relecture 10/10, js/ecole_etage1_pause.js)
 //   le couloir sombre                    x 0-4,6     y 7,0-8,9   derrière la porte du fond de l'espace pause
 //   le palier d'étage                    x 1,75-4,6  y 8,9-12,45  devant la double porte de l'escalier, ouverte
 //   le palier est et l'escalier est      x 13,55-19,8 y 7,0-12,45 (photos 27 à 29 : js/ecole_est.js poserPalierEst) ; les
