@@ -198,10 +198,10 @@ function texCafe() {
 }
 // LE DISTRIBUTEUR DE SNACKS ET DE BOISSONS FRAÎCHES (VO : éclairage bleu froid, rayons à spirales, le monnayeur et son
 // pavé vert-jaune à droite) — relecture 10/10 : DEUX portes vitrées côte à côte (les snacks à spirales, puis les
-// bouteilles debout), deux fois la largeur de la machine à café sur toutes les vues (VO f_45,5 s, 45,8 s, 47,5 s,
-// 53,45 s) : 1,24 x 1,83 m, et non 0,90
+// bouteilles debout), une fois et demie la largeur de la machine à café sur toutes les vues (VO f_45,5 s, 45,8 s,
+// 47,5 s, 53,45 s) : 1,0 x 1,83 m (à 45,5 s, vue de face, un tiers de mètre de gris à sa droite dans l'habillage)
 function texSnack() {
-  return canvasTex(512, 756, (g, w, h) => {
+  return canvasTex(420, 768, (g, w, h) => {
     const r2 = graine(8086);
     g.fillStyle = '#161616'; g.fillRect(0, 0, w, h);
     const t0 = 28, t1 = 590, coul = ['#d0262d', '#f2b705', '#e8e6e0', '#3e9b6b', '#7b2a6e', '#e07b2a', '#3a2418', '#1d1d1d'];
@@ -230,14 +230,14 @@ function texSnack() {
       g.fillStyle = 'rgba(255,255,255,0.12)'; g.beginPath(); g.moveTo(v0 + 30, t0); g.lineTo(v0 + 90, t0); g.lineTo(v0 + 18, t1); g.lineTo(v0, t1); g.closePath(); g.fill();
       g.strokeStyle = '#0c0c0c'; g.lineWidth = 8; g.strokeRect(v0, t0, v1 - v0, t1 - t0);
     };
-    vitre(12, 206, true); vitre(216, 404, false);
+    vitre(10, 166, true); vitre(174, 330, false);
     // le monnayeur : afficheur, clavier, le pavé vert-jaune
-    g.fillStyle = '#c0c2c3'; g.fillRect(414, 28, 88, 562);
-    g.fillStyle = '#0d1a0f'; g.fillRect(424, 50, 66, 28); g.fillStyle = '#7dff8e'; g.font = '600 17px Consolas, monospace'; g.fillText('1,20', 432, 70);
-    for (let j = 0; j < 4; j++) for (let i = 0; i < 3; i++) { g.fillStyle = '#ececea'; g.fillRect(428 + i * 20, 98 + j * 22, 15, 15); }
-    g.fillStyle = '#c6d817'; g.fillRect(426, 210, 64, 90); g.fillStyle = '#1d1d1d'; g.fillRect(447, 316, 22, 32);
+    g.fillStyle = '#c0c2c3'; g.fillRect(338, 28, 74, 562);
+    g.fillStyle = '#0d1a0f'; g.fillRect(345, 50, 60, 28); g.fillStyle = '#7dff8e'; g.font = '600 17px Consolas, monospace'; g.fillText('1,20', 352, 70);
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 3; i++) { g.fillStyle = '#ececea'; g.fillRect(348 + i * 19, 98 + j * 22, 14, 15); }
+    g.fillStyle = '#c6d817'; g.fillRect(346, 210, 58, 90); g.fillStyle = '#1d1d1d'; g.fillRect(364, 316, 22, 32);
     // les trappes
-    g.fillStyle = '#2a2a29'; g.fillRect(12, 620, 392, 96); g.fillStyle = '#4a4a48'; g.fillRect(28, 636, 360, 8);
+    g.fillStyle = '#2a2a29'; g.fillRect(10, 620, 320, 96); g.fillStyle = '#4a4a48'; g.fillRect(24, 636, 292, 8);
   }, null, false, 4);
 }
 // LA GRANDE AFFICHE ENCADRÉE du mur est (VO 67 s, `reseau.md` § 4.2 : 0,95 x 1,35 m, une photo sombre bleue et grise,
@@ -343,7 +343,8 @@ export function poserPause1(ch, ctx) {
     lilas: std({ map: texPeinture(0xa8a4b5, 3), roughness: 0.8 }, 'muret lilas'),
     tablette: std({ color: 0xf0ede6, roughness: 0.42 }, 'tablette blanche des murets'),
     plinthe: std({ color: 0x6e5038, roughness: 0.5 }, 'plinthe brune'),
-    habillage: std({ map: texPeinture(0x6b6862, 3), roughness: 0.6 }, 'habillage gris des distributeurs'),
+    // (relecture 10/10 : un gris taupe moins sombre, VO f_45,5 s)
+    habillage: std({ map: texPeinture(0x77716a, 3), roughness: 0.6 }, 'habillage gris des distributeurs'),
     // (la vidéo : brun taupe, satiné — les tables s'y reflètent ; sous les spots chauds du jeu, la teinte du relevé sortait
     // trop claire : un voile — relecture 10/10 : et trop rouge, chocolat ; un voile vert-gris le ramène au taupe mesuré sur
     // la vidéo, VO f_45,5 s : 104/76/45 contre 96/55/30)
@@ -552,7 +553,7 @@ export function poserPause1(ch, ctx) {
   // deux portes vitrées)
   {
     const y0 = 9.6, y1 = 11.7, xa = XB + 0.06, xb = XN, hh = HP, hm = N1 + 1.9;
-    const yc0 = 9.68, yc1 = 10.36, ys0 = 10.44, ys1 = 11.62;         // la machine à café, la machine à snacks
+    const yc0 = 9.7, yc1 = 10.34, ys0 = 10.42, ys1 = 11.42;          // la machine à café, la machine à snacks
     B(xa, y0, xb, y1, hm, hh, P.habillage, { collision: true });
     for (const [a, b] of [[y0, yc0], [yc1, ys0], [ys1, y1]]) B(xa, a, xb, b, N1, hm, P.habillage, { collision: true });
     const grille = new THREE.MeshStandardMaterial({ map: texGrilleVent(), roughness: 0.6 });
