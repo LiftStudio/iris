@@ -85,6 +85,12 @@
 // à la porte de la Si 1.4 (x 11,45-12,15 libre), dans la salle jusqu'au tableau, l'escalier ouest descendu et remonté ;
 // les 18 sièges de l'espace pause (la rouge assise du seul côté de la table basse) : on s'assoit, on se relève à sa
 // place ; la caméra de troisième personne ne rentre jamais dans le local ; ?tel=1 charge et tourne.
+// VÉRIFIÉ EN JOUANT (V2, 11/10) : la photo 28 superposée depuis sa pose — la plinthe du mur des jours sur le trait y 4,95,
+// les deux jours dans leurs cadres, le sol nu par la porte ; VO q_0270, q_0212, q_0183 au même point de vue ; marché du
+// palier est à la pause, à la S 1.3 (porte, allée, tableau), au recoin, à la Si 1.4 (allée est, fond, allée ouest), au
+// couloir sombre et au palier d'étage ouest, sans blocage ni chute ; 23 places dans l'espace pause (les banquettes
+// étirées en gagnent), 38 dans la salle — on s'assoit et on se relève à sa place, chaque chaise de l'allée proposée de
+// son côté ; zones au pas de 5 cm ; ?tel=1 charge et tourne.
 import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex } from './kit_decor.js';
