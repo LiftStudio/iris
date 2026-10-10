@@ -399,7 +399,7 @@ export function poserAmphi(ch, K) {
     dep.color.setRGB(0.76, 0.79, 0.84); dep.emissiveIntensity = 0.06;      // (f_0245 : de dedans, un gris bleuté, pas un blanc)
     // (relecture du 10/10 : un dépoli, pas un panneau — VO f_0060, f_0078, q_0104 : au travers du fixe, de la pause, on
     // devine le beige des tables et le jaune des fauteuils du dernier rang ; de dedans, f_0238, les mange-debout)
-    dep.transparent = true; dep.opacity = 0.8; dep.depthWrite = false; dep.name = 'verre dépoli (S -1.14, translucide)';
+    dep.transparent = true; dep.opacity = 0.88; dep.depthWrite = false; dep.name = 'verre dépoli (S -1.14, translucide)';
     const bati = (x0, x1, h0, h1) => {
       B(x0, yS - 0.015, x1, yM, h0, h1, X.creme, { ombre: false });
       B(x0, yM, x1, yN + 0.012, h0, h1, Z.bati, { ombre: false });
@@ -410,6 +410,9 @@ export function poserAmphi(ch, K) {
     bati(8.88, 9.32, Y_SS, Y_SS + 0.05);                    // le bas du fixe
     B(8.88, yS - 0.006, 9.32, yN + 0.006, Y_SS + 0.05, hT, dep, { ombre: false });
     B(8.88, yS - 0.006, 10.22, yN + 0.006, hT + 0.05, H_RET - 0.06, dep, { ombre: false });
+    // (le fixe et l'imposte au monde solide, comme des vitres : la lumière cuite les traverse, Haythem et la caméra non)
+    C.ajouterBoite(8.85, -yS, 9.35, -yN, { y0: Y_SS, y1: hT, vitre: true });
+    C.ajouterBoite(8.85, -yS, 10.25, -yN, { y0: hT, y1: H_RET, joueur: false, vitre: true });
     const Pt = ch.porte('x', yM, 9.8, { l: 0.86, h: 2.05, ep: 0.15, base: Y_SS, modele: 'vitree', blanc: true, tirant: 'aucun', huisserie: false,
       etat: 'auto', cote: 'N', charniere: 'd', libre: -1, nom: 'grande salle S -1.14' });
     const v = Pt.vantaux[0], s = v.s, w = 0.86, hv = 2.05;

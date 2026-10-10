@@ -763,9 +763,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     mur({ de: [10.45, 15.0], a: [12.9, 15.0], ep: 0.1, mats: B0, plinthes: ['S'], plinthe: P });
     mur({ de: [10.5, 14.95], a: [10.5, 15.95], ep: 0.1, mats: B0, plinthes: ['W'], plinthe: P });
     // LE MUR NORD, VERT ANIS (v_060 à v_064) : peint de vert jusqu'à 2,30 m, la retombée blanche au-dessus
-    // (10/10 : percé de la porte de la grande salle S -1.14, js/ecole_amphi.js — son vantail x 9,35-10,25 ; le fixe
-    // dépoli, x 8,85-9,35, est posé devant le mur)
-    mur({ de: [2.42, 15.875], a: [13.05, 15.875], mats: B0, plinthes: ['S'], plinthe: P, ouvertures: [{ c: 9.8, l: 0.9, h: Y_SS + 2.06 }] });
+    // (10/10 : percé de la porte de la grande salle S -1.14, js/ecole_amphi.js — le fixe dépoli x 8,85-9,35, le vantail
+    // x 9,35-10,25, l'imposte jusqu'à la retombée ; le fixe et l'imposte, translucides, ont leur vitre au monde solide)
+    mur({ de: [2.42, 15.875], a: [13.05, 15.875], mats: B0, plinthes: ['S'], plinthe: P, ouvertures: [{ c: 9.55, l: 1.4, h: H_RET }] });
     for (const [a, b] of [[2.55, 3.9], [5.5, 8.82]]) B(a, 15.795, b, 15.8, Y_SS + 0.1, H_RET, X.vert, { ombre: false });
   }
 
