@@ -38,6 +38,12 @@
 //   poserKahn(ch, { groupe, lampes, renderer, ySud = 12.0, xPorte = 12.65 }) -> { zones }
 //     groupe, lampes : ceux de l'étage (js/ecole_etage1.js) ; ySud : le nu nord du mur orange (la constante du lot 5) ;
 //     xPorte : l'axe de sa porte. Tout le reste se déduit de ces deux cotes.
+//
+// À L'INTÉGRATION (10/10) : le mur orange, sa porte vitrée à imposte et la plaque sont ceux du lot 5 (ici, seulement le
+// doublage blanc, percé de 1,05 x 2,50 m au droit de la porte). Sur master seul, l'espace pause imaginé (mur nord en
+// y 12,69 et ses fenêtres « sur cour », mur est en x 12,5) et l'angle nord-est des toilettes (x 8,25-8,56, y 12,0-12,75)
+// débordent dans les 75 premiers centimètres de la salle : le lot 5 les retire ; les toilettes doivent s'arrêter au mur
+// orange (y 11,925) ou à l'ouest de x 8,175.
 import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex } from './kit_decor.js';
