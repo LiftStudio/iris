@@ -30,16 +30,24 @@
 //                                                         David Clark (photos 05, 23)
 //   la salle d'attente         x 5,8-13,5    y 9,0-12,0   le mur safran, les chaises coque, l'écran (photos 02, 21)
 //   le couloir C01             x 11,7-13,5   y 12,0-20,6  toilettes, gaine technique (photo 01)
-//   le « cou »                 x 9,9-13,5    y 4,8-9,0    le bureau B vitré, le trumeau (photo 03)
-//   le hall d'entrée, accueil  x 13,35-19,8  y 0,3-7,5    porte n° 6, comptoir (photos 03, 16)
-//   le couloir est, l'escalier x 14,6-19,8   y 7,575-12,45 derrière la porte nord du hall : js/ecole_est.js (photos 24-29)
-//   les pièces fermées         la salle A, le bureau B, les toilettes (femmes et hommes par le C05, PMR par le C01), le
-//                              local, le couloir de service, la salle David Clark (au nord du C05, y 18,75-24,35) : leurs
-//                              portes s'ouvrent, leur intérieur est imaginé (js/ecole_pieces.js) ; fermés : le bureau du
-//                              photocopieur, la gaine
-//   le 1er étage (3,50 m)      js/ecole_etage1.js : salles sur rue, couloir, toilettes, bureaux, l'escalier vers le 2e
+//   le « cou »                 x 9,9-13,3    y 4,8-9,0    le bureau de direction vitré, le trumeau (photo 03), le totem ;
+//                                                         au sud-est, le passage au sud-ouest de la pile (y 2,5-4,7)
+//   la pile du hall            x 13,3-14,65  y 4,7-7,575  la plaque « iris », l'horloge, les annuaires (VO 6,4-12,4 s) :
+//                                                         js/ecole_rdc_centre.js
+//   le hall d'entrée, accueil  x 13,35-19,8  y 0,3-7,5    porte n° 6, le comptoir nord-sud et l'open-space, l'angle nord-est
+//                                                         ouvert (photos 03, 16, 24 ; VO) : js/ecole_hall.js
+//   le couloir est, l'escalier x 14,6-19,8   y 7,575-12,45 derrière la porte nord du hall : js/ecole_est.js (photos 24-29) ;
+//                                                         l'ascenseur au bout du dégagement (js/ecole_ascenseur.js), la
+//                                                         descente au -1 sous la volée 2 (js/ecole_soussol_est.js)
+//   les pièces fermées         la salle A, le bureau de direction, les toilettes (femmes et hommes par le C05, PMR par le
+//                              C01), le local, le couloir de service, la salle David Clark Si 0.2 (au nord du C05, y
+//                              18,75-24,35) : leurs portes s'ouvrent, leur intérieur est imaginé (js/ecole_pieces.js)
+//   le 1er étage (3,50 m)      js/ecole_etage1.js : l'espace pause orange, la salle de cours S 1.3, la salle Robert Kahn
+//                              Si 1.4 (la vidéo officielle, js/ecole_etage1_pause.js, js/ecole_kahn.js), le palier est
+//   le 2e étage (6,60 m)       js/ecole_etage2.js (la vidéo officielle) : le palier, le couloir rouge, deux salles
 //   le sous-sol (-3,06 m)      js/ecole_soussol.js (la vidéo de Haythem) : derrière la porte grise du hall ouest, le palier
-//                              « 0 », la volée de tôle, le hall du -1, le couloir, l'espace pause
+//                              « 0 », la volée de tôle, le hall du -1, le couloir, l'espace pause ; la grande salle
+//                              S -1.14 (js/ecole_amphi.js) ; à l'est, le palier -1 et le sas (js/ecole_soussol_est.js)
 import * as THREE from 'three';
 import { Collisions } from './collisions.js';
 import { carteLocale, poserSondeLocale, planifierOcclusionSol, optimiserDecor, nePasFusionner, animerVent } from './kit_decor.js';
@@ -721,8 +729,8 @@ function construireMurs(ch) {
   pilier(10.3, 9.75, 10.9, 10.35, M.pilier);
   // ---- LE HALL D'ENTRÉE ----
   // (09/10, photo 24 : la porte du mur nord n'est pas en x 17 mais en face de la porte 6 — 1,5 vantail, x 14,70-16,10 ;
-  // à l'est, la cloison vitrée cannelée du bureau du photocopieur. Les vantaux, la cloison, le couloir et l'escalier qui
-  // suivent : js/ecole_est.js)
+  // à l'est, la cloison vitrée cannelée, le photocopieur devant elle côté hall (10/10 : l'angle nord-est est ouvert, VO
+  // q_0026-0031). Les vantaux, la cloison, le couloir et l'escalier qui suivent : js/ecole_est.js)
   // (10/10 : à l'ouest de la porte, la pile — js/ecole_rdc_centre.js : le mur part de sa face est)
   ch.mur({ de: [14.6, 7.575], a: [16.25, 7.575], mats: B, plinthes: ['S'], ouvertures: [{ c: 15.4, l: 1.4, h: 2.1 }] });
   // (le mitoyen est du hall, x 19,95 de y -0,4 à 7,65 : peint gris ardoise côté accueil — js/ecole_hall.js, 10/10)
@@ -745,8 +753,8 @@ function construireMurs(ch) {
   void P;
 }
 
-// LA PORTE DU FOND DE C05 (photos 05, 23) : ce n'est PAS une issue de secours (09/10) — c'est celle d'une salle de
-// cours, « Salle David Clark — B 0.2 » (sa plaque à droite de la porte, js/ecole_pieces.js) ; sur la photo 23 un
+// LA PORTE DU FOND DE C05 (photos 05, 23) : ce n'est PAS une issue de secours (09/10) — c'est celle d'une salle
+// informatique, « Salle David Clark — Si 0.2 » (sa plaque à droite de la porte, js/ecole_pieces.js) ; sur la photo 23 un
 // étudiant en sort en la poussant : elle s'ouvre VERS LE COULOIR, gonds à l'ouest. Huisserie blanche, vantail de verre
 // dépoli bleu (le jour des fenêtres de la salle le traverse : il « s'allume » sur la photo 05), béquille inox à droite,
 // pastille rouge en haut ; au-dessus, l'imposte dépolie, plus claire, jusque sous le plafond. Plus de bloc de sortie :

@@ -27,7 +27,7 @@
 //   LE LOCAL TECHNIQUE         x 9,0-11,55  y 12,15-17,4 (porte « local » du couloir C01, ce qui reste de la bande)
 //        baies serveurs aux diodes qui clignotent, onduleur, tableau électrique, étagères, établi, climatiseur, chemins
 //        de câbles ; pas de faux plafond (la dalle brute à 3,25 m) et des réglettes LED suspendues
-//   LA SALLE DAVID CLARK (B 0.2)  x 1,75-8,85 y 18,75-24,35, derrière la porte bleue du fond du C05 (sa plaque, photo 23)
+//   LA SALLE DAVID CLARK (Si 0.2) x 1,75-8,85 y 18,75-24,35, derrière la porte bleue du fond du C05 (sa plaque, photo 23)
 //        une salle de cours : trois rangs de tables pour deux tournés vers le tableau blanc et l'écran du mur est,
 //        vidéoprojecteur, bureau de l'enseignant ; trois fenêtres au nord sur une COUR éclairée par le jour (le
 //        bâtiment, imaginé, dépasse ici son fond de 20,75)
@@ -62,7 +62,7 @@ const LT = { x0: 9.0, x1: 11.55, y0: 12.15, y1: 17.4 };     // le local techniqu
 const WF = { x0: 5.95, x1: 8.85, y0: 12.15, y1: 15.3 };     // les toilettes femmes (porte du C05, y 13,75)
 const WH = { x0: 5.95, x1: 8.85, y0: 15.45, y1: 18.6 };     // les toilettes hommes (porte du C05, y 16,85)
 const PM = { x0: 9.0, x1: 11.55, y0: 17.55, y1: 20.6 };     // les toilettes PMR (porte du C01, y 19,05)
-const DC = { x0: 1.75, x1: 8.85, y0: 18.75, y1: 24.35 };    // la salle David Clark, B 0.2 (porte bleue du C05)
+const DC = { x0: 1.75, x1: 8.85, y0: 18.75, y1: 24.35 };    // la salle David Clark, Si 0.2 (porte bleue du C05)
 
 // LES ZONES DE LUMIÈRE (js/ecole_lumieres.js) : rectangles en MONDE [x0, z0, x1, z1, hauteur mini], le point de prise de
 // vue de la carte d'environnement (au-dessus des meubles, au milieu de la pièce)
@@ -1634,11 +1634,12 @@ function solGres(ch, R) {
 }
 
 // =====================================================================
-//  LA SALLE DAVID CLARK (B 0.2), derrière la porte bleue du fond du C05
+//  LA SALLE DAVID CLARK (Si 0.2), derrière la porte bleue du fond du C05
 // =====================================================================
 // (09/10) La photo 23 montre, à droite de la porte bleue, une plaque de salle à trois lignes : « Salle … B 0.? » ; la
 // plaque directionnelle des photos 22 et 24 annonce au rez-de-chaussée « Salle Tim Berners-Lee B 0.1 » et « Salle David
-// Clark B 0.2 » — la longueur de la ligne du milieu désigne plutôt la seconde. L'intérieur est IMAGINÉ : une salle de
+// Clark B 0.2 » — la longueur de la ligne du milieu désigne plutôt la seconde (10/10 : l'annuaire de la pile, sur la
+// vidéo officielle, lit « Si 0.1 » et « Si 0.2 » — des salles informatiques). L'intérieur est IMAGINÉ : une salle de
 // cours sobre, comme la salle A et la salle 101. Elle déborde le fond du bâtiment (y 20,75) jusqu'à 24,5 : ses trois
 // fenêtres donnent au nord sur une cour éclairée par le jour — c'est ce jour qui allume le verre bleu de sa porte sur la
 // photo 05.

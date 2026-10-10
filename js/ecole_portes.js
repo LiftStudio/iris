@@ -10,7 +10,7 @@
 //     autocollants « iris » sur deux rangs ; et celle du bureau B (photo 03) ;
 //   - la PORTE D'ENTRÉE n° 6 (photos 03, 16) : double porte vitrée en aluminium gris, imposte, fixe à gauche, les
 //     vitrophanies de l'école (arcs, nuage, visage) — vues à l'envers depuis le hall ;
-//   - la porte BLEUE du fond du couloir C05 (photos 05, 23) : celle de la salle David Clark (B 0.2), verre dépoli bleu
+//   - la porte BLEUE du fond du couloir C05 (photos 05, 23) : celle de la salle David Clark (Si 0.2), verre dépoli bleu
 //     qui s'allume du jour de ses fenêtres (ce n'était pas une issue de secours, 09/10) ;
 //   - les FENÊTRES de la façade (barreaux noirs, menuiserie brun-noir, imposte) et les jours de souffrance dépolis.
 //

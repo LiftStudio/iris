@@ -58,6 +58,7 @@ import { canvasTex } from './kit_decor.js';
 import { texPictoExtincteur } from './ecole_matieres.js';
 import { cuireLumiereSol } from './ecole_lumieres.js';
 import { TELEPHONE } from './appareil.js';
+import { cuireOcclusionNiveau } from './ecole_soussol.js';
 
 // ---- les hauteurs (absolues) ----
 const N1 = 3.5;                      // le plancher du 1er
@@ -1016,7 +1017,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   K.moquette.lightMap = lm; K.moquette.lightMapIntensity = 1.4;
   groupe.traverse((o) => { o.userData.horsAOSol = true; });
   if (renderer) {
-    try { cuireOcclusionKahn(renderer, groupe, K.moquette, RK); } catch (e) { console.warn('[Robert Kahn] ombre du sol non cuite :', e); }
+    try { cuireOcclusionNiveau(renderer, groupe, [K.moquette], N1, RK, 'solEtage'); } catch (e) { console.warn('[Robert Kahn] ombre du sol non cuite :', e); }
   }
   const t2 = performance.now();
   ch.sieges.push(...sieges);
@@ -1029,89 +1030,4 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   _zones = [{ id: 'e1kahn', rects: rects.map(([xa, ya, xb, yb]) => zr(xa, ya, xb, yb)), voisines: ['e1pause'], env: { x: X(4.64), y: N1 + 1.6, z: -Y(5.6) } }];   // (la carte : au milieu de l'allée est)
   console.info('[Robert Kahn] Si 1.4 : %d sièges, %d lampes, posée en %d ms (dont la moquette cuite : %d ms)', sieges.length, mesLampes.length, Math.round(performance.now() - t0), Math.round(t2 - t1));
   return { zones: _zones };
-}
-
-// =====================================================================
-//  L'OMBRE DOUCE CUITE DE LA MOQUETTE (celle de js/ecole_soussol.js cuireOcclusionNiveau, pour ce plancher)
-// =====================================================================
-// Une carte des hauteurs vue de dessus (seulement ce qui part du plancher : murs, pieds, meubles — pas un plateau, ni un
-// plafond), puis pour chaque texel l'horizon dans 16 directions ; le ciel masqué vaut sin² de l'élévation de l'horizon.
-// Le résultat est l'aoMap (uv1) de la moquette : il n'assombrit que la lumière indirecte.
-function cuireOcclusionKahn(renderer, groupe, mat, R) {
-  const base = N1, rayon = 1.6, marge = 1.8, tpm = TELEPHONE ? 16 : 32;
-  const W = R.x1 - R.x0, L = R.y1 - R.y0, WH = W + 2 * marge, LH = L + 2 * marge;
-  const cx = (R.x0 + R.x1) / 2, cz = -(R.y0 + R.y1) / 2;
-  const hw = Math.round(WH * tpm), hh = Math.round(LH * tpm), aw = Math.round(W * tpm), ah = Math.round(L * tpm);
-  const cibleH = new THREE.WebGLRenderTarget(hw, hh, { type: THREE.HalfFloatType, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true });
-  const hauteur = new THREE.ShaderMaterial({
-    uniforms: { uBase: { value: base } },
-    vertexShader: 'varying float vH; void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vH = wp.y; gl_Position = projectionMatrix * viewMatrix * wp; }',
-    fragmentShader: 'uniform float uBase; varying float vH; void main() { gl_FragColor = vec4(vH - uBase, 0.0, 0.0, 1.0); }',
-    side: THREE.DoubleSide,
-  });
-  const cam = new THREE.OrthographicCamera(-WH / 2, WH / 2, LH / 2, -LH / 2, 0.1, 100);
-  cam.position.set(cx, base + 40, cz); cam.up.set(0, 0, -1); cam.lookAt(cx, base, cz); cam.updateMatrixWorld();
-  const parent = groupe.parent, sc = new THREE.Scene();
-  sc.add(groupe); sc.overrideMaterial = hauteur;
-  const vu = new Map(), bb = new THREE.Box3();
-  groupe.updateMatrixWorld(true);
-  groupe.traverse((o) => {
-    vu.set(o, o.visible);
-    if (!o.isMesh) return;
-    const m = o.material;
-    if (!m || m.transparent || o.userData.solEtage) { o.visible = false; return; }
-    bb.setFromObject(o);
-    if (bb.min.y > base + 0.3 || bb.max.y < base + 0.05 || bb.min.y < base - 0.4) o.visible = false;
-  });
-  const couleur = renderer.getClearColor(new THREE.Color()), alpha = renderer.getClearAlpha(), avant = renderer.getRenderTarget();
-  renderer.setRenderTarget(cibleH); renderer.setClearColor(0x000000, 1); renderer.clear(); renderer.render(sc, cam);
-  groupe.traverse((o) => { if (vu.has(o)) o.visible = vu.get(o); });
-  sc.remove(groupe); if (parent) parent.add(groupe);
-  const cibleBrute = new THREE.WebGLRenderTarget(aw, ah, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
-  const cibleAO = new THREE.WebGLRenderTarget(aw, ah, { minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, generateMipmaps: true });
-  const vs = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
-  const calcul = new THREE.ShaderMaterial({
-    uniforms: { tH: { value: cibleH.texture }, uTaille: { value: new THREE.Vector2(WH, LH) }, uZone: { value: new THREE.Vector2(W, L) }, uR: { value: rayon } },
-    vertexShader: vs,
-    fragmentShader: `uniform sampler2D tH; uniform vec2 uTaille, uZone; uniform float uR; varying vec2 vUv;
-      float h(vec2 p) { return texture2D(tH, p / uTaille + 0.5).r; }
-      float bruit(vec2 c) { return fract(52.9829189 * fract(dot(c, vec2(0.06711056, 0.00583715)))); }
-      void main() {
-        vec2 p = (vUv - 0.5) * uZone;
-        float h0 = h(p), masque = 0.0, rot = bruit(gl_FragCoord.xy) * 0.3926991, dec = bruit(gl_FragCoord.yx + 7.0);
-        for (int d = 0; d < 16; d++) {
-          float a = (float(d) + 0.5) * 0.3926991 + rot;
-          vec2 dir = vec2(cos(a), sin(a));
-          float pente = 0.0;
-          for (int s = 0; s < 12; s++) {
-            float t = uR * pow((float(s) + dec) / 12.0, 1.6) + 0.02;
-            pente = max(pente, (h(p + dir * t) - h0) / t);
-          }
-          masque += pente * pente / (1.0 + pente * pente);
-        }
-        gl_FragColor = vec4(vec3(1.0 - masque / 16.0), 1.0);
-      }`,
-    depthTest: false, depthWrite: false,
-  });
-  const flou = new THREE.ShaderMaterial({
-    uniforms: { tAO: { value: cibleBrute.texture }, uPas: { value: new THREE.Vector2(1 / aw, 1 / ah) } },
-    vertexShader: vs,
-    fragmentShader: `uniform sampler2D tAO; uniform vec2 uPas; varying vec2 vUv;
-      void main() {
-        float s = 0.0, n = 0.0;
-        for (int y = -2; y <= 2; y++) for (int x = -2; x <= 2; x++) {
-          float w = 1.0 / (1.0 + float(x * x + y * y));
-          s += texture2D(tAO, vUv + vec2(float(x), float(y)) * uPas * 1.5).r * w; n += w;
-        }
-        gl_FragColor = vec4(vec3(s / n), 1.0);
-      }`,
-    depthTest: false, depthWrite: false,
-  });
-  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), calcul), sceneAO = new THREE.Scene(); sceneAO.add(quad);
-  renderer.setRenderTarget(cibleBrute); renderer.render(sceneAO, cam);
-  quad.material = flou; renderer.setRenderTarget(cibleAO); renderer.render(sceneAO, cam);
-  renderer.setRenderTarget(avant); renderer.setClearColor(couleur, alpha);
-  calcul.dispose(); flou.dispose(); hauteur.dispose(); quad.geometry.dispose(); cibleH.dispose(); cibleBrute.dispose();
-  cibleAO.texture.channel = 1;
-  mat.aoMap = cibleAO.texture; mat.aoMapIntensity = 1.0; mat.needsUpdate = true;
 }

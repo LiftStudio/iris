@@ -1265,7 +1265,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
 // Une carte des hauteurs du niveau vue de dessus (seulement ce qui part de son sol : murs, pieds, meubles — pas un
 // plateau, ni un plafond), puis pour chaque texel l'horizon dans 16 directions ; le ciel masqué vaut sin² de l'élévation
 // de l'horizon. Le résultat est l'aoMap (uv1) de ses sols : il n'assombrit que la lumière indirecte.
-function cuireOcclusionNiveau(renderer, groupe, mats, base, R) {
+// (intégration du 10/10 : la seule de son espèce — le -1 est, la salle Robert Kahn et le 2e en avaient chacun une copie ;
+// `drapeau` : la marque, dans userData, des sols du niveau, qui ne comptent pas comme des obstacles)
+export function cuireOcclusionNiveau(renderer, groupe, mats, base, R, drapeau = 'solSS') {
   const rayon = 1.6, marge = 1.8, tpm = TELEPHONE ? 16 : 32;
   const W = R.x1 - R.x0, L = R.y1 - R.y0, WH = W + 2 * marge, LH = L + 2 * marge;
   const cx = (R.x0 + R.x1) / 2, cz = -(R.y0 + R.y1) / 2;
@@ -1287,7 +1289,7 @@ function cuireOcclusionNiveau(renderer, groupe, mats, base, R) {
     vu.set(o, o.visible);
     if (!o.isMesh) return;
     const m = o.material;
-    if (!m || m.transparent || o.userData.solSS) { o.visible = false; return; }
+    if (!m || m.transparent || o.userData[drapeau]) { o.visible = false; return; }
     bb.setFromObject(o);
     if (bb.min.y > base + 0.3 || bb.max.y < base + 0.05 || bb.min.y < base - 0.4) o.visible = false;
   });

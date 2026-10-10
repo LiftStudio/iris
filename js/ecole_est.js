@@ -15,9 +15,10 @@
 //
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; RDC à 0, 1er à 3,50) :
 //   la porte du hall                 x 14,70-16,10   y 7,575    vantail 0,92 (auto) + semi-fixe 0,48 « POINT ÉCOUTE »
-//   le bureau du photocopieur        x 16,25-19,8    y 5,85-7,5 dans l'angle nord-est du hall, fermé : sa cloison nord
-//                                                               est le vitrage cannelé (photo 24), ses murs côté hall
-//                                                               sont blancs (les photos 03 et 16 ne voient pas ce coin)
+//   la cloison du hall               x 16,25-19,8    y 7,575    le pan cannelé jusqu'à x 17,1 (photo 24), puis un mur
+//                                                               blanc plein ; l'angle nord-est du hall est ouvert, le
+//                                                               photocopieur contre le cannelé côté hall (VO q_0026-0031,
+//                                                               js/ecole_hall.js)
 //   le couloir est                   x 14,6-16,2     y 7,575-10,8   mur jaune à l'ouest, plaque directionnelle
 //   le dégagement                    x 16,2-17,9     y 7,65-9,0     devant le vitrage ; le poteau gris x 16,2-16,35 ; au
 //                                                                  bout, la porte de l'ASCENSEUR (js/ecole_ascenseur.js)
@@ -31,7 +32,7 @@
 //   au 1er : le palier est           x 13,55-16,05   y 7,0-12,45    le mur du panneau (face est x 14,225) de y 8,6 à
 //                                                                  11,1, la porte du couloir en x 13,55 (y 7,12-8,55),
 //                                                                  le renfoncement nord x 13,2-14,2 y 11,1-12,45, au
-//                                                                  fond la porte de la 106 (B 1.6, fermée) en x 15,2
+//                                                                  fond la porte de la 106 (S 1.6, fermée) en x 15,2
 //            et la bande sud         x 16,05-17,9    y 7,0-9,0      sans porte, jusqu'à l'ascenseur (VO q_0274-0281)
 //   au-dessus (la vidéo officielle, 68-71 s et 88,8-90 s ; 10/10) : la volée 3 au-dessus de la volée 1 (17,2 cm, palier
 //   à 5,05 m), la volée 4 au-dessus de la volée 2 (échiffre ROUGE de ce côté) jusqu'au palier du 2e (js/ecole_etage2.js),
@@ -871,7 +872,7 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   B(ch, G, 14.06, 12.3, 14.22, 12.45, N1, H1, B0, { collision: true, ombre: false });
   B(ch, G, 14.05, 12.29, 14.23, 12.3, N1, N1 + 0.08, X.plinthe, { ombre: false });
   // le mur nord (au-dessus des volées 1 et 3, il monte jusqu'au plafond de la cage) et, au fond du palier, la porte de
-  // la salle 106 (« Salle de cours B 1.6 » du panneau, fermée ; non vue : derrière le chant gris sur la photo 28, au-dessus
+  // la salle 106 (« Salle de cours S 1.6 » du panneau, fermée ; non vue : derrière le chant gris sur la photo 28, au-dessus
   // de la porte du local du vestibule) ; le mur sud de la cage, côté bande
   mur(ch, G, { de: [13.125, E.yN], a: [E.x0, E.yN], base: N1, h: H_CAGE, mats: B0, plinthes: ['S'], ouvertures: [{ c: 15.2, l: 0.95, h: N1 + 2.04 }] });
   ch.porte('x', E.yN, 15.2, { l: 0.95, h: 2.04, base: N1, modele: 'grise', etat: 'fermee', cote: 'N', notices: 1, nom: 'salle 106' });

@@ -14,8 +14,8 @@
 // tableau triptyque au mur est), revient vers l'est le long du mur rouge et redescend par la volée 4.
 // CE QUI N'EST PAS VU (fermé ou sobre, IMAGINÉ) : la salle Bjarne Stroustrup Si 2.6 et le Bureau des Conseillers B 2.3
 // (derrière des portes fermées : à l'ouest côté rue, au bout est du couloir), le dégagement ouest (derrière la porte grise
-// du fond, sous son bloc de sortie), le vestibule de l'ascenseur (un mur propre en x 17,9 : l'ascenseur, js/ecole_ascenseur.js
-// du lot 7, s'y branche à l'intégration), le dehors des fenêtres côté cour (le « jour » : surexposé sur la vidéo).
+// du fond, sous son bloc de sortie), le vestibule de l'ascenseur (sa porte palière, la même qu'au 1er : js/ecole_ascenseur.js,
+// branchée à l'intégration du 10/10 — la cabine monte jusqu'ici), le dehors des fenêtres côté cour (le « jour » : surexposé sur la vidéo).
 // Laquelle des deux salles est S 2.7 ou S 2.8 : inconnu (plaques illisibles) — S 2.7 pour la salle 1, la première vue.
 //
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; plancher à 6,60 m) :
@@ -62,6 +62,8 @@ import { jourDehors, texPeinture, texPictoExtincteur, texConsignes } from './eco
 import { cuireLumiereSol } from './ecole_lumieres.js';
 import { TELEPHONE } from './appareil.js';
 import { EST, ROUGE_2E, poserCageHaute } from './ecole_est.js';
+import { cuireOcclusionNiveau } from './ecole_soussol.js';
+import { ASC, poserAscenseur } from './ecole_ascenseur.js';
 
 // ---- les hauteurs ----
 const N2 = 6.6;                     // le plancher du 2e
@@ -609,11 +611,13 @@ export function poserEtage2(ch, renderer = null) {
     // (l'ouverture de la porte coupe-feu à 2,05 m : côté sas, le vantail affleure sous l'enduit, sans jour au-dessus)
     mur({ de: [13.49, Y_PAL], a: [E.x0 + 0.06, Y_PAL], mats: B0, plinthes: [['N', P], ['S', X.plinthe]], ouvertures: [{ c: 14.75, l: 0.95, h: N2 + 2.05 }] });
     // LE VESTIBULE DE L'ASCENSEUR (x 16,05-17,9, y 7,0-9,0 : la bande sud du 1er, au-dessus — non vu) : son mur ouest, son
-    // mur sud, et au fond, en x 17,9, UN MUR PROPRE là où viendra la porte palière (lot 7 : à l'intégration, ce mur cède
-    // la place à poserAscenseur(ch, { base: N2, groupe }), js/ecole_ascenseur.js)
+    // mur sud, et au fond, en x 17,9, la PORTE PALIÈRE (intégration du 10/10, js/ecole_ascenseur.js) : la gaine est la même
+    // qu'au 1er — la façade de y 7,43 à 9,0, le passage en 8,0-8,81 —, un retour de mur la borde au sud (au 1er, le
+    // doublage), la platine d'appel est sur le mur de la cage ; le 2e est desservi (la cabine va du rez-de-chaussée au 2e)
     mur({ de: [E.x0 + 0.06, Y_VEST - 0.06], a: [E.x0 + 0.06, Y_PAL - 0.06], mats: B0, plinthes: [['E', P]] });
     mur({ de: [E.x0, Y_VEST], a: [X_ASC + 0.06, Y_VEST], mats: B0, plinthes: [['N', P]] });
-    mur({ de: [X_ASC, Y_VEST - 0.06], a: [X_ASC, 9.0], mats: B0, plinthes: [['W', P]] });
+    mur({ de: [X_ASC, Y_VEST - 0.06], a: [X_ASC, ASC.yS1], mats: B0, plinthes: [['W', P]] });
+    poserAscenseur(ch, { base: N2, groupe, ouvert: true, hMur: H_PAL, zone: 'e2palier', bouton: 'N' });
     // LE SOL : le vinyle du palier (le même qu'au 1er, photo 28), du recoin au vestibule ; le tapis devant le mur du panneau
     const vin = new THREE.Mesh(geoDalles([[13.55, Y_PAL, X_PAN, 8.65], [X_PAN, Y_PAL, E.x0, Y_ARR], [E.x0, Y_VEST, X_ASC, 9.0]], N2, R2), X.vinyle);
     vin.receiveShadow = true; vin.name = 'vinyle du palier du 2e'; vin.userData.solE2 = true; fixe.add(vin); sols.push(X.vinyle);
@@ -1134,7 +1138,7 @@ export function poserEtage2(ch, renderer = null) {
   for (const m of sols) { m.lightMap = lm; m.lightMapIntensity = m === X.lino ? 1.1 : m === X.vinyle ? 0.85 : 0.75; m.needsUpdate = true; }
   groupe.traverse((o) => { o.userData.horsAOSol = true; });
   if (renderer) {
-    try { cuireOcclusionNiveau(renderer, groupe, sols, N2, R2); } catch (e) { console.warn('[2e étage] ombre du sol non cuite :', e); }
+    try { cuireOcclusionNiveau(renderer, groupe, sols, N2, R2, 'solE2'); } catch (e) { console.warn('[2e étage] ombre du sol non cuite :', e); }
   }
   // LA FUSION : le décor fixe cousu en un maillage par matériau ; le groupe hors de l'optimisation du décor (sa
   // visibilité et ses ombres changent avec le niveau de Haythem)
@@ -1156,7 +1160,7 @@ export function poserEtage2(ch, renderer = null) {
     { id: 'escEst3', rects: [zr(E.x0, E.bS[0], E.xM, E.bN[1], N2 - 0.4)], voisines: ['e2palier', 'escEst2'], env: { x: 19.05, y: N2 + 0.6, z: -11.6 } },
     // (la carte du palier prise au nord, d'où l'on ne voit pas la face rouge de l'échiffre : devant elle, les murs
     // blancs viraient au saumon — la leçon du 1er, js/ecole_est.js)
-    { id: 'e2palier', rects: [zr(13.5, Y_PAL, E.x0, Y_ARR), zr(E.x0, Y_VEST, X_ASC, 9.05)], voisines: ['escEst3', 'e2sas'], env: env(15.1, 11.7, 1.5) },
+    { id: 'e2palier', rects: [zr(13.5, Y_PAL, E.x0, Y_ARR), zr(E.x0, Y_VEST, E.xM, 9.05)], voisines: ['escEst3', 'e2sas'], env: env(15.1, 11.7, 1.5) },
     { id: 'e2sas', rects: [zr(X_SAS0, Y_COUR, X_SAS1, Y_PAL)], voisines: ['e2palier', 'e2couloir'], env: env(14.75, 7.2) },
     // (relecture du 10/10 : prise à 0,9 m du mur rouge, la carte — et la sonde qui en sort, en basse et au téléphone — virait
     // tous les blancs du couloir au saumon, #c5987f à côté de la photo turquoise, et la photo au brun ; prise au bout est,
@@ -1183,89 +1187,4 @@ export function poserEtage2(ch, renderer = null) {
   };
   console.info('[2e étage] %d sièges, %d lampes, %d ombrants, construit en %d ms', sieges.length, lampes.length, ombrants.length, Math.round(performance.now() - t0));
   return { zones, maj, groupe };
-}
-
-// =====================================================================
-//  L'OMBRE DOUCE CUITE AU SOL D'UN NIVEAU (celle de js/ecole_soussol.js cuireOcclusionNiveau, pour le plancher du 2e)
-// =====================================================================
-// Une carte des hauteurs du niveau vue de dessus (seulement ce qui part de son sol : murs, pieds, meubles — pas un
-// plateau, ni un plafond), puis pour chaque texel l'horizon dans 16 directions ; le ciel masqué vaut sin² de l'élévation
-// de l'horizon. Le résultat est l'aoMap (uv1) de ses sols : il n'assombrit que la lumière indirecte.
-function cuireOcclusionNiveau(renderer, groupe, mats, base, R) {
-  const rayon = 1.6, marge = 1.8, tpm = TELEPHONE ? 16 : 32;
-  const W = R.x1 - R.x0, L = R.y1 - R.y0, WH = W + 2 * marge, LH = L + 2 * marge;
-  const cx = (R.x0 + R.x1) / 2, cz = -(R.y0 + R.y1) / 2;
-  const hw = Math.round(WH * tpm), hh = Math.round(LH * tpm), aw = Math.round(W * tpm), ah = Math.round(L * tpm);
-  const cibleH = new THREE.WebGLRenderTarget(hw, hh, { type: THREE.HalfFloatType, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true });
-  const hauteur = new THREE.ShaderMaterial({
-    uniforms: { uBase: { value: base } },
-    vertexShader: 'varying float vH; void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vH = wp.y; gl_Position = projectionMatrix * viewMatrix * wp; }',
-    fragmentShader: 'uniform float uBase; varying float vH; void main() { gl_FragColor = vec4(vH - uBase, 0.0, 0.0, 1.0); }',
-    side: THREE.DoubleSide,
-  });
-  const cam = new THREE.OrthographicCamera(-WH / 2, WH / 2, LH / 2, -LH / 2, 0.1, 100);
-  cam.position.set(cx, base + 40, cz); cam.up.set(0, 0, -1); cam.lookAt(cx, base, cz); cam.updateMatrixWorld();
-  const parent = groupe.parent, sc = new THREE.Scene();
-  sc.add(groupe); sc.overrideMaterial = hauteur;
-  const vu = new Map(), bb = new THREE.Box3();
-  groupe.updateMatrixWorld(true);
-  groupe.traverse((o) => {
-    vu.set(o, o.visible);
-    if (!o.isMesh) return;
-    const m = o.material;
-    if (!m || m.transparent || o.userData.solE2) { o.visible = false; return; }
-    bb.setFromObject(o);
-    if (bb.min.y > base + 0.3 || bb.max.y < base + 0.05 || bb.min.y < base - 0.4) o.visible = false;
-  });
-  const couleur = renderer.getClearColor(new THREE.Color()), alpha = renderer.getClearAlpha(), avant = renderer.getRenderTarget();
-  renderer.setRenderTarget(cibleH); renderer.setClearColor(0x000000, 1); renderer.clear(); renderer.render(sc, cam);
-  groupe.traverse((o) => { if (vu.has(o)) o.visible = vu.get(o); });
-  sc.remove(groupe); if (parent) parent.add(groupe);
-  const cibleBrute = new THREE.WebGLRenderTarget(aw, ah, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
-  const cibleAO = new THREE.WebGLRenderTarget(aw, ah, { minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, generateMipmaps: true });
-  const vs = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
-  const calcul = new THREE.ShaderMaterial({
-    uniforms: { tH: { value: cibleH.texture }, uTaille: { value: new THREE.Vector2(WH, LH) }, uZone: { value: new THREE.Vector2(W, L) }, uR: { value: rayon } },
-    vertexShader: vs,
-    fragmentShader: `uniform sampler2D tH; uniform vec2 uTaille, uZone; uniform float uR; varying vec2 vUv;
-      float h(vec2 p) { return texture2D(tH, p / uTaille + 0.5).r; }
-      float bruit(vec2 c) { return fract(52.9829189 * fract(dot(c, vec2(0.06711056, 0.00583715)))); }
-      void main() {
-        vec2 p = (vUv - 0.5) * uZone;
-        float h0 = h(p), masque = 0.0, rot = bruit(gl_FragCoord.xy) * 0.3926991, dec = bruit(gl_FragCoord.yx + 7.0);
-        for (int d = 0; d < 16; d++) {
-          float a = (float(d) + 0.5) * 0.3926991 + rot;
-          vec2 dir = vec2(cos(a), sin(a));
-          float pente = 0.0;
-          for (int s = 0; s < 12; s++) {
-            float t = uR * pow((float(s) + dec) / 12.0, 1.6) + 0.02;
-            pente = max(pente, (h(p + dir * t) - h0) / t);
-          }
-          masque += pente * pente / (1.0 + pente * pente);
-        }
-        gl_FragColor = vec4(vec3(1.0 - masque / 16.0), 1.0);
-      }`,
-    depthTest: false, depthWrite: false,
-  });
-  const flou = new THREE.ShaderMaterial({
-    uniforms: { tAO: { value: cibleBrute.texture }, uPas: { value: new THREE.Vector2(1 / aw, 1 / ah) } },
-    vertexShader: vs,
-    fragmentShader: `uniform sampler2D tAO; uniform vec2 uPas; varying vec2 vUv;
-      void main() {
-        float s = 0.0, n = 0.0;
-        for (int y = -2; y <= 2; y++) for (int x = -2; x <= 2; x++) {
-          float w = 1.0 / (1.0 + float(x * x + y * y));
-          s += texture2D(tAO, vUv + vec2(float(x), float(y)) * uPas * 1.5).r * w; n += w;
-        }
-        gl_FragColor = vec4(vec3(s / n), 1.0);
-      }`,
-    depthTest: false, depthWrite: false,
-  });
-  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), calcul), sceneAO = new THREE.Scene(); sceneAO.add(quad);
-  renderer.setRenderTarget(cibleBrute); renderer.render(sceneAO, cam);
-  quad.material = flou; renderer.setRenderTarget(cibleAO); renderer.render(sceneAO, cam);
-  renderer.setRenderTarget(avant); renderer.setClearColor(couleur, alpha);
-  calcul.dispose(); flou.dispose(); hauteur.dispose(); quad.geometry.dispose(); cibleH.dispose(); cibleBrute.dispose();
-  cibleAO.texture.channel = 1;
-  for (const m of mats) { m.aoMap = cibleAO.texture; m.aoMapIntensity = 1.0; m.needsUpdate = true; }
 }

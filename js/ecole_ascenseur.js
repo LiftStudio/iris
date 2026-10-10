@@ -46,7 +46,9 @@
 // cache le bas du fixe derrière ce mur : au-delà de y0 = 7,535, les vantaux n'auraient plus où s'effacer) ; avec
 // `ouvert: true` et la `zone` de son vestibule, la cabine y monte aussi (il faut alors que le vestibule soit un sol où
 // marcher et que le groupe de l'étage se montre quand Haythem est à 6,6 : le transport le rend visible pour la première
-// image).
+// image). Intégration du 10/10 : le 2e est desservi — poserAscenseur(ch, { base: 6.6, groupe, ouvert: true, hMur,
+// zone: 'e2palier', bouton: 'N' }), la platine sur le mur de la cage comme au rez-de-chaussée ; la cabine fait le
+// va-et-vient du rez-de-chaussée au 2e (au -1, la gaine reste close).
 import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex, nePasFusionner } from './kit_decor.js';
