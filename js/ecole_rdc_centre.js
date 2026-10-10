@@ -18,8 +18,8 @@
 //        comptoir et toute la porte 6
 // LE PASSAGE au sud-ouest de la pile (VO 7,0-9,0 s : de la porte 6, la vue passe à gauche de la pile en x 13,3 entre
 // y 3,6 et 4,7, et la caméra contourne l'angle sud-ouest ; photo 03) : le bureau de direction (le « bureau B ») perd
-// son angle nord-est — js/carte_ecole.js : mur nord arrêté à x 11,8, redents en x 11,8, y 3,1 et x 12,5, la porte vitrée
-// dans le retour y 2,5 ; le passage s'ouvre sur 2,1 m côté hall (y 2,575-4,7), 1,43 m entre le bureau et la pile.
+// son angle nord-est — js/carte_ecole.js : mur nord arrêté à x 11,55, redents en x 11,55, y 3,1 et x 12,5, la porte
+// vitrée dans le retour y 2,5 ; le passage s'ouvre sur 2,1 m côté hall (y 2,575-4,7), 1,68 m entre le bureau et la pile.
 // LE BUREAU DE DIRECTION B 0.3 (VO q_0041-0045, 10,0 s) : la plaque noire à deux lignes et son porte-nom blanc, le
 // drapeau noir à trois lignes au-dessus — sur le mur sud de la salle d'attente, près de son angle sud-est.
 // (11/10 : LE TOTEM « 1ère école pour le BTS SIO en France » de la VO de 2021 est RETIRÉ — en 2026 la borne l'a remplacé
@@ -33,10 +33,11 @@ const H_DALLE = 3.25;                       // le dessous de la dalle du 1er (la
 // la pile, en plan (le nu de ses faces)
 export const PILE = { x0: 13.30, x1: 14.675, y0: 4.7, y1: 7.575 };
 // le bureau de direction : le nu nord de son mur (la ligne y 4,8, épaisseur 0,15 : le mur sud de la salle d'attente), la
-// plaque, le drapeau (11/10, plan V2 : x 10,89 -> 11,6, entre le jour dépoli du bureau et l'angle sud-est de la salle —
-// VO q_0041-0044 : la plaque tout près à gauche, juste avant le premier jour dépoli)
+// plaque, le drapeau (11/10, plan V2 : sur le pan entre le jour dépoli du bureau, c 10,42, et l'angle sud-est de la salle,
+// x 11,625 — VO q_0041-0044 : la plaque tout près à gauche, juste avant le premier jour dépoli ; le plan la voulait en
+// x 11,6, mais l'angle a reculé à 11,625 : js/carte_ecole.js X_B)
 const Y_BUREAU = 4.875;
-const X_PLAQUE = 11.6;
+const X_PLAQUE = 11.0;
 
 // =====================================================================
 //  LES TEXTURES
@@ -241,7 +242,7 @@ export function poserRdcCentre(ch) {
   plaqueMurale(ch, std({ map: texLames(), roughness: 0.4, metalness: 0.15 }, 'annuaire à lames'), P.x1, 5.3, 'E', 0.5, 0.35, 2.35, 0.015);
   for (const h of [0.37, 2.33]) ch.boite(P.x1, 5.07, P.x1 + 0.03, 5.53, h - 0.01, h + 0.01, M.aluGris, { ombre: false });
 
-  // ---- LE PASSAGE (x 11,875-13,30 × y 2,575-4,8) : un spot rond, comme ceux du hall (VO q_0029 : spots ronds) ; il
+  // ---- LE PASSAGE (x 11,625-13,30 × y 2,575-4,8) : un spot rond, comme ceux du hall (VO q_0029 : spots ronds) ; il
   // éclaire avec la salle d'attente, dont le passage fait partie (11/10 : plus de zone « cou ») ----
   ch.spot(12.75, 3.65, 2.6, 'attente');
 

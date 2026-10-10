@@ -58,7 +58,7 @@ const H_DALLE = 3.25;                       // le dessous de la dalle du 1er ét
 // ligne y 4,8 ; la salle A, devenue la Si 0.1, perd 4,2 m de profondeur ; son mur ouest est le mur est du passage, x 4,5)
 const SA = { x0: 4.575, x1: 9.9, y0: 0, y1: 4.725 };       // la Si 0.1, l'ex-salle A
 const BB = { x0: 10.05, x1: 13.2, y0: 0, y1: 4.725 };       // le bureau B (côté ouest, jusqu'au mur sud de la salle d'attente)
-// (son angle nord-est est écorné : de x 11,725 à 12,425 il s'arrête en y 3,025, de 12,425 à 13,2 en y 2,425 — js/carte_ecole.js)
+// (son angle nord-est est écorné : de x 11,475 à 12,425 il s'arrête en y 3,025, de 12,425 à 13,2 en y 2,425 — js/carte_ecole.js)
 const SV = { x0: 0, x1: 1.6, y0: 0, y1: 8.95 };             // le couloir de service (jusqu'au palier du sous-sol)
 // (09/10 : la bande entre le C05 et le C01 — x 5,95-11,55, y 12,15-20,6 — était un local et des toilettes ; elle est
 // redistribuée d'après la photo 23 : une cloison nord-sud en x 8,925, les toilettes du C05 à l'ouest, le local et les
@@ -79,7 +79,7 @@ const ZONES = [
   { ...zone('si01', SA, { x: 7.7, y: 1.6, z: -2.55 }), rects: [[4.5, -4.8, 9.975, -SA.y0, -1]] },
   // (10/10 : le bureau B a perdu son angle nord-est, le passage au sud-ouest de la pile du hall ; 11/10 : en deux redents,
   // trois rectangles jusqu'aux axes de ses murs — js/carte_ecole.js et js/ecole_rdc_centre.js)
-  { ...zone('bureauB', BB, { x: 11.0, y: 1.6, z: -3.2 }), rects: [[BB.x0, -4.8, 11.8, -BB.y0, -1], [11.8, -3.1, 12.5, -BB.y0, -1], [12.5, -2.5, 13.275, -BB.y0, -1]] },
+  { ...zone('bureauB', BB, { x: 11.0, y: 1.6, z: -3.2 }), rects: [[BB.x0, -4.8, 11.55, -BB.y0, -1], [11.55, -3.1, 12.5, -BB.y0, -1], [12.5, -2.5, 13.275, -BB.y0, -1]] },
   zone('service', SV, { x: 0.8, y: 1.5, z: -6.8 }),
   zone('local', LT, { x: 10.2, y: 1.7, z: -14.9 }),
   // (relecture du 09/10 : les deux toilettes du C05 prennent leur vue HAUT, à 2,20 m, et loin des portes safran des
