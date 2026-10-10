@@ -12,18 +12,18 @@
 //        l'heure de l'ordinateur), la plaque « iris » et l'annuaire du niveau 0, centrés (VO q_0028, 6,7 s)
 //   face EST, jaune (#e9a03a, le jaune du couloir est) : le grand annuaire à lames bleu ardoise (VO q_0371-0373, 92,6 s) ;
 //        le vantail ouvert de la porte nord s'y rabat
-//   face OUEST, blanche : le radiateur, les affichettes et le haut-parleur de la photo 03 (posés par js/carte_ecole.js et
-//        js/ecole_mobilier.js) — la photo 03 est prise du cou, contre cette face : au-delà de son angle sud-ouest, le
-//        hall, le comptoir et toute la porte 6
+//   face OUEST, blanche : c'est le MUR DU FOND DE LA SALLE D'ATTENTE (11/10, plan V2) — le présentoir, le radiateur, les
+//        affichettes et le haut-parleur des photos 21 et 03 (posés par js/carte_ecole.js et js/ecole_mobilier.js) ; la
+//        photo 03 est prise de l'angle sud-est de la salle : au-delà de l'angle sud-ouest de la pile, le hall, le
+//        comptoir et toute la porte 6
 // LE PASSAGE au sud-ouest de la pile (VO 7,0-9,0 s : de la porte 6, la vue passe à gauche de la pile en x 13,3 entre
 // y 3,6 et 4,7, et la caméra contourne l'angle sud-ouest ; photo 03) : le bureau de direction (le « bureau B ») perd
-// son angle nord-est — js/carte_ecole.js : mur est arrêté à y 2,5, retours en y 2,5 et en x 12,1 ; 2,1 m de passage
-// côté hall (y 2,575-4,7), 1,13 m entre l'angle de la pile et celui du bureau.
-// LE BUREAU DE DIRECTION B 0.3 (VO q_0043-0045, 10,0 s) : la plaque noire à deux lignes et son porte-nom blanc près de la
-// porte, le drapeau noir à trois lignes au-dessus.
-// LE TOTEM « 1ère école pour le BTS SIO en France » (VO 6,7-11,6 s : texte à empattements, doré et blanc) : en 2021
-// dans la salle d'attente ; en 2026 la borne l'a remplacé (photo 21), et ni la photo 01 (le cou vu du C01, jusqu'à la
-// porte vitrée du bureau) ni la 03 ni la 21 ne le montrent : posé contre le mur ouest du cou (IMAGINÉ).
+// son angle nord-est — js/carte_ecole.js : mur nord arrêté à x 11,8, redents en x 11,8, y 3,1 et x 12,5, la porte vitrée
+// dans le retour y 2,5 ; le passage s'ouvre sur 2,1 m côté hall (y 2,575-4,7), 1,43 m entre le bureau et la pile.
+// LE BUREAU DE DIRECTION B 0.3 (VO q_0041-0045, 10,0 s) : la plaque noire à deux lignes et son porte-nom blanc, le
+// drapeau noir à trois lignes au-dessus — sur le mur sud de la salle d'attente, près de son angle sud-est.
+// (11/10 : LE TOTEM « 1ère école pour le BTS SIO en France » de la VO de 2021 est RETIRÉ — en 2026 la borne l'a remplacé
+// dans la salle d'attente, photo 21, et aucune photo de 2026 ne le montre ; plan V2 § 1.4)
 import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex, detailPhoto } from './kit_decor.js';
@@ -32,9 +32,11 @@ import { texPeinture } from './ecole_matieres.js';
 const H_DALLE = 3.25;                       // le dessous de la dalle du 1er (la pile y monte)
 // la pile, en plan (le nu de ses faces)
 export const PILE = { x0: 13.30, x1: 14.675, y0: 4.7, y1: 7.575 };
-// le bureau de direction : le nu nord de son mur (y 4,8, épaisseur 0,12), la plaque, le drapeau
-const Y_BUREAU = 4.86;
-const X_PLAQUE = 10.89;
+// le bureau de direction : le nu nord de son mur (la ligne y 4,8, épaisseur 0,15 : le mur sud de la salle d'attente), la
+// plaque, le drapeau (11/10, plan V2 : x 10,89 -> 11,6, entre le jour dépoli du bureau et l'angle sud-est de la salle —
+// VO q_0041-0044 : la plaque tout près à gauche, juste avant le premier jour dépoli)
+const Y_BUREAU = 4.875;
+const X_PLAQUE = 11.6;
 
 // =====================================================================
 //  LES TEXTURES
@@ -62,17 +64,6 @@ function logoIris(g, cx, y, taille, largeur = 0) {
 }
 function carreJaune(g, x, y, h) {
   g.fillStyle = '#f1b40c'; g.fillRect(x - 0.16 * h, y - 0.16 * h, 0.38 * h, 0.38 * h);
-}
-// un QR code figuré (blanc, modules noirs, les trois repères)
-function qr(g, x, y, c) {
-  g.fillStyle = '#f4f4f4'; g.fillRect(x, y, c, c);
-  const m = c / 25; g.fillStyle = '#111';
-  for (let i = 1; i < 24; i++) for (let j = 1; j < 24; j++) if (((i * 11 + j * 5 + i * j * 3) % 5) < 2) g.fillRect(x + i * m, y + j * m, m, m);
-  for (const [a, b] of [[1, 1], [17, 1], [1, 17]]) {
-    g.fillStyle = '#111'; g.fillRect(x + a * m, y + b * m, 7 * m, 7 * m);
-    g.fillStyle = '#f4f4f4'; g.fillRect(x + (a + 1) * m, y + (b + 1) * m, 5 * m, 5 * m);
-    g.fillStyle = '#111'; g.fillRect(x + (a + 2) * m, y + (b + 2) * m, 3 * m, 3 * m);
-  }
 }
 // une flèche blanche au trait : `sens` -1 vers la gauche, +1 vers la droite
 function fleche(g, x, y, sens, r, ep = 4) {
@@ -199,45 +190,6 @@ function texDrapeau() {
     g.font = '700 31px "Segoe UI", Arial, sans-serif'; g.fillText('B 0.3', w / 2, 128);
   }, null, false, 4);
 }
-// LE TOTEM « 1ère école pour le BTS SIO en France » (VO a_0244-0291, photo 22) : roll-up noir ; l'équerre jaune et le
-// logo ; le texte en capitales À EMPATTEMENTS — « 1ÈRE ÉCOLE / POUR LE BTS SIO / EN FRANCE » en doré (« BTS SIO » en gras),
-// « ÉCOLE / DE L'INFORMATIQUE / ET DU NUMÉRIQUE » en blanc, « BAC À BAC+5 » en doré ; le site et le QR code au pied.
-// (relecture du 10/10, VO a_0244, a_0260 et a_0262 : tout le texte tient dans la moitié HAUTE — doré du quart au tiers
-// de la hauteur, blanc de 40 à 48 %, « BAC À BAC+5 » vers 54 %, en grandes lettres serrées qui prennent presque toute la
-// largeur ; les lignes dorées et les deux dernières blanches sont calées À DROITE, « ÉCOLE » et « BAC À BAC+5 » à
-// gauche ; « INFORMATIQUE » et « NUMÉRIQUE » en gras)
-function texTotem() {
-  return canvasTex(320, 800, (g, w, h) => {
-    const d = g.createLinearGradient(0, 0, 0, h); d.addColorStop(0, '#1c1c1c'); d.addColorStop(1, '#0e0e0e');
-    g.fillStyle = d; g.fillRect(0, 0, w, h);
-    // (le logo en haut À GAUCHE, VO a_0260)
-    carreJaune(g, 34, 34, 54);
-    logoIris(g, 96, 80, 64);
-    const serif = (poids, t) => `${poids} ${t}px "Didot", "Bodoni MT", "Times New Roman", Georgia, serif`;
-    const OR = '#d9a43a', XD = w - 26;
-    // une ligne calée à droite, faite de morceaux [texte, poids, taille, montée]
-    // (resserrée en largeur si la police de repli est plus large que le Didot)
-    const droite = (morceaux, y) => {
-      let L = 0; for (const [t, p, s] of morceaux) { g.font = serif(p, s); L += g.measureText(t).width; }
-      const k = Math.min(1, (XD - 10) / L);
-      g.save(); g.translate(XD - L * k, 0); g.scale(k, 1);
-      let x = 0; for (const [t, p, s, m = 0] of morceaux) { g.font = serif(p, s); g.fillText(t, x, y - m); x += g.measureText(t).width; }
-      g.restore();
-    };
-    g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.fillStyle = OR;
-    droite([['1', 400, 36], ['ÈRE', 400, 17, 14], [' ÉCOLE', 400, 36]], 200);
-    droite([['POUR LE ', 400, 32], ['BTS SIO', 700, 32]], 233);
-    droite([['EN FRANCE', 400, 32]], 266);
-    g.fillStyle = '#f4f2ec';
-    g.font = serif(400, 29); g.fillText('ÉCOLE', 14, 318);
-    droite([["DE L'", 400, 29], ['INFORMATIQUE', 700, 29]], 351);
-    droite([['ET DU ', 400, 29], ['NUMÉRIQUE', 700, 29]], 384);
-    g.fillStyle = OR; g.font = serif(400, 25); g.fillText('BAC À BAC+5', 22, 430);
-    g.fillStyle = '#cfcfcf'; g.font = '600 16px "Segoe UI", Arial, sans-serif'; g.fillText('www.ecoleiris.fr', 22, h - 40);
-    qr(g, w - 88, h - 92, 66);
-  }, null, false, 8);
-}
-
 // =====================================================================
 //  LES OUTILS
 // =====================================================================
@@ -289,32 +241,23 @@ export function poserRdcCentre(ch) {
   plaqueMurale(ch, std({ map: texLames(), roughness: 0.4, metalness: 0.15 }, 'annuaire à lames'), P.x1, 5.3, 'E', 0.5, 0.35, 2.35, 0.015);
   for (const h of [0.37, 2.33]) ch.boite(P.x1, 5.07, P.x1 + 0.03, 5.53, h - 0.01, h + 0.01, M.aluGris, { ombre: false });
 
-  // ---- LE PASSAGE (x 12,175-13,30 × y 2,575-4,7) : un spot rond, comme ceux du hall (VO q_0029 : spots ronds) ----
-  ch.spot(12.75, 3.65, 2.6, 'cou');
+  // ---- LE PASSAGE (x 11,875-13,30 × y 2,575-4,8) : un spot rond, comme ceux du hall (VO q_0029 : spots ronds) ; il
+  // éclaire avec la salle d'attente, dont le passage fait partie (11/10 : plus de zone « cou ») ----
+  ch.spot(12.75, 3.65, 2.6, 'attente');
 
   // =====================================================================
   //  LE BUREAU DE DIRECTION B 0.3 : la plaque, son porte-nom, le drapeau (VO q_0043-0045)
   // =====================================================================
-  // (sur le mur nord du bureau, entre le jour dépoli et la porte vitrée : js/carte_ecole.js ; relecture du 10/10 : 21 cm
-  // de large et non 18 — dans la VO, a_0260, la plaque est presque aussi large que le drapeau de 0,28 ; le porte-nom
-  // blanc fait les quatre cinquièmes de la hauteur du noir, hall_work/c_103_plaque)
+  // (sur le mur nord du bureau, entre son jour dépoli et l'angle : js/carte_ecole.js ; relecture du 10/10 : 21 cm de large
+  // et non 18 — dans la VO, a_0260, la plaque est presque aussi large que le drapeau de 0,28 ; le porte-nom blanc fait
+  // les quatre cinquièmes de la hauteur du noir, hall_work/c_103_plaque)
   plaqueMurale(ch, std({ map: texPlaqueBureau(), roughness: 0.4 }, 'plaque du bureau de direction'), X_PLAQUE, Y_BUREAU, 'N', 0.21, 1.555, 1.635, 0.006);
   plaqueMurale(ch, std({ map: texPorteNom(), roughness: 0.5 }, 'porte-nom'), X_PLAQUE, Y_BUREAU, 'N', 0.21, 1.48, 1.545, 0.006);
-  // le drapeau, perpendiculaire au mur, au-dessus de la porte (de 2,28 à 2,46 m), sur sa potence
+  // le drapeau, perpendiculaire au mur, au-dessus de la plaque (de 2,28 à 2,46 m), sur sa potence
   const dr = new THREE.Group(); dr.position.set(X_PLAQUE, 2.37, -(Y_BUREAU + 0.19)); ch.decor.add(dr);
   maille(boiteM(0.012, 0.18, 0.3), M.noir, 0, 0, 0, 0, dr, { ombre: false });
   const td = std({ map: texDrapeau(), roughness: 0.45 }, 'drapeau du bureau de direction');
   for (const s of [1, -1]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.162), td); p.position.x = s * 0.0065; p.rotation.y = s * Math.PI / 2; dr.add(p); }
   maille(boiteM(0.016, 0.016, 0.05), M.aluGris, 0, 0.1, 0.17, 0, dr, { ombre: false });
   dr.traverse((m) => { m.userData.horsAOSol = true; });
-
-  // =====================================================================
-  //  LE TOTEM, contre le mur ouest du cou (x 10,05), tourné vers l'est
-  // =====================================================================
-  const totem = new THREE.Group(); totem.position.set(10.2, 0, -7.9); totem.rotation.y = Math.PI / 2; ch.decor.add(totem);
-  maille(boiteM(0.86, 0.03, 0.26), M.aluGris, 0, 0.015, 0, 0, totem);
-  maille(boiteM(0.8, 2.0, 0.04), M.noir, 0, 1.03, 0, 0, totem);
-  const face = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 1.96), std({ map: texTotem(), roughness: 0.5 }, 'totem BTS SIO'));
-  face.position.set(0, 1.03, 0.021); face.receiveShadow = true; totem.add(face);
-  C.ajouterBoite(10.06, -7.46, 10.34, -8.34, { y1: 2.05 });
 }

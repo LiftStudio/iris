@@ -15,6 +15,11 @@ import { maille, boiteM } from './ecole_portes.js';
 import { texAffiche, texConsignes, texTri, texEcran, texPictoExtincteur } from './ecole_matieres.js';
 import { canvasTex } from './kit_decor.js';
 
+// LA SALLE D'ATTENTE RECULE VERS LA RUE de 4,20 m (11/10, plan V2 — scratchpad iris_audit/plan_v2.md § 2.1 et § 2.2 ; la
+// carte, js/carte_ecole.js) : son contenu, relevé sur les photos 02 et 21, la suit d'un bloc
+const DY_A = -4.2;
+const A = (y) => y + DY_A;
+
 // ---- LES CHAISES COQUE (type Eames DAR) : coque moulée, piètement « tour Eiffel » chromé ----
 // Couleurs relevées (photos 02, 21, rééquilibrées sur le blanc des murs) : blanc cassé, bleu canard (un bleu-vert
 // grisé, pas un bleu), grège (taupe rosé), vert anis, noir, gris rosé (rose poudré).
@@ -125,29 +130,34 @@ function cadreMural(ch, mat, x, y, face, w, h0, h1, ep = 0.01) {
 export function poserMobilier(ch) {
   const { M, C } = ch;
   // =====================================================================
-  //  LA SALLE D'ATTENTE (photos 02, 21)
+  //  LA SALLE D'ATTENTE (photos 02, 03, 21 ; 11/10 : y 4,8-7,875, DY_A)
   // =====================================================================
   // la rangée nord, dos au mur safran, tournée vers le sud ; la rangée sud sous les jours dépolis, tournée vers le nord
-  [[6.5, 'blanc'], [7.2, 'canard'], [7.9, 'grege'], [8.6, 'citron'], [9.3, 'blanc']].forEach(([x, c]) => chaise(ch, x, 11.55, 'S', COQUE[c]));
-  [[6.3, 'noir'], [7.0, 'rose'], [7.7, 'canard']].forEach(([x, c]) => chaise(ch, x, 9.45, 'N', COQUE[c]));
-  C.ajouterBoite(6.15, -11.9, 9.65, -11.2, { y1: 0.8 });
-  C.ajouterBoite(5.95, -9.8, 8.05, -9.1, { y1: 0.8 });
+  [[6.5, 'blanc'], [7.2, 'canard'], [7.9, 'grege'], [8.6, 'citron'], [9.3, 'blanc']].forEach(([x, c]) => chaise(ch, x, A(11.55), 'S', COQUE[c]));
+  [[6.3, 'noir'], [7.0, 'rose'], [7.7, 'canard']].forEach(([x, c]) => chaise(ch, x, A(9.45), 'N', COQUE[c]));
+  C.ajouterBoite(6.15, -A(11.9), 9.65, -A(11.2), { y1: 0.8 });
+  C.ajouterBoite(5.95, -A(9.8), 8.05, -A(9.1), { y1: 0.8 });
   // l'écran de 65 pouces (x 6,5-7,95, h 1,55-2,40) et l'affiche blanche aux graphismes vert pâle (x 8,4-9,4)
-  ch.boite(6.5, 11.94, 7.95, 12.0, 1.55, 2.4, M.noir);
-  ch.panneau(new THREE.MeshBasicMaterial({ map: texEcran(), color: new THREE.Color(1.25, 1.25, 1.25) }), 1.39, 0.79, 7.225, 11.935, 1.975, 'S');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#cfe8d2', '#fbfbf8', 3), roughness: 0.7 }), 1.0, 1.5, 8.9, 11.994, 1.8, 'S');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#ffffff', '#f5f5f0', 4), roughness: 0.7 }), 0.15, 0.21, 7.0, 11.994, 1.4, 'S');
-  // la borne numérique noire (x 9,45), son écran en mosaïque de photos, tournée vers l'ouest-nord-ouest : on la voit de
-  // face depuis le bout ouest de la salle (photo 21 ; 09/10 : elle était tournée vers le nord-est, vue de chant)
-  // (et poussée contre le bout du mur de la salle A, x 9,45 -> 9,7 : sur la photo, son pied touche presque l'angle)
-  const borne = new THREE.Group(); borne.position.set(9.7, 0, -9.42); borne.rotation.y = -Math.PI * 0.62; ch.decor.add(borne);
+  ch.boite(6.5, A(11.94), 7.95, A(12.0), 1.55, 2.4, M.noir);
+  ch.panneau(new THREE.MeshBasicMaterial({ map: texEcran(), color: new THREE.Color(1.25, 1.25, 1.25) }), 1.39, 0.79, 7.225, A(11.935), 1.975, 'S');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#cfe8d2', '#fbfbf8', 3), roughness: 0.7 }), 1.0, 1.5, 8.9, A(11.994), 1.8, 'S');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#ffffff', '#f5f5f0', 4), roughness: 0.7 }), 0.15, 0.21, 7.0, A(11.994), 1.4, 'S');
+  // la borne numérique noire, son écran en mosaïque de photos, tournée vers l'ouest-nord-ouest : on la voit de face
+  // depuis le bout ouest de la salle (photo 21 ; 09/10 : elle était tournée vers le nord-est, vue de chant), entre le
+  // pilier gris et le mur sud. (11/10 : DY_A, et x 9,7 -> 10,05 — le mur sud est maintenant d'un seul tenant et la porte
+  // de la Si 0.1 s'ouvre derrière elle, x 9,1-9,9 : il fallait 0,6 m pour passer ; sur la photo 21, son bord gauche frôle
+  // toujours le pilier)
+  const borne = new THREE.Group(); borne.position.set(10.05, 0, -A(9.42)); borne.rotation.y = -Math.PI * 0.62; ch.decor.add(borne);
   maille(boiteM(0.6, 0.02, 0.5), M.noir, 0, 0.01, 0, 0, borne);
   maille(boiteM(0.6, 1.95, 0.08), M.noir, 0, 0.995, 0, 0, borne);
   const mos = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 1.6), new THREE.MeshBasicMaterial({ map: texMosaique(), color: new THREE.Color(1.1, 1.1, 1.1) }));
   mos.position.set(0, 1.05, 0.041); borne.add(mos);
-  C.ajouterBoite(9.35, -9.78, 10.05, -9.08, { y1: 2 });
-  // le présentoir à brochures noir contre le mur du fond (x 13,3, y 11,3), tourné vers l'ouest
-  const pres = new THREE.Group(); pres.position.set(13.28, 0, -11.3); pres.rotation.y = -Math.PI / 2; ch.decor.add(pres);
+  // (le socle de 0,6 x 0,5 tourné de 112° : ± 0,33 m en x, ± 0,36 en y)
+  C.ajouterBoite(9.72, -A(9.06), 10.38, -A(9.78), { y1: 2 });
+  // LE PRÉSENTOIR à brochures noir, tourné vers l'ouest, adossé au bout nord de la face ouest de la pile (11/10, plan V2 :
+  // photo 21, juste à gauche du radiateur ; photo 01, de profil à gauche, vers l'entrée du C01 — il était contre le mur
+  // x 13,5 du jeu d'avant, en y 11,3)
+  const pres = new THREE.Group(); pres.position.set(13.08, 0, -6.8); pres.rotation.y = -Math.PI / 2; ch.decor.add(pres);
   for (const sx of [-0.39, 0.39]) maille(boiteM(0.02, 1.55, 0.35), M.noir, sx, 0.8, 0, 0, pres);
   const br = texBrochures();
   for (let i = 0; i < 5; i++) {
@@ -155,40 +165,38 @@ export function poserMobilier(ch) {
     const b = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.24), new THREE.MeshStandardMaterial({ map: br, roughness: 0.6 }));
     b.position.set(0, 0.42 + i * 0.27, 0.05); b.rotation.x = -0.3; pres.add(b);
   }
-  C.ajouterBoite(12.9, -11.72, 13.5, -10.88, { y1: 1.6 });
-  // le kakémono noir à l'entrée du couloir C01, les affichettes du mur du fond (WIFI, photo)
-  // (contre le mur est, à l'entrée du C01, tourné vers l'ouest : photo 21)
-  ch.boite(13.38, 12.15, 13.42, 12.95, 0, 2.0, M.noir);
-  ch.boite(13.3, 12.2, 13.48, 12.9, 0, 0.06, M.aluGris);
+  C.ajouterBoite(12.7, -6.38, 13.3, -7.22, { y1: 1.6 });
+  // le kakémono noir des formations, à l'entrée du couloir C01, contre son mur est, tourné vers l'ouest (photo 21 ; 11/10 :
+  // y 12,15-12,95 -> 7,95-8,75, DY_A)
+  ch.boite(13.38, A(12.15), 13.42, A(12.95), 0, 2.0, M.noir);
+  ch.boite(13.3, A(12.2), 13.48, A(12.9), 0, 0.06, M.aluGris);
   // (photo 22 : c'est le panneau des formations — « Initial ou alternance », les bandeaux orange Bac pro, BTS, Bac+3, Bac+5)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texFormations(), roughness: 0.6 }), 0.78, 1.9, 13.377, 12.55, 1.02, 'W');
-  C.ajouterBoite(13.28, -12.95, 13.5, -12.15, { y1: 2 });
-  // (09/10 : les affichettes du fond suivent le radiateur, juste à gauche du pilier sur la photo 21 ; y 9,55 -> 10,05)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texFormations(), roughness: 0.6 }), 0.78, 1.9, 13.377, A(12.55), 1.02, 'W');
+  C.ajouterBoite(13.28, -A(12.95), 13.5, -A(12.15), { y1: 2 });
+  // LES AFFICHETTES DU FOND (photo orange, carte WIFI) : au bout du mur, près de l'angle du hall, sous le haut-parleur
+  // (photo 03) — sur la face ouest de la pile du hall, x 13,30, js/ecole_rdc_centre.js ; son angle sud-ouest, y 4,7.
+  // (Relecture du 10/10 : sur la photo 03 recalée — caméra (12,2 ; 5,4), cap 136,5 —, les affichettes sont à 0,1-0,25 m
+  // de l'angle et le haut-parleur juste au-dessus, y 4,9 et non 5,15.) (11/10, plan V2 : ce sont les MÊMES que celles du
+  // fond de la photo 21, à côté du radiateur — le jeu les avait aussi posées sur le mur x 13,5, en y 10,05 : retirées)
   const wifi = new THREE.MeshStandardMaterial({ map: texWifi(), roughness: 0.45 });
-  ch.panneau(wifi, 0.2, 0.17, 13.494, 10.05, 1.5, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c7783a', '#f4ead9', 8), roughness: 0.6 }), 0.24, 0.17, 13.494, 10.05, 1.75, 'W');
-  // ... et les mêmes au bout du mur, près de l'angle du hall, sous le haut-parleur (photo 03) — (10/10 : ce bout de mur est
-  // la face ouest de la pile du hall, x 13,30, js/ecole_rdc_centre.js ; l'angle, son angle sud-ouest, y 4,7 ; relecture
-  // du 10/10 : sur la photo 03 recalée — caméra (12,2 ; 5,4), cap 136,5 —, les affichettes sont à 0,1-0,25 m de l'angle
-  // et le haut-parleur juste au-dessus, y 4,9 et non 5,15)
   ch.panneau(wifi, 0.2, 0.17, 13.294, 4.88, 1.45, 'W');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c7783a', '#f4ead9', 12), roughness: 0.6 }), 0.26, 0.19, 13.294, 4.88, 1.72, 'W');
   const hp = new THREE.Group(); hp.position.set(13.24, 2.32, -4.93); ch.decor.add(hp);
   maille(boiteM(0.1, 0.17, 0.13), M.boitier, 0, 0, 0, 0, hp, { ombre: false });
   maille(new THREE.CylinderGeometry(0.035, 0.035, 0.01, 16), M.grille, -0.051, 0.01, 0, 0, hp, { ombre: false }).rotation.z = Math.PI / 2;
-  // les affiches du pilier (il est maintenant planté dans la salle, y 9,75-10,35) : sur la face ouest, l'A3 blanche aux
-  // dessins de couleur et le tract orange dessous ; sur la face nord, une feuille étroite (photo 21)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e8eef8', '#ffffff', 9), roughness: 0.7 }), 0.42, 0.6, 10.294, 10.05, 1.72, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#f08a3c', '#ffffff', 10), roughness: 0.7 }), 0.3, 0.42, 10.294, 10.05, 1.2, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3e9b6b', '#ffffff', 11), roughness: 0.7 }), 0.21, 0.42, 10.45, 10.356, 1.55, 'N');
+  // les affiches du pilier gris (planté dans la salle, x 10,3-10,9 × y 5,55-6,15 : DY_A) : sur la face ouest, l'A3 blanche
+  // aux dessins de couleur et le tract orange dessous ; sur la face nord, une feuille étroite (photo 21)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e8eef8', '#ffffff', 9), roughness: 0.7 }), 0.42, 0.6, 10.294, A(10.05), 1.72, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#f08a3c', '#ffffff', 10), roughness: 0.7 }), 0.3, 0.42, 10.294, A(10.05), 1.2, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3e9b6b', '#ffffff', 11), roughness: 0.7 }), 0.21, 0.42, 10.45, A(10.356), 1.55, 'N');
   // (10/10, VO q_0039-0050 : sa face EST, vers le hall — l'A3 bleu-gris au dessin d'écran d'ordinateur, de 1,5 à 1,9 m,
   // et l'A4 blanche à vignettes de photos dessous. La plaque « iris », l'annuaire et l'horloge qu'il portait sur sa face
   // sud sont sur la pile du hall : js/ecole_rdc_centre.js)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texEcranA3(), roughness: 0.7 }), 0.3, 0.42, 10.906, 10.05, 1.7, 'E');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texVignettes(), roughness: 0.7 }), 0.21, 0.297, 10.906, 10.05, 1.25, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texEcranA3(), roughness: 0.7 }), 0.3, 0.42, 10.906, A(10.05), 1.7, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texVignettes(), roughness: 0.7 }), 0.21, 0.297, 10.906, A(10.05), 1.25, 'E');
   // les affiches scotchées sur les jours dépolis
   [[6.3, 1.7, '#e07b2a'], [6.95, 1.85, '#2f6fb0'], [8.0, 1.75, '#3e9b6b'], [8.65, 1.9, '#7b2a6e']].forEach(([x, h, c], i) =>
-    ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche(c, '#fbfbf8', 20 + i), roughness: 0.7 }), 0.21, 0.297, x, 9.088, h, 'N'));
+    ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche(c, '#fbfbf8', 20 + i), roughness: 0.7 }), 0.21, 0.297, x, A(9.088), h, 'N'));
 
   // =====================================================================
   //  LE HALL OUEST (photo 06)
@@ -252,8 +260,7 @@ export function poserMobilier(ch) {
   // =====================================================================
   // l'affiche bleue étroite sur le trumeau entre les fenêtres de l'accueil
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2b4c9b', '#2b4c9b', 50), roughness: 0.6 }), 0.3, 0.9, 18.15, 0.006, 1.55, 'N');
-  // (10/10 : le totem noir « 1ère école pour le BTS SIO en France » n'est plus dans l'angle nord-ouest du hall — c'est la
-  // place de la pile : js/ecole_rdc_centre.js le pose contre le mur ouest du cou)
+  // (le totem noir « 1ère école pour le BTS SIO en France » de 2021 : retiré le 11/10 — la borne l'a remplacé, photo 21)
 }
 
 // ---- les petites textures du mobilier ----
