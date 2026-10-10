@@ -872,8 +872,10 @@ export function poserEtage2(ch, renderer = null) {
     plinthe(X_S1 + 0.36, Y_COUR + EP / 2 + 0.015, X_S1 + 0.375, 6.95, PS); plinthe(X_S1 + EP / 2, 6.95, X_S1 + 0.375, 6.965, PS);
     // (10/10, q_0310-0313 : un second poteau, plein, contre le mur du couloir à 1,5 m de la porte — au premier plan quand
     // on entre et qu'on regarde le tableau)
-    B(10.6, Y_COUR + EP / 2, 10.95, 6.95, N2, H_SALLE, B0, { ombre: false, collision: true });
-    plinthe(10.585, Y_COUR + EP / 2, 10.6, 6.965, PS); plinthe(10.95, Y_COUR + EP / 2, 10.965, 6.965, PS); plinthe(10.6, 6.95, 10.95, 6.965, PS);
+    // (relecture du 10/10, en jouant : entre ce poteau et le bout des rangées, 0,65 m — Haythem y butait en longeant l'allée
+    // de la porte ; le poteau a 30 cm de saillie et les rangées reculent de 10 cm : 0,78 m)
+    B(10.6, Y_COUR + EP / 2, 10.95, 6.92, N2, H_SALLE, B0, { ombre: false, collision: true });
+    plinthe(10.585, Y_COUR + EP / 2, 10.6, 6.935, PS); plinthe(10.95, Y_COUR + EP / 2, 10.965, 6.935, PS); plinthe(10.6, 6.92, 10.95, 6.935, PS);
     extincteur(X_S1 + EP / 2 + 0.02, 7.2, 'E');
     panneau(matPan(texPictoExtincteur(), 0.5), 0.15, 0.15, X_S1 + EP / 2 + 0.003, 7.2, N2 + 2.0, 'E');
     panneau(matPan(texPictoAlarme(), 0.5), 0.1, 0.1, X_S1 + EP / 2 + 0.003, 7.2, N2 + 1.5, 'E');
@@ -883,12 +885,12 @@ export function poserEtage2(ch, renderer = null) {
     B(5.6, 11.95, 6.2, 12.25, N2, N2 + 0.8, M.noirMat, { collision: true });
     chaiseLuge(5.2, 11.3, 'E', { sortie: [5.4, 10.3], nom: 'la chaise du professeur' });
     // LES TABLES DES ÉLÈVES : cinq rangées nord-sud (les élèves regardent l'ouest), trois tables de 1,4 m bout à bout de
-    // y 7,6 à 11,8 (l'allée de la porte au sud), deux chaises par table ; passe-câbles au bord ouest, quelques multiprises
+    // y 7,7 à 11,9 (l'allée de la porte au sud), deux chaises par table ; passe-câbles au bord ouest, quelques multiprises
     let n = 0;
     for (const xr of [6.75, 8.05, 9.35, 10.65, 11.95]) {
-      for (const yc of [8.3, 9.7, 11.1]) {
+      for (const yc of [8.4, 9.8, 11.2]) {
         table(xr, yc, 0.6, 1.4, { pied: X.marine, passe: 'W', multi: (n % 5) === 2 });
-        for (const s of [-1, 1]) chaiseLuge(xr + 0.48, yc + s * 0.35, 'W', { coque: X.coque1, pied: X.noir, sortie: [xr + 0.62, s > 0 ? 11.95 : 7.4] });
+        for (const s of [-1, 1]) chaiseLuge(xr + 0.48, yc + s * 0.35, 'W', { coque: X.coque1, pied: X.noir, sortie: [xr + 0.62, s > 0 ? 11.95 : 7.35] });
         n++;
       }
     }
