@@ -435,8 +435,9 @@ function construireFacade(ch) {
     de: [-0.3, -0.2], a: [20.1, -0.2], ep: 0.4, h: H_RDC, mats: { N: M.blanc, S: M.pierre }, plinthes: ['N'],
     ouvertures: [
       { c: 0.8, l: 1.0, h: 2.2 },                              // porte de secours (travée 1)
-      // le passage des étudiants (ses murs font les tableaux) : 2,25 m, x 2,175-4,425, centré sur la limite des travées 2
-      // et 3 (plan V2 ; photo 10, sur l'échelle des travées de 1,65 m : 2,25 — le jeu avait deux travées, 3,3 m)
+      // le passage des étudiants : 2,25 m, x 2,175-4,425, centré sur la limite des travées 2 et 3 (plan V2 ; photo 10, sur
+      // l'échelle des travées de 1,65 m — le jeu avait deux travées, 3,3 m) ; à l'est, le mur du passage fait le tableau,
+      // à l'ouest, un trumeau de 0,43 m (le passage, derrière, part de x 1,75 : construireMurs)
       { c: 3.3, l: 2.25, h: 2.45 },
       ...BAIES_HAUTES.map((c) => ({ c, l: 1.2, bas: 0.95, h: 2.5 })),
       ...BAIES_BUREAU.map((c) => ({ c, l: 1.2, bas: 1.75, h: 2.5 })),
