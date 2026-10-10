@@ -195,35 +195,38 @@ export function poserMobilier(ch) {
   //  centimètre, retour de Haythem du 10/10, « la porte n'est pas aussi loin » ; js/carte_ecole.js construireMurs)
   // =====================================================================
   // LE PLAN D'ÉVACUATION, sur la face est de la PILE (x 2,45, y 4,05-4,97) : centré sur elle, à 0,45 m de la paroi
-  // vitrée, de 0,95 à 1,70 (photo 06 : le jeu le mettait à 1,30-1,92, sur une lame de 25 cm, 2,7 m plus au nord)
-  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texConsignes(), roughness: 0.5 }), 2.45, 4.51, 'E', 0.44, 0.95, 1.7);
+  // vitrée, un cadre A2 en hauteur de 0,44 x 0,62, de 1,08 à 1,70 (photo 06 rejouée à la pose recalée — haut à 248 px,
+  // bas à 402 : le jeu le mettait à 1,30-1,92, sur une lame de 25 cm, 2,7 m plus au nord)
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texConsignes(), roughness: 0.5 }), 2.45, 4.51, 'E', 0.44, 1.08, 1.7);
   // la prise électrique contre l'huisserie nord de la porte grise, au ras de la plinthe (photo 06, vidéo v_001)
   ch.boite(1.75, 6.01, 1.765, 6.09, 0.16, 0.24, M.blanc, { ombre: false });
   for (const dy of [-0.018, 0.018]) ch.boite(1.765, 6.05 + dy - 0.005, 1.768, 6.05 + dy + 0.005, 0.195, 0.205, M.noirMat, { ombre: false });
   // L'EXTINCTEUR rouge sur sa console et ses deux plaques (photo 06 : au fond du renfoncement, à 0,95 m au nord de la
-  // porte grise et à 0,3 m de l'angle ; le corps de 0,60 à 1,20 — le jeu le mettait 0,36 m trop haut —, la poignée à
-  // 1,46 ; au-dessus, le pictogramme à 1,95 et une petite plaque rouge et bleue à 1,54)
+  // porte grise et à 0,3 m de l'angle). Plus bas qu'il n'était : la photo 06 rejouée à la pose recalée — la porte, son
+  // oculus et le pictogramme y tombent à quelques pixels — met le corps de 0,66 à 1,08 (372 à 440 px), la poignée verte
+  // vers 1,15 et le haut de la boucle du tuyau vers 1,28 (le jeu : corps 0,96-1,44, poignée 1,56 ; plan V2 : 0,60-1,20,
+  // 1,46). Au-dessus, le pictogramme à 1,92 et la petite plaque rouge et bleue à 1,53.
   const ext = new THREE.Group(); ext.position.set(1.86, 0, -6.9); ch.decor.add(ext);
-  maille(new THREE.CylinderGeometry(0.075, 0.075, 0.6, 16), M.rougeEtiquette, 0, 0.9, 0, 0, ext);
-  maille(new THREE.SphereGeometry(0.075, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.rougeEtiquette, 0, 1.2, 0, 0, ext);
-  maille(new THREE.CylinderGeometry(0.03, 0.045, 0.12, 10), M.noirMat, 0, 1.33, 0, 0, ext);
-  maille(boiteM(0.04, 0.06, 0.06), M.noirMat, -0.08, 1.12, 0, 0, ext);
-  // (photo 06 : la poignée noire et son levier, l'étiquette blanche, le tuyau noir qui fait une boucle le long du corps
-  // jusqu'à la lance clipsée en bas ; 09/10)
-  maille(boiteM(0.12, 0.018, 0.035), M.noirMat, 0.03, 1.46, 0, 0, ext).rotation.z = -0.25;
-  maille(boiteM(0.05, 0.05, 0.04), M.noirMat, 0.0, 1.41, 0, 0, ext);
-  const etiq = maille(new THREE.CylinderGeometry(0.0765, 0.0765, 0.24, 16, 1, true, -0.7, 1.4), M.boitier, 0, 0.88, 0, Math.PI / 2, ext, { ombre: false });
+  maille(new THREE.CylinderGeometry(0.075, 0.075, 0.42, 16), M.rougeEtiquette, 0, 0.87, 0, 0, ext);
+  maille(new THREE.SphereGeometry(0.075, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.rougeEtiquette, 0, 1.08, 0, 0, ext);
+  maille(new THREE.CylinderGeometry(0.03, 0.045, 0.08, 10), M.noirMat, 0, 1.17, 0, 0, ext);
+  maille(boiteM(0.04, 0.06, 0.06), M.noirMat, -0.08, 1.02, 0, 0, ext);
+  // (photo 06 : la poignée et son levier, l'étiquette blanche, le tuyau noir qui fait une boucle au-dessus de la tête
+  // puis descend le long du corps jusqu'à la lance clipsée en bas ; 09/10)
+  maille(boiteM(0.12, 0.018, 0.035), M.noirMat, 0.03, 1.22, 0, 0, ext).rotation.z = -0.25;
+  const etiq = maille(new THREE.CylinderGeometry(0.0765, 0.0765, 0.2, 16, 1, true, -0.7, 1.4), M.boitier, 0, 0.86, 0, Math.PI / 2, ext, { ombre: false });
   void etiq;
-  const tuyau = new THREE.CatmullRomCurve3([[0.03, 1.4, 0.02], [0.11, 1.33, 0.05], [0.12, 1.0, 0.07], [0.1, 0.7, 0.06], [0.06, 0.64, 0.06]].map((p) => new THREE.Vector3(...p)));
+  const tuyau = new THREE.CatmullRomCurve3([[0.0, 1.19, 0.02], [-0.04, 1.27, 0.04], [0.06, 1.28, 0.06], [0.12, 1.12, 0.07], [0.11, 0.85, 0.07], [0.06, 0.7, 0.06]].map((p) => new THREE.Vector3(...p)));
   maille(new THREE.TubeGeometry(tuyau, 24, 0.009, 6), M.noirMat, 0, 0, 0, 0, ext, { ombre: false });
-  C.ajouterCercle(1.86, -6.9, 0.09, { y0: 0.55, y1: 1.5 });
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.16, 0.16, 1.755, 6.9, 1.95, 'E');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texPlaqueRougeBleue(), roughness: 0.5 }), 0.1, 0.1, 1.755, 6.9, 1.54, 'E');
+  C.ajouterCercle(1.86, -6.9, 0.09, { y0: 0.6, y1: 1.3 });
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.16, 0.16, 1.755, 6.9, 1.92, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texPlaqueRougeBleue(), roughness: 0.5 }), 0.1, 0.1, 1.755, 6.9, 1.53, 'E');
   // l'affiche jaune du tri, à gauche des portes de l'escalier : sur la face est de l'avancée nord du mur OUEST (09/10 :
   // elle était sur le mur des portes, cachée par le vantail ouvert ; photos 04, 20 : on la voit à gauche du vantail, sur
-  // le mur en fuite). (Plan V2, photo 06 : son bord gauche à 0,29 m de l'angle de l'avancée — y 7,51-8,11 —, juste à
-  // gauche du vantail ouvert rabattu à plat, y 8,0-9,0, qui la touche presque.)
-  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texTri(), roughness: 0.6 }), 2.45, 7.81, 'E', 0.6, 1.1, 1.95);
+  // le mur en fuite). (Plan V2, photo 06 : son bord gauche à 0,29 m de l'angle de l'avancée, y 7,51 ; la photo rejouée la
+  // met de 1,08 à 2,04 — une affiche A1 en hauteur, 0,68 x 0,96 —, sa moitié droite derrière le vantail ouvert rabattu à
+  // plat, y 7,955-8,955, comme sur la photo 06.)
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texTri(), roughness: 0.6 }), 2.45, 7.85, 'E', 0.68, 1.08, 2.04);
   // LES DEUX A4 DU VANTAIL FERMÉ des portes de l'escalier (vantail est, x 3,45-4,45, face hall à y 8,935), l'un au-dessus
   // de l'autre, côté gonds (photos 06, 20 : une fiche de consignes de 1,25 à 1,70, une photo imprimée de 1,75 à 2,0 ; le
   // jeu les mettait côte à côte vers 1,65)
