@@ -167,10 +167,13 @@ export function poserMobilier(ch) {
   const wifi = new THREE.MeshStandardMaterial({ map: texWifi(), roughness: 0.45 });
   ch.panneau(wifi, 0.2, 0.17, 13.494, 10.05, 1.5, 'W');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c7783a', '#f4ead9', 8), roughness: 0.6 }), 0.24, 0.17, 13.494, 10.05, 1.75, 'W');
-  // ... et les mêmes au bout du mur, près de l'angle du hall, sous le haut-parleur (photo 03)
-  ch.panneau(wifi, 0.2, 0.17, 13.494, 7.95, 1.45, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c7783a', '#f4ead9', 12), roughness: 0.6 }), 0.26, 0.19, 13.494, 7.95, 1.72, 'W');
-  const hp = new THREE.Group(); hp.position.set(13.44, 2.32, -7.97); ch.decor.add(hp);
+  // ... et les mêmes au bout du mur, près de l'angle du hall, sous le haut-parleur (photo 03) — (10/10 : ce bout de mur est
+  // la face ouest de la pile du hall, x 13,30, js/ecole_rdc_centre.js ; l'angle, son angle sud-ouest, y 4,7 ; relecture
+  // du 10/10 : sur la photo 03 recalée — caméra (12,2 ; 5,4), cap 136,5 —, les affichettes sont à 0,1-0,25 m de l'angle
+  // et le haut-parleur juste au-dessus, y 4,9 et non 5,15)
+  ch.panneau(wifi, 0.2, 0.17, 13.294, 4.88, 1.45, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c7783a', '#f4ead9', 12), roughness: 0.6 }), 0.26, 0.19, 13.294, 4.88, 1.72, 'W');
+  const hp = new THREE.Group(); hp.position.set(13.24, 2.32, -4.93); ch.decor.add(hp);
   maille(boiteM(0.1, 0.17, 0.13), M.boitier, 0, 0, 0, 0, hp, { ombre: false });
   maille(new THREE.CylinderGeometry(0.035, 0.035, 0.01, 16), M.grille, -0.051, 0.01, 0, 0, hp, { ombre: false }).rotation.z = Math.PI / 2;
   // les affiches du pilier (il est maintenant planté dans la salle, y 9,75-10,35) : sur la face ouest, l'A3 blanche aux
@@ -178,12 +181,11 @@ export function poserMobilier(ch) {
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e8eef8', '#ffffff', 9), roughness: 0.7 }), 0.42, 0.6, 10.294, 10.05, 1.72, 'W');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#f08a3c', '#ffffff', 10), roughness: 0.7 }), 0.3, 0.42, 10.294, 10.05, 1.2, 'W');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3e9b6b', '#ffffff', 11), roughness: 0.7 }), 0.21, 0.42, 10.45, 10.356, 1.55, 'N');
-  // LA FACE SUD DU PILIER, celle qu'on voit en arrivant par le cou (photo 22, l'ancienne photo du hall) : la plaque
-  // « iris » de l'Institut et l'annuaire des salles en dessous, et l'horloge à diodes rouges au-dessus — elle donne
-  // l'heure et le jour de l'ordinateur du joueur
-  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texPlaqueIris(), roughness: 0.45 }), 10.6, 9.75, 'S', 0.46, 1.02, 1.94, 0.012);
-  ch.boite(10.39, 9.69, 10.81, 9.75, 2.1, 2.34, M.noir);
-  ch.panneau(matHorloge(), 0.4, 0.2, 10.6, 9.6895, 2.22, 'S');
+  // (10/10, VO q_0039-0050 : sa face EST, vers le hall — l'A3 bleu-gris au dessin d'écran d'ordinateur, de 1,5 à 1,9 m,
+  // et l'A4 blanche à vignettes de photos dessous. La plaque « iris », l'annuaire et l'horloge qu'il portait sur sa face
+  // sud sont sur la pile du hall : js/ecole_rdc_centre.js)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texEcranA3(), roughness: 0.7 }), 0.3, 0.42, 10.906, 10.05, 1.7, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texVignettes(), roughness: 0.7 }), 0.21, 0.297, 10.906, 10.05, 1.25, 'E');
   // les affiches scotchées sur les jours dépolis
   [[6.3, 1.7, '#e07b2a'], [6.95, 1.85, '#2f6fb0'], [8.0, 1.75, '#3e9b6b'], [8.65, 1.9, '#7b2a6e']].forEach(([x, h, c], i) =>
     ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche(c, '#fbfbf8', 20 + i), roughness: 0.7 }), 0.21, 0.297, x, 9.088, h, 'N'));
@@ -250,15 +252,8 @@ export function poserMobilier(ch) {
   // =====================================================================
   // l'affiche bleue étroite sur le trumeau entre les fenêtres de l'accueil
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2b4c9b', '#2b4c9b', 50), roughness: 0.6 }), 0.3, 0.9, 18.15, 0.006, 1.55, 'N');
-  // LE TOTEM NOIR « 1ère école pour le BTS SIO en France » (photo 22 : il était dans la salle d'attente, à la place de
-  // la borne d'aujourd'hui) : contre le mur nord du hall, face à la porte 6 — on le voit en entrant. (09/10 : poussé dans
-  // l'angle nord-ouest du hall, x 13,65-14,45 — la porte du couloir est s'ouvre maintenant en x 14,70-16,10, photo 24)
-  const totem = new THREE.Group(); totem.position.set(14.05, 0, -7.4); ch.decor.add(totem);
-  maille(boiteM(0.86, 0.03, 0.26), M.aluGris, 0, 0.015, 0, 0, totem);
-  maille(boiteM(0.8, 2.0, 0.04), M.noir, 0, 1.03, 0, 0, totem);
-  const face = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 1.96), new THREE.MeshStandardMaterial({ map: texTotemBTS(), roughness: 0.5 }));
-  face.position.set(0, 1.03, 0.021); face.receiveShadow = true; totem.add(face);
-  C.ajouterBoite(13.6, -7.55, 14.5, -7.25, { y1: 2.05 });
+  // (10/10 : le totem noir « 1ère école pour le BTS SIO en France » n'est plus dans l'angle nord-ouest du hall — c'est la
+  // place de la pile : js/ecole_rdc_centre.js le pose contre le mur ouest du cou)
 }
 
 // ---- les petites textures du mobilier ----
@@ -346,50 +341,31 @@ function qrFigure(g, x, y, c) {
     g.fillStyle = '#111'; g.fillRect(x + (a + 2) * m, y + (b + 2) * m, 3 * m, 3 * m);
   }
 }
-// LA PLAQUE DU PILIER : en haut, sur blanc, le logo dans son pavé noir et « Institut supérieur de ressources
-// informatiques » ; en bas, sur noir, l'annuaire (la salle en blanc, le niveau en orange à droite)
-function texPlaqueIris() {
-  return canvasTex(384, 768, (g, w, h) => {
-    g.fillStyle = '#f7f7f4'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#161616'; g.fillRect(84, 44, 216, 128);
-    logoIris(g, w / 2, 140, 86);
-    g.fillStyle = '#3c3c3c'; g.font = '600 21px "Segoe UI", Arial, sans-serif'; g.textAlign = 'center';
-    ['INSTITUT SUPÉRIEUR', 'DE RESSOURCES', 'INFORMATIQUES'].forEach((t, i) => g.fillText(t, w / 2, 222 + i * 28));
-    g.fillStyle = '#161616'; g.fillRect(0, 372, w, h - 372);
-    const salles = [['Accueil - Réception', 'RDC'], ['Salle Tim Berners-Lee', 'B 1'], ['Salle David Clark', 'B 2'], ['Pause extérieure', 'RDC'],
-      ['Nos niveaux 1/2/3/4/5', '▲'], ['Nos niveaux -1/-2', '▼'], ['Direction des Études', '1']];
-    salles.forEach(([s, n], i) => {
-      const y = 418 + i * 48;
-      g.textAlign = 'left'; g.fillStyle = '#f2f2f2'; g.font = '500 20px "Segoe UI", Arial, sans-serif'; g.fillText(s, 22, y);
-      g.textAlign = 'right'; g.fillStyle = '#f08a24'; g.font = '700 20px "Segoe UI", Arial, sans-serif'; g.fillText(n, w - 22, y);
-      g.fillStyle = 'rgba(255,255,255,0.12)'; g.fillRect(22, y + 16, w - 44, 1.5);
-    });
-    g.textAlign = 'left';
-  }, null, false, 8);
+// LES DEUX AFFICHES DE LA FACE EST DU PILIER GRIS (VO q_0039-0050, 10/10) : l'A3 bleu-gris au dessin d'écran
+// d'ordinateur (un écran, son clavier, des bulles), l'A4 blanche à vignettes de photos
+function texEcranA3() {
+  return canvasTex(256, 362, (g, w, h) => {
+    g.fillStyle = '#9fb3c8'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e9eef4'; g.fillRect(16, 16, w - 32, 54);
+    g.fillStyle = '#2b4c6e'; g.fillRect(28, 30, w * 0.55, 12); g.fillRect(28, 50, w * 0.35, 8);
+    g.fillStyle = '#2c3440'; g.fillRect(40, 96, w - 80, 120); g.fillStyle = '#e6edf5'; g.fillRect(50, 106, w - 100, 100);
+    g.fillStyle = '#f08a24'; g.fillRect(64, 120, 70, 10); g.fillStyle = '#7f95ad'; for (let k = 0; k < 4; k++) g.fillRect(64, 142 + k * 14, 110 - k * 12, 6);
+    g.fillStyle = '#2c3440'; g.fillRect(w / 2 - 12, 216, 24, 18); g.fillRect(w / 2 - 50, 234, 100, 8); g.fillRect(56, 256, w - 112, 22);
+    g.fillStyle = '#ffffff'; for (const [x, y, r] of [[40, 300, 14], [92, 318, 10], [200, 296, 16]]) { g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+    g.fillStyle = '#4a5a6c'; g.fillRect(16, h - 26, w * 0.5, 8);
+  }, null, false, 4);
 }
-// L'HORLOGE À DIODES ROUGES : l'heure en grand, le jour et la date dessous (« VEN 09 »), sur fond noir ; les segments
-// éteints se devinent. Elle suit l'horloge de l'ordinateur (redessinée toutes les 10 s).
-function matHorloge() {
-  const c = document.createElement('canvas'); c.width = 256; c.height = 128;
-  const g = c.getContext('2d'), t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
-  const JOURS = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
-  const dessiner = () => {
-    const d = new Date(), p2 = (n) => String(n).padStart(2, '0');
-    g.fillStyle = '#0a0a0a'; g.fillRect(0, 0, 256, 128);
-    g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-    g.font = '700 66px "Consolas", "Lucida Console", "Courier New", monospace';
-    g.fillStyle = 'rgba(255,40,20,0.1)'; g.fillText('88:88', 128, 66);
-    g.shadowColor = '#ff2a14'; g.shadowBlur = 10; g.fillStyle = '#ff3a22';
-    g.fillText(`${p2(d.getHours())}:${p2(d.getMinutes())}`, 128, 66);
-    g.shadowBlur = 0; g.font = '700 34px "Consolas", "Lucida Console", "Courier New", monospace';
-    g.fillStyle = 'rgba(255,40,20,0.1)'; g.fillText('888 88', 128, 112);
-    g.shadowBlur = 8; g.fillStyle = '#ff3a22'; g.fillText(`${JOURS[d.getDay()]} ${p2(d.getDate())}`, 128, 112);
-    g.shadowBlur = 0;
-    t.needsUpdate = true;
-  };
-  dessiner(); setInterval(dessiner, 10000);
-  return new THREE.MeshBasicMaterial({ map: t, color: new THREE.Color(1.6, 1.6, 1.6) });
+function texVignettes() {
+  return canvasTex(256, 362, (g, w, h) => {
+    g.fillStyle = '#fbfbf8'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#2b4c6e'; g.fillRect(16, 16, w * 0.6, 14); g.fillStyle = '#9aa0a6'; g.fillRect(16, 38, w * 0.4, 8);
+    const tons = [['#8aa0b8', '#4e5f73'], ['#c8a07a', '#6e4e38'], ['#9fb39a', '#4f6650'], ['#b9b4c8', '#5d566e'], ['#d6c2a8', '#7d6650'], ['#7f95a8', '#3a4a5c']];
+    for (let i = 0; i < 6; i++) {
+      const x = 16 + (i % 2) * 116, y = 62 + Math.floor(i / 2) * 96, [a, b] = tons[i];
+      const d = g.createLinearGradient(0, y, 0, y + 80); d.addColorStop(0, a); d.addColorStop(1, b); g.fillStyle = d; g.fillRect(x, y, 108, 80);
+      g.fillStyle = 'rgba(240,222,204,0.85)'; g.beginPath(); g.arc(x + 54, y + 34, 12, 0, 7); g.fill();
+    }
+  }, null, false, 4);
 }
 // LE PANNEAU DES FORMATIONS (kakémono noir, photo 22) : le logo, « Initial ou alternance », puis les quatre bandeaux
 // orange (du plus clair au plus soutenu) et leurs formations, l'adresse du site et le QR code au pied
@@ -414,35 +390,5 @@ function texFormations() {
     }
     g.fillStyle = '#d8d8d8'; g.font = '600 16px "Segoe UI", Arial, sans-serif'; g.fillText('www.ecoleiris.fr', 24, h - 34);
     qrFigure(g, w - 92, h - 96, 72);
-  }, null, false, 8);
-}
-// LE TOTEM « 1ère école pour le BTS SIO en France » (photo 22) : noir, le logo en haut, l'accroche en grandes capitales,
-// « Bac à Bac+5 » en orange, le site et le QR code au pied
-function texTotemBTS() {
-  return canvasTex(320, 800, (g, w, h) => {
-    const d = g.createLinearGradient(0, 0, 0, h); d.addColorStop(0, '#1b1b1b'); d.addColorStop(1, '#0f0f0f');
-    g.fillStyle = d; g.fillRect(0, 0, w, h);
-    logoIris(g, w / 2, 128, 96);
-    g.textAlign = 'center'; g.fillStyle = '#9a9a9a'; g.font = '600 12px "Segoe UI", Arial, sans-serif';
-    g.fillText('INSTITUT SUPÉRIEUR DE RESSOURCES INFORMATIQUES', w / 2, 162);
-    // « 1ère ÉCOLE » : le « ère » en exposant, la ligne mesurée puis centrée
-    g.fillStyle = '#ffffff'; g.textAlign = 'left';
-    const grand = '800 40px "Segoe UI", Arial, sans-serif', petit = '800 20px "Segoe UI", Arial, sans-serif';
-    g.font = grand; const w1 = g.measureText('1').width, wE = g.measureText(' ÉCOLE').width;
-    g.font = petit; const wr = g.measureText('ère').width;
-    let x = (w - (w1 + wr + wE)) / 2;
-    g.font = grand; g.fillText('1', x, 290); x += w1;
-    g.font = petit; g.fillText('ère', x + 1, 270); x += wr + 1;
-    g.font = grand; g.fillText(' ÉCOLE', x, 290);
-    g.textAlign = 'center';
-    g.font = '700 27px "Segoe UI", Arial, sans-serif';
-    g.fillText('POUR LE BTS SIO', w / 2, 330); g.fillText('EN FRANCE', w / 2, 364);
-    g.fillStyle = '#f08a24'; g.fillRect(w / 2 - 40, 392, 80, 4);
-    g.fillStyle = '#f2f2f2'; g.font = '600 22px "Segoe UI", Arial, sans-serif';
-    ['ÉCOLE', "DE L'INFORMATIQUE", 'ET DU NUMÉRIQUE'].forEach((t, i) => g.fillText(t, w / 2, 444 + i * 30));
-    g.fillStyle = '#f08a24'; g.font = '800 30px "Segoe UI", Arial, sans-serif'; g.fillText('BAC À BAC+5', w / 2, 574);
-    g.fillStyle = '#d8d8d8'; g.font = '600 17px "Segoe UI", Arial, sans-serif'; g.fillText('www.ecoleiris.fr', w / 2 - 36, h - 40);
-    qrFigure(g, w - 88, h - 92, 66);
-    g.textAlign = 'left';
   }, null, false, 8);
 }
