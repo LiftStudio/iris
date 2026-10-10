@@ -245,24 +245,9 @@ export function poserMobilier(ch) {
   // (la plaque « Toilettes » du C01, photo 01 — le fauteuil roulant : avec les toilettes PMR, js/ecole_pieces.js ; 09/10)
 
   // =====================================================================
-  //  L'ACCUEIL (photo 03) : deux écrans, un téléphone, des papiers, deux fauteuils noirs
+  //  L'ACCUEIL : le comptoir nord-sud, l'open-space, ses écrans, ses fauteuils et le manteau moutarde (VO 92,5-95,8 s,
+  //  photo 03) — js/ecole_hall.js (10/10)
   // =====================================================================
-  for (const x of [17.0, 18.6]) {
-    const e = new THREE.Group(); e.position.set(x, 0.75, -1.25); e.rotation.y = Math.PI; ch.decor.add(e);
-    maille(boiteM(0.55, 0.34, 0.03), M.noir, 0, 0.32, 0, 0, e);
-    maille(boiteM(0.06, 0.15, 0.04), M.noir, 0, 0.08, 0.02, 0, e);
-    maille(boiteM(0.2, 0.01, 0.15), M.noir, 0, 0.005, 0.02, 0, e);
-  }
-  ch.boite(17.6, 1.2, 17.9, 1.4, 0.75, 0.78, M.store);
-  for (const x of [17.0, 18.6]) {
-    const f = new THREE.Group(); f.position.set(x, 0, -0.7); ch.decor.add(f);
-    maille(boiteM(0.48, 0.08, 0.46), M.noir, 0, 0.48, 0, 0, f);
-    maille(boiteM(0.46, 0.55, 0.06), M.noir, 0, 0.82, 0.22, 0, f);
-    maille(new THREE.CylinderGeometry(0.025, 0.025, 0.4, 8), M.inox, 0, 0.25, 0, 0, f);
-    maille(boiteM(0.6, 0.03, 0.06), M.noir, 0, 0.04, 0, 0, f);
-    maille(boiteM(0.06, 0.03, 0.6), M.noir, 0, 0.04, 0, 0, f);
-  }
-  ch.boite(18.36, 0.42, 18.84, 0.48, 0.52, 1.1, new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.9 }));   // le manteau moutarde
   // l'affiche bleue étroite sur le trumeau entre les fenêtres de l'accueil
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2b4c9b', '#2b4c9b', 50), roughness: 0.6 }), 0.3, 0.9, 18.15, 0.006, 1.55, 'N');
   // LE TOTEM NOIR « 1ère école pour le BTS SIO en France » (photo 22 : il était dans la salle d'attente, à la place de

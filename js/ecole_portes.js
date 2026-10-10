@@ -83,86 +83,194 @@ export function fusionnerLocal(g) {
 }
 
 // =====================================================================
-//  LES VITROPHANIES DE LA PORTE 6 (photos 16, 31)
+//  LES VITROPHANIES DE LA PORTE 6 (photo 16 de 2026 ; VO 5,1 s côté rue, 93-95 s côté hall ; 10/10)
 // =====================================================================
-// La face RUE : les arcs concentriques orange / magenta / violet sur le fixe de gauche, le nuage « low poly » bleu qui
-// court sur les deux vantaux, le pavé « iris » et sa phrase sur le vantail gauche, la forme d'origami violette et, en
-// bas du vantail droit, le visage d'un jeune homme qui lève les yeux. Une texture pour toute la largeur vitrée
-// (x 13,45 à 16,35, 2,25 m de haut) ; transparente là où il n'y a pas d'adhésif. La face HALL : la même découpe en gris
-// sombre (le dos de l'adhésif), vue à l'envers.
+// La face RUE (photo 16, recadrée et cotée contre la largeur de la porte) : sur le fixe ouest, en bas, un quart de
+// cible « low poly » — quatre bandes épaisses, orange saumon, rouge, magenta, autour d'un centre au pied du montant
+// ouest — qui déborde sur le vantail ouest ; sur les deux vantaux, le NUAGE « low poly » bleu (x 14,48-15,87, h 1,31-1,94)
+// et, posé sur son coin haut gauche, le TRAIT JAUNE en équerre (le coin du logo) ; sous le nuage, le petit pavé noir
+// « iris » au premier i jaune, et sa phrase « Connectez / -vous » en orange, « aux métiers / de demain » en blanc ;
+// l'étiquette blanche à liseré et flèche orange (vantail ouest, 1,6-1,8 m) ; l'interdiction de fumer (vantail est,
+// 1,6-1,9 m) ; l'origami violet sous le nuage ; en bas du vantail est, le GRAND VISAGE d'un jeune homme qui lève les
+// yeux, coupé par le montant (un œil seulement), en couleurs de photo ; deux feuilles A4 et une pastille bleue sur le
+// fixe. Une texture pour toute la largeur vitrée (x 13,45 à 16,35, 2,25 m de haut) ; transparente hors des adhésifs.
+// La face HALL (VO 93-95 s, photos 03, 24) : la même découpe vue à l'envers — le nuage et l'équerre en gris violacé (le
+// dos de l'adhésif), le pavé noir et son « iris » en miroir, mais LE VISAGE, LES ARCS ET L'ORIGAMI EN COULEUR (imprimés
+// recto verso), plus sombres ; la pastille jaune côté hall seulement.
 function texVitrophanie(dos = false) {
   const W = 1024, H = 800;   // 2,9 m x 2,25 m
   return canvasTex(W, H, (g, w, h) => {
     g.clearRect(0, 0, w, h);
     const mx = w / 2.9, my = h / 2.25, X = (x) => (x - 13.45) * mx, Y = (y) => h - y * my;
-    const peindre = (f, coul) => { g.fillStyle = dos ? 'rgba(52,54,60,0.92)' : coul; f(); };
-    // les arcs sur le fixe de gauche (x 13,45-14,3), bas
-    const cx = X(13.5), cy = Y(0.05);
-    const arcs = [['#7b2a6e', 0.92], ['#d6337a', 0.78], ['#f08a3c', 0.64], ['#d6337a', 0.5], ['#7b2a6e', 0.38]];
-    for (const [c, r] of arcs) {
-      peindre(() => { g.beginPath(); g.arc(cx, cy, r * mx, -Math.PI / 2, 0); g.lineTo(cx, cy); g.closePath(); g.fill(); }, c);
-      g.globalCompositeOperation = 'destination-out';
-      g.beginPath(); g.arc(cx, cy, (r - 0.07) * mx, -Math.PI / 2 - 0.1, 0.1); g.lineTo(cx, cy); g.closePath(); g.fill();
-      g.globalCompositeOperation = 'source-over';
-    }
-    // LE NUAGE « LOW POLY » (les deux vantaux, en haut) : une silhouette de nuage (union de disques) remplie d'une
-    // grille de points tremblés, triangulée ; chaque facette prend un bleu selon son orientation (claire en haut à gauche)
-    const disques = [[14.75, 1.85, 0.3], [15.15, 2.0, 0.36], [15.6, 1.92, 0.3], [15.95, 1.8, 0.22], [14.5, 1.72, 0.18], [15.3, 1.72, 0.3]];
-    const dedans = (x, y) => disques.some(([cx, cy, r]) => (x - cx) ** 2 + (y - cy) ** 2 < r * r) && y > 1.6;
-    const pas = 0.11, gr0 = [];
     let sx = 3;
     const alea = () => { sx = (sx * 16807) % 2147483647; return sx / 2147483647; };
-    for (let j = 0; j <= 7; j++) { gr0.push([]); for (let i = 0; i <= 18; i++) gr0[j].push([14.25 + i * pas + (alea() - 0.5) * pas * 0.7, 1.55 + j * pas + (alea() - 0.5) * pas * 0.7]); }
-    const bleus = ['#3d5a9e', '#4c6db3', '#6c8fd0', '#8aa9e0', '#a9c2ec'];
-    for (let j = 0; j < 7; j++) for (let i = 0; i < 18; i++) {
+    // deux teintes #rrggbb mêlées (t de 0 à 1) ; une teinte éclaircie (d > 0) ou assombrie (d < 0)
+    const melange = (a, b, t) => {
+      const A = parseInt(a.slice(1), 16), Bc = parseInt(b.slice(1), 16), l = (s) => Math.round(((A >> s) & 255) * (1 - t) + ((Bc >> s) & 255) * t);
+      return '#' + [l(16), l(8), l(0)].map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0')).join('');
+    };
+    const nuance = (c, d) => melange(c, d > 0 ? '#ffffff' : '#000000', Math.abs(d));
+    // le dos d'une impression, vu du hall : la teinte assombrie (`k`) et un peu grisée (`gris`)
+    const dosCouleur = (c, k = 0.6, gris = 0.25) => {
+      const v = parseInt(c.slice(1), 16), r = v >> 16, gg = (v >> 8) & 255, b = v & 255, m = (r + gg + b) / 3;
+      const f = (u) => Math.round(((1 - gris) * u + gris * m) * k);
+      return `rgb(${f(r)},${f(gg)},${f(b)})`;
+    };
+    // une facette (polygone du plan de la porte : x, h), bordée de sa propre teinte (pas de jour entre deux facettes)
+    const facette = (pts, c) => {
+      g.fillStyle = c; g.strokeStyle = c; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(X(pts[0][0]), Y(pts[0][1])); for (const [x, y] of pts.slice(1)) g.lineTo(X(x), Y(y)); g.closePath(); g.fill(); g.stroke();
+    };
+
+    // ---- LE QUART DE CIBLE (fixe ouest, en bas) : quatre bandes de facettes ; la teinte glisse le long de l'arc, du haut
+    // (orange saumon) vers la droite (magenta) ; la bande intérieure est un quart de disque plein ----
+    const cx = 13.42, cy = 0.0;
+    const bandes = [[1.02, 0.84, ['#f3a06a', '#e8463f', '#d2347f']], [0.72, 0.55, ['#ef6c3c', '#d93a57', '#c3308a']],
+      [0.45, 0.29, ['#e0507a', '#d0368c', '#c02f92']], [0.16, 0.0, ['#c8318c', '#c02f92', '#b52c90']]];
+    for (const [R0, R1, cols] of bandes) {
+      const n = Math.max(3, Math.round(R0 * 11));
+      for (let i = 0; i < n; i++) {
+        const a0 = i / n * Math.PI / 2, a1 = (i + 1) / n * Math.PI / 2, t = (i + 0.5) / n;
+        const base = t < 0.5 ? melange(cols[0], cols[1], t * 2) : melange(cols[1], cols[2], t * 2 - 1);
+        const P = (r, a) => [cx + r * Math.sin(a), cy + r * Math.cos(a)];
+        const am = (a0 + a1) / 2, rm = (R0 + R1) / 2 + (alea() - 0.5) * (R0 - R1) * 0.4;
+        const morceaux = R1 > 0 ? [[P(R1, a0), P(R0, a0), P(rm, am)], [P(R0, a0), P(R0, a1), P(rm, am)], [P(R0, a1), P(R1, a1), P(rm, am)], [P(R1, a1), P(R1, a0), P(rm, am)]]
+          : [[[cx, cy], P(R0, a0), P(R0, a1)]];
+        for (const q of morceaux) { const c = nuance(base, (alea() - 0.45) * 0.22); facette(q, dos ? dosCouleur(c, 0.62) : c); }
+      }
+    }
+    // ---- LE NUAGE « LOW POLY » : cinq lobes, le dessous plat ; une grille de points tremblés, triangulée ; chaque facette
+    // prend un bleu selon sa place (sombre en bas à gauche, clair en haut à droite) ----
+    const lobes = [[14.66, 1.46, 0.17], [14.96, 1.55, 0.34], [15.23, 1.52, 0.24], [15.5, 1.65, 0.33], [15.7, 1.49, 0.17]];
+    const dedans = (x, y) => y > 1.31 && lobes.some(([lx, ly, r]) => (x - lx) ** 2 + (y - ly) ** 2 < r * r);
+    const pas = 0.085, gr0 = [];
+    for (let j = 0; j <= 9; j++) { gr0.push([]); for (let i = 0; i <= 18; i++) gr0[j].push([14.44 + i * pas + (alea() - 0.5) * pas * 0.7, 1.24 + j * pas + (alea() - 0.5) * pas * 0.7]); }
+    // (relecture 10/10 : un peu moins saturés — photo 16, VO 5,1 s : du bleu ciel grisé au bleu marine)
+    const bleus = ['#30407e', '#43609f', '#6182bb', '#88a7d2', '#b2c9e6'], gris = ['#625e78', '#6e6a84', '#7a7690', '#86839b', '#9390a6'];
+    for (let j = 0; j < 9; j++) for (let i = 0; i < 18; i++) {
       const p00 = gr0[j][i], p10 = gr0[j][i + 1], p01 = gr0[j + 1][i], p11 = gr0[j + 1][i + 1];
       for (const t of [[p00, p10, p11], [p00, p11, p01]]) {
-        const cx = (t[0][0] + t[1][0] + t[2][0]) / 3, cy = (t[0][1] + t[1][1] + t[2][1]) / 3;
-        if (!dedans(cx, cy)) continue;
-        const k = Math.max(0, Math.min(4, Math.round(1.6 + (cy - 1.8) * 6 - (cx - 15.2) * 1.5 + (alea() - 0.5) * 2)));
-        peindre(() => { g.beginPath(); g.moveTo(X(t[0][0]), Y(t[0][1])); g.lineTo(X(t[1][0]), Y(t[1][1])); g.lineTo(X(t[2][0]), Y(t[2][1])); g.closePath(); g.fill(); g.strokeStyle = g.fillStyle; g.lineWidth = 1; g.stroke(); }, bleus[k]);
+        const tx = (t[0][0] + t[1][0] + t[2][0]) / 3, ty = (t[0][1] + t[1][1] + t[2][1]) / 3;
+        if (!dedans(tx, ty)) continue;
+        // (le dessous coupé net : les sommets sous la ligne remontent sur elle)
+        const q = t.map(([x, y]) => [x, Math.max(1.31, y)]);
+        const k = Math.max(0, Math.min(4, Math.round(1.5 + (ty - 1.6) * 5 + (tx - 15.15) * 1.3 + (alea() - 0.5) * 2.2)));
+        facette(q, (dos ? gris : bleus)[k]);
       }
     }
-    // l'origami violet (vantail droit, sous le nuage)
-    peindre(() => { g.beginPath(); g.moveTo(X(15.5), Y(1.55)); g.lineTo(X(15.95), Y(1.4)); g.lineTo(X(15.7), Y(1.1)); g.lineTo(X(15.35), Y(1.25)); g.closePath(); g.fill(); }, '#8a6fb5');
-    // le pavé « iris » et sa phrase (vantail gauche)
-    peindre(() => g.fillRect(X(14.42), Y(1.42), 0.62 * mx, 0.5 * my), '#111111');
+    // (relecture 10/10 : côté rue, le réseau de fins traits blancs et de points qui court sur le nuage — photo 16 et VO
+    // 5,1 s, une « constellation » clairsemée ; une arête sur six, les sommets touchés pointés)
     if (!dos) {
-      g.fillStyle = '#ffffff'; g.font = `600 ${Math.round(0.16 * my)}px "Century Gothic", "Avenir", "Segoe UI", sans-serif`;
-      g.textBaseline = 'alphabetic'; g.fillText('iris', X(14.5), Y(1.2));
-      g.fillStyle = '#f08a24'; g.fillRect(X(14.51), Y(1.36), 0.035 * mx, 0.02 * my);
-      g.fillStyle = '#ffffff'; g.font = `500 ${Math.round(0.042 * my)}px "Segoe UI", sans-serif`;
-      g.fillText('Connectez-vous', X(14.5), Y(1.07)); g.fillText('aux métiers', X(14.5), Y(1.02)); g.fillText('de demain', X(14.5), Y(0.97));
-    }
-    // LE VISAGE (vantail droit, en bas : un jeune homme qui lève les yeux vers le nuage). Une photo sur la vraie porte ;
-    // ici une impression en bichromie violet / rose, comme un visuel d'affiche, plutôt qu'un dessin naïf.
-    // (grand et coupé par le bas de la vitre, comme sur la porte : on voit le haut du visage, les yeux levés)
-    const fx = X(15.7), fy = Y(0.2), rx = 0.36 * mx, ry = 0.45 * my;
-    if (dos) { peindre(() => { g.beginPath(); g.ellipse(fx, fy - ry * 0.1, rx * 1.12, ry * 1.2, 0, 0, Math.PI * 2); g.fill(); }, ''); }
-    else {
-      g.save();
-      g.beginPath(); g.ellipse(fx, fy - ry * 0.1, rx * 1.12, ry * 1.2, 0, 0, Math.PI * 2); g.clip();
-      const fond = g.createLinearGradient(fx - rx, 0, fx + rx, 0); fond.addColorStop(0, '#3b1840'); fond.addColorStop(1, '#5a2350');
-      g.fillStyle = fond; g.fillRect(fx - rx * 1.2, fy - ry * 1.4, rx * 2.4, ry * 2.6);
-      const peau = g.createRadialGradient(fx - rx * 0.25, fy - ry * 0.15, rx * 0.1, fx, fy, rx * 1.05);
-      peau.addColorStop(0, '#f4c6d2'); peau.addColorStop(0.55, '#c76a98'); peau.addColorStop(1, '#5e2558');
-      g.fillStyle = peau; g.beginPath(); g.ellipse(fx, fy + ry * 0.05, rx * 0.9, ry, 0, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#2a0f2e'; g.beginPath(); g.ellipse(fx, fy - ry * 0.78, rx * 0.95, ry * 0.42, 0, Math.PI, Math.PI * 2); g.fill();
-      // les sourcils, les yeux levés (le blanc en bas, l'iris tout en haut), l'ombre du nez, la bouche
-      for (const s2 of [-1, 1]) {
-        g.fillStyle = '#3a1438'; g.beginPath(); g.ellipse(fx + s2 * rx * 0.36, fy - ry * 0.43, rx * 0.21, ry * 0.04, s2 * 0.12, 0, Math.PI * 2); g.fill();   // (levés : il regarde en l'air)
-        g.fillStyle = '#fbe9ef'; g.beginPath(); g.ellipse(fx + s2 * rx * 0.36, fy - ry * 0.18, rx * 0.16, ry * 0.07, 0, 0, Math.PI * 2); g.fill();
-        g.fillStyle = '#2a0f2e'; g.beginPath(); g.arc(fx + s2 * rx * 0.36, fy - ry * 0.235, rx * 0.075, 0, 7); g.fill();
+      const ok = ([x, y]) => dedans(x, Math.max(1.315, y)), pts = [];
+      g.strokeStyle = 'rgba(255,255,255,0.42)'; g.lineWidth = 0.9;
+      for (let j = 0; j < 9; j++) for (let i = 0; i < 18; i++) {
+        const a = gr0[j][i];
+        for (const b of [gr0[j][i + 1], gr0[j + 1][i], gr0[j + 1][i + 1]]) {
+          if (alea() > 0.17 || !ok(a) || !ok(b)) continue;
+          const A = [a[0], Math.max(1.315, a[1])], Bp = [b[0], Math.max(1.315, b[1])];
+          g.beginPath(); g.moveTo(X(A[0]), Y(A[1])); g.lineTo(X(Bp[0]), Y(Bp[1])); g.stroke(); pts.push(A, Bp);
+        }
       }
-      g.fillStyle = 'rgba(70,20,70,0.45)'; g.beginPath(); g.moveTo(fx - rx * 0.02, fy - ry * 0.12); g.lineTo(fx + rx * 0.14, fy + ry * 0.22); g.lineTo(fx - rx * 0.1, fy + ry * 0.24); g.closePath(); g.fill();
-      g.fillStyle = '#8c2f63'; g.beginPath(); g.ellipse(fx, fy + ry * 0.48, rx * 0.26, ry * 0.07, 0, 0, Math.PI * 2); g.fill();
-      g.restore();
+      g.fillStyle = 'rgba(255,255,255,0.75)';
+      for (const [x, y] of pts) { g.beginPath(); g.arc(X(x), Y(y), 1.4, 0, 7); g.fill(); }
     }
-    // l'interdiction de fumer (haut à droite) et deux feuilles A4 sur le fixe
-    peindre(() => { g.beginPath(); g.arc(X(16.05), Y(2.05), 0.06 * mx, 0, 7); g.fill(); }, '#ffffff');
-    if (!dos) { g.strokeStyle = '#d0262d'; g.lineWidth = 5; g.beginPath(); g.arc(X(16.05), Y(2.05), 0.05 * mx, 0, 7); g.moveTo(X(16.01), Y(2.09)); g.lineTo(X(16.09), Y(2.01)); g.stroke(); }
+    // ---- LE TRAIT JAUNE EN ÉQUERRE (le coin du logo) : il borde le haut gauche du nuage, juste au-dessus du lobe gauche
+    // (photo 16 : la branche verticale en x 14,82 de 1,66 à 1,93 m, la branche horizontale jusqu'en x 15,08) ----
+    g.fillStyle = dos ? 'rgb(96,94,110)' : '#f1b40c';
+    g.fillRect(X(14.82), Y(1.93), 0.03 * mx, 0.27 * my); g.fillRect(X(14.82), Y(1.93), 0.26 * mx, 0.03 * my);
+    // ---- L'ORIGAMI VIOLET sous le lobe droit (x 15,46-15,81, h 0,95-1,31) ----
+    const oA = [15.47, 1.3], oB = [15.63, 1.29], oC = [15.81, 1.19], oD = [15.66, 0.96], oE = [15.56, 1.11];
+    for (const [q, c] of [[[oA, oB, oE], '#bba7df'], [[oB, oC, oE], '#9c83c9'], [[oE, oC, oD], '#7a5fae'], [[oA, oE, oD], '#8d74bf']]) facette(q, dos ? dosCouleur(c, 0.72, 0.15) : c);
+    // ---- LE PAVÉ NOIR « iris » (x 14,52-14,90, h 1,06-1,22) : vu du hall, le même dessin en miroir ----
+    g.fillStyle = '#111111'; g.fillRect(X(14.52), Y(1.22), 0.38 * mx, 0.16 * my);
+    g.font = `600 ${Math.round(0.12 * my)}px "Century Gothic", "Avenir", "Segoe UI", sans-serif`; g.textBaseline = 'alphabetic';
+    const xi = X(14.57), yi = Y(1.09);
+    g.fillStyle = dos ? '#dcdcdc' : '#f1b40c'; g.fillText('i', xi, yi);
+    g.fillStyle = dos ? '#dcdcdc' : '#ffffff'; g.fillText('ris', xi + g.measureText('i').width, yi);
+    if (!dos) {
+      // la phrase, sur le verre nu
+      g.font = `600 ${Math.round(0.038 * my)}px "Segoe UI", sans-serif`;
+      [['Connectez', '#f08a24'], ['-vous', '#f08a24'], ['aux métiers', '#ffffff'], ['de demain', '#ffffff']].forEach(([t, c], i) => { g.fillStyle = c; g.fillText(t, X(14.53), Y(1.0 - i * 0.046)); });
+    }
+    // ---- L'ÉTIQUETTE BLANCHE à liseré et flèche orange (vantail ouest, x 14,36-14,68, h 1,58-1,80 ; vue des deux côtés) ----
+    g.fillStyle = '#f7f6f2'; g.fillRect(X(14.36), Y(1.8), 0.32 * mx, 0.22 * my);
+    g.fillStyle = '#ef7d22'; g.fillRect(X(14.36), Y(1.61), 0.32 * mx, 0.03 * my);
+    if (!dos) {
+      g.fillStyle = '#1b1b1d'; g.fillRect(X(14.39), Y(1.77), 0.07 * mx, 0.035 * my);
+      g.fillStyle = '#7b7b80'; g.fillRect(X(14.48), Y(1.765), 0.16 * mx, 0.012 * my); g.fillRect(X(14.48), Y(1.74), 0.12 * mx, 0.012 * my);
+      g.strokeStyle = '#ef7d22'; g.lineWidth = 0.014 * mx; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(X(14.62), Y(1.685)); g.lineTo(X(14.42), Y(1.685)); g.moveTo(X(14.47), Y(1.71)); g.lineTo(X(14.42), Y(1.685)); g.lineTo(X(14.47), Y(1.66)); g.stroke();
+    }
+    // ---- L'INTERDICTION DE FUMER (vantail est, x 15,74-15,96, h 1,62-1,90 — relecture 10/10 : photo 16, 0,48 à 0,70 m du
+    // montant central ; les trois bandes bleues sont à sa droite) ----
+    const xf = 15.74;
+    g.fillStyle = dos ? 'rgba(236,236,232,0.95)' : '#f7f6f2'; g.fillRect(X(xf), Y(1.9), 0.22 * mx, 0.28 * my);
+    if (!dos) {
+      g.strokeStyle = '#d0262d'; g.lineWidth = 0.012 * mx; g.beginPath(); g.arc(X(xf + 0.11), Y(1.81), 0.055 * mx, 0, 7);
+      g.moveTo(X(xf + 0.07), Y(1.85)); g.lineTo(X(xf + 0.15), Y(1.77)); g.stroke();
+      g.fillStyle = '#1b1b1d'; g.fillRect(X(xf + 0.07), Y(1.825), 0.07 * mx, 0.016 * my);
+      g.fillStyle = '#5a5a5e'; for (let k = 0; k < 3; k++) g.fillRect(X(xf + 0.03), Y(1.72 - k * 0.03), 0.16 * mx, 0.01 * my);
+    }
+    // ---- LES TROIS BANDES contre le montant est (relecture 10/10 : photo 16, bleu clair côté rue, à droite de
+    // l'interdiction de fumer ; VO 93,6 et 95,4 s et photo 03, trois traits sombres vus du hall, x 15,97-16,13, 1,45-1,85 m) ----
+    g.fillStyle = dos ? '#3a3b40' : '#86b7da';
+    for (const hb of [1.8, 1.65, 1.5]) g.fillRect(X(15.97), Y(hb + 0.035), 0.16 * mx, 0.07 * my);
+    // ---- DEUX FEUILLES A4 et la pastille bleue sur le fixe ouest ----
     g.fillStyle = dos ? 'rgba(245,245,240,0.95)' : 'rgba(250,250,246,0.95)';
-    g.fillRect(X(13.55), Y(1.95), 0.21 * mx, 0.297 * my); g.fillRect(X(13.82), Y(1.9), 0.21 * mx, 0.297 * my);
+    g.fillRect(X(13.48), Y(1.88), 0.23 * mx, 0.28 * my); g.fillRect(X(13.72), Y(1.88), 0.21 * mx, 0.36 * my);
+    if (!dos) { g.fillStyle = '#9aa0a6'; for (let k = 0; k < 6; k++) { g.fillRect(X(13.51), Y(1.83 - k * 0.035), 0.16 * mx, 0.008 * my); g.fillRect(X(13.75), Y(1.83 - k * 0.045), 0.15 * mx, 0.008 * my); } }
+    g.fillStyle = dos ? '#c9c9c6' : '#2f6fb0'; g.fillRect(X(13.97), Y(1.46), 0.15 * mx, 0.1 * my);
+    if (!dos) { g.fillStyle = '#ffffff'; g.fillRect(X(14.0), Y(1.42), 0.09 * mx, 0.02 * my); }
+    // ---- LA PASTILLE JAUNE à pictogramme noir (côté hall, VO 93,6 s : vantail est, ≈ 1,25 m) ----
+    if (dos) {
+      g.fillStyle = '#f2c21a'; g.fillRect(X(16.0), Y(1.31), 0.11 * mx, 0.11 * my);
+      g.strokeStyle = '#1b1b1d'; g.lineWidth = 0.008 * mx; g.beginPath(); g.arc(X(16.055), Y(1.255), 0.035 * mx, 0, 7); g.stroke();
+      g.fillStyle = '#1b1b1d'; g.beginPath(); g.arc(X(16.055), Y(1.255), 0.012 * mx, 0, 7); g.fill();
+    }
+    // ---- LE VISAGE (en bas du vantail est, coupé par le montant à x 16,18 ; photo 16 : la peau dès x 15,63, l'œil gauche
+    // en x 15,89 à 0,29 m, les sourcils levés, les cheveux bruns courts ; le bas du visage passe sous la vitre) ----
+    {
+      const fx = X(16.05), fy = Y(0.3), rx = 0.4 * mx, ry = 0.56 * my;
+      g.save();
+      g.beginPath(); g.rect(X(15.55), Y(0.95), 0.63 * mx, 0.95 * my); g.clip();
+      // la tête (le bas sous la vitre) ; la peau, éclairée de la gauche
+      const peau = g.createRadialGradient(fx - rx * 0.35, fy - ry * 0.35, rx * 0.1, fx, fy, rx * 1.05);
+      peau.addColorStop(0, '#f6d8c2'); peau.addColorStop(0.55, '#e6b99c'); peau.addColorStop(1, '#bc8a72');
+      g.fillStyle = peau; g.beginPath(); g.ellipse(fx, fy + ry * 0.12, rx * 0.95, ry, 0, 0, Math.PI * 2); g.fill();
+      // l'oreille gauche
+      g.fillStyle = '#c48a6e'; g.beginPath(); g.ellipse(fx - rx * 0.97, fy + ry * 0.05, rx * 0.1, ry * 0.2, 0.1, 0, Math.PI * 2); g.fill();
+      // les cheveux : la calotte sombre, la ligne du front, les tempes, quelques mèches
+      g.fillStyle = '#2a1c16'; g.beginPath();
+      g.moveTo(fx - rx * 1.02, fy - ry * 0.15);
+      g.quadraticCurveTo(fx - rx * 1.05, fy - ry * 1.05, fx, fy - ry * 1.02);
+      g.quadraticCurveTo(fx + rx * 1.05, fy - ry * 1.05, fx + rx * 1.02, fy - ry * 0.15);
+      g.lineTo(fx + rx * 0.8, fy - ry * 0.35);
+      g.quadraticCurveTo(fx + rx * 0.5, fy - ry * 0.66, fx, fy - ry * 0.62);
+      g.quadraticCurveTo(fx - rx * 0.55, fy - ry * 0.66, fx - rx * 0.82, fy - ry * 0.32);
+      g.closePath(); g.fill();
+      g.fillStyle = 'rgba(90,60,44,0.35)'; for (let k = 0; k < 40; k++) { const a = alea() * Math.PI, r = rx * (0.7 + alea() * 0.3); g.fillRect(fx - Math.cos(a) * r, fy - ry * 0.75 - Math.sin(a) * ry * 0.25, 2, 6); }
+      // les sourcils levés
+      for (const s2 of [-1, 1]) { g.fillStyle = '#2b1a12'; g.beginPath(); g.ellipse(fx + s2 * rx * 0.4, fy - ry * 0.2, rx * 0.25, ry * 0.035, s2 * 0.08, 0, Math.PI * 2); g.fill(); }
+      // les yeux levés : le pli de la paupière, l'amande, le blanc, l'iris brun sous la paupière du haut, le reflet
+      for (const s2 of [-1, 1]) {
+        const ex = fx + s2 * rx * 0.4, ey = fy;
+        g.fillStyle = '#b97e64'; g.beginPath(); g.ellipse(ex, ey - ry * 0.035, rx * 0.2, ry * 0.07, 0, Math.PI, Math.PI * 2); g.fill();
+        g.save(); g.beginPath(); g.ellipse(ex, ey, rx * 0.16, ry * 0.05, 0, 0, Math.PI * 2); g.clip();
+        g.fillStyle = '#f3ede8'; g.fillRect(ex - rx * 0.2, ey - ry * 0.08, rx * 0.4, ry * 0.16);
+        g.fillStyle = '#4a2c1a'; g.beginPath(); g.arc(ex + s2 * rx * 0.01, ey - ry * 0.04, rx * 0.075, 0, 7); g.fill();
+        g.fillStyle = '#120a06'; g.beginPath(); g.arc(ex + s2 * rx * 0.01, ey - ry * 0.045, rx * 0.035, 0, 7); g.fill();
+        g.fillStyle = 'rgba(255,255,255,0.85)'; g.beginPath(); g.arc(ex - rx * 0.02, ey - ry * 0.055, rx * 0.012, 0, 7); g.fill();
+        g.restore();
+        g.strokeStyle = '#3a2216'; g.lineWidth = 2.2; g.beginPath(); g.ellipse(ex, ey, rx * 0.16, ry * 0.05, 0, Math.PI * 1.02, Math.PI * 1.98); g.stroke();
+      }
+      // le nez (l'arête dans l'ombre, la pointe sous la vitre)
+      const nz = g.createLinearGradient(fx - rx * 0.12, 0, fx + rx * 0.12, 0);
+      nz.addColorStop(0, 'rgba(150,96,74,0)'); nz.addColorStop(0.6, 'rgba(150,96,74,0.45)'); nz.addColorStop(1, 'rgba(150,96,74,0)');
+      g.fillStyle = nz; g.fillRect(fx - rx * 0.12, fy - ry * 0.05, rx * 0.24, ry * 0.6);
+      g.restore();
+      // (vu du hall, l'impression est un rien plus terne)
+      if (dos) { g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(60,52,60,0.12)'; g.fillRect(X(15.55), Y(0.95), 0.63 * mx, 0.95 * my); g.globalCompositeOperation = 'source-over'; }
+    }
   }, null, true, 8);
 }
 

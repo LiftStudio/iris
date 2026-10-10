@@ -544,19 +544,23 @@ function construireEntree(ch) {
   const { M, C } = ch, Y = 0.3, z = -Y, hP = 2.25, hT = 2.6;
   const vit = vitrophanies();
   const matRue = new THREE.MeshStandardMaterial({ map: vit.rue, alphaTest: 0.5, roughness: 0.4 });
-  const matHall = new THREE.MeshStandardMaterial({ map: vit.hall, alphaTest: 0.5, roughness: 0.6 });
+  // (côté hall, l'adhésif est vu à contre-jour, la rue derrière lui : il s'éclaire un peu de lui-même — VO 93-95 s, le
+  // visage et les arcs y sont clairs ; 10/10)
+  const matHall = new THREE.MeshStandardMaterial({ map: vit.hall, alphaTest: 0.5, roughness: 0.6, emissive: 0xffffff, emissiveMap: vit.hall, emissiveIntensity: 0.32 });
   // un morceau de vitrophanie : la bande x a-b de la texture (13,45 -> 16,35), collée des deux côtés d'un vitrage
+  // (10/10 : côté hall, le plan est tourné d'un demi-tour et ses u retournés — plus d'échelle négative : cousu par
+  // l'optimisation du décor, le morceau du fixe ouest, miroir, tournait le dos au hall et disparaissait)
   const morceau = (parent, a, b, xl, zl) => {
     for (const [mat, s] of [[matRue, 1], [matHall, -1]]) {
       const g = new THREE.PlaneGeometry(b - a, hP);
       const uv = g.attributes.uv;
       for (let i = 0; i < uv.count; i++) {
-        const u = uv.getX(i), uu = ((a + u * (b - a)) - 13.45) / 2.9;
-        uv.setX(i, s > 0 ? uu : uu);
+        const u = uv.getX(i), uu = ((a + (s > 0 ? u : 1 - u) * (b - a)) - 13.45) / 2.9;
+        uv.setX(i, uu);
       }
       const m = new THREE.Mesh(g, mat);
       m.position.set(xl, hP / 2, zl + s * 0.008);
-      if (s < 0) { m.rotation.y = Math.PI; m.scale.x = -1; }
+      if (s < 0) m.rotation.y = Math.PI;
       m.castShadow = false; parent.add(m);
     }
   };
@@ -707,7 +711,7 @@ function construireMurs(ch) {
   // à l'est, la cloison vitrée cannelée du bureau du photocopieur. Les vantaux, la cloison, le couloir et l'escalier qui
   // suivent : js/ecole_est.js)
   ch.mur({ de: [13.5, 7.575], a: [16.25, 7.575], mats: B, plinthes: ['S'], ouvertures: [{ c: 15.4, l: 1.4, h: 2.1 }] });
-  ch.mur({ de: [19.95, -0.4], a: [19.95, 7.65], ep: 0.3, mats: B, plinthes: ['W'] });
+  // (le mitoyen est du hall, x 19,95 de y -0,4 à 7,65 : peint gris ardoise côté accueil — js/ecole_hall.js, 10/10)
   // ---- L'ESCALIER : la cage (jusqu'au plafond de l'étage), les portes coupe-feu ----
   ch.mur({ de: [1.6, 13.675], a: [4.75, 13.675], mats: B, plinthes: ['S', 'N'], ouvertures: [{ c: 3.5, l: 1.8, h: 2.1 }] });
   ch.mur({ de: [4.675, 13.6], a: [4.675, 18.75], h: H_CAGE, mats: B, plinthes: ['E'] });
@@ -744,21 +748,15 @@ function construirePorteFond(ch) {
   ch.porte('x', 18.675, (x0 + x1) / 2, { l: x1 - x0 - 2 * c, h: hv, modele: 'bleue', etat: 'auto', cote: 'S', huisserie: false, libre: 1, nom: 'salle David Clark' });
 }
 
-// L'ACCUEIL (photo 03) : comptoir de stratifié gris clair le long de la façade, sous les fenêtres 11-12 — face avant à
-// y = 2,3, 70 cm de profondeur, 1,10 m de haut, tablette haute en saillie, socle sombre en retrait souligné de bois ;
-// derrière, le plan de travail du personnel à 0,75 m. (Les écrans, le téléphone, les fauteuils : js/ecole_mobilier.js)
+// L'ACCUEIL ET LE HALL D'ENTRÉE (VO 6,4-7,4 s et 92,5-95,8 s, photos 03, 16, 24 ; 10/10) : le comptoir n'est pas le long
+// de la façade mais NORD-SUD, face à l'ouest (x 16,45-17,15, y 1,1-3,55), terminé au nord par la tablette PMR et le
+// pupitre de chêne grisé ; derrière lui l'open-space du personnel, le mitoyen gris ardoise et ses affiches ; l'angle
+// nord-est ouvert (photocopieur, étiquettes « INFORMATIQUE », table, présentoir de bois) ; les lignes lumineuses du
+// plafond : js/ecole_hall.js. (Importé ici, à côté de son appel : l'en-tête des imports est celui des autres lots.)
+import { poserHall } from './ecole_hall.js';
 function construireAccueil(ch) {
-  const { M, C } = ch, x0 = 16.0, x1 = 19.6, yA = 2.3, yR = 1.6;
-  ch.boite(x0 + 0.05, yR + 0.05, x1 - 0.05, yA - 0.06, 0, 0.1, M.socle);
-  ch.boite(x0 + 0.05, yA - 0.07, x1 - 0.05, yA - 0.05, 0.03, 0.06, M.bois, { ombre: false });
-  ch.boite(x0, yR, x1, yA, 0.1, 1.02, M.comptoir);
-  ch.boite(x0 - 0.02, yA - 0.32, x1 + 0.0, yA + 0.06, 1.02, 1.1, M.comptoirDessus);
-  ch.boite(x0, yR, x0 + 0.03, yA, 0.1, 1.02, M.comptoirDessus);
-  // le plan de travail du personnel
-  ch.boite(x0 + 0.03, 0.95, x1 - 0.05, yR, 0.72, 0.75, M.comptoirDessus);
-  ch.boite(x0 + 0.03, yR - 0.02, x1 - 0.05, yR, 0.1, 0.72, M.comptoir);
-  for (const x of [x0 + 0.08, (x0 + x1) / 2, x1 - 0.1]) ch.boite(x - 0.025, 0.97, x + 0.025, 1.05, 0, 0.72, M.comptoir);
-  C.ajouterBoite(x0 - 0.02, -(yA + 0.06), x1, -yR, { y1: 1.1 });
+  const { M } = ch;
+  poserHall(ch);
   // le tapis d'entrée bleu-gris foncé
   ch.boite(13.6, 0.4, 16.2, 1.9, 0, 0.012, M.tapis, { ombre: false });
 }
@@ -858,8 +856,10 @@ export function construireCarte(scene, renderer = null) {
   for (const [x, y] of [[6.6, 9.9], [9.0, 9.9], [11.4, 9.9], [7.8, 11.1], [10.2, 11.1], [12.6, 11.1]]) ch.spot(x, y, 2.6, 'attente');
   for (const [x, y] of [[12.3, 7.8], [11.9, 5.7]]) ch.spot(x, y, 2.6, 'cou');
   for (const [x, y] of [[12.6, 16.0], [12.6, 19.4]]) ch.opale(x, y, 2.45, 'c01');
-  // (09/10 : le spot nord-est du hall, 18,2 ; 6,0, tombait dans le bureau du photocopieur — js/ecole_est.js — : avancé)
-  for (const [x, y] of [[16.4, 1.4], [18.6, 1.4], [14.9, 3.7], [17.3, 3.7], [19.0, 3.9], [15.8, 6.0], [18.1, 4.85]]) ch.spot(x, y, 2.6, 'hall');
+  // (10/10, VO 92,6-94,8 s : les spots ronds du hall relevés depuis la porte nord — une rangée vers y 4,3 au bout des
+  // lignes lumineuses, une vers y 3,2 au-dessus du comptoir ; au-dessus de l'open-space et dans l'angle nord-est, rouvert,
+  // posés au même pas. Les huit lignes : js/ecole_hall.js)
+  for (const [x, y] of [[15.4, 4.3], [16.55, 4.3], [17.7, 4.3], [17.25, 3.2], [18.75, 3.2], [17.25, 1.5], [18.75, 1.5], [15.9, 6.2], [18.3, 6.3]]) ch.spot(x, y, 2.6, 'hall');
   for (const [x, y] of [[11.0, 2.4], [12.5, 2.4]]) ch.spot(x, y, 2.6, 'bureauB');
   // (la salle A : ses six dalles LED sont posées avec son mobilier, js/ecole_pieces.js)
   ch.opale(3.2, 18.6, 3.75, 'escalier', { mur: 'S', r: 0.15 });
