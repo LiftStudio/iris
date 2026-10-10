@@ -732,9 +732,11 @@ export function poserEst(ch, { RECT }) {
   // (09/10 : les cartes de la cage et du palier prises là où l'on ne voit pas la face orange de l'échiffre — au-dessus
   // de la moitié nord du palier intermédiaire, au nord du palier du 1er ; prises devant elle, elles teintaient de saumon
   // les murs blancs qui regardent le nord)
+  // (relecture du 10/10 : le 103 et la 104 ne s'ouvrent plus sur la bande sud — leurs dalles, voisines, éclairaient la
+  // bande et la gaine au travers de la cloison : un spot sur quatre venait de la 104)
   const zonesHaut = [
     { id: 'escEst2', rects: [zr(14.2, E.bS[0], E.x0, E.bS[1], N2 - 0.6), zr(E.x0, E.bS[0], E.xM, E.bN[1], 2.6)], voisines: ['escEst', 'e1est'], env: { x: 19.05, y: 3.3, z: -11.6 } },
-    { id: 'e1est', rects: [zr(13.55, 6.975, E.x0, 11.1, 2.6), zr(13.2, 11.1, E.x0, E.bN[1], 2.6), zr(E.x0, 6.975, E.xM, E.bS[0], 2.6)], voisines: ['escEst2', 'e1couloir', 'e103', 'e104'], env: { x: 15.0, y: N1 + 1.5, z: -11.3 } },
+    { id: 'e1est', rects: [zr(13.55, 6.975, E.x0, 11.1, 2.6), zr(13.2, 11.1, E.x0, E.bN[1], 2.6), zr(E.x0, 6.975, E.xM, E.bS[0], 2.6)], voisines: ['escEst2', 'e1couloir'], env: { x: 15.0, y: N1 + 1.5, z: -11.3 } },
   ];
 
   // LA MISE À JOUR (js/carte_ecole.js maj) : l'ombre douce cuite du rez-de-chaussée et la lumière et l'ombre cuites du
@@ -800,7 +802,7 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   ch.panneau(matPanneau(texPlaqueSalle('Salle', 'de cours', 'B 1.6'), 0.4), 0.15, 0.09, 15.86, E.yN - 0.078, N1 + 1.6, 'S', G);
   mur(ch, G, { de: [E.x0, E.yN], a: [E.xM, E.yN], base: N1, h: H_CAGE, mats: B0 });
   mur(ch, G, { de: [E.x0, E.yS], a: [E.xM, E.yS], base: N1, h: H_CAGE, mats: B0, plinthes: ['S'] });
-  // le mitoyen au nord de l'issue de secours (js/ecole_etage1.js le monte jusqu'à y 8,99) ; le mur d'échiffre
+  // le mitoyen au nord de la gaine de l'ascenseur (js/ecole_etage1.js le monte, plein, jusqu'à y 8,99) ; le mur d'échiffre
   mur(ch, G, { de: [19.95, 8.99], a: [19.95, 12.6], ep: 0.3, base: N1, h: H_CAGE, mats: B0 });
   mur(ch, G, { de: [E.x0, E.yE], a: [E.xP, E.yE], base: N1, h: H_CAGE, mats: B0 });
   // (les plinthes du palier sont gris foncé, photo 28 : sur la cloison des salles et le mitoyen de js/ecole_etage1.js, qui
