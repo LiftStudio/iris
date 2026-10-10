@@ -415,12 +415,12 @@ export function poserBandeSud(ch, { groupe, lampes = null }) {
   // le corps rouge de 0,36 à 0,88 m, la tête jusqu'à 0,95 ; pas de pictogramme au-dessus)
   {
     const x = 17.72, y = yD + 0.1;
-    maille(new THREE.CylinderGeometry(0.078, 0.078, 0.52, 18), X.rouge, x, b + 0.62, -y, 0, G);
+    maille(new THREE.CylinderGeometry(0.085, 0.085, 0.52, 18), X.rouge, x, b + 0.62, -y, 0, G);
     maille(new THREE.CylinderGeometry(0.03, 0.045, 0.07, 12), M.noirMat, x, b + 0.915, -y, 0, G);
     B(x - 0.012, y - 0.02, x + 0.07, y + 0.02, b + 0.92, b + 0.95, M.noirMat);
     B(x - 0.04, yD, x + 0.04, yD + 0.025, b + 0.76, b + 0.84, M.noirMat);
-    const t = maille(new THREE.CylinderGeometry(0.011, 0.011, 0.4, 8), M.noirMat, x - 0.085, b + 0.66, -(y + 0.02), 0, G); t.rotation.z = 0.1;
-    B(x - 0.03, y + 0.074, x + 0.03, y + 0.08, b + 0.52, b + 0.64, M.boitier);      // (l'étiquette blanche, g056)
+    const t = maille(new THREE.CylinderGeometry(0.011, 0.011, 0.4, 8), M.noirMat, x - 0.095, b + 0.66, -(y + 0.02), 0, G); t.rotation.z = 0.1;
+    B(x - 0.03, y + 0.081, x + 0.03, y + 0.087, b + 0.52, b + 0.64, M.boitier);     // (l'étiquette blanche, g056)
     C.ajouterCercle(x, -y, 0.09, { y0: b, y1: b + 1.0 });
   }
   // LE PALIER DE L'ASCENSEUR, desservi
