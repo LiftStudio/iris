@@ -18,13 +18,15 @@
 //
 // LA PLACE (plan_global.md § 2.2, § 3.3, lot 6). La porte est dans le MUR ORANGE NORD de l'espace pause (posé par le lot
 // 5 : son nu nord en y 12,0 — PROVISOIRE, en attendant sa constante), vers x 12,2-13,1. La salle part de là vers le
-// nord. Recalée sur la vidéo (VO 54,98 s : l'appareil 1,34 m devant le seuil, centré sur la porte, tourné de 7° à
-// gauche — le bord du tableau 1, l'extincteur, le radiateur et l'angle nord-est tombent à 5 cm près de leur place)
-// : la porte est à 4,75 m du mur ouest et à 1,65 m du mur est, en face de l'allée est — pas dans l'angle, comme le
-// supposait le plan.
-//   la salle             x 7,90-14,30   y 12,0-23,3    (u = x - 7,90, v = y - 12,0 : le repère de reseau.md § 3.3)
+// nord. Recalée sur la vidéo (10/10) : sur VO 54,98 s, l'appareil est 1,34 m devant le seuil, centré sur la porte,
+// tourné de 4° à gauche — le bord du tableau 1, le poteau nord, l'extincteur, le radiateur et l'angle nord-est tombent
+// à 3 px de leur place pour une porte à 4,40 m du mur ouest (u 3,9-4,9) et un îlot dans l'axe u 2,82 ; VO 66,0 s (q_0265,
+// le regard vers la porte) le confirme : l'angle sud-ouest, le poteau sud et les deux jambages de la porte. La porte
+// n'est donc pas dans l'angle, comme le supposait le plan, et l'îlot est plus à l'ouest que dans reseau.md (u 2,45-4,0) :
+// l'allée est, en face de la porte, est large (2 m), l'allée ouest étroite (1,25 m) — ce que montre la vidéo.
+//   la salle             x 8,25-14,65   y 12,0-23,3    (u = x - 8,25, v = y - 12,0 : le repère de reseau.md § 3.3)
 //   la porte             x 12,175-13,125 dans le mur sud (lot 5)
-//   l'encoche sud-est    x 13,125-14,30 y 12,0-12,6 : le renfoncement nord du palier est (js/ecole_est.js) ; la rangée
+//   l'encoche sud-est    x 13,125-14,65 y 12,0-12,6 : le renfoncement nord du palier est (js/ecole_est.js) ; la rangée
 //                        du mur est commence juste au nord, en y 12,7 (reseau.md : v 0,7)
 //   la porte grise       mur ouest, y 20,9-21,8 (fermée : la pièce voisine n'est pas vue)
 //   le toit              à 6,70 m, ses six lanterneaux et son acrotère : une aile basse côté cour, sous les fenêtres
@@ -52,7 +54,7 @@ const H_TOIT = N1 + 3.2;             // le dessus du toit (étanchéité) ; l'ac
 const H_PLAT = 0.74;                 // le dessus des plateaux, au-dessus du plancher
 // ---- la salle (reseau.md § 3.3, recalé : voir l'en-tête) ----
 const LARG = 6.4, LONG = 11.3;       // le nu intérieur
-const U_PORTE = 4.75, L_PORTE = 0.95;
+const U_PORTE = 4.4, L_PORTE = 0.95;
 // le renfoncement nord du palier est (js/ecole_est.js poserPalierEst) : la face ouest de son mur x 13,2, la face nord du
 // mur nord de la cage (y 12,525) ; la façade arrière des étages, au-dessus (le 2e s'arrête là)
 const X_RENF = 13.125, Y_RENF = 12.6, Y_ARRIERE = 12.45;
@@ -86,11 +88,11 @@ function texMoquette(nx, ny) {
       clair.push([]);
       for (let i = 0; i < nx; i++) {
         const v = (i > 0 && clair[j][i - 1] ? 0.22 : 0) + (j > 0 && clair[j - 1][i] ? 0.22 : 0);
-        clair[j].push(r2() < 0.24 + v);
+        clair[j].push(r2() < 0.2 + v);
       }
     }
     for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
-      const c = clair[j][i] ? [102, 112, 126] : [62, 74, 92], t = (r2() - 0.5) * 6;
+      const c = clair[j][i] ? [106, 114, 128] : [78, 88, 106], t = (r2() - 0.5) * 6;
       const x0 = i * p, y0 = (ny - 1 - j) * p;
       g.fillStyle = rgb(c[0] + t, c[1] + t, c[2] + t); g.fillRect(x0, y0, p, p);
       // les rangs de touffes, dans un sens ou dans l'autre (le quart de tour)
@@ -113,7 +115,7 @@ function texMoquette(nx, ny) {
 function texHetre() {
   return canvasTex(256, 256, (g, w, h) => {
     const r2 = graine(77);
-    g.fillStyle = '#d2ab7a'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#c0925c'; g.fillRect(0, 0, w, h);
     for (let k = 0; k < 140; k++) {
       const x = r2() * w, a = 0.04 + r2() * 0.09, c = r2() < 0.5 ? [160, 118, 72] : [236, 206, 160];
       g.strokeStyle = rgb(c[0], c[1], c[2], a); g.lineWidth = 0.6 + r2() * 1.6;
@@ -143,10 +145,10 @@ function texSwitch() {
     g.fillStyle = '#1d242c'; g.fillRect(56, 6, 36, 40);
     for (let i = 0; i < 12; i++) for (let j = 0; j < 2; j++) {
       const x = 104 + i * 27 + Math.floor(i / 6) * 8, y = 6 + j * 21;
-      g.fillStyle = '#c9cdd2'; g.fillRect(x, y, 22, 18); g.fillStyle = '#0d0f12'; g.fillRect(x + 2, y + 3, 18, 13);
+      g.fillStyle = '#7b828a'; g.fillRect(x, y, 22, 18); g.fillStyle = '#0d0f12'; g.fillRect(x + 2, y + 3, 18, 13);
       g.fillStyle = (i * 7 + j * 3) % 5 ? '#4cff7a' : '#ffb13a'; g.fillRect(x + 3, y + 1, 3, 2);
     }
-    g.fillStyle = '#c9cdd2'; g.fillRect(450, 8, 22, 18); g.fillRect(478, 8, 22, 18);
+    g.fillStyle = '#7b828a'; g.fillRect(450, 8, 22, 18); g.fillRect(478, 8, 22, 18);
     g.fillStyle = '#0d0f12'; g.fillRect(452, 11, 18, 13); g.fillRect(480, 11, 18, 13);
   }, null, false, 4);
 }
@@ -158,7 +160,7 @@ function texRouteur() {
     g.fillStyle = '#7c8086'; for (let y = 10; y < h - 10; y += 6) g.fillRect(12, y, 96, 2);
     for (const x0 of [140, 330]) {
       g.fillStyle = '#3a3c41'; g.fillRect(x0, 12, 170, 36); g.fillStyle = '#1a1b1e'; g.fillRect(x0, 56, 170, 36);
-      for (let i = 0; i < 4; i++) { g.fillStyle = '#c9cdd2'; g.fillRect(x0 + 10 + i * 38, 20, 26, 20); g.fillStyle = '#0d0f12'; g.fillRect(x0 + 12 + i * 38, 23, 22, 15); }
+      for (let i = 0; i < 4; i++) { g.fillStyle = '#7b828a'; g.fillRect(x0 + 10 + i * 38, 20, 26, 20); g.fillStyle = '#0d0f12'; g.fillRect(x0 + 12 + i * 38, 23, 22, 15); }
       g.fillStyle = '#4cff7a'; g.fillRect(x0 + 150, 18, 4, 4);
     }
     g.fillStyle = '#4cff7a'; g.fillRect(20, 16, 5, 5); g.fillStyle = '#ffb13a'; g.fillRect(32, 16, 5, 5);
@@ -319,7 +321,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   // (les blancs de la salle tirent un rien vers le froid : sous la lumière des caissons, la vidéo les montre bleutés,
   // quand ceux de l'espace pause, à côté, sont chauds — VO q_0220 ; et le plafond, que les caissons éclairent, reste
   // clair : un rebond plus fort que celui des plafonds sous spots)
-  const teinte = new THREE.Color(0.95, 0.98, 1.04);
+  const teinte = new THREE.Color(0.9, 0.94, 1.0);
   const K = {
     blanc: nommer(M.blanc.clone(), 'peinture blanche (salle Robert Kahn)'),
     platre: nommer(M.platre.clone(), 'plafond en plâtre (salle Robert Kahn)'),
@@ -327,7 +329,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
     facade: nommer(std({ color: 0xc9c6bf, roughness: 0.9 }), 'enduit extérieur de l\'aile'),
     plinthe: nommer(std({ color: 0x3a3f48, roughness: 0.55 }), 'plinthe gris-bleu'),
     moquette: nommer(std({ map: texMoquette(Math.ceil(LARG / 0.5), Math.ceil(LONG / 0.5)), roughness: 0.937 }), 'moquette en dalles (salle Robert Kahn)'),
-    plateau: nommer(std({ color: 0xe6e1d8, roughness: 0.42 }), 'plateau stratifié blanc cassé'),
+    plateau: nommer(std({ color: 0xd9d3c8, roughness: 0.42 }), 'plateau stratifié blanc cassé'),
     pied: nommer(std({ color: 0x8e9298, roughness: 0.38, metalness: 0.55 }), 'pied de bureau gris'),
     piedSombre: std({ color: 0x3a3c40, roughness: 0.4, metalness: 0.5 }),
     hetre: nommer(std({ map: texHetre(), roughness: 0.5 }), 'coque de hêtre'),
@@ -343,7 +345,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
     routeurFace: std({ map: texRouteur(), roughness: 0.4 }),
     plastique: nommer(std({ color: 0xf0f0ec, roughness: 0.4 }), 'plastique blanc'),
     noir: std({ color: 0x18181a, roughness: 0.5 }),
-    rouge: nommer(std({ color: 0xc8202a, roughness: 0.5 }), 'cordon rouge'),
+    rouge: nommer(std({ color: 0xb31822, roughness: 0.55 }), 'cordon rouge'),
     cyan: nommer(std({ color: 0x5bc0de, roughness: 0.5 }), 'cordon cyan'),
     poteau: nommer(std({ color: 0xdadde0, roughness: 0.7 }), 'poteau gris très clair'),
     miel: nommer(std({ color: 0xc8853f, roughness: 0.5 }), 'étagère en bois miel'),
@@ -364,11 +366,14 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
     dome: nommer(std({ color: 0xe9eef2, roughness: 0.3, transparent: true, opacity: 0.8, depthWrite: false }), 'dôme de lanterneau'),
     fente: std({ color: 0x0e0f11, roughness: 0.8 }),
   };
-  K.blanc.color.copy(teinte);
-  K.platre.color.multiply(teinte); K.platre.emissive = new THREE.Color(0xe4ecf6); K.platre.emissiveIntensity = 0.3;
-  K.joue.color.multiply(teinte); K.joue.emissive = new THREE.Color(0xeef4ff); K.joue.emissiveIntensity = 0.62;
+  // (les murs : un léger émissif froid tient lieu du jour diffus des six caissons, qui éclaire toute la salle d'égal — les
+  // quatre spots qui suivent Haythem n'en éclairent que le coin où il est ; VO q_0265 : le mur du fond, côté porte, est
+  // aussi clair que les autres)
+  K.blanc.color.copy(teinte); K.blanc.emissive = new THREE.Color(0xdfe8f6); K.blanc.emissiveIntensity = 0.16;
+  K.platre.color.multiply(teinte); K.platre.emissive = new THREE.Color(0xe4ecf6); K.platre.emissiveIntensity = 0.2;
+  K.joue.color.multiply(teinte); K.joue.emissive = new THREE.Color(0xeef4ff); K.joue.emissiveIntensity = 1.0;
   // ce qui éclaire (au-delà de 1, le bloom les fait briller) : le verre diffusant des caissons
-  const diffuseur = nommer(new THREE.MeshBasicMaterial({ color: FROID.clone().multiplyScalar(2.3) }), 'caisson lumineux allumé');
+  const diffuseur = nommer(new THREE.MeshBasicMaterial({ color: FROID.clone().multiplyScalar(4.0) }), 'caisson lumineux allumé');
   const consoles = [0, 1, 2].map((n) => new THREE.MeshBasicMaterial({ map: texConsole(n), color: new THREE.Color(0.85, 0.85, 0.85) }));
 
   // ---- les outils ----
@@ -499,9 +504,10 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   // =====================================================================
   // Les caissons : 1,30 x 2,60 m, le verre diffusant à 2,88 m, au fond d'une trémie à joues inclinées de 25 cm ; deux
   // files au-dessus des allées (u 1,6 et 4,85), trois par file (v 2,2 ; 5,6 ; 9,0)
-  const UC = [1.6, 4.85], VC = [2.2, 5.6, 9.0], CW = 1.3, CL = 2.6, J = 0.25;
+  // (deux files au-dessus des allées : u 1,38 et 4,5 — VO q_0265, f_0066)
+  const UC = [1.38, 4.5], VC = [2.2, 5.6, 9.0], CW = 1.3, CL = 2.6, J = 0.25;
   const RET = 0.3, PENTE = 0.2;                           // la retombée : 30 cm à plat, puis la joue inclinée
-  const uPoutre = 3.245;
+  const uPoutre = 2.82;                                  // l'axe de l'îlot, de la poutre et des poteaux
   {
     // le plafond plat, en bandes autour des trémies
     const ua = RET + PENTE, ub = LARG - RET - PENTE;
@@ -538,7 +544,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
           archi(xa, ya, xb, yb, H_CAIS - 0.012, H_CAIS, M.alu).userData.horsAOSol = true;
         }
         // LA LAMPE du caisson (un jour froid ; cuite sur la moquette par cette salle, sur le carrelage de l'étage par lui)
-        const L = { x: cx, z: -cy, h: H_PL, zone: 'e1kahn', type: 'dalle', base: N1, cuire: false, force: 1.25, couleur: FROID };
+        const L = { x: cx, z: -cy, h: H_PL, zone: 'e1kahn', type: 'dalle', base: N1, cuire: false, force: 1.0, couleur: FROID };
         ch.lampes.push(L); if (lampes) lampes.push(L); mesLampes.push(L);
       }
     }
@@ -678,12 +684,13 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
       if (dos) {
         // (de l'arrière de la tour, le long du fond du bureau, jusqu'à la tour voisine — VO q_0233-0236)
         const b = b0 + (r2() - 0.5) * 0.1;
-        tube(g, mat, [[b, 0.22 + r2() * 0.1, af], [b + s * 0.02, 0.05, af - 0.01], [b + s * 0.2, 0.012, aF + 0.06], [b + s * 0.48, 0.012, aF + 0.05 + r2() * 0.06], [b + s * 0.66, 0.16, af]], 0.0032, 16, false);
+        tube(g, mat, [[b, 0.22 + r2() * 0.1, af], [b + s * 0.02, 0.05, af - 0.01], [b + s * 0.2, 0.012, aF + 0.06], [b + s * 0.48, 0.012, aF + 0.05 + r2() * 0.06], [b + s * 0.66, 0.16, af]], 0.0026, 16, false);
         continue;
       }
-      const b = b0 + (r2() - 0.5) * 0.34, hh = h - r2() * 0.03;
-      tube(g, mat, [[b, hh, af], [b + s * 0.02, hh - 0.06, af + 0.05], [b + s * 0.07, 0.014 + r2() * 0.01, af + 0.09 + r2() * 0.07], [bS, 0.01, af - 0.14],
-        [bS, 0.012, aF + 0.08], [bS + s * 0.03, Math.max(0.012, hF * 0.6), aF + 0.03], [bS + s * 0.05 + (r2() - 0.5) * 0.08, hF, aF]], 0.0032, 22, false);
+      // (des ports, une boucle vers l'avant, puis le long du flanc de la pile — pas devant la façade de la tour)
+      const b = b0 + s * (0.06 + r2() * 0.14), hh = h - r2() * 0.03, bL = b0 + s * (0.17 + r2() * 0.05);
+      tube(g, mat, [[b, hh, af], [b + s * 0.02, hh - 0.04, af + 0.05], [bL, hh * 0.55, af + 0.03 + r2() * 0.05], [bL + s * 0.02, 0.014, af - 0.02 + r2() * 0.06], [bS, 0.01, af - 0.2],
+        [bS, 0.012, aF + 0.08], [bS + s * 0.03, Math.max(0.012, hF * 0.6), aF + 0.03], [bS + s * 0.05 + (r2() - 0.5) * 0.08, hF, aF]], 0.0026, 24, false);
     }
   };
 
@@ -712,7 +719,8 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
         else cordons(g, mat, n, { b0: bT, af: aT - 0.225, h: 0.3, fin, dos: true });
       }
     }
-    chaise(cx - fx * (P / 2 + 0.27), cy, dir, sortie, { tiree: chaiseTiree, angle });
+    // (rangée sous le plateau : l'assise passe à moitié sous le bord, le dossier dépasse à peine — VO q_0230, q_0265)
+    chaise(cx - fx * (P / 2 - 0.04), cy, dir, sortie, { tiree: chaiseTiree, angle });
     return g;
   };
 
@@ -727,7 +735,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
       const vc = v0 + (i + 0.5) * pas, nord = i >= 4;
       const empile = nord ? (i === 6 ? ['switch', 'switch', 'borne'] : i % 2 ? ['switch', 'switch'] : ['switch']) : [];
       poste((xa + xb) / 2, Y(vc), 'E', {
-        sortie: [X(4.85), Y(vc)], tour: { poignee: i % 3 === 1 }, empile, fin: [-P / 2 + 0.06, 0.37],
+        sortie: [X(4.64), Y(vc)], tour: { poignee: i % 3 === 1 }, empile, fin: [-P / 2 + 0.06, 0.37],
         cordon: nord ? [K.rouge, 5] : [K.cyan, 2], tourCote: i % 2 ? 1 : -1, chaiseTiree: i === 2 ? 0.12 : 0,
       });
     }
@@ -747,21 +755,21 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
     for (let i = 0; i < n; i++) {
       const vc = v0 + (i + 0.5) * pas;
       const g = poste((xa + xb) / 2, Y(vc), 'W', {
-        sortie: [X(1.6), Y(vc)], tour: { poignee: i % 3 === 0 }, empile: i === 5 ? ['wifi'] : [], tourCote: i % 2 ? -1 : 1,
+        sortie: [X(1.38), Y(vc)], tour: { poignee: i % 3 === 0 }, empile: i === 5 ? ['wifi'] : [], tourCote: i % 2 ? -1 : 1,
         cordon: i % 3 === 1 ? [K.rouge, 2] : null, chaiseTiree: i === 4 ? 0.15 : 0,
       });
       if (i === n - 1) maille(boiteM(0.3, 0.16, 0.34), K.carton, i % 2 ? -0.36 : 0.36, 0.42 + 0.08, -P / 2 + 0.26, 0, g);
     }
     for (const v of [3.6, 6.6]) {
       archi(xa, Y(v) - 0.06, xa + 0.04, Y(v) + 0.06, N1 + 1.06, N1 + 1.14, K.plastique);
-      for (let k = 0; k < 2; k++) tube(groupe, K.rouge, [[xa + 0.04, N1 + 1.09, -(Y(v) - 0.03 + k * 0.05)], [xa + 0.12, N1 + 0.95, -(Y(v) - 0.1 + k * 0.1)], [xa + 0.3, N1 + H_PLAT + 0.01, -(Y(v) - 0.2 + k * 0.25)]], 0.0032, 10, false);
+      for (let k = 0; k < 2; k++) tube(groupe, K.rouge, [[xa + 0.04, N1 + 1.09, -(Y(v) - 0.03 + k * 0.05)], [xa + 0.12, N1 + 0.95, -(Y(v) - 0.1 + k * 0.1)], [xa + 0.3, N1 + H_PLAT + 0.01, -(Y(v) - 0.2 + k * 0.25)]], 0.0026, 10, false);
     }
   }
   // L'ÎLOT DOUBLE : deux rangées de 7 postes dos à dos (élèves de l'allée ouest face à l'est, ceux de l'allée est face à
   // l'ouest), l'épine blanche au milieu (15 cm, 30 cm au-dessus des plateaux) d'où sortent les câbles ; les routeurs 2U
   // empilés sur une tour sur deux ou trois (VO q_0226-0232) ; quelques écrans en console côté ouest (VO 66 s)
   {
-    const v0 = 0.9, v1 = 8.5, n = 7, pas = (v1 - v0) / n, ue = uPoutre - 0.075, uf = uPoutre + 0.075;
+    const v0 = 0.9, v1 = 8.5, n = 7, pas = (v1 - v0) / n, ue = uPoutre - 0.06, uf = uPoutre + 0.06;
     bureau(X(ue - P), Y(v0), X(ue), Y(v1)); bureau(X(uf), Y(v0), X(uf + P), Y(v1));
     C.ajouterBoite(X(ue - P), -Y(v0), X(uf + P), -Y(v1), { y0: N1, y1: N1 + H_PLAT + 0.02 });
     archi(X(ue), Y(v0), X(uf), Y(v1), N1 + 0.4, N1 + H_PLAT + 0.3, K.plastique).castShadow = true;
@@ -769,13 +777,13 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
       const vc = v0 + (i + 0.5) * pas;
       // (côté ouest : élèves face à l'est ; au bout nord, pas de machine — la caisse et l'imprimante)
       poste(X(ue - P / 2), Y(vc), 'E', {
-        sortie: [X(1.6), Y(vc)], empile: i % 3 === 0 ? ['routeur', 'routeur'] : i % 3 === 1 ? ['routeur'] : [], fin: [-P / 2 + 0.01, 0.29],
+        sortie: [X(1.38), Y(vc)], empile: i % 3 === 0 ? ['routeur', 'routeur'] : i % 3 === 1 ? ['routeur'] : [], fin: [-P / 2 + 0.01, 0.29],
         ecranMat: i === 4 || i === 5 ? consoles[i % 3] : null, cordon: i % 3 !== 2 ? [i % 2 ? K.cyan : K.rouge, 3] : null,
         tourCote: i % 2 ? 1 : -1, chaiseTiree: i === 1 ? 0.1 : 0, machine: i < n - 1,
       });
       // (côté est : élèves face à l'ouest)
       poste(X(uf + P / 2), Y(vc), 'W', {
-        sortie: [X(4.85), Y(vc)], empile: i % 3 === 1 ? ['routeur', 'routeur', 'routeur'] : i % 3 === 2 ? ['routeur'] : [], fin: [-P / 2 + 0.01, 0.29],
+        sortie: [X(4.64), Y(vc)], empile: i % 3 === 1 ? ['routeur', 'routeur', 'routeur'] : i % 3 === 2 ? ['routeur'] : [], fin: [-P / 2 + 0.01, 0.29],
         cordon: i % 3 !== 0 ? [K.rouge, 4] : [K.cyan, 2], tour: { poignee: i % 2 === 0 }, tourCote: i % 2 ? -1 : 1,
       });
     }
@@ -789,13 +797,13 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   // LE BUREAU DE L'ENSEIGNANT (VO f_0066 : plateau blanc sur pieds sombres, en T au bout nord de l'îlot ; l'enseignant
   // assis à son bout ouest, face à la salle), son fauteuil, sa machine
   {
-    const xa = X(3.05), xb = X(4.45), ya = Y(8.62), yb = Y(9.32);
+    const xa = X(2.95), xb = X(4.45), ya = Y(8.62), yb = Y(9.32);
     bureau(xa, ya, xb, yb, { pieds: K.piedSombre });
     C.ajouterBoite(xa, -ya, xb, -yb, { y0: N1, y1: N1 + H_PLAT + 0.02 });
-    const g = poser(X(3.85), Y(8.97), ROT.N, N1 + H_PLAT);
+    const g = poser(X(3.75), Y(8.97), ROT.N, N1 + H_PLAT);
     // (dans le repère du bureau, tourné vers l'enseignant : sa droite vers l'ouest — l'écran devant lui, la tour à l'est)
     tour(g, -0.12, -0.45); ecran(g, -0.15, 0.35); clavier(g, 0.15, 0.35);
-    chaise(X(3.45), Y(9.62), 'S', [X(3.45), Y(10.3)], { nom: 'la chaise du professeur' });
+    chaise(X(3.4), Y(9.62), 'S', [X(3.4), Y(10.3)], { nom: 'la chaise du professeur' });
   }
   // ---- le mur du fond : le rail, les deux tableaux blancs, l'extincteur et ses pictogrammes, le radiateur vertical, le
   // porte-câbles, l'affiche jaune et bleue (VO q_0242-0249, f_0066, f_0204) ----
@@ -808,7 +816,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
       const xa = X(ua), xb = X(ub);
       archi(xa, yN - 0.025, xb, yN, N1 + 0.95, N1 + 1.95, M.alu);
       const t = new THREE.Mesh(new THREE.PlaneGeometry(xb - xa - 0.04, 0.96), new THREE.MeshStandardMaterial({ map: texTableauReseau(n), roughness: 0.16 }));
-      t.position.set((xa + xb) / 2, N1 + 1.45, -(yN - 0.026)); t.rotation.y = Math.PI; t.receiveShadow = true; groupe.add(t);
+      t.position.set((xa + xb) / 2, N1 + 1.45, -(yN - 0.026)); t.receiveShadow = true; groupe.add(t);   // (tourné vers le sud)
       archi(xa + 0.1, yN - 0.09, xb - 0.1, yN - 0.025, N1 + 0.94, N1 + 0.96, M.alu);
       archi(xa - 0.02, yN - 0.03, xa + 0.02, yN, N1 + 1.95, N1 + 2.1, M.alu);
       archi(xb - 0.02, yN - 0.03, xb + 0.02, yN, N1 + 1.95, N1 + 2.1, M.alu);
@@ -820,16 +828,17 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
     }
     archi(X(1.78), yN - 0.07, X(1.84), yN - 0.026, N1 + 1.35, N1 + 1.48, std({ color: 0xe0559a, roughness: 0.5 }));
     archi(X(3.4), yN - 0.035, X(3.43), yN - 0.026, N1 + 1.0, N1 + 1.03, std({ color: 0x3caa4a, roughness: 0.5 }));
-    // l'extincteur à eau (u 4,6), sa console, son tuyau noir ; le pictogramme carré à 2,0 m, le petit à 1,65 m
+    // l'extincteur à eau (u 4,6 ; de 0,45 à 1,15 m — VO f_0066, q_0230 : son milieu sous le bas des tableaux, et non à
+    // 1,0-1,75 m comme le relevé), sa console, son tuyau noir ; le pictogramme carré à 2,0 m, le petit à 1,6 m
     const ge = poser(X(4.6), yN - 0.1, ROT.S);
-    maille(new THREE.CylinderGeometry(0.075, 0.075, 0.5, 16), M.rougeEtiquette, 0, 1.25, 0, 0, ge);
-    maille(new THREE.CylinderGeometry(0.03, 0.045, 0.08, 10), M.noirMat, 0, 1.54, 0, 0, ge);
-    tube(ge, M.noirMat, [[0.02, 1.52, 0.04], [0.08, 1.4, 0.06], [0.07, 1.1, 0.07], [0.05, 1.02, 0.05]], 0.009, 10);
-    archi(X(4.6) - 0.05, yN - 0.03, X(4.6) + 0.05, yN, N1 + 1.3, N1 + 1.38, M.noirMat);
-    C.ajouterCercle(X(4.6), -(yN - 0.1), 0.09, { y0: N1 + 0.9, y1: N1 + 1.6 });
+    maille(new THREE.CylinderGeometry(0.075, 0.075, 0.5, 16), M.rougeEtiquette, 0, 0.72, 0, 0, ge);
+    maille(new THREE.CylinderGeometry(0.03, 0.045, 0.08, 10), M.noirMat, 0, 1.01, 0, 0, ge);
+    tube(ge, M.noirMat, [[0.02, 0.99, 0.04], [0.08, 0.87, 0.06], [0.07, 0.57, 0.07], [0.05, 0.49, 0.05]], 0.009, 10);
+    archi(X(4.6) - 0.05, yN - 0.03, X(4.6) + 0.05, yN, N1 + 0.78, N1 + 0.86, M.noirMat);
+    C.ajouterCercle(X(4.6), -(yN - 0.1), 0.09, { y0: N1 + 0.4, y1: N1 + 1.1 });
     const picto = new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 });
     panneau(picto, 0.15, 0.15, X(4.6), yN - 0.001, N1 + 2.0, 'S');
-    panneau(picto, 0.1, 0.1, X(4.6), yN - 0.001, N1 + 1.66, 'S');
+    panneau(picto, 0.1, 0.1, X(4.6), yN - 0.001, N1 + 1.58, 'S');
     // le radiateur vertical de l'angle nord-est (u 5,37-5,82, de 0,30 à 1,75 m) et sa grille
     B(X(5.37), yN - 0.09, X(5.82), yN, N1 + 0.3, N1 + 1.75, M.radiateur, { collision: true });
     for (let k = 0; k < 9; k++) archi(X(5.39 + k * 0.05), yN - 0.092, X(5.41 + k * 0.05), yN - 0.09, N1 + 0.32, N1 + 1.73, M.grille);
@@ -894,11 +903,11 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   // ---- le côté de la porte : la desserte bleue, le radiateur, la pile noire en hauteur dans l'angle sud-ouest (VO q_0258,
   // q_0262-0265, pile_ecrans) ----
   {
-    // le radiateur du mur sud (u 0,9-1,5, de 0,35 à 1,30 m), derrière la desserte
-    B(X(0.95), y0 + 0.012, X(1.5), y0 + 0.09, N1 + 0.35, N1 + 1.3, M.radiateur, { collision: true });
-    for (let k = 0; k < 10; k++) archi(X(0.97 + k * 0.054), y0 + 0.09, X(0.99 + k * 0.054), y0 + 0.092, N1 + 0.37, N1 + 1.28, M.grille);
+    // le radiateur du mur sud (u 1,0-1,55, de 0,30 à 1,30 m — VO q_0265), derrière la desserte
+    B(X(1.0), y0 + 0.012, X(1.55), y0 + 0.09, N1 + 0.3, N1 + 1.3, M.radiateur, { collision: true });
+    for (let k = 0; k < 10; k++) archi(X(1.02 + k * 0.054), y0 + 0.09, X(1.04 + k * 0.054), y0 + 0.092, N1 + 0.32, N1 + 1.28, M.grille);
     // la desserte : cadre de tube bleu, deux plateaux gris clair, quatre roulettes, un boîtier noir plat dessus
-    const g = poser(X(1.25), Y(0.43), ROT.N);
+    const g = poser(X(1.2), Y(0.4), ROT.N);
     const w = 0.85, d = 0.5, hh = 0.85;
     for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
       tige(g, K.desserte, [sx * (w / 2 - 0.02), 0.08, sz * (d / 2 - 0.02)], [sx * (w / 2 - 0.02), hh, sz * (d / 2 - 0.02)], 0.013);
@@ -909,21 +918,22 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
       for (const s of [-1, 1]) { tige(g, K.desserte, [-w / 2, h - 0.02, s * (d / 2 - 0.02)], [w / 2, h - 0.02, s * (d / 2 - 0.02)], 0.012); tige(g, K.desserte, [s * (w / 2 - 0.02), h - 0.02, -d / 2], [s * (w / 2 - 0.02), h - 0.02, d / 2], 0.012); }
     }
     maille(boiteM(0.44, 0.045, 0.3), K.noir, 0, hh + 0.033, 0, 0, g);
-    C.ajouterBoite(X(1.25) - w / 2, -(Y(0.43) - d / 2), X(1.25) + w / 2, -(Y(0.43) + d / 2), { y0: N1, y1: N1 + hh + 0.06 });
+    C.ajouterBoite(X(1.2) - w / 2, -(Y(0.4) - d / 2), X(1.2) + w / 2, -(Y(0.4) + d / 2), { y0: N1, y1: N1 + hh + 0.06 });
     // LA PILE NOIRE fixée en hauteur, au-dessus du bout de la rangée ouest : deux coffrets côte à côte, le petit écran
     // 4:3 gris argent posé sur le premier, un boîtier au-dessus du second, jusqu'à 2,60 m
     // (contre le mur ouest, le grand coffret et le boîtier au-dessus ; à côté, le coffret bas, l'écran posé dessus et un
     // petit boîtier noir — pile_ecrans : vue de l'allée ouest, l'écran est à gauche du grand coffret)
     const ys = y0 + 0.012, k = (xa, xb, ya, yb, h0, h1, mat) => archi(xa, ys + ya, xb, ys + yb, N1 + h0, N1 + h1, mat).castShadow = true;
-    k(X(0), X(0.38), 0, 0.4, 1.62, 2.24, K.tour);
-    k(X(0.02), X(0.36), 0.02, 0.38, 2.26, 2.56, K.tour);
-    k(X(0.38), X(0.9), 0, 0.4, 1.55, 1.97, K.tour);
-    k(X(0.46), X(0.8), 0.08, 0.13, 2.0, 2.27, K.argent);
-    k(X(0.6), X(0.66), 0.05, 0.16, 1.97, 2.0, K.argent);
-    k(X(0.81), X(0.9), 0.04, 0.34, 1.97, 2.11, K.noir);
-    panneau(K.eteint, 0.29, 0.21, X(0.63), ys + 0.131, N1 + 2.135, 'N');
+    // (hauteurs relevées sur VO q_0265 : le bas juste au-dessus des tours de la rangée, le haut vers 2,40 m)
+    k(X(0), X(0.38), 0, 0.4, 1.25, 2.05, K.tour);
+    k(X(0.02), X(0.36), 0.02, 0.38, 2.1, 2.4, K.tour);
+    k(X(0.38), X(0.86), 0, 0.4, 1.22, 1.65, K.tour);
+    k(X(0.43), X(0.79), 0.08, 0.13, 1.68, 1.98, K.argent);
+    k(X(0.58), X(0.64), 0.05, 0.16, 1.65, 1.68, K.argent);
+    k(X(0.79), X(0.86), 0.04, 0.34, 1.65, 1.8, K.noir);
+    panneau(K.eteint, 0.31, 0.24, X(0.61), ys + 0.131, N1 + 1.83, 'N');
     // (les équerres qui la tiennent au mur)
-    for (const u of [0.1, 0.55, 0.85]) k(X(u) - 0.015, X(u) + 0.015, 0, 0.36, 1.5, 1.55, K.noir);
+    for (const u of [0.1, 0.5, 0.8]) k(X(u) - 0.015, X(u) + 0.015, 0, 0.36, 1.17, 1.22, K.noir);
   }
 
   // =====================================================================
@@ -937,7 +947,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   const pres = (L) => L.x > RK.x0 - 7 && L.x < RK.x1 + 7 && -L.z > RK.y0 - 7 && -L.z < RK.y1 + 7;
   const aCuire = [...new Set([...mesLampes, ...(lampes || []).filter((L) => L.base === N1 && pres(L))])].map((L) => ({ ...L, h: L.h - N1, cuire: true }));
   const lm = cuireLumiereSol(proxy, aCuire, { x0: RK.x0, z0: -RK.y1, W, L: Lg }, { tpm: 16 });
-  K.moquette.lightMap = lm; K.moquette.lightMapIntensity = 1.0;
+  K.moquette.lightMap = lm; K.moquette.lightMapIntensity = 1.4;
   groupe.traverse((o) => { o.userData.horsAOSol = true; });
   if (renderer) {
     try { cuireOcclusionKahn(renderer, groupe, K.moquette, RK); } catch (e) { console.warn('[Robert Kahn] ombre du sol non cuite :', e); }
