@@ -22,7 +22,7 @@
 //   - LA VUE DE 67 s (f_012, vers le sud ; échelles tirées des HAUTEURS — porte taupe 2,04 m, imposte 2,07 m, plaque
 //     à 1,60 m — donc indépendantes de la focale) : entre le mur de la porte du palier (x 13,55) et le jambage est de la
 //     porte de la salle, un RECOIN de 1,98 m de large qui file au sud jusqu'à une porte taupe de 0,95 m (à 0,8 m de son
-//     angle est) ; la porte de la salle fait 0,93 m ; les jours dépolis 0,92 x 1,44 m (appui 0,90, linteau 2,35) au pas
+//     angle est) ; la porte de la salle fait 0,93 m ; les jours dépolis 0,92 x 1,44 m (appui 0,98, linteau 2,44) au pas
 //     de 1,45 m (sous-estimé au bord de l'image, où l'objectif grand-angle tasse : on retient le pas des travées, 1,65).
 //     La porte de la salle est donc dans la travée 7 (x 10,44-11,37), pas dans la 8 : la lecture A (porte x 11,6-12,5,
 //     recoin de 0,9 m) ne loge ni le recoin ni sa porte.
@@ -34,14 +34,30 @@
 //   grand-angle des plans de l'espace pause (f ≈ 230-300, celle qui met la caméra de 67 s dans la pièce), elle le met
 //   entre 4,3 et 6,7. La travée 8 reste à la salle (elle passe au sud du recoin), la porte taupe du bout du recoin est la
 //   seconde porte de la salle (plus de 50 places : deux dégagements).
+// RELECTURE (10/10) — LE CÔTÉ NORD EN L. Les trois poteaux étaient étalés du fond à la Si 1.4 (5,7 / 8,05 / 10,4) : sur
+//   toutes les vues, ils sont SERRÉS, l'intervalle à peine plus large qu'un poteau (VO f_45,5 s, 47,5 s, 54,6 s), et la
+//   niche des distributeurs est juste à gauche du 1er, au bout d'un muret court (53,45 s, 54,6 s). Recalage des quatre
+//   vues sur les points que chacune montre (bords de la porte du fond, notice, niche, machines, poteaux, porte de la
+//   Si 1.4 ; references/_r5/fit047.py, sens.py) : le plan du premier jet laisse 12 à 48 px d'écart (des poses absurdes :
+//   caméra dans la niche, focale de 820) ; un plan EN L en laisse 1 à 8, avec des poses vraisemblables (focales 220-510,
+//   le grand-angle du film) — la niche sur la face est d'un LOCAL FERMÉ qui occupe le coin nord-ouest (x 4,75-7,06,
+//   y 9,46-12,96), les poteaux à 8,0 / 9,25 / 10,5 (le résultat bouge peu de 6,8 à 7,8 pour la niche, de 1,15 à 1,3
+//   pour le pas). Le reste ne bouge pas : le mur du fond en x 4,75 et sa porte vers le couloir sombre ferment la bande
+//   sud, le long des jours (à 49,2 s, la face sud du local est vue par la tranche : le « bord sombre » à droite du mur
+//   des affichettes). Dans l'alcôve, entre le local et le 1er poteau, une porte de service blanche à vitre lilas-bleu
+//   (la « bande lumineuse » de etage1.md § 4.4), fermée.
 //
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; plancher du 1er à 3,50 m) :
-//   l'espace pause            x 4,75-13,49  y 7,035-12,0  (+ l'alcôve jusqu'au mur orange, y 12,84)
-//     le mur du fond          x 4,675 (face est 4,75) : porte à 1,5 vantail y 7,18-8,63 vers le couloir sombre, la
-//                             niche des distributeurs y 9,5-11,6 (saillie 0,30)
-//     les poteaux             x 6,6 / 8,8 / 11,0 sur y 12,0 (38 x 38 cm), murets lilas entre le fond et le 3e
-//     le mur orange           y 12,9 (nu sud 12,84, nu NORD 12,96 : Y_MUR_ORANGE, lu par le lot 6), crème à l'ouest du
-//                             1er poteau ; la porte de la Si 1.4 x 11,9-12,85, gonds à l'est, ouverte vers le sud
+//   l'espace pause            x 4,75-13,49  y 7,035-9,34 (la bande sud, jusqu'au mur du fond) ; x 7,36-13,49  y 9,34-12,0
+//                             (+ l'alcôve jusqu'au mur orange, y 12,84, de x 7,06 à 13,2)
+//     le mur du fond          x 4,675 (face est 4,75) : porte à 1,5 vantail y 7,18-8,63 vers le couloir sombre, notice A3
+//                             et déclencheur
+//     le local du coin N-O    x 4,75-7,06  y 9,46-12,96, fermé (IMAGINÉ dedans) ; sur sa face est (x 7,06), la niche des
+//                             distributeurs y 9,6-11,7 (habillage jusqu'aux dalles, saillie 0,30 : nu x 7,36)
+//     les poteaux             x 8,0 / 9,25 / 10,5 sur y 12,0 (42 x 42 cm), murets lilas du local au 3e (le 1er, court)
+//     le mur orange           y 12,9 (nu sud 12,84, nu NORD 12,96 : Y_MUR_ORANGE, lu par le lot 6) : crème du local à la
+//                             porte de service (x 7,14-7,86, fermée), orange au-delà ; la porte de la Si 1.4 x 11,9-12,85,
+//                             gonds à l'est, ouverte vers le sud
 //     le mur est              x 13,55 (face ouest 13,49), sa retombée de 45 cm ; la porte du palier (js/ecole_est.js)
 //   le recoin sud-est         x 11,49-13,49 y 5,51-7,035 ; porte taupe x 11,72-12,67 (fermée) au bout
 //   la salle S 1.3            x 1,71-13,14 y 0-6,915, moins le recoin (x > 11,37, y > 5,39) ; porte x 10,44-11,37
@@ -73,9 +89,18 @@ const XE = 13.55;                   // l'axe du mur est (celui de la porte du pa
 const YP = 12.0;                    // la ligne des poteaux et des murets
 const YO = 12.9;                    // l'axe du mur orange (ep 0,12)
 const XR = 11.43, YR = 5.45;        // le recoin : l'axe de son mur ouest, de son mur sud
-const POTEAUX = [5.7, 8.05, 10.4];             // (VO f_108, 53,5 s : le 1er près du fond, au bout d'un muret court)
+// (relecture 10/10 — LE PLAN EN L, voir l'en-tête : les trois poteaux serrés, au pas de 1,25, le 3e à 1,2 m de la porte
+// de la Si 1.4 ; le local fermé du coin nord-ouest et, sur sa face est, la niche des distributeurs, à 0,75 m du 1er)
+const POTEAUX = [8.0, 9.25, 10.5], DP = 0.21;   // (42 x 42 cm)
+const XB = 7.0, YB = 9.4;                       // le local du coin nord-ouest : l'axe de sa face est, de sa face sud (ep 0,12)
+const XN = XB + 0.06 + 0.3;                     // le nu de l'habillage des distributeurs (saillie 0,30)
+const PA = { c: 7.5, l: 0.72 };                 // la porte de service du fond de l'alcôve, entre le local et le 1er poteau
 const JOURS = [9.075, 7.425, 5.775];             // les trois jours dépolis (travées 6, 5, 4)
 const PORTE_S13 = { c: 10.905, l: 0.93 };        // la porte de la salle (travée 7)
+// les jours dépolis : appui et linteau ; le haut de l'imposte de la porte de la salle (relecture 10/10 : VO f_67,4 s, vus
+// de face, à l'échelle de la porte de 2,04 m — appui 0,98, linteau 2,42-2,44, l'imposte jusqu'à 2,38 ; à 49,2 s, le
+// linteau des jours frôle les dalles. Ils étaient à 0,90-2,35 : trop bas d'un bon 7 cm sous un plafond trop loin)
+const J0 = N1 + 0.98, J1 = N1 + 2.44, IMP1 = N1 + 2.38;
 const TRAVEE = 1.65;
 const centreTravee = (k) => 0.825 + (k - 1) * TRAVEE;
 // LA Si 1.4 (pour le lot 6, js/ecole_kahn.js) : le NU NORD du mur orange (la face blanche, côté salle), l'ouverture de
@@ -171,36 +196,48 @@ function texCafe() {
     g.fillStyle = '#262626'; g.fillRect(18, 640, 220, 60);
   }, null, false, 4);
 }
-// LE DISTRIBUTEUR DE SNACKS ET DE BOISSONS FRAÎCHES (VO : porte vitrée, éclairage bleu froid, rayons à spirales, le
-// monnayeur et son pavé vert-jaune à droite) — 0,90 x 1,83 m
+// LE DISTRIBUTEUR DE SNACKS ET DE BOISSONS FRAÎCHES (VO : éclairage bleu froid, rayons à spirales, le monnayeur et son
+// pavé vert-jaune à droite) — relecture 10/10 : DEUX portes vitrées côte à côte (les snacks à spirales, puis les
+// bouteilles debout), deux fois la largeur de la machine à café sur toutes les vues (VO f_45,5 s, 45,8 s, 47,5 s,
+// 53,45 s) : 1,24 x 1,83 m, et non 0,90
 function texSnack() {
-  return canvasTex(384, 768, (g, w, h) => {
+  return canvasTex(512, 756, (g, w, h) => {
     const r2 = graine(8086);
     g.fillStyle = '#161616'; g.fillRect(0, 0, w, h);
-    const v0 = 16, v1 = 290, t0 = 30, t1 = 600, rang = (t1 - t0) / 6;
-    const fond = g.createLinearGradient(0, t0, 0, t1); fond.addColorStop(0, '#6fb6ff'); fond.addColorStop(0.5, '#3d7fd6'); fond.addColorStop(1, '#2a5fae');
-    g.fillStyle = fond; g.fillRect(v0, t0, v1 - v0, t1 - t0);
-    const coul = ['#d0262d', '#f2b705', '#e8e6e0', '#3e9b6b', '#7b2a6e', '#e07b2a', '#3a2418', '#1d1d1d'];
-    for (let r = 0; r < 6; r++) {
-      const yb = t0 + (r + 1) * rang, n = 5, lc = (v1 - v0) / n, ph = rang - 30;
-      for (let i = 0; i < n; i++) {
-        const cx = v0 + (i + 0.5) * lc;
-        g.fillStyle = coul[Math.floor(r2() * coul.length)]; g.fillRect(cx - lc * 0.3, yb - 10 - ph, lc * 0.6, ph);
-        g.strokeStyle = 'rgba(220,235,255,0.7)'; g.lineWidth = 2;
-        g.beginPath(); g.ellipse(cx, yb - 10 - ph * 0.45, lc * 0.36, ph * 0.42, 0, 0, 7); g.stroke();
+    const t0 = 28, t1 = 590, coul = ['#d0262d', '#f2b705', '#e8e6e0', '#3e9b6b', '#7b2a6e', '#e07b2a', '#3a2418', '#1d1d1d'];
+    const vitre = (v0, v1, spirales) => {
+      const fond = g.createLinearGradient(0, t0, 0, t1); fond.addColorStop(0, '#7cbcff'); fond.addColorStop(0.5, '#3f82d8'); fond.addColorStop(1, '#2a5fae');
+      g.fillStyle = fond; g.fillRect(v0, t0, v1 - v0, t1 - t0);
+      const nr = spirales ? 6 : 5, rang = (t1 - t0) / nr;
+      for (let r = 0; r < nr; r++) {
+        const yb = t0 + (r + 1) * rang, n = spirales ? 4 : 6, lc = (v1 - v0) / n, ph = rang - 26;
+        for (let i = 0; i < n; i++) {
+          const cx = v0 + (i + 0.5) * lc;
+          g.fillStyle = coul[Math.floor(r2() * coul.length)];
+          if (spirales) {
+            g.fillRect(cx - lc * 0.3, yb - 10 - ph, lc * 0.6, ph);
+            g.strokeStyle = 'rgba(220,235,255,0.7)'; g.lineWidth = 2;
+            g.beginPath(); g.ellipse(cx, yb - 10 - ph * 0.45, lc * 0.36, ph * 0.42, 0, 0, 7); g.stroke();
+          } else {
+            // (les bouteilles debout, leur goulot)
+            g.fillRect(cx - lc * 0.28, yb - 8 - ph * 0.78, lc * 0.56, ph * 0.78); g.fillRect(cx - lc * 0.1, yb - 8 - ph, lc * 0.2, ph * 0.24);
+          }
+        }
+        g.fillStyle = '#c9d6e6'; g.fillRect(v0, yb - 8, v1 - v0, 3);
       }
-      g.fillStyle = '#c9d6e6'; g.fillRect(v0, yb - 10, v1 - v0, 3);
-    }
-    // les deux tubes de l'éclairage, le reflet de la vitre
-    g.fillStyle = 'rgba(235,245,255,0.95)'; g.fillRect(v1 - 18, t0, 8, t1 - t0); g.fillRect(v0 + 4, t0, 6, t1 - t0);
-    g.fillStyle = 'rgba(255,255,255,0.12)'; g.beginPath(); g.moveTo(v0 + 40, t0); g.lineTo(v0 + 110, t0); g.lineTo(v0 + 20, t1); g.lineTo(v0, t1); g.closePath(); g.fill();
+      // le tube de l'éclairage, le reflet de la vitre, le montant noir
+      g.fillStyle = 'rgba(235,245,255,0.95)'; g.fillRect(v1 - 16, t0, 7, t1 - t0);
+      g.fillStyle = 'rgba(255,255,255,0.12)'; g.beginPath(); g.moveTo(v0 + 30, t0); g.lineTo(v0 + 90, t0); g.lineTo(v0 + 18, t1); g.lineTo(v0, t1); g.closePath(); g.fill();
+      g.strokeStyle = '#0c0c0c'; g.lineWidth = 8; g.strokeRect(v0, t0, v1 - v0, t1 - t0);
+    };
+    vitre(12, 206, true); vitre(216, 404, false);
     // le monnayeur : afficheur, clavier, le pavé vert-jaune
-    g.fillStyle = '#c0c2c3'; g.fillRect(304, 30, 70, 570);
-    g.fillStyle = '#0d1a0f'; g.fillRect(312, 50, 54, 26); g.fillStyle = '#7dff8e'; g.font = '600 15px Consolas, monospace'; g.fillText('1,20', 318, 69);
-    for (let j = 0; j < 4; j++) for (let i = 0; i < 3; i++) { g.fillStyle = '#ececea'; g.fillRect(314 + i * 17, 96 + j * 20, 13, 14); }
-    g.fillStyle = '#c6d817'; g.fillRect(312, 200, 54, 86); g.fillStyle = '#1d1d1d'; g.fillRect(330, 300, 18, 30);
-    // la trappe
-    g.fillStyle = '#2a2a29'; g.fillRect(v0, 630, v1 - v0, 100); g.fillStyle = '#4a4a48'; g.fillRect(v0 + 16, 646, v1 - v0 - 32, 8);
+    g.fillStyle = '#c0c2c3'; g.fillRect(414, 28, 88, 562);
+    g.fillStyle = '#0d1a0f'; g.fillRect(424, 50, 66, 28); g.fillStyle = '#7dff8e'; g.font = '600 17px Consolas, monospace'; g.fillText('1,20', 432, 70);
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 3; i++) { g.fillStyle = '#ececea'; g.fillRect(428 + i * 20, 98 + j * 22, 15, 15); }
+    g.fillStyle = '#c6d817'; g.fillRect(426, 210, 64, 90); g.fillStyle = '#1d1d1d'; g.fillRect(447, 316, 22, 32);
+    // les trappes
+    g.fillStyle = '#2a2a29'; g.fillRect(12, 620, 392, 96); g.fillStyle = '#4a4a48'; g.fillRect(28, 636, 360, 8);
   }, null, false, 4);
 }
 // LA GRANDE AFFICHE ENCADRÉE du mur est (VO 67 s, `reseau.md` § 4.2 : 0,95 x 1,35 m, une photo sombre bleue et grise,
@@ -297,8 +334,9 @@ export function poserPause1(ch, ctx) {
   const { groupe, sieges, B, panneau, porte, spot, dalle, radiateur, projecteur, fauteuil, ordinateur, texPlaqueSalle } = ctx;
   const std = (o, nom) => { const m = new THREE.MeshStandardMaterial(o); if (nom) m.name = nom; return m; };
   const P = {
-    // (les teintes « à modéliser » de etage1.md § 4.6 ; l'orange un rien plus clair que l'échiffre du palier, photo 28)
-    orange: std({ map: texPeinture(0xe47e2c, 4), roughness: 0.7 }, 'peinture orange (espace pause du 1er)'),
+    // (les teintes « à modéliser » de etage1.md § 4.6 ; l'orange un rien plus clair que l'échiffre du palier, photo 28 —
+    // relecture 10/10 : un peu moins cru, sous nos lampes chaudes il sortait plus saturé que la vidéo, VO f_53,45 s)
+    orange: std({ map: texPeinture(0xe4823a, 4), roughness: 0.7 }, 'peinture orange (espace pause du 1er)'),
     // (un léger émissif tient lieu de la lumière renvoyée par le lino et les murs : sur la vidéo, le mur des jours est clair
     // d'un bout à l'autre, loin des spots)
     creme: std({ map: texPeinture(0xeee6d2, 4), roughness: 0.86, emissive: 0xeee6d2, emissiveIntensity: 0.1 }, 'peinture crème (espace pause du 1er)'),
@@ -307,10 +345,13 @@ export function poserPause1(ch, ctx) {
     plinthe: std({ color: 0x6e5038, roughness: 0.5 }, 'plinthe brune'),
     habillage: std({ map: texPeinture(0x6b6862, 3), roughness: 0.6 }, 'habillage gris des distributeurs'),
     // (la vidéo : brun taupe, satiné — les tables s'y reflètent ; sous les spots chauds du jeu, la teinte du relevé sortait
-    // trop claire : un voile)
-    lino: std({ map: texLino(), color: 0xb8b0a8, roughness: 0.3 }, 'lino taupe (espace pause du 1er)'),
+    // trop claire : un voile — relecture 10/10 : et trop rouge, chocolat ; un voile vert-gris le ramène au taupe mesuré sur
+    // la vidéo, VO f_45,5 s : 104/76/45 contre 96/55/30)
+    lino: std({ map: texLino(), color: 0xbac6c2, roughness: 0.3 }, 'lino taupe (espace pause du 1er)'),
     moquette: std({ map: texMoquette(), color: 0xa9adb6, roughness: 0.97 }, 'moquette en dalles (salle S 1.3)'),
-    plateau: std({ color: 0xd8cab2, roughness: 0.48 }, 'stratifié hêtre clair (tables de la salle)'),
+    // (relecture 10/10 : un rien plus gris — sous nos lampes chaudes le #d8cab2 du relevé sortait crème jaune, VO f_51,6 s gris
+    // beige)
+    plateau: std({ color: 0xd8d0c2, roughness: 0.48 }, 'stratifié hêtre clair (tables de la salle)'),
     chant: std({ color: 0xa48a68, roughness: 0.5 }),
     pietement: std({ color: 0x2b2d33, roughness: 0.45, metalness: 0.5 }, 'piétement anthracite'),
     chrome: std({ color: 0xa8a9ad, roughness: 0.3, metalness: 0.85 }, 'tube chromé'),
@@ -331,8 +372,10 @@ export function poserPause1(ch, ctx) {
     // salle, plus ternes)
     jourPause: std({ color: 0xf3f3f1, roughness: 0.5, emissive: 0xeef0f4, emissiveIntensity: 0.62 }, 'jour dépoli (côté pause)'),
     jourSalle: std({ color: 0xe6e8ea, roughness: 0.5, emissive: 0xdde0e6, emissiveIntensity: 0.18 }, 'jour dépoli (côté salle)'),
-    // (la salle : un blanc plus froid que celui du reste de l'école — VO q_0198-0212, sous ses tubes à 4 000 K et le jour)
-    blancSalle: std({ map: texPeinture(0xf2f3f3, 3), roughness: 0.86 }, 'peinture blanche (salle S 1.3)'),
+    // (la salle : un blanc plus froid que celui du reste de l'école — VO q_0198-0212, sous ses tubes à 4 000 K et le jour ;
+    // relecture 10/10 : le blanc seul sortait beige rosé — la lumière chaude du « soleil » et de l'hémisphère de la carte —,
+    // un voile bleuté et un léger émissif lui rendent le blanc bleuté de la vidéo, VO f_51,6 s, d'où qu'on la regarde)
+    blancSalle: std({ map: texPeinture(0xf2f3f3, 3), color: 0xd9e2f0, roughness: 0.86, emissive: 0xe2e8f2, emissiveIntensity: 0.2 }, 'peinture blanche (salle S 1.3)'),
     lilasBleu: std({ color: 0xc4c4ec, roughness: 0.4, emissive: 0xb4b6ea, emissiveIntensity: 0.55 }, 'vitrage lilas-bleu de l\'alcôve'),
   };
   const sols = [P.moquette, P.lino];
@@ -399,14 +442,19 @@ export function poserPause1(ch, ctx) {
   //  LES MURS
   // =====================================================================
   // LA CLOISON NORD DES SALLES, de la travée 1 au recoin : le bureau (porte fermée sur le couloir), puis la salle — ses
-  // trois jours dépolis (appui 0,90, linteau 2,35 : VO 67 s) et sa porte à imposte vitrée ; crème côté espace pause
+  // trois jours dépolis (appui 0,98, linteau 2,44 : VO 67 s) et sa porte à imposte vitrée ; crème côté espace pause
   mur({ de: [-0.3, Y_S], a: [XF, Y_S], mats: { N: M.blanc, S: P.blancSalle }, plinthes: [['N', M.bois], ['S', M.bois]], ouvertures: [{ c: 0.85, l: 0.95 }] });
   mur({ de: [XF, Y_S], a: [XR - 0.06, Y_S], mats: { N: P.creme, S: P.blancSalle }, plinthes: [['N', P.plinthe], ['S', M.bois]],
-    ouvertures: [...JOURS.map((c) => ({ c, l: 0.95, bas: N1 + 0.9, h: N1 + 2.35 })), { c: PORTE_S13.c, l: PORTE_S13.l, h: N1 + 2.35 }] });
+    ouvertures: [...JOURS.map((c) => ({ c, l: 0.95, bas: J0, h: J1 })), { c: PORTE_S13.c, l: PORTE_S13.l, h: IMP1 }] });
   // (au-dessus de la bouche du recoin, entre les deux plafonds : le linteau jusqu'à la dalle)
   B(XR - 0.06, Y_S - 0.06, XE + 0.06, Y_S + 0.06, HP, DALLE2, M.blanc, { ombre: false });
   // LE MUR DU FOND (ouest) : crème côté pause, blanc côté couloir sombre ; la porte à 1,5 vantail (y 7,18-8,63)
   mur({ de: [XF, Y_S - 0.06], a: [XF, YO + 0.06], ep: 0.15, mats: { E: P.creme, W: M.blanc }, plinthes: [['E', P.plinthe], ['W', M.bois]], ouvertures: [{ c: 7.9, l: 1.45, h: N1 + 2.06 }] });
+  // LE LOCAL DU COIN NORD-OUEST (relecture 10/10) : sa face sud, vue par la tranche à 49,2 s (le « bord sombre » à droite
+  // du mur des affichettes), et sa face est, qui porte la niche des distributeurs et le muret court ; fermé (le dedans est
+  // IMAGINÉ : un local de service, sans porte vue)
+  mur({ de: [XF, YB], a: [XB + 0.06, YB], mats: { S: P.creme, N: M.blanc }, plinthes: [['S', P.plinthe]] });
+  mur({ de: [XB, YB - 0.06], a: [XB, YO], mats: { E: P.creme, W: M.blanc }, plinthes: [['E', P.plinthe]] });
   // LE MUR EST, du bout du mur du palier (y 8,925, js/ecole_est.js) au renfoncement nord (y 11,1) — derrière lui, le dos
   // du mur du panneau d'étage
   mur({ de: [XE, 8.925], a: [XE, 11.1], mats: { W: P.creme, E: M.blanc }, plinthes: [['W', P.plinthe]] });
@@ -422,12 +470,24 @@ export function poserPause1(ch, ctx) {
   mur({ de: [13.2, 0], a: [13.2, YR - 0.06], mats: { W: P.blancSalle, E: M.blanc }, plinthes: [['E', M.bois], ['W', M.bois]] });
   // LE MUR OUEST DE LA SALLE, sur le trumeau des travées 1 et 2 : à l'ouest, le bureau de la grande baie rouge
   mur({ de: [1.65, 0], a: [1.65, Y_S - 0.06], mats: { E: P.blancSalle, W: M.blanc }, plinthes: [['E', M.bois], ['W', M.bois]] });
-  // LE MUR ORANGE (le fond de l'alcôve, la façade sud de la Si 1.4) : crème du fond au 1er poteau (la « bande lilas-bleu »
-  // y luit), orange au-delà ; blanc côté Si 1.4. La porte de la Si 1.4 et son imposte vitrée (VO 54,8 s : 2,45 m)
-  mur({ de: [XF - 0.075, YO], a: [POTEAUX[0] - 0.19, YO], mats: { S: P.creme, N: M.blanc }, plinthes: [['S', P.plinthe]], ouvertures: [{ c: 5.18, l: 0.22, bas: N1 + 0.95, h: N1 + 2.35 }] });
-  B(5.07, YO - 0.03, 5.29, YO + 0.03, N1 + 0.95, N1 + 2.35, P.lilasBleu, { ombre: false });
-  C.ajouterBoite(5.07, -(YO - 0.06), 5.29, -(YO + 0.06), { y0: N1 + 0.95, y1: N1 + 2.35 });
-  mur({ de: [POTEAUX[0] - 0.19, YO], a: [13.26, YO], mats: { S: P.orange, N: M.blanc }, plinthes: [['S', P.plinthe]], ouvertures: [{ c: (SI14.x0 + SI14.x1) / 2, l: SI14.x1 - SI14.x0, h: N1 + 2.45 }] });
+  // LE MUR ORANGE (le fond de l'alcôve, la façade sud de la Si 1.4) : le nord du local, puis crème jusqu'à la porte de
+  // service de l'alcôve, orange au-delà ; blanc côté Si 1.4. La porte de la Si 1.4 et son imposte vitrée (VO 54,8 s : 2,45 m)
+  const xPA = PA.c + PA.l / 2 + 0.05;
+  mur({ de: [XF - 0.075, YO], a: [xPA, YO], mats: { S: P.creme, N: M.blanc }, plinthes: [['S', P.plinthe]], ouvertures: [{ c: PA.c, l: PA.l, h: N1 + 2.1 }] });
+  mur({ de: [xPA, YO], a: [13.26, YO], mats: { S: P.orange, N: M.blanc }, plinthes: [['S', P.plinthe]], ouvertures: [{ c: (SI14.x0 + SI14.x1) / 2, l: SI14.x1 - SI14.x0, h: N1 + 2.45 }] });
+  // LA PORTE DE SERVICE DE L'ALCÔVE (relecture 10/10 : VO f_54,6 s, un cadre blanc juste à droite du 1er poteau, puis
+  // l'orange et la plaque noire ; f_47,5 s, entre le 1er et le 2e poteau, la « bande lilas-bleu lumineuse » de etage1.md :
+  // sa vitre) — vantail blanc à grande vitre dépolie, éclairée de l'autre côté, béquille inox ; fermée (derrière : IMAGINÉ)
+  {
+    const a = PA.c - PA.l / 2, b = PA.c + PA.l / 2, h = N1 + 2.1, k = 0.05;
+    for (const [u0, u1] of [[a, a + k], [b - k, b]]) B(u0, YO - 0.085, u1, YO - 0.055, N1, h, M.huisserie, { ombre: false });
+    B(a, YO - 0.085, b, YO - 0.055, h - k, h, M.huisserie, { ombre: false });
+    B(a + k, YO - 0.04, b - k, YO, N1, h - k, P.cadreBlanc);
+    B(a + 0.15, YO - 0.043, b - 0.15, YO - 0.04, N1 + 0.95, N1 + 1.9, P.lilasBleu, { ombre: false });
+    B(b - 0.17, YO - 0.11, b - 0.07, YO - 0.09, N1 + 1.0, N1 + 1.02, M.inox, { ombre: false });
+    B(b - 0.09, YO - 0.11, b - 0.07, YO - 0.04, N1 + 0.985, N1 + 1.035, M.inox, { ombre: false });
+    C.ajouterBoite(a, -(YO - 0.06), b, -(YO + 0.06), { y0: N1, y1: h });
+  }
   // (l'angle nord-est : du bout du mur du renfoncement nord du palier, y 12,6, au mur orange)
   mur({ de: [13.2, 12.6], a: [13.2, YO + 0.06], mats: { W: P.creme, E: M.blanc } });
 
@@ -475,7 +535,7 @@ export function poserPause1(ch, ctx) {
   ch.plafond(11.49, 5.51, 13.49, 7.035, HP, 'dalles');
   B(13.04, 7.035, 13.49, 11.1, HP - 0.3, HP, M.platre, { ombre: false });
   C.plafond(13.04, -11.1, 13.49, -7.035, HP - 0.3);
-  for (const [x, y] of [[5.9, 8.45], [7.7, 8.45], [9.5, 8.45], [11.3, 8.45], [6.8, 10.55], [8.6, 10.55], [10.4, 10.55], [12.2, 10.0], [12.45, 6.2], [12.5, 12.35]]) spot(x, y, HP, 'e1pause');
+  for (const [x, y] of [[5.9, 8.4], [7.7, 8.4], [9.5, 8.4], [11.3, 8.4], [8.3, 10.6], [10.1, 10.6], [12.2, 10.0], [12.45, 6.2], [12.5, 12.35], [9.6, 12.4]]) spot(x, y, HP, 'e1pause');
   maille(new THREE.CylinderGeometry(0.055, 0.06, 0.04, 20), M.boitier, 11.9, HP - 0.02, -12.4, 0, groupe, { ombre: false });
 
   // LE MUR DU FOND : la porte à 1,5 vantail — le semi-fixe gris clair au nord et ses deux affichettes, le vantail de
@@ -484,19 +544,24 @@ export function poserPause1(ch, ctx) {
   porte('y', XF, 8.38, { l: 0.48, ep: 0.15, etat: 'fermee', cote: 'E', oculus: false, poignee: null, fermePorte: false, notices: 2, matVantail: M.porte, nom: 'espace pause (semi-fixe du fond)' });
   porte('y', XF, 7.665, { l: 0.95, ep: 0.15, etat: 'ouverte', angle: 1.55, cote: 'W', nom: 'espace pause (porte du fond)' });
   ch.sortie(4.79, 7.9, N1 + 2.3, 'E');
-  panneau(new THREE.MeshStandardMaterial({ map: texConsignes(), roughness: 0.5 }), 0.3, 0.42, 4.753, 9.15, N1 + 1.55, 'E');
-  declencheur(4.75, 9.15, 1.18, 'E');
+  panneau(new THREE.MeshStandardMaterial({ map: texConsignes(), roughness: 0.5 }), 0.3, 0.42, 4.753, 9.1, N1 + 1.55, 'E');
+  declencheur(4.75, 8.82, 1.18, 'E');
+  // (relecture 10/10 : la niche est sur la face est du local du coin nord-ouest — VO f_48,9 s, la machine à café plus près
+  // que la porte du fond ; f_53,45 s, le muret court et le 1er poteau juste à sa droite —, l'habillage monte jusqu'aux
+  // dalles — VO f_45,5 s : son dessus touche le plafond —, les machines sont logées dans le local ; la machine à snacks a
+  // deux portes vitrées)
   {
-    const y0 = 9.5, y1 = 11.6, xa = 4.75, xb = 5.05, hh = N1 + 2.4, hm = N1 + 1.86;
+    const y0 = 9.6, y1 = 11.7, xa = XB + 0.06, xb = XN, hh = HP, hm = N1 + 1.9;
+    const yc0 = 9.68, yc1 = 10.36, ys0 = 10.44, ys1 = 11.62;         // la machine à café, la machine à snacks
     B(xa, y0, xb, y1, hm, hh, P.habillage, { collision: true });
-    for (const [a, b] of [[y0, y0 + 0.1], [10.29, 10.39], [11.33, y1]]) B(xa, a, xb, b, N1, hm, P.habillage, { collision: true });
+    for (const [a, b] of [[y0, yc0], [yc1, ys0], [ys1, y1]]) B(xa, a, xb, b, N1, hm, P.habillage, { collision: true });
     const grille = new THREE.MeshStandardMaterial({ map: texGrilleVent(), roughness: 0.6 });
-    for (const yc of [9.95, 10.86]) panneau(grille, 0.5, 0.19, xb + 0.002, yc, N1 + 2.13, 'E');
+    for (const yc of [(yc0 + yc1) / 2, ys0 + 0.42]) panneau(grille, 0.5, 0.19, xb + 0.002, yc, N1 + 2.2, 'E');
     // les deux machines (façades lumineuses), leur caisse dans la niche
-    B(xa, 9.6, xb - 0.03, 10.29, N1, hm, M.noirMat, { collision: true });
-    B(xa, 10.39, xb - 0.03, 11.33, N1, hm, M.noirMat, { collision: true });
-    panneau(lum(texCafe(), 0.32), 0.65, 1.83, xb - 0.028, 9.945, N1 + 0.95, 'E');
-    panneau(lum(texSnack(), 0.6), 0.92, 1.83, xb - 0.028, 10.86, N1 + 0.95, 'E');
+    B(XB - 0.5, yc0, xb - 0.03, yc1, N1, hm, M.noirMat, { collision: true });
+    B(XB - 0.5, ys0, xb - 0.03, ys1, N1, hm, M.noirMat, { collision: true });
+    panneau(lum(texCafe(), 0.32), yc1 - yc0 - 0.02, 1.83, xb - 0.028, (yc0 + yc1) / 2, N1 + 0.95, 'E');
+    panneau(lum(texSnack(), 0.6), ys1 - ys0 - 0.02, 1.83, xb - 0.028, (ys0 + ys1) / 2, N1 + 0.95, 'E');
   }
   // LE MUR EST : le bloc de sortie au-dessus de la porte du palier, la grande affiche encadrée « ESC… » ; dans le recoin,
   // le déclencheur et le cadre de consignes (VO 67 s)
@@ -514,21 +579,24 @@ export function poserPause1(ch, ctx) {
 
   // LE CÔTÉ NORD : les trois poteaux blancs, les murets lilas à tablette blanche (on s'y accoude), l'alcôve derrière
   for (const x of POTEAUX) {
-    B(x - 0.19, YP - 0.19, x + 0.19, YP + 0.19, N1, HP, M.blanc, { collision: true, ombre: false });
-    for (const [a, b, c, d] of [[x - 0.2, YP - 0.2, x + 0.2, YP - 0.19], [x - 0.2, YP - 0.19, x - 0.19, YP + 0.19], [x + 0.19, YP - 0.19, x + 0.2, YP + 0.19]]) B(a, b, c, d, N1, N1 + 0.08, P.plinthe, { ombre: false });
+    const e = DP + 0.01;
+    B(x - DP, YP - DP, x + DP, YP + DP, N1, HP, M.blanc, { collision: true, ombre: false });
+    for (const [a, b, c, dd] of [[x - e, YP - e, x + e, YP - DP], [x - e, YP - DP, x - DP, YP + DP], [x + DP, YP - DP, x + e, YP + DP]]) B(a, b, c, dd, N1, N1 + 0.08, P.plinthe, { ombre: false });
   }
-  const murets = [[4.75, POTEAUX[0] - 0.19], [POTEAUX[0] + 0.19, POTEAUX[1] - 0.19], [POTEAUX[1] + 0.19, POTEAUX[2] - 0.19]];
+  // (le muret court, du local au 1er poteau, puis les deux autres)
+  const murets = [[XB + 0.06, POTEAUX[0] - DP], [POTEAUX[0] + DP, POTEAUX[1] - DP], [POTEAUX[1] + DP, POTEAUX[2] - DP]];
   for (const [a, b] of murets) {
     B(a, YP - 0.075, b, YP + 0.075, N1, N1 + 0.97, P.lilas, { collision: true });
     B(a, YP - 0.125, b, YP + 0.125, N1 + 0.97, N1 + 1.0, P.tablette);
     B(a, YP - 0.09, b, YP - 0.075, N1, N1 + 0.08, P.plinthe, { ombre: false });
     C.ajouterBoite(a, -(YP - 0.125), b, -(YP + 0.125), { y0: N1, y1: N1 + 1.0 });
   }
-  // les plaques et les affiches : « Espace pause » (la tasse) sur l'orange entre les poteaux 1 et 2, la sketchnote A2 sur
+  // les plaques et les affiches : « Espace pause » (la tasse) sur l'orange, à l'est de la porte de service (VO f_53,45 s :
+  // la plaque noire juste à droite du 1er poteau ; f_54,6 s, au tiers du jour entre le 1er et le 2e), la sketchnote A2 sur
   // le 3e poteau et la fiche bleue sur sa face est
-  plaque('Espace', 'pause', null, POTEAUX[0] + 0.45, YO - 0.063, 'S', 1.65, 'tasse');
-  panneau(new THREE.MeshStandardMaterial({ map: texSketchnote(), roughness: 0.6 }), 0.36, 0.51, POTEAUX[2], YP - 0.192, N1 + 1.9, 'S');
-  panneau(new THREE.MeshStandardMaterial({ map: texFiche('#2f62b5', '#e8eef8'), roughness: 0.6 }), 0.21, 0.297, POTEAUX[2] + 0.192, YP, N1 + 1.6, 'E');
+  plaque('Espace', 'pause', null, POTEAUX[0] + 0.07, YO - 0.063, 'S', 1.65, 'tasse');
+  panneau(new THREE.MeshStandardMaterial({ map: texSketchnote(), roughness: 0.6 }), 0.36, 0.51, POTEAUX[2], YP - DP - 0.002, N1 + 1.9, 'S');
+  panneau(new THREE.MeshStandardMaterial({ map: texFiche('#2f62b5', '#e8eef8'), roughness: 0.6 }), 0.21, 0.297, POTEAUX[2] + DP + 0.002, YP, N1 + 1.6, 'E');
 
   // =====================================================================
   //  LE MOBILIER DE L'ESPACE PAUSE (on s'y assoit)
@@ -607,28 +675,31 @@ export function poserPause1(ch, ctx) {
       for (const sg of [1, -1]) siege(p.x + sg * nx * 0.06, p.y + sg * ny * 0.06, sg * nx, -sg * ny, 0.46, p.x + sg * nx * 0.62, p.y + sg * ny * 0.62, 'la banquette');
     }
   };
-  // (VO q_0182-0196, f_015 à 45,4 s, 53,2-54 s : la jaune en S, nord-sud, en avant des distributeurs ; la rouge en
-  // haricot au nord-est, devant les murets, ouverte au sud-ouest ; la table basse entre les deux)
-  banquette([[8.0, 8.35], [7.5, 8.95], [7.65, 9.75], [7.2, 10.45]], P.jaune, 'banquette jaune');
-  banquette([[7.75, 11.0], [8.45, 11.4], [9.3, 11.42], [9.9, 11.05], [10.05, 10.5]], P.rouge, 'banquette rouge');
+  // (VO q_0182-0196, f_015 à 45,4 s, 53,2-54 s : la jaune en S, nord-sud, en avant des distributeurs — à 0,8 m de leur
+  // habillage, qu'on y passe — ; la rouge en haricot au nord-est, devant les murets, ouverte au sud-ouest ; la table basse
+  // entre les deux ; relecture 10/10 : repoussées vers l'est avec la niche)
+  banquette([[9.15, 8.75], [8.6, 9.35], [8.75, 10.1], [8.4, 10.8]], P.jaune, 'banquette jaune');
+  banquette([[9.05, 11.15], [9.7, 11.45], [10.5, 11.45], [11.05, 11.1], [11.2, 10.55]], P.rouge, 'banquette rouge');
   {
-    const g = new THREE.Group(); g.position.set(8.5, N1, -10.2); g.rotation.y = 2.04; groupe.add(g);
+    const g = new THREE.Group(); g.position.set(9.75, N1, -10.3); g.rotation.y = 2.04; groupe.add(g);
     const s = new THREE.Shape(), w = 0.7, d = 0.275;
     s.moveTo(-w + d, -d); s.lineTo(w - d, -d); s.absarc(w - d, 0, d, -Math.PI / 2, Math.PI / 2, false); s.lineTo(-w + d, d); s.absarc(-w + d, 0, d, Math.PI / 2, Math.PI * 1.5, false);
     const geo = new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: false, curveSegments: 10 }); geo.rotateX(-Math.PI / 2);
     maille(geo, P.laque, 0, 0.36, 0, 0, g);
     // (le piétement : un socle noir en retrait, sous le plateau)
     const pied = maille(geo.clone().scale(0.62, 1, 0.45), P.noir, 0, 0.0, 0, 0, g, { ombre: false }); pied.scale.y = 9;
-    C.ajouterBoiteOrientee(8.5, -10.2, 0.7, 0.275, -2.04, { y0: N1, y1: N1 + 0.4 });
+    C.ajouterBoiteOrientee(9.75, -10.3, 0.7, 0.275, -2.04, { y0: N1, y1: N1 + 0.4 });
   }
   // les mange-debout et leurs tabourets, les chaises coque (VO : près de la porte du palier, devant les jours, devant la
-  // jaune, devant la rouge, et celui du coin nord-est, vu à 67 s). On y circule : le long des jours, de la porte du palier
-  // à celle du fond et à celle de la salle (y 7,0-8,1) ; du palier à la porte de la Si 1.4 (x 11,5-12,1)
-  for (const [x, y] of [[12.45, 9.1], [9.3, 8.55], [9.75, 9.95], [10.85, 10.45], [12.4, 10.95]]) mangeDebout(x, y);
-  miura(12.9, 8.75, 'W', [13.0, 8.15]); miura(12.0, 9.5, 'E', [11.7, 8.6]); miura(8.85, 8.9, 'E', [8.6, 7.65]);
-  miura(10.25, 10.2, 'W', [10.4, 9.4]); miura(11.3, 10.75, 'W', [11.75, 10.0]); miura(12.85, 11.3, 'W', [12.6, 12.1]);
-  coque(10.35, 8.7, 'W', P.coqueOrange, [10.6, 8.05]); coque(10.0, 9.2, 'W', P.coqueMenthe, [10.6, 9.45]);
-  coque(5.2, 11.5, 'S', P.coqueLime, [5.25, 10.9]);
+  // jaune, devant la rouge, deux à l'est, vus à 67 s, et un près de la porte du fond). On y circule : le long des jours, de
+  // la porte du palier à celle du fond et à celle de la salle (y 7,04-7,82) ; du palier à la porte de la Si 1.4 (x
+  // 11,45-12,15) ; de la porte du fond à la niche (x 7,36-8,13)
+  for (const [x, y] of [[12.75, 9.35], [12.8, 10.9], [9.6, 8.15], [10.85, 9.45], [6.3, 8.55]]) mangeDebout(x, y);
+  miura(13.2, 9.45, 'W', [13.2, 10.05]); miura(12.85, 11.45, 'S', [12.4, 11.75]); miura(9.05, 8.1, 'E', [8.9, 7.55]);
+  miura(10.85, 8.9, 'N', [11.3, 8.35]); miura(6.85, 8.9, 'W', [7.3, 8.5]); miura(5.8, 8.95, 'E', [5.5, 8.4]);
+  coque(10.2, 8.5, 'W', P.coqueOrange, [10.2, 7.8]); coque(10.25, 9.1, 'W', P.coqueMenthe, [9.95, 9.5]);
+  // (la lime contre le muret court, entre la niche et le 1er poteau)
+  coque(7.75, 11.45, 'S', P.coqueLime, [7.75, 10.85]);
 
   // =====================================================================
   //  LA SALLE DE COURS S 1.3 (travées 2 à 8 ; VO q_0198-0213)
@@ -637,7 +708,9 @@ export function poserPause1(ch, ctx) {
   solEtage([[-0.3, 0, 13.2, YR - 0.06], [-0.3, YR - 0.06, XR, Y_S]], P.moquette, 'moquette de la salle S 1.3');
   // LE PLAFOND de dalles (2,70 m), les luminaires 60 x 60 à grille en trois rangs, les diffuseurs d'air
   // (les dalles de la salle, d'un blanc plus froid que celles du reste de l'étage : le jour et les tubes à 4 000 K)
-  const dallesSalle = M.dalles.clone(); dallesSalle.emissive = new THREE.Color(0xe6ebf3); dallesSalle.emissiveIntensity = 0.2; dallesSalle.name = 'plafond en dalles (salle S 1.3)';
+  // (relecture 10/10 : à 0,2 le plafond restait beige — rien ne l'éclaire d'en dessous que l'hémisphère chaude ; VO f_51,6 s
+  // il est blanc, presque autant que les luminaires)
+  const dallesSalle = M.dalles.clone(); dallesSalle.color = new THREE.Color(0xe2eaf8); dallesSalle.emissive = new THREE.Color(0xdde6f5); dallesSalle.emissiveIntensity = 0.42; dallesSalle.name = 'plafond en dalles (salle S 1.3)';
   ch.plafond(1.71, 0, 13.14, YR - 0.06, HS, 'dalles').material = dallesSalle;
   ch.plafond(1.71, YR - 0.06, XR - 0.06, 6.915, HS, 'dalles').material = dallesSalle;
   // (VO q_0198-0212 : vu de la salle, le jour des sept fenêtres est éblouissant — l'appareil règle sa pose sur la pièce ;
@@ -647,8 +720,17 @@ export function poserPause1(ch, ctx) {
   for (let k = 2; k <= 8; k++) { const v = new THREE.Mesh(new THREE.PlaneGeometry(1.18, 1.13), voile); v.position.set(centreTravee(k), N1 + 1.575, 0.14); v.rotation.y = Math.PI; v.renderOrder = 1; groupe.add(v); }
   // (VO : la salle est d'un blanc froid, le jour et les tubes à 4 000 K — pas la lumière chaude des spots de l'espace pause)
   const froid = new THREE.Color(0xeef2fb);
-  for (const y of [1.5, 3.45, 5.0]) for (const x of [3.4, 6.0, 8.6, 11.2]) { dalle(x, y, 'e1salle'); Object.assign(ch.lampes[ch.lampes.length - 1], { couleur: froid, force: 1.2 }); }
-  const diff = new THREE.MeshStandardMaterial({ map: texDiffuseur(), roughness: 0.6, emissive: 0xd8d4cc, emissiveIntensity: 0.12 });
+  // (relecture 10/10 : les grilles des luminaires aussi, d'un blanc bleuté — celles du reste de l'étage sont jaunâtres)
+  let grilleFroide = null;
+  for (const y of [1.5, 3.45, 5.0]) for (const x of [3.4, 6.0, 8.6, 11.2]) {
+    dalle(x, y, 'e1salle'); Object.assign(ch.lampes[ch.lampes.length - 1], { couleur: froid, force: 1.2 });
+    const d = groupe.children[groupe.children.length - 1];
+    if (d.material && d.material.isMeshBasicMaterial) {
+      if (!grilleFroide) { grilleFroide = d.material.clone(); grilleFroide.color = new THREE.Color(0xf2f6ff).multiplyScalar(1.75); grilleFroide.name = 'luminaire à grille allumé (salle S 1.3)'; }
+      d.material = grilleFroide;
+    }
+  }
+  const diff = new THREE.MeshStandardMaterial({ map: texDiffuseur(), roughness: 0.6, emissive: 0xdfe5ee, emissiveIntensity: 0.22 });
   for (const [x, y] of [[4.7, 2.45], [7.3, 4.3], [9.9, 2.45], [12.25, 3.6]]) { const d = maille(new THREE.PlaneGeometry(0.58, 0.58), diff, x, HS - 0.006, -y, 0, groupe, { ombre: false }); d.rotation.x = Math.PI / 2; }
   // LES PILASTRES (VO : 35 cm, 20 cm de saillie, entre toutes les fenêtres ; les mêmes en face, au mur nord)
   const pilastre = (x, ya, yb) => B(x - 0.175, ya, x + 0.175, yb, N1, HS, P.blancSalle, { collision: true, ombre: false });
@@ -659,7 +741,7 @@ export function poserPause1(ch, ctx) {
   B(1.71, 6.715, 1.885, 6.915, N1, HS, P.blancSalle, { collision: true, ombre: false });
   // LES JOURS DÉPOLIS (verre sablé, cadre blanc, des deux côtés) ; L'IMPOSTE VITRÉE de la porte
   for (const c of JOURS) {
-    const a = c - 0.475, b = c + 0.475, h0 = N1 + 0.9, h1 = N1 + 2.35, k = 0.05;
+    const a = c - 0.475, b = c + 0.475, h0 = J0, h1 = J1, k = 0.05;
     for (const [s, m, yy] of [[1, P.jourPause, Y_S + 0.004], [-1, P.jourSalle, Y_S - 0.004]]) {
       const v = new THREE.Mesh(new THREE.PlaneGeometry(b - a - 2 * k, h1 - h0 - 2 * k), m);
       v.position.set(c, (h0 + h1) / 2, -yy); v.rotation.y = s > 0 ? Math.PI : 0; groupe.add(v);
@@ -672,7 +754,7 @@ export function poserPause1(ch, ctx) {
     C.ajouterBoite(a, -(Y_S - 0.06), b, -(Y_S + 0.06), { y0: h0, y1: h1, vitre: true });
   }
   {
-    const a = PORTE_S13.c - PORTE_S13.l / 2, b = PORTE_S13.c + PORTE_S13.l / 2, h0 = N1 + 2.09, h1 = N1 + 2.35;
+    const a = PORTE_S13.c - PORTE_S13.l / 2, b = PORTE_S13.c + PORTE_S13.l / 2, h0 = N1 + 2.09, h1 = IMP1;
     for (const [s, m, yy] of [[1, P.jourPause, Y_S + 0.004], [-1, P.jourSalle, Y_S - 0.004]]) {
       const v = new THREE.Mesh(new THREE.PlaneGeometry(b - a, h1 - h0), m); v.position.set(PORTE_S13.c, (h0 + h1) / 2, -yy); v.rotation.y = s > 0 ? Math.PI : 0; groupe.add(v);
     }
@@ -700,9 +782,11 @@ export function poserPause1(ch, ctx) {
   // parleur au-dessus, le vidéoprojecteur à 2 m du mur
   {
     const yc = 3.45, xw = 1.71;
+    // (relecture 10/10 : l'émail blanc, un peu lumineux — il sortait beige, VO f_51,6 s il est le plus blanc de la salle)
+    const triptyque = (n) => new THREE.MeshStandardMaterial({ map: texTriptyque(n), color: 0xeef2f8, roughness: 0.16, emissive: 0xe8eef6, emissiveIntensity: 0.16 });
     for (const [y, w, n] of [[yc, 2.0, 0], [yc - 1.5, 0.98, 1], [yc + 1.5, 0.98, 2]]) {
       B(xw, y - w / 2 - 0.02, xw + 0.025, y + w / 2 + 0.02, N1 + 0.88, N1 + 2.12, M.alu, { ombre: false });
-      panneau(new THREE.MeshStandardMaterial({ map: texTriptyque(n), roughness: 0.16 }), w, 1.2, xw + 0.026, y, N1 + 1.5, 'E');
+      panneau(triptyque(n), w, 1.2, xw + 0.026, y, N1 + 1.5, 'E');
     }
     B(xw, yc - 0.6, xw + 0.07, yc + 0.6, N1 + 0.86, N1 + 0.88, M.alu, { ombre: false });
     B(xw, yc - 0.13, xw + 0.12, yc + 0.13, N1 + 2.32, N1 + 2.5, M.boitier);
