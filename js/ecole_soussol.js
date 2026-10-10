@@ -1028,19 +1028,16 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     B(12.88, 10.08, 12.9, 10.82, Y_SS + 1.24, Y_SS + 2.26, X.montant, { ombre: false });
     panneau(new THREE.MeshStandardMaterial({ map: texTrombi(), roughness: 0.55 }), 0.7, 0.98, 12.88, 10.45, Y_SS + 1.75, 'W', 0.002);
     B(12.885, 10.9, 12.9, 11.1, Y_SS + 1.7, Y_SS + 1.84, X.noir, { ombre: false });
-    // ---- LA PORTE DU LOCAL SOMBRE (ouverte, vantail sombre rabattu dedans) et son noir ----
+    // ---- LA PORTE DU PASSAGE VERS L'ESCALIER EST (ouverte, vantail sombre rabattu dedans) ----
+    // (10/10, la visite officielle : le « local sombre » n'existe pas — derrière la porte, le PASSAGE de 1,1 m vers le sas
+    // technique et l'escalier est, éteint quand Haythem a filmé : js/ecole_soussol_est.js. La porte, posée depuis 2021,
+    // reste : huisserie blanche, vantail sombre, gond au sud, ouvert presque à plat contre le retour sud du passage)
     const yl0 = 9.2, yl1 = 10.1;
-    B(13.05, 8.6, 14.4, 10.7, Y_SS - 0.01, Y_SS, X.sombre, { ombre: false });
-    B(14.3, 8.6, 14.4, 10.7, Y_SS, DALLE, X.sombre, { ombre: false });
-    B(13.05, 8.6, 14.4, 8.7, Y_SS, DALLE, X.sombre, { ombre: false }); B(13.05, 10.6, 14.4, 10.7, Y_SS, DALLE, X.sombre, { ombre: false });
-    B(13.05, 8.6, 14.4, 10.7, Y_SS + 2.1, Y_SS + 2.12, X.sombre, { ombre: false });
     for (const y of [yl0 - 0.025, yl1 + 0.025]) B(12.88, y - 0.025, 13.07, y + 0.025, Y_SS, Y_SS + 2.07, X.blancMat, { ombre: false });
     B(12.88, yl0 - 0.05, 13.07, yl1 + 0.05, Y_SS + 2.04, Y_SS + 2.09, X.blancMat, { ombre: false });
-    // (le gond au sud, le vantail ouvert de 70° vers le nord-est, dans le local)
-    const vl = new THREE.Group(); vl.position.set(13.07, Y_SS, -yl0); vl.rotation.y = 0.35; ch.decor.add(vl);
+    const vl = new THREE.Group(); vl.position.set(13.07, Y_SS, -(yl0 + 0.03)); vl.rotation.y = 0.1; ch.decor.add(vl);
     maille(boiteM(0.88, 2.02, 0.04), X.sombre, 0.44, 1.01, 0, 0, vl);
-    // (on n'y entre pas : le local n'a pas été vu)
-    C.ajouterBoite(12.9, -yl0, 13.3, -yl1, { y0: Y_SS, y1: Y_SS + 2.1 });
+    C.ajouterBoiteOrientee(13.07 + 0.44 * Math.cos(0.1), -(yl0 + 0.03) - 0.44 * Math.sin(0.1), 0.44, 0.03, -0.1, { y0: Y_SS, y1: Y_SS + 2.04 });
     // ---- LES TROIS DISTRIBUTEURS (du nord au sud : friandises, boissons chaudes, froid) ----
     distributeur(8.67, L_.friandises);
     distributeur(7.82, L_.cafe, { vitre: false, montant: false });

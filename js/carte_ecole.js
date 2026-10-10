@@ -52,6 +52,7 @@ import { poserPieces } from './ecole_pieces.js';
 import { poserEtage1 } from './ecole_etage1.js';
 import { poserSousSol } from './ecole_soussol.js';
 import { poserEst } from './ecole_est.js';
+import { poserSousSolEst } from './ecole_soussol_est.js';
 
 // ---- les hauteurs ----
 const H_DALLE = 3.25;            // le dessous de la dalle du 1er étage (les cloisons montent jusque-là)
@@ -894,6 +895,9 @@ export function construireCarte(scene, renderer = null) {
   // le couloir et l'espace pause ; ses zones (en tête : elles passent sous celles du rez-de-chaussée), sa mise à jour, et
   // le sol du palier (niveau 0) qui prend la lumière et l'ombre cuites d'ici
   const sousSol = poserSousSol(ch, renderer, { RECT });
+  // (10/10, la visite officielle) la descente de l'escalier est au -1, son palier, le sas technique et le passage vers
+  // l'espace pause ; ses zones (en tête, à hauteur maximale) et sa mise à jour
+  const sousSolEst = poserSousSolEst(ch, renderer, { RECT });
 
   // =====================================================================
   //  LA LUMIÈRE
@@ -939,7 +943,7 @@ export function construireCarte(scene, renderer = null) {
   ];
   // (celles de l'étage et du sous-sol d'abord : leurs rectangles couvrent ceux du rez-de-chaussée, à d'autres hauteurs ;
   // et devant elles, la cage de l'escalier est et son palier du 1er)
-  zones.unshift(...est.zonesHaut, ...etage1.zones, ...sousSol.zones);
+  zones.unshift(...est.zonesHaut, ...etage1.zones, ...sousSolEst.zones, ...sousSol.zones);
   const lumieres = new LumieresEcole(scene, { lampes: ch.lampes.filter((l) => l.reel !== false), zones });
   // LA LUMIÈRE CUITE AU SOL (toutes les sources, découpées par les murs)
   const lm = cuireLumiereSol(C, ch.lampes, { x0: RECT.x0, z0: -RECT.y1, W, L }, { tpm: 16 });
@@ -975,6 +979,7 @@ export function construireCarte(scene, renderer = null) {
     lumieres.maj(dt, u.x, u.z, jeu.renderer, u.y);
     etage1.maj(dt, jeu);
     sousSol.maj(dt, jeu);
+    sousSolEst.maj(dt, jeu);
     est.maj(dt, jeu);
     // l'ombre cuite au sol vaut aussi pour le carrelage du passage et le sol du palier du sous-sol (elle est posée sur le
     // matériau du « terrain »)
