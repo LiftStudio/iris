@@ -838,8 +838,8 @@ export function construireCarte(scene, renderer = null) {
   const RN = [
     [-0.3, -0.4, 1.6, 9.1, 'ns', 1.75, 0], [-0.3, 13.6, 1.6, 20.75, 'ns', 1.75, 0],
     [1.6, 5.0, 4.9, 20.75, 'ns', 1.75, 0], [4.9, -0.4, 5.3, 20.75, 'ns', 1.75, 0],
-    // (11/10 : la salle d'attente, ses dalles posées est-ouest, recule de DY_A — y 4,8-7,875 ; au sud, la Si 0.1, le
-    // bureau B et le passage de la pile ; au nord, le fond, jusqu'au lot du fond)
+    // (11/10 : la salle d'attente, ses dalles posées est-ouest, recule de DY_A — y 4,8-7,875, jusqu'à x 13,5 : sous la
+    // pile, et devant elle l'entrée du C01 ; au sud, la Si 0.1, le bureau B et le passage de la pile ; au nord, le fond)
     [5.3, -0.4, 13.5, ATT.ys, 'ns', 1.75, 0], [5.3, ATT.ys, 13.5, ATT.yn, 'ew', 5.8, ATT.ys], [5.3, ATT.yn, 13.5, 20.75, 'ns', 1.75, 0],
     // (le hall ; au nord, le lino du couloir est et de l'escalier est remplace le carrelage : js/ecole_est.js)
     [13.5, -0.4, 20.1, 7.575, 'ns', 1.75, 0], [13.5, 7.575, 14.6, 20.75, 'ns', 1.75, 0], [14.6, 12.45, 20.1, 20.75, 'ns', 1.75, 0],

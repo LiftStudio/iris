@@ -888,7 +888,7 @@ function texAfficheEtudiant() {
 // 0-4,725 ; sa porte, dans ce mur (x 9,1-9,9, js/carte_ecole.js), s'ouvre dans la salle et se rabat contre son mur est.)
 // Deux rangs de cinq postes face au NORD (la toile descend devant les jours dépolis), tables arrêtées à x 9,4 : 0,5 m le
 // long du mur est, là où la porte se rabat ; 0,6 m de passage derrière chaque rangée de chaises (le joueur en fait 0,6),
-// 1,2 m d'une table à l'autre (0,7 avant), 0,9 m devant le premier rang. L'allée ouest (1,4 m) mène à l'imprimante, dans
+// 1,2 m d'une table à l'autre, 0,9 m devant le premier rang. L'allée ouest (1,4 m) mène à l'imprimante, dans
 // l'angle sud-ouest, et au poste de l'enseignant, dans l'angle nord-ouest, contre le mur nord. Plus de sac, de patère ni
 // de veste : « ne pas meubler l'imaginé ».
 const RANGEES = [[1.3, 1.95], [3.15, 3.8]];          // (côté chaises, côté écrans)
