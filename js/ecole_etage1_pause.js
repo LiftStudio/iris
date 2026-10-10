@@ -48,6 +48,13 @@
 //   le bureau de la travée 1  x 0-1,59 y 0-6,915 (la grande baie rouge), porte fermée sur le couloir sombre
 //
 //   poserPause1(ch, ctx) -> { zones, sols }        ctx : les outils et listes de l'étage (js/ecole_etage1.js)
+//   Y_MUR_ORANGE, SI14                              pour la salle Robert Kahn (lot 6) : son mur sud est le nôtre — nu nord
+//                                                   12,96, blanc —, sa porte x 11,9-12,85 ; quand elle est posée :
+//                                                   SI14.provisoires (une forme : `off = true` ; un fond : `visible = false`)
+// VÉRIFIÉ EN JOUANT (10/10) : on entre par le palier est, on longe les jours jusqu'à la porte du fond et le couloir sombre,
+// jusqu'au palier d'étage ouest et l'escalier ; on entre dans la salle par sa porte, on gagne l'allée centrale et le
+// tableau ; le recoin s'arrête sur sa porte taupe, la Si 1.4 sur sa forme provisoire ; on s'assoit sur les banquettes, les
+// tabourets, les chaises hautes et les chaises de la salle ; la caméra reste dans les pièces (murets, alcôve, recoin).
 import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex } from './kit_decor.js';
