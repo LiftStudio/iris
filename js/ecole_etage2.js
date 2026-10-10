@@ -270,19 +270,23 @@ function texPlaque2(l1, l2) {
   }, null, false, 4);
 }
 // LA PHOTO ENCADRÉE TURQUOISE du mur sud du couloir, face au sas (VO q_0292-0295) : cadre blanc mince, une photo bleu-vert,
-// une silhouette sombre au bonnet rose, un cartouche blanc en bas à gauche, un petit logo en bas à droite
+// un cartouche blanc en bas à gauche, un petit logo en bas à droite
+// (relecture du 10/10, 73,1-73,6 s à 25 i/s : la « silhouette au bonnet rose » est le reflet du cadreur dans le verre — elle
+// bouge avec lui, à côté du reflet d'un spot ; la photo elle-même : un haut turquoise, une bande gris lavande en bas, sous
+// une ligne d'horizon, quelques formes floues)
 function texPhotoTurquoise() {
   return canvasTex(256, 352, (g, w, h) => {
     g.fillStyle = '#f4f4f2'; g.fillRect(0, 0, w, h);
-    const m = 12, d = g.createLinearGradient(0, m, w, h - m);
-    d.addColorStop(0, '#86c3c8'); d.addColorStop(0.5, '#7db1bc'); d.addColorStop(1, '#7a91b0');
+    const m = 12, d = g.createLinearGradient(0, m, 0, h - m);
+    d.addColorStop(0, '#78c4c1'); d.addColorStop(0.5, '#7fb9b6'); d.addColorStop(0.58, '#9fb4b9'); d.addColorStop(0.62, '#8e93ad'); d.addColorStop(1, '#868aa6');
     g.fillStyle = d; g.fillRect(m, m, w - 2 * m, h - 2 * m);
     const r2 = graine(77);
-    for (let k = 0; k < 18; k++) { g.fillStyle = `rgba(255,255,255,${0.05 + r2() * 0.08})`; g.beginPath(); g.arc(m + r2() * (w - 2 * m), m + r2() * (h - 2 * m), 6 + r2() * 26, 0, 7); g.fill(); }
-    // la silhouette, de dos, son bonnet rose fuchsia
-    g.fillStyle = '#2c3442'; g.beginPath(); g.ellipse(w * 0.42, h * 0.62, w * 0.16, h * 0.2, 0, 0, 7); g.fill();
-    g.beginPath(); g.arc(w * 0.44, h * 0.38, w * 0.08, 0, 7); g.fill();
-    g.fillStyle = '#e0388f'; g.beginPath(); g.arc(w * 0.47, h * 0.33, w * 0.075, Math.PI, 0); g.fill(); g.fillRect(w * 0.395, h * 0.33, w * 0.15, 6);
+    for (let k = 0; k < 18; k++) { g.fillStyle = `rgba(255,255,255,${0.04 + r2() * 0.06})`; g.beginPath(); g.arc(m + r2() * (w - 2 * m), m + r2() * (h - 2 * m) * 0.55, 6 + r2() * 26, 0, 7); g.fill(); }
+    // le bas : des formes sombres floues (des façades, une silhouette lointaine), un liseré clair sur l'horizon
+    g.fillStyle = 'rgba(225,235,238,0.55)'; g.fillRect(m, h * 0.6 - 1, w - 2 * m, 2);
+    for (const [x, y, lw, lh] of [[0.18, 0.66, 0.1, 0.05], [0.33, 0.68, 0.06, 0.08], [0.62, 0.64, 0.05, 0.16], [0.75, 0.7, 0.12, 0.04]]) {
+      g.fillStyle = 'rgba(52,58,78,0.45)'; g.fillRect(w * x, h * y, w * lw, h * lh);
+    }
     g.fillStyle = '#ffffff'; g.fillRect(m + 8, h - m - 40, w * 0.42, 30);
     g.fillStyle = '#9aa0a6'; g.fillRect(m + 14, h - m - 32, w * 0.3, 5); g.fillRect(m + 14, h - m - 22, w * 0.22, 5);
     g.fillStyle = '#ffffff'; g.font = '600 15px "Century Gothic", "Segoe UI", sans-serif'; g.fillText('iris', w - m - 34, h - m - 12);
@@ -739,8 +743,8 @@ export function poserEtage2(ch, renderer = null) {
     // ---- LE MUR SUD, d'est en ouest : la photo turquoise face au sas, la plaque de la salle 2, la porte D1, l'affiche à
     // bandeau rouge, les trois chaises noires ----
     B(14.75 - 0.33, Y_RUE + EP / 2, 14.75 + 0.33, Y_RUE + EP / 2 + 0.02, N2 + 1.05, N2 + 1.95, M.alu, { ombre: false });
-    // (relecture du 10/10 : à 0,2 de rugosité, la photo renvoyait le couloir et sortait brune ; VO q_0293, #7aa19c)
-    panneau(matPan(texPhotoTurquoise(), 0.6), 0.62, 0.85, 14.75, Y_RUE + EP / 2 + 0.022, N2 + 1.5, 'N');
+    // (sous verre : elle renvoie le couloir — VO q_0293, le reflet d'un spot et du cadreur)
+    panneau(matPan(texPhotoTurquoise(), 0.3), 0.62, 0.85, 14.75, Y_RUE + EP / 2 + 0.022, N2 + 1.5, 'N');
     panneau(matPan(texPlaque2('Salle de cours', 'S 2.8'), 0.4), 0.2, 0.11, 11.2, Y_RUE + EP / 2 + 0.004, N2 + 1.65, 'N');
     panneau(matPan(texAfficheRouge(), 0.6), 0.42, 0.6, 9.35, Y_RUE + EP / 2 + 0.003, N2 + 1.7, 'N');
     for (const x of [7.0, 7.55, 8.1]) chaiseVisiteur(x, Y_RUE + EP / 2 + 0.27, 'N');
