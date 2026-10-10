@@ -48,20 +48,15 @@ function graine(s) {
   let x = s >>> 0 || 1;
   return () => { x ^= x << 13; x >>>= 0; x ^= x >> 17; x ^= x << 5; x >>>= 0; return x / 4294967296; };
 }
-// LE STRATIFIÉ CHÊNE GRISÉ du pupitre (VO q_0377, q_0380) : un fond taupe clair, des veines verticales serrées, quelques
-// flammes plus sombres. Tuile : 1 m.
+// LE STRATIFIÉ CHÊNE GRISÉ du pupitre (VO q_0377, q_0380) : un fond taupe gris, des veines verticales fines et serrées,
+// à peine marquées (de loin, presque uni). Tuile : 1 m.
 function texChene() {
   return canvasTex(256, 256, (g, w, h) => {
-    g.fillStyle = '#ab9b86'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#a99c8b'; g.fillRect(0, 0, w, h);
     const r2 = graine(77);
-    for (let k = 0; k < 160; k++) {
-      const x = r2() * w, l = 0.6 + r2() * 2.4, a = 0.05 + r2() * 0.12;
-      g.fillStyle = r2() < 0.55 ? `rgba(92,76,60,${a})` : `rgba(214,202,184,${a})`; g.fillRect(x, 0, l, h);
-    }
-    for (let k = 0; k < 6; k++) {
-      const x = r2() * w, y = r2() * h, R = 18 + r2() * 30;
-      g.strokeStyle = 'rgba(96,80,64,0.16)'; g.lineWidth = 1.2;
-      for (let j = 0; j < 4; j++) { g.beginPath(); g.ellipse(x, y, R * 0.18 + j * 3, R + j * 7, 0, 0, Math.PI * 2); g.stroke(); }
+    for (let k = 0; k < 220; k++) {
+      const x = r2() * w, l = 0.5 + r2() * 1.8, a = 0.04 + r2() * 0.08;
+      g.fillStyle = r2() < 0.55 ? `rgba(98,86,72,${a})` : `rgba(206,198,186,${a})`; g.fillRect(x, 0, l, h);
     }
   }, [1, 1], false, 4);
 }
@@ -177,7 +172,7 @@ function matieresHall(M) {
     // le comptoir : un stratifié blanc gris (plus clair que M.comptoir), la tablette haute gris clair, la rainure
     comptoir: std({ color: 0xe4e4e6, roughness: 0.42 }, 'stratifié blanc gris (comptoir)'),
     tablette: std({ color: 0xcfcfd2, roughness: 0.32 }, 'tablette gris clair (comptoir)'),
-    rainure: std({ color: 0x77797e, roughness: 0.5 }, 'rainure du comptoir'),
+    rainure: std({ color: 0x3a3b3f, roughness: 0.5 }, 'rainure du comptoir'),
     chene: std({ map: texChene(), roughness: 0.5 }, 'stratifié chêne grisé (pupitre)'),
     dessus: std({ color: 0xc9c9cc, roughness: 0.35 }, 'dessus gris du pupitre'),
     bureau: std({ color: 0x3d4150, roughness: 0.48 }, 'bureau bleu-gris foncé'),
@@ -195,7 +190,7 @@ function matieresHall(M) {
     boisPres: std({ color: 0xa8794a, roughness: 0.55 }, 'bois du présentoir'),
     magenta: std({ color: 0x8a2f7a, roughness: 0.5 }, 'cadre magenta'),
     argent: std({ color: 0xb8bbbe, roughness: 0.3, metalness: 0.8 }, 'cadre argent'),
-    ecran: std({ color: 0x23324a, roughness: 0.2, emissive: 0x3a5a86, emissiveIntensity: 0.35 }, 'écran allumé'),
+    ecran: std({ color: 0x1e2836, roughness: 0.2, emissive: 0x4a6280, emissiveIntensity: 0.22 }, 'écran allumé'),
   };
   // (les murs peints : le léger relief d'enduit des autres peintures)
   detailPhoto(H.ardoise, 'beton', 1, 1, { relief: 0.035, grain: 0, rugo: false });

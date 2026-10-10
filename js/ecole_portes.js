@@ -148,7 +148,7 @@ function texVitrophanie(dos = false) {
     const dedans = (x, y) => y > 1.31 && lobes.some(([lx, ly, r]) => (x - lx) ** 2 + (y - ly) ** 2 < r * r);
     const pas = 0.085, gr0 = [];
     for (let j = 0; j <= 9; j++) { gr0.push([]); for (let i = 0; i <= 18; i++) gr0[j].push([14.44 + i * pas + (alea() - 0.5) * pas * 0.7, 1.24 + j * pas + (alea() - 0.5) * pas * 0.7]); }
-    const bleus = ['#2c3d8c', '#3b55a8', '#5573c0', '#7c9bd6', '#a6c1ea'], gris = ['#4d4a5e', '#58556a', '#646177', '#6f6c82', '#7b788d'];
+    const bleus = ['#2c3d8c', '#3b55a8', '#5573c0', '#7c9bd6', '#a6c1ea'], gris = ['#625e78', '#6e6a84', '#7a7690', '#86839b', '#9390a6'];
     for (let j = 0; j < 9; j++) for (let i = 0; i < 18; i++) {
       const p00 = gr0[j][i], p10 = gr0[j][i + 1], p01 = gr0[j + 1][i], p11 = gr0[j + 1][i + 1];
       for (const t of [[p00, p10, p11], [p00, p11, p01]]) {
