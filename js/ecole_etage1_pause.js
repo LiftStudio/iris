@@ -651,8 +651,9 @@ export function poserPause1(ch, ctx) {
     siege(g.position.x + fx * 0.02, y - fz * 0.02, fx, fz, h + 0.03, so[0], so[1], 'la chaise haute');
   };
   // LA BANQUETTE COURBE (VO : monobloc de mousse gainée de simili, 50 cm de large, assise à 45 cm) le long d'une ligne
-  // médiane `pts` (plan) ; on s'y assoit des deux côtés, tous les 60 cm
-  const banquette = (pts, mat, nom) => {
+  // médiane `pts` (plan) ; on s'y assoit tous les 60 cm, des deux côtés ou d'un seul (`cotes` : +1 à gauche de la ligne,
+  // -1 à droite — relecture 10/10 : le dos de la rouge est à 30 cm des murets, on ne s'y assoit pas)
+  const banquette = (pts, mat, nom, cotes = [1, -1]) => {
     const courbe = new THREE.CatmullRomCurve3(pts.map(([x, y]) => new THREE.Vector3(x, y, 0)), false, 'centripetal');
     const n = 40, ga = [], dr = [], L = courbe.getLength();
     for (let i = 0; i <= n; i++) {
@@ -673,31 +674,33 @@ export function poserPause1(ch, ctx) {
     }
     for (let d = 0.3; d < L - 0.2; d += 0.6) {
       const p = courbe.getPointAt(d / L), t = courbe.getTangentAt(d / L), nx = -t.y, ny = t.x;
-      for (const sg of [1, -1]) siege(p.x + sg * nx * 0.06, p.y + sg * ny * 0.06, sg * nx, -sg * ny, 0.46, p.x + sg * nx * 0.62, p.y + sg * ny * 0.62, 'la banquette');
+      for (const sg of cotes) siege(p.x + sg * nx * 0.06, p.y + sg * ny * 0.06, sg * nx, -sg * ny, 0.46, p.x + sg * nx * 0.6, p.y + sg * ny * 0.6, 'la banquette');
     }
   };
   // (VO q_0182-0196, f_015 à 45,4 s, 53,2-54 s : la jaune en S, nord-sud, en avant des distributeurs — à 0,8 m de leur
   // habillage, qu'on y passe — ; la rouge en haricot au nord-est, devant les murets, ouverte au sud-ouest ; la table basse
   // entre les deux ; relecture 10/10 : repoussées vers l'est avec la niche)
   banquette([[9.15, 8.75], [8.6, 9.35], [8.75, 10.05], [8.3, 10.6]], P.jaune, 'banquette jaune');
-  banquette([[8.7, 11.1], [9.3, 11.45], [10.05, 11.45], [10.6, 11.15], [10.75, 10.65]], P.rouge, 'banquette rouge');
+  banquette([[8.7, 11.1], [9.3, 11.45], [10.05, 11.45], [10.6, 11.15], [10.75, 10.65]], P.rouge, 'banquette rouge', [-1]);
   {
-    const g = new THREE.Group(); g.position.set(9.85, N1, -10.2); g.rotation.y = 2.04; groupe.add(g);
+    const g = new THREE.Group(); g.position.set(10.0, N1, -10.2); g.rotation.y = 3.0; groupe.add(g);
     const s = new THREE.Shape(), w = 0.7, d = 0.275;
     s.moveTo(-w + d, -d); s.lineTo(w - d, -d); s.absarc(w - d, 0, d, -Math.PI / 2, Math.PI / 2, false); s.lineTo(-w + d, d); s.absarc(-w + d, 0, d, Math.PI / 2, Math.PI * 1.5, false);
     const geo = new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: false, curveSegments: 10 }); geo.rotateX(-Math.PI / 2);
     maille(geo, P.laque, 0, 0.36, 0, 0, g);
     // (le piétement : un socle noir en retrait, sous le plateau)
     const pied = maille(geo.clone().scale(0.62, 1, 0.45), P.noir, 0, 0.0, 0, 0, g, { ombre: false }); pied.scale.y = 9;
-    C.ajouterBoiteOrientee(9.85, -10.2, 0.7, 0.275, -2.04, { y0: N1, y1: N1 + 0.4 });
+    C.ajouterBoiteOrientee(10.0, -10.2, 0.7, 0.275, -3.0, { y0: N1, y1: N1 + 0.4 });
   }
-  // les mange-debout et leurs tabourets, les chaises coque (VO : près de la porte du palier, devant les jours, devant la
-  // jaune, devant la rouge, deux à l'est, vus à 67 s, et un près de la porte du fond). On y circule : le long des jours, de
+  // les mange-debout et leurs tabourets, les chaises coque (VO : devant les jours, devant la jaune, devant la rouge, deux à
+  // l'est, vus à 67 s). On y circule : le long des jours, de
   // la porte du palier à celle du fond et à celle de la salle (y 7,04-7,82) ; du palier à la porte de la Si 1.4 (x
   // 11,45-12,15) ; de la porte du fond à la niche (x 7,36-8,13)
-  for (const [x, y] of [[12.75, 9.35], [12.8, 10.9], [9.6, 8.15], [11.0, 9.6], [6.3, 8.55]]) mangeDebout(x, y);
+  // (relecture 10/10 : rien devant le mur du fond — VO f_49,2 s, le sol nu jusqu'à la porte ; quatre mange-debout, le
+  // passage vers la Si 1.4 n'en laisse pas loger un cinquième)
+  for (const [x, y] of [[12.75, 9.35], [12.8, 10.9], [9.6, 8.15], [11.1, 9.5]]) mangeDebout(x, y);
   miura(13.2, 9.45, 'W', [13.2, 10.05]); miura(12.85, 11.45, 'S', [12.4, 11.75]); miura(9.05, 8.1, 'E', [8.9, 7.55]);
-  miura(12.35, 9.85, 'E', [12.35, 10.4]); miura(6.85, 8.9, 'W', [7.3, 8.5]); miura(5.8, 8.95, 'E', [5.5, 8.4]);
+  miura(12.35, 9.85, 'E', [12.35, 10.4]); miura(12.8, 10.35, 'N', [12.4, 10.4]);
   coque(10.2, 8.5, 'W', P.coqueOrange, [10.2, 7.8]); coque(10.5, 9.05, 'W', P.coqueMenthe, [10.95, 8.75]);
   // (la lime contre le muret court, entre la niche et le 1er poteau)
   coque(7.75, 11.45, 'S', P.coqueLime, [7.75, 10.85]);
