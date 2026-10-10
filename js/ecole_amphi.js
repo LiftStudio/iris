@@ -396,10 +396,10 @@ export function poserAmphi(ch, K) {
     const yS = 15.8, yM = 15.875, yN = 15.95, hT = Y_SS + 2.06;
     // (le verre dépoli du -1, son dégradé calé sur la hauteur : une boîte a ses UV centrés, le bas reprenait le haut)
     const dep = X.depoli.clone(); dep.map = X.depoli.map.clone(); dep.map.offset.set(0, 0.5); dep.map.needsUpdate = true;
-    dep.color.setRGB(0.76, 0.79, 0.84); dep.emissiveIntensity = 0.06;      // (f_0245 : de dedans, un gris bleuté, pas un blanc)
+    dep.color.setRGB(0.76, 0.79, 0.84);                                    // (f_0245 : de dedans, un gris bleuté, pas un blanc)
     // (relecture du 10/10 : un dépoli, pas un panneau — VO f_0060, f_0078, q_0104 : au travers du fixe, de la pause, on
     // devine le beige des tables et le jaune des fauteuils du dernier rang ; de dedans, f_0238, les mange-debout)
-    dep.transparent = true; dep.opacity = 0.88; dep.depthWrite = false; dep.name = 'verre dépoli (S -1.14, translucide)';
+    dep.transparent = true; dep.opacity = 0.93; dep.depthWrite = false; dep.emissiveIntensity = 0.14; dep.name = 'verre dépoli (S -1.14, translucide)';
     const bati = (x0, x1, h0, h1) => {
       B(x0, yS - 0.015, x1, yM, h0, h1, X.creme, { ombre: false });
       B(x0, yM, x1, yN + 0.012, h0, h1, Z.bati, { ombre: false });
