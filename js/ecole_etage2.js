@@ -34,7 +34,7 @@
 // de la salle 2 passe au trumeau entre les travées 6 et 7, x 9,9 — une cloison ne bute pas sur une fenêtre — et la porte
 // D1 la suit, 0,45 m plus à l'est ; les fenêtres de la salle 1 sont réparties sur son mur, pas de 1,30 m ; la fenêtre du
 // palier n'est pas dans le mur nord mais dans le mur du panneau (q_0285-0287, vue de face) ; l'extincteur du recoin est
-// contre son mur sud (q_0288, q_0290).)
+// contre son mur ouest, au pied de l'angle sud-ouest (relecture : 71,6-72,6 s à 25 i/s).)
 //
 // LES PIÈGES D'UN NIVEAU DE PLUS (ceux du 1er, js/ecole_etage1.js, et du sous-sol, js/ecole_soussol.js) :
 //   1. des SOLS (C.sol à 6,60) sous tout ce qu'on foule, la cage exceptée : sinon solEn rendrait le plancher du 1er ;
@@ -620,11 +620,14 @@ export function poserEtage2(ch, renderer = null) {
     B(xf + 0.04, 9.9, xf + 0.043, 9.94, N2 + 1.128, N2 + 1.164, M.noirMat, { ombre: false });
     B(xf, 9.88, xf + 0.018, 9.96, N2 + 0.21, N2 + 0.29, M.boitier, { ombre: false });
     B(xf + 0.018, 9.905, xf + 0.021, 9.935, N2 + 0.235, N2 + 0.265, M.noirMat, { ombre: false });
-    // LE RECOIN SUD-OUEST : l'extincteur au sol contre le mur SUD du recoin (VO q_0288, q_0290 : vu de face quand on se
-    // tourne vers la porte, à droite d'elle), ses deux pictogrammes au-dessus (rouge à 1,9 m, rouge et bleu à 1,35 m)
-    extincteur(13.9, Y_PAL + EP / 2 + 0.02, 'N');
-    panneau(matPan(texPictoExtincteur(), 0.5), 0.15, 0.15, 13.9, Y_PAL + EP / 2 + 0.003, N2 + 1.9, 'N');
-    panneau(matPan(texPictoAlarme(), 0.5), 0.1, 0.1, 13.9, Y_PAL + EP / 2 + 0.003, N2 + 1.35, 'N');
+    // LE RECOIN SUD-OUEST : l'extincteur au sol, ses deux pictogrammes au-dessus (rouge à 1,9 m, rouge et bleu à 1,35 m)
+    // (relecture du 10/10, 71,6-72,6 s à 25 i/s, contraste poussé : en tournant vers la porte, on voit de gauche à droite
+    // l'ouverture du sas, un pan blanc frontal de 0,7 m (le mur sud, à l'ouest de la porte), un angle rentrant, puis le mur
+    // de l'extincteur, de face quand on regarde l'ouest (q_0285) et fuyant quand on regarde le sud (q_0290) : le mur OUEST
+    // du recoin, comme le relevé — l'extincteur est au pied de ce mur, contre l'angle sud-ouest)
+    extincteur(13.63, 8.12, 'E');
+    panneau(matPan(texPictoExtincteur(), 0.5), 0.15, 0.15, 13.613, 8.12, N2 + 1.9, 'E');
+    panneau(matPan(texPictoAlarme(), 0.5), 0.1, 0.1, 13.613, 8.12, N2 + 1.35, 'E');
     // LA PORTE COUPE-FEU (VO q_0288-0292, g140, g152 ; 88,3 s vue du couloir) : un vantail de 0,95 m, gonds à l'est, qui
     // s'ouvre vers le palier (on la tire du palier, on la pousse du couloir) — bâton inox, oculus étroit cerclé de bois côté
     // serrure (ouest), étiquette rouge, ferme-porte côté sas, une feuille A4 côté couloir ; l'huisserie de bois brun
