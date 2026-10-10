@@ -49,8 +49,9 @@ const RANG1 = 23.55, PAS_RANG = 0.95, PROF_TABLE = 0.42;     // le chant avant d
 const ya = (k) => RANG1 - (k - 1) * PAS_RANG;                 // le chant avant (nord) de la table du rang k
 const X_ALLEE = 9.65;                                         // l'axe de l'allée (et de la porte)
 // la lumière des luminaires à grille : des tubes fluorescents d'un blanc chaud (la vidéo est orangée dans la salle,
-// d'un blanc neutre dans l'espace pause et ses LED)
-const CHAUD_AMPHI = new THREE.Color(0xffe2bc);
+// d'un blanc neutre dans l'espace pause et ses LED) ; les blancs de la salle (murs, dalles) en prennent une teinte
+// tiède — le -1 passe les siens au froid (js/ecole_soussol.js plafondsSS), la salle garde les siens
+const CHAUD_AMPHI = new THREE.Color(0xffe2bc), TIEDE = new THREE.Color(1.0, 0.985, 0.955);
 
 // =====================================================================
 //  LES TEXTURES (dessinées : la salle n'ajoute aucun fichier à charger)
@@ -68,15 +69,15 @@ function texSolSalle() {
     const r2 = graine(1140), c = w / 2;
     for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) {
       const t = (r2() - 0.5) * 7;
-      g.fillStyle = rgb(146 + t, 147 + t, 150 + t); g.fillRect(a * c, b * c, c, c);
+      g.fillStyle = rgb(124 + t, 125 + t, 128 + t); g.fillRect(a * c, b * c, c, c);
     }
     // le moucheté : des grains sombres et clairs, serrés
     for (let k = 0; k < w * h / 9; k++) {
-      const v = r2() < 0.5 ? 112 + r2() * 22 : 168 + r2() * 22;
+      const v = r2() < 0.5 ? 92 + r2() * 22 : 146 + r2() * 22;
       g.fillStyle = rgb(v, v + 1, v + 3, 0.55); g.fillRect(r2() * w, r2() * h, 1 + r2() * 1.4, 1 + r2() * 1.4);
     }
     // les joints : un filet à peine plus sombre
-    g.fillStyle = 'rgba(70,70,74,0.35)';
+    g.fillStyle = 'rgba(70,70,74,0.18)';
     for (let i = 0; i <= 2; i++) { g.fillRect(i * c - 0.6, 0, 1.2, h); g.fillRect(0, i * c - 0.6, w, 1.2); }
   }, [1, 1], false, 8);
 }
@@ -92,7 +93,7 @@ function normalesSol() {
 function texHetre() {
   return canvasTex(512, 128, (g, w, h) => {
     const r2 = graine(2021);
-    g.fillStyle = '#dcc08f'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#d8b67c'; g.fillRect(0, 0, w, h);
     for (let k = 0; k < 70; k++) {
       const y = r2() * h, a = 0.05 + r2() * 0.08, c = r2() < 0.5 ? [176, 140, 86] : [236, 214, 170];
       g.strokeStyle = rgb(c[0], c[1], c[2], a); g.lineWidth = 0.6 + r2() * 1.6;
@@ -159,46 +160,58 @@ function texConvecteur() {
 // pas la photographie
 function texEinstein() {
   return canvasTex(256, 384, (g, w, h) => {
-    const r2 = graine(1879);
-    const fond = g.createRadialGradient(w / 2, h * 0.4, 20, w / 2, h * 0.45, h * 0.7);
-    fond.addColorStop(0, '#5a5a5a'); fond.addColorStop(1, '#1d1d1d');
+    const r2 = graine(1879), cx = w / 2, cy = h * 0.42;
+    const fond = g.createRadialGradient(cx, h * 0.38, 10, cx, h * 0.45, h * 0.75);
+    fond.addColorStop(0, '#4c4c4c'); fond.addColorStop(1, '#101010');
     g.fillStyle = fond; g.fillRect(0, 0, w, h);
-    // le chandail sombre, les épaules
-    g.fillStyle = '#262626'; g.beginPath(); g.moveTo(20, h); g.quadraticCurveTo(40, h * 0.7, w / 2, h * 0.68); g.quadraticCurveTo(w - 40, h * 0.7, w - 20, h); g.fill();
-    g.fillStyle = '#d8d8d8'; g.beginPath(); g.moveTo(w / 2 - 26, h * 0.69); g.lineTo(w / 2, h * 0.8); g.lineTo(w / 2 + 26, h * 0.69); g.fill();   // le col
-    // la chevelure blanche en bataille (derrière le visage)
-    for (let k = 0; k < 260; k++) {
-      const a = Math.PI * (0.92 + r2() * 1.16), r0 = 52 + r2() * 14, r1 = r0 + 24 + r2() * 46;
-      const cx = w / 2, cy = h * 0.36;
-      const v = 190 + r2() * 60;
-      g.strokeStyle = rgb(v, v, v, 0.55); g.lineWidth = 0.8 + r2() * 1.6;
-      g.beginPath(); g.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0 * 1.1);
-      g.quadraticCurveTo(cx + Math.cos(a + 0.3) * (r0 + r1) / 2, cy + Math.sin(a + 0.3) * (r0 + r1) / 2, cx + Math.cos(a + (r2() - 0.5) * 0.6) * r1, cy + Math.sin(a) * r1 * 1.05);
+    // le veston sombre, le col de chemise
+    g.fillStyle = '#1b1b1b'; g.beginPath(); g.moveTo(0, h); g.quadraticCurveTo(18, h * 0.74, cx, h * 0.7); g.quadraticCurveTo(w - 18, h * 0.74, w, h); g.fill();
+    g.fillStyle = '#9a9a9a'; g.beginPath(); g.moveTo(cx - 30, h * 0.705); g.lineTo(cx - 4, h * 0.79); g.lineTo(cx + 4, h * 0.79); g.lineTo(cx + 30, h * 0.705); g.lineTo(cx + 14, h * 0.69); g.lineTo(cx - 14, h * 0.69); g.fill();
+    // la chevelure blanche en bataille : un nuage flou, puis des mèches
+    g.save(); g.filter = 'blur(6px)';
+    const nuage = g.createRadialGradient(cx, cy - 34, 20, cx, cy - 20, 105);
+    nuage.addColorStop(0, 'rgba(225,225,225,0.95)'); nuage.addColorStop(0.65, 'rgba(200,200,200,0.55)'); nuage.addColorStop(1, 'rgba(160,160,160,0)');
+    g.fillStyle = nuage; g.beginPath(); g.ellipse(cx, cy - 22, 100, 92, 0, 0, Math.PI * 2); g.fill();
+    g.restore();
+    g.save(); g.filter = 'blur(0.8px)';
+    for (let k = 0; k < 340; k++) {
+      const a = Math.PI * (0.85 + r2() * 1.3), r0 = 48 + r2() * 18, r1 = r0 + 18 + r2() * 52, v = 205 + r2() * 50;
+      g.strokeStyle = rgb(v, v, v, 0.35 + r2() * 0.3); g.lineWidth = 0.6 + r2() * 1.2;
+      g.beginPath(); g.moveTo(cx + Math.cos(a) * r0, cy - 18 + Math.sin(a) * r0);
+      const a2 = a + (r2() - 0.5) * 0.9;
+      g.quadraticCurveTo(cx + Math.cos(a) * (r0 + r1) * 0.55, cy - 24 + Math.sin(a) * (r0 + r1) * 0.55, cx + Math.cos(a2) * r1, cy - 18 + Math.sin(a2) * r1);
       g.stroke();
     }
-    // le visage
-    const vis = g.createRadialGradient(w / 2 - 8, h * 0.4, 10, w / 2, h * 0.42, 70);
-    vis.addColorStop(0, '#c9c9c9'); vis.addColorStop(0.7, '#9e9e9e'); vis.addColorStop(1, '#6c6c6c');
-    g.fillStyle = vis; g.beginPath(); g.ellipse(w / 2, h * 0.43, 50, 66, 0, 0, Math.PI * 2); g.fill();
+    g.restore();
+    // le visage, modelé ; les orbites, l'ombre du nez, les plis des joues
+    g.save(); g.filter = 'blur(2px)';
+    const vis = g.createRadialGradient(cx - 10, cy - 6, 8, cx, cy + 4, 72);
+    vis.addColorStop(0, '#d2d2d2'); vis.addColorStop(0.55, '#aaaaaa'); vis.addColorStop(1, '#5e5e5e');
+    g.fillStyle = vis; g.beginPath(); g.ellipse(cx, cy + 8, 48, 64, 0, 0, Math.PI * 2); g.fill();
+    g.fillStyle = 'rgba(40,40,40,0.55)';
+    for (const sx of [-1, 1]) { g.beginPath(); g.ellipse(cx + sx * 19, cy + 4, 14, 9, 0, 0, Math.PI * 2); g.fill(); }
+    g.fillStyle = 'rgba(50,50,50,0.4)'; g.beginPath(); g.ellipse(cx + 5, cy + 26, 6, 16, 0.15, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = 'rgba(60,60,60,0.5)'; g.lineWidth = 3;
+    for (const sx of [-1, 1]) { g.beginPath(); g.moveTo(cx + sx * 14, cy + 34); g.quadraticCurveTo(cx + sx * 30, cy + 48, cx + sx * 26, cy + 64); g.stroke(); }
+    g.restore();
     // le front ridé
-    g.strokeStyle = 'rgba(70,70,70,0.5)'; g.lineWidth = 1.4;
-    for (let k = 0; k < 4; k++) { g.beginPath(); g.moveTo(w / 2 - 30, h * 0.33 + k * 6); g.quadraticCurveTo(w / 2, h * 0.32 + k * 6 - 4, w / 2 + 30, h * 0.33 + k * 6); g.stroke(); }
-    // les sourcils broussailleux, les yeux cernés
-    for (const s of [-1, 1]) {
-      const ex = w / 2 + s * 21, ey = h * 0.415;
-      g.fillStyle = 'rgba(225,225,225,0.85)'; g.beginPath(); g.ellipse(ex, ey - 12, 15, 5, s * -0.25, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#5a5a5a'; g.beginPath(); g.ellipse(ex, ey + 6, 13, 7, 0, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#e4e4e4'; g.beginPath(); g.ellipse(ex, ey, 9, 5, 0, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#1a1a1a'; g.beginPath(); g.arc(ex, ey, 4, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#ffffff'; g.fillRect(ex - 2, ey - 2, 1.5, 1.5);
+    g.strokeStyle = 'rgba(70,70,70,0.45)'; g.lineWidth = 1.2;
+    for (let k = 0; k < 4; k++) { g.beginPath(); g.moveTo(cx - 28, cy - 30 + k * 6); g.quadraticCurveTo(cx, cy - 34 + k * 6, cx + 28, cy - 30 + k * 6); g.stroke(); }
+    // les sourcils broussailleux, les yeux
+    for (const sx of [-1, 1]) {
+      const ex = cx + sx * 19, ey = cy + 4;
+      g.save(); g.filter = 'blur(1px)'; g.fillStyle = 'rgba(215,215,215,0.9)'; g.beginPath(); g.ellipse(ex + sx * 2, ey - 12, 15, 4.5, sx * -0.2, 0, Math.PI * 2); g.fill(); g.restore();
+      g.fillStyle = '#d9d9d9'; g.beginPath(); g.ellipse(ex, ey, 7.5, 4, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#202020'; g.beginPath(); g.arc(ex, ey, 3.6, 0, Math.PI * 2); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.9)'; g.fillRect(ex - 1.8, ey - 1.8, 1.4, 1.4);
     }
-    // le nez, la grosse moustache blanche, le menton
-    g.strokeStyle = 'rgba(60,60,60,0.6)'; g.lineWidth = 2;
-    g.beginPath(); g.moveTo(w / 2 - 3, h * 0.43); g.quadraticCurveTo(w / 2 - 9, h * 0.49, w / 2 - 6, h * 0.505); g.lineTo(w / 2 + 8, h * 0.505); g.stroke();
-    g.fillStyle = '#e2e2e2'; g.beginPath(); g.moveTo(w / 2 - 30, h * 0.545); g.quadraticCurveTo(w / 2, h * 0.49, w / 2 + 30, h * 0.545); g.quadraticCurveTo(w / 2, h * 0.53, w / 2 - 30, h * 0.545); g.fill();
-    g.fillStyle = 'rgba(40,40,40,0.55)'; g.fillRect(w / 2 - 14, h * 0.56, 28, 3);
+    // la grosse moustache, la lèvre
+    g.save(); g.filter = 'blur(1.2px)';
+    g.fillStyle = '#d4d4d4'; g.beginPath(); g.moveTo(cx - 27, cy + 50); g.quadraticCurveTo(cx - 14, cy + 34, cx, cy + 38); g.quadraticCurveTo(cx + 14, cy + 34, cx + 27, cy + 50); g.quadraticCurveTo(cx, cy + 46, cx - 27, cy + 50); g.fill();
+    g.fillStyle = 'rgba(35,35,35,0.6)'; g.fillRect(cx - 13, cy + 52, 26, 2.5);
+    g.restore();
     // un grain photographique
-    for (let k = 0; k < 4000; k++) { const v = r2() * 255; g.fillStyle = rgb(v, v, v, 0.05); g.fillRect(r2() * w, r2() * h, 1, 1); }
+    for (let k = 0; k < 5000; k++) { const v = r2() * 255; g.fillStyle = rgb(v, v, v, 0.05); g.fillRect(r2() * w, r2() * h, 1, 1); }
   }, null, false, 4);
 }
 // LE 2e PORTRAIT (f_0150-f_0165, à gauche du tableau) : une photo noir et blanc, une silhouette claire en pied sur fond
@@ -253,7 +266,7 @@ export function poserAmphi(ch, K) {
   const Z = {
     hetre: std({ map: texHetre(), roughness: 0.46 }),
     voile: std({ map: texHetre(), color: 0xe8d8bc, roughness: 0.55 }),
-    coque: std({ color: 0xd4ad4c, roughness: 0.4, side: THREE.DoubleSide }),
+    coque: std({ color: 0xcfa23e, roughness: 0.4, side: THREE.DoubleSide }),
     acier: std({ color: 0x1e1e1f, roughness: 0.5, metalness: 0.35 }),
     tableau: std({ color: 0xf6f6f2, roughness: 0.2 }),
     cadreAlu: std({ color: 0xbfc1c0, roughness: 0.35, metalness: 0.6 }),
@@ -266,6 +279,11 @@ export function poserAmphi(ch, K) {
     feutre: std({ color: 0x3e9b3a, roughness: 0.5 }),
   };
   Z.hetre.name = 'stratifié hêtre (S -1.14)'; Z.coque.name = 'coque jaune moutarde (S -1.14)';
+  for (const [k, m] of [['mur', M.blanc], ['dalles', M.dalles], ['platre', M.platre]]) {
+    Z[k] = m.clone(); Z[k].color.multiply(TIEDE); Z[k].name = m.name + ' (S -1.14, tiède)';
+  }
+  // (le rebond des plafonds, comme ceux du -1 : js/ecole_soussol.js plafondsSS)
+  Z.dalles.emissiveIntensity = Z.platre.emissiveIntensity = 0.3;
   // LE SOL de la salle : à lui (une rugosité unique : l'optimisation du décor ne doit le confondre avec rien) ; la lumière
   // et l'ombre douce cuites du -1 (js/ecole_soussol.js) y sont posées par uv1, comme sur les autres sols du niveau
   const matSol = std({ map: texSolSalle(), roughness: 0.613 });
@@ -280,33 +298,42 @@ export function poserAmphi(ch, K) {
   solNiveau([[A.x0, A.y0, A.xE, A.y1], [A.xE, A.yE, A.x1, A.y1], [9.35, 15.8, 10.25, A.y0]], matSol, 'sol de la salle S -1.14');
   b(9.35, 15.8, 10.25, 15.95, 0, 0.006, M.inox, { ombre: false });
   // LE MUR OUEST, dans le prolongement du mur du couloir et du hall (x 2,42-2,55) ; au-delà, l'inconnu reste plein
-  mur({ de: [2.485, 17.45], a: [2.485, A.y1 + 0.15], ep: 0.13, plinthes: ['E'], plinthe: P });
+  mur({ de: [2.485, 17.45], a: [2.485, A.y1 + 0.15], ep: 0.13, mats: { E: Z.mur, W: M.blanc }, plinthes: ['E'], plinthe: P });
   plinthe('y', A.x0, A.y0, 17.45, 1, Y_SS, P);
   // LE MUR DU TABLEAU (nord) ; LE MUR EST ; L'ENCOCHE (mur nord des toilettes, mur du vestibule)
-  mur({ de: [2.42, A.y1 + 0.075], a: [A.x1 + 0.15, A.y1 + 0.075] });
-  mur({ de: [A.x1 + 0.075, A.yE - 0.15], a: [A.x1 + 0.075, A.y1 + 0.15], plinthes: ['W'], plinthe: P });
-  mur({ de: [A.xE, A.yE - 0.075], a: [A.x1 + 0.15, A.yE - 0.075], plinthes: ['N'], plinthe: P });
-  mur({ de: [A.xE + 0.075, A.y0 - 0.15], a: [A.xE + 0.075, A.yE], plinthes: ['W'], plinthe: P });
+  mur({ de: [2.42, A.y1 + 0.075], a: [A.x1 + 0.15, A.y1 + 0.075], mats: Z.mur });
+  mur({ de: [A.x1 + 0.075, A.yE - 0.15], a: [A.x1 + 0.075, A.y1 + 0.15], mats: Z.mur, plinthes: ['W'], plinthe: P });
+  mur({ de: [A.xE, A.yE - 0.075], a: [A.x1 + 0.15, A.yE - 0.075], mats: Z.mur, plinthes: ['N'], plinthe: P });
+  mur({ de: [A.xE + 0.075, A.y0 - 0.15], a: [A.xE + 0.075, A.yE], mats: Z.mur, plinthes: ['W'], plinthe: P });
+  // (les faces de la salle des murs du -1 qui la bordent — le mur vert, le mur du hall : un enduit tiède par-dessus)
+  for (const [x0, x1, h0, h1] of [[A.x0, 3.9, 0, A.h], [5.5, 8.82, 0, A.h], [3.9, 5.5, 2.52, A.h], [8.82, A.xE, H_RET - Y_SS, A.h]]) b(x0, A.y0, x1, A.y0 + 0.004, h0, h1, Z.mur, { ombre: false });
+  b(A.x0, A.y0, A.x0 + 0.004, 17.45, 0, A.h, Z.mur, { ombre: false });
+  // LE RETOUR du mur du tableau (f_0082 à f_0105 : une arête verticale passé le convecteur, vers x 13,9 — un doublage,
+  // « faible changement de plan », amphi.md § 3.2) et le BANDEAU du mur est, pendant de celui de l'ouest (un plafond
+  // plus bas au-dessus de l'arête : f_0086, f_0095)
+  b(13.9, A.y1 - 0.12, A.x1, A.y1, 0, A.h + 0.01, Z.mur, { ombre: false, collision: true });
   // (au pied du mur vert, côté salle : la plinthe grise, la porte verte exceptée)
   for (const [a0, a1] of [[A.x0, 3.88], [5.52, 8.82]]) plinthe('x', A.y0, a0, a1, 1, Y_SS, P);
   // LA GOULOTTE NOIRE au pied du mur du tableau (≈ 10 cm, f_0082) et ses deux boîtiers de prises blancs
-  b(A.x0, A.y1 - 0.03, A.x1, A.y1, 0, 0.1, Z.goulotte, { ombre: false });
+  b(A.x0, A.y1 - 0.03, 13.9, A.y1, 0, 0.1, Z.goulotte, { ombre: false });
+  b(13.9, A.y1 - 0.15, A.x1, A.y1 - 0.12, 0, 0.1, Z.goulotte, { ombre: false });
   for (const x of [9.2, 11.5]) b(x - 0.045, A.y1 - 0.045, x + 0.045, A.y1 - 0.03, 0.015, 0.085, X.blancMat, { ombre: false });
   // LE POTEAU carré (f_0188-f_0200) et le pilier au bout du vestibule (VO q_0105 : le radiateur « s'arrête à un pilier »)
-  b(3.25, 17.5, 3.6, 17.85, 0, A.h + 0.01, M.blanc, { ombre: false, collision: true });
+  b(3.25, 17.5, 3.6, 17.85, 0, A.h + 0.01, Z.mur, { ombre: false, collision: true });
   plinthe('x', 17.5, 3.25, 3.6, -1, Y_SS, P); plinthe('x', 17.85, 3.25, 3.6, 1, Y_SS, P);
   plinthe('y', 3.25, 17.5, 17.85, -1, Y_SS, P); plinthe('y', 3.6, 17.5, 17.85, 1, Y_SS, P);
-  b(10.18, 17.62, A.xE, A.yE, 0, A.h + 0.01, M.blanc, { ombre: false, collision: true });
+  b(10.18, 17.62, A.xE, A.yE, 0, A.h + 0.01, Z.mur, { ombre: false, collision: true });
   plinthe('y', 10.18, 17.62, A.yE, -1, Y_SS, P); plinthe('x', 17.62, 10.18, A.xE, -1, Y_SS, P);
   // LE FAUX PLAFOND : dalles minérales de 60 x 60 à 2,70 m (la salle est plus haute que l'espace pause, 2,55) ; la
   // RETOMBÉE de la poutre (sous 2,40, du mur ouest au pilier, par le poteau) ; le BANDEAU du mur ouest (sous 2,35)
-  ch.plafond(A.x0, A.y0, A.x1, A.y1, H, 'dalles', { retombees: false });
+  ch.plafond(A.x0, A.y0, A.x1, A.y1, H, 'dalles', { retombees: false }).material = Z.dalles;
   const retombee = (x0, y0, x1, y1, hb) => {
-    b(x0, y0, x1, y1, hb, A.h + 0.01, M.platre, { ombre: false });
+    b(x0, y0, x1, y1, hb, A.h + 0.01, Z.platre, { ombre: false });
     C.plafond(x0, -y1, x1, -y0, Y_SS + hb, A.h - hb + 0.3);
   };
   retombee(2.9, 17.55, A.xE, 17.85, 2.4);
   retombee(A.x0, A.y0, 2.9, A.y1, 2.35);
+  retombee(14.85, A.yE, A.x1, A.y1 - 0.12, 2.35);
   // la caméra ne se glisse pas au-dessus du plafond de l'encoche (fermée)
   C.ajouterBoite(A.xE, -A.yE, A.x1, -A.y0, { y0: Y_SS, y1: DALLE, joueur: false });
 
@@ -342,6 +369,8 @@ export function poserAmphi(ch, K) {
   // se rabat contre le mur du vestibule. La petite pastille rouge sur l'huisserie ; la plaque noire à l'ouest, côté pause.
   {
     const yS = 15.8, yM = 15.875, yN = 15.95, hT = Y_SS + 2.06;
+    // (le verre dépoli du -1, son dégradé calé sur la hauteur : une boîte a ses UV centrés, le bas reprenait le haut)
+    const dep = X.depoli.clone(); dep.map = X.depoli.map.clone(); dep.map.offset.set(0, 0.5); dep.map.needsUpdate = true;
     const bati = (x0, x1, h0, h1) => {
       B(x0, yS - 0.012, x1, yM, h0, h1, X.creme, { ombre: false });
       B(x0, yM, x1, yN + 0.012, h0, h1, Z.bati, { ombre: false });
@@ -350,12 +379,12 @@ export function poserAmphi(ch, K) {
     bati(8.82, 10.28, hT, hT + 0.05);                        // la traverse
     bati(8.82, 10.28, H_RET - 0.06, H_RET);                 // le haut
     bati(8.88, 9.32, Y_SS, Y_SS + 0.05);                    // le bas du fixe
-    B(8.88, yS - 0.006, 9.32, yN + 0.006, Y_SS + 0.05, hT, X.depoli, { ombre: false });
-    B(8.88, yS - 0.006, 10.22, yN + 0.006, hT + 0.05, H_RET - 0.06, X.depoli, { ombre: false });
+    B(8.88, yS - 0.006, 9.32, yN + 0.006, Y_SS + 0.05, hT, dep, { ombre: false });
+    B(8.88, yS - 0.006, 10.22, yN + 0.006, hT + 0.05, H_RET - 0.06, dep, { ombre: false });
     const Pt = ch.porte('x', yM, 9.8, { l: 0.86, h: 2.05, ep: 0.15, base: Y_SS, modele: 'vitree', blanc: true, tirant: 'aucun', huisserie: false,
       etat: 'auto', cote: 'N', charniere: 'd', libre: -1, nom: 'grande salle S -1.14' });
     const v = Pt.vantaux[0], s = v.s, w = 0.86, hv = 2.05;
-    maille(boiteM(w - 0.14, hv - 0.168, 0.014), X.depoli, s * w / 2, 0.07 + (hv - 0.168) / 2, 0, 0, v.g, { ombre: false });
+    maille(boiteM(w - 0.14, hv - 0.168, 0.014), dep, s * w / 2, 0.07 + (hv - 0.168) / 2, 0, 0, v.g, { ombre: false });
     for (const z of [1, -1]) {
       maille(boiteM(0.045, 0.15, 0.012), M.inox, s * (w - 0.04), 1.02, z * 0.031, 0, v.g, { ombre: false });
       maille(boiteM(0.13, 0.02, 0.02), M.inox, s * (w - 0.09), 1.06, z * 0.075, 0, v.g, { ombre: false });
@@ -450,7 +479,7 @@ export function poserAmphi(ch, K) {
   // UN FAUTEUIL (f_0082, f_0225) : coque de bois moulé, dossier galbé à bord supérieur creusé ; l'assise, rabattue, se
   // dresse devant le dossier ; la console noire qui la porte sur la poutre du rang
   const geoDos = (() => {
-    const R = 0.62, larg = 0.46, th = larg / R, haut = 0.38;
+    const R = 0.62, larg = 0.47, th = larg / R, haut = 0.41;
     const g = new THREE.CylinderGeometry(R, R, haut, 8, 1, true, -th / 2, th);
     const p = g.attributes.position;
     for (let i = 0; i < p.count; i++) if (p.getY(i) > 0) { const u = p.getX(i) / (larg / 2); p.setY(i, p.getY(i) - 0.035 * (1 - u * u)); }

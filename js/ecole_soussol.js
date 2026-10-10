@@ -1069,9 +1069,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       B(x - c / 2, y - c / 2, x + c / 2, y + c / 2, Y_SS, Y_SS + 0.62, mat, { collision: true });
       B(x - c / 2 + 0.03, y - c / 2 + 0.03, x + c / 2 - 0.03, y + c / 2 - 0.03, Y_SS + 0.62, Y_SS + 0.625, X.noir, { ombre: false });
     };
-    // (10/10 : 40 cm plus au sud — la porte de la grande salle, élargie à 1,40 m d'après la vidéo de 2021, s'ouvre juste
-    // à côté ; elle reste au pied du mur blanc du sas, v_062, v_065)
-    poubelle(10.24, 15.12, X.bleuPoubelle);
+    // (10/10 : collée au mur du sas — la porte de la grande salle, élargie à 1,40 m d'après la vidéo de 2021, passe à
+    // 18 cm d'elle ; on entre entre le fixe et la poubelle)
+    poubelle(10.26, 15.55, X.bleuPoubelle);
     for (const [y, h] of [[15.2, 1.45], [15.55, 1.5]]) panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#fbfbf8', Math.round(y * 10)), roughness: 0.7 }), 0.21, 0.297, 10.45, y, Y_SS + h, 'W');
     panneau(new THREE.MeshStandardMaterial({ map: texPersiennes(), roughness: 0.55 }), 0.6, 0.38, 10.45, 15.45, Y_SS + 2.08, 'W', 0.01);
     // ---- LE SAS DES TOILETTES : deux portes crème à plaque rouge (fermées), les casiers blancs dans la niche ----
