@@ -54,6 +54,7 @@ import { jourDehors, texAffiche, texConsignes, texPictoExtincteur } from './ecol
 import { cuireLumiereSol } from './ecole_lumieres.js';
 import { TELEPHONE } from './appareil.js';
 import { poserPalierEst } from './ecole_est.js';
+import { poserKahn, zonesKahn } from './ecole_kahn.js';
 
 // ---- les hauteurs ----
 const N1 = 3.5;                     // le plancher du 1er étage (H_RDC de js/carte_ecole.js)
@@ -1703,6 +1704,8 @@ export function poserEtage1(ch, renderer = null) {
     // LE PALIER EST ET LA CAGE DE L'ESCALIER EST (photos 27 à 29) : dans le groupe de l'étage, ses lampes cuites avec les
     // nôtres, son vinyle sur notre lumière et notre ombre cuites (js/ecole_est.js)
     poserPalierEst(ch, { groupe, lampes, matSol, R1 });
+    // LA SALLE ROBERT KAHN, Si 1.4 (10/10, la vidéo de visite : derrière le mur orange de l'espace pause ; js/ecole_kahn.js)
+    poserKahn(ch, { groupe, lampes, renderer, ySud: 12.0, xPorte: 12.65 });
   } finally {
     ch.decor = decor0; ch.portes.decor = portes0;
   }
@@ -1756,6 +1759,7 @@ export function poserEtage1(ch, renderer = null) {
     { id: 'e104', rects: [zr(16.5, -0.2, 20.0, Y_SALLES)], voisines: ['e1est'], env: env(18.15, 3.6) },
     { id: 'e1wc', rects: [zr(4.75, Y_COUR, 8.6, 12.8)], voisines: ['e1couloir'], env: env(6.6, 10.2) },
     { id: 'e1pause', rects: [zr(8.6, Y_COUR, 12.5, 12.75)], voisines: ['e1couloir'], env: env(10.5, 10.9) },
+    ...zonesKahn(),
   ];
 
   // =====================================================================
