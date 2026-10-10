@@ -70,6 +70,26 @@ function texBrosse() {
     }
   }, [2, 2], false, 8);
 }
+// LE REFLET DE L'INOX : une petite carte d'environnement à soi, neutre — un plafond clair, des murs blancs barrés d'une
+// réglette, un sol sombre (VO q_0274-0279 : les vantaux sont clairs en haut, une bande de lumière sous le linteau, plus
+// sombres vers le sol). Celle de la zone, prise loin de la façade et pleine de sols bruns, en faisait un panneau brun.
+function envInox() {
+  const face = (haut, bas, bande) => {
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 64);
+    gr.addColorStop(0, haut); gr.addColorStop(0.5, '#cfccc6'); gr.addColorStop(0.56, '#8d8a85'); gr.addColorStop(1, bas);
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    if (bande) { g.fillStyle = '#ffffff'; g.fillRect(8, 14, 48, 5); }
+    return c;
+  };
+  const ciel = document.createElement('canvas'); ciel.width = ciel.height = 64;
+  let g = ciel.getContext('2d'); g.fillStyle = '#efede8'; g.fillRect(0, 0, 64, 64); g.fillStyle = '#ffffff'; g.fillRect(24, 0, 16, 64);
+  const sol = document.createElement('canvas'); sol.width = sol.height = 64;
+  g = sol.getContext('2d'); g.fillStyle = '#4a4744'; g.fillRect(0, 0, 64, 64);
+  const t = new THREE.CubeTexture([face('#eeece7', '#3e3b38', true), face('#eeece7', '#3e3b38', false), ciel, sol, face('#eeece7', '#3e3b38', true), face('#eeece7', '#3e3b38', false)]);
+  t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true;
+  return t;
+}
 // LE SOL DE LA CABINE : un granit gris anthracite poli, mouchetures claires et noires (tuile 0,6 m)
 function texGranit() {
   return canvasTex(256, 256, (g, w, h) => {
@@ -156,14 +176,13 @@ function boiteBoutons() {
 function matieres(ch) {
   if (ch._ascX) return ch._ascX;
   const std = (o, nom) => { const m = new THREE.MeshStandardMaterial(o); m.name = nom; return m; };
-  const brosse = texBrosse();
+  const brosse = texBrosse(), env = envInox();
   const X = {
     // (etage2.md § 4 : inox brossé #A7A6A2, rugosité 0,35 — sous la lumière jaune de 2021, il sort doré. Relecture du
-    // 10/10 : à métal 0,86 puis 0,6, il ne renvoyait que la carte d'environnement de la zone, faite de sols bruns — un
-    // panneau brun foncé ; peu métallique et d'un gris un rien froid, il sort gris acier sous les plafonniers chauds,
-    // comme les murs blancs sortent blancs)
-    inox: std({ map: brosse, color: 0xc6ccd2, metalness: 0.25, roughness: 0.34 }, 'inox brossé (ascenseur)'),
-    inoxCab: std({ map: brosse, color: 0xccd1d6, metalness: 0.28, roughness: 0.3 }, 'inox brossé (cabine)'),
+    // 10/10 : avec la carte d'environnement de la zone, faite de sols bruns, il sortait brun foncé ; avec la sienne,
+    // neutre, il sort gris acier, clair en haut et sombre en bas comme sur la vidéo)
+    inox: std({ map: brosse, color: 0xc9ccd0, metalness: 0.7, roughness: 0.33, envMap: env, envMapIntensity: 0.9 }, 'inox brossé (ascenseur)'),
+    inoxCab: std({ map: brosse, color: 0xcdd0d4, metalness: 0.7, roughness: 0.3, envMap: env, envMapIntensity: 0.8 }, 'inox brossé (cabine)'),
     joint: std({ color: 0x2a2826, roughness: 0.6, metalness: 0.3 }, 'joint sombre (ascenseur)'),
     alu: std({ color: 0xb7b8b6, roughness: 0.38, metalness: 0.75 }, 'seuil aluminium (ascenseur)'),
     granit: std({ map: texGranit(), roughness: 0.32 }, 'granit de la cabine'),
