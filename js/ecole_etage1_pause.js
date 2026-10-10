@@ -493,6 +493,11 @@ export function poserPause1(ch, ctx) {
   }
   // LE MUR EST : le bloc de sortie au-dessus de la porte du palier, la grande affiche encadrée « ESC… » ; dans le recoin,
   // le déclencheur et le cadre de consignes (VO 67 s)
+  // (le mur du renfoncement nord du palier — x 13,2, js/ecole_est.js —, côté espace pause : la même peinture crème, sa
+  // plinthe brune ; et le bout du mur y 11,1 entre lui et le mur est)
+  panneau(P.creme, 1.5, HP - N1, 13.123, 11.85, N1 + (HP - N1) / 2, 'W');
+  B(13.105, 11.1, 13.123, 12.6, N1, N1 + 0.08, P.plinthe, { ombre: false });
+  panneau(P.creme, 0.37, HP - N1, 13.305, 11.023, N1 + (HP - N1) / 2, 'S');
   // (la grande affiche est sur le mur du renfoncement nord du palier, x 13,2 : à 67 s, la caméra sort de la Si 1.4 et
   // l'a à sa gauche, à 1-2 m)
   cadre(texAfficheESC(), 0.95, 1.35, 13.125, 11.85, 1.58, 'W');

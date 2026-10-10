@@ -1,14 +1,13 @@
 // =====================================================================
 //  LE 1er ÉTAGE DE L'ÉCOLE IRIS (crochet de js/carte_ecole.js)
 // =====================================================================
-// L'ÉTAGE EST IMAGINÉ, en attendant des photos de Haythem. Ce qui est SÛR vient des photos : la double porte coupe-feu
-// du palier (photos 06 et 20 : la même que celle du rez-de-chaussée), et surtout la FAÇADE (photos 11, 12, 16 à 18) —
-// douze travées de 1,65 m, une fenêtre par travée à menuiserie brun-noir, la grande baie dans son encadrement rouge à
-// l'ouest (travée 1 : par la vitre, la photo 12 montre des plafonniers et quelqu'un assis à une table — une salle de
-// cours), la fenêtre étroite dans son encadrement rouge à l'est (travée 12), les pastilles rouges des accès pompiers sur
-// ces deux-là. Les salles sont donc posées DERRIÈRE ces fenêtres, leurs cloisons tombant entre deux travées. Le reste
-// (couloir, toilettes, bureaux, salles côté cour) est la distribution courante d'un étage d'école, dans les matières et
-// la lumière du rez-de-chaussée. À reprendre quand les photos viendront.
+// Ce qui est SÛR vient des photos — la double porte coupe-feu du palier (photos 06 et 20), le palier est (27 à 29), la
+// FAÇADE (11, 12, 16 à 18 : douze travées de 1,65 m, une fenêtre par travée à menuiserie brun-noir, la grande baie dans
+// son encadrement rouge à l'ouest, travée 1, la fenêtre étroite rouge à l'est, travée 12, les pastilles des pompiers) —
+// et, depuis le 10/10, de la VIDÉO OFFICIELLE DE VISITE (2021), qui parcourt l'étage de 41 à 68 s : l'espace pause
+// orange derrière la porte du palier est, la salle de cours S 1.3 sur les travées 2 à 8, la porte de la salle Robert
+// Kahn (js/ecole_etage1_pause.js). Le reste (le bureau 103, la salle 104, le couloir sombre, le palier d'étage ouest)
+// est la distribution courante d'un étage d'école, dans les matières et la lumière du rez-de-chaussée — imaginé.
 //
 // LE PLAN DE L'ÉTAGE (repère du plan de js/carte_ecole.js : x le long de la façade, y vers le fond ; plancher à 3,50 m,
 // dessous de la dalle du 2e à 6,40 m) — refait le 10/10 d'après la vidéo officielle de visite (2021), qui le parcourt
@@ -62,7 +61,7 @@ const N1 = 3.5;                     // le plancher du 1er étage (H_RDC de js/ca
 const N2 = 6.6;                     // le plancher du 2e (un étage courant : 3,10 m, la tuile de la façade)
 const DALLE2 = 6.4;                 // le dessous de la dalle du 2e (H_CAGE de js/carte_ecole.js) : les cloisons y montent
 const H_SALLE = N1 + 2.7;           // le faux plafond des salles et des bureaux
-const H_COUL = N1 + 2.5;            // celui du couloir, du palier d'étage et des toilettes (les gaines passent au-dessus)
+const H_COUL = N1 + 2.5;            // celui du couloir sombre et du palier d'étage (les gaines passent au-dessus)
 const EP = 0.12;                    // les cloisons de l'étage (plaques de plâtre sur rails)
 // ---- les murs du couloir ----
 const Y_SALLES = 6.975;             // la cloison nord des salles sur rue
@@ -896,7 +895,7 @@ export function poserEtage1(ch, renderer = null) {
   }
 
   // =====================================================================
-  //  LA SALLE 104 : « Salle Gordon Earle Moore », B 1.5 (travées 11 et 12, la fenêtre des pompiers)
+  //  LA SALLE 104 : « Salle Gordon Earle Moore », Si 1.5 (travées 11 et 12, la fenêtre des pompiers ; non vue)
   // =====================================================================
   // (09/10 : le panneau d'étage du palier est, photo 28, la range parmi les salles de cours — ce n'est plus la salle des
   // enseignants. Étroite, 3,30 m : une salle de TD en deux îlots de six, le tableau blanc au mur nord, à côté de la porte
