@@ -202,15 +202,17 @@ function texDrapeau() {
 // LE TOTEM « 1ère école pour le BTS SIO en France » (VO a_0244-0291, photo 22) : roll-up noir ; l'équerre jaune et le
 // logo ; le texte en capitales À EMPATTEMENTS — « 1ÈRE ÉCOLE / POUR LE BTS SIO / EN FRANCE » en doré (« BTS SIO » en gras),
 // « ÉCOLE / DE L'INFORMATIQUE / ET DU NUMÉRIQUE » en blanc, « BAC À BAC+5 » en doré ; le site et le QR code au pied.
-// (relecture du 10/10, VO a_0244 et a_0262 : tout le texte tient dans la moitié HAUTE — doré de 25 à 32 % de la
-// hauteur, blanc de 38 à 45 %, « BAC À BAC+5 » à 51 %, interligne serré ; les lignes dorées et les deux dernières
-// blanches sont calées À DROITE, « ÉCOLE » et « BAC À BAC+5 » à gauche ; « INFORMATIQUE » et « NUMÉRIQUE » en gras)
+// (relecture du 10/10, VO a_0244, a_0260 et a_0262 : tout le texte tient dans la moitié HAUTE — doré du quart au tiers
+// de la hauteur, blanc de 40 à 48 %, « BAC À BAC+5 » vers 54 %, en grandes lettres serrées qui prennent presque toute la
+// largeur ; les lignes dorées et les deux dernières blanches sont calées À DROITE, « ÉCOLE » et « BAC À BAC+5 » à
+// gauche ; « INFORMATIQUE » et « NUMÉRIQUE » en gras)
 function texTotem() {
   return canvasTex(320, 800, (g, w, h) => {
     const d = g.createLinearGradient(0, 0, 0, h); d.addColorStop(0, '#1c1c1c'); d.addColorStop(1, '#0e0e0e');
     g.fillStyle = d; g.fillRect(0, 0, w, h);
-    carreJaune(g, 104, 30, 56);
-    logoIris(g, w / 2 + 8, 76, 64);
+    // (le logo en haut À GAUCHE, VO a_0260)
+    carreJaune(g, 34, 34, 54);
+    logoIris(g, 96, 80, 64);
     const serif = (poids, t) => `${poids} ${t}px "Didot", "Bodoni MT", "Times New Roman", Georgia, serif`;
     const OR = '#d9a43a', XD = w - 26;
     // une ligne calée à droite, faite de morceaux [texte, poids, taille, montée]
@@ -223,14 +225,14 @@ function texTotem() {
       g.restore();
     };
     g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.fillStyle = OR;
-    droite([['1', 400, 30], ['ÈRE', 400, 14, 12], [' ÉCOLE', 400, 30]], 206);
-    droite([['POUR LE ', 400, 27], ['BTS SIO', 700, 27]], 234);
-    droite([['EN FRANCE', 400, 27]], 262);
+    droite([['1', 400, 36], ['ÈRE', 400, 17, 14], [' ÉCOLE', 400, 36]], 200);
+    droite([['POUR LE ', 400, 32], ['BTS SIO', 700, 32]], 233);
+    droite([['EN FRANCE', 400, 32]], 266);
     g.fillStyle = '#f4f2ec';
-    g.font = serif(400, 24); g.fillText('ÉCOLE', 16, 312);
-    droite([["DE L'", 400, 24], ['INFORMATIQUE', 700, 24]], 340);
-    droite([['ET DU ', 400, 24], ['NUMÉRIQUE', 700, 24]], 368);
-    g.fillStyle = OR; g.font = serif(400, 21); g.fillText('BAC À BAC+5', 24, 412);
+    g.font = serif(400, 29); g.fillText('ÉCOLE', 14, 318);
+    droite([["DE L'", 400, 29], ['INFORMATIQUE', 700, 29]], 351);
+    droite([['ET DU ', 400, 29], ['NUMÉRIQUE', 700, 29]], 384);
+    g.fillStyle = OR; g.font = serif(400, 25); g.fillText('BAC À BAC+5', 22, 430);
     g.fillStyle = '#cfcfcf'; g.font = '600 16px "Segoe UI", Arial, sans-serif'; g.fillText('www.ecoleiris.fr', 22, h - 40);
     qr(g, w - 88, h - 92, 66);
   }, null, false, 8);
