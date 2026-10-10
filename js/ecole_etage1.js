@@ -1773,10 +1773,10 @@ export function poserEtage1(ch, renderer = null) {
     // (et la cage de l'escalier est, depuis le vestibule : on y voit monter la volée 1 jusqu'au 1er. Pas depuis le
     // couloir est : par la porte du vestibule, le regard ne passe pas 2,3 m — relecture du 09/10, tout l'étage n'y est
     // plus dessiné pour rien ; ni depuis le hall du -1, sous la cage principale — intégration du 10/10)
-    // (10/10, le 2e : au-dessus de ses plafonds, hors de la cage est et du sas, le 1er n'est plus vu — il n'est plus
-    // dessiné ; de la cage est, on voit la volée 4 et le palier du 1er)
+    // (10/10, le 2e : au-dessus de ses plafonds, hors des deux cages et du sas, le 1er n'est plus vu — il n'est plus
+    // dessiné ; de la cage est, on voit la volée 4 et le palier du 1er ; dans la cage ouest, son palier du 2e est le nôtre)
     const cage = (cam.x > 1.4 && cam.x < 5.0 && cam.z < -12.2 && cam.z > -19.0 && cam.y > -0.3) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7);
-    const au2e = cam.y > 7.0 && u.y > 6.0 && cam.z < -0.05 && !(cam.x > 13.4 && cam.z < -6.45 && cam.z > -12.75);
+    const au2e = cam.y > 7.0 && u.y > 6.0 && cam.z < -0.05 && !cage && !(cam.x > 13.4 && cam.z < -6.45 && cam.z > -12.75);
     const vis = (cage || cam.y > 2.7 || cam.z > -0.05 || u.y > 2.0) && !au2e;
     if (vis !== groupe.visible) groupe.visible = vis;
     // SON OMBRE quand Haythem y est (au-delà de la moitié de la volée 2 ; il redescend sous 2 m ; au 2e, elle ne tomberait

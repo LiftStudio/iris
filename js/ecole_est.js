@@ -32,8 +32,9 @@
 //                                                                  le renfoncement nord x 13,2-14,2 y 11,1-12,45, au
 //                                                                  fond la porte de la 106 (B 1.6, fermée) en x 15,2
 //            et la bande sud         x 16,05-19,8    y 7,0-9,0      jusqu'à la salle 104 et l'issue de secours
-//   au-dessus (IMAGINÉ, rien n'est photographié) : la volée 3 au-dessus de la volée 1 (17,2 cm, palier à 5,05 m), la
-//   volée 4 au-dessus de la volée 2, le palier du 2e (6,60 m, x 14,2-16,05 y 9,15-10,65) et sa porte fermée.
+//   au-dessus (la vidéo officielle, 68-71 s et 88,8-90 s ; 10/10) : la volée 3 au-dessus de la volée 1 (17,2 cm, palier
+//   à 5,05 m), la volée 4 au-dessus de la volée 2 (échiffre ROUGE de ce côté) jusqu'au palier du 2e (js/ecole_etage2.js),
+//   et la cage qui monte au 3e (poserCageHaute).
 //
 // LE MONDE SOLIDE comme l'escalier principal (js/carte_ecole.js construireEscalier) : une RAMPE par volée (la pente passe
 // par le milieu des marches), une dalle par palier, des boîtes « caméra seule » sous chaque marche ; les murs de la cage
@@ -42,6 +43,7 @@
 //
 //   poserEst(ch, { RECT }) -> { zones, zonesHaut, sols, maj }       (le rez-de-chaussée, appelé par la carte)
 //   poserPalierEst(ch, { groupe, lampes, matSol, R1 })              (le 1er et au-dessus, appelé par le 1er étage)
+//   poserCageHaute(ch, { groupe })                                  (au-dessus du 2e, appelé par le 2e étage)
 import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex, detailPhoto } from './kit_decor.js';

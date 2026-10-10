@@ -606,11 +606,11 @@ export function poserEtage2(ch, renderer = null) {
     B(xf + 0.04, 9.9, xf + 0.043, 9.94, N2 + 1.128, N2 + 1.164, M.noirMat, { ombre: false });
     B(xf, 9.88, xf + 0.018, 9.96, N2 + 0.21, N2 + 0.29, M.boitier, { ombre: false });
     B(xf + 0.018, 9.905, xf + 0.021, 9.935, N2 + 0.235, N2 + 0.265, M.noirMat, { ombre: false });
-    // LE RECOIN SUD-OUEST : l'extincteur au sol contre le mur ouest, ses deux pictogrammes (rouge à 1,9 m, rouge et bleu
-    // à 1,35 m ; VO q_0285-0288)
-    extincteur(13.55 + 0.06, 8.28, 'E');
-    panneau(matPan(texPictoExtincteur(), 0.5), 0.15, 0.15, 13.613, 8.28, N2 + 1.9, 'E');
-    panneau(matPan(texPictoAlarme(), 0.5), 0.1, 0.1, 13.613, 8.28, N2 + 1.35, 'E');
+    // LE RECOIN SUD-OUEST : l'extincteur au sol contre le mur SUD du recoin (VO q_0288, q_0290 : vu de face quand on se
+    // tourne vers la porte, à droite d'elle), ses deux pictogrammes au-dessus (rouge à 1,9 m, rouge et bleu à 1,35 m)
+    extincteur(13.9, Y_PAL + EP / 2 + 0.02, 'N');
+    panneau(matPan(texPictoExtincteur(), 0.5), 0.15, 0.15, 13.9, Y_PAL + EP / 2 + 0.003, N2 + 1.9, 'N');
+    panneau(matPan(texPictoAlarme(), 0.5), 0.1, 0.1, 13.9, Y_PAL + EP / 2 + 0.003, N2 + 1.35, 'N');
     // LA PORTE COUPE-FEU (VO q_0288-0292, g140, g152 ; 88,3 s vue du couloir) : un vantail de 0,95 m, gonds à l'est, qui
     // s'ouvre vers le palier (on la tire du palier, on la pousse du couloir) — bâton inox, oculus étroit cerclé de bois côté
     // serrure (ouest), étiquette rouge, ferme-porte côté sas, une feuille A4 côté couloir ; l'huisserie de bois brun
@@ -958,7 +958,7 @@ export function poserEtage2(ch, renderer = null) {
     // ---- ARRIÈRE (y 12,45) : le mur (30 cm, enduit dehors), les six fenêtres de la salle 1 (1,0 x 1,3 m, allège 0,95 ;
     // VO q_0304-0313) ; dehors, le jour (surexposé sur la vidéo). Pas devant
     // la cage ouest (x 1,6-4,75 : sa porte double du 2e, js/ecole_etage1.js) ----
-    const FA = FEN_S1.map((c) => ({ c, l: 1.0, bas: N2 + 0.95, haut: N2 + 2.25, s1: true }));
+    const FA = FEN_S1.map((c) => ({ c, l: 1.0, bas: N2 + 0.95, haut: N2 + 2.25 }));
     mur({ de: [-0.3, Y_ARR], a: [1.6, Y_ARR], ep: EP_ARR, h: N3, mats: { S: M.blanc, N: X.enduit } });
     mur({ de: [4.75, Y_ARR], a: [E.x0, Y_ARR], ep: EP_ARR, h: N3, mats: { S: M.blanc, N: X.enduit }, ouvertures: FA.map((f) => ({ c: f.c, l: f.l, bas: f.bas, h: f.haut })) });
     plinthe(X_S1 + EP / 2, Y_ARR - EP_ARR / 2 - 0.015, X_S1E - EP / 2, Y_ARR - EP_ARR / 2, X.plintheSalle);
@@ -1006,37 +1006,26 @@ export function poserEtage2(ch, renderer = null) {
     lampe({ type: 'jour', x: X_PAN - 1.0, z: -Y_FEN, h: N2 + 2.4, sx: X_PAN + 0.45, sz: -Y_FEN, ox: X_PAN - 0.6, oz: -Y_FEN, zone: 'e2palier', reel: false, cuireForce: 0.5 });
     ch.lampes.push({ type: 'jour', x: X_PAN - 1.2, z: -Y_FEN, h: N2 + 2.6, cx: X_PAN + 2.5, cz: -Y_FEN, zone: 'e2palier', base: N2, cuire: false, poids: 1.2 });
   }
-  // UNE FENÊTRE CÔTÉ COUR, dans la façade arrière : la menuiserie au milieu de l'épaisseur — brun-noir et sa traverse
-  // aux deux cinquièmes, ses stores à lamelles verticales au-dessus (la salle 1, VO crops/fenetres_c1) ; anthracite, un
-  // seul ouvrant et sa poignée à gauche (le palier) —, la tablette blanche, le jour derrière, la vitre vue de dehors
-  function fenetreCour({ c, l, bas, haut, s1 }) {
-    const ym = Y_ARR, c0 = 0.075, x0 = c - l / 2, x1 = c + l / 2, mat = s1 ? M.menuiserie : X.anthracite, e = 0.035;
+  // UNE FENÊTRE CÔTÉ COUR de la salle 1, dans la façade arrière (VO crops/fenetres_c1) : la menuiserie brun-noir au
+  // milieu de l'épaisseur et sa traverse aux deux cinquièmes, les stores à lamelles verticales au-dessus, la tablette
+  // blanche, le jour derrière, la vitre vue de dehors
+  function fenetreCour({ c, l, bas, haut }) {
+    const ym = Y_ARR, c0 = 0.075, x0 = c - l / 2, x1 = c + l / 2, mat = M.menuiserie, e = 0.035, yi = Y_ARR - EP_ARR / 2;
     B(x0, ym - e, x1, ym + e, bas, bas + c0, mat, { ombre: false }); B(x0, ym - e, x1, ym + e, haut - c0, haut, mat, { ombre: false });
     B(x0, ym - e, x0 + c0, ym + e, bas, haut, mat, { ombre: false }); B(x1 - c0, ym - e, x1, ym + e, bas, haut, mat, { ombre: false });
     const ht = bas + (haut - bas) * 0.4;
-    if (s1) B(x0, ym - e, x1, ym + e, ht - 0.035, ht + 0.035, mat, { ombre: false });
-    else {
-      // l'ouvrant (son cadre en retrait), la poignée à gauche vue du palier (côté ouest)
-      B(x0 + c0, ym - e - 0.012, x1 - c0, ym - e, bas + c0, bas + c0 + 0.05, mat, { ombre: false });
-      B(x0 + c0, ym - e - 0.012, x1 - c0, ym - e, haut - c0 - 0.05, haut - c0, mat, { ombre: false });
-      B(x0 + c0, ym - e - 0.012, x0 + c0 + 0.05, ym - e, bas + c0, haut - c0, mat, { ombre: false });
-      B(x1 - c0 - 0.05, ym - e - 0.012, x1 - c0, ym - e, bas + c0, haut - c0, mat, { ombre: false });
-      B(x0 + c0 + 0.01, ym - e - 0.05, x0 + c0 + 0.03, ym - e - 0.012, (bas + haut) / 2 - 0.07, (bas + haut) / 2 + 0.04, M.alu, { ombre: false });
-    }
+    B(x0, ym - e, x1, ym + e, ht - 0.035, ht + 0.035, mat, { ombre: false });
     const v = new THREE.Mesh(new THREE.PlaneGeometry(l - 2 * c0, haut - bas - 2 * c0), ciel);
     v.position.set(c, (bas + haut) / 2, -(ym + 0.005)); fixe.add(v);
     const d = new THREE.Mesh(new THREE.PlaneGeometry(l - 2 * c0, haut - bas - 2 * c0), vitreDehors);
     d.position.set(c, (bas + haut) / 2, -(ym + 0.02)); d.rotation.y = Math.PI; d.castShadow = false; fixe.add(d);
-    const yi = Y_ARR - EP_ARR / 2;
     B(x0, yi - 0.02, x1, ym - e, bas - 0.025, bas, M.blanc, { ombre: false });
     C.ajouterBoite(x0, -yi, x1, -(Y_ARR + EP_ARR / 2), { y0: bas, y1: haut, vitre: true });
-    if (s1) {
-      // les stores à lamelles verticales claires (9 cm), ouvertes — vues de la salle, des traits clairs sur le jour (VO
-      // crops/fenetres_c1, fen_c1_225), sur les trois cinquièmes du haut : un plan découpé (les lames vues par la tranche)
-      const hl = haut - ht - 0.08, st = new THREE.Mesh(new THREE.PlaneGeometry(l - 0.1, hl), storesOuverts);
-      st.position.set(c, ht + 0.03 + hl / 2, -(yi - 0.05)); fixe.add(st);
-      B(x0 + 0.03, yi - 0.1, x1 - 0.03, yi - 0.03, haut - 0.05, haut + 0.01, M.alu, { ombre: false });
-    }
+    // les stores à lamelles verticales claires (9 cm), ouvertes — vues de la salle, des traits clairs sur le jour (VO
+    // crops/fenetres_c1, fen_c1_225), sur les trois cinquièmes du haut : un plan découpé (les lames vues par la tranche)
+    const hl = haut - ht - 0.08, st = new THREE.Mesh(new THREE.PlaneGeometry(l - 0.1, hl), storesOuverts);
+    st.position.set(c, ht + 0.03 + hl / 2, -(yi - 0.05)); fixe.add(st);
+    B(x0 + 0.03, yi - 0.1, x1 - 0.03, yi - 0.03, haut - 0.05, haut + 0.01, M.alu, { ombre: false });
   }
 
   // =====================================================================
