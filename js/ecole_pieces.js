@@ -69,7 +69,9 @@ const DC = { x0: 1.75, x1: 8.85, y0: 18.75, y1: 24.35 };    // la salle David Cl
 const zone = (id, R, env) => ({ id, rects: [[R.x0, -R.y1, R.x1, -R.y0, -1]], voisines: [], env });
 const ZONES = [
   zone('salleA', SA, { x: 7.4, y: 1.6, z: -4.0 }),
-  zone('bureauB', BB, { x: 11.7, y: 1.55, z: -3.0 }),
+  // (10/10 : le bureau B a perdu son angle nord-est — x 12,1-13,2 × y 2,5-4,74 —, le passage au sud-ouest de la pile du hall,
+  // js/carte_ecole.js et js/ecole_rdc_centre.js : deux rectangles)
+  { ...zone('bureauB', BB, { x: 11.3, y: 1.55, z: -2.6 }), rects: [[BB.x0, -2.425, BB.x1, -BB.y0, -1], [BB.x0, -BB.y1, 12.025, -2.425, -1]] },
   zone('service', SV, { x: 0.8, y: 1.5, z: -6.8 }),
   zone('local', LT, { x: 10.2, y: 1.7, z: -14.9 }),
   // (relecture du 09/10 : les deux toilettes du C05 prennent leur vue HAUT, à 2,20 m, et loin des portes safran des
@@ -588,14 +590,15 @@ function texPlaqueWC(picto) {
     g.font = '600 11px "Segoe UI", Arial, sans-serif'; g.fillText('Toilettes', w / 2, 104);
   }, null, false, 2);
 }
-// LA PLAQUE DE LA SALLE (photo 23, à droite de la porte bleue) : noire, trois lignes blanches
+// LA PLAQUE DE LA SALLE (photo 23, à droite de la porte bleue) : noire, trois lignes blanches — « Si 0.2 », une salle
+// informatique (l'annuaire du hall, VO 7,9-8,1 s ; 10/10)
 function texPlaqueSalle() {
   return canvasTex(192, 112, (g, w, h) => {
     g.fillStyle = '#242322'; g.fillRect(0, 0, w, h);
     g.fillStyle = '#f2f2f2'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
     g.font = '600 19px "Segoe UI", Arial, sans-serif'; g.fillText('Salle', w / 2, 30);
     g.font = '500 21px "Segoe UI", Arial, sans-serif'; g.fillText('David Clark', w / 2, 62);
-    g.font = '600 19px "Segoe UI", Arial, sans-serif'; g.fillText('B 0.2', w / 2, 94);
+    g.font = '600 19px "Segoe UI", Arial, sans-serif'; g.fillText('Si 0.2', w / 2, 94);
   }, null, false, 4);
 }
 // L'AFFICHE DES PORTES DES TOILETTES (photo 23) : « DES PROTECTIONS HYGIÉNIQUES GRATUITES / À VOTRE DISPOSITION » sur
@@ -973,7 +976,8 @@ function bureauB(ch, P) {
   radiateur(ch, 11.15, 0, 12.05, 0.09, 0.15, 0.65);
   // le tapis
   const tapis = new THREE.MeshStandardMaterial({ map: texTapis(), roughness: 1 });
-  ch.boite(10.45, 0.35, 12.95, 3.45, 0, 0.01, tapis, { ombre: false });
+  // (10/10 : sous le bureau et le fauteuil seulement — l'angle nord-est est devenu le passage de la pile)
+  ch.boite(10.45, 0.35, 12.95, 2.35, 0, 0.01, tapis, { ombre: false });
   // le bureau de chêne clair sur piètement noir, son caisson blanc
   ch.boite(11.0, 1.35, 12.5, 2.15, 0.72, 0.75, P.chene);
   for (const x of [11.04, 12.46]) for (const y of [1.39, 2.11]) ch.boite(x - 0.02, y - 0.02, x + 0.02, y + 0.02, 0.01, 0.72, P.noirMat);
@@ -997,8 +1001,8 @@ function bureauB(ch, P) {
   const pot = groupe(ch, 11.07, 2.05, 'S', 0.75); CY(pot, P.noirMat, 0.035, 0.1, 0, 0.05, 0, 14); for (let i = 0; i < 3; i++) CY(pot, [P.bleu, P.rouge, P.jaune][i], 0.005, 0.15, -0.012 + i * 0.012, 0.11, (i - 1) * 0.008, 6, { ombre: false });
   // le fauteuil (haut dossier) et les deux chaises visiteurs
   chaiseBureau(ch, P, 11.7, 0.86, 'N', { accoudoirs: true, haut: true, nom: 'le fauteuil du bureau', sortie: [-0.8, 0] });
-  chaiseLuge(ch, P, 11.3, 2.72, 'S');
-  chaiseLuge(ch, P, 12.15, 2.72, 'S', -0.12);
+  chaiseLuge(ch, P, 10.95, 2.8, 'S');
+  chaiseLuge(ch, P, 11.7, 2.8, 'S', -0.12);
   // l'armoire haute (deux portes) au mur est
   ch.boite(12.76, 0.3, 13.2, 2.1, 0, 1.98, P.grisClair, { collision: true });
   ch.boite(12.75, 0.31, 12.76, 1.195, 0.03, 1.95, P.blancMat, { ombre: false });
@@ -1020,14 +1024,14 @@ function bureauB(ch, P) {
   // le tableau (impression encadrée) au-dessus du fauteuil des visiteurs, la grande plante, le porte-manteau
   cadre(ch, P, new THREE.MeshStandardMaterial({ map: texArt(), roughness: 0.7 }), BB.x0, 2.75, 'E', 0.82, 1.02, 1.62, { baguette: P.chene, ep: 0.03 });
   plante(ch, P, 10.48, 4.25, { h: 1.65, graineN: 3 });
-  const pm = groupe(ch, 12.92, 4.35, 'S');
+  const pm = groupe(ch, 10.4, 3.6, 'S');
   CY(pm, P.noirMat, 0.17, 0.02, 0, 0.01, 0, 20); CY(pm, P.noirMat, 0.016, 1.75, 0, 0.88, 0, 8);
   for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + 0.4; const c = CY(pm, P.noirMat, 0.008, 0.18, Math.sin(a) * 0.07, 1.67, Math.cos(a) * 0.07, 6, { ombre: false }); c.rotation.set(Math.cos(a) * 0.8, 0, -Math.sin(a) * 0.8); }
   vetement(pm, P.tissu, 0.0, 1.66, 0.12, { haut: 0.85, rot: 0.3 });  // un manteau sombre (devant le mât, qu'il frôle)
-  C.ajouterCercle(12.92, -4.35, 0.2, { y1: 1.8 });
-  corbeille(ch, P, 12.75, 2.35, null, 0.12, 0.3);
-  // la plaque « Bureau B » côté cou
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaque('Bureau B', 'bureau'), roughness: 0.4 }), 12.72, 4.86, 'N', 0.17, 0.17, 1.6, { ep: 0.006 });
+  C.ajouterCercle(10.4, -3.6, 0.2, { y1: 1.8 });
+  corbeille(ch, P, 12.66, 2.22, null, 0.12, 0.3);
+  // (10/10 : la plaque « Bureau B » a cédé la place à celle du bureau de direction B 0.3 et à son drapeau, VO q_0044 :
+  // js/ecole_rdc_centre.js)
 }
 // LA CHAISE VISITEUR « luge » : tube chromé en traîneau, coque et dossier de tissu
 function chaiseLuge(ch, P, x, y, face, rot = 0) {

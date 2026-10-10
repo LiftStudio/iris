@@ -52,6 +52,7 @@ import { poserPieces } from './ecole_pieces.js';
 import { poserEtage1 } from './ecole_etage1.js';
 import { poserSousSol } from './ecole_soussol.js';
 import { poserEst } from './ecole_est.js';
+import { poserRdcCentre } from './ecole_rdc_centre.js';
 
 // ---- les hauteurs ----
 const H_DALLE = 3.25;            // le dessous de la dalle du 1er étage (les cloisons montent jusque-là)
@@ -683,15 +684,23 @@ function construireMurs(ch) {
   ch.porte('x', 20.675, 12.6, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'S', nom: 'fond du C01' });
   // ---- LE « COU » ET LE BUREAU B ----
   ch.mur({ de: [9.975, 0], a: [9.975, 9.075], mats: B, plinthes: ['W', 'E'] });
-  ch.mur({ de: [10.05, 4.8], a: [13.2, 4.8], ep: 0.12, mats: B, plinthes: ['N', 'S'], ouvertures: [{ c: 10.6, l: 1.0, bas: 1.0, h: 2.4 }, { c: 11.85, l: 0.9, h: 2.1 }] });
+  // LE BUREAU DE DIRECTION B 0.3 (le « bureau B ») ET LE PASSAGE AU SUD-OUEST DE LA PILE (10/10, VO 7,0-9,0 s et photo 03 :
+  // de la porte 6, la vue passe à gauche de la pile entre y 3,6 et 4,7 ; du cou, le hall et toute la porte 6 au-delà de
+  // l'angle de la pile — la pile : js/ecole_rdc_centre.js). Le bureau perd son angle nord-est : son mur est s'arrête à
+  // y 2,5, deux retours (y 2,5 et x 12,1) le referment ; le passage fait 2,1 m côté hall et 1,13 m entre l'angle du bureau
+  // et celui de la pile. Son mur nord garde le jour dépoli (0,62 m, la largeur que lui donne la photo 01 à côté de la
+  // porte) et la porte vitrée, poussée à l'ouest ; entre les deux, la plaque du bureau de direction.
+  ch.mur({ de: [10.05, 4.8], a: [12.175, 4.8], ep: 0.12, mats: B, plinthes: ['N', 'S'], ouvertures: [{ c: 10.42, l: 0.62, bas: 1.0, h: 2.4 }, { c: 11.5, l: 0.9, h: 2.1 }] });
   const nordB = new THREE.Group(); nordB.position.set(0, 0, -4.8); ch.decor.add(nordB);
-  fenetreDepolie(nordB, M, { x: 10.6, l: 1.0, bas: 1.0, haut: 2.4, ep: 0.12, bandeClaire: 0.2 });
-  ch.C.ajouterBoite(10.1, -4.75, 11.1, -4.85, { y0: 1.0, y1: 2.4, vitre: true });
+  fenetreDepolie(nordB, M, { x: 10.42, l: 0.62, bas: 1.0, haut: 2.4, ep: 0.12, bandeClaire: 0.2 });
+  ch.C.ajouterBoite(10.11, -4.75, 10.73, -4.85, { y0: 1.0, y1: 2.4, vitre: true });
   // (toujours vers le cou, comme sur la photo 03 où elle est ouverte de ce côté : jamais de vantail dans ce petit bureau)
-  ch.porte('x', 4.8, 11.85, { l: 0.9, h: 2.1, ep: 0.12, modele: 'vitree', etat: 'auto', cote: 'S', tirant: 'court', libre: -1, nom: 'bureau B' });
-  // le mur est du bureau B : tableau noir du portail n° 6 jusqu'à y = 0,3, puis le hall
+  ch.porte('x', 4.8, 11.5, { l: 0.9, h: 2.1, ep: 0.12, modele: 'vitree', etat: 'auto', cote: 'S', tirant: 'court', libre: -1, nom: 'bureau B' });
+  ch.mur({ de: [12.1, 2.5], a: [12.1, 4.86], mats: B, plinthes: ['E', 'W'] });
+  ch.mur({ de: [12.025, 2.5], a: [13.35, 2.5], mats: B, plinthes: ['N', 'S'] });
+  // le mur est du bureau B : tableau noir du portail n° 6 jusqu'à y = 0,3, puis le hall, jusqu'au retour y 2,5
   ch.mur({ de: [13.275, -0.4], a: [13.275, 0.3], mats: { E: M.noirMat, W: B } });
-  ch.mur({ de: [13.275, 0.3], a: [13.275, 4.875], mats: B, plinthes: ['E', 'W'] });
+  ch.mur({ de: [13.275, 0.3], a: [13.275, 2.575], mats: B, plinthes: ['E', 'W'] });
   // le trumeau blanc du cou, le pilier gris de la salle d'attente (plinthes de bois tout autour)
   const pilier = (x0, y0, x1, y1, mat) => {
     ch.boite(x0, y0, x1, y1, 0, H_DALLE, mat, { collision: true });
@@ -705,7 +714,8 @@ function construireMurs(ch) {
   // (09/10, photo 24 : la porte du mur nord n'est pas en x 17 mais en face de la porte 6 — 1,5 vantail, x 14,70-16,10 ;
   // à l'est, la cloison vitrée cannelée du bureau du photocopieur. Les vantaux, la cloison, le couloir et l'escalier qui
   // suivent : js/ecole_est.js)
-  ch.mur({ de: [13.5, 7.575], a: [16.25, 7.575], mats: B, plinthes: ['S'], ouvertures: [{ c: 15.4, l: 1.4, h: 2.1 }] });
+  // (10/10 : à l'ouest de la porte, la pile — js/ecole_rdc_centre.js : le mur part de sa face est)
+  ch.mur({ de: [14.6, 7.575], a: [16.25, 7.575], mats: B, plinthes: ['S'], ouvertures: [{ c: 15.4, l: 1.4, h: 2.1 }] });
   ch.mur({ de: [19.95, -0.4], a: [19.95, 7.65], ep: 0.3, mats: B, plinthes: ['W'] });
   // ---- L'ESCALIER : la cage (jusqu'au plafond de l'étage), les portes coupe-feu ----
   ch.mur({ de: [1.6, 13.675], a: [4.75, 13.675], mats: B, plinthes: ['S', 'N'], ouvertures: [{ c: 3.5, l: 1.8, h: 2.1 }] });
@@ -819,7 +829,9 @@ export function construireCarte(scene, renderer = null) {
   // le mur du fond de la salle d'attente : le radiateur à côté du présentoir (photo 21), et celui du bout du mur, près
   // de l'angle du hall d'entrée, sous le haut-parleur et l'affichette WIFI (photo 03) (09/10)
   radiateur(ch, 13.5, 10.5, 'W', 0.45, 0.15, 1.1);
-  radiateur(ch, 13.5, 8.4, 'W', 0.5, 0.12, 1.15);
+  // (10/10 : celui de la photo 03 est sur la face ouest de la pile, à 0,9 m de son angle sud-ouest — l'angle au-delà
+  // duquel la photo voit le hall)
+  radiateur(ch, 13.3, 5.6, 'W', 0.5, 0.12, 1.15);
   // la caméra de surveillance du hall ouest et son haut-parleur ; le déclencheur manuel rouge
   const dome = maille(new THREE.SphereGeometry(0.06, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.boitier, 4.2, 2.4, -12.9, 0, ch.decor, { ombre: false });
   dome.userData.horsAOSol = true;
@@ -859,7 +871,8 @@ export function construireCarte(scene, renderer = null) {
   for (const [x, y] of [[12.6, 16.0], [12.6, 19.4]]) ch.opale(x, y, 2.45, 'c01');
   // (09/10 : le spot nord-est du hall, 18,2 ; 6,0, tombait dans le bureau du photocopieur — js/ecole_est.js — : avancé)
   for (const [x, y] of [[16.4, 1.4], [18.6, 1.4], [14.9, 3.7], [17.3, 3.7], [19.0, 3.9], [15.8, 6.0], [18.1, 4.85]]) ch.spot(x, y, 2.6, 'hall');
-  for (const [x, y] of [[11.0, 2.4], [12.5, 2.4]]) ch.spot(x, y, 2.6, 'bureauB');
+  // (10/10 : le bureau B a perdu son angle nord-est, le passage de la pile — le second spot recule)
+  for (const [x, y] of [[11.0, 2.4], [12.55, 1.55]]) ch.spot(x, y, 2.6, 'bureauB');
   // (la salle A : ses six dalles LED sont posées avec son mobilier, js/ecole_pieces.js)
   ch.opale(3.2, 18.6, 3.75, 'escalier', { mur: 'S', r: 0.15 });
   ch.opale(3.2, 13.4, H_CAGE, 'palier1', { r: 0.18, base: 2 * ESC.hPalier });
@@ -879,6 +892,8 @@ export function construireCarte(scene, renderer = null) {
 
   // ---- LES CROCHETS : le mobilier, la rue ----
   poserMobilier(ch);
+  // la pile du hall (plaque « iris », horloge, annuaires), le bureau de direction B 0.3, le totem : js/ecole_rdc_centre.js
+  poserRdcCentre(ch);
   poserRue(ch);
   // les pièces qu'on peut maintenant visiter (salle A, bureau B, couloir de service, local, toilettes, salle David
   // Clark) et leurs zones
@@ -931,8 +946,10 @@ export function construireCarte(scene, renderer = null) {
     { id: 'hallO', rects: [zr(1.6, 5.0, 4.9, 9.0), zr(1.6, 9.0, 5.8, 13.6)], voisines: ['attente', 'passage', 'c05', 'escalier'], env: { x: 3.4, y: 1.6, z: -9.8 } },
     { id: 'c01', rects: [zr(11.6, 12.0, 13.6, 20.75)], voisines: ['attente'], env: { x: 12.6, y: 1.5, z: -16.5 } },
     { id: 'attente', rects: [zr(5.8, 9.0, 13.6, 12.0)], voisines: ['hallO', 'cou', 'c01'], env: { x: 9.2, y: 1.6, z: -10.5 } },
-    { id: 'cou', rects: [zr(9.9, 4.8, 13.5, 9.0)], voisines: ['attente', 'hall'], env: { x: 11.9, y: 1.6, z: -7.2 } },
-    { id: 'hall', rects: [zr(13.3, -0.45, 20.1, 7.6)], voisines: ['cou', 'rue', 'couloirEst'], env: { x: 15.8, y: 1.6, z: -4.0 } },
+    // (10/10 : le cou s'arrête à la pile et prend le passage au sud-ouest de la pile ; le hall perd la pile —
+    // js/ecole_rdc_centre.js)
+    { id: 'cou', rects: [zr(9.9, 4.8, 13.3, 9.0), zr(12.1, 2.5, 13.3, 4.8)], voisines: ['attente', 'hall'], env: { x: 11.9, y: 1.6, z: -7.2 } },
+    { id: 'hall', rects: [zr(13.3, -0.45, 20.1, 4.7), zr(14.675, 4.7, 20.1, 7.6)], voisines: ['cou', 'rue', 'couloirEst'], env: { x: 15.8, y: 1.6, z: -4.0 } },
     { id: 'rue', rects: [zr(-25, -12, 50, -0.4)], voisines: ['hall', 'passage'], env: { x: 9.5, y: 1.7, z: 3.4 } },
     ...pieces.zones,
     ...est.zones,
@@ -983,8 +1000,9 @@ export function construireCarte(scene, renderer = null) {
       for (const m of solsCuits) if (m !== M.sol) { m.aoMap = M.sol.aoMap; m.aoMapIntensity = M.sol.aoMapIntensity; m.needsUpdate = true; }
     }
   };
-  // le départ : dans le hall d'entrée, juste passé la porte 6, tourné vers le cou et la salle d'attente
-  const d = { x: 15.3, y: 2.9 }, v = { x: 11.6 - d.x, y: 8.4 - d.y }, n = Math.hypot(v.x, v.y);
+  // le départ : dans le hall d'entrée, juste passé la porte 6, plein nord, face à la pile et à sa plaque « iris » — là
+  // où entre la visite officielle (VO q_0026-0028 ; 10/10)
+  const d = { x: 14.9, y: 1.3 }, v = { x: 0, y: 1 }, n = Math.hypot(v.x, v.y);
   return {
     nom: 'IRIS — rez-de-chaussée',
     collisions: C,
