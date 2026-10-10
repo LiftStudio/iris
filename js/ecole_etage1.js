@@ -880,20 +880,20 @@ export function poserEtage1(ch, renderer = null) {
     const B0 = M.blanc;
     // les mitoyens (l'ouest de la salle 101, l'est de la salle 104 et le bout du couloir)
     mur({ de: [-0.15, 0], a: [-0.15, 7.05], ep: 0.3, mats: B0, plinthes: ['E'] });
-    mur({ de: [19.95, 0], a: [19.95, 8.99], ep: 0.3, mats: B0, plinthes: ['W'], ouvertures: [{ c: 7.95, l: 0.93 }] });
+    // (10/10 : plein — l'issue de secours du bout de la bande tombait dans la gaine de l'ascenseur, VO q_0274-0281)
+    mur({ de: [19.95, 0], a: [19.95, 8.99], ep: 0.3, mats: B0, plinthes: ['W'] });
     // les cloisons entre les salles, sur les limites de travées (entre deux fenêtres)
     for (const x of [6.6, 13.2, 16.5]) mur({ de: [x, 0], a: [x, Y_SALLES - EP / 2], mats: B0, plinthes: ['E', 'W'] });
-    // LA CLOISON NORD DES SALLES (le mur sud du couloir) et ses quatre portes
+    // LA CLOISON NORD DES SALLES (le mur sud du couloir) et ses portes
     // (09/10 : celle du bureau 103, 13,95 -> 15,35 — le couloir finit en x 13,55, photo 28, et le mur sud du palier est,
-    // entre la porte du couloir et x 14,5, n'a pas de porte)
-    const PORTES_SALLES = [5.75, 12.35, 15.35, 17.15];
+    // entre la porte du couloir et x 14,5, n'a pas de porte ; 10/10 : la bande sud non plus, jusqu'à l'ascenseur — VO
+    // q_0274-0281 : les portes du 103 et de la 104 n'y sont pas, leur accès est à trouver, js/ecole_ascenseur.js)
+    const PORTES_SALLES = [5.75, 12.35];
     mur({ de: [-0.3, Y_SALLES], a: [19.8, Y_SALLES], mats: B0, plinthes: ['N', 'S'], ouvertures: PORTES_SALLES.map((c) => ({ c, l: 0.95 })) });
     // (ouvertes dans la salle, contre la cloison : le gond côté cloison ; celle de la 101, rabattue à plat contre le mur
     // — l'allée du fond de la salle passe là)
     porte('x', Y_SALLES, 5.75, { etat: 'ouverte', angle: 2.95, cote: 'S', nom: 'salle 101' });
     porte('x', Y_SALLES, 12.35, { etat: 'ouverte', angle: 1.5, cote: 'S', charniere: 'd', nom: 'salle 102' });
-    porte('x', Y_SALLES, 15.35, { etat: 'ouverte', angle: 1.5, cote: 'S', nom: 'bureau 103', notices: 1 });
-    porte('x', Y_SALLES, 17.15, { etat: 'ouverte', angle: 1.5, cote: 'S', nom: 'salle 104' });
     // les blocs de sortie au-dessus des portes des deux salles de cours, côté salle
     for (const x of [5.75, 12.35]) ch.sortie(x, Y_SALLES - EP / 2 - 0.03, N1 + 2.3, 'S');
     // LA CLOISON NORD DU COULOIR : les toilettes (ouvertes), les salles côté cour (fermées) — jusqu'au bout du couloir, x
@@ -906,9 +906,6 @@ export function poserEtage1(ch, renderer = null) {
     porte('x', Y_COUR, 5.4, { etat: 'ouverte', angle: 1.45, cote: 'N', charniere: 'd', oculus: false, nom: 'toilettes' });
     // (09/10 : la 105 est l'espace pause, ouverte — son vantail rabattu contre le mur, côté est, dans la pièce)
     porte('x', Y_COUR, 9.6, { etat: 'ouverte', angle: 2.95, cote: 'N', charniere: 'd', notices: 2, nom: 'espace pause' });
-    // l'issue de secours au bout du couloir (fermée) et son bloc vert
-    porte('y', 19.95, 7.95, { etat: 'fermee', cote: 'E', ep: 0.3, notices: 1, nom: 'issue de secours (étage)' });
-    ch.sortie(19.78, 7.95, N1 + 2.3, 'W');
     // LE PALIER D'ÉTAGE : à l'ouest, le mur du local ménage (porte de gaine fermée) — peint en SAFRAN, comme le mur de
     // la salle d'attente (photos 02, 21), avec le panneau de l'étage ; à l'est, les toilettes
     mur({ de: [1.675, Y_SALLES + EP / 2], a: [1.675, 12.45], ep: 0.15, mats: { E: M.orange, W: B0 }, plinthes: ['E'], ouvertures: [{ c: 7.95, l: 0.95 }] });
@@ -1660,8 +1657,6 @@ export function poserEtage1(ch, renderer = null) {
     // portes du 103 et de la 104 y sont passées, celle de la 106, B 1.6, est au fond du palier : js/ecole_est.js)
     plaqueSalle('Salle', 'de cours', 'B 1.1', 6.45, Y_SALLES + EP / 2 + 0.003, 'N');
     plaqueSalle('Salle', 'Robert Kahn', 'B 1.4', 11.6, Y_SALLES + EP / 2 + 0.003, 'N');
-    plaqueSalle('Bureau', 'Pédagogie', null, 16.0, Y_SALLES + EP / 2 + 0.003, 'N');
-    plaqueSalle('Salle', 'Gordon Earle Moore', 'B 1.5', 17.84, Y_SALLES + EP / 2 + 0.003, 'N');
     plaqueSalle('Espace', 'pause', null, 8.84, Y_COUR - EP / 2 - 0.003, 'S', 'tasse');
     panneau(new THREE.MeshStandardMaterial({ map: texPlaqueWC(), roughness: 0.4 }), 0.16, 0.2, 6.05, Y_COUR - EP / 2 - 0.003, N1 + 1.6, 'S');
     // le tableau de liège (cadre d'aluminium) et les affiches entre les portes côté cour

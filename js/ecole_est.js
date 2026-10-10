@@ -19,7 +19,8 @@
 //                                                               est le vitrage cannelé (photo 24), ses murs côté hall
 //                                                               sont blancs (les photos 03 et 16 ne voient pas ce coin)
 //   le couloir est                   x 14,6-16,2     y 7,575-10,8   mur jaune à l'ouest, plaque directionnelle
-//   le dégagement                    x 16,2-19,8     y 7,65-9,0     devant le vitrage ; le poteau gris x 16,2-16,35
+//   le dégagement                    x 16,2-17,9     y 7,65-9,0     devant le vitrage ; le poteau gris x 16,2-16,35 ; au
+//                                                                  bout, la porte de l'ASCENSEUR (js/ecole_ascenseur.js)
 //   la niche sous la volée 2         x 16,2-18,3     y 9,15-10,65   tapis noir, interrupteur, la boucle noire
 //   la porte du vestibule            x 14,70-16,05   y 10,725   vantail 0,85 (auto) + vantail de 0,50 entrebâillé
 //   le vestibule                     x 14,6-16,05    y 10,8-12,45
@@ -31,7 +32,7 @@
 //                                                                  11,1, la porte du couloir en x 13,55 (y 7,12-8,55),
 //                                                                  le renfoncement nord x 13,2-14,2 y 11,1-12,45, au
 //                                                                  fond la porte de la 106 (B 1.6, fermée) en x 15,2
-//            et la bande sud         x 16,05-19,8    y 7,0-9,0      jusqu'à la salle 104 et l'issue de secours
+//            et la bande sud         x 16,05-17,9    y 7,0-9,0      sans porte, jusqu'à l'ascenseur (VO q_0274-0281)
 //   au-dessus (IMAGINÉ, rien n'est photographié) : la volée 3 au-dessus de la volée 1 (17,2 cm, palier à 5,05 m), la
 //   volée 4 au-dessus de la volée 2, le palier du 2e (6,60 m, x 14,2-16,05 y 9,15-10,65) et sa porte fermée.
 //
@@ -46,6 +47,7 @@ import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex, detailPhoto } from './kit_decor.js';
 import { texPeinture, texAffiche } from './ecole_matieres.js';
+import { ASC, poserAscenseur, poserBandeSud, majAscenseur } from './ecole_ascenseur.js';
 
 // ---- les niveaux ----
 const N1 = 3.5;                     // le plancher du 1er étage
@@ -622,13 +624,17 @@ export function poserEst(ch, { RECT }) {
   // LES PLAFONDS de plâtre à 2,55 m : le couloir, le dégagement, le bord de la niche (la sous-face de la volée 2 descend
   // ensuite vers l'est) ; le détecteur de fumée ; les deux hublots ronds (comme ceux du C05, photo 05)
   ch.plafond(14.675, 7.65, 16.2, 10.65, HC, 'platre');
-  ch.plafond(16.2, 7.65, E.xM, 9.0, HC, 'platre');
+  // (10/10 : le dégagement finit sur la porte de l'ascenseur, x 17,9 — derrière, sa gaine : js/ecole_ascenseur.js)
+  ch.plafond(16.2, 7.65, ASC.xF, 9.0, HC, 'platre');
   ch.plafond(16.2, 9.15, 16.73, 10.65, HC, 'platre', { retombees: false });
   const det = maille(new THREE.CylinderGeometry(0.055, 0.06, 0.035, 20), M.boitier, 15.9, HC - 0.018, -9.0, 0, D, { ombre: false });
   det.userData.horsAOSol = true;
   ch.opale(15.4, 8.3, HC, 'couloirEst', { r: 0.19 });
   ch.opale(15.4, 9.75, HC, 'couloirEst', { r: 0.19 });
-  ch.opale(18.0, 8.3, HC, 'couloirEst', { r: 0.19 });             // (le dégagement : non vu, mais il n'est pas noir)
+  ch.opale(17.05, 8.3, HC, 'couloirEst', { r: 0.19 });            // (le dégagement : non vu, mais il n'est pas noir)
+  // L'ASCENSEUR (déduit : la même façade palière qu'au 1er, VO q_0274-0281), au bout du dégagement, desservi ; la
+  // platine d'appel sur le mur de la cage (le mur du hall, au sud, est le cannelé et le mur « INFORMATIQUE »)
+  poserAscenseur(ch, { base: 0, ouvert: true, y0: E.yH + 0.005, hMur: H_DALLE, zone: 'couloirEst', bouton: 'N' });
 
   // =====================================================================
   //  LA PORTE DU VESTIBULE ET LE VESTIBULE (photos 24 à 26)
@@ -734,7 +740,8 @@ export function poserEst(ch, { RECT }) {
   // LA MISE À JOUR (js/carte_ecole.js maj) : l'ombre douce cuite du rez-de-chaussée et la lumière et l'ombre cuites du
   // 1er, reprises sur le lino et le vinyle quand elles arrivent
   let ao = null;
-  const maj = () => {
+  const maj = (dt, jeu) => {
+    majAscenseur(ch, dt, jeu);                    // (la cabine, ses portes, ses afficheurs : js/ecole_ascenseur.js)
     if (M.sol.aoMap && M.sol.aoMap !== ao) { ao = M.sol.aoMap; X.lino.aoMap = ao; X.lino.aoMapIntensity = M.sol.aoMapIntensity; X.lino.needsUpdate = true; }
     const S = _matSolEtage;
     if (S && (X.vinyle.lightMap !== S.lightMap || X.vinyle.aoMap !== S.aoMap)) {
@@ -798,9 +805,9 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   mur(ch, G, { de: [E.x0, E.yE], a: [E.xP, E.yE], base: N1, h: H_CAGE, mats: B0 });
   // (les plinthes du palier sont gris foncé, photo 28 : sur la cloison des salles et le mitoyen de js/ecole_etage1.js, qui
   // portent les plinthes de bois du couloir, une plinthe grise par-dessus)
-  for (const [a, b] of [[13.61, 14.87], [15.83, 16.67], [17.63, E.xM]]) B(ch, G, a, 7.034, b, 7.052, N1, N1 + 0.082, X.plinthe, { ombre: false });
-  B(ch, G, E.xM - 0.017, 7.035, E.xM, 7.47, N1, N1 + 0.082, X.plinthe, { ombre: false });
-  B(ch, G, E.xM - 0.017, 8.43, E.xM, 9.0, N1, N1 + 0.082, X.plinthe, { ombre: false });
+  // (10/10 : plus de portes 103 et 104 sur la bande, ni d'issue de secours au bout — le doublage et l'ascenseur, et
+  // leurs plinthes : js/ecole_ascenseur.js poserBandeSud)
+  B(ch, G, 13.61, 7.034, 16.25, 7.052, N1, N1 + 0.082, X.plinthe, { ombre: false });
   // LE CHANT GRIS du mur d'échiffre (photo 28 : ≈ 10 cm, comme le poteau du rez-de-chaussée) : il retourne sur la face
   // sud — vu du haut de la volée 2, c'est une bande grise de 11 cm avant l'orange
   B(ch, G, E.x0 - 0.006, E.yE - 0.081, E.x0 + 0.11, E.yE + 0.081, N1, 6.1, X.poteau, { ombre: false });
@@ -840,11 +847,12 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   // (sur le mur sud du palier, près du renfoncement, la petite photo encadrée sombre et brillante, à 1,7-1,9 m)
   B(ch, G, 14.17, 7.035, 14.45, 7.045, N1 + 1.64, N1 + 1.96, M.noirMat, { ombre: false });
   ch.panneau(new THREE.MeshStandardMaterial({ map: texPhotoNuit(), roughness: 0.08, metalness: 0.1 }), 0.25, 0.29, 14.31, 7.047, N1 + 1.8, 'N', G);
-  // (les plaques du bureau 103 et de la salle 104, sur la bande sud : js/ecole_etage1.js garnirCouloir)
-  // LES LUMIÈRES du palier : la réglette (plus haut), un hublot au nord (non vu), deux dans la bande qui file à l'est
+  // LES LUMIÈRES du palier : la réglette (plus haut), un hublot au nord (non vu) ; la bande sud n'a pas de plafonnier
+  // (VO q_0274-0281 : sa réglette murale l'éclaire)
   opale(15.1, 11.75, 'e1est');
-  opale(17.3, 8.0, 'e1est');
-  opale(18.9, 8.0, 'e1est');
+  // LA BANDE SUD ET L'ASCENSEUR (VO 68,2-70 s) : le tableau, le doublage, le boîtier vert, la réglette, l'extincteur, la
+  // façade palière et la cabine
+  poserBandeSud(ch, { groupe: G, lampes });
 
   // =====================================================================
   //  LA CAGE AU-DESSUS DU 1er (IMAGINÉE) : volée 3, palier à 5,05 m, volée 4, palier du 2e (fermé)
