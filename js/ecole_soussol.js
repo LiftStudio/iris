@@ -107,9 +107,12 @@ const Y_FOND = 17.3 + DY_SS;              // le nu du mur du fond du hall du -1 
 // le nu du mur du fond (sud) du couloir : 5,3 avant le décalage, et non plus 6,4 (soussol.md § 2.3 : sur v_047, v_048,
 // v_050, v_051, la plinthe du fond mesure 133 à 155 px, soit 7,1 à 8,3 m de la caméra) — le couloir fait 8,9 m
 const Y_COUL0 = 5.3 + DY_SS;              // 1,21
-// l'extincteur du hall (mur ouest) : aux deux tiers du hall, petit et bas sur v_035 (corps de 0,45 sur 180 px à
-// f 1 200, à ≈ 3,0 m de la caméra — soussol.md § 2.2)
-const Y_EXT = 16.3 + DY_SS;               // 12,21
+// l'extincteur du hall (mur ouest), plus bas et plus petit qu'avant (garnirHall). Sa place : le plan V2 le met en y 12,21
+// (16,3 avant le décalage), d'après sa taille sur v_035, lue pour un corps de 0,45 m ; mais ce corps n'en fait que 0,30,
+// et la planche de contrôle v_010 — la pose recalée sur les 16 nez — le montre au même rang d'image que le pied du mur
+// du fond, sous la retombée : en y 12,21, il passait DERRIÈRE elle. Sur v_010, son corps (rangs 1 065-1 110, colonnes
+// 365-390) tombe en y 11,0 ; sur v_035, à 0,30 m pour 115 px, en y ≈ 11,5 (vérifié au jeu, 11/10)
+const Y_EXT = 11.0;
 // le rectangle du sol cuit du -1 (lumière et ombre cuites, uv1 de 0 à 1, v = 1 au nord) ; du fond du couloir au fond de
 // la grande salle S -1.14 (y 21,41) et à l'est jusqu'au passage sombre (plan V2)
 const R_SS = { x0: 0, x1: 15.5, y0: 0.9, y1: 22.0 };
@@ -743,9 +746,10 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     sh.moveTo(0, Y_SS); sh.lineTo(0, -0.03); sh.lineTo(s(Y_REB1), -0.03); sh.lineTo(s(Y_REB2), -0.3); sh.lineTo(s(yR), -0.3); sh.lineTo(s(yR), Y_SS); sh.closePath();
     const ressaut = maille(new THREE.ExtrudeGeometry(sh, { depth: X_REB - 0.2, bevelEnabled: false }), M.blanc, 0.2, 0, -ESC.y0, Math.PI / 2, ch.decor, { ombre: false });
     void ressaut;
-    // (le petit objet jaune posé sur le rebord, vers la 3e marche : v_008 à v_017 — sur son dessus, et non plus 2,5 cm
-    // dessous)
-    B(0.27, 6.78, 0.34, 6.84, -0.03, -0.005, std({ color: 0xe0b32a, roughness: 0.6 }), { ombre: false });
+    // (le petit objet jaune posé sur le rebord : v_008 à v_017 — sur son dessus, et non plus 2,5 cm dessous ; v_010, la
+    // pose recalée, le met au bout de la partie de niveau, en y ≈ 7,8 — rang 1 140, colonne 125 —, et non vers la 3e
+    // marche, y 6,81 : posé là, il sortait au pied de l'image)
+    B(0.24, 7.75, 0.31, 7.81, -0.03, -0.005, std({ color: 0xe0b32a, roughness: 0.6 }), { ombre: false });
     // LA CLOISON entre la volée et le couloir (x 1,35-1,50), du sol du -1 à la dalle, jusqu'au pilier du pied
     // (elle borde aussi le couloir au sud du palier) ; LE MUR OUEST du hall
     mur({ de: [1.425, Y_COUL0 - 0.15], a: [1.425, ESC.yPied], mats: M.blanc, plinthes: ['E'] });
@@ -831,10 +835,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // LE MUR NORD, VERT ANIS (v_060 à v_064) : peint de vert jusqu'à 2,30 m, la retombée blanche au-dessus
     // (10/10 : percé de la porte de la grande salle S -1.14, js/ecole_amphi.js — le fixe dépoli x 8,85-9,35, le vantail
     // x 9,35-10,25, l'imposte jusqu'à la retombée ; le fixe et l'imposte, translucides, ont leur vitre au monde solide)
-    // (plan V2, soussol.md § 2.4 : la cloison vitrée est au bout ouest du mur, juste après l'angle — 20,85-20,98 s —, en
-    // x 2,6-4,2 ; le vert va de 4,2 à 8,82)
+    // (la cloison vitrée en x 3,6-5,17 : voir meublerPause ; le vert de part et d'autre, jusqu'à 8,82)
     mur({ de: [2.42, 11.785], a: [13.05, 11.785], mats: B0, plinthes: ['S'], plinthe: P, ouvertures: [{ c: 9.55, l: 1.4, h: H_RET }] });
-    B(4.2, 11.705, 8.82, 11.71, Y_SS + 0.1, H_RET, X.vert, { ombre: false });
+    for (const [a, b] of [[2.55, 3.6], [5.17, 8.82]]) B(a, 11.705, b, 11.71, Y_SS + 0.1, H_RET, X.vert, { ombre: false });
   }
 
   // =====================================================================
@@ -947,17 +950,19 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   //  LE HALL DU -1 ET LE COULOIR : l'extincteur, la consigne, l'interrupteur
   // =====================================================================
   function garnirHall() {
-    // L'EXTINCTEUR à eau de 6 L (v_027 à v_037), son pictogramme au-dessus
-    // (plan V2, soussol.md § 2.2 : sur v_035, il est petit et bas, aux deux tiers du hall — le corps de 0,88 à 1,34, le
-    // pictogramme à 1,65 ; à 1,13 et 1,85, au ras de la volée, il emplissait le premier plan)
+    // L'EXTINCTEUR (v_027 à v_037), son pictogramme au-dessus
+    // (plan V2, soussol.md § 2.2 : plus bas — le corps à partir de 0,9 m, le pictogramme à 1,65 ; à 1,13 et 1,85, au
+    // ras de la volée, il emplissait le premier plan. Et PETIT : sur v_010 et v_035, rejoués au jeu, un corps de 0,46 m
+    // sortait deux fois trop grand à la place où l'image le met ; sur v_035, net, il est trapu, d'un diamètre de la
+    // moitié de sa hauteur — un modèle de 2 kg : corps de 0,30, Ø 0,13)
     const ex = new THREE.Group(); ex.position.set(0.5, Y_SS, -Y_EXT); ch.decor.add(ex);
-    maille(new THREE.CylinderGeometry(0.085, 0.085, 0.46, 18), X.rouge, 0, 1.11, 0, 0, ex);
-    maille(new THREE.SphereGeometry(0.085, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), X.rouge, 0, 1.34, 0, 0, ex);
-    maille(new THREE.CylinderGeometry(0.03, 0.03, 0.08, 10), X.noir, 0, 1.45, 0, 0, ex);
-    B(0.55, Y_EXT - 0.03, 0.6, Y_EXT + 0.03, Y_SS + 1.40, Y_SS + 1.48, X.noir);
-    tube(ch.decor, X.noir, P3(0.6, Y_SS + 1.45, Y_EXT), P3(0.6, Y_SS + 0.96, Y_EXT + 0.05), 0.012, 8);
-    panneau(new THREE.MeshStandardMaterial({ color: 0xf6f6f2, roughness: 0.6 }), 0.1, 0.16, 0.5 + 0.086, Y_EXT, Y_SS + 1.08, 'E', 0.001);
-    C.ajouterCercle(0.52, -Y_EXT, 0.1, { y0: Y_SS + 0.78, y1: Y_SS + 1.53 });
+    maille(new THREE.CylinderGeometry(0.065, 0.065, 0.30, 18), X.rouge, 0, 1.05, 0, 0, ex);
+    maille(new THREE.SphereGeometry(0.065, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), X.rouge, 0, 1.20, 0, 0, ex);
+    maille(new THREE.CylinderGeometry(0.025, 0.025, 0.07, 10), X.noir, 0, 1.29, 0, 0, ex);
+    B(0.535, Y_EXT - 0.025, 0.58, Y_EXT + 0.025, Y_SS + 1.26, Y_SS + 1.32, X.noir);
+    tube(ch.decor, X.noir, P3(0.58, Y_SS + 1.29, Y_EXT), P3(0.58, Y_SS + 0.95, Y_EXT + 0.04), 0.01, 8);
+    panneau(new THREE.MeshStandardMaterial({ color: 0xf6f6f2, roughness: 0.6 }), 0.08, 0.12, 0.5 + 0.066, Y_EXT, Y_SS + 1.03, 'E', 0.001);
+    C.ajouterCercle(0.51, -Y_EXT, 0.08, { y0: Y_SS + 0.8, y1: Y_SS + 1.36 });
     panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.15, 0.15, 0.4, Y_EXT, Y_SS + 1.65, 'E');
     // LA CONSIGNE vert pâle sous son protège-document, l'interrupteur dessous (mur est, v_037 à v_039)
     panneau(new THREE.MeshStandardMaterial({ map: texConsigneVerte(), roughness: 0.3 }), 0.15, 0.35, X_MUR - EP_MUR / 2, Y_FOND - 0.45, Y_SS + 1.85, 'W', 0.006);
@@ -1158,10 +1163,15 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     B(12.62, 8.86, 12.9, 9.46, Y_SS + 1.0, Y_SS + 1.9, X.blancMat, { collision: true });
     panneau(new THREE.MeshStandardMaterial({ map: texCasiers(), roughness: 0.6 }), 0.56, 0.88, 12.62, 9.16, Y_SS + 1.45, 'W', 0.001);
     poubelle(12.72, 9.16, X.grisPoubelle, 0.3);
-    // ---- LE MUR VERT : la cloison vitrée dépolie et sa porte (x 2,6-4,2), les deux affiches encadrées, l'affiche
+    // ---- LE MUR VERT : la cloison vitrée dépolie et sa porte (x 3,6-5,17), les deux affiches encadrées, l'affiche
     // bordeaux au QR ; la porte vitrée de l'est (x 8,85-10,25) est celle de la grande salle S -1.14 : js/ecole_amphi.js.
-    // (Plan V2, soussol.md § 2.4 — confiance moyenne : de 20,85 à 20,98 s, la cloison et son bâti blanc sont au bout
-    // ouest du mur vert, juste après l'angle ; en x 3,9-5,5, elle laissait 1,35 m de vert jamais vu)
+    // (Plan V2 — soussol.md § 2.4, confiance moyenne — : la cloison en x 2,6-4,2, « au bout ouest du mur, juste après
+    // l'angle » (20,85-20,98 s). REJOUÉ AU JEU (11/10) : posée là, elle sort à gauche du cadre de v_064. Deux poses
+    // ajustées sur les deux cadres et le bord de la porte de la grande salle — v_064 et l'image de 20,98 s, à 11 px
+    // près, de f 900 à f 1 400 — mettent le bord est de la cloison en x 5,1-5,2, le jambage ouest de son vantail vers
+    // 4,45, sa poignée sur ce jambage (les gonds à l'est : pas de fixe entre le vantail et le vert) et l'affiche
+    // bordeaux juste après, vers 5,3 ; à 20,98 s, le bord gauche de l'image est vers x 4,4 — ce n'est pas l'angle. Le
+    // fixe, s'il y en a un, est à l'ouest du vantail ; le vert, de part et d'autre)
     const yC = 11.71;
     const cloison = (a, b, montants) => {
       const y = yC - 0.035;
@@ -1175,14 +1185,14 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
         B(xa, y + 0.01, xb, y + 0.02, Y_SS + 2.13, H_RET - 0.06, X.depoli, { ombre: false });
       }
     };
-    cloison(2.6, 4.2, [2.63, 3.55, 4.17]);
-    B(3.4, yC - 0.08, 3.52, yC - 0.06, Y_SS + 1.02, Y_SS + 1.05, M.inox, { ombre: false });
-    maille(new THREE.CylinderGeometry(0.013, 0.013, 0.02, 10), M.inox, 3.46, Y_SS + 0.95, -(yC - 0.07), 0, ch.decor, { ombre: false }).rotation.x = Math.PI / 2;
+    cloison(3.6, 5.17, [3.63, 4.22, 5.14]);
+    B(4.28, yC - 0.08, 4.4, yC - 0.06, Y_SS + 1.02, Y_SS + 1.05, M.inox, { ombre: false });
+    maille(new THREE.CylinderGeometry(0.013, 0.013, 0.02, 10), M.inox, 4.31, Y_SS + 0.95, -(yC - 0.07), 0, ch.decor, { ombre: false }).rotation.x = Math.PI / 2;
     for (const x of [6.45, 7.95]) {
       B(x - 0.235, yC - 0.02, x + 0.235, yC, Y_SS + 1.48, Y_SS + 2.12, X.noir, { ombre: false });
       panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3a3a3a', '#ffffff', Math.round(x * 3)), roughness: 0.6 }), 0.44, 0.61, x, yC - 0.02, Y_SS + 1.8, 'S', 0.001);
     }
-    panneau(new THREE.MeshStandardMaterial({ map: texBordeaux(), roughness: 0.6 }), 0.3, 0.42, 4.48, yC, Y_SS + 1.5, 'S', 0.01);
+    panneau(new THREE.MeshStandardMaterial({ map: texBordeaux(), roughness: 0.6 }), 0.3, 0.42, 5.36, yC, Y_SS + 1.5, 'S', 0.01);
     // ---- L'AFFICHE « 100 % » sur le retour, à droite de l'entrée ----
     panneau(new THREE.MeshStandardMaterial({ map: texAffiche100(), roughness: 0.6 }), 0.42, 0.594, 3.35, 7.51, Y_SS + 1.5, 'N');
     // ---- L'AILE (Haythem ne l'a pas filmée en 2026 : la vidéo officielle de 2021, q_0088-q_0097, q_0137-q_0142, es/z_M,
