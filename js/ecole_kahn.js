@@ -57,15 +57,22 @@ const H_RET = N1 + 2.45;             // le dessous des retombées et de la poutr
 const H_PL = N1 + 2.60;              // le plafond plat
 const H_CAIS = N1 + 2.88;            // le fond des caissons lumineux (2,85-2,90 m)
 const H_TOIT = N1 + 3.2;             // le dessus du toit (étanchéité) ; l'acrotère au-dessus
+const DALLE2 = 6.4;                  // le dessous de la dalle du 2e (js/ecole_etage1.js) : sous le 2e, les murs s'y arrêtent
 const H_PLAT = 0.74;                 // le dessus des plateaux, au-dessus du plancher
 // ---- la salle (reseau.md § 3.3, recalé : voir l'en-tête) ----
 const LARG = 6.4, LONG = 11.3;       // le nu intérieur
 const U_PORTE = 4.4, L_PORTE = 0.95;
 // le renfoncement nord du palier est (js/ecole_est.js poserPalierEst) : la face ouest de son mur x 13,2, la face nord du
-// mur nord de la cage (y 12,525) ; la façade arrière des étages, au-dessus (le 2e s'arrête là)
-const X_RENF = 13.125, Y_RENF = 12.6, Y_ARRIERE = 12.45;
-// la lumière des caissons : un jour froid (reseau.md § 3.9 : ≈ 6 000 K)
-const FROID = new THREE.Color(0xeef3ff);
+// mur nord de la cage (y 12,525) ; la façade arrière des étages, au-dessus (le 2e s'arrête là : son nu extérieur,
+// Y_ARR_N — js/ecole_etage2.js, y 12,45, ép. 0,30). Au sud de cette ligne, le 2e est au-dessus de la salle : ses murs
+// s'arrêtent sous sa dalle (relecture du 10/10 : sur la cote provisoire y 12,0, ils perçaient le plancher du 2e de
+// 10 cm et l'acrotère montait dans sa salle 1) ; au nord, le toit
+const X_RENF = 13.125, Y_RENF = 12.6, Y_ARRIERE = 12.45, Y_ARR_N = Y_ARRIERE + 0.15;
+// la lumière des caissons : un jour froid (reseau.md § 3.9 : ≈ 6 000 K). Relecture du 10/10 : #eef3ff sortait blanc
+// neutre, voire tiède sous le « soleil » chaud qui figure tous les plafonniers ; la vidéo (q_0230, q_0265) montre la salle
+// nettement BLEUTÉE (murs bruts #a6b9d4-#b2cae7, moquette #3d4e6d : bleu moins rouge ≈ +50), face à l'espace pause
+// orange — on en garde une bonne moitié
+const FROID = new THREE.Color(0xd6e3ff);
 const DIR = { N: [0, 1], S: [0, -1], E: [1, 0], W: [-1, 0] };        // en PLAN (y vers le fond)
 const ROT = { S: 0, N: Math.PI, E: Math.PI / 2, W: -Math.PI / 2 };   // un groupe dont le +z local regarde vers…
 
@@ -98,7 +105,8 @@ function texMoquette(nx, ny) {
       }
     }
     for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
-      const c = clair[j][i] ? [106, 114, 128] : [78, 88, 106], t = (r2() - 0.5) * 6;
+      // (relecture du 10/10 : un rien plus marine — la vidéo, q_0265, #3d4e6d en moyenne ; le jeu sortait gris neutre)
+      const c = clair[j][i] ? [98, 110, 134] : [68, 80, 106], t = (r2() - 0.5) * 6;
       const x0 = i * p, y0 = (ny - 1 - j) * p;
       g.fillStyle = rgb(c[0] + t, c[1] + t, c[2] + t); g.fillRect(x0, y0, p, p);
       // les rangs de touffes, dans un sens ou dans l'autre (le quart de tour)
@@ -337,7 +345,9 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   // (les blancs de la salle tirent un rien vers le froid : sous la lumière des caissons, la vidéo les montre bleutés,
   // quand ceux de l'espace pause, à côté, sont chauds — VO q_0220 ; le plafond reste plus terne que les murs, et les joues
   // des trémies, que le verre éclaire, plus claires que lui — VO q_0222, q_0230 : seuls les verres éblouissent)
-  const teinte = new THREE.Color(0.9, 0.94, 1.0);
+  // (relecture du 10/10 : plus froids — voir FROID ; le plafond un peu plus clair, la vidéo le montre gris bleuté clair
+  // entre les caissons, le jeu le rendait gris moyen : #94908d contre #b6b1bd, q_0230)
+  const teinte = new THREE.Color(0.82, 0.89, 1.0);
   const K = {
     blanc: nommer(M.blanc.clone(), 'peinture blanche (salle Robert Kahn)'),
     platre: nommer(M.platre.clone(), 'plafond en plâtre (salle Robert Kahn)'),
@@ -350,11 +360,14 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
     piedSombre: std({ color: 0x3a3c40, roughness: 0.4, metalness: 0.5 }),
     hetre: nommer(std({ map: texHetre(), roughness: 0.5 }), 'coque de hêtre'),
     luge: nommer(std({ color: 0x1e1e20, roughness: 0.4, metalness: 0.5 }), 'luge de chaise noire'),
-    tour: nommer(std({ color: 0x141418, roughness: 0.38, metalness: 0.3 }), 'tour noire'),
-    faceTour: std({ map: texFaceTour(), roughness: 0.5 }),
-    ecran: std({ color: 0x101012, roughness: 0.4 }),
-    eteint: nommer(std({ color: 0x07080a, roughness: 0.12, metalness: 0.4 }), 'écran éteint'),
-    clavier: std({ color: 0x19191b, roughness: 0.6 }),
+    // (relecture du 10/10 : plastique MAT — à 0,38 de rugosité et 0,3 de métal, les tours prenaient le reflet de la
+    // carte d'environnement : brun chocolat dans celle de l'espace pause orange, gris dans celle de la salle ; les
+    // claviers, à plat sous les caissons, sortaient gris clair quand la vidéo les montre noirs — q_0230, q_0265)
+    tour: nommer(std({ color: 0x141418, roughness: 0.6, metalness: 0.05, envMapIntensity: 0.45 }), 'tour noire'),
+    faceTour: std({ map: texFaceTour(), roughness: 0.6, envMapIntensity: 0.45 }),
+    ecran: std({ color: 0x101012, roughness: 0.55, envMapIntensity: 0.45 }),
+    eteint: nommer(std({ color: 0x07080a, roughness: 0.14, metalness: 0.2, envMapIntensity: 0.6 }), 'écran éteint'),
+    clavier: std({ color: 0x141416, roughness: 0.88, envMapIntensity: 0.25 }),
     switchCorps: std({ color: 0x2c3742, roughness: 0.4, metalness: 0.5 }),
     switchFace: std({ map: texSwitch(), roughness: 0.4 }),
     routeurCorps: std({ color: 0x2a2b2e, roughness: 0.35, metalness: 0.6 }),
@@ -385,9 +398,9 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   // (les murs : un léger émissif froid tient lieu du jour diffus des six caissons, qui éclaire toute la salle d'égal — les
   // quatre spots qui suivent Haythem n'en éclairent que le coin où il est ; VO q_0265 : le mur du fond, côté porte, est
   // aussi clair que les autres)
-  K.blanc.color.copy(teinte); K.blanc.emissive = new THREE.Color(0xdfe8f6); K.blanc.emissiveIntensity = 0.13;
-  K.platre.color.multiply(teinte); K.platre.emissive = new THREE.Color(0xe4ecf6); K.platre.emissiveIntensity = 0.06;
-  K.joue.color.multiply(teinte); K.joue.emissive = new THREE.Color(0xeef4ff); K.joue.emissiveIntensity = 0.32;
+  K.blanc.color.copy(teinte); K.blanc.emissive = new THREE.Color(0xc9d8f4); K.blanc.emissiveIntensity = 0.14;
+  K.platre.color.multiply(teinte); K.platre.emissive = new THREE.Color(0xd0ddf4); K.platre.emissiveIntensity = 0.13;
+  K.joue.color.multiply(teinte); K.joue.emissive = new THREE.Color(0xe2ecff); K.joue.emissiveIntensity = 0.34;
   // ce qui éclaire (au-delà de 1, le bloom les fait briller) : le verre diffusant des caissons
   const diffuseur = nommer(new THREE.MeshBasicMaterial({ map: texDiffuseur(), color: FROID.clone().multiplyScalar(4.5) }), 'caisson lumineux allumé');
   const consoles = [0, 1, 2].map((n) => new THREE.MeshBasicMaterial({ map: texConsole(n), color: new THREE.Color(0.85, 0.85, 0.85) }));
@@ -465,9 +478,15 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   //  LES MURS (blancs dedans ; l'enduit de l'aile dehors) ET LA PORTE GRISE
   // =====================================================================
   const yGrise = Y(9.35);
-  mur({ de: [x0 - 0.075, y0 - 0.15], a: [x0 - 0.075, y1 + 0.15], mats: { E: K.blanc, W: K.facade }, plinthes: ['E'], ouvertures: [{ c: yGrise, l: 0.93, h: N1 + 2.04 }] });
+  // (un mur nord-sud : sous le 2e — au sud de sa façade arrière — il s'arrête sous sa dalle ; au-delà, il monte au toit)
+  const murNS = (x, ya, yb, o) => {
+    const dans = (p, q) => (o.ouvertures || []).filter((v) => v.c > p && v.c < q);
+    if (ya < Y_ARR_N - 1e-3) mur({ ...o, de: [x, ya], a: [x, Math.min(yb, Y_ARR_N)], h: DALLE2, ouvertures: dans(ya, Y_ARR_N) });
+    if (yb > Y_ARR_N + 1e-3) mur({ ...o, de: [x, Math.max(ya, Y_ARR_N)], a: [x, yb], ouvertures: dans(Y_ARR_N, yb) });
+  };
+  murNS(x0 - 0.075, y0 - 0.15, y1 + 0.15, { mats: { E: K.blanc, W: K.facade }, plinthes: ['E'], ouvertures: [{ c: yGrise, l: 0.93, h: N1 + 2.04 }] });
   mur({ de: [x0 - 0.15, y1 + 0.075], a: [x1 + 0.15, y1 + 0.075], mats: { S: K.blanc, N: K.facade }, plinthes: ['S'] });
-  mur({ de: [x1 + 0.075, encoche ? Y_RENF : y0 - 0.15], a: [x1 + 0.075, y1 + 0.15], mats: { W: K.blanc, E: K.facade }, plinthes: ['W'] });
+  murNS(x1 + 0.075, encoche ? Y_RENF : y0 - 0.15, y1 + 0.15, { mats: { W: K.blanc, E: K.facade }, plinthes: ['W'] });
   // LE MUR SUD : le mur orange de l'espace pause (lot 5) ; de ce côté, un doublage blanc de 12 mm, percé au droit de sa
   // porte et de son imposte (VO, de l'intérieur : la porte à cadre blanc, l'imposte claire au-dessus — jusqu'à 2,50 m)
   mur({ de: [x0, y0 + 0.006], a: [xS, y0 + 0.006], ep: 0.012, h: H_PL, mats: K.blanc, plinthes: ['N'], ouvertures: [{ c: xPorte, l: L_PORTE + 0.1, h: N1 + 2.5 }] });
@@ -590,7 +609,9 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   //  LE TOIT ET SES LANTERNEAUX (vus des fenêtres arrière du 2e)
   // =====================================================================
   {
-    const ya = Math.max(y0, Y_ARRIERE) - 0.15, xa = x0 - 0.15, xb = x1 + 0.15, yb = y1 + 0.15;
+    // (du nu extérieur de la façade arrière du 2e — ni dans son mur, ni dans sa salle 1 — jusqu'au mur nord ; si le mur
+    // orange est plus au nord, le toit le couvre jusqu'à la façade : pas de fente sur le vide sous les fenêtres du 2e)
+    const ya = Y_ARR_N, xa = x0 - 0.15, xb = x1 + 0.15, yb = y1 + 0.15;
     const ouv = [];
     for (const uc of UC) for (const vc of VC) ouv.push([X(uc) - CW / 2, Y(vc) - CL / 2, X(uc) + CW / 2, Y(vc) + CL / 2]);
     // la dalle et son gravier, en bandes autour des trémies (de H_CAIS au dessus du toit)

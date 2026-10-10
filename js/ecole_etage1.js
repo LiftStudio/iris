@@ -1751,6 +1751,7 @@ export function poserEtage1(ch, renderer = null) {
   // emplissait la moitié de la carte, et le mur blanc d'en face, éclairé par lui, virait au saumon — mesuré : rouge
   // moins bleu de 92 contre 35 à 45 pour les autres murs blancs ; d'ici, 62, comme un reflet de couleur)
   const zones = [
+    ...zonesKahn(),   // (en tête : sur la cote provisoire du mur orange, ses rectangles passent sous ceux d'ici — relecture du 10/10)
     { id: 'e1hall', rects: [zr(1.6, Y_COUR, 4.75, 12.6)], voisines: ['palier1', 'e1couloir'], env: env(3.9, 8.3) },
     { id: 'e1couloir', rects: [zr(1.6, Y_SALLES, 13.55, Y_COUR)], voisines: ['e1hall', 'e101', 'e102', 'e103', 'e104', 'e1wc', 'e1est', 'e1pause'], env: env(10.6, 7.95) },
     { id: 'e101', rects: [zr(-0.3, -0.2, 6.6, Y_SALLES)], voisines: ['e1couloir'], env: env(3.3, 3.6) },
@@ -1759,7 +1760,6 @@ export function poserEtage1(ch, renderer = null) {
     { id: 'e104', rects: [zr(16.5, -0.2, 20.0, Y_SALLES)], voisines: ['e1est'], env: env(18.15, 3.6) },
     { id: 'e1wc', rects: [zr(4.75, Y_COUR, 8.6, 12.8)], voisines: ['e1couloir'], env: env(6.6, 10.2) },
     { id: 'e1pause', rects: [zr(8.6, Y_COUR, 12.5, 12.75)], voisines: ['e1couloir'], env: env(10.5, 10.9) },
-    ...zonesKahn(),
   ];
 
   // =====================================================================
