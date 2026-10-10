@@ -16,11 +16,13 @@
 //   l'open-space            x 17,2-19,8   y 0,3-6,0    derrière le comptoir : bureaux bleu-gris en L le long des fenêtres
 //                                                     et du mitoyen, fauteuils noirs, imprimante, carton, dossiers
 //   le mitoyen est          x 19,8        y 0-7,5      peint GRIS ARDOISE ; l'affiche noire à l'immeuble blanc et cadre
-//                                                     magenta, la photo encadrée d'une tour, la caméra dôme
+//                                                     magenta, la photo encadrée d'une tour, le panneau des premiers
+//                                                     secours, la caméra dôme
 //   l'angle nord-est        x 16,3-19,8   y 5,5-7,5    OUVERT sur le hall (VO 6,4-7,4 s : ni murs ni porte) : le
 //                                                     photocopieur contre le pan cannelé, le caisson et ses corbeilles, le
 //                                                     mur blanc aux étiquettes ocre « INFORMATIQUE », la table blanche et
-//                                                     sa chaise de hêtre ; le présentoir de bois au nord-est du pupitre
+//                                                     sa chaise de hêtre ; le présentoir de bois au nord du pupitre, vers
+//                                                     (17,2 ; 4,9), tourné vers l'ouest
 //   le plafond              x 14,35-16,45 y 0,5-4,1    huit lignes lumineuses nord-sud dans l'axe de la porte 6 (VO 92,6-93,6
 //                                                     s ; la photo 24 en voit les joints en 2026), les spots ronds autour
 //                                                     (posés par la carte)
