@@ -3,9 +3,9 @@
 // =====================================================================
 // D'après la VIDÉO OFFICIELLE DE VISITE (2021, VO 68,2-70 s, q_0274-0281 ; à 25 i/s e2/f25/f_0031-0055 ; recadrages
 // e2/crops/g038, g056, g074) : au 1er, au bout de la bande sud du palier est, une FAÇADE PALIÈRE tout en inox brossé qui
-// regarde l'ouest (x 17,9) — le montant de 21 cm au nord, les deux vantaux coulissants (0,88 m de passage, 2,0 m de
+// regarde l'ouest (x 17,9) — le montant de 19 cm au nord, les deux vantaux coulissants (0,81 m de passage, 2,0 m de
 // haut), le grand panneau fixe au sud derrière lequel ils s'effacent (porte télescopique à deux vitesses : le joint des
-// vantaux n'est pas au milieu de la façade), le linteau de 25 cm sur toute la largeur et, au droit du passage, son
+// vantaux n'est pas au milieu de la façade), le linteau de 22,5 cm sur toute la largeur et, au droit du passage, son
 // afficheur à cristaux liquides bleus ; contre la façade, sur le mur sud, la platine du bouton d'appel et l'extincteur ;
 // au-dessus, la réglette murale. Aucune photo de 2026 ne couvre ce coin (x 16-19,8, y 7-9) : on garde la vidéo.
 // Au rez-de-chaussée, la porte n'est pas vue (la photo 24 ne voit le dégagement derrière le cannelé que jusqu'à x 17) :
@@ -15,14 +15,19 @@
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; hauteurs absolues) :
 //   la gaine                     x 17,9-19,8   de la face nord du mur du hall (RDC) ou du doublage (1er) au mur sud de la
 //                                              cage (y 9,0) ; à l'est, le mitoyen
-//   la façade palière (ouest)    x 17,885-18,0 le fixe y0-7,91, le passage 7,91-8,79, le montant 8,79-9,0 ; le linteau
-//                                              de 2,0 à 2,25 m ; au-dessus, le mur blanc jusqu'au plafond
+//   la façade palière (ouest)    x 17,885-18,0 le fixe y0-8,0, le passage 8,0-8,81, le montant 8,81-9,0 ; le linteau
+//                                              de 2,0 à 2,225 m ; au-dessus, le mur blanc jusqu'au plafond
 //   la cabine (imaginée)         x 17,99-19,7  y 7,74-9,01 (dedans ≈ 1,6 × 1,15 m ; plafond à 2,24 m)
-//   au 1er, le DOUBLAGE du mur sud de la bande  x 16,05-17,9  y 7,035-7,355 (relecture du 10/10 : la façade mesure
-//                                              ≈ 1,6 m sur 2,25, rapport tiré de q_0274-0277 et f_0041 sans dépendre de
-//                                              la focale, et non les 1,97 m de la bande ; l'arête verticale vue juste à
-//                                              l'ouest du boîtier vert, f_0031, est l'angle de ce doublage, sa face ouest
-//                                              — un disque de laiton en haut — court jusqu'au bord du tableau)
+//   au 1er, le DOUBLAGE du mur sud de la bande  x 16,25-17,9  y 7,035-7,43 (relecture du 10/10, et non x 16,05-17,9 ×
+//                                              y 7,035-7,355 : la façade mesure 1,57 m sur 2,225 : rapport
+//                                              0,696 tiré de q_0277 vue de face, 0,69 de f_0050, sans dépendre de la
+//                                              focale, et non les 1,97 m de la bande ; l'arête verticale vue juste à
+//                                              l'ouest du boîtier vert, f_0031-0050, est l'angle de ce doublage, sa face
+//                                              ouest — un disque de laiton en haut — court jusqu'au bord du tableau)
+//   (relecture du 10/10 : poses de caméra résolues ensemble sur q_0277, f_0050 et f_0041 — le pilastre, l'angle nord-ouest
+//   de la façade, son angle sud-est, l'arête — à f 430 px, la focale de etage2.md ; écart moyen 0,2 px. Les hauteurs, de
+//   chaque objet rapporté à la façade vue à la même profondeur, à ± 5 cm : la réglette à 2,05 m et non 2,3, l'extincteur
+//   de 0,36 à 0,88, le boîtier vert de 1,06 à 1,42, la platine d'appel à 1,28, le tableau de 1,1 à 2,42)
 //
 // L'ASCENSEUR MARCHE (10/10, imaginé) : Haythem devant la porte l'appelle (le bouton s'allume), la cabine vient, les
 // portes s'ouvrent ; dedans, au bout de deux secondes, elles se referment et la cabine le porte au palier suivant
@@ -32,8 +37,8 @@
 //   poserAscenseur(ch, { base, groupe, ouvert, y0, y1, hMur, zone, bouton }) -> le palier
 //   poserBandeSud(ch, { groupe, lampes })    le 1er : la bande sud du palier est, son décor, le palier de l'ascenseur
 //   majAscenseur(ch, dt, jeu)                à chaque image (js/ecole_est.js, la mise à jour du rez-de-chaussée)
-// Le 2e (js/ecole_etage2.js) : poserAscenseur(ch, { base: 6.6, groupe }) pose un palier FERMÉ (y0 par défaut 7,355,
-// comme au 1er ; son vestibule plus étroit : y0 jusqu'à 7,9) ; avec `ouvert: true` et la `zone` de son vestibule, la
+// Le 2e (js/ecole_etage2.js) : poserAscenseur(ch, { base: 6.6, groupe }) pose un palier FERMÉ (y0 par défaut 7,43,
+// comme au 1er ; son vestibule plus étroit : y0 jusqu'à 7,9 — le fixe garde alors 10 cm) ; avec `ouvert: true` et la `zone` de son vestibule, la
 // cabine y monte aussi (il faut alors que le vestibule soit un sol où marcher et que le groupe de l'étage se montre
 // quand Haythem est à 6,6 : le transport le rend visible pour la première image).
 import * as THREE from 'three';
@@ -46,12 +51,15 @@ export const ASC = {
   xF: 17.9,                         // le nu de la façade palière (face ouest), à tous les niveaux
   xM: 19.8,                         // le fond de la gaine (le mitoyen est)
   yN: 9.0,                          // le nu sud du mur de la cage (le côté nord de la gaine)
-  // (la façade presque de face — f_0041, 68,6 s : montant 27 px, vantaux 41 + 49, fixe 53, hauteur 247 dont 215 pour
-  // les vantaux ; q_0277, 69 s : 18, 47 + 48, 62 — en moyenne, sur 1,645 m : montant 0,21, passage 0,88, fixe 0,55 ;
-  // portes de 2,0 m, linteau de 0,25)
-  yP0: 7.91, yP1: 8.79,             // le passage (0,88 m) : le même à chaque niveau, c'est la porte de la cabine
+  // (la façade de face — q_0277, 69 s, relevée à 4 × : montant 20,5 px, vantaux 44 + 46, fixe 63,5, hauteur 250 dont
+  // 25 pour le linteau ; f_0050 : 21, 42,5 + 43,5, 57,5, hauteur 239. Relecture du 10/10 : la largeur suit la hauteur —
+  // 0,696 × 2,225 = 1,57 m, et non 1,645 — d'où, avec des portes de 2,0 m, montant 0,19, passage 0,81 (la porte
+  // d'ascenseur courante, 800 × 2000), fixe 0,57, linteau 0,225)
+  yS1: 7.43,                        // au 1er, le bord sud de la façade (le nu nord du doublage)
+  xD: 16.25,                        // au 1er, la face ouest du doublage (l'arête : 16,28 à f 430, 16,22 à f 460)
+  yP0: 8.0, yP1: 8.81,              // le passage (0,81 m) : le même à chaque niveau, c'est la porte de la cabine
   hP: 2.0,                          // la hauteur du passage
-  hF: 2.25,                         // le haut de l'habillage inox (le dessus du linteau)
+  hF: 2.225,                        // le haut de l'habillage inox (le dessus du linteau)
   cab: { x0: 17.99, x1: 19.7, y0: 7.74, y1: 9.01, h: 2.24 },   // la cabine (imaginée), murs compris
 };
 const XA = 17.885, XB = 18.0;       // l'épaisseur de la façade (l'inox à 1,5 cm devant le nu du mur de la gaine)
@@ -105,25 +113,40 @@ function texGranit() {
     }
   }, [1 / 0.6, 1 / 0.6], false, 8);
 }
-// LE TABLEAU ABSTRAIT de la bande sud du 1er (VO q_0274-0277, g038) : sur un fond crème, quatre champs gris-bleu
-// séparés par une croix claire décentrée (le bras vertical à droite du milieu, l'horizontal au-dessus), des repentirs
-// plus clairs ; crème #E6DFCF, gris-bleu #8FA3B5 (relevé corrigé de etage2.md § 3.1)
+// LE TABLEAU ABSTRAIT de la bande sud du 1er (VO f_0031-0044, q_0274-0277, g038) : sur un fond crème, quatre champs
+// gris-bleu séparés par une croix claire décentrée (le bras vertical à droite du milieu, l'horizontal au-dessus, avec
+// une marche : à droite, le champ du haut finit plus haut), des repentirs plus clairs ; à gauche (l'est) les champs sont
+// pâles, presque blanchis le long du bord, à droite (l'ouest) nettement plus sombres — sous la lumière jaune de 2021, les
+// champs de l'est sortent à 0,85 du crème, ceux de l'ouest à 0,5 (relecture du 10/10) ; crème #E6DFCF, gris-bleu
+// #8FA3B5 (etage2.md § 3.1)
 function texTableau() {
-  return canvasTex(192, 288, (g, w, h) => {
+  return canvasTex(192, 244, (g, w, h) => {
     const r = graine(5150);
     g.fillStyle = '#e6dfcf'; g.fillRect(0, 0, w, h);
     const champ = (x, y, l, H, c) => {
       g.fillStyle = c; g.fillRect(x, y, l, H);
       for (let k = 0; k < 40; k++) { g.fillStyle = `rgba(255,255,255,${0.04 + r() * 0.07})`; g.fillRect(x + r() * l, y + r() * H, 4 + r() * 22, 2 + r() * 10); }
     };
-    const xc = w * 0.56, yc = h * 0.43, e = 15;
-    champ(w * 0.07, h * 0.06, xc - e - w * 0.07, yc - e - h * 0.06, '#aebcc7');
-    champ(xc + e, h * 0.04, w * 0.9 - xc - e, yc - e - h * 0.04, '#8fa0b1');
-    champ(w * 0.1, yc + e, xc - e - w * 0.1, h * 0.94 - yc - e, '#9eaebc');
-    champ(xc + e, yc + e, w * 0.93 - xc - e, h * 0.9 - yc - e, '#899bac');
-    // une bande plus pâle qui court le long du bord gauche, des reprises crème sur les champs
-    g.fillStyle = 'rgba(214,226,232,0.55)'; g.fillRect(w * 0.07, h * 0.06, 14, h * 0.88);
+    const x0 = w * 0.07, xa = w * 0.49, xb = w * 0.6, ya = h * 0.42, yb = h * 0.55, yr = h * 0.37;
+    champ(x0, h * 0.06, xa - x0, ya - h * 0.06, '#bcc7cf');
+    champ(xb, h * 0.05, w * 0.91 - xb, yr - h * 0.05, '#7d8fa0');
+    champ(w * 0.09, yb, xa - w * 0.09, h * 0.93 - yb, '#adbac4');
+    champ(xb, yb, w * 0.93 - xb, h * 0.9 - yb, '#8193a4');
+    // une bande blanchie qui court le long du bord gauche, des reprises crème sur les champs
+    g.fillStyle = 'rgba(226,233,236,0.6)'; g.fillRect(x0, h * 0.06, 13, h * 0.86);
     for (let k = 0; k < 6; k++) { g.fillStyle = 'rgba(230,223,207,0.5)'; g.fillRect(r() * w, r() * h, 10 + r() * 30, 6 + r() * 16); }
+  }, null, false, 4);
+}
+// LE BOÎTIER VERT du doublage (VO q_0277, f_0050, f_0056 agrandies : un cadre clair, en tête un bandeau sombre rayé de
+// fines lignes, dessous un champ vert tendre — plus sombre que le mur, pas lumineux)
+function texBoitierVert() {
+  return canvasTex(48, 96, (g, w, h) => {
+    g.fillStyle = '#e9e8e2'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#4b4f43'; g.fillRect(5, 5, w - 10, h * 0.28);
+    g.fillStyle = 'rgba(220,224,210,0.45)'; for (let y = 9; y < h * 0.28; y += 5) g.fillRect(7, y, w - 14, 1);
+    const gr = g.createLinearGradient(0, h * 0.3, 0, h - 5); gr.addColorStop(0, '#93b062'); gr.addColorStop(1, '#7fa056');
+    g.fillStyle = gr; g.fillRect(5, h * 0.3 + 2, w - 10, h * 0.7 - 7);
+    g.fillStyle = 'rgba(255,255,255,0.12)'; g.fillRect(7, h * 0.3 + 4, 4, h * 0.6);
   }, null, false, 4);
 }
 // L'AFFICHEUR À CRISTAUX LIQUIDES (VO g038 : ≈ 12 × 5 cm, bleu rétroéclairé) : le niveau de la cabine, la flèche quand
@@ -184,8 +207,9 @@ function matieres(ch) {
   const X = {
     // (etage2.md § 4 : inox brossé #A7A6A2, rugosité 0,35 — sous la lumière jaune de 2021, il sort doré. Relecture du
     // 10/10 : avec la carte d'environnement de la zone, faite de sols bruns, il sortait brun foncé ; avec la sienne,
-    // neutre, il sort gris acier, clair en haut et sombre en bas comme sur la vidéo)
-    inox: std({ map: brosse, color: 0xc9ccd0, metalness: 0.7, roughness: 0.33, envMap: env, envMapIntensity: 0.9 }, 'inox brossé (ascenseur)'),
+    // neutre, il sort gris acier, clair en haut et sombre en bas comme sur la vidéo. Relecture du 10/10 : sur q_0277,
+    // l'inox à mi-hauteur vaut 0,9 du mur voisin, et le jeu le rendait à 0,55 — plus de reflet)
+    inox: std({ map: brosse, color: 0xd3d6da, metalness: 0.7, roughness: 0.33, envMap: env, envMapIntensity: 1.3 }, 'inox brossé (ascenseur)'),
     inoxCab: std({ map: brosse, color: 0xcdd0d4, metalness: 0.7, roughness: 0.3, envMap: env, envMapIntensity: 0.8 }, 'inox brossé (cabine)'),
     joint: std({ color: 0x2a2826, roughness: 0.6, metalness: 0.3 }, 'joint sombre (ascenseur)'),
     alu: std({ color: 0xb7b8b6, roughness: 0.38, metalness: 0.75 }, 'seuil aluminium (ascenseur)'),
@@ -198,7 +222,7 @@ function matieres(ch) {
     cadre: std({ color: 0x2c2420, roughness: 0.45 }, 'cadre de bois foncé'),
     tableau: std({ map: texTableau(), roughness: 0.75 }, 'tableau abstrait (bande sud du 1er)'),
     laiton: std({ color: 0xc9a24a, roughness: 0.3, metalness: 0.85 }, 'laiton'),
-    vert: std({ color: 0x2f9a55, roughness: 0.35, emissive: 0x3bd16f, emissiveIntensity: 0.55 }, 'boîtier vert allumé'),
+    vert: std({ map: texBoitierVert(), roughness: 0.35, emissive: 0x9dc070, emissiveIntensity: 0.06 }, 'boîtier vert'),
     reglette: std({ color: 0xf2f1ed, roughness: 0.4 }, 'réglette'),
     diffuseur: new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffe4b8).multiplyScalar(2.4) }),
     embout: std({ color: 0xe8701e, roughness: 0.5, emissive: 0xe8701e, emissiveIntensity: 0.5 }, 'embout de réglette'),
@@ -220,10 +244,10 @@ const libelle = (base) => String(Math.round(base / 3.2));       // -3,06 -> -1 ;
 // =====================================================================
 // `base` : le plancher ; `groupe` : où poser (par défaut ch.decor — un étage passe le sien) ; `ouvert` : desservi (la
 // cabine y vient, les portes s'ouvrent), sinon la porte est un mur ; `y0`, `y1` : la façade (du nu du mur sud au nu du
-// mur nord de la gaine — le passage, lui, ne bouge pas : y 7,91-8,79) ; `hMur` : le haut du mur au-dessus du linteau (le
+// mur nord de la gaine — le passage, lui, ne bouge pas : y 8,0-8,81) ; `hMur` : le haut du mur au-dessus du linteau (le
 // plafond du palier) ; `zone` : la zone de lumière du palier (la lampe de la cabine y prend part) ; `bouton` : le mur qui
 // porte la platine d'appel ('S' : contre le fixe, comme au 1er ; 'N' : sur le mur de la cage).
-export function poserAscenseur(ch, { base = 0, groupe = null, ouvert = false, y0 = 7.355, y1 = ASC.yN, hMur = null, zone = null, bouton = 'S' } = {}) {
+export function poserAscenseur(ch, { base = 0, groupe = null, ouvert = false, y0 = ASC.yS1, y1 = ASC.yN, hMur = null, zone = null, bouton = 'S' } = {}) {
   const { C, M } = ch, G = groupe || ch.decor, b = base, X = matieres(ch), S = etat(ch);
   const { hP, hF, yP0, yP1 } = ASC;
   const hM = hMur ?? b + 2.6;
@@ -241,23 +265,23 @@ export function poserAscenseur(ch, { base = 0, groupe = null, ouvert = false, y0
   // les seuils d'aluminium (le palier, l'embrasure)
   B(XA - 0.09, yP0, XA, yP1, b, b + 0.005, X.alu);
   B(XA, yP0, XB + 0.05, yP1, b, b + 0.008, X.alu);
-  // L'AFFICHEUR au milieu du passage, dans le linteau (centre à 2,125 m), sa lunette noire
+  // L'AFFICHEUR au milieu du passage, dans le linteau (centre à 2,115 m), sa lunette noire
   const aff = afficheur();
   const matAff = new THREE.MeshBasicMaterial({ map: aff.t, color: new THREE.Color(1.35, 1.35, 1.35) }); matAff.name = 'afficheur ' + b;
-  // (f_0041 : la plaque de l'afficheur ≈ 0,2 × 0,09, sa fenêtre bleue ≈ 0,16 × 0,06, au milieu du linteau, au droit du
-  // milieu du passage — le joint des vantaux est 1,5 cm plus au nord)
+  // (q_0277 à 4 × : la plaque de l'afficheur ≈ 0,2 × 0,1, sa fenêtre bleue ≈ 0,16 × 0,06, au milieu du linteau, au
+  // droit du milieu du passage — le joint des vantaux est 1,5 cm plus au nord)
   const yA = (yP0 + yP1) / 2;
-  B(XA - 0.005, yA - 0.1, XA, yA + 0.1, b + 2.08, b + 2.17, X.lunette);
-  ch.panneau(matAff, 0.16, 0.06, XA - 0.0055, yA, b + 2.125, 'W', G);
-  // LA PLATINE D'APPEL (VO g056 : petite platine carrée à ≈ 1,15 m, contre la façade) : l'inox, le bouton et son anneau
-  // qui s'allume quand on appelle
-  const yb = bouton === 'N' ? y1 : y0, sb = bouton === 'N' ? -1 : 1, xb = ASC.xF - 0.09;
-  B(xb - 0.04, yb, xb + 0.04, yb + sb * 0.008, b + 1.07, b + 1.23, X.inox);
+  B(XA - 0.005, yA - 0.1, XA, yA + 0.1, b + 2.065, b + 2.165, X.lunette);
+  ch.panneau(matAff, 0.16, 0.06, XA - 0.0055, yA, b + 2.115, 'W', G);
+  // LA PLATINE D'APPEL (VO q_0277, f_0041, f_0050 : petite platine carrée à 1,28 m, contre la façade) : l'inox, le
+  // bouton et son anneau qui s'allume quand on appelle
+  const yb = bouton === 'N' ? y1 : y0, sb = bouton === 'N' ? -1 : 1, xb = ASC.xF - 0.09, hb = b + 1.28;
+  B(xb - 0.04, yb, xb + 0.04, yb + sb * 0.008, hb - 0.08, hb + 0.08, X.inox);
   const matAnneau = new THREE.MeshStandardMaterial({ color: 0x3a3632, roughness: 0.3 + b * 0.0007, emissive: 0xff6a1a, emissiveIntensity: 0 });
   matAnneau.name = 'anneau d\'appel ' + b;
-  const anneau = maille(new THREE.CylinderGeometry(0.021, 0.021, 0.006, 20), matAnneau, xb, b + 1.15, -(yb + sb * 0.011), 0, G, { ombre: false });
+  const anneau = maille(new THREE.CylinderGeometry(0.021, 0.021, 0.006, 20), matAnneau, xb, hb, -(yb + sb * 0.011), 0, G, { ombre: false });
   anneau.rotation.x = Math.PI / 2;
-  const poussoir = maille(new THREE.CylinderGeometry(0.016, 0.016, 0.012, 20), X.alu, xb, b + 1.15, -(yb + sb * 0.014), 0, G, { ombre: false });
+  const poussoir = maille(new THREE.CylinderGeometry(0.016, 0.016, 0.012, 20), X.alu, xb, hb, -(yb + sb * 0.014), 0, G, { ombre: false });
   poussoir.rotation.x = Math.PI / 2;
   // ---- LE MONDE SOLIDE : le fixe, le montant, le linteau ; le passage (une forme MOBILE si le palier est desservi) ----
   C.ajouterBoite(XA, -y0, XB + 0.05, -yP0, { y0: b, y1: hM });
@@ -337,21 +361,23 @@ export function poserAscenseur(ch, { base = 0, groupe = null, ouvert = false, y0
 // =====================================================================
 //  LA BANDE SUD DU PALIER EST DU 1er (VO 68,2-70 s, q_0274-0281) — crochet de js/ecole_est.js poserPalierEst
 // =====================================================================
-// Le mur sud de la bande (la cloison des salles côté rue, y 7,035), d'ouest en est (pose de la caméra résolue sur
-// f_0031, 68,2 s : dans l'embrasure de la porte du palier, (13,66 ; 8,27), à ≈ 1,45 m, cap 39° au sud de l'est, f 430
-// px — la façade à 3,87 m de profondeur, l'angle nord-ouest du doublage à -18,3°, son angle sud-ouest, contre le bord
-// est du tableau, à -11,8°, le bord ouest du tableau à -0,3°) : le grand tableau abstrait dans son cadre fin de bois
-// foncé (x 15,2-16,03, de 1,2 à 2,35 m), accroché contre le DOUBLAGE (x 16,05-17,9, 32 cm : il commence au droit du
-// pilastre de la cage, la bande n'a plus que 1,65 m devant l'ascenseur) ; sur la face ouest du doublage, haut, un disque
-// de laiton ; sur sa face nord, le boîtier vert lumineux et sa plaque blanche (x ≈ 16,3 ; 1,3-1,48 et 1,1-1,2 m), la
-// réglette murale (x 16,65-17,75, 2,3 m : l'éclairage de la bande, aucun plafonnier), l'extincteur au pied de
-// l'ascenseur et la platine d'appel ; au fond, la façade palière. Aucune porte : ni le 103 ni la 104 ne s'ouvrent ici
-// (la vidéo ne montre pas de porte entre x ≈ 14,5 et 17,9), ni l'issue de secours de js/ecole_etage1.js (elle tombait
-// dans la gaine).
+// Le mur sud de la bande (la cloison des salles côté rue, y 7,035), d'ouest en est (relecture du 10/10 : poses de
+// caméra résolues ensemble sur q_0277 (14,03 ; 8,68 ; cap 2,4° au sud de l'est), f_0050 (13,84 ; 8,67 ; 9,2°), f_0041
+// (13,47 ; 8,85 ; 28,2°), à f 430 px, par le pilastre (16,05 ; 9,0-9,15), les deux angles de la façade et l'arête ;
+// puis f_0031 (13,55 ; 8,66 ; 42,7°) dans l'embrasure — l'angle intérieur du doublage y tombe sur le bord est du
+// tableau à 1,5 px ; ces poses sont 10 à 20 cm plus au nord que ne le permet le mur du panneau du jeu, qui vient des
+// photos de 2026 : l'écart est celui des deux relevés) : le grand tableau abstrait dans son cadre fin de bois foncé
+// (x 15,16-16,2, de 1,1 à 2,42 m ; f_0031 : 15,28-16,25, f_0041 : 15,03-16,14), accroché contre le DOUBLAGE (x 16,25-17,9,
+// 40 cm : la bande n'a plus que 1,57 m devant l'ascenseur, la largeur de sa façade) ; sur la face ouest du doublage,
+// haut, un disque de laiton ; sur sa face nord, le boîtier vert et sa plaque blanche (x 16,38-16,56 ; 1,06-1,42 et
+// 0,9-1,04 m), la réglette murale (x 16,6-17,82, à 2,05 m : l'éclairage de la bande, aucun plafonnier ; sur toutes les
+// vues son bout est tombe au niveau du bas du linteau), l'extincteur au pied de l'ascenseur et la platine d'appel ; au
+// fond, la façade palière. Aucune porte : ni le 103 ni la 104 ne s'ouvrent ici (la vidéo ne montre pas de porte entre
+// x ≈ 14,5 et 17,9), ni l'issue de secours de js/ecole_etage1.js (elle tombait dans la gaine).
 export function poserBandeSud(ch, { groupe, lampes = null }) {
   const { C, M } = ch, G = groupe, X = matieres(ch), b = N1;
   const B = (x0, ya, x1, yb, h0, h1, mat, o = {}) => ch.boite(Math.min(x0, x1), Math.min(ya, yb), Math.max(x0, x1), Math.max(ya, yb), h0, h1, mat, { ombre: false, ...o, parent: G });
-  const yS = 7.035, yD = 7.355, xD = 16.05, H1 = b + 2.5;
+  const yS = 7.035, yD = ASC.yS1, xD = ASC.xD, H1 = b + 2.5;
   // LE DOUBLAGE, jusqu'au plafond de la bande, ses plinthes gris foncé (photo 28 : celles du palier)
   B(xD, yS, ASC.xF, yD, b, H1, M.blanc);
   C.ajouterBoite(xD, -yS, ASC.xF + 0.01, -yD, { y0: b, y1: H1 });
@@ -359,23 +385,23 @@ export function poserBandeSud(ch, { groupe, lampes = null }) {
   B(xD - 0.015, yS + 0.017, xD, yD + 0.015, b, b + 0.082, X.plinthe);
   // LE TABLEAU ABSTRAIT : la toile dans un cadre fin de bois foncé
   {
-    const x0 = 15.2, x1 = 16.03, h0 = b + 1.2, h1 = b + 2.35, e = 0.028, y = yS;
+    const x0 = 15.16, x1 = 16.2, h0 = b + 1.1, h1 = b + 2.42, e = 0.028, y = yS;
     ch.panneau(X.tableau, x1 - x0 - 2 * e, h1 - h0 - 2 * e, (x0 + x1) / 2, y + 0.016, (h0 + h1) / 2, 'N', G);
     for (const [xa, xb, ha, hb] of [[x0, x1, h0, h0 + e], [x0, x1, h1 - e, h1], [x0, x0 + e, h0, h1], [x1 - e, x1, h0, h1]]) B(xa, y, xb, y + 0.026, ha, hb, X.cadre);
   }
-  // le petit disque de laiton (une sonnerie ?), haut sur la face ouest du doublage (f_0031 : entre son angle et le
-  // tableau, à ≈ 2,4 m)
-  const disque = maille(new THREE.CylinderGeometry(0.035, 0.035, 0.03, 18), X.laiton, xD - 0.015, b + 2.4, -7.2, 0, G, { ombre: false });
+  // le petit disque de laiton (une sonnerie ?), haut sur la face ouest du doublage (f_0031, f_0041 : entre son angle et
+  // le tableau, y ≈ 7,17, à ≈ 2,37 m)
+  const disque = maille(new THREE.CylinderGeometry(0.035, 0.035, 0.03, 18), X.laiton, xD - 0.015, b + 2.37, -7.17, 0, G, { ombre: false });
   disque.rotation.z = Math.PI / 2;
-  // LE BOÎTIER VERT LUMINEUX dans son cadre blanc (≈ 11 × 19 cm ; déverrouillage ou interrupteur à voyant) et la petite
-  // plaque blanche dessous
-  B(16.24, yD, 16.35, yD + 0.045, b + 1.29, b + 1.48, M.boitier);
-  B(16.255, yD + 0.045, 16.335, yD + 0.048, b + 1.31, b + 1.46, X.vert);
-  B(16.25, yD, 16.34, yD + 0.014, b + 1.1, b + 1.2, M.boitier);
-  // LA RÉGLETTE MURALE (x 16,65-17,75, 2,3 m ; f_0031 : son embout orange vers 16,6) : le corps blanc, le diffuseur
-  // allumé, les embouts orange (VO g038, g074)
+  // LE BOÎTIER VERT dans son cadre clair (≈ 18 × 36 cm, un bandeau sombre en tête) et, dessous, le petit boîtier blanc
+  // (VO q_0277, f_0050, f_0056 : 1,06-1,42 et 0,9-1,04 m)
+  B(16.38, yD, 16.56, yD + 0.03, b + 1.06, b + 1.42, M.boitier);
+  ch.panneau(X.vert, 0.172, 0.352, 16.47, yD + 0.0305, b + 1.24, 'N', G);
+  B(16.4, yD, 16.54, yD + 0.04, b + 0.9, b + 1.04, M.boitier);
+  // LA RÉGLETTE MURALE (x 16,6-17,82, à 2,05 m ; son embout orange à l'ouest) : le corps blanc, le diffuseur allumé, les
+  // embouts orange (VO g038, g074)
   {
-    const x0 = 16.65, x1 = 17.75, h = b + 2.3, y = yD;
+    const x0 = 16.6, x1 = 17.82, h = b + 2.05, y = yD;
     B(x0, y, x1, y + 0.085, h - 0.03, h + 0.04, X.reglette);
     B(x0 + 0.03, y + 0.012, x1 - 0.03, y + 0.092, h - 0.045, h - 0.03, X.diffuseur);
     B(x0 + 0.03, y + 0.085, x1 - 0.03, y + 0.092, h - 0.03, h + 0.03, X.diffuseur);
@@ -384,17 +410,17 @@ export function poserBandeSud(ch, { groupe, lampes = null }) {
     const L = { x: (x0 + x1) / 2, z: -(y + 0.25), h, zone: 'e1est', type: 'tube', force: 1.1, base: b, cuire: false };
     ch.lampes.push(L); if (lampes) lampes.push(L);
   }
-  // L'EXTINCTEUR au pied de l'ascenseur, sur le doublage, contre l'angle (f_0031, g056 : de ≈ 0,55 à 1,05 m ; pas de
-  // pictogramme au-dessus)
+  // L'EXTINCTEUR au pied de l'ascenseur, sur le doublage, contre l'angle (relecture du 10/10 : q_0277, f_0041, f_0050 —
+  // le corps rouge de 0,36 à 0,88 m, la tête jusqu'à 0,95 ; pas de pictogramme au-dessus)
   {
-    const x = 17.7, y = yD + 0.1;
-    maille(new THREE.CylinderGeometry(0.075, 0.075, 0.42, 18), X.rouge, x, b + 0.76, -y, 0, G);
-    maille(new THREE.CylinderGeometry(0.03, 0.045, 0.07, 12), M.noirMat, x, b + 1.005, -y, 0, G);
-    B(x - 0.012, y - 0.02, x + 0.07, y + 0.02, b + 1.01, b + 1.04, M.noirMat);
-    B(x - 0.04, yD, x + 0.04, yD + 0.03, b + 0.9, b + 0.98, M.noirMat);
-    const t = maille(new THREE.CylinderGeometry(0.011, 0.011, 0.34, 8), M.noirMat, x - 0.08, b + 0.82, -(y + 0.02), 0, G); t.rotation.z = 0.12;
-    B(x - 0.03, y + 0.071, x + 0.03, y + 0.077, b + 0.7, b + 0.8, M.boitier);      // (l'étiquette blanche, g056)
-    C.ajouterCercle(x, -y, 0.09, { y0: b, y1: b + 1.1 });
+    const x = 17.72, y = yD + 0.1;
+    maille(new THREE.CylinderGeometry(0.078, 0.078, 0.52, 18), X.rouge, x, b + 0.62, -y, 0, G);
+    maille(new THREE.CylinderGeometry(0.03, 0.045, 0.07, 12), M.noirMat, x, b + 0.915, -y, 0, G);
+    B(x - 0.012, y - 0.02, x + 0.07, y + 0.02, b + 0.92, b + 0.95, M.noirMat);
+    B(x - 0.04, yD, x + 0.04, yD + 0.025, b + 0.76, b + 0.84, M.noirMat);
+    const t = maille(new THREE.CylinderGeometry(0.011, 0.011, 0.4, 8), M.noirMat, x - 0.085, b + 0.66, -(y + 0.02), 0, G); t.rotation.z = 0.1;
+    B(x - 0.03, y + 0.074, x + 0.03, y + 0.08, b + 0.52, b + 0.64, M.boitier);      // (l'étiquette blanche, g056)
+    C.ajouterCercle(x, -y, 0.09, { y0: b, y1: b + 1.0 });
   }
   // LE PALIER DE L'ASCENSEUR, desservi
   return poserAscenseur(ch, { base: b, groupe: G, ouvert: true, y0: yD, hMur: H1, zone: 'e1est', bouton: 'S' });
