@@ -191,34 +191,48 @@ export function poserMobilier(ch) {
     ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche(c, '#fbfbf8', 20 + i), roughness: 0.7 }), 0.21, 0.297, x, 9.088, h, 'N'));
 
   // =====================================================================
-  //  LE HALL OUEST (photo 06)
+  //  LE HALL OUEST (photo 06 ; plan V2, 11/10 — scratchpad iris_audit/plan_v2.md § 2.2 : la photo 06 rejouée au
+  //  centimètre, retour de Haythem du 10/10, « la porte n'est pas aussi loin » ; js/carte_ecole.js construireMurs)
   // =====================================================================
-  // (sur l'avancée sud du mur ouest, x 2,0 : js/carte_ecole.js ; 09/10)
-  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texConsignes(), roughness: 0.5 }), 2.0, 8.45, 'E', 0.45, 1.3, 1.92);
-  // l'extincteur rouge sur sa console (h 0,95-1,55) et ses pictogrammes (relecture du 09/10 : à 0,9 m de la porte grise,
-  // au fond du renfoncement raccourci — photos 02 et 06 ; y 11,2 -> 10,95)
-  const ext = new THREE.Group(); ext.position.set(1.86, 0, -10.95); ch.decor.add(ext);
-  maille(new THREE.CylinderGeometry(0.075, 0.075, 0.48, 16), M.rougeEtiquette, 0, 1.2, 0, 0, ext);
-  maille(new THREE.SphereGeometry(0.075, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.rougeEtiquette, 0, 1.44, 0, 0, ext);
-  maille(new THREE.CylinderGeometry(0.03, 0.045, 0.08, 10), M.noirMat, 0, 1.5, 0, 0, ext);
-  maille(boiteM(0.04, 0.06, 0.06), M.noirMat, -0.08, 1.35, 0, 0, ext);
+  // LE PLAN D'ÉVACUATION, sur la face est de la PILE (x 2,45, y 4,05-4,97) : centré sur elle, à 0,45 m de la paroi
+  // vitrée, de 0,95 à 1,70 (photo 06 : le jeu le mettait à 1,30-1,92, sur une lame de 25 cm, 2,7 m plus au nord)
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texConsignes(), roughness: 0.5 }), 2.45, 4.51, 'E', 0.44, 0.95, 1.7);
+  // la prise électrique contre l'huisserie nord de la porte grise, au ras de la plinthe (photo 06, vidéo v_001)
+  ch.boite(1.75, 6.01, 1.765, 6.09, 0.16, 0.24, M.blanc, { ombre: false });
+  for (const dy of [-0.018, 0.018]) ch.boite(1.765, 6.05 + dy - 0.005, 1.768, 6.05 + dy + 0.005, 0.195, 0.205, M.noirMat, { ombre: false });
+  // L'EXTINCTEUR rouge sur sa console et ses deux plaques (photo 06 : au fond du renfoncement, à 0,95 m au nord de la
+  // porte grise et à 0,3 m de l'angle ; le corps de 0,60 à 1,20 — le jeu le mettait 0,36 m trop haut —, la poignée à
+  // 1,46 ; au-dessus, le pictogramme à 1,95 et une petite plaque rouge et bleue à 1,54)
+  const ext = new THREE.Group(); ext.position.set(1.86, 0, -6.9); ch.decor.add(ext);
+  maille(new THREE.CylinderGeometry(0.075, 0.075, 0.6, 16), M.rougeEtiquette, 0, 0.9, 0, 0, ext);
+  maille(new THREE.SphereGeometry(0.075, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.rougeEtiquette, 0, 1.2, 0, 0, ext);
+  maille(new THREE.CylinderGeometry(0.03, 0.045, 0.12, 10), M.noirMat, 0, 1.33, 0, 0, ext);
+  maille(boiteM(0.04, 0.06, 0.06), M.noirMat, -0.08, 1.12, 0, 0, ext);
   // (photo 06 : la poignée noire et son levier, l'étiquette blanche, le tuyau noir qui fait une boucle le long du corps
   // jusqu'à la lance clipsée en bas ; 09/10)
-  maille(boiteM(0.12, 0.018, 0.035), M.noirMat, 0.03, 1.56, 0, 0, ext).rotation.z = -0.25;
-  const etiq = maille(new THREE.CylinderGeometry(0.0765, 0.0765, 0.2, 16, 1, true, -0.7, 1.4), M.boitier, 0, 1.18, 0, Math.PI / 2, ext, { ombre: false });
+  maille(boiteM(0.12, 0.018, 0.035), M.noirMat, 0.03, 1.46, 0, 0, ext).rotation.z = -0.25;
+  maille(boiteM(0.05, 0.05, 0.04), M.noirMat, 0.0, 1.41, 0, 0, ext);
+  const etiq = maille(new THREE.CylinderGeometry(0.0765, 0.0765, 0.24, 16, 1, true, -0.7, 1.4), M.boitier, 0, 0.88, 0, Math.PI / 2, ext, { ombre: false });
   void etiq;
-  const tuyau = new THREE.CatmullRomCurve3([[0.03, 1.5, 0.02], [0.11, 1.45, 0.05], [0.12, 1.2, 0.07], [0.1, 1.0, 0.06], [0.06, 0.97, 0.06]].map((p) => new THREE.Vector3(...p)));
+  const tuyau = new THREE.CatmullRomCurve3([[0.03, 1.4, 0.02], [0.11, 1.33, 0.05], [0.12, 1.0, 0.07], [0.1, 0.7, 0.06], [0.06, 0.64, 0.06]].map((p) => new THREE.Vector3(...p)));
   maille(new THREE.TubeGeometry(tuyau, 24, 0.009, 6), M.noirMat, 0, 0, 0, 0, ext, { ombre: false });
-  C.ajouterCercle(1.86, -10.95, 0.09, { y0: 0.9, y1: 1.6 });
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.16, 0.16, 1.755, 10.95, 1.9, 'E');
-  // l'affiche jaune du tri, à gauche des portes de l'escalier : sur l'avancée nord du mur OUEST, dans l'angle (09/10 :
+  C.ajouterCercle(1.86, -6.9, 0.09, { y0: 0.55, y1: 1.5 });
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.16, 0.16, 1.755, 6.9, 1.95, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texPlaqueRougeBleue(), roughness: 0.5 }), 0.1, 0.1, 1.755, 6.9, 1.54, 'E');
+  // l'affiche jaune du tri, à gauche des portes de l'escalier : sur la face est de l'avancée nord du mur OUEST (09/10 :
   // elle était sur le mur des portes, cachée par le vantail ouvert ; photos 04, 20 : on la voit à gauche du vantail, sur
-  // le mur en fuite). (Relecture du 09/10 : l'avancée, plus longue, avance jusqu'à x 2,35 ; l'affiche est à 45 cm de
-  // son angle sud, juste à gauche du vantail ouvert sur les photos 06 et 04 — à y 13,17, le vantail la cachait encore.)
-  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texTri(), roughness: 0.6 }), 2.35, 12.1, 'E', 0.6, 1.1, 1.95);
+  // le mur en fuite). (Plan V2, photo 06 : son bord gauche à 0,29 m de l'angle de l'avancée — y 7,51-8,11 —, juste à
+  // gauche du vantail ouvert rabattu à plat, y 8,0-9,0, qui la touche presque.)
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texTri(), roughness: 0.6 }), 2.45, 7.81, 'E', 0.6, 1.1, 1.95);
+  // LES DEUX A4 DU VANTAIL FERMÉ des portes de l'escalier (vantail est, x 3,45-4,45, face hall à y 8,935), l'un au-dessus
+  // de l'autre, côté gonds (photos 06, 20 : une fiche de consignes de 1,25 à 1,70, une photo imprimée de 1,75 à 2,0 ; le
+  // jeu les mettait côte à côte vers 1,65)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#fbfbf8', 13), roughness: 0.75 }), 0.3, 0.45, 4.1, 8.932, 1.475, 'S');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#9aa6b4', '#eef0f2', 14), roughness: 0.6 }), 0.3, 0.25, 4.1, 8.932, 1.875, 'S');
   // le diffuseur d'alarme blanc, sur la retombée au-dessus de l'entrée du couloir C05, contre l'angle (photos 04 et 05 :
-  // un boîtier carré à grille ronde ; relecture du 09/10)
-  const diff = new THREE.Group(); diff.position.set(5.39, 2.49, -11.965); ch.decor.add(diff);
+  // un boîtier carré à grille ronde ; relecture du 09/10 ; plan V2 : la retombée du hall au bout du mur safran, qui
+  // recule avec la salle d'attente — DY_A, -4,20 : y 11,965 -> 7,765 ; la bande visible va de 2,30 à 2,60)
+  const diff = new THREE.Group(); diff.position.set(5.39, 2.45, -7.765); ch.decor.add(diff);
   maille(boiteM(0.12, 0.13, 0.07), M.boitier, 0, 0, 0, 0, diff, { ombre: false });
   maille(new THREE.CylinderGeometry(0.035, 0.035, 0.01, 16), M.grille, 0, -0.005, 0.038, 0, diff, { ombre: false }).rotation.x = Math.PI / 2;
   diff.traverse((m) => { m.userData.horsAOSol = true; });
@@ -226,22 +240,27 @@ export function poserMobilier(ch) {
   // =====================================================================
   //  LE PASSAGE (photos 07, 19)
   // =====================================================================
+  // (plan V2, 11/10 : le passage rétréci à x 2,175-4,425 et arrêté à la paroi vitrée en y 4,05 ; les deux lièges du mur
+  // est sont vers la rue, y 0,4-1,4 et 1,5-2,6 — photos 07, 10 —, pas contre la paroi)
   const liege = texLiege();
-  for (const [y0, y1] of [[2.3, 3.3], [3.4, 4.6]]) {
+  for (const [y0, y1] of [[0.4, 1.4], [1.5, 2.6]]) {
     const yc = (y0 + y1) / 2, w = y1 - y0;
-    cadreMural(ch, M.aluGris, 4.75, yc, 'W', w + 0.04, 0.98, 1.92, 0.02);
-    cadreMural(ch, new THREE.MeshStandardMaterial({ map: liege, roughness: 0.9 }), 4.73, yc, 'W', w, 1.0, 1.9, 0.012);
+    cadreMural(ch, M.aluGris, 4.425, yc, 'W', w + 0.04, 0.98, 1.92, 0.02);
+    cadreMural(ch, new THREE.MeshStandardMaterial({ map: liege, roughness: 0.9 }), 4.405, yc, 'W', w, 1.0, 1.9, 0.012);
   }
-  ['#2f6fb0', '#d6542b', '#f08a3c'].forEach((c, i) => ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche(c, '#fbfbf8', 30 + i), roughness: 0.7 }), 0.3, 0.42, 4.715, 2.55 + i * 0.6, 1.45 + (i % 2) * 0.15, 'W'));
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e0e0e0', '#ffffff', 40), roughness: 0.7 }), 0.42, 0.3, 1.756, 4.75, 1.55, 'E');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#ffffff', 41), roughness: 0.7 }), 0.42, 0.6, 1.756, 3.2, 1.5, 'E');
+  [[0.75, '#2f6fb0'], [1.95, '#d6542b'], [2.3, '#f08a3c']].forEach(([y, c], i) => ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche(c, '#fbfbf8', 30 + i), roughness: 0.7 }), 0.3, 0.42, 4.39, y, 1.45 + (i % 2) * 0.15, 'W'));
+  // le mur ouest, entre la porte « Sortie » (y 1,15-2,05) et la paroi
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e0e0e0', '#ffffff', 40), roughness: 0.7 }), 0.42, 0.3, 2.181, 3.5, 1.55, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#ffffff', 41), roughness: 0.7 }), 0.42, 0.6, 2.181, 2.75, 1.5, 'E');
+  // l'affiche du pan plein de la paroi, à gauche de la double porte (le dos de la pile du plan d'évacuation, photo 10)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3e9b6b', '#fbfbf8', 42), roughness: 0.7 }), 0.21, 0.297, 2.3125, 4.046, 1.5, 'S');
   // L'AFFICHETTE SCOTCHÉE sur le vantail OUEST de la porte automatique, juste au-dessus de son autocollant « iris »
   // (photo 07 côté hall, photo 19 côté passage, en transparence ; relecture du 09/10) : elle part avec le vantail
-  const pp = ch.portes.auto.find((P) => Math.abs(P.cx - 3.2) < 0.01 && Math.abs(P.cz + 5.0) < 0.01);
+  const pp = ch.portes.auto.find((P) => P.g.name === 'porte passage');
   const vo = pp && pp.vantaux.find((v) => v.s > 0);
   if (vo) {
     const a = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.2), new THREE.MeshStandardMaterial({ map: texAffiche('#c98f3e', '#efe9df', 60), roughness: 0.75, side: THREE.DoubleSide }));
-    a.position.set(0.38, 1.45, -0.004); a.rotation.y = Math.PI; a.castShadow = false; a.userData.vitre = true; vo.g.add(a);
+    a.position.set(0.42, 1.45, -0.004); a.rotation.y = Math.PI; a.castShadow = false; a.userData.vitre = true; vo.g.add(a);
   }
 
   // (la plaque « Toilettes » du C01, photo 01 — le fauteuil roulant : avec les toilettes PMR, js/ecole_pieces.js ; 09/10)
@@ -311,6 +330,15 @@ function texLiege() {
   }, null, false, 4);
 }
 // l'affichette WIFI (photo 03) : noire, le titre et deux lignes en blanc, le QR code à droite
+// LA PETITE PLAQUE sous le pictogramme de l'extincteur du hall ouest (photo 06, à 1,54 m) : un carré rouge au liseré
+// blanc sur un fond bleu, la consigne en blanc dessous
+function texPlaqueRougeBleue() {
+  return canvasTex(64, 64, (g, w, h) => {
+    g.fillStyle = '#244a9a'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#ffffff'; g.fillRect(6, 5, w - 12, 34); g.fillStyle = '#d32f2f'; g.fillRect(9, 8, w - 18, 28);
+    g.fillStyle = '#f2f2f2'; for (let k = 0; k < 3; k++) g.fillRect(9, 44 + k * 6, w - 18 - k * 8, 2);
+  }, null, false, 4);
+}
 function texWifi() {
   return canvasTex(160, 136, (g, w, h) => {
     g.fillStyle = '#121212'; g.fillRect(0, 0, w, h);
