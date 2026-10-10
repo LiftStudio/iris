@@ -46,6 +46,13 @@
 // ni bâton côté sas, sans scintillement dans ses tableaux ; le sas élargi à l'ouest et sa caméra ; la photo turquoise sans
 // la « silhouette » (un reflet) ; le verre des portes des salles gris vert ; l'extincteur du recoin sur son mur ouest ;
 // l'allée de la porte de la salle 1 assez large pour passer le poteau ; le lino un peu plus clair.
+// LE PLAN V2 DU 11/10 (retour de Haythem du 10/10, « les salles sont trop compressées » ; iris_audit/plan_v2.md § 2.5 et
+// etage2.md, planches VO/jeu au même point de vue) : les plafonds à 2,40 (salles) et 2,45 (couloir, sas) au lieu de 2,70
+// et 2,58 ; la salle 1 de 9,35 x 4,93 au lieu de 8,05 x 5,68 — mur ouest en x 3,6, façade en y 11,70 —, ses fenêtres de
+// 0,88 x 1,10 au pas de 1,35, ses rangées au pas de 1,45 avec 2,0 m devant le tableau, le coin du professeur dans l'angle
+// nord-ouest, le second poteau en x 9,0 ; les chaises du couloir contre D1 ; les trumeaux de la salle 2 saillants de
+// 0,28 ; le recoin de l'extincteur en x 13,78 ; la porte coupe-feu rabattue, son bois côté gonds seulement ; la fenêtre
+// 11 sans cadre rouge (il est au 3e) ; plus de cage de l'escalier principal au 2e.
 //
 // LES PIÈGES D'UN NIVEAU DE PLUS (ceux du 1er, js/ecole_etage1.js, et du sous-sol, js/ecole_soussol.js) :
 //   1. des SOLS (C.sol à 6,60) sous tout ce qu'on foule, la cage exceptée : sinon solEn rendrait le plancher du 1er ;
@@ -947,13 +954,13 @@ export function poserEtage2(ch, renderer = null) {
     // LES TABLES DES ÉLÈVES : cinq rangées nord-sud (les élèves regardent l'ouest), trois tables de 1,15 m bout à bout de
     // y 7,80 à 11,25 (l'allée de la porte au sud), deux chaises par table ; passe-câbles au bord ouest, quelques multiprises
     // (plan V2, etage2.md § 2 : rangées au pas de 1,45 — VO 1,39-1,45, q_0309 —, 2,0 m entre le tableau et la 1re ; les
-    // chaises rentrées à 0,40 m de l'axe des tables et leur forme resserrée sous l'assise : 0,63 m libres derrière les
+    // chaises rentrées à 0,40 m de l'axe des tables et leur forme resserrée sous l'assise : 0,65 m libres derrière les
     // dossiers, Haythem passe entre deux rangées et s'assied aux 30 places)
     let n = 0;
     for (const xr of [5.95, 7.40, 8.85, 10.30, 11.75]) {
       for (const yc of [8.375, 9.525, 10.675]) {
         table(xr, yc, 0.6, 1.15, { pied: X.marine, passe: 'W', multi: (n % 5) === 2 });
-        for (const s of [-1, 1]) chaiseLuge(xr + 0.4, yc + s * 0.29, 'W', { coque: X.coque1, pied: X.noir, sortie: [xr + 0.835, yc + s * 0.29], rc: 0.15, dc: 0.03 });
+        for (const s of [-1, 1]) chaiseLuge(xr + 0.4, yc + s * 0.29, 'W', { coque: X.coque1, pied: X.noir, sortie: [xr + 0.825, yc + s * 0.29], rc: 0.15, dc: 0.05 });
         n++;
       }
     }
