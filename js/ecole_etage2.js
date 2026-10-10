@@ -632,7 +632,7 @@ export function poserEtage2(ch, renderer = null) {
     mur({ de: [X_REC - EP / 2, Y_PAL - 0.06], a: [X_REC - EP / 2, 8.71], mats: B0, plinthes: [['E', P]] });
     // (l'ouverture de la porte coupe-feu à 2,05 m : côté sas, le vantail affleure sous l'enduit, sans jour au-dessus)
     mur({ de: [13.49, Y_PAL], a: [E.x0 + 0.06, Y_PAL], mats: B0, plinthes: [['N', P], ['S', X.plinthe]], ouvertures: [{ c: 14.75, l: 0.95, h: N2 + 2.05 }] });
-    // LE VESTIBULE DE L'ASCENSEUR (x 16,05-17,9, y 7,0-9,0 : la bande sud du 1er, au-dessus — non vu) : son mur ouest, son
+    // LE VESTIBULE DE L'ASCENSEUR (x 16,05-17,9, y 6,94-9,0 : la bande sud du 1er, au-dessus — non vu) : son mur ouest, son
     // mur sud, et au fond, en x 17,9, la PORTE PALIÈRE (intégration du 10/10, js/ecole_ascenseur.js) : la gaine est la même
     // qu'au 1er — la façade de y 7,43 à 9,0, le passage en 8,0-8,81 —, un retour de mur la borde au sud (au 1er, le
     // doublage), la platine d'appel est sur le mur de la cage ; le 2e est desservi (la cabine va du rez-de-chaussée au 2e)
