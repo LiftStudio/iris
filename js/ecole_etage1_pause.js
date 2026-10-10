@@ -508,7 +508,7 @@ export function poserPause1(ch, ctx) {
   // service de l'alcôve, orange au-delà ; blanc côté Si 1.4. La porte de la Si 1.4 et son imposte vitrée (VO 54,8 s : 2,45 m)
   const xPA = PA.c + PA.l / 2 + 0.05;
   mur({ de: [XF - 0.075, YO], a: [xPA, YO], mats: { S: P.creme, N: M.blanc }, plinthes: [['S', P.plinthe]], ouvertures: [{ c: PA.c, l: PA.l, h: N1 + 2.1 }] });
-  mur({ de: [xPA, YO], a: [13.26, YO], mats: { S: P.orange, N: M.blanc }, plinthes: [['S', P.plinthe]], ouvertures: [{ c: (SI14.x0 + SI14.x1) / 2, l: SI14.x1 - SI14.x0, h: N1 + 2.45 }] });
+  mur({ de: [xPA, YO], a: [XK, YO], mats: { S: P.orange, N: M.blanc }, plinthes: [['S', P.plinthe]], ouvertures: [{ c: (SI14.x0 + SI14.x1) / 2, l: SI14.x1 - SI14.x0, h: N1 + 2.45 }] });
   // LA PORTE DE SERVICE DE L'ALCÔVE (relecture 10/10 : VO f_54,6 s, un cadre blanc juste à droite du 1er poteau, puis
   // l'orange et la plaque noire ; f_47,5 s, entre le 1er et le 2e poteau, la « bande lilas-bleu lumineuse » de etage1.md :
   // sa vitre) — vantail blanc à grande vitre dépolie, éclairée de l'autre côté, béquille inox ; fermée (derrière : IMAGINÉ)
@@ -754,12 +754,14 @@ export function poserPause1(ch, ctx) {
   // (V2 : étirés comme le reste, sauf le mange-debout de l'entrée et ses deux tabourets : étiré, il tombait dans le
   // passage de la porte du palier, en (12,75 ; 8,28) ; VO q_0270 — pose résolue, (12,0 ; 10,92), 1,35 m, cap 173,5°, f 464
   // — le montre devant l'angle du recoin, vers (11,2 ; 7,1) à 0,3 m près, ses deux tabourets « Miura » côté nord-est ;
-  // l'autre, vers (10,9 ; 8,5), est celui du milieu étiré, (11,1 ; 8,49). Posé en (11,5 ; 7,0) : la sortie de la chaise
-  // menthe reste libre)
-  for (const [x, y] of [[11.5, 7.0], [12.8, Yv(10.9)], [9.6, Yv(8.15)], [11.1, Yv(9.5)]]) mangeDebout(x, y);
-  miura(12.05, 7.1, 'W', [12.6, 7.1]); miura(12.85, Yv(11.45), 'S', [12.4, Yv(11.75)]); miura(9.05, Yv(8.1), 'E', [8.9, Yv(7.55)]);
-  miura(11.6, 7.55, 'S', [12.1, 7.85]); miura(12.8, Yv(10.35), 'N', [12.4, Yv(10.4)]);
-  coque(10.2, Yv(8.5), 'W', P.coqueOrange, [10.2, Yv(7.8)]); coque(10.5, Yv(9.05), 'W', P.coqueMenthe, [10.95, Yv(8.75)]);
+  // l'autre, vers (10,9 ; 8,5), est celui du milieu étiré, (11,1 ; 8,49). Mais la photo 28 (2026, qui passe avant la
+  // vidéo) voit par la porte du palier, en biais, un sol nu jusqu'aux jours : le cône y = 9,75 − k (16,39 − x), k de 0,573
+  // à 0,747, reste vide — le mange-debout en (11,3 ; 7,2), juste au nord, ses tabourets au nord-est ; la chaise menthe
+  // recule de 10 cm, que sa sortie reste libre)
+  for (const [x, y] of [[11.3, 7.2], [12.8, Yv(10.9)], [9.6, Yv(8.15)], [11.1, Yv(9.5)]]) mangeDebout(x, y);
+  miura(11.85, 7.4, 'W', [12.4, 7.4]); miura(12.85, Yv(11.45), 'S', [12.4, Yv(11.75)]); miura(9.05, Yv(8.1), 'E', [8.9, Yv(7.55)]);
+  miura(11.4, 7.75, 'S', [11.75, 8.2]); miura(12.8, Yv(10.35), 'N', [12.4, Yv(10.4)]);
+  coque(10.2, Yv(8.5), 'W', P.coqueOrange, [10.2, Yv(7.8)]); coque(10.4, Yv(9.05) + 0.08, 'W', P.coqueMenthe, [10.85, 7.6]);
   // (la lime contre le muret court, entre la niche et le 1er poteau)
   coque(7.75, Yv(11.45), 'S', P.coqueLime, [7.75, Yv(10.85)]);
 
@@ -924,7 +926,9 @@ export function poserPause1(ch, ctx) {
     const blocs = i < 5 ? [0.9, 2.1, yNord(xr)] : [0.9, 2.1];
     for (const yc of blocs) {
       tableDouble(xr, yc);
-      for (const s of [-1, 1]) chaiseHetre(xr + 0.45, yc + s * 0.3, 'W', [xr + 0.45, ALLEE]);
+      // (V2 : on se relève dans l'allée, du côté de sa chaise — depuis ce point, c'est elle qu'on propose, et non sa
+      // voisine d'en face)
+      for (const s of [-1, 1]) chaiseHetre(xr + 0.45, yc + s * 0.3, 'W', [xr + 0.45, yc + s * 0.3 < ALLEE ? ALLEE - 0.15 : ALLEE + 0.1]);
     }
   });
 
