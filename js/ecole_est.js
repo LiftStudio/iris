@@ -136,10 +136,11 @@ function qr(g, x, y, s, n) {
   }
 }
 // LA PLAQUE DIRECTIONNELLE du couloir est (photo 24, sur le mur jaune) : cinq lames bleu ardoise, texte et flèches
-// blancs, toutes vers le hall. Lue sur la photo, recoupée avec l'annuaire de la photo 22.
+// blancs, toutes vers le hall. Lue sur la photo, recoupée avec l'annuaire de la photo 22. (10/10 : les codes sont « Si »,
+// salles informatiques — l'annuaire de la pile, VO 7,9-8,1 s, « Si 0.1 » et « Si 0.2 » ; le « B » ne sert qu'aux bureaux)
 function texDirection() {
   return canvasTex(512, 512, (g, w, h) => {
-    const lames = [['Accueil – Réception', ''], ['Salle Tim Berners-Lee', 'B 0.1'], ['Salle David Clark', 'B 0.2'], ['Pause extérieure', ''], ['Direction des Études', '']];
+    const lames = [['Accueil – Réception', ''], ['Salle Tim Berners-Lee', 'Si 0.1'], ['Salle David Clark', 'Si 0.2'], ['Pause extérieure', ''], ['Direction des Études', '']];
     const lh = h / 5;
     lames.forEach(([t, num], i) => {
       const y = i * lh, gr = g.createLinearGradient(0, y, 0, y + lh);
@@ -291,6 +292,33 @@ function texPhotoNuit() {
     for (let k = 0; k < 9; k++) { const x = 14 + k * 11, hh = 30 + r2() * 70; g.fillStyle = '#0a0c12'; g.fillRect(x, h - 10 - hh, 10, hh); for (let j = 0; j < 6; j++) if (r2() < 0.5) { g.fillStyle = 'rgba(255,214,140,0.9)'; g.fillRect(x + 2 + (j % 2) * 4, h - 16 - hh * r2(), 2, 2); } }
   }, null, false, 2);
 }
+// L'AFFICHE À LA POMME du vestibule (VO q_0154-0160, q_0361-0365 ; 10/10) : sous verre, fond vert lime, une grande
+// pomme verte mordue par une pomme blanche, un globe rayé au milieu de la morsure, une marge blanche et une ligne de
+// petit texte en bas
+function texAffichePomme() {
+  return canvasTex(256, 362, (g, w, h) => {
+    g.fillStyle = '#f2f3ea'; g.fillRect(0, 0, w, h);
+    const m = 12;
+    g.fillStyle = '#b8c656'; g.fillRect(m, m, w - 2 * m, h - 2 * m - 26);
+    const pomme = (cx, cy, r, c) => {
+      g.fillStyle = c; g.beginPath();
+      g.arc(cx - r * 0.42, cy, r * 0.62, Math.PI * 0.55, Math.PI * 1.75); g.arc(cx + r * 0.42, cy, r * 0.62, Math.PI * 1.25, Math.PI * 0.45); g.closePath(); g.fill();
+      g.beginPath(); g.ellipse(cx + r * 0.12, cy - r * 0.86, r * 0.1, r * 0.24, 0.6, 0, 7); g.fill();     // la feuille
+    };
+    pomme(w * 0.4, h * 0.42, 118, '#6f9c78');
+    g.save(); g.beginPath(); g.rect(m, m, w - 2 * m, h - 2 * m - 26); g.clip();
+    pomme(w * 0.86, h * 0.52, 92, '#f2f3ea');
+    g.restore();
+    // le globe dans la morsure
+    const gx = w * 0.62, gy = h * 0.46, gr = 30;
+    g.fillStyle = '#7fae86'; g.beginPath(); g.arc(gx, gy, gr, 0, 7); g.fill();
+    g.strokeStyle = '#f2f3ea'; g.lineWidth = 2.5;
+    g.beginPath(); g.arc(gx, gy, gr, 0, 7); g.stroke();
+    for (const k of [-0.5, 0, 0.5]) { g.beginPath(); g.moveTo(gx - gr * Math.sqrt(1 - k * k), gy + k * gr); g.lineTo(gx + gr * Math.sqrt(1 - k * k), gy + k * gr); g.stroke(); }
+    g.beginPath(); g.ellipse(gx, gy, gr * 0.45, gr, 0, 0, 7); g.stroke();
+    g.fillStyle = '#4f6f55'; g.fillRect(m + 8, h - m - 18, 120, 5); g.fillRect(w - m - 54, h - m - 18, 46, 5);
+  }, null, false, 4);
+}
 
 // =====================================================================
 //  LES MATIÈRES
@@ -317,6 +345,7 @@ function matieresEst() {
     limon: std({ color: 0x1b1918, roughness: 0.55, side: THREE.DoubleSide }, 'plinthe rampante noire'),
     rail: std({ color: 0x1e1c1a, roughness: 0.36, metalness: 0.35 }, 'main courante noire'),
     taupe: std({ color: 0x9d978f, roughness: 0.45 }, 'vantail gris taupe'),
+    creme: std({ color: 0xe9dcc8, roughness: 0.45 }, 'vantail crème'),
     bois: std({ color: 0xe4dccb, roughness: 0.5 }, 'huisserie de bois crème'),
     cadre: std({ color: 0xeeece6, roughness: 0.4 }, 'cadre de la cloison vitrée'),
     tapis: std({ map: texTapis(), roughness: 0.85 }, 'tapis strié noir'),
@@ -540,6 +569,8 @@ function geoDalles(rects, h, R) {
 }
 // (zone de lumière en monde : [x0, z0, x1, z1, hauteur mini])
 const zr = (x0, y0, x1, y1, hmin = -1) => [x0, -y1, x1, -y0, hmin];
+// (10/10 : les mêmes outils et les mêmes matières pour la descente au -1 et le sas technique, js/ecole_soussol_est.js)
+export const outilsEst = { mur, chambranle, reglette, mainCourante, limon, volee, geoDalles, texMouchete, texAfficheIris, matieres: () => X };
 
 // =====================================================================
 //  LE REZ-DE-CHAUSSÉE (crochet de js/carte_ecole.js)
@@ -551,7 +582,9 @@ export function poserEst(ch, { RECT }) {
 
   // ---- LE SOL : le lino moucheté clair, du seuil de la porte du hall au fond de la cage (photos 24, 26) ----
   // (le carrelage du rez-de-chaussée s'arrête au mur du hall et au mur jaune : js/carte_ecole.js RN)
-  const lino = new THREE.Mesh(geoDalles([[E.xJ, E.yH, E.xM + 0.3, 12.45]], 0, RECT), X.lino);
+  // (10/10 : coupé au droit de la descente au -1 — la volée A sous la volée 2, x 16,95-18,70 — et sous la volée 1 et le
+  // palier intermédiaire, qui ne sont plus pleins : d'en bas on y voyait flotter le lino ; js/ecole_soussol_est.js)
+  const lino = new THREE.Mesh(geoDalles([[E.xJ, E.yH, 16.2, 12.45], [16.2, E.yH, E.xM + 0.3, 9.15], [16.2, 9.15, 16.95, 10.65]], 0, RECT), X.lino);
   lino.receiveShadow = true; lino.name = 'lino du couloir est'; lino.userData.nofuse = true;
   ch.scene.add(lino);
 
@@ -595,7 +628,14 @@ export function poserEst(ch, { RECT }) {
   // =====================================================================
   // LE MUR JAUNE à l'ouest (de la porte du hall à celle du vestibule), plinthe gris foncé ; puis le mur du vestibule
   mur(ch, D, { de: [E.xJ, 7.65], a: [E.xJ, 10.65], mats: { E: X.jaune, W: B0 }, plinthes: ['E'] });
-  mur(ch, D, { de: [E.xJ, 10.8], a: [E.xJ, 12.45], mats: B0, plinthes: ['E'] });
+  // (10/10 : le mur ouest du VESTIBULE est jaune lui aussi — VO q_0154-0160 et q_0361-0365, la même peinture ; aucune
+  // photo de 2026 ne le montre — et porte l'affiche à la pomme, sous verre, à baguette noire (0,60 x 0,85, centre à
+  // 1,55 m). Au mur nord, collé à l'angle, le déclencheur manuel rouge à 1,35 m)
+  mur(ch, D, { de: [E.xJ, 10.8], a: [E.xJ, 12.45], mats: { E: X.jaune, W: B0 }, plinthes: ['E'] });
+  B(ch, D, 14.675, 11.29, 14.69, 11.91, 1.115, 1.985, M.noirMat, { ombre: false });
+  ch.panneau(matPanneau(texAffichePomme(), 0.18), 0.6, 0.85, 14.692, 11.6, 1.55, 'E');
+  B(ch, D, 14.7, 12.41, 14.79, 12.45, 1.27, 1.43, M.rougeEtiquette, { ombre: false });
+  B(ch, D, 14.712, 12.405, 14.778, 12.41, 1.285, 1.335, M.boitier, { ombre: false });
   // LA PLAQUE DIRECTIONNELLE bleu ardoise (40 x 40 cm, centre à 1,55 m, vers y 8,65)
   B(ch, D, 14.675, 8.44, 14.69, 8.86, 1.34, 1.76, M.noirMat, { ombre: false });
   ch.panneau(matPanneau(texDirection(), 0.35), 0.4, 0.4, 14.692, 8.65, 1.55, 'E');
@@ -609,16 +649,29 @@ export function poserEst(ch, { RECT }) {
   butoir.rotation.x = Math.PI / 2;
   // LE MUR SUD DE LA CAGE (y 9,0-9,15) : côté dégagement, côté niche ; jusqu'au plancher du 1er
   mur(ch, D, { de: [16.35, E.yS], a: [E.xM, E.yS], h: N1, mats: B0, plinthes: ['S'] });
-  B(ch, D, 16.35, 9.15, E.xP, 9.165, 0, 0.08, X.plinthe, { ombre: false });
-  // LA NICHE sous la volée 2 : le tapis de caoutchouc strié, l'interrupteur, le cadre de fer plat noir (27 x 40 cm, de
-  // 0,5 à 0,95 m) qui pivote sur un gond rond à son bord est, à quelques centimètres du mur — son ombre s'y colle
-  B(ch, D, 16.3, 9.17, 17.6, 10.63, 0, 0.008, X.tapis, { ombre: false });
+  B(ch, D, 16.35, 9.15, 16.95, 9.165, 0, 0.08, X.plinthe, { ombre: false });
+  // LA NICHE sous la volée 2 = LA TÊTE DE LA DESCENTE AU -1 (VO q_0050-0063, q_0143-0153 ; photo 24 ; 10/10) : le tapis
+  // de caoutchouc strié couvre le palier de tête (x 16,3-16,95), puis la volée A descend vers l'est sous la volée 2
+  // (js/ecole_soussol_est.js). À chaque bord, LE POTEAU : la main courante qui monte de la descente fait en tête un
+  // retour horizontal et plonge jusqu'au sol (Ø 38 mm, crosse vers 0,92 m : VO q_0149, la main courante y arrive dans sa
+  // pente) ; sur lui, le PORTILLON anti-chute — cadre de fer plat noir 0,27 x 0,40 (de 0,45 à 0,85 m) sur deux paumelles laiton, replié à plat contre son mur, ouvert (celui du
+  // sud, à traverse haute de bois brun, est la « boucle noire » de la photo 24). L'interrupteur reste au mur sud.
+  B(ch, D, 16.3, 9.17, 16.95, 10.63, 0, 0.008, X.tapis, { ombre: false });
   B(ch, D, 16.4, 9.15, 16.48, 9.162, 1.03, 1.11, M.boitier, { ombre: false });
   B(ch, D, 16.425, 9.162, 16.455, 9.17, 1.05, 1.09, M.boitier, { ombre: false });
-  for (const [xa, xb, ha, hb] of [[16.6, 16.87, 0.93, 0.95], [16.6, 16.87, 0.5, 0.52], [16.6, 16.62, 0.5, 0.95], [16.85, 16.87, 0.5, 0.95]]) B(ch, D, xa, 9.205, xb, 9.212, ha, hb, M.acierNoir);
-  maille(new THREE.CylinderGeometry(0.026, 0.026, 0.07, 14), M.acierNoir, 16.89, 0.92, -9.2, 0, D);
-  B(ch, D, 16.88, 9.15, 16.9, 9.2, 0.6, 0.95, M.acierNoir);
-  C.ajouterBoite(16.58, -9.15, 16.93, -9.24, { y1: 0.96 });
+  {
+    const laiton = new THREE.MeshStandardMaterial({ color: 0xc9a046, roughness: 0.35, metalness: 0.8 }); laiton.name = 'paumelle laiton';
+    const brun = new THREE.MeshStandardMaterial({ color: 0x5a3a22, roughness: 0.5 }); brun.name = 'traverse de bois brun';
+    for (const [yp, s] of [[9.229, 1], [10.571, -1]]) {
+      // (s : +1 au sud, le mur en y 9,15 ; -1 au nord, l'échiffre en y 10,65) ; le portillon entre le poteau et son mur
+      mainCourante(ch, D, [[16.92, yp, 0.004], [16.92, yp, 0.919], [17.03, yp, 0.919], [17.32, yp, 0.697]], []);
+      const yg = yp - s * 0.034, ya = yg - 0.004, yb = yg + 0.004;
+      for (const [xa, xb, ha, hb, m] of [[16.61, 16.88, 0.82, 0.85, s > 0 ? brun : M.acierNoir], [16.61, 16.88, 0.45, 0.48, M.acierNoir], [16.61, 16.64, 0.45, 0.85, M.acierNoir], [16.85, 16.88, 0.45, 0.85, M.acierNoir]]) B(ch, D, xa, ya, xb, yb, ha, hb, m);
+      for (const h of [0.54, 0.76]) B(ch, D, 16.875, yg - 0.006, 16.905, yg + 0.006, h - 0.04, h + 0.04, laiton, { ombre: false });
+      C.ajouterCercle(16.92, -yp, 0.03, { y1: 0.95 });
+      C.ajouterBoite(16.61, -(s > 0 ? 9.15 : 10.65), 16.9, -(yg + s * 0.006), { y0: 0.4, y1: 0.86 });
+    }
+  }
   // LES PLAFONDS de plâtre à 2,55 m : le couloir, le dégagement, le bord de la niche (la sous-face de la volée 2 descend
   // ensuite vers l'est) ; le détecteur de fumée ; les deux hublots ronds (comme ceux du C05, photo 05)
   ch.plafond(14.675, 7.65, 16.2, 10.65, HC, 'platre');
@@ -644,8 +697,19 @@ export function poserEst(ch, { RECT }) {
   ch.porte('x', E.yE, 15.8, { l: 0.5, h: 2.06, modele: 'grise', etat: 'ouverte', angle: 0.28, cote: 'N', charniere: 'd', huisserie: false, oculus: false, poignee: null, fermePorte: false, matVantail: X.taupe, nom: 'vestibule est (petit vantail)' });
   ch.sortie(15.85, E.yE + 0.12, 2.33, 'N');
   // le mur nord du vestibule (et de la cage) : une porte fermée vers le reste du quart nord-est, jamais vu
-  mur(ch, D, { de: [13.65, E.yN], a: [E.xM, E.yN], h: N1, mats: B0, plinthes: ['S'], ouvertures: [{ c: 15.36, l: 0.93, h: 2.04 }] });
-  ch.porte('x', E.yN, 15.36, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'S', oculus: false, matVantail: X.taupe, nom: 'local (vestibule est)' });
+  // (10/10 : sa plinthe s'arrête au vestibule — sous la volée 1, qui n'est plus pleine, elle flottait au-dessus de la
+  // volée B du -1)
+  mur(ch, D, { de: [13.65, E.yN], a: [E.x0, E.yN], h: N1, mats: B0, plinthes: ['S'], ouvertures: [{ c: 15.36, l: 0.93, h: 2.04 }] });
+  mur(ch, D, { de: [E.x0, E.yN], a: [E.xM, E.yN], h: N1, mats: B0 });
+  // (10/10, VO q_0050-0057 : le vantail est CLAIR — crème —, fermé, béquille NOIRE côté ouest (gonds à l'est), le
+  // ferme-porte en tête côté vestibule, à droite ; le vantail pris dans le nu nord du mur pour que son bras soit au sud)
+  {
+    const P = ch.porte('x', E.yN, 15.36, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'N', charniere: 'd', oculus: false, poignee: null, matVantail: X.creme, nom: 'local (vestibule est)' });
+    const v = P.vantaux[0].g, z = 0.02;
+    B(ch, v, -0.89, -z - 0.012, -0.84, -z, 0.94, 1.1, M.noirMat, { ombre: false });
+    B(ch, v, -0.86, -z - 0.06, -0.85, -z - 0.012, 1.03, 1.05, M.noirMat, { ombre: false });
+    B(ch, v, -0.86, -z - 0.07, -0.73, -z - 0.05, 1.03, 1.05, M.noirMat, { ombre: false });
+  }
   ch.plafond(14.675, 10.8, E.x0, 12.45, HC, 'platre');
   ch.opale(15.36, 11.62, HC, 'escEst', { r: 0.19 });
   // (le chant de la dalle du 1er au-dessus du vestibule, vu de la volée 1)
@@ -655,21 +719,25 @@ export function poserEst(ch, { RECT }) {
   //  L'ESCALIER, DU REZ-DE-CHAUSSÉE AU 1er (photos 25, 26)
   // =====================================================================
   // le mitoyen est, prolongé au nord du hall ; le mur d'échiffre entre les deux volées
-  mur(ch, D, { de: [19.95, 7.65], a: [19.95, 12.6], ep: 0.3, h: N1, mats: B0, plinthes: ['W'] });
+  // (10/10 : sa plinthe s'arrête au dégagement — au nord, la cage descend au -1, js/ecole_soussol_est.js)
+  mur(ch, D, { de: [19.95, 7.65], a: [19.95, 9.075], ep: 0.3, h: N1, mats: B0, plinthes: ['W'] });
+  mur(ch, D, { de: [19.95, 9.075], a: [19.95, 12.6], ep: 0.3, h: N1, mats: B0 });
   mur(ch, D, { de: [E.x0, E.yE], a: [E.xP, E.yE], h: N1, mats: B0 });
-  // LE PALIER INTERMÉDIAIRE (1,75 m) contre le mitoyen, plein ; ses plinthes ; le monde solide
-  B(ch, D, E.xP, E.bS[0], E.xM, E.bN[1], 0, E.hP1 - 0.02, X.beton);
+  // LE PALIER INTERMÉDIAIRE (1,75 m) contre le mitoyen ; ses plinthes ; le monde solide. (10/10 : une DALLE de 25 cm et
+  // non plus un plein — dessous, le palier bas de la descente au -1, à -1,53 m)
+  B(ch, D, E.xP, E.bS[0], E.xM, E.bN[1], E.hP1 - 0.25, E.hP1 - 0.02, X.beton);
   B(ch, D, E.xP, E.bS[0], E.xM, E.bN[1], E.hP1 - 0.02, E.hP1, X.giron);
   B(ch, D, E.xM - 0.015, E.bS[0], E.xM, E.bN[1], E.hP1, E.hP1 + 0.08, X.plinthe, { ombre: false });
   B(ch, D, E.xP + 0.05, E.bS[0], E.xM, E.bS[0] + 0.015, E.hP1, E.hP1 + 0.08, X.plinthe, { ombre: false });
   B(ch, D, E.xP + 0.05, E.bN[1] - 0.015, E.xM, E.bN[1], E.hP1, E.hP1 + 0.08, X.plinthe, { ombre: false });
   C.sol(E.xP, -E.bS[0], E.xM, -E.bN[1], E.hP1);
-  C.ajouterBoite(E.xP, -E.bS[0], E.xM, -E.bN[1], { y0: 0, y1: E.hP1, joueur: false });
-  // LA VOLÉE 1 (vers l'est, pleine) et LA VOLÉE 2 (vers l'ouest, sur paillasse : la niche est dessous)
+  C.ajouterBoite(E.xP, -E.bS[0], E.xM, -E.bN[1], { y0: E.hP1 - 0.25, y1: E.hP1, joueur: false });
+  // LA VOLÉE 1 (vers l'est) et LA VOLÉE 2 (vers l'ouest) sur paillasse (10/10 : la volée 1 n'est plus pleine — la volée
+  // B passe dessous ; et sous la volée 2, la volée A descend : plus de boîte au sol de la niche)
   const v1 = { x0: E.x0, sens: 1, y0: E.bN[0], y1: E.bN[1], b: 0, n: E.n, r: E.r1, g: E.g };
   const v2 = { x0: E.xP, sens: -1, y0: E.bS[0], y1: E.bS[1], b: E.hP1, n: E.n, r: E.r1, g: E.g };
-  volee(ch, D, { ...v1, pleine: true });
-  volee(ch, D, { ...v2, sous: 0 });
+  volee(ch, D, v1);
+  volee(ch, D, v2);
   // les plinthes rampantes, des deux côtés de chaque volée
   limon(ch, D, { ...v1, y: E.bN[1], cote: 1 }); limon(ch, D, { ...v1, y: E.bN[0], cote: -1 });
   limon(ch, D, { ...v2, y: E.bS[0], cote: -1 }); limon(ch, D, { ...v2, y: E.bS[1], cote: 1 });
