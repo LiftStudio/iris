@@ -755,7 +755,9 @@ function construireMurs(ch) {
     ch.boite(x0 - 0.015, y0 - 0.015, x1 + 0.015, y1 + 0.015, 0, 0.08, M.bois, { ombre: false });
   };
   // (09/10/2026 : le pilier gris est DÉTACHÉ du mur sud — photo 21 : planté dans la salle, le fond visible de part et
-  // d'autre ; photo 02 : il frôle le bord gauche de l'image. 11/10 : DY_A, x 10,3-10,9 × y 5,55-6,15)
+  // d'autre ; photo 02 : il frôle le bord gauche de l'image. 11/10 : DY_A, x 10,3-10,9 × y 5,55-6,15. DOUTE : sur la
+  // photo 21, ses arêtes, le radiateur et les affichettes du fond ne se calent ensemble, appareil dans la salle, que si
+  // le pilier est 0,6-0,7 m plus au sud — ou si les affichettes de la photo 21 ne sont pas celles de la photo 03)
   pilier(10.3, 9.75 + DY_A, 10.9, 10.35 + DY_A, M.pilier);
   // ---- LE HALL D'ENTRÉE ----
   // (09/10, photo 24 : la porte du mur nord n'est pas en x 17 mais en face de la porte 6 — 1,5 vantail, x 14,70-16,10 ;
