@@ -1010,39 +1010,40 @@ function dalleLED(ch, P, x, y, h, zone) {
 // passage de la pile, dans le retour y 2,5, x 12,5-13,275 : elle s'ouvre dans le bureau, gonds à l'ouest. Le mobilier se
 // range autour : le bureau de chêne et le fauteuil sous les deux fenêtres hautes, les chaises des visiteurs devant, la
 // bibliothèque et le tableau au mur ouest, l'armoire au mur est, raccourcie au sud du débattement de la porte ; de la
-// porte au fauteuil, on passe entre l'armoire et le bout du bureau, 0,7 m.)
+// porte au fauteuil, on passe entre l'armoire et le bout du bureau, 0,86 m.)
 function bureauB(ch, P) {
   const { C } = ch;
   plinthe(ch, 'y', BB.x1, 0, 0.3, -1);
   radiateur(ch, 11.15, 0, 12.05, 0.09, 0.15, 0.65);
   // le tapis (sous le bureau, le fauteuil et les chaises des visiteurs)
   const tapis = new THREE.MeshStandardMaterial({ map: texTapis(), roughness: 1 });
-  ch.boite(10.45, 0.35, 12.4, 2.85, 0, 0.01, tapis, { ombre: false });
+  ch.boite(10.25, 0.35, 12.25, 2.85, 0, 0.01, tapis, { ombre: false });
   // le bureau de chêne clair sur piètement noir, son caisson blanc
-  ch.boite(10.55, 1.2, 12.05, 2.0, 0.72, 0.75, P.chene);
-  for (const x of [10.59, 12.01]) for (const y of [1.24, 1.96]) ch.boite(x - 0.02, y - 0.02, x + 0.02, y + 0.02, 0.01, 0.72, P.noirMat);
-  ch.boite(10.59, 1.94, 12.01, 1.96, 0.62, 0.7, P.noirMat, { ombre: false });
-  ch.boite(11.53, 1.27, 11.97, 1.83, 0.02, 0.6, P.blancMat);
-  for (const h of [0.08, 0.27, 0.45]) ch.boite(11.58, 1.255, 11.92, 1.27, h, h + 0.12, P.grisClair, { ombre: false });
-  C.ajouterBoite(10.55, -1.2, 12.05, -2.0, { y1: 0.75 });
+  ch.boite(10.4, 1.2, 11.9, 2.0, 0.72, 0.75, P.chene);
+  for (const x of [10.44, 11.86]) for (const y of [1.24, 1.96]) ch.boite(x - 0.02, y - 0.02, x + 0.02, y + 0.02, 0.01, 0.72, P.noirMat);
+  ch.boite(10.44, 1.94, 11.86, 1.96, 0.62, 0.7, P.noirMat, { ombre: false });
+  ch.boite(11.38, 1.27, 11.82, 1.83, 0.02, 0.6, P.blancMat);
+  for (const h of [0.08, 0.27, 0.45]) ch.boite(11.43, 1.255, 11.77, 1.27, h, h + 0.12, P.grisClair, { ombre: false });
+  C.ajouterBoite(10.4, -1.2, 11.9, -2.0, { y1: 0.75 });
   // sur le bureau : l'écran, le portable ouvert, le téléphone, des papiers, la lampe, le pot à crayons
-  ecranPC(ch, P, 11.17, 1.8, 0.75, 'S', P.ecrans[2]);
-  clavier(ch, P, 11.13, 1.45, 0.75, 'S');
-  const lp = groupe(ch, 11.75, 1.57, 'S', 0.75); lp.rotation.y = -0.35;
+  ecranPC(ch, P, 11.02, 1.8, 0.75, 'S', P.ecrans[2]);
+  clavier(ch, P, 10.98, 1.45, 0.75, 'S');
+  const lp = groupe(ch, 11.6, 1.57, 'S', 0.75); lp.rotation.y = -0.35;
   R(lp, P.alu, 0.32, 0.016, 0.22, 0.006, 0, 0.008, 0, { ombre: false });
   const cou = new THREE.Group(); cou.position.set(0, 0.016, -0.11); cou.rotation.x = -0.25; lp.add(cou);
   B(cou, P.alu, 0.32, 0.21, 0.007, 0, 0.105, 0);
   plan(cou, P.ecrans[3], 0.3, 0.18, 0, 0.108, 0.0040);
-  const tel = groupe(ch, 10.68, 1.7, 'S', 0.75); R(tel, P.plastique, 0.18, 0.05, 0.2, 0.015, 0, 0.025, 0, { ombre: false }); R(tel, P.plastique, 0.05, 0.035, 0.19, 0.015, -0.055, 0.065, 0, { ombre: false });
-  const pap = groupe(ch, 10.71, 1.37, 'S', 0.75); pap.rotation.y = 0.2; B(pap, P.blancMat, 0.21, 0.012, 0.297, 0, 0.006, 0, { ombre: false });
-  const lampe = groupe(ch, 11.93, 1.85, 'S', 0.75);
+  const tel = groupe(ch, 10.53, 1.7, 'S', 0.75); R(tel, P.plastique, 0.18, 0.05, 0.2, 0.015, 0, 0.025, 0, { ombre: false }); R(tel, P.plastique, 0.05, 0.035, 0.19, 0.015, -0.055, 0.065, 0, { ombre: false });
+  const pap = groupe(ch, 10.56, 1.37, 'S', 0.75); pap.rotation.y = 0.2; B(pap, P.blancMat, 0.21, 0.012, 0.297, 0, 0.006, 0, { ombre: false });
+  const lampe = groupe(ch, 11.78, 1.85, 'S', 0.75);
   CY(lampe, P.noirMat, 0.07, 0.015, 0, 0.008, 0, 18); CY(lampe, P.noirMat, 0.008, 0.42, 0, 0.22, 0, 6);
   maille(new THREE.ConeGeometry(0.08, 0.12, 18, 1, true), P.noirMat, -0.05, 0.43, 0.04, 0, lampe).rotation.z = 0.5;
-  const pot = groupe(ch, 10.62, 1.9, 'S', 0.75); CY(pot, P.noirMat, 0.035, 0.1, 0, 0.05, 0, 14); for (let i = 0; i < 3; i++) CY(pot, [P.bleu, P.rouge, P.jaune][i], 0.005, 0.15, -0.012 + i * 0.012, 0.11, (i - 1) * 0.008, 6, { ombre: false });
-  // le fauteuil (haut dossier), dont on se relève vers l'est, et les deux chaises visiteurs, devant le bureau
-  chaiseBureau(ch, P, 11.25, 0.75, 'N', { accoudoirs: true, haut: true, nom: 'le fauteuil du bureau', sortie: [0.75, 0] });
-  chaiseLuge(ch, P, 10.85, 2.45, 'S');
-  chaiseLuge(ch, P, 11.5, 2.45, 'S', -0.12);
+  const pot = groupe(ch, 10.47, 1.9, 'S', 0.75); CY(pot, P.noirMat, 0.035, 0.1, 0, 0.05, 0, 14); for (let i = 0; i < 3; i++) CY(pot, [P.bleu, P.rouge, P.jaune][i], 0.005, 0.15, -0.012 + i * 0.012, 0.11, (i - 1) * 0.008, 6, { ombre: false });
+  // le fauteuil (haut dossier), dont on se relève vers l'est, et les deux chaises visiteurs, devant la moitié ouest du
+  // bureau : à l'est, 0,67 m entre elles et l'angle du mur x 11,55 — le passage de la porte vers le fond du bureau, la plante
+  chaiseBureau(ch, P, 11.1, 0.75, 'N', { accoudoirs: true, haut: true, nom: 'le fauteuil du bureau', sortie: [0.75, 0] });
+  chaiseLuge(ch, P, 10.3, 2.35, 'S', 0.1);
+  chaiseLuge(ch, P, 10.85, 2.35, 'S', -0.12);
   // l'armoire (deux portes) au mur est, au sud du débattement de la porte (y 1,7-2,45)
   ch.boite(12.76, 0.3, 13.2, 1.5, 0, 1.98, P.grisClair, { collision: true });
   ch.boite(12.75, 0.31, 12.76, 0.895, 0.03, 1.95, P.blancMat, { ombre: false });
@@ -1070,7 +1071,7 @@ function bureauB(ch, P) {
   for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + 0.4; const c = CY(pm, P.noirMat, 0.008, 0.18, Math.sin(a) * 0.07, 1.67, Math.cos(a) * 0.07, 6, { ombre: false }); c.rotation.set(Math.cos(a) * 0.8, 0, -Math.sin(a) * 0.8); }
   vetement(pm, P.tissu, 0.0, 1.66, 0.12, { haut: 0.85, rot: 0.3 });  // un manteau sombre (devant le mât, qu'il frôle)
   C.ajouterCercle(10.52, -0.24, 0.2, { y1: 1.8 });
-  corbeille(ch, P, 10.75, 0.62, null, 0.12, 0.3);
+  corbeille(ch, P, 10.6, 0.62, null, 0.12, 0.3);
   // L'AFFICHE DE LA PORTE VITRÉE (photo 01 : vue du C01, de face, dans le haut du vantail, côté gonds ; son dos blanc côté
   // bureau) : elle part avec le vantail
   const pB = ch.portes.auto.find((Q) => Math.abs(Q.cx - 12.89) < 0.01 && Math.abs(Q.cz + 2.5) < 0.01);
