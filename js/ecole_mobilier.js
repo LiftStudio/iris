@@ -168,10 +168,12 @@ export function poserMobilier(ch) {
   ch.panneau(wifi, 0.2, 0.17, 13.494, 10.05, 1.5, 'W');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c7783a', '#f4ead9', 8), roughness: 0.6 }), 0.24, 0.17, 13.494, 10.05, 1.75, 'W');
   // ... et les mêmes au bout du mur, près de l'angle du hall, sous le haut-parleur (photo 03) — (10/10 : ce bout de mur est
-  // la face ouest de la pile du hall, x 13,30, js/ecole_rdc_centre.js ; l'angle, son angle sud-ouest, y 4,7)
-  ch.panneau(wifi, 0.2, 0.17, 13.294, 5.15, 1.45, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c7783a', '#f4ead9', 12), roughness: 0.6 }), 0.26, 0.19, 13.294, 5.15, 1.72, 'W');
-  const hp = new THREE.Group(); hp.position.set(13.24, 2.32, -5.17); ch.decor.add(hp);
+  // la face ouest de la pile du hall, x 13,30, js/ecole_rdc_centre.js ; l'angle, son angle sud-ouest, y 4,7 ; relecture
+  // du 10/10 : sur la photo 03 recalée — caméra (12,2 ; 5,4), cap 136,5 —, les affichettes sont à 0,1-0,25 m de l'angle
+  // et le haut-parleur juste au-dessus, y 4,9 et non 5,15)
+  ch.panneau(wifi, 0.2, 0.17, 13.294, 4.88, 1.45, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c7783a', '#f4ead9', 12), roughness: 0.6 }), 0.26, 0.19, 13.294, 4.88, 1.72, 'W');
+  const hp = new THREE.Group(); hp.position.set(13.24, 2.32, -4.93); ch.decor.add(hp);
   maille(boiteM(0.1, 0.17, 0.13), M.boitier, 0, 0, 0, 0, hp, { ombre: false });
   maille(new THREE.CylinderGeometry(0.035, 0.035, 0.01, 16), M.grille, -0.051, 0.01, 0, 0, hp, { ombre: false }).rotation.z = Math.PI / 2;
   // les affiches du pilier (il est maintenant planté dans la salle, y 9,75-10,35) : sur la face ouest, l'A3 blanche aux

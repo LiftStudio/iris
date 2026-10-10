@@ -833,9 +833,9 @@ export function construireCarte(scene, renderer = null) {
   // le mur du fond de la salle d'attente : le radiateur à côté du présentoir (photo 21), et celui du bout du mur, près
   // de l'angle du hall d'entrée, sous le haut-parleur et l'affichette WIFI (photo 03) (09/10)
   radiateur(ch, 13.5, 10.5, 'W', 0.45, 0.15, 1.1);
-  // (10/10 : celui de la photo 03 est sur la face ouest de la pile, à 0,9 m de son angle sud-ouest — l'angle au-delà
-  // duquel la photo voit le hall)
-  radiateur(ch, 13.3, 5.6, 'W', 0.5, 0.12, 1.15);
+  // (10/10 : celui de la photo 03 est sur la face ouest de la pile, son bout à 0,3 m de l'angle sud-ouest — l'angle
+  // au-delà duquel la photo voit le hall ; relecture : la photo recalée le met en y 5,0-5,6, pas 5,35-5,85)
+  radiateur(ch, 13.3, 5.32, 'W', 0.6, 0.12, 1.15);
   // la caméra de surveillance du hall ouest et son haut-parleur ; le déclencheur manuel rouge
   const dome = maille(new THREE.SphereGeometry(0.06, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.boitier, 4.2, 2.4, -12.9, 0, ch.decor, { ombre: false });
   dome.userData.horsAOSol = true;
