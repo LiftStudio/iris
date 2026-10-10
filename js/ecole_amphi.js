@@ -19,8 +19,9 @@
 // faux plafond de dalles 60 x 60 à 2,70 m, une vingtaine de luminaires à grille en lumière CHAUDE (des tubes fluo : la
 // vidéo est orangée ici, blanche dans l'espace pause), aucune fenêtre (on est sous la cour).
 //   Le mur du vestibule (x 10,3) borde l'ENCOCHE sud-est (le bloc des toilettes, derrière le sas de 2026) : fermée, son
-// dedans n'est pas modélisé. Le mur est (x 15,2, ± 0,6) n'est jamais vu en entier : nu. L'état de 2026 de la salle n'est
-// pas connu (aucune photo de Haythem) : tout vient de 2021.
+// dedans n'est pas modélisé. Le mur est (x 15,2, ± 0,6) n'est jamais vu en entier : nu, sous un bandeau, et le mur du
+// tableau y fait un retour (l'arête vers x 13,9). 109 fauteuils et la chaise seule : 110 places. L'état de 2026 de la
+// salle n'est pas connu (aucune photo de Haythem) : tout vient de 2021.
 //
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; X = x, Z = -y ; sol à Y_SS = -3,06) :
 //   la salle            x 2,55-15,2   y 15,95-25,5   moins l'encoche x 10,3-15,2 y 15,95-17,875 ; plafond à 2,70 m
@@ -162,7 +163,7 @@ function texEinstein() {
   return canvasTex(256, 384, (g, w, h) => {
     const r2 = graine(1879), cx = w / 2, cy = h * 0.42;
     const fond = g.createRadialGradient(cx, h * 0.38, 10, cx, h * 0.45, h * 0.75);
-    fond.addColorStop(0, '#4c4c4c'); fond.addColorStop(1, '#101010');
+    fond.addColorStop(0, '#6e6e6e'); fond.addColorStop(1, '#262626');
     g.fillStyle = fond; g.fillRect(0, 0, w, h);
     // le veston sombre, le col de chemise
     g.fillStyle = '#1b1b1b'; g.beginPath(); g.moveTo(0, h); g.quadraticCurveTo(18, h * 0.74, cx, h * 0.7); g.quadraticCurveTo(w - 18, h * 0.74, w, h); g.fill();
@@ -371,6 +372,7 @@ export function poserAmphi(ch, K) {
     const yS = 15.8, yM = 15.875, yN = 15.95, hT = Y_SS + 2.06;
     // (le verre dépoli du -1, son dégradé calé sur la hauteur : une boîte a ses UV centrés, le bas reprenait le haut)
     const dep = X.depoli.clone(); dep.map = X.depoli.map.clone(); dep.map.offset.set(0, 0.5); dep.map.needsUpdate = true;
+    dep.color.setRGB(0.76, 0.79, 0.84); dep.emissiveIntensity = 0.06;      // (f_0245 : de dedans, un gris bleuté, pas un blanc)
     const bati = (x0, x1, h0, h1) => {
       B(x0, yS - 0.015, x1, yM, h0, h1, X.creme, { ombre: false });
       B(x0, yM, x1, yN + 0.012, h0, h1, Z.bati, { ombre: false });
@@ -479,20 +481,21 @@ export function poserAmphi(ch, K) {
   // UN FAUTEUIL (f_0082, f_0225) : coque de bois moulé, dossier galbé à bord supérieur creusé ; l'assise, rabattue, se
   // dresse devant le dossier ; la console noire qui la porte sur la poutre du rang
   const geoDos = (() => {
-    const R = 0.62, larg = 0.47, th = larg / R, haut = 0.41;
-    const g = new THREE.CylinderGeometry(R, R, haut, 8, 1, true, -th / 2, th);
+    // (f_0225 : le haut du dossier dépasse nettement la table du rang ; un galbe de 6 cm, le bord creusé de 5 cm)
+    const R = 0.45, larg = 0.47, th = larg / R, haut = 0.44;
+    const g = new THREE.CylinderGeometry(R, R, haut, 10, 1, true, -th / 2, th);
     const p = g.attributes.position;
-    for (let i = 0; i < p.count; i++) if (p.getY(i) > 0) { const u = p.getX(i) / (larg / 2); p.setY(i, p.getY(i) - 0.035 * (1 - u * u)); }
+    for (let i = 0; i < p.count; i++) if (p.getY(i) > 0) { const u = p.getX(i) / (larg / 2); p.setY(i, p.getY(i) - 0.05 * (1 - u * u)); }
     g.computeVertexNormals();
-    g.translate(0, 0.47 + haut / 2, -R);
+    g.translate(0, 0.5 + haut / 2, -R);
     return g;
   })();
-  const geoAssise = boiteM(0.43, 0.38, 0.02), geoPivot = boiteM(0.44, 0.035, 0.05), geoConsole = boiteM(0.04, 0.16, 0.035);
+  const geoAssise = boiteM(0.42, 0.33, 0.02), geoPivot = boiteM(0.44, 0.035, 0.05), geoConsole = boiteM(0.04, 0.14, 0.035);
   const fauteuil = (x, yb) => {
     maille(geoDos, Z.coque, x, Y_SS, -yb, 0, ch.decor);
-    const a = maille(geoAssise, Z.coque, x, Y_SS + 0.61, -(yb + 0.085), 0, ch.decor); a.rotation.x = -0.1;
-    maille(geoPivot, Z.acier, x, Y_SS + 0.41, -(yb + 0.075), 0, ch.decor, { ombre: false });
-    maille(geoConsole, Z.acier, x, Y_SS + 0.47, -(yb + 0.03), 0, ch.decor, { ombre: false });
+    const a = maille(geoAssise, Z.coque, x, Y_SS + 0.62, -(yb + 0.11), 0, ch.decor); a.rotation.x = -0.16;
+    maille(geoPivot, Z.acier, x, Y_SS + 0.43, -(yb + 0.1), 0, ch.decor, { ombre: false });
+    maille(geoConsole, Z.acier, x, Y_SS + 0.46, -(yb + 0.03), 0, ch.decor, { ombre: false });
   };
   let nSieges = 0;
   // UN RANG (le rang k, de xa à xb, n places) : la table au nord (plateau en tronçons de trois places, voile de fond,
