@@ -372,7 +372,7 @@ export function poserAmphi(ch, K) {
     // (le verre dépoli du -1, son dégradé calé sur la hauteur : une boîte a ses UV centrés, le bas reprenait le haut)
     const dep = X.depoli.clone(); dep.map = X.depoli.map.clone(); dep.map.offset.set(0, 0.5); dep.map.needsUpdate = true;
     const bati = (x0, x1, h0, h1) => {
-      B(x0, yS - 0.012, x1, yM, h0, h1, X.creme, { ombre: false });
+      B(x0, yS - 0.015, x1, yM, h0, h1, X.creme, { ombre: false });
       B(x0, yM, x1, yN + 0.012, h0, h1, Z.bati, { ombre: false });
     };
     for (const x of [8.85, 9.35, 10.25]) bati(x - 0.03, x + 0.03, Y_SS, H_RET);
