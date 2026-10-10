@@ -56,7 +56,8 @@ import { jourDehors, texAffiche, texConsignes, texPictoExtincteur } from './ecol
 import { cuireLumiereSol } from './ecole_lumieres.js';
 import { TELEPHONE } from './appareil.js';
 import { poserPalierEst } from './ecole_est.js';
-import { poserPause1 } from './ecole_etage1_pause.js';
+import { poserPause1, Y_MUR_ORANGE, SI14 } from './ecole_etage1_pause.js';
+import { poserKahn, zonesKahn } from './ecole_kahn.js';
 
 // ---- les hauteurs ----
 const N1 = 3.5;                     // le plancher du 1er étage (H_RDC de js/carte_ecole.js)
@@ -956,6 +957,11 @@ export function poserEtage1(ch, renderer = null) {
     // LE PALIER EST ET LA CAGE DE L'ESCALIER EST (photos 27 à 29) : dans le groupe de l'étage, ses lampes cuites avec les
     // nôtres, son vinyle sur notre lumière et notre ombre cuites (js/ecole_est.js)
     poserPalierEst(ch, { groupe, lampes, matSol, R1 });
+    // LA SALLE ROBERT KAHN, Si 1.4 (10/10, la vidéo de visite : derrière le mur orange de l'espace pause ; js/ecole_kahn.js)
+    // (intégration du 10/10 : son mur sud est le mur orange de l'espace pause — le nu nord Y_MUR_ORANGE, 12,96 —, sa porte
+    // celle de SI14 ; ce qui fermait la porte en attendant la salle (une forme, un fond sombre) s'efface)
+    poserKahn(ch, { groupe, lampes, renderer, ySud: Y_MUR_ORANGE, xPorte: (SI14.x0 + SI14.x1) / 2 });
+    for (const o of SI14.provisoires) { if (o.isObject3D) o.removeFromParent(); else o.off = true; }
   } finally {
     ch.decor = decor0; ch.portes.decor = portes0;
   }
@@ -1007,6 +1013,7 @@ export function poserEtage1(ch, renderer = null) {
   // moins bleu de 92 contre 35 à 45 pour les autres murs blancs ; d'ici, 62, comme un reflet de couleur)
   // (10/10 : en tête, l'espace pause et son recoin, la salle S 1.3, le bureau de la travée 1 — js/ecole_etage1_pause.js)
   const zones = [
+    ...zonesKahn(),   // (en tête, la salle Robert Kahn — js/ecole_kahn.js)
     ...(pause ? pause.zones : []),
     { id: 'e1hall', rects: [zr(1.6, Y_COUR, 4.75, 12.6)], voisines: ['palier1', 'e1couloir'], env: env(3.9, 8.3) },
     { id: 'e1couloir', rects: [zr(-0.3, Y_SALLES, 4.75, Y_COUR)], voisines: ['e1hall', 'e1pause', 'e1bureau'], env: env(2.6, 7.95) },
