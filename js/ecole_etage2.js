@@ -24,7 +24,7 @@
 //                                                       le mur du panneau (y 11,1-11,8 : elle donne sur une courette)
 //   le vestibule (ascenseur) x 16,05-17,9  y 7,0-9,0    ouvert sur le palier au sud de la cage
 //   la porte coupe-feu      x 14,275-15,225 dans le mur y 7,9 (gonds à l'est, s'ouvre vers le palier)
-//   le sas                  x 14,0-15,5    y 6,5-7,9
+//   le sas                  x 13,72-15,5   y 6,5-7,9    (relecture : 0,55 m de mur à l'ouest de la porte, sa plaque)
 //   le couloir              x 3,3-15,9     y 4,65-6,5   mur nord rouge de x 4,9 à 12,0 ; porte du fond (x 3,3) fermée
 //   la salle 1 (cour)       x 4,9-12,95    y 6,62-12,3  porte x 12,0-12,9 (gonds à l'est, s'ouvre vers la salle)
 //   la salle 2 (rue)        x 9,96-18,15   y 0-4,53     travées 7 à 11 ; porte D1 x 10,05-11,0 (gonds à l'ouest)
@@ -35,6 +35,13 @@
 // D1 la suit, 0,45 m plus à l'est ; les fenêtres de la salle 1 sont réparties sur son mur, pas de 1,30 m ; la fenêtre du
 // palier n'est pas dans le mur nord mais dans le mur du panneau (q_0285-0287, vue de face) ; l'extincteur du recoin est
 // contre son mur ouest, au pied de l'angle sud-ouest (relecture : 71,6-72,6 s à 25 i/s).)
+// LA RELECTURE DU 10/10 (chaque vue de la vidéo refaite au même point de vue, côte à côte, en « haute ») : le rouge du
+// couloir et de l'échiffre relevé sur la vidéo (js/ecole_est.js ROUGE_2E : le #d0502c du relevé sortait orange vif) ; la
+// carte d'environnement du couloir prise loin du mur rouge (tous les blancs viraient au saumon) ; les fenêtres 7 et 11 à la
+// taille du jour de leur encadrement rouge (on voyait le rouge déborder dedans) ; la porte coupe-feu sans bois ni étiquette
+// ni bâton côté sas, sans scintillement dans ses tableaux ; le sas élargi à l'ouest et sa caméra ; la photo turquoise sans
+// la « silhouette » (un reflet) ; le verre des portes des salles gris vert ; l'extincteur du recoin sur son mur ouest ;
+// l'allée de la porte de la salle 1 assez large pour passer le poteau ; le lino un peu plus clair.
 //
 // LES PIÈGES D'UN NIVEAU DE PLUS (ceux du 1er, js/ecole_etage1.js, et du sous-sol, js/ecole_soussol.js) :
 //   1. des SOLS (C.sol à 6,60) sous tout ce qu'on foule, la cage exceptée : sinon solEn rendrait le plancher du 1er ;
