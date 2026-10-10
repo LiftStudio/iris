@@ -10,7 +10,7 @@
 //   x 13,30-14,675 (sa face est dans le plan du mur jaune du couloir est) × y 4,7-7,575 (le mur nord du hall)
 //   face SUD, blanche, plinthe de bois : l'horloge à diodes ambre (« 16 39 / LUN / 26 AVR » le jour du tournage ; ici
 //        l'heure de l'ordinateur), la plaque « iris » et l'annuaire du niveau 0, centrés (VO q_0028, 6,7 s)
-//   face EST, jaune (#e9a03a, le jaune du couloir est) : le grand annuaire à lames bleu ardoise (VO q_0371-0373, 92,6 s) ;
+//   face EST, jaune (#e8a65a, le jaune du couloir est) : le grand annuaire à lames bleu ardoise (VO q_0371-0373, 92,6 s) ;
 //        le vantail ouvert de la porte nord s'y rabat
 //   face OUEST, blanche : le radiateur, les affichettes et le haut-parleur de la photo 03 (posés par js/carte_ecole.js et
 //        js/ecole_mobilier.js) — la photo 03 est prise du cou, contre cette face : au-delà de son angle sud-ouest, le
@@ -258,8 +258,9 @@ function plaqueMurale(ch, mat, x, y, face, w, h0, h1, ep = 0.01) {
 export function poserRdcCentre(ch) {
   const { M, C } = ch, P = PILE, xm = (P.x0 + P.x1) / 2;
   const std = (o, nom) => { const m = new THREE.MeshStandardMaterial(o); m.name = nom; return m; };
-  // (le jaune du couloir est, recréé ici : js/ecole_est.js garde le sien)
-  const jaune = std({ map: texPeinture(0xe9a03a, 4), roughness: 0.62 }, 'peinture jaune (face est de la pile)');
+  // (le jaune du couloir est, recréé ici : js/ecole_est.js garde le sien — plan V2, lot H, 11/10 : le safran ocré
+  // JAUNE_EST, #e8a65a, réglé sur la photo 24 rejouée ; l'ancien #e9a03a sortait jaune d'or vif)
+  const jaune = std({ map: texPeinture(0xe8a65a, 4), roughness: 0.62 }, 'peinture jaune (face est de la pile)');
   detailPhoto(jaune, 'beton', 1, 1, { relief: 0.035, grain: 0, rugo: false });
   const gris = std({ color: 0x5a534b, roughness: 0.5 }, 'plinthe gris foncé (pile)');
 

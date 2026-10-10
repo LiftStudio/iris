@@ -51,6 +51,7 @@ import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex, detailPhoto } from './kit_decor.js';
 import { texPeinture, texAffiche } from './ecole_matieres.js';
 import { ASC, poserAscenseur, poserBandeSud, majAscenseur } from './ecole_ascenseur.js';
+import { Y_SS } from './ecole_soussol.js';
 
 // ---- les niveaux ----
 const N1 = 3.5;                     // le plancher du 1er étage
@@ -64,6 +65,13 @@ const H1 = N1 + 2.5;                // le plafond du palier est du 1er (photo 27
 // relevé sortait #d93d18, orange vif, sous la lumière chaude du jeu (relecture du 10/10, côte à côte avec q_0340, même
 // point de vue : VO #cf4c31 ; q_0299 #bd543d, q_0343 #d6563e) — l'albédo #c46050 rend #d04f31
 export const ROUGE_2E = 0xc46050;
+// LE SAFRAN OCRÉ du mur jaune du couloir est et de la face est de la pile (js/ecole_rdc_centre.js : la même valeur ;
+// plan V2, lot H, 11/10 : réglé côte à côte avec la photo 24 rejouée au même point de vue — l'ancien #e9a03a sortait
+// jaune d'or vif, presque sans bleu) ; le gris neutre du poteau du couloir et du chant de l'échiffre du 1er
+export const JAUNE_EST = 0xe8a65a;
+const POTEAU_EST = 0x7f8183;
+// la lumière du tube fluo du palier intermédiaire : blanc neutre (≈ 4 000 K), plus froid que les plafonniers
+const REGLETTE_EST = new THREE.Color(0xf6f4ef);
 // ---- le plan ----
 export const EST = {
   xJ: 14.6,                         // l'axe du mur jaune (face est en 14,675)
@@ -151,18 +159,19 @@ function texDirection() {
   return canvasTex(512, 512, (g, w, h) => {
     const lames = [['Accueil – Réception', ''], ['Salle Tim Berners-Lee', 'Si 0.1'], ['Salle David Clark', 'Si 0.2'], ['Pause extérieure', ''], ['Direction des Études', '']];
     const lh = h / 5;
+    // (lot H, 11/10 : bleu nuit presque noir sur la photo 24 rejouée — le fond rendu #1f2c3c passe à #17212d)
     lames.forEach(([t, num], i) => {
       const y = i * lh, gr = g.createLinearGradient(0, y, 0, y + lh);
-      gr.addColorStop(0, '#3a5c84'); gr.addColorStop(0.5, '#2c4a6e'); gr.addColorStop(1, '#223b58');
+      gr.addColorStop(0, '#2c4664'); gr.addColorStop(0.5, '#213a56'); gr.addColorStop(1, '#192d44');
       g.fillStyle = gr; g.fillRect(0, y, w, lh);
-      g.fillStyle = '#13202f'; g.fillRect(0, y, w, 4);
+      g.fillStyle = '#0d1621'; g.fillRect(0, y, w, 4);
       g.fillStyle = '#f3f5f7'; g.font = '600 31px "Segoe UI", Arial, sans-serif'; g.textBaseline = 'middle';
       g.fillText(t, i === 0 ? 70 : 34, y + lh / 2 + 2);
       if (num) { g.font = '700 30px "Segoe UI", Arial, sans-serif'; g.textAlign = 'right'; g.fillText(num, w - 78, y + lh / 2 + 2); g.textAlign = 'left'; }
       // la flèche vers la gauche (le hall)
       g.strokeStyle = '#f3f5f7'; g.lineWidth = 6; g.lineCap = 'round';
       g.beginPath(); g.moveTo(w - 22, y + lh / 2); g.lineTo(w - 58, y + lh / 2); g.moveTo(w - 44, y + lh / 2 - 13); g.lineTo(w - 58, y + lh / 2); g.lineTo(w - 44, y + lh / 2 + 13); g.stroke();
-      if (i === 0) { g.fillStyle = '#f3f5f7'; g.beginPath(); g.arc(36, y + lh / 2, 20, 0, 7); g.fill(); g.fillStyle = '#2c4a6e'; g.font = '700 24px "Segoe UI", sans-serif'; g.textAlign = 'center'; g.fillText('i', 36, y + lh / 2 + 2); g.textAlign = 'left'; }
+      if (i === 0) { g.fillStyle = '#f3f5f7'; g.beginPath(); g.arc(36, y + lh / 2, 20, 0, 7); g.fill(); g.fillStyle = '#213a56'; g.font = '700 24px "Segoe UI", sans-serif'; g.textAlign = 'center'; g.fillText('i', 36, y + lh / 2 + 2); g.textAlign = 'left'; }
     });
   }, null, false, 4);
 }
@@ -274,25 +283,41 @@ export function texPlaqueSalle(l1, l2, l3) {
 function texCannele(copieur) {
   return canvasTex(256, 576, (g, w, h) => {
     const m = h / 2.35;                              // pixels par mètre (le pan fait 2,35 m de haut)
+    // (lot H, 11/10, photo 24 rejouée : le verre est GRIS-VERT SOMBRE, ≈ 0,55-0,6 du mur blanc voisin — le bureau
+    // derrière est moins éclairé que le couloir — et le photocopieur s'y lit nettement, clair, sur toute la largeur du
+    // pan jusqu'à 1,15 m ; au-dessus, une tache bleu-vert floue et le jour d'une fenêtre)
     const fond = g.createLinearGradient(0, 0, 0, h);
-    fond.addColorStop(0, '#cbd6df'); fond.addColorStop(0.45, '#aebbc6'); fond.addColorStop(1, '#8e99a2');
+    fond.addColorStop(0, '#8f9a97'); fond.addColorStop(0.45, '#808b88'); fond.addColorStop(1, '#717b78');
     g.fillStyle = fond; g.fillRect(0, 0, w, h);
     if (copieur) {
       // (vu du couloir, le photocopieur est contre le jambage de la porte du hall : à droite du pan)
-      g.filter = 'blur(7px)';
       const y = (z) => h - z * m;                    // z : hauteur au-dessus du bas du pan
-      g.fillStyle = 'rgba(70,74,80,0.5)'; g.fillRect(6, y(1.6), 60, 1.6 * m);     // une armoire au fond
-      g.fillStyle = '#e8e8e4'; g.fillRect(96, y(1.0), 150, 1.0 * m);           // le corps
-      g.fillStyle = '#8d9196'; g.fillRect(96, y(1.12), 150, 0.12 * m);         // le scanner
-      g.fillStyle = '#5d6166'; g.fillRect(108, y(0.78), 126, 0.05 * m);       // les bacs
-      g.fillStyle = '#6a6e73'; g.fillRect(108, y(0.52), 126, 0.04 * m);
-      g.fillStyle = '#3b3e42'; g.fillRect(96, y(0.1), 150, 0.1 * m);
+      g.filter = 'blur(9px)';
+      g.fillStyle = 'rgba(96,150,160,0.55)'; g.fillRect(40, y(2.05), 150, 0.55 * m);   // la tache bleu-vert
+      g.fillStyle = 'rgba(232,238,240,0.7)'; g.fillRect(150, y(1.95), 60, 0.3 * m);    // le jour d'une fenêtre
+      g.filter = 'blur(4px)';
+      g.fillStyle = 'rgba(60,64,68,0.5)'; g.fillRect(4, y(1.6), 30, 1.6 * m);      // une armoire au fond
+      g.fillStyle = '#e6e6e2'; g.fillRect(26, y(1.05), 222, 1.05 * m);           // le corps
+      g.fillStyle = '#55595e'; g.fillRect(26, y(1.17), 222, 0.12 * m);           // le scanner
+      g.fillStyle = '#c9cac6'; g.fillRect(40, y(1.25), 120, 0.08 * m);           // le pupitre
+      g.fillStyle = '#4d5156'; g.fillRect(40, y(0.8), 196, 0.045 * m);           // les bacs
+      g.fillStyle = '#5a5e63'; g.fillRect(40, y(0.56), 196, 0.04 * m);
+      g.fillStyle = '#5a5e63'; g.fillRect(40, y(0.33), 196, 0.04 * m);
+      g.fillStyle = '#34373b'; g.fillRect(26, y(0.1), 222, 0.1 * m);
       g.filter = 'none';
     }
     // les côtes : une bande claire et une sombre tous les 1,6 cm
     const pas = w / (1.08 / 0.016);
     for (let x = 0; x < w; x += pas) { g.fillStyle = 'rgba(255,255,255,0.16)'; g.fillRect(x, 0, pas * 0.35, h); g.fillStyle = 'rgba(40,50,60,0.10)'; g.fillRect(x + pas * 0.55, 0, pas * 0.3, h); }
   }, null, false, 4);
+}
+// L'ÉTIQUETTE ROUGE du grand vantail du vestibule (photo 24, en haut, côté gonds) : rouge, deux lignes blanches
+function texEtiquetteFeu() {
+  return canvasTex(256, 80, (g, w, h) => {
+    g.fillStyle = '#c8262c'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#ffffff'; g.font = '700 22px "Segoe UI", Arial, sans-serif'; g.textAlign = 'center';
+    g.fillText('PORTE COUPE-FEU', w / 2, 33); g.font = '600 17px "Segoe UI", Arial, sans-serif'; g.fillText('À MAINTENIR FERMÉE', w / 2, 62);
+  }, null, false, 2);
 }
 // LA PETITE PHOTO ENCADRÉE du palier du 1er (photo 28) : sombre et brillante — une ville la nuit
 function texPhotoNuit() {
@@ -340,24 +365,44 @@ function matieresEst() {
   const P = {
     // le mur jaune du couloir est (photo 24 : à peine plus orangé que le safran de la salle d'attente) ; l'orange du
     // mur d'échiffre au 1er (photo 28 : plus soutenu)
-    jaune: std({ map: texPeinture(0xe9a03a, 4), roughness: 0.62 }, 'peinture jaune (couloir est)'),
+    // (plan V2, lot H, 11/10 : la photo 24 rejouée au même point de vue — le jaune du jeu, presque sans bleu (B/blanc
+    // 0,17-0,19), sortait jaune d'or vif ; celui de la photo est un safran ocré (B/blanc 0,31-0,44, V/R 0,72) : JAUNE_EST,
+    // la même peinture sur la face est de la pile, js/ecole_rdc_centre.js)
+    jaune: std({ map: texPeinture(JAUNE_EST, 4), roughness: 0.62 }, 'peinture jaune (couloir est)'),
     orange: std({ map: texPeinture(0xd9782a, 4), roughness: 0.62, side: THREE.DoubleSide }, 'peinture orange (échiffre)'),
     plinthe: std({ color: 0x5a534b, roughness: 0.5 }, 'plinthe gris foncé'),
-    poteau: std({ color: 0x8a8580, roughness: 0.62 }, 'poteau gris'),
-    lino: std({ map: texMouchete({ fond: [158, 152, 143], taches: [[[214, 210, 202], 0.9], [[80, 76, 70], 0.85], [[128, 122, 113], 0.7]], n: 9000, graineN: 11 }), roughness: 0.38 }, 'lino moucheté clair'),
+    // (lot H, 11/10 : gris NEUTRE — photo 24, 0,58 du mur et pas plus chaud que lui ; le #8a8580 sortait brun-gris à
+    // 0,67 sous la lumière chaude. Photo 28 : le chant de l'échiffre du 1er est du même gris)
+    poteau: std({ color: POTEAU_EST, roughness: 0.62 }, 'poteau gris'),
+    // (lot H, 11/10 : les mouchetures à 0,4 — sur la photo 24, le lino est un gris-taupe presque uni, sans le « granito »)
+    lino: std({ map: texMouchete({ fond: [158, 152, 143], taches: [[[214, 210, 202], 0.4], [[80, 76, 70], 0.4], [[128, 122, 113], 0.5]], n: 9000, graineN: 11 }), roughness: 0.38 }, 'lino moucheté clair'),
     // (relecture du 09/10 : mouchetures adoucies — sur les photos 27 et 28, de près, le vinyle paraît presque uni)
     vinyle: std({ map: texMouchete({ fond: [86, 79, 70], taches: [[[118, 111, 99], 0.7], [[58, 53, 46], 0.7], [[138, 131, 119], 0.35]], n: 8000, graineN: 13 }), roughness: 0.55 }, 'vinyle moucheté du 1er'),
-    giron: std({ map: texMouchete({ fond: [64, 63, 61], taches: [[[112, 110, 106], 0.75], [[40, 39, 37], 0.8]], n: 5000, tuile: 0.5, w: 256, graineN: 17, nuee: 4 }), roughness: 0.66 }, 'giron moucheté'),
+    // (lot H, 11/10 : la photo 25 rejouée au même point de vue — girons gris-noir #2e261b à peine mouchetés, 0,28 du
+    // mur nord ; ceux du jeu sortaient bruns, 0,41, et poivre et sel : le fond plus sombre et neutre, les mouchetures
+    // fines et basses)
+    giron: std({ map: texMouchete({ fond: [52, 51, 49], taches: [[[78, 77, 74], 0.5], [[36, 35, 34], 0.6]], n: 5000, tuile: 0.5, w: 256, graineN: 17, nuee: 4 }), roughness: 0.66 }, 'giron moucheté'),
     // (le béton peint des volées et des paliers : vu d'en dessous, il ne reçoit que le rebond — sur la photo 25, la
     // sous-face au-dessus de la volée 1 est presque aussi claire que les murs : un léger émissif, comme les plafonds)
     beton: std({ color: 0xe9e6e0, roughness: 0.88, emissive: 0xd8d4cc, emissiveIntensity: 0.22 }, 'béton peint (escalier est)'),
     contremarche: std({ color: 0x151311, roughness: 0.7 }, 'contremarche noire'),
     nez: std({ color: 0x9a9894, roughness: 0.32, metalness: 0.75 }, 'nez de marche aluminium'),
     bande: std({ color: 0x454443, roughness: 0.92 }, 'bande antidérapante'),
-    limon: std({ color: 0x1b1918, roughness: 0.55, side: THREE.DoubleSide }, 'plinthe rampante noire'),
+    // (lot H, 11/10, photo 25 : la plinthe rampante est GRIS FONCÉ, du ton des contremarches dans l'ombre — noire, elle
+    // dessinait de larges coins noirs le long des volées)
+    limon: std({ color: 0x2a2826, roughness: 0.55, side: THREE.DoubleSide }, 'plinthe rampante gris foncé'),
     rail: std({ color: 0x1e1c1a, roughness: 0.36, metalness: 0.35 }, 'main courante noire'),
     taupe: std({ color: 0x9d978f, roughness: 0.45 }, 'vantail gris taupe'),
+    // (lot H, 11/10 : le petit vantail du vestibule, gris moyen — photo 26, 0,56 du mur ; repeint depuis la VO, où il
+    // était crème) ; le tirant en U inox BROSSÉ du grand vantail (photo 24 : clair, il prend la lumière ; l'inox poli
+    // de js/ecole_portes.js sortait noir dans la carte d'environnement) ; le verre clair de son oculus
+    grisVantail: std({ color: 0x8b8b88, roughness: 0.5 }, 'vantail gris moyen (petit vantail du vestibule)'),
+    inox: std({ color: 0xc4c6c7, roughness: 0.32, metalness: 0.45 }, 'tirant inox brossé'),
     creme: std({ color: 0xe9dcc8, roughness: 0.45 }, 'vantail crème'),
+    // (lot H, 11/10 : le fond de la partie est — l'enduit du mur sur cour, comme la façade arrière du 2e, et le toit
+    // de son local, un gravier gris comme celui de l'aile de la Robert Kahn)
+    enduit: std({ color: 0xd8d6cf, roughness: 0.92 }, 'enduit du mur du fond (partie est)'),
+    toit: std({ color: 0x8e8b85, roughness: 0.95 }, 'toit du local de la partie est'),
     bois: std({ color: 0xe4dccb, roughness: 0.5 }, 'huisserie de bois crème'),
     cadre: std({ color: 0xeeece6, roughness: 0.4 }, 'cadre de la cloison vitrée'),
     tapis: std({ map: texTapis(), roughness: 0.85 }, 'tapis strié noir'),
@@ -367,18 +412,26 @@ function matieresEst() {
     embout: std({ color: 0xe8701e, roughness: 0.5, emissive: 0xe8701e, emissiveIntensity: 0.5 }, 'embout de réglette'),
   };
   P.diffuseur.name = 'diffuseur de réglette allumé';
+  P.verreOculus = new THREE.MeshStandardMaterial({ color: 0xe2eaec, roughness: 0.05, metalness: 0, transparent: true, opacity: 0.14, depthWrite: false });
+  P.verreOculus.name = 'verre clair (oculus du vestibule)';
+  P.etiquette = matPanneau(texEtiquetteFeu(), 0.5); P.etiquette.name = 'étiquette rouge « porte coupe-feu »';
   P.voyant = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x3bd16f).multiplyScalar(1.6) }); P.voyant.name = 'voyant vert';
   // (les vitres cannelées : opaques ici, éclairées par derrière — le bureau est allumé)
+  // (lot H, 11/10 : la photo 24 rejouée au même point de vue — côté couloir, le verre est gris-vert sombre, #60696b, 0,55
+  // du mur, le photocopieur bien lisible au travers ; à 0,16 d'émissif sur un fond blanc bleuté, il sortait presque
+  // blanc, #a8a49b, 1,1 du mur : le fond gris-vert de texCannele, l'émissif à 0,04)
   for (const k of [1, 2]) {
     const t = texCannele(k === 1);
-    P['cannele' + k] = std({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.16, roughness: 0.25, metalness: 0.05 }, 'verre cannelé ' + k);
+    P['cannele' + k] = std({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.04, roughness: 0.25, metalness: 0.05 }, 'verre cannelé ' + k);
   }
   for (const m of [P.jaune, P.orange]) detailPhoto(m, 'beton', 1, 1, { relief: 0.035, grain: 0, rugo: false });
   // (le lino clair : sa lumière cuite est celle du carrelage du rez-de-chaussée, moins forte — il renvoie plus)
   P.lino.lightMapIntensity = 0.6;
   // (relecture du 09/10 : mesuré sur la photo 24, le lino rend 0,62 du mur blanc voisin, et 1,0 dans le jeu — il
   // sortait presque blanc : un voile plus sombre sur sa texture)
-  P.lino.color.setScalar(0.76);
+  // (plan V2, lot H, 11/10 : à 0,76 il rendait encore 0,90-0,99 du mur au point de vue de la photo 24 ; celle-ci donne
+  // #675740, 0,61 du mur blanc voisin, et un ton plus chaud que lui — R/V/B au mur 0,70/0,65/0,56)
+  P.lino.color.setRGB(0.5, 0.46, 0.4);
   P.vinyle.lightMapIntensity = 0.8;
   return P;
 }
@@ -453,6 +506,36 @@ function chambranle(ch, parent, axe, ligne, a0, a1, base, hL, ep, faces = { 1: [
     if (d) bx(a1 + 0.05, a1 + 0.065, vc, vd, base, base + hL + 0.065);
     bx(a0 - (g ? 0.065 : 0.04), a1 + (d ? 0.065 : 0.04), vc, vd, base + hL + 0.05, base + hL + 0.065);
   }
+}
+
+// LE GRAND VANTAIL DU VESTIBULE (photo 24 rejouée au même point de vue ; lot H, 11/10) : posé par ch.porte sans oculus ni
+// poignée, il est refait ici dans son repère (gonds en x 0, chant libre en x w ; « y » du plan = −z du vantail) : le
+// panneau percé de l'oculus, le cadre de bois brun qui déborde de 1,2 cm sur les deux faces et fait l'ébrasement, le
+// verre clair, le tirant en U inox sur les deux faces, l'étiquette rouge en haut côté gonds sur la face −z (celle qu'on
+// voit du couloir, le vantail rabattu contre le mur jaune)
+function vantailVestibule(ch, v, w, h) {
+  for (const o of v.children.filter((o) => o.isMesh && o.material === X.taupe)) { v.remove(o); o.geometry.dispose(); }
+  const e = 0.02, c = 0.035, ox0 = w - 0.29, ox1 = w - 0.19, oh0 = 0.6, oh1 = 1.85;   // (la fente : 0,10 x 1,25)
+  const P = (x0, x1, h0, h1, ep, m) => B(ch, v, x0, -ep, x1, ep, h0, h1, m);
+  // le panneau autour de la fente
+  P(0.006, ox0 - c, 0.006, h - 0.006, e, X.taupe);
+  P(ox1 + c, w - 0.006, 0.006, h - 0.006, e, X.taupe);
+  P(ox0 - c, ox1 + c, 0.006, oh0 - c, e, X.taupe);
+  P(ox0 - c, ox1 + c, oh1 + c, h - 0.006, e, X.taupe);
+  // le cadre de bois brun (photo 24 : profond, il fait tout l'ébrasement de la fente)
+  const n = ch.M.noyer, eb = e + 0.012;
+  P(ox0 - c, ox0, oh0 - c, oh1 + c, eb, n); P(ox1, ox1 + c, oh0 - c, oh1 + c, eb, n);
+  P(ox0, ox1, oh0 - c, oh0, eb, n); P(ox0, ox1, oh1, oh1 + c, eb, n);
+  const vitre = P(ox0, ox1, oh0, oh1, 0.003, X.verreOculus); vitre.castShadow = false;
+  // le tirant en U (Ø 22 mm, 0,30 m, à 0,055 m du panneau) sur les deux faces, à 7 cm du chant libre
+  const xt = w - 0.07;
+  for (const s of [1, -1]) {
+    const y0 = s * e, y1 = s * (e + 0.066);
+    B(ch, v, xt - 0.011, Math.min(y1, y1 - s * 0.022), xt + 0.011, Math.max(y1, y1 - s * 0.022), 0.92, 1.22, X.inox, { ombre: false });
+    for (const hb of [0.95, 1.19]) B(ch, v, xt - 0.008, Math.min(y0, y1), xt + 0.008, Math.max(y0, y1), hb - 0.008, hb + 0.008, X.inox, { ombre: false });
+  }
+  // l'étiquette rouge (0,18 x 0,056), en haut, côté gonds, sur la face −z (« y » du plan +e)
+  ch.panneau(X.etiquette, 0.18, 0.056, 0.2, e + 0.0015, h - 0.13, 'N', v);
 }
 
 // LA RÉGLETTE FLUORESCENTE MURALE (photos 25, 28) : un tube T8 sous un diffuseur blanc, embouts orange, posée à plat
@@ -599,6 +682,15 @@ export function poserEst(ch, { RECT }) {
   const lino = new THREE.Mesh(geoDalles([[E.xJ, E.yH, 16.2, 12.45], [16.2, E.yH, E.xM + 0.3, 9.15], [16.2, 9.15, 16.95, 10.65]], 0, RECT), X.lino);
   lino.receiveShadow = true; lino.name = 'lino du couloir est'; lino.userData.nofuse = true;
   ch.scene.add(lino);
+  // LE JOINT DE LÉ est-ouest (photo 24 : un trait fin et sombre en travers du couloir ; rejoué au même point de vue, il
+  // tombe en y 9,59-9,62, du mur jaune au pied du poteau) : un filet de 5 mm, une ombre légère posée sur le lino
+  {
+    const m = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    m.name = 'joint de lé du lino';
+    const j = new THREE.Mesh(new THREE.PlaneGeometry(16.3 - E.xJ - 0.075, 0.005), m);
+    j.rotation.x = -Math.PI / 2; j.position.set((E.xJ + 0.075 + 16.3) / 2, 0.0012, -9.6); j.name = 'joint de lé';
+    j.userData.horsAOSol = true; j.userData.nofuse = true; D.add(j);
+  }
 
   // =====================================================================
   //  LE HALL : LA PORTE À 1,5 VANTAIL, LA CLOISON VITRÉE, LE BUREAU (photos 24, 26)
@@ -625,7 +717,9 @@ export function poserEst(ch, { RECT }) {
   B(ch, D, 16.25, yv - 0.035, xC, yv + 0.035, 0, 0.05, X.cadre, { ombre: false });
   B(ch, D, 16.25, yv - 0.035, xC, yv + 0.035, 2.4, 2.46, X.cadre, { ombre: false });
   // (côté hall, le dégagement derrière est plus sombre que le hall : le verre y sort gris vert, à peine éclairé — VO 7,0 s)
-  const canHall = X.cannele1.clone(); canHall.emissiveIntensity = 0.05; canHall.color.setRGB(0.8, 0.84, 0.82);
+  // (lot H, 11/10, VO q_0027-0031 : gris-vert sombre, ≈ 0,6 du mur « INFORMATIQUE » voisin — il sortait à 0,8-0,9 ;
+  // le photocopieur est devant lui, côté hall : le verre sans sa silhouette)
+  const canHall = X.cannele2.clone(); canHall.emissiveIntensity = 0.02; canHall.color.setRGB(0.86, 0.9, 0.9);
   for (const f of ['N', 'S']) ch.panneau(f === 'N' ? X.cannele1 : canHall, xC - 16.35, 2.35, (16.3 + xC - 0.05) / 2, yv + (f === 'N' ? 0.006 : -0.006), 1.225, f);
   B(ch, D, 16.25, yv - 0.075, xC, yv + 0.075, 2.46, H_DALLE, B0, { ombre: false });
   C.ajouterBoite(16.25, -(yv - 0.075), xC, -(yv + 0.075), { y1: H_DALLE });
@@ -691,9 +785,11 @@ export function poserEst(ch, { RECT }) {
   ch.plafond(16.2, 9.15, 16.73, 10.65, HC, 'platre', { retombees: false });
   const det = maille(new THREE.CylinderGeometry(0.055, 0.06, 0.035, 20), M.boitier, 15.9, HC - 0.018, -9.0, 0, D, { ombre: false });
   det.userData.horsAOSol = true;
-  ch.opale(15.4, 8.3, HC, 'couloirEst', { r: 0.19 });
-  ch.opale(15.4, 9.75, HC, 'couloirEst', { r: 0.19 });
-  ch.opale(17.05, 8.3, HC, 'couloirEst', { r: 0.19 });            // (le dégagement : non vu, mais il n'est pas noir)
+  // (lot H, 11/10 : Ø 0,30 mesuré sur la photo 24 rejouée, à 1,5 m — r 0,19 les faisait trop grands ; leurs places,
+  // y 8,2-8,3 et 9,75-9,8, sont justes)
+  ch.opale(15.4, 8.3, HC, 'couloirEst', { r: 0.15 });
+  ch.opale(15.4, 9.75, HC, 'couloirEst', { r: 0.15 });
+  ch.opale(17.05, 8.3, HC, 'couloirEst', { r: 0.15 });            // (le dégagement : non vu, mais il n'est pas noir)
   // L'ASCENSEUR (déduit : la même façade palière qu'au 1er, VO q_0274-0281), au bout du dégagement, desservi ; la
   // platine d'appel sur le mur de la cage (le mur du hall, au sud, est le cannelé et le mur « INFORMATIQUE »)
   poserAscenseur(ch, { base: 0, ouvert: true, y0: E.yH + 0.005, hMur: H_DALLE, zone: 'couloirEst', bouton: 'N' });
@@ -708,27 +804,46 @@ export function poserEst(ch, { RECT }) {
   chambranle(ch, D, 'x', E.yE, 14.70, E.x0, 0, 2.06, 0.15, { 1: [false, true], [-1]: [false, true] });
   // (10/10 : OUVERT À DEMEURE, rabattu côté couloir devant le mur jaune — VO q_0051-0055 et q_0151 : on voit sa face, son
   // oculus et son bâton contre le mur jaune ; photo 24 (2026) : ouvert aussi)
-  ch.porte('x', E.yE, 15.125, { l: 0.85, h: 2.06, modele: 'grise', etat: 'ouverte', angle: 1.45, cote: 'S', huisserie: false, oculus: 'long', poignee: 'tirant', feu: true, matVantail: X.taupe, nom: 'vestibule est' });
+  // (plan V2, lot H, 11/10, photo 24 rejouée au même point de vue : sur sa face visible, un TIRANT EN U INOX brossé
+  // près du chant libre — et non une barre noire —, l'OCULUS VITRÉ CLAIR dans son cadre de bois brun profond (on voit le
+  // jaune au travers ; il sortait vert-noir, opaque), l'ÉTIQUETTE ROUGE en haut, côté gonds : vantailVestibule)
+  {
+    const P = ch.porte('x', E.yE, 15.125, { l: 0.85, h: 2.06, modele: 'grise', etat: 'ouverte', angle: 1.45, cote: 'S', huisserie: false, oculus: false, poignee: null, fermePorte: false, matVantail: X.taupe, nom: 'vestibule est' });
+    vantailVestibule(ch, P.vantaux[0].g, 0.85, 2.06);
+  }
   // (relecture du 09/10, photo 26 : le petit vantail n'est qu'ENTREBÂILLÉ — une quinzaine de degrés ; ouvert à 70°, il
   // cachait le couloir et la cloison vitrée qu'on voit par la porte. Sa face côté vestibule est lisse : pas de ferme-porte)
-  ch.porte('x', E.yE, 15.8, { l: 0.5, h: 2.06, modele: 'grise', etat: 'ouverte', angle: 0.28, cote: 'N', charniere: 'd', huisserie: false, oculus: false, poignee: null, fermePorte: false, matVantail: X.taupe, nom: 'vestibule est (petit vantail)' });
+  // (plan V2, lot H, 11/10 : RECALÉ au point de la photo 26 — pose résolue sur des repères lointains et sûrs : la feuille
+  // A4 et le cadre du cannelé, l'affiche POINT ÉCOUTE, le chambranle et le gond (rms 13 px, appareil en (15,22 ; 11,61),
+  // h 1,48, cap 140°, piqué −8,5°, roulis 2,7°) : son chant libre tombe à 0,49-0,50 m du gond, PRESQUE FERMÉ (0 à 5°) ;
+  // à 0,55 m il sortirait 50 px trop à droite, à 0,60 m 120 px. La VO le confirme : q_0051-0057, il prend 34-36 % de la
+  // baie de 1,35 m, soit 0,48-0,50. On garde donc 0,50 + 0,85 ; il est GRIS MOYEN (photo 26 : 0,56 du mur ; le taupe
+  // sortait beige clair, 0,93). Côté couloir, la VO montre sa béquille noire en J et le ferme-porte en tête, à droite :
+  // c'est LUI, alors crème, la « porte crème » des q_0050-0057 — son pied passe devant la plinthe du mur du fond, son
+  // haut touche le linteau de la baie)
+  {
+    const P = ch.porte('x', E.yE, 15.8, { l: 0.5, h: 2.06, modele: 'grise', etat: 'ouverte', angle: 0.06, cote: 'N', charniere: 'd', huisserie: false, oculus: false, poignee: null, matVantail: X.grisVantail, nom: 'vestibule est (petit vantail)' });
+    // (la béquille en J sur la face côté couloir — +z du vantail —, au chant libre, x −0,5)
+    const v = P.vantaux[0].g, z = 0.02;
+    B(ch, v, -0.475, -z - 0.012, -0.425, -z, 0.94, 1.1, M.noirMat, { ombre: false });
+    B(ch, v, -0.455, -z - 0.06, -0.445, -z - 0.012, 1.03, 1.05, M.noirMat, { ombre: false });
+    B(ch, v, -0.455, -z - 0.07, -0.33, -z - 0.05, 1.03, 1.05, M.noirMat, { ombre: false });
+    B(ch, v, -0.34, -z - 0.07, -0.33, -z - 0.05, 0.99, 1.05, M.noirMat, { ombre: false });
+  }
   ch.sortie(15.85, E.yE + 0.12, 2.33, 'N');
-  // le mur nord du vestibule (et de la cage) : une porte fermée vers le reste du quart nord-est, jamais vu
+  // le mur nord du vestibule (et de la cage) : derrière lui, le local de 0,9 m (plan V2 : x 13,65-19,8 × y 12,6-13,5,
+  // fermé, laissé vide), puis le mur du fond de la partie est (y 13,5-13,8 : fondPartieEst)
   // (10/10 : sa plinthe s'arrête au vestibule — sous la volée 1, qui n'est plus pleine, elle flottait au-dessus de la
   // volée B du -1)
-  mur(ch, D, { de: [13.65, E.yN], a: [E.x0, E.yN], h: N1, mats: B0, plinthes: ['S'], ouvertures: [{ c: 15.36, l: 0.93, h: 2.04 }] });
+  // (plan V2, lot H, 11/10 : PLUS DE PORTE à ce mur — la VO le montre nu d'un bout à l'autre, q_0156-0161 : le jaune, le
+  // déclencheur au ras de l'angle, le mur blanc, puis la crosse de la main courante de la volée 1 ; la « porte crème » des
+  // q_0050-0057 était le petit vantail du vestibule, voir plus haut. Le local n'a pas d'accès vu)
+  mur(ch, D, { de: [13.65, E.yN], a: [E.x0, E.yN], h: N1, mats: B0, plinthes: ['S'] });
   mur(ch, D, { de: [E.x0, E.yN], a: [E.xM, E.yN], h: N1, mats: B0 });
-  // (10/10, VO q_0050-0057 : le vantail est CLAIR — crème —, fermé, béquille NOIRE côté ouest (gonds à l'est), le
-  // ferme-porte en tête côté vestibule, à droite ; le vantail pris dans le nu nord du mur pour que son bras soit au sud)
-  {
-    const P = ch.porte('x', E.yN, 15.36, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'N', charniere: 'd', oculus: false, poignee: null, matVantail: X.creme, nom: 'local (vestibule est)' });
-    const v = P.vantaux[0].g, z = 0.02;
-    B(ch, v, -0.89, -z - 0.012, -0.84, -z, 0.94, 1.1, M.noirMat, { ombre: false });
-    B(ch, v, -0.86, -z - 0.06, -0.85, -z - 0.012, 1.03, 1.05, M.noirMat, { ombre: false });
-    B(ch, v, -0.86, -z - 0.07, -0.73, -z - 0.05, 1.03, 1.05, M.noirMat, { ombre: false });
-  }
   ch.plafond(14.675, 10.8, E.x0, 12.45, HC, 'platre');
-  ch.opale(15.36, 11.62, HC, 'escEst', { r: 0.19 });
+  // (lot H, 11/10 : les hublots de Ø 0,30 de la photo 24 — r 0,15 ; un peu moins forte, l'opale du vestibule ne fait plus
+  // sortir le petit vantail beige clair)
+  ch.opale(15.36, 11.62, HC, 'escEst', { r: 0.15, force: 0.85 });
   // (le chant de la dalle du 1er au-dessus du vestibule, vu de la volée 1)
   B(ch, D, E.x0 - 0.1, 9.15, E.x0, 12.45, H_DALLE, N1 - 0.012, X.beton, { ombre: false });
 
@@ -765,12 +880,18 @@ export function poserEst(ch, { RECT }) {
   const rail = (v, s) => v.b + v.r + s * v.r / v.g + 0.9, xv = (v, s) => v.x0 + v.sens * s, fin = (E.n - 1) * E.g;
   const yN1 = E.bN[1] - 0.079, yS1 = E.bN[0] + 0.079, yS2 = E.bS[0] + 0.079, yN2 = E.bS[1] - 0.079;
   const crosse = (v, y) => [[xv(v, -0.02), y, rail(v, -0.02) - 0.15], [xv(v, 0.07), y, rail(v, 0.07)]];
-  mainCourante(ch, D, [...crosse(v1, yN1), [xv(v1, fin), yN1, rail(v1, fin)], [18.7, yN1, E.hP1 + 1.0], [E.xM - 0.079, yN1, E.hP1 + 1.0], [E.xM - 0.079, 11.2, E.hP1 + 1.0], [E.xM, 11.2, E.hP1 + 1.0]],
-    [[xv(v1, 0.5), yN1, rail(v1, 0.5), 'N'], [xv(v1, 1.6), yN1, rail(v1, 1.6), 'N'], [19.1, yN1, E.hP1 + 1.0, 'N'], [E.xM - 0.079, 11.9, E.hP1 + 1.0, 'E'], [E.xM - 0.079, 11.4, E.hP1 + 1.0, 'E']]);
+  // (plan V2, lot H, 11/10 : la photo 25 rejouée au même point de vue — la main courante horizontale du mur du fond ne
+  // s'arrête pas en y 11,2 : elle file jusqu'au bout de l'échiffre, qui la cache au-delà de y ≈ 10,45, sur des consoles
+  // en y ≈ 12,07 et 10,70 (et celle du mur nord en x ≈ 18,97). Comme au palier à 5,05 m (VO q_0356-0360, poserPalierEst),
+  // elle est d'un seul tenant : le mur nord, le mitoyen, le mur sud, puis elle monte avec la volée 2 — sa crosse basse
+  // disparaît ; une 3e console sur le mitoyen, une au mur sud)
+  const hH = E.hP1 + 1.0, xm = E.xM - 0.079;
+  mainCourante(ch, D, [...crosse(v1, yN1), [xv(v1, fin), yN1, rail(v1, fin)], [18.7, yN1, hH], [xm, yN1, hH], [xm, yS2, hH], [18.62, yS2, hH],
+    [xv(v2, 0.07), yS2, rail(v2, 0.07)], [xv(v2, fin), yS2, rail(v2, fin)], [E.x0 - 0.04, yS2, rail(v2, fin)], [E.x0 - 0.04, E.bS[0], rail(v2, fin)]],
+    [[xv(v1, 0.5), yN1, rail(v1, 0.5), 'N'], [xv(v1, 1.6), yN1, rail(v1, 1.6), 'N'], [19.0, yN1, hH, 'N'], [xm, 12.05, hH, 'E'], [xm, 10.7, hH, 'E'], [xm, 9.6, hH, 'E'],
+      [19.1, yS2, hH, 'S'], [xv(v2, 0.5), yS2, rail(v2, 0.5), 'S'], [xv(v2, 1.6), yS2, rail(v2, 1.6), 'S']]);
   mainCourante(ch, D, [...crosse(v1, yS1), [xv(v1, fin), yS1, rail(v1, fin)], [E.xP + 0.06, yS1, rail(v1, fin)], [E.xP + 0.06, E.bN[0], rail(v1, fin)]],
     [[xv(v1, 0.5), yS1, rail(v1, 0.5), 'S'], [xv(v1, 1.6), yS1, rail(v1, 1.6), 'S']]);
-  mainCourante(ch, D, [...crosse(v2, yS2), [xv(v2, fin), yS2, rail(v2, fin)], [E.x0 - 0.04, yS2, rail(v2, fin)], [E.x0 - 0.04, E.bS[0], rail(v2, fin)]],
-    [[xv(v2, 0.5), yS2, rail(v2, 0.5), 'S'], [xv(v2, 1.6), yS2, rail(v2, 1.6), 'S']]);
   // (relecture du 09/10 : en haut, elle ne plonge pas — l'épingle de la photo 28 fait le tour du chant gris et repart
   // sur l'autre face de l'échiffre, en main courante de la volée 3 : js/ecole_est.js poserPalierEst)
   mainCourante(ch, D, [...crosse(v2, yN2), [xv(v2, fin), yN2, rail(v2, fin)]],
@@ -791,11 +912,31 @@ export function poserEst(ch, { RECT }) {
   reglette(ch, D, E.xM, 10.0, 11.4, E.hP1 + 2.5, 'W');
   // (sa `base` est le palier, 1,75 : à 4,25 m du sol, comptée depuis 0, js/ecole_lumieres.js l'écartait des voisines
   // — sur la moitié haute de la volée 2, zone escEst2, la volée n'avait plus sa lumière — relecture du 09/10)
-  ch.lampes.push({ x: E.xM - 0.25, z: -10.7, h: E.hP1 + 2.5, zone: 'escEst', type: 'tube', force: 1.1, base: E.hP1, cuire: false });
+  // (plan V2, lot H, 11/10 : un tube fluo BLANC NEUTRE, ≈ 4 000 K — la photo 25 rejouée au même point de vue donne le
+  // mur du palier blanc neutre, #b6af9b, aussi clair que le mur nord ; sous la lumière chaude des plafonniers, il sortait
+  // pêche, #dbc2a3)
+  ch.lampes.push({ x: E.xM - 0.25, z: -10.7, h: E.hP1 + 2.5, zone: 'escEst', type: 'tube', force: 1.1, base: E.hP1, cuire: false, couleur: REGLETTE_EST });
   ch.sortie(E.xM - 0.03, 11.0, E.hP1 + 2.85, 'W');
   ch.panneau(matPanneau(texAfficheIris(), 0.55), 0.45, 0.82, E.xM - 0.004, 10.62, E.hP1 + 1.85, 'W');
   // (pour la caméra : le dessous du palier de la volée 3, au-dessus du palier intermédiaire)
   C.plafond(E.xP, -E.bS[0], E.xM, -E.bN[1], E.hP2 - 0.25);
+
+  // =====================================================================
+  //  LE FOND DE LA PARTIE EST (plan V2, lot H, 11/10 ; rdc_est.md § 8, gabarit_reel.md)
+  // =====================================================================
+  // Le vrai bâtiment (IGN BD TOPO) s'arrête en y 13,80-13,88 pour x 13,3-20,1 : au-delà, la cour ou le voisin — le jeu y
+  // avait un « quart nord-est » ouvert sur le ciel, carrelé jusqu'en y 20,75. Le MUR DU FOND, y 13,5-13,8 (enduit côté
+  // cour, blanc dedans), du sous-sol au toit de l'aile basse, et le mitoyen qui le rejoint ; entre lui et le mur nord de
+  // la cage, LE LOCAL DE 0,9 m (x 13,65-19,8 × y 12,6-13,5), fermé, laissé vide : aucune image ne le montre, aucune porte
+  // n'y mène (VO q_0156-0161 : le mur nord du vestibule est nu). Son toit, au niveau de celui de l'aile de la Robert
+  // Kahn (js/ecole_kahn.js, 6,70 m), sous les fenêtres arrière du 2e ; 2 cm plus bas, pour ne pas se confondre avec lui
+  // là où les deux se touchent.
+  {
+    const H_TOIT = N2 + 0.08, H_ACRO = H_TOIT + 0.25;
+    mur(ch, D, { de: [13.3, 13.65], a: [20.1, 13.65], ep: 0.3, base: Y_SS, h: H_ACRO, mats: { N: X.enduit, S: B0 } });
+    mur(ch, D, { de: [19.95, 12.6], a: [19.95, 13.5], ep: 0.3, base: Y_SS, h: H_ACRO, mats: { E: X.enduit, W: B0 } });
+    B(ch, D, 13.3, 12.6, 19.8, 13.5, H_TOIT - 0.25, H_TOIT, X.toit, { ombre: false });
+  }
 
   // =====================================================================
   //  LES ZONES (pièces) pour js/ecole_lumieres.js
@@ -803,7 +944,10 @@ export function poserEst(ch, { RECT }) {
   // (escEst : le vestibule et la volée 1, puis, au-dessus du sol, le palier intermédiaire et le bas de la volée 2 — sous
   // celle-ci, la niche reste au couloir ; au-dessus de 2,60 m, c'est la cage du 1er, zonesHaut)
   const zones = [
-    { id: 'escEst', rects: [zr(E.xJ, E.yE, E.xM, E.bN[1]), zr(E.x0, E.bS[0], E.xM, E.bN[1], 0.3)], voisines: ['couloirEst', 'escEst2'], env: { x: 15.6, y: 1.6, z: -11.6 } },
+    // (plan V2, lot H, 11/10 : la carte prise au-dessus de la moitié nord du palier intermédiaire, comme celle de escEst2
+    // — prise dans le vestibule, elle voyait de près ses murs jaunes et teintait de pêche le mur du palier, les murs de la
+    // cage et les nez d'aluminium, dorés)
+    { id: 'escEst', rects: [zr(E.xJ, E.yE, E.xM, E.bN[1]), zr(E.x0, E.bS[0], E.xM, E.bN[1], 0.3)], voisines: ['couloirEst', 'escEst2'], env: { x: 19.0, y: 2.4, z: -11.9 } },
     // (la carte du couloir est prise dans le dégagement, pas contre le mur jaune : à 0,7 m de lui, elle teintait de pêche
     // le mur blanc de la niche et le vitrage)
     { id: 'couloirEst', rects: [zr(E.xJ, E.yH, 16.2, E.yE), zr(16.2, E.yH, E.xM, E.yS), zr(16.2, E.yS, E.xP, E.yE)], voisines: ['hall', 'escEst'], env: { x: 16.3, y: 1.6, z: -8.3 } },

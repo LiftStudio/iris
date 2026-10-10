@@ -813,7 +813,9 @@ export function construireCarte(scene, renderer = null) {
     [1.6, 5.0, 4.9, 20.75, 'ns', 1.75, 0], [4.9, -0.4, 5.3, 20.75, 'ns', 1.75, 0],
     [5.3, -0.4, 13.5, 9.0, 'ns', 1.75, 0], [5.3, 9.0, 13.5, 12.0, 'ew', 5.8, 9.0], [5.3, 12.0, 13.5, 20.75, 'ns', 1.75, 0],
     // (le hall ; au nord, le lino du couloir est et de l'escalier est remplace le carrelage : js/ecole_est.js)
-    [13.5, -0.4, 20.1, 7.575, 'ns', 1.75, 0], [13.5, 7.575, 14.6, 20.75, 'ns', 1.75, 0], [14.6, 12.45, 20.1, 20.75, 'ns', 1.75, 0],
+    // (plan V2, lot H, 11/10 : la partie est s'arrête en y 13,8 — IGN, gabarit_reel.md ; plus de carrelage au nord de
+    // y 13,5 : le local de 0,9 m et le mur du fond, js/ecole_est.js fondPartieEst)
+    [13.5, -0.4, 20.1, 7.575, 'ns', 1.75, 0], [13.5, 7.575, 14.6, 13.5, 'ns', 1.75, 0], [14.6, 12.45, 20.1, 13.5, 'ns', 1.75, 0],
     [1.6, 20.75, 9.0, 24.5, 'ns', 1.75, 0],          // la salle David Clark, au-delà du fond du bâtiment (09/10)
   ];
   const sol = new THREE.Mesh(geoSol(RN), M.sol); sol.receiveShadow = true; sol.name = 'carrelage'; nePasFusionner(sol);
