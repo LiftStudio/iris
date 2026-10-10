@@ -734,15 +734,16 @@ export function poserPause1(ch, ctx) {
   banquette([[9.15, 8.75], [8.6, 9.35], [8.75, 10.05], [8.3, 10.6]].map(([x, y]) => [x, Yv(y)]), P.jaune, 'banquette jaune');
   banquette([[8.7, 11.1], [9.3, 11.45], [10.05, 11.45], [10.6, 11.15], [10.75, 10.65]].map(([x, y]) => [x, Yv(y)]), P.rouge, 'banquette rouge', [-1]);
   {
-    const yt = Yv(10.2);
-    const g = new THREE.Group(); g.position.set(10.0, N1, -yt); g.rotation.y = 3.0; groupe.add(g);
+    // (V2 : 0,3 m plus à l'est — étirée, la banquette jaune l'approchait : ses places de l'est se relevaient dans la table)
+    const xt = 10.3, yt = Yv(10.2);
+    const g = new THREE.Group(); g.position.set(xt, N1, -yt); g.rotation.y = 3.0; groupe.add(g);
     const s = new THREE.Shape(), w = 0.7, d = 0.275;
     s.moveTo(-w + d, -d); s.lineTo(w - d, -d); s.absarc(w - d, 0, d, -Math.PI / 2, Math.PI / 2, false); s.lineTo(-w + d, d); s.absarc(-w + d, 0, d, Math.PI / 2, Math.PI * 1.5, false);
     const geo = new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: false, curveSegments: 10 }); geo.rotateX(-Math.PI / 2);
     maille(geo, P.laque, 0, 0.36, 0, 0, g);
     // (le piétement : un socle noir en retrait, sous le plateau)
     const pied = maille(geo.clone().scale(0.62, 1, 0.45), P.noir, 0, 0.0, 0, 0, g, { ombre: false }); pied.scale.y = 9;
-    C.ajouterBoiteOrientee(10.0, -yt, 0.7, 0.275, -3.0, { y0: N1, y1: N1 + 0.4 });
+    C.ajouterBoiteOrientee(xt, -yt, 0.7, 0.275, -3.0, { y0: N1, y1: N1 + 0.4 });
   }
   // les mange-debout et leurs tabourets, les chaises coque (VO : devant les jours, devant la jaune, devant la rouge, deux à
   // l'est, vus à 67 s). On y circule : le long des jours, de la porte du palier à celle du fond et à celle de la salle
@@ -750,13 +751,14 @@ export function poserPause1(ch, ctx) {
   // niche
   // (relecture 10/10 : rien devant le mur du fond — VO f_49,2 s, le sol nu jusqu'à la porte ; quatre mange-debout, le
   // passage vers la Si 1.4 n'en laisse pas loger un cinquième)
-  // (V2 : à l'est, les deux mange-debout et leurs quatre tabourets restent au nord de la porte du palier — étirés, ils
-  // tombaient dans son passage ; à l'ouest et au milieu, étirés : devant les jours, le passage s'ouvre)
-  for (const [x, y] of [[12.75, 9.35], [12.8, 10.9], [9.6, Yv(8.15)], [11.1, Yv(9.5)]]) mangeDebout(x, y);
-  // (vérification du 10/10 : le premier recule de 8 cm — le vantail de la porte du palier est rabattu contre le mur est,
-  // js/ecole_est.js)
-  miura(13.12, 9.5, 'W', [13.12, 10.1]); miura(12.85, 11.45, 'S', [12.4, 11.75]); miura(9.05, Yv(8.1), 'E', [8.9, Yv(7.55)]);
-  miura(12.35, 9.85, 'E', [12.35, 10.4]); miura(12.8, 10.35, 'N', [12.4, 10.4]);
+  // (V2 : étirés comme le reste, sauf le mange-debout de l'entrée et ses deux tabourets : étiré, il tombait dans le
+  // passage de la porte du palier, en (12,75 ; 8,28) ; VO q_0270 — pose résolue, (12,0 ; 10,92), 1,35 m, cap 173,5°, f 464
+  // — le montre devant l'angle du recoin, vers (11,2 ; 7,1) à 0,3 m près, ses deux tabourets « Miura » côté nord-est ;
+  // l'autre, vers (10,9 ; 8,5), est celui du milieu étiré, (11,1 ; 8,49). Posé en (11,5 ; 7,0) : la sortie de la chaise
+  // menthe reste libre)
+  for (const [x, y] of [[11.5, 7.0], [12.8, Yv(10.9)], [9.6, Yv(8.15)], [11.1, Yv(9.5)]]) mangeDebout(x, y);
+  miura(12.05, 7.1, 'W', [12.6, 7.1]); miura(12.85, Yv(11.45), 'S', [12.4, Yv(11.75)]); miura(9.05, Yv(8.1), 'E', [8.9, Yv(7.55)]);
+  miura(11.6, 7.55, 'S', [12.1, 7.85]); miura(12.8, Yv(10.35), 'N', [12.4, Yv(10.4)]);
   coque(10.2, Yv(8.5), 'W', P.coqueOrange, [10.2, Yv(7.8)]); coque(10.5, Yv(9.05), 'W', P.coqueMenthe, [10.95, Yv(8.75)]);
   // (la lime contre le muret court, entre la niche et le 1er poteau)
   coque(7.75, Yv(11.45), 'S', P.coqueLime, [7.75, Yv(10.85)]);
