@@ -28,6 +28,8 @@
 //   le couloir                 x 1,50-2,42  y 6,4-14,18   0,92 m de large, plafond à 2,45 m, caisson et grille au fond
 //   l'espace pause             x 2,55-12,9  y 11,6-15,8   et son aile x 5,0-12,9 y 6,5-11,6 ; dalles à 2,55 m
 //   le sas des toilettes       x 10,55-12,9 y 13,65-14,95 deux portes crème à plaque rouge (fermées)
+//   la grande salle S -1.14    x 2,55-15,2  y 15,95-25,5  derrière le mur vert (js/ecole_amphi.js : la vidéo officielle
+//                                                         de visite, 2021 — comme l'aile et ses murs sud et ouest, 10/10)
 // Le sol du sous-sol est à Y_SS = -3,06 (17 x 0,18).
 //
 // LES PIÈGES D'UN NIVEAU SOUS LE SOL (js/collisions.js : solEn rend le sol le plus haut qui ne dépasse pas les pieds de
@@ -58,6 +60,7 @@ import { canvasTex, nePasFusionner, normalesDepuisGrille, avecRelief } from './k
 import { texAffiche, texPictoExtincteur } from './ecole_matieres.js';
 import { cuireLumiereSol } from './ecole_lumieres.js';
 import { TELEPHONE } from './appareil.js';
+import { poserAmphi, EMPRISE_AMPHI } from './ecole_amphi.js';
 
 // ---- les hauteurs ----
 export const Y_SS = -3.06;               // le sol du sous-sol (17 contremarches de 18 cm sous le palier)
@@ -83,8 +86,11 @@ const PORTE_PAUSE = 12.15, PORTE_HALL = 14.85, L_PORTE = 1.0;
 const Y_FOND = 17.3;                      // le nu du mur du fond du hall du -1
 const Y_COUL0 = 6.4;                      // le nu du mur du fond (sud) du couloir
 const Y_EXT = 15.6;                       // l'extincteur du hall (mur ouest), entre le « -1 » et le fond
-// le rectangle du sol cuit du -1 (lumière et ombre cuites, uv1 de 0 à 1, v = 1 au nord)
-const R_SS = { x0: 0, x1: 13.4, y0: 2.8, y1: 21.0 };
+// le rectangle du sol cuit du -1 (lumière et ombre cuites, uv1 de 0 à 1, v = 1 au nord) ; jusqu'au fond de la grande
+// salle S -1.14 (y 25,5) et à son mur est (x 15,2) — 10/10
+const R_SS = { x0: 0, x1: 15.5, y0: 2.8, y1: 26.0 };
+// la dalle du rez-de-chaussée au-dessus du -1 (la trémie et le palier exceptés) : pour la caméra et pour l'ombre
+const DALLES_RDC = [[-0.3, 2.8, 13.2, 9.1], [1.6, 9.1, 13.2, 14.3], [-0.3, 14.3, 13.2, 20.75], EMPRISE_AMPHI];
 const LED = new THREE.Color(0xf3f6f8);       // la lumière des LED du -1 (blanc neutre)
 
 // =====================================================================
@@ -747,15 +753,20 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // le retour sud, à droite de l'entrée (l'affiche « 100 % »), l'aile des distributeurs (ouest et sud)
     mur({ de: [2.42, 11.525], a: [5.0, 11.525], mats: B0, plinthes: ['N'], plinthe: P });
     mur({ de: [4.925, 6.35], a: [4.925, 11.6], mats: B0, plinthes: ['E'], plinthe: P });
-    mur({ de: [4.85, 6.425], a: [13.05, 6.425], mats: B0, plinthes: ['N'], plinthe: P });
+    // (10/10, la vidéo officielle de 2021, q_0088-q_0097, q_0137-q_0142 : le mur ouest de l'aile est VERT ANIS jusqu'à
+    // 2,30 m, comme le mur nord ; le mur sud porte une PORTE GRISE, x 9,7-10,6, fermée)
+    B(5.0, 6.5, 5.005, 11.6, Y_SS + 0.1, H_RET, X.vert, { ombre: false });
+    mur({ de: [4.85, 6.425], a: [13.05, 6.425], mats: B0, plinthes: ['N'], plinthe: P, ouvertures: [{ c: 10.15, l: 0.95 }] });
     // le mur est : la porte du local sombre (ouverte, v_065) ; le sas des toilettes au nord
     mur({ de: [12.975, 6.35], a: [12.975, 15.95], mats: B0, plinthes: ['W'], plinthe: P, ouvertures: [{ c: 9.65, l: 0.9 }] });
     mur({ de: [10.45, 13.6], a: [12.9, 13.6], ep: 0.1, mats: B0, plinthes: ['S', 'N'], plinthe: P });
     mur({ de: [10.45, 15.0], a: [12.9, 15.0], ep: 0.1, mats: B0, plinthes: ['S'], plinthe: P });
     mur({ de: [10.5, 14.95], a: [10.5, 15.95], ep: 0.1, mats: B0, plinthes: ['W'], plinthe: P });
     // LE MUR NORD, VERT ANIS (v_060 à v_064) : peint de vert jusqu'à 2,30 m, la retombée blanche au-dessus
-    mur({ de: [2.42, 15.875], a: [13.05, 15.875], mats: B0, plinthes: ['S'], plinthe: P });
-    for (const [a, b] of [[2.55, 3.9], [5.5, 9.0]]) B(a, 15.795, b, 15.8, Y_SS + 0.1, H_RET, X.vert, { ombre: false });
+    // (10/10 : percé de la porte de la grande salle S -1.14, js/ecole_amphi.js — le fixe dépoli x 8,85-9,35, le vantail
+    // x 9,35-10,25, l'imposte jusqu'à la retombée ; le fixe et l'imposte, translucides, ont leur vitre au monde solide)
+    mur({ de: [2.42, 15.875], a: [13.05, 15.875], mats: B0, plinthes: ['S'], plinthe: P, ouvertures: [{ c: 9.55, l: 1.4, h: H_RET }] });
+    for (const [a, b] of [[2.55, 3.9], [5.5, 8.82]]) B(a, 15.795, b, 15.8, Y_SS + 0.1, H_RET, X.vert, { ombre: false });
   }
 
   // =====================================================================
@@ -779,8 +790,13 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     C.sol(0.0, -9.1, 1.6, -ESC.y0, 0);                                        // le palier
     C.rampe(ESC.x0, -(ESC.y0 + (ESC.n - 0.5) * ESC.G), ESC.x1, -(ESC.y0 - ESC.G / 2), 'z', -(ESC.y0 - ESC.G / 2), 0, -(ESC.y0 + (ESC.n - 0.5) * ESC.G), Y_SS);
     C.sol(0.4, -3.05, 13.05, -20.75, Y_SS);
+    // (10/10 : la grande salle S -1.14, jusqu'à y 25,5 et x 15,2 — au-dessus, la salle David Clark, la cour, le C01 : le
+    // joueur du rez-de-chaussée y marche à 0)
+    const [ea, eb, ec, ed] = EMPRISE_AMPHI;
+    C.sol(ea, -eb, ec, -ed, 0);
+    C.sol(ea, -eb, ec, -ed, Y_SS);
     // pour la caméra seule : la dalle du rez-de-chaussée (au-dessus des plafonds du -1)
-    for (const [a, b, c, d] of [[-0.3, 2.8, 13.2, 9.1], [1.6, 9.1, 13.2, 14.3], [-0.3, 14.3, 13.2, 20.75]]) C.ajouterBoite(a, -b, c, -d, { y0: DALLE, y1: -0.01, joueur: false });
+    for (const [a, b, c, d] of DALLES_RDC) C.ajouterBoite(a, -b, c, -d, { y0: DALLE, y1: -0.01, joueur: false });
   }
 
   // =====================================================================
@@ -855,6 +871,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       // le ferme-porte à glissière, côté couloir : le rail et le boîtier, en haut de l'huisserie
       B(X_MUR - EP_MUR / 2 - 0.04, c - 0.45, X_MUR - EP_MUR / 2 - 0.01, c + 0.1, Y_SS + 2.09, Y_SS + 2.12, M.ferme, { ombre: false });
     }
+    // LA PORTE GRISE G du mur sud de l'aile (vidéo officielle, q_0135, q_0137-q_0139 : à droite du trombinoscope de
+    // 2021, oculus étroit cerclé de bois, ferme-porte côté salle) : fermée — ce qu'il y a derrière n'est pas vu
+    ch.porte('x', 6.425, 10.15, { l: 0.93, h: 2.04, ep: 0.15, base: Y_SS, modele: 'grise', etat: 'fermee', cote: 'S', nom: 'G (aile du -1)' });
   }
 
   // =====================================================================
@@ -1047,7 +1066,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       B(x - c / 2, y - c / 2, x + c / 2, y + c / 2, Y_SS, Y_SS + 0.62, mat, { collision: true });
       B(x - c / 2 + 0.03, y - c / 2 + 0.03, x + c / 2 - 0.03, y + c / 2 - 0.03, Y_SS + 0.62, Y_SS + 0.625, X.noir, { ombre: false });
     };
-    poubelle(10.2, 15.55, X.bleuPoubelle);
+    // (10/10 : collée au mur du sas — la porte de la grande salle, élargie à 1,40 m d'après la vidéo de 2021, passe à
+    // 18 cm d'elle ; on entre entre le fixe et la poubelle)
+    poubelle(10.26, 15.55, X.bleuPoubelle);
     for (const [y, h] of [[15.2, 1.45], [15.55, 1.5]]) panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#fbfbf8', Math.round(y * 10)), roughness: 0.7 }), 0.21, 0.297, 10.45, y, Y_SS + h, 'W');
     panneau(new THREE.MeshStandardMaterial({ map: texPersiennes(), roughness: 0.55 }), 0.6, 0.38, 10.45, 15.45, Y_SS + 2.08, 'W', 0.01);
     // ---- LE SAS DES TOILETTES : deux portes crème à plaque rouge (fermées), les casiers blancs dans la niche ----
@@ -1064,7 +1085,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     panneau(new THREE.MeshStandardMaterial({ map: texCasiers(), roughness: 0.6 }), 0.56, 0.88, 12.62, 13.25, Y_SS + 1.45, 'W', 0.001);
     poubelle(12.72, 13.25, X.grisPoubelle, 0.3);
     // ---- LE MUR VERT : la cloison vitrée dépolie et sa porte (x 3,9-5,5), les deux affiches encadrées, l'affiche
-    // bordeaux au QR, la porte vitrée à deux panneaux (x 9,0-10,0) et son affichette bleue ----
+    // bordeaux au QR ; la porte vitrée de l'est (x 8,85-10,25) est celle de la grande salle S -1.14 : js/ecole_amphi.js ----
     const cloison = (a, b, montants) => {
       const y = 15.8 - 0.035;
       B(a, y, b, 15.8, Y_SS, Y_SS + 0.05, X.creme, { ombre: false });
@@ -1080,9 +1101,6 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     cloison(3.9, 5.5, [3.93, 4.85, 5.47]);
     B(4.7, 15.72, 4.82, 15.74, Y_SS + 1.02, Y_SS + 1.05, M.inox, { ombre: false });
     maille(new THREE.CylinderGeometry(0.013, 0.013, 0.02, 10), M.inox, 4.76, Y_SS + 0.95, -15.73, 0, ch.decor, { ombre: false }).rotation.x = Math.PI / 2;
-    cloison(9.0, 10.0, [9.03, 9.5, 9.97]);
-    for (const x of [9.42, 9.58]) B(x - 0.006, 15.71, x + 0.006, 15.73, Y_SS + 0.8, Y_SS + 1.3, M.inox, { ombre: false });
-    panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#f7f8fb', 9), roughness: 0.6 }), 0.21, 0.297, 9.72, 15.75, Y_SS + 1.55, 'S', 0.002);
     for (const x of [6.45, 7.95]) {
       B(x - 0.235, 15.78, x + 0.235, 15.8, Y_SS + 1.48, Y_SS + 2.12, X.noir, { ombre: false });
       panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3a3a3a', '#ffffff', Math.round(x * 3)), roughness: 0.6 }), 0.44, 0.61, x, 15.78, Y_SS + 1.8, 'S', 0.001);
@@ -1090,16 +1108,30 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     panneau(new THREE.MeshStandardMaterial({ map: texBordeaux(), roughness: 0.6 }), 0.3, 0.42, 5.78, 15.8, Y_SS + 1.5, 'S', 0.01);
     // ---- L'AFFICHE « 100 % » sur le retour, à droite de l'entrée ----
     panneau(new THREE.MeshStandardMaterial({ map: texAffiche100(), roughness: 0.6 }), 0.42, 0.594, 3.35, 11.6, Y_SS + 1.5, 'N');
-    // ---- L'AILE (pas vue : imaginée) : le coin des micro-ondes, la fontaine, deux mange-debout ----
-    B(5.0, 7.0, 5.62, 9.0, Y_SS + 0.88, Y_SS + 0.92, X.tablette, { collision: true });
-    B(5.02, 7.02, 5.58, 8.98, Y_SS + 0.05, Y_SS + 0.88, X.blancMat);
-    B(5.06, 7.04, 5.56, 8.96, Y_SS, Y_SS + 0.05, X.plintheSalle, { ombre: false });
-    for (const y of [7.5, 8.45]) {
-      B(5.08, y - 0.24, 5.48, y + 0.24, Y_SS + 0.92, Y_SS + 1.2, X.microOndes);
-      B(5.481, y - 0.22, 5.483, y + 0.12, Y_SS + 0.95, Y_SS + 1.17, X.vitreNoire, { ombre: false });
+    // ---- L'AILE (Haythem ne l'a pas filmée en 2026 : la vidéo officielle de 2021, q_0088-q_0097, q_0137-q_0142, es/z_M,
+    // z_D) : contre son mur ouest vert, la TABLETTE HAUTE de stratifié gris (dessus à 1,05, 35 cm de profondeur, trois
+    // pieds d'acier fins), le micro-ondes NOIR à porte miroir puis le BLANC à porte noire, trois A4 au-dessus du bout sud
+    // (une mosaïque de photos, deux textes), une chaise filaire noire et un tabouret dessous ; deux mange-debout imaginés ----
+    B(5.0, 6.9, 5.35, 10.8, Y_SS + 1.02, Y_SS + 1.05, X.tablette, { collision: true });
+    B(5.0, 6.9, 5.35, 10.8, Y_SS + 1.015, Y_SS + 1.02, X.acierGris, { ombre: false });
+    for (const y of [7.0, 8.85, 10.7]) B(5.27, y - 0.015, 5.3, y + 0.015, Y_SS, Y_SS + 1.015, X.acierGris);
+    for (const [y, mat, porte] of [[9.25, X.caisse, X.chrome], [10.35, X.microOndes, X.vitreNoire]]) {
+      B(5.02, y - 0.24, 5.34, y + 0.24, Y_SS + 1.05, Y_SS + 1.33, mat);
+      B(5.34, y - 0.22, 5.343, y + 0.1, Y_SS + 1.08, Y_SS + 1.3, porte, { ombre: false });
+      B(5.34, y + 0.13, 5.342, y + 0.21, Y_SS + 1.12, Y_SS + 1.28, X.vitreNoire, { ombre: false });
     }
-    panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3e9b6b', '#fbfbf8', 77), roughness: 0.7 }), 0.21, 0.297, 5.0, 8.0, Y_SS + 1.6, 'E');
-    poubelle(5.2, 9.35, X.bleuPoubelle);
+    panneau(new THREE.MeshStandardMaterial({ map: texCadre(2), roughness: 0.6 }), 0.21, 0.297, 5.005, 7.35, Y_SS + 1.75, 'E');
+    panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3a3a3a', '#fbfbf8', 78), roughness: 0.7 }), 0.21, 0.297, 5.005, 7.7, Y_SS + 1.72, 'E');
+    panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3a3a3a', '#fbfbf8', 79), roughness: 0.7 }), 0.21, 0.297, 5.005, 8.0, Y_SS + 1.72, 'E');
+    tabouret(5.62, 9.0, -1, 0);
+    {
+      // (la chaise filaire noire : assise et dossier de fil, quatre pieds)
+      const g = new THREE.Group(); g.position.set(5.65, Y_SS, -7.55); g.rotation.y = -Math.PI / 2 + 0.2; ch.decor.add(g);
+      maille(boiteM(0.42, 0.012, 0.4), X.noir, 0, 0.46, 0, 0, g);
+      maille(boiteM(0.42, 0.34, 0.012), X.noir, 0, 0.66, 0.2, 0, g).rotation.x = -0.12;
+      for (const [px, pz] of [[-0.19, -0.18], [0.19, -0.18], [-0.19, 0.18], [0.19, 0.18]]) tube(g, X.noir, new THREE.Vector3(px, 0.46, pz), new THREE.Vector3(px * 1.1, 0, pz * 1.1), 0.008, 6);
+      C.ajouterCercle(5.65, -7.55, 0.24, { y0: Y_SS, y1: Y_SS + 0.85 });
+    }
     mangeDebout(6.6, 8.2, 'trepied'); autour(6.6, 8.2, 0.5, [0, 180]);
     mangeDebout(9.3, 7.4, 'trepied'); autour(9.3, 7.4, 0.5, [90, 270]);
     panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#7b2a6e', '#fbfbf8', 5), roughness: 0.7 }), 0.42, 0.594, 8.2, 6.5, Y_SS + 1.55, 'N');
@@ -1113,6 +1145,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   // =====================================================================
   construirePalier();                                        // (au niveau 0 : le décor du rez-de-chaussée)
   ch.decor = fixe; ch.portes.decor = groupe;
+  let amphi = null;
   try {
     construireEscalier();
     construireMurs();
@@ -1121,13 +1154,21 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     construirePortes();
     garnirHall();
     meublerPause();
+    // LA GRANDE SALLE S -1.14, derrière le mur vert (js/ecole_amphi.js, d'après la vidéo officielle de 2021 ; 10/10)
+    const solNiveau = (rects, mat, nom) => {
+      const m = new THREE.Mesh(geoSolNiveau(rects, Y_SS, R_SS), mat);
+      m.receiveShadow = true; m.castShadow = false; m.name = nom; m.userData.solSS = true; groupe.add(m);
+      return m;
+    };
+    amphi = poserAmphi(ch, { Y_SS, DALLE, H_RET, B, mur, plinthe, panneau, siege, solNiveau, lampes, X });
+    solsSS.push(...amphi.sols);
   } finally {
     ch.decor = decor0; ch.portes.decor = portes0;
   }
   // LA DALLE-BOÎTE (dans le décor du rez-de-chaussée) : sous le carrelage d'en haut, elle porte l'ombre du « soleil » sur
   // tout le -1 tant que Haythem n'y est pas (la trémie et le palier exceptés) ; invisible d'en haut comme d'en bas
   const dalleOmbre = new THREE.Group(); dalleOmbre.name = 'dalle du rez-de-chaussée (ombre)';
-  for (const [a, b, c, d] of [[-0.3, 2.8, 13.2, 9.1], [1.6, 9.1, 13.2, 14.3], [-0.3, 14.3, 13.2, 20.75]]) {
+  for (const [a, b, c, d] of DALLES_RDC) {
     const m = maille(boiteM(c - a, 0.26, d - b), M.beton, (a + c) / 2, -0.16, -(b + d) / 2, 0, dalleOmbre, { ombre: true, recoit: false });
     m.userData.horsAOSol = true;
   }
@@ -1146,7 +1187,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   const lm = cuireLumiereSol(proxy, aCuire, { x0: R_SS.x0, z0: -R_SS.y1, W, L: Lg }, { tpm: 16 });
   // (relecture du 09/10 : à 1,4 partout, la résine du hall et le carrelage beige sortaient presque blancs, aussi clairs
   // que les murs ; sur la vidéo, le sol est nettement plus sombre qu'eux — le couloir, lui, est bien gris foncé)
-  for (const m of solsSS) { m.lightMap = lm; m.lightMapIntensity = m === SOL.couloir ? 1.4 : m === SOL.hall ? 0.75 : 0.55; }
+  for (const m of solsSS) { m.lightMap = lm; m.lightMapIntensity = m.userData.lmi ?? (m === SOL.couloir ? 1.4 : m === SOL.hall ? 0.75 : 0.55); }
   groupe.traverse((o) => { o.userData.horsAOSol = true; });
   if (renderer) {
     try { cuireOcclusionNiveau(renderer, groupe, solsSS, Y_SS, R_SS); } catch (e) { console.warn('[sous-sol] ombre du sol non cuite :', e); }
@@ -1175,6 +1216,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     { id: 'hallSS', rects: [zr(0.4, ESC.yPied, 2.48, Y_FOND)], voisines: ['escalierSS', 'couloirSS'], env: env(1.45, 15.7) },
     { id: 'couloirSS', rects: [zr(1.45, Y_COUL0, 2.48, ESC.yPied)], voisines: ['hallSS'], env: env(1.96, 10.3, 1.5) },
     { id: 'pauseSS', rects: [zr(2.48, 11.6, 12.95, 15.85), zr(4.95, 6.45, 12.95, 11.6)], voisines: [], env: env(7.4, 12.2) },
+    amphi.zone,
   ];
 
   // =====================================================================
@@ -1186,7 +1228,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   // le mobilier du -1 porte la sienne. Reposé à chaque image : le cache de l'ombre du décor (js/ombre_cache.js) rallume
   // ce qu'il a éteint le temps d'un rendu.
   let bas = false, rdc = null;
-  const colonne = new THREE.Box3(new THREE.Vector3(-1.5, -4, -21.5), new THREE.Vector3(14.5, 12, -1.5));
+  // (10/10 : jusqu'au fond et au mur est de la grande salle S -1.14 — sous la salle David Clark et la cour, piège n° 12)
+  const colonne = new THREE.Box3(new THREE.Vector3(-1.5, -4, -27.0), new THREE.Vector3(16.6, 12, -1.5));
   const releverRDC = (jeu) => {
     const L = [], bb = new THREE.Box3(), etage = ch.scene.getObjectByName('1er étage');
     const sauter = new Set([groupe, etage, dalleOmbre, jeu.user && jeu.user.mesh].filter(Boolean));
@@ -1210,6 +1253,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     for (const o of rdc) o.castShadow = !bas;
     for (const o of dalles) o.castShadow = !bas;
     for (const o of ombrants) o.castShadow = bas;
+    amphi.maj(dt, jeu);
   };
   console.info('[sous-sol] %d sièges, %d lampes, %d ombrants, construit en %d ms', sieges.length, lampes.length, ombrants.length, Math.round(performance.now() - t0));
   return { zones, maj, groupe, solsRDC: [matPalier] };
