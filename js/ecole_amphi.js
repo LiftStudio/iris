@@ -50,9 +50,10 @@ const RANG1 = 23.55, PAS_RANG = 0.95, PROF_TABLE = 0.42;     // le chant avant d
 const ya = (k) => RANG1 - (k - 1) * PAS_RANG;                 // le chant avant (nord) de la table du rang k
 const X_ALLEE = 9.65;                                         // l'axe de l'allée (et de la porte)
 // la lumière des luminaires à grille : des tubes fluorescents d'un blanc chaud (la vidéo est orangée dans la salle,
-// d'un blanc neutre dans l'espace pause et ses LED) ; les blancs de la salle (murs, dalles) en prennent une teinte
-// tiède — le -1 passe les siens au froid (js/ecole_soussol.js plafondsSS), la salle garde les siens
-const CHAUD_AMPHI = new THREE.Color(0xffe2bc), TIEDE = new THREE.Color(1.0, 0.985, 0.955);
+// d'un blanc neutre dans l'espace pause et ses LED) ; les blancs de la salle (murs, dalles) sont ceux du -1 (relecture
+// du 10/10 : teintés « tièdes » en plus, ils sortaient plus orangés que la vidéo — mesuré sur f_0143, f_0228 : bleu sur
+// rouge 0,81 au mur contre 0,88 ; c'est la lumière qui chauffe, pas la peinture)
+const CHAUD_AMPHI = new THREE.Color(0xffe2bc);
 
 // =====================================================================
 //  LES TEXTURES (dessinées : la salle n'ajoute aucun fichier à charger)
@@ -68,14 +69,16 @@ function texSolSalle() {
   const W = TELEPHONE ? 256 : 512;
   return canvasTex(W, W, (g, w, h) => {
     const r2 = graine(1140), c = w / 2;
+    // (relecture du 10/10 : un gris un rien bleuté — sous la lumière chaude, l'ancien gris neutre sortait plus brun que
+    // la vidéo, f_0143 : bleu sur rouge 0,82 contre 0,87)
     for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) {
       const t = (r2() - 0.5) * 7;
-      g.fillStyle = rgb(116 + t, 116 + t, 118 + t); g.fillRect(a * c, b * c, c, c);
+      g.fillStyle = rgb(117 + t, 118 + t, 124 + t); g.fillRect(a * c, b * c, c, c);
     }
     // le moucheté : des grains sombres et clairs, serrés
     for (let k = 0; k < w * h / 9; k++) {
       const v = r2() < 0.5 ? 86 + r2() * 22 : 138 + r2() * 22;
-      g.fillStyle = rgb(v, v + 1, v + 3, 0.55); g.fillRect(r2() * w, r2() * h, 1 + r2() * 1.4, 1 + r2() * 1.4);
+      g.fillStyle = rgb(v, v + 2, v + 6, 0.55); g.fillRect(r2() * w, r2() * h, 1 + r2() * 1.4, 1 + r2() * 1.4);
     }
     // les joints : un filet à peine plus sombre
     g.fillStyle = 'rgba(70,70,74,0.18)';
@@ -215,17 +218,35 @@ function texEinstein() {
     for (let k = 0; k < 5000; k++) { const v = r2() * 255; g.fillStyle = rgb(v, v, v, 0.05); g.fillRect(r2() * w, r2() * h, 1, 1); }
   }, null, false, 4);
 }
-// LE 2e PORTRAIT (f_0150-f_0165, à gauche du tableau) : une photo noir et blanc, une silhouette claire en pied sur fond
-// sombre — on ne sait pas qui : une figure, sans visage lisible
+// LE 2e PORTRAIT (f_0150-f_0168, à gauche du tableau) : une photo noir et blanc aux gris doux — une figure claire,
+// floue, dressée au milieu, sur un fond sombre, une bande plus sombre en bas ; on ne sait pas qui (relecture du 10/10 :
+// la silhouette blanche nette sur fond noir se lisait comme le pictogramme des toilettes)
 function texPortrait2() {
   return canvasTex(160, 256, (g, w, h) => {
-    const r2 = graine(1956);
-    const f = g.createLinearGradient(0, 0, 0, h); f.addColorStop(0, '#2c2c2c'); f.addColorStop(1, '#161616');
+    const r2 = graine(1956), cx = w / 2;
+    const f = g.createLinearGradient(0, 0, 0, h); f.addColorStop(0, '#3a3a3a'); f.addColorStop(0.7, '#2a2a2a'); f.addColorStop(1, '#1c1c1c');
     g.fillStyle = f; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#bdbdbd';
-    g.beginPath(); g.ellipse(w / 2, h * 0.2, 13, 16, 0, 0, Math.PI * 2); g.fill();
-    g.beginPath(); g.moveTo(w / 2 - 26, h * 0.3); g.lineTo(w / 2 + 26, h * 0.3); g.lineTo(w / 2 + 22, h * 0.62); g.lineTo(w / 2 - 22, h * 0.62); g.fill();
-    g.fillStyle = '#a2a2a2'; g.fillRect(w / 2 - 20, h * 0.62, 16, h * 0.3); g.fillRect(w / 2 + 4, h * 0.62, 16, h * 0.3);
+    g.save(); g.filter = 'blur(7px)';
+    // la lueur du fond derrière la figure, la bande sombre du bas
+    const lu = g.createRadialGradient(cx, h * 0.38, 6, cx, h * 0.4, w * 0.62);
+    lu.addColorStop(0, 'rgba(120,120,120,0.85)'); lu.addColorStop(1, 'rgba(60,60,60,0)');
+    g.fillStyle = lu; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(22,22,22,0.85)'; g.fillRect(0, h * 0.78, w, h * 0.22);
+    // la figure : une masse claire irrégulière, la tête, les épaules, le buste qui s'efface vers le bas
+    const fig = g.createLinearGradient(0, h * 0.12, 0, h * 0.8);
+    fig.addColorStop(0, 'rgba(205,205,205,0.95)'); fig.addColorStop(0.55, 'rgba(175,175,175,0.9)'); fig.addColorStop(1, 'rgba(110,110,110,0.2)');
+    g.fillStyle = fig;
+    g.beginPath(); g.ellipse(cx + 2, h * 0.2, 17, 21, 0.08, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.moveTo(cx - 36, h * 0.36); g.quadraticCurveTo(cx, h * 0.27, cx + 38, h * 0.35);
+    g.lineTo(cx + 30, h * 0.8); g.lineTo(cx - 28, h * 0.8); g.closePath(); g.fill();
+    g.restore();
+    // des taches et des traits de gris (le modelé flou d'une vieille photo)
+    g.save(); g.filter = 'blur(2px)';
+    for (let k = 0; k < 60; k++) {
+      const v = 70 + r2() * 150, x = cx + (r2() - 0.5) * w * 0.7, y = h * (0.12 + r2() * 0.7);
+      g.fillStyle = rgb(v, v, v, 0.18); g.fillRect(x, y, 2 + r2() * 10, 2 + r2() * 14);
+    }
+    g.restore();
     for (let k = 0; k < 2500; k++) { const v = r2() * 255; g.fillStyle = rgb(v, v, v, 0.06); g.fillRect(r2() * w, r2() * h, 1, 1); }
   }, null, false, 2);
 }
@@ -267,7 +288,9 @@ export function poserAmphi(ch, K) {
   const Z = {
     hetre: std({ map: texHetre(), roughness: 0.46 }),
     voile: std({ map: texHetre(), color: 0xe8d8bc, roughness: 0.55 }),
-    coque: std({ color: 0xcfa23e, roughness: 0.4, side: THREE.DoubleSide }),
+    // (relecture du 10/10 : #cfa23e sortait orange vif sous la lumière chaude — au mur voisin, vert 0,70 et bleu 0,10
+    // contre 0,74-0,88 et 0,31-0,34 sur la vidéo, f_0082 et f_0228 ; un ocre moins saturé, qui sort jaune moutarde)
+    coque: std({ color: 0xd8ae58, roughness: 0.4, side: THREE.DoubleSide }),
     acier: std({ color: 0x1e1e1f, roughness: 0.5, metalness: 0.35 }),
     tableau: std({ color: 0xf6f6f2, roughness: 0.2 }),
     cadreAlu: std({ color: 0xbfc1c0, roughness: 0.35, metalness: 0.6 }),
@@ -280,11 +303,11 @@ export function poserAmphi(ch, K) {
     feutre: std({ color: 0x3e9b3a, roughness: 0.5 }),
   };
   Z.hetre.name = 'stratifié hêtre (S -1.14)'; Z.coque.name = 'coque jaune moutarde (S -1.14)';
-  for (const [k, m] of [['mur', M.blanc], ['dalles', M.dalles], ['platre', M.platre]]) {
-    Z[k] = m.clone(); Z[k].color.multiply(TIEDE); Z[k].name = m.name + ' (S -1.14, tiède)';
-  }
-  // (le rebond des plafonds, comme ceux du -1 : js/ecole_soussol.js plafondsSS)
-  Z.dalles.emissiveIntensity = Z.platre.emissiveIntensity = 0.3;
+  // les blancs : ceux du -1 (js/ecole_soussol.js plafondsSS les passe à son blanc neutre et au rebond de ses plafonds)
+  Z.mur = M.blanc; Z.dalles = M.dalles; Z.platre = M.platre;
+  // LE POTEAU : ses faces nord et sud un ton plus bas (f_0185, f_0200 : la lumière des luminaires vient de la salle, à
+  // l'est ; la face est sort blanche, les côtés gris — d'un seul blanc partout, il disparaissait sur le mur du fond)
+  Z.ombre = M.blanc.clone(); Z.ombre.color.setRGB(0.96 * 0.84, 0.99 * 0.84, 1.03 * 0.84); Z.ombre.name = 'peinture blanche (côté du poteau, S -1.14)';
   // LE SOL de la salle : à lui (une rugosité unique : l'optimisation du décor ne doit le confondre avec rien) ; la lumière
   // et l'ombre douce cuites du -1 (js/ecole_soussol.js) y sont posées par uv1, comme sur les autres sols du niveau
   const matSol = std({ map: texSolSalle(), roughness: 0.613 });
@@ -321,6 +344,7 @@ export function poserAmphi(ch, K) {
   for (const x of [9.2, 11.5]) b(x - 0.045, A.y1 - 0.045, x + 0.045, A.y1 - 0.03, 0.015, 0.085, X.blancMat, { ombre: false });
   // LE POTEAU carré (f_0188-f_0200) et le pilier au bout du vestibule (VO q_0105 : le radiateur « s'arrête à un pilier »)
   b(3.25, 17.5, 3.6, 17.85, 0, A.h + 0.01, Z.mur, { ombre: false, collision: true });
+  for (const [y0, y1] of [[17.495, 17.5], [17.85, 17.855]]) b(3.25, y0, 3.6, y1, 0, A.h, Z.ombre, { ombre: false });
   plinthe('x', 17.5, 3.25, 3.6, -1, Y_SS, P); plinthe('x', 17.85, 3.25, 3.6, 1, Y_SS, P);
   plinthe('y', 3.25, 17.5, 17.85, -1, Y_SS, P); plinthe('y', 3.6, 17.5, 17.85, 1, Y_SS, P);
   b(10.18, 17.62, A.xE, A.yE, 0, A.h + 0.01, Z.mur, { ombre: false, collision: true });
@@ -373,6 +397,9 @@ export function poserAmphi(ch, K) {
     // (le verre dépoli du -1, son dégradé calé sur la hauteur : une boîte a ses UV centrés, le bas reprenait le haut)
     const dep = X.depoli.clone(); dep.map = X.depoli.map.clone(); dep.map.offset.set(0, 0.5); dep.map.needsUpdate = true;
     dep.color.setRGB(0.76, 0.79, 0.84); dep.emissiveIntensity = 0.06;      // (f_0245 : de dedans, un gris bleuté, pas un blanc)
+    // (relecture du 10/10 : un dépoli, pas un panneau — VO f_0060, f_0078, q_0104 : au travers du fixe, de la pause, on
+    // devine le beige des tables et le jaune des fauteuils du dernier rang ; de dedans, f_0238, les mange-debout)
+    dep.transparent = true; dep.opacity = 0.8; dep.depthWrite = false; dep.name = 'verre dépoli (S -1.14, translucide)';
     const bati = (x0, x1, h0, h1) => {
       B(x0, yS - 0.015, x1, yM, h0, h1, X.creme, { ombre: false });
       B(x0, yM, x1, yN + 0.012, h0, h1, Z.bati, { ombre: false });
@@ -478,24 +505,37 @@ export function poserAmphi(ch, K) {
   // =====================================================================
   //  LES RANGS : tables filantes de hêtre, fauteuils coque jaune moutarde
   // =====================================================================
-  // UN FAUTEUIL (f_0082, f_0225) : coque de bois moulé, dossier galbé à bord supérieur creusé ; l'assise, rabattue, se
-  // dresse devant le dossier ; la console noire qui la porte sur la poutre du rang
+  // UN FAUTEUIL (f_0082, f_0215, f_0225, f_0228) : coque de bois moulé ; vu de face, le DOSSIER en écu, galbé, au bord
+  // supérieur creusé, et sous lui l'ASSISE relevée, plus étroite, percée d'une fente de préhension noire (relecture du
+  // 10/10 : l'assise remontait devant le dossier, deux rectangles d'une même largeur) ; la console noire qui la porte sur
+  // la poutre du rang
   const geoDos = (() => {
-    // (f_0225 : le haut du dossier dépasse nettement la table du rang ; un galbe de 6 cm, le bord creusé de 5 cm)
-    const R = 0.45, larg = 0.47, th = larg / R, haut = 0.44;
-    const g = new THREE.CylinderGeometry(R, R, haut, 10, 1, true, -th / 2, th);
+    // (f_0225 : le haut du dossier dépasse nettement la table du rang ; un galbe de 6 cm, le bord creusé de 5 cm, le bas
+    // resserré d'un cinquième)
+    const R = 0.45, larg = 0.48, th = larg / R, haut = 0.42;
+    const g = new THREE.CylinderGeometry(R, R, haut, 12, 1, true, -th / 2, th);
     const p = g.attributes.position;
-    for (let i = 0; i < p.count; i++) if (p.getY(i) > 0) { const u = p.getX(i) / (larg / 2); p.setY(i, p.getY(i) - 0.05 * (1 - u * u)); }
+    for (let i = 0; i < p.count; i++) {
+      const u = p.getX(i) / (larg / 2);
+      if (p.getY(i) > 0) p.setY(i, p.getY(i) - 0.05 * (1 - u * u));
+      else p.setX(i, p.getX(i) * 0.8);
+    }
     g.computeVertexNormals();
-    g.translate(0, 0.5 + haut / 2, -R);
+    g.translate(0, 0.53 + haut / 2, -R);
     return g;
   })();
-  const geoAssise = boiteM(0.42, 0.33, 0.02), geoPivot = boiteM(0.44, 0.035, 0.05), geoConsole = boiteM(0.04, 0.14, 0.035);
+  const geoAssise = (() => {
+    const g = boiteM(0.4, 0.3, 0.022), p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) if (p.getY(i) < 0) p.setX(i, p.getX(i) * 0.84);
+    return g;
+  })();
+  const geoFente = boiteM(0.12, 0.028, 0.004), geoPivot = boiteM(0.4, 0.035, 0.04), geoConsole = boiteM(0.04, 0.12, 0.035);
   const fauteuil = (x, yb) => {
     maille(geoDos, Z.coque, x, Y_SS, -yb, 0, ch.decor);
-    const a = maille(geoAssise, Z.coque, x, Y_SS + 0.62, -(yb + 0.11), 0, ch.decor); a.rotation.x = -0.16;
-    maille(geoPivot, Z.acier, x, Y_SS + 0.43, -(yb + 0.1), 0, ch.decor, { ombre: false });
-    maille(geoConsole, Z.acier, x, Y_SS + 0.46, -(yb + 0.03), 0, ch.decor, { ombre: false });
+    maille(geoAssise, Z.coque, x, Y_SS + 0.43, -(yb + 0.075), 0, ch.decor);
+    maille(geoFente, X.noir, x, Y_SS + 0.47, -(yb + 0.088), 0, ch.decor, { ombre: false });
+    maille(geoPivot, Z.acier, x, Y_SS + 0.3, -(yb + 0.04), 0, ch.decor, { ombre: false });
+    maille(geoConsole, Z.acier, x, Y_SS + 0.33, -(yb + 0.01), 0, ch.decor, { ombre: false });
   };
   let nSieges = 0;
   // UN RANG (le rang k, de xa à xb, n places) : la table au nord (plateau en tronçons de trois places, voile de fond,
@@ -515,10 +555,10 @@ export function poserAmphi(ch, K) {
       b(x - 0.025, yN - 0.26, x + 0.025, yN - 0.21, 0, 0.72, Z.acier);
       b(x - 0.06, yN - 0.33, x + 0.06, yN - 0.14, 0, 0.01, Z.acier, { ombre: false });
       b(x - 0.018, yN - 0.4, x + 0.018, yN - 0.05, 0.685, 0.72, Z.acier, { ombre: false });
-      b(x - 0.02, yb + 0.05, x + 0.02, yb + 0.09, 0, 0.36, Z.acier);
-      b(x - 0.05, yb + 0.02, x + 0.05, yb + 0.12, 0, 0.01, Z.acier, { ombre: false });
+      b(x - 0.02, yb + 0.005, x + 0.02, yb + 0.045, 0, 0.24, Z.acier);
+      b(x - 0.05, yb - 0.025, x + 0.05, yb + 0.075, 0, 0.01, Z.acier, { ombre: false });
     }
-    b(xa, yb + 0.05, xb, yb + 0.09, 0.36, 0.4, Z.acier);
+    b(xa, yb + 0.005, xb, yb + 0.045, 0.24, 0.28, Z.acier);
     for (let i = 0; i < n; i++) {
       const x = xa + (i + 0.5) * p;
       fauteuil(x, yb);
@@ -534,6 +574,9 @@ export function poserAmphi(ch, K) {
   rang(7, 3.72, 9.0, 8, [2.95, X_ALLEE]);
   rang(8, 5.6, 9.0, 5, [5.2, X_ALLEE]);
   for (let k = 1; k <= 6; k++) rang(k, A.xE, 14.5, 7, [X_ALLEE, 14.85]);
+  // LA LISSE MURALE derrière le dernier rang (f_0215, f_0228 : une barre claire sur le mur du fond, à mi-hauteur des
+  // dossiers, qui déborde le rang à ses deux bouts ; relecture du 10/10)
+  b(5.35, A.y0, 8.78, A.y0 + 0.04, 0.7, 0.76, Z.voile);
   // LA CHAISE SEULE près du meuble multimédia (f_0165-f_0175) : la même coque, sur quatre pieds noirs, l'assise baissée
   {
     const x = 4.32, y = 25.02, g = new THREE.Group(); g.position.set(x, Y_SS, -y); g.rotation.y = Math.PI + 0.35; ch.decor.add(g);
@@ -551,7 +594,10 @@ export function poserAmphi(ch, K) {
   // [x0, z0, x1, z1, hauteur mini, hauteur MAXI] : comme les autres pièces du -1, des pieds sous -1,5 m seulement ; elle
   // s'ouvre sur l'espace pause par sa porte
   const zr = (x0, y0, x1, y1) => [x0, -y1, x1, -y0, -10, -1.5];
-  const zone = { id: 'salleSS', rects: [zr(A.x0 - 0.05, 15.9, A.xE, A.y1 + 0.05), zr(A.xE, A.yE, A.x1 + 0.05, A.y1 + 0.05)], voisines: ['pauseSS'],
+  // (relecture du 10/10 : PAS de voisine — les spots ne portent pas d'ombre ; voisine de l'espace pause, la salle prêtait
+  // ses luminaires au vestibule et aux mange-debout au travers du mur vert, et la pause les siens au dernier rang. Les
+  // deux pièces ne s'ouvrent que par une porte, comme la pause et le hall du -1)
+  const zone = { id: 'salleSS', rects: [zr(A.x0 - 0.05, 15.9, A.xE, A.y1 + 0.05), zr(A.xE, A.yE, A.x1 + 0.05, A.y1 + 0.05)], voisines: [],
     env: { x: X_ALLEE, y: Y_SS + 1.6, z: -20.6 } };
 
   // LE FILET DE SÉCURITÉ du joueur (js/player.js bounds) : la carte le borne à z -25 (le fond de la salle David Clark) ;
@@ -560,7 +606,8 @@ export function poserAmphi(ch, K) {
   const maj = (dt, jeu) => {
     if (borne) return;
     const Bo = jeu.user && jeu.user.bounds;
-    if (Bo && Bo.zMin > -(A.y1 + 0.5)) Bo.zMin = -(A.y1 + 0.5);
+    if (!Bo) return;
+    if (Bo.zMin > -(A.y1 + 0.5)) Bo.zMin = -(A.y1 + 0.5);
     borne = true;
   };
   console.info('[sous-sol] salle S -1.14 : %d places', nSieges);
