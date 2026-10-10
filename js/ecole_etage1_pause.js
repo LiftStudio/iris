@@ -706,7 +706,9 @@ export function poserPause1(ch, ctx) {
   // (relecture 10/10 : rien devant le mur du fond — VO f_49,2 s, le sol nu jusqu'à la porte ; quatre mange-debout, le
   // passage vers la Si 1.4 n'en laisse pas loger un cinquième)
   for (const [x, y] of [[12.75, 9.35], [12.8, 10.9], [9.6, 8.15], [11.1, 9.5]]) mangeDebout(x, y);
-  miura(13.2, 9.45, 'W', [13.2, 10.05]); miura(12.85, 11.45, 'S', [12.4, 11.75]); miura(9.05, 8.1, 'E', [8.9, 7.55]);
+  // (vérification du 10/10 : le premier recule de 8 cm — le vantail de la porte du palier est rabattu contre le mur est,
+  // js/ecole_est.js)
+  miura(13.12, 9.5, 'W', [13.12, 10.1]); miura(12.85, 11.45, 'S', [12.4, 11.75]); miura(9.05, 8.1, 'E', [8.9, 7.55]);
   miura(12.35, 9.85, 'E', [12.35, 10.4]); miura(12.8, 10.35, 'N', [12.4, 10.4]);
   coque(10.2, 8.5, 'W', P.coqueOrange, [10.2, 7.8]); coque(10.5, 9.05, 'W', P.coqueMenthe, [10.95, 8.75]);
   // (la lime contre le muret court, entre la niche et le 1er poteau)
@@ -810,9 +812,9 @@ export function poserPause1(ch, ctx) {
     C.ajouterBoite(2.3, -0.75, 3.0, -2.15, { y0: N1, y1: N1 + 0.76 });
     ordinateur(2.75, 1.45, 'E', 3);
     B(2.4, 1.9, 2.6, 2.1, N1 + 0.745, N1 + 1.17, M.noirMat);
-    // (vérification du 10/10 : la sortie à 30 cm du mur ouest — en x 2,0, Haythem n'y tenait pas, le siège n'était pas
-    // proposé depuis elle)
-    fauteuil(2.0, 1.45, 'E', { sortie: [2.1, 2.55], nom: 'le fauteuil du professeur' });
+    // (vérification du 10/10 : la sortie à 39 cm du mur ouest, à 0,95 m du siège — en x 2,0, Haythem n'y tenait pas, le
+    // siège n'était pas proposé depuis elle)
+    fauteuil(2.0, 1.45, 'E', { sortie: [2.1, 2.4], nom: 'le fauteuil du professeur' });
   }
   // LES TABLES DOUBLES (1,20 x 0,50, hêtre clair, piétement anthracite à patin) et leurs chaises de hêtre percé, face à
   // l'ouest : deux blocs de deux tables par rang, l'allée centrale de 80 cm ; cinq rangs entiers, puis les tables du bloc
