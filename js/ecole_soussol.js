@@ -107,11 +107,11 @@ const Y_FOND = 17.3 + DY_SS;              // le nu du mur du fond du hall du -1 
 // le nu du mur du fond (sud) du couloir : 5,3 avant le décalage, et non plus 6,4 (soussol.md § 2.3 : sur v_047, v_048,
 // v_050, v_051, la plinthe du fond mesure 133 à 155 px, soit 7,1 à 8,3 m de la caméra) — le couloir fait 8,9 m
 const Y_COUL0 = 5.3 + DY_SS;              // 1,21
-// l'extincteur du hall (mur ouest), plus bas et plus petit qu'avant (garnirHall). Sa place : le plan V2 le met en y 12,21
-// (16,3 avant le décalage), d'après sa taille sur v_035, lue pour un corps de 0,45 m ; mais ce corps n'en fait que 0,30,
-// et la planche de contrôle v_010 — la pose recalée sur les 16 nez — le montre au même rang d'image que le pied du mur
-// du fond, sous la retombée : en y 12,21, il passait DERRIÈRE elle. Sur v_010, son corps (rangs 1 065-1 110, colonnes
-// 365-390) tombe en y 11,0 ; sur v_035, à 0,30 m pour 115 px, en y ≈ 11,5 (vérifié au jeu, 11/10)
+// l'extincteur du hall (mur ouest), plus bas et plus trapu qu'avant (garnirHall). Sa place : le plan V2 le met en
+// y 12,21 (16,3 avant le décalage), d'après sa taille sur v_035, lue pour un corps de 0,45 m ; mais ce corps est plus
+// court, et la planche de contrôle v_010 — la pose recalée sur les 16 nez — le montre au même rang d'image que le pied
+// du mur du fond, sous la retombée : en y 12,21, il passait DERRIÈRE elle. Sur v_010, son corps (rangs 1 065-1 110,
+// colonnes 365-390) tombe en y 11,0 ; sur v_035, pour un corps de 0,30 à 0,36, en y 11,3-11,7 (vérifié au jeu, 11/10)
 const Y_EXT = 11.0;
 // le rectangle du sol cuit du -1 (lumière et ombre cuites, uv1 de 0 à 1, v = 1 au nord) ; du fond du couloir au fond de
 // la grande salle S -1.14 (y 21,41) et à l'est jusqu'au passage sombre (plan V2)
@@ -952,17 +952,17 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   function garnirHall() {
     // L'EXTINCTEUR (v_027 à v_037), son pictogramme au-dessus
     // (plan V2, soussol.md § 2.2 : plus bas — le corps à partir de 0,9 m, le pictogramme à 1,65 ; à 1,13 et 1,85, au
-    // ras de la volée, il emplissait le premier plan. Et PETIT : sur v_010 et v_035, rejoués au jeu, un corps de 0,46 m
-    // sortait deux fois trop grand à la place où l'image le met ; sur v_035, net, il est trapu, d'un diamètre de la
-    // moitié de sa hauteur — un modèle de 2 kg : corps de 0,30, Ø 0,13)
+    // ras de la volée, il emplissait le premier plan. Et TRAPU : sur v_010 et v_035, rejoués au jeu, un corps de 0,46 m
+    // sortait deux fois trop grand à la place où l'image le met ; sur v_035, net, son diamètre fait la moitié de sa
+    // hauteur — celui du hall ouest, sur la photo r01, a la même allure : un corps de 0,36 sur une porte de 2,04, Ø 0,16)
     const ex = new THREE.Group(); ex.position.set(0.5, Y_SS, -Y_EXT); ch.decor.add(ex);
-    maille(new THREE.CylinderGeometry(0.065, 0.065, 0.30, 18), X.rouge, 0, 1.05, 0, 0, ex);
-    maille(new THREE.SphereGeometry(0.065, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), X.rouge, 0, 1.20, 0, 0, ex);
-    maille(new THREE.CylinderGeometry(0.025, 0.025, 0.07, 10), X.noir, 0, 1.29, 0, 0, ex);
-    B(0.535, Y_EXT - 0.025, 0.58, Y_EXT + 0.025, Y_SS + 1.26, Y_SS + 1.32, X.noir);
-    tube(ch.decor, X.noir, P3(0.58, Y_SS + 1.29, Y_EXT), P3(0.58, Y_SS + 0.95, Y_EXT + 0.04), 0.01, 8);
-    panneau(new THREE.MeshStandardMaterial({ color: 0xf6f6f2, roughness: 0.6 }), 0.08, 0.12, 0.5 + 0.066, Y_EXT, Y_SS + 1.03, 'E', 0.001);
-    C.ajouterCercle(0.51, -Y_EXT, 0.08, { y0: Y_SS + 0.8, y1: Y_SS + 1.36 });
+    maille(new THREE.CylinderGeometry(0.08, 0.08, 0.36, 18), X.rouge, 0, 1.08, 0, 0, ex);
+    maille(new THREE.SphereGeometry(0.08, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), X.rouge, 0, 1.26, 0, 0, ex);
+    maille(new THREE.CylinderGeometry(0.028, 0.028, 0.08, 10), X.noir, 0, 1.37, 0, 0, ex);
+    B(0.55, Y_EXT - 0.028, 0.6, Y_EXT + 0.028, Y_SS + 1.34, Y_SS + 1.41, X.noir);
+    tube(ch.decor, X.noir, P3(0.6, Y_SS + 1.37, Y_EXT), P3(0.6, Y_SS + 0.95, Y_EXT + 0.05), 0.011, 8);
+    panneau(new THREE.MeshStandardMaterial({ color: 0xf6f6f2, roughness: 0.6 }), 0.09, 0.14, 0.5 + 0.081, Y_EXT, Y_SS + 1.06, 'E', 0.001);
+    C.ajouterCercle(0.51, -Y_EXT, 0.09, { y0: Y_SS + 0.8, y1: Y_SS + 1.45 });
     panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.15, 0.15, 0.4, Y_EXT, Y_SS + 1.65, 'E');
     // LA CONSIGNE vert pâle sous son protège-document, l'interrupteur dessous (mur est, v_037 à v_039)
     panneau(new THREE.MeshStandardMaterial({ map: texConsigneVerte(), roughness: 0.3 }), 0.15, 0.35, X_MUR - EP_MUR / 2, Y_FOND - 0.45, Y_SS + 1.85, 'W', 0.006);
