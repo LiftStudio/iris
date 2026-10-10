@@ -915,12 +915,12 @@ export function poserEtage2(ch, renderer = null) {
     fente(6.75, 7.95, 9.4); fente(10.55, 11.75, 9.4);
     // LE MUR OUEST, du sud au nord (VO q_0313 projetée sur le mur, faisceau e2x/bundle2.py) : le poteau de l'angle
     // sud-ouest, l'extincteur et ses deux pictogrammes (rouge à 1,8 m, rouge et bleu à 1,35 m) et le haut-parleur au-dessus,
-    // puis le tableau blanc en trois panneaux (VO : 1,0 + 2,07 + 1,1 m, de y 7,23 à 11,4 ; de 0,95 à 1,95 m), à 0,2 m de
-    // l'angle nord-ouest ; le vidéoprojecteur à 1,5 m du mur
-    // (plan V2 : tableau centré en y ≈ 9,1 sur le mur raccourci — ici 9,15, pour laisser l'extincteur à son sud, comme sur
-    // la VO, entre le poteau et le tableau)
-    tableau(X_S1 + EP / 2, 9.15, 'E', [1.0, 2.0, 1.0], 0.95, 1.95);
-    projecteur(X_S1 + 1.55, 9.15, 'W');
+    // puis le tableau blanc en trois panneaux (VO : 1,0 + 2,07 + 1,1 m, de y 7,23 à 11,4 ; de 0,95 à 1,95 m), presque
+    // contre l'angle nord-ouest ; le vidéoprojecteur à 1,5 m du mur
+    // (plan V2 : tableau centré en y ≈ 9,1 sur le mur raccourci — ici 9,25, de 7,20 à 11,30 : q_0313 projetée sur le mur le
+    // met de 7,23 à 11,4, l'extincteur à son sud, entre le poteau et le tableau, et son bout nord à 0,05 m de l'angle)
+    tableau(X_S1 + EP / 2, 9.25, 'E', [1.0, 2.05, 1.05], 0.95, 1.95);
+    projecteur(X_S1 + 1.55, 9.25, 'W');
     hautParleur(X_S1 + EP / 2, 7.06, 'E');
     B(X_S1 + EP / 2, Y_COUR + EP / 2, X_S1 + 0.36, 6.95, N2, H_SALLE, B0, { ombre: false, collision: true });
     plinthe(X_S1 + 0.36, Y_COUR + EP / 2 + 0.015, X_S1 + 0.375, 6.95, PS); plinthe(X_S1 + EP / 2, 6.95, X_S1 + 0.375, 6.965, PS);
@@ -947,13 +947,13 @@ export function poserEtage2(ch, renderer = null) {
     // LES TABLES DES ÉLÈVES : cinq rangées nord-sud (les élèves regardent l'ouest), trois tables de 1,15 m bout à bout de
     // y 7,80 à 11,25 (l'allée de la porte au sud), deux chaises par table ; passe-câbles au bord ouest, quelques multiprises
     // (plan V2, etage2.md § 2 : rangées au pas de 1,45 — VO 1,39-1,45, q_0309 —, 2,0 m entre le tableau et la 1re ; les
-    // chaises rentrées à 0,40 m de l'axe des tables et leur forme resserrée sous l'assise : 0,62 m libres derrière les
+    // chaises rentrées à 0,40 m de l'axe des tables et leur forme resserrée sous l'assise : 0,63 m libres derrière les
     // dossiers, Haythem passe entre deux rangées et s'assied aux 30 places)
     let n = 0;
     for (const xr of [5.95, 7.40, 8.85, 10.30, 11.75]) {
       for (const yc of [8.375, 9.525, 10.675]) {
         table(xr, yc, 0.6, 1.15, { pied: X.marine, passe: 'W', multi: (n % 5) === 2 });
-        for (const s of [-1, 1]) chaiseLuge(xr + 0.4, yc + s * 0.29, 'W', { coque: X.coque1, pied: X.noir, sortie: [xr + 0.85, yc + s * 0.29], rc: 0.16, dc: 0.03 });
+        for (const s of [-1, 1]) chaiseLuge(xr + 0.4, yc + s * 0.29, 'W', { coque: X.coque1, pied: X.noir, sortie: [xr + 0.835, yc + s * 0.29], rc: 0.15, dc: 0.03 });
         n++;
       }
     }
