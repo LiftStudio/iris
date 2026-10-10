@@ -62,6 +62,7 @@ import { poserSousSol } from './ecole_soussol.js';
 import { poserEst } from './ecole_est.js';
 import { poserSousSolEst } from './ecole_soussol_est.js';
 import { poserRdcCentre } from './ecole_rdc_centre.js';
+import { poserHall } from './ecole_hall.js';
 
 // ---- les hauteurs ----
 const H_DALLE = 3.25;            // le dessous de la dalle du 1er étage (les cloisons montent jusque-là)
@@ -774,8 +775,7 @@ function construirePorteFond(ch) {
 // de la façade mais NORD-SUD, face à l'ouest (x 16,45-17,15, y 1,1-3,55), terminé au nord par la tablette PMR et le
 // pupitre de chêne grisé ; derrière lui l'open-space du personnel, le mitoyen gris ardoise et ses affiches ; l'angle
 // nord-est ouvert (photocopieur, étiquettes « INFORMATIQUE », table, présentoir de bois) ; les lignes lumineuses du
-// plafond : js/ecole_hall.js. (Importé ici, à côté de son appel : l'en-tête des imports est celui des autres lots.)
-import { poserHall } from './ecole_hall.js';
+// plafond : js/ecole_hall.js.
 function construireAccueil(ch) {
   const { M } = ch;
   poserHall(ch);
