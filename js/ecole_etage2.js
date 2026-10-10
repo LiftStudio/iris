@@ -54,7 +54,7 @@ import { canvasTex, nePasFusionner, detailPhoto } from './kit_decor.js';
 import { jourDehors, texPeinture, texPictoExtincteur, texConsignes } from './ecole_matieres.js';
 import { cuireLumiereSol } from './ecole_lumieres.js';
 import { TELEPHONE } from './appareil.js';
-import { EST, poserCageHaute } from './ecole_est.js';
+import { EST, ROUGE_2E, poserCageHaute } from './ecole_est.js';
 
 // ---- les hauteurs ----
 const N2 = 6.6;                     // le plancher du 2e
@@ -73,7 +73,8 @@ const X_S1 = 4.84, X_S1E = 13.01;               // la salle 1 (nus 4,90 et 12,95
 const Y_ARR = 12.45, EP_ARR = 0.3;              // la façade arrière (nu intérieur 12,30)
 const X_S2 = 9.9, X_S2E = 18.21;                // la salle 2 (nus 9,96 et 18,15)
 const Y_PAL = 7.9;                  // le mur sud du palier (nu côté palier 7,96)
-const X_SAS0 = 13.94, X_SAS1 = 15.56;           // les murs du sas (nus 14,00 et 15,50)
+const X_SAS0 = 13.66, X_SAS1 = 15.56;           // les murs du sas (nus 13,72 et 15,50 ; relecture du 10/10, 88,0-88,7 s :
+                                                // le mur ouest est à 0,55 m de la porte, la plaque noire carrée entre eux)
 const X_ASC = 17.96, Y_VEST = 6.94;             // le vestibule de l'ascenseur : son mur du fond (nu 17,90), son mur sud
 const X_PAN = 14.15;                // le mur du panneau (face est 14,225, comme au 1er)
 const Y_FEN = 11.45;                // le milieu de la fenêtre du palier, dans le mur du panneau (VO q_0285-0287)
@@ -423,8 +424,9 @@ export function poserEtage2(ch, renderer = null) {
   // ---- les matières du 2e ----
   const std = (o, nom) => { const m = new THREE.MeshStandardMaterial(o); if (nom) m.name = nom; return m; };
   const X = {
-    // (le rouge vermillon du couloir : VO brut #c24e35-#e5654c, rééquilibré sur le blanc voisin, etage2.md § 4)
-    rouge: std({ map: texPeinture(0xd0502c, 4), roughness: 0.6 }, 'peinture rouge vermillon (couloir du 2e)'),
+    // (le rouge vermillon du couloir : VO brut #c24e35-#e5654c, rééquilibré sur le blanc voisin, etage2.md § 4 ; relecture
+    // du 10/10 : son albédo relevé côte à côte avec q_0340, js/ecole_est.js ROUGE_2E)
+    rouge: std({ map: texPeinture(ROUGE_2E, 4), roughness: 0.6 }, 'peinture rouge vermillon (couloir du 2e)'),
     // (les sols : une rugosité à eux — l'optimisation du décor ne doit pas les confondre, ils ont leur lumière cuite)
     // (10/10, côte à côte avec q_0299 : #9a8a7a sortait rose pâle sous les spots chauds — un taupe plus sombre et plus gris)
     lino: std({ map: texMouchete({ fond: [128, 117, 106], taches: [[[160, 150, 138], 0.7], [[88, 80, 71], 0.75], [[112, 102, 92], 0.6]], n: 8000, graineN: 23 }), roughness: 0.401 }, 'lino taupe du 2e'),
@@ -440,6 +442,8 @@ export function poserEtage2(ch, renderer = null) {
     plinthePal: std({ color: 0x5b544d, roughness: 0.5 }, 'plinthe gris foncé (palier du 2e)'),
     plintheSalle: std({ color: 0x3e3d3c, roughness: 0.5 }, 'plinthe des salles du 2e'),
     taupe: std({ color: 0xa39d94, roughness: 0.45 }, 'vantail gris taupe (2e)'),
+    // (relecture du 10/10 : le vantail de la porte coupe-feu, gris clair à peine chaud sur la vidéo, 88,3 s : #b9b3ac)
+    grisCF: std({ color: 0xaaa9a6, roughness: 0.45 }, 'vantail gris clair (coupe-feu du 2e)'),
     boisBrun: std({ color: 0x6e4a2c, roughness: 0.5 }, 'huisserie de bois brun'),
     hetre: std({ map: texHetre(), roughness: 0.42 }, 'stratifié hêtre (tables du 2e)'),
     coque1: std({ color: 0xc89a5c, roughness: 0.5 }, 'coque de hêtre (salle 1)'),
@@ -467,6 +471,9 @@ export function poserEtage2(ch, renderer = null) {
   const matPan = (tex, rugo = 0.45) => new THREE.MeshStandardMaterial({ map: tex, roughness: rugo });
   // le verre dépoli des portes des salles et de l'imposte (celui des jours de souffrance du rez-de-chaussée, vu des deux côtés)
   const depoli = M.depoli.clone(); depoli.side = THREE.DoubleSide; depoli.name = 'verre dépoli (portes du 2e)';
+  // (relecture du 10/10, q_0315-0318 : le verre de la porte D1 est gris vert, plus sombre que l'enduit — #819391 — ; le
+  // menthe clair du rez-de-chaussée en faisait une porte blanche pleine)
+  depoli.color.setHex(0xa4b8b0); depoli.emissive.setHex(0x86998f); depoli.emissiveIntensity = 0.12;
   // la tuile des étages de la façade sur rue, posée sur la façade arrière en UV du monde : recalée sur les planchers
   const etageArr = M.etage.clone(), tEt = M.etage.map.clone(); tEt.offset.set(0, -3.5 / 3.1); tEt.needsUpdate = true;
   etageArr.map = tEt; etageArr.emissiveMap = tEt; etageArr.name = 'étages de la façade arrière';
@@ -616,17 +623,35 @@ export function poserEtage2(ch, renderer = null) {
     // s'ouvre vers le palier (on la tire du palier, on la pousse du couloir) — bâton inox, oculus étroit cerclé de bois côté
     // serrure (ouest), étiquette rouge, ferme-porte côté sas, une feuille A4 côté couloir ; l'huisserie de bois brun
     // moulurée ; le bloc de sortie au-dessus, des deux côtés
-    ch.porte('x', Y_PAL, 14.75, { l: 0.95, h: 2.04, base: N2, ep: EP, modele: 'grise', etat: 'auto', cote: 'N', charniere: 'd', libre: -1,
-      oculus: { bas: 0.85, haut: 1.85, l: 0.12, bord: 0.2 }, poignee: 'tirant', feu: true, notices: 1, huisserie: false, matVantail: X.taupe, nom: 'coupe-feu du 2e' });
-    for (const s of [1, -1]) {
-      const v0 = s * (EP / 2), v1 = s * (EP / 2 + 0.02), ya = Y_PAL + Math.min(v0, v1), yb = Y_PAL + Math.max(v0, v1);
-      B(14.275 - 0.08, ya, 14.275, yb, N2, N2 + 2.12, X.boisBrun, { ombre: false });
-      B(15.225, ya, 15.225 + 0.08, yb, N2, N2 + 2.12, X.boisBrun, { ombre: false });
-      B(14.275 - 0.08, ya, 15.225 + 0.08, yb, N2 + 2.04, N2 + 2.12, X.boisBrun, { ombre: false });
+    // (relecture du 10/10, 88,0-88,7 s à 25 i/s, contraste poussé : CÔTÉ SAS, ni huisserie de bois ni étiquette rouge ni
+    // bâton — le vantail gris clair affleure dans l'enduit blanc, une béquille inox sous l'oculus ; le bâton, l'étiquette
+    // et le bois sont côté palier seulement. Le gris taupe sortait brun sous les spots chauds : un gris plus froid)
+    const P = ch.porte('x', Y_PAL, 14.75, { l: 0.95, h: 2.04, base: N2, ep: EP, modele: 'grise', etat: 'auto', cote: 'N', charniere: 'd', libre: -1,
+      oculus: { bas: 0.85, haut: 1.85, l: 0.12, bord: 0.2 }, poignee: null, feu: false, notices: 1, huisserie: false, matVantail: X.grisCF, nom: 'coupe-feu du 2e' });
+    // (dans le repère du vantail : les gonds en x = 0, le vantail vers s ; +z côté sas, -z côté palier)
+    for (const v of P.vantaux) {
+      const sv = v.s, w = 0.95, e = 0.04, o = { ombre: false };
+      maille(boiteM(0.05, 0.16, 0.012), M.inox, sv * (w - 0.07), 1.02, e / 2 + 0.006, 0, v.g, o);
+      maille(boiteM(0.13, 0.02, 0.02), M.inox, sv * (w - 0.12), 1.06, e / 2 + 0.05, 0, v.g, o);
+      maille(boiteM(0.02, 0.02, 0.05), M.inox, sv * (w - 0.07), 1.06, e / 2 + 0.025, 0, v.g, o);
+      maille(new THREE.CylinderGeometry(0.012, 0.012, 0.3, 10), M.inox, sv * (w - 0.08), 1.05, -(e / 2 + 0.045), 0, v.g, o);
+      for (const dy of [-0.12, 0.12]) maille(boiteM(0.018, 0.018, 0.045), M.inox, sv * (w - 0.08), 1.05 + dy, -(e / 2 + 0.022), 0, v.g, o);
+      maille(boiteM(0.12, 0.04, 0.004), M.rougeEtiquette, sv * (w - 0.18), 2.04 - 0.12, -(e / 2 + 0.003), 0, v.g, o);
     }
-    for (const x of [14.255, 15.245]) B(x - 0.02, Y_PAL - EP / 2, x + 0.02, Y_PAL + EP / 2, N2, N2 + 2.06, X.boisBrun, { ombre: false });
+    // l'huisserie de bois côté palier (montants et traverse de 8 cm) ; les tableaux de l'ouverture, de bois côté palier,
+    // blancs côté sas (à 3 mm dans le jour : ils ne se battent plus avec les tranches du mur)
+    const ya = Y_PAL + EP / 2, yb = ya + 0.02;
+    B(14.275 - 0.08, ya, 14.275, yb, N2, N2 + 2.12, X.boisBrun, { ombre: false });
+    B(15.225, ya, 15.225 + 0.08, yb, N2, N2 + 2.12, X.boisBrun, { ombre: false });
+    B(14.275 - 0.08, ya, 15.225 + 0.08, yb, N2 + 2.04, N2 + 2.12, X.boisBrun, { ombre: false });
+    for (const [x0, x1] of [[14.235, 14.278], [15.222, 15.265]]) {
+      B(x0, Y_PAL, x1, Y_PAL + EP / 2, N2, N2 + 2.06, X.boisBrun, { ombre: false });
+      B(x0, Y_PAL - EP / 2, x1, Y_PAL, N2, N2 + 2.06, M.blanc, { ombre: false });
+    }
+    // les blocs de sortie : au-dessus de la porte côté palier ; côté couloir, sur le linteau de l'entrée du sas (VO 88,0 s :
+    // haut, au ras du plafond, au-dessus de l'ouverture — rien au-dessus de la porte côté sas)
     ch.sortie(14.75, Y_PAL + EP / 2 + 0.035, N2 + 2.3, 'N');
-    ch.sortie(14.75, Y_PAL - EP / 2 - 0.035, N2 + 2.2, 'S');
+    ch.sortie((X_SAS0 + X_SAS1) / 2, Y_COUR - EP / 2 - 0.035, N2 + 2.44, 'S');
     // la plaque verte à l'est de la porte, côté palier (VO 72,6 s) ; la plaque noire carrée à l'ouest, côté sas (88,3 s)
     panneau(matPan(texPlaqueVerte(), 0.5), 0.2, 0.35, 15.55, Y_PAL + EP / 2 + 0.003, N2 + 1.5, 'N');
     B(14.07, Y_PAL - EP / 2 - 0.006, 14.19, Y_PAL - EP / 2, N2 + 1.5, N2 + 1.62, M.noirMat, { ombre: false });
@@ -654,15 +679,24 @@ export function poserEtage2(ch, renderer = null) {
     mur({ de: [X_SAS1, Y_COUR], a: [X_SAS1, Y_PAL - EP / 2], mats: B0, plinthes: [['W', P]] });
     // (entre le sas et le vestibule, un massif plein : une gaine)
     B(X_SAS1 + EP / 2, Y_COUR, E.x0, Y_PAL - EP / 2, N2, DALLE3, B0, { ombre: false });
-    ch.plafond(14.0, Y_COUR - EP / 2, 15.5, Y_PAL - EP / 2, H_SAS, 'platre');
+    const xs0 = X_SAS0 + EP / 2, xs1 = X_SAS1 - EP / 2;
+    ch.plafond(xs0, Y_COUR - EP / 2, xs1, Y_PAL - EP / 2, H_SAS, 'platre');
     // la retombée côté porte (2,30 m)
-    B(14.0, Y_PAL - EP / 2 - 0.22, 15.5, Y_PAL - EP / 2, H_RET, H_SAS, B0, { ombre: false });
+    B(xs0, Y_PAL - EP / 2 - 0.22, xs1, Y_PAL - EP / 2, H_RET, H_SAS, B0, { ombre: false });
     spot(14.75, 7.15, H_SAS, 'e2sas');
     // le grand cadre noir du mur est (plan d'évacuation sous verre, 0,6 x 1,1 m, de 1,0 à 2,1 m) ; le disque blanc au
     // plafond (détecteur)
     B(15.5 - 0.025, 6.75, 15.5, 7.4, N2 + 1.0, N2 + 2.1, M.noirMat, { ombre: false });
     panneau(matPan(texPlanEvacuation(), 0.12), 0.55, 1.0, 15.5 - 0.027, 7.075, N2 + 1.55, 'W');
     maille(new THREE.CylinderGeometry(0.07, 0.07, 0.03, 20), M.boitier, 14.45, H_SAS - 0.015, -7.05, 0, fixe, { ombre: false });
+    // LA CAMÉRA DE SURVEILLANCE (relecture du 10/10, 88,0-88,7 s ; q_0290 par la porte) : en haut du mur est, au-dessus du
+    // bout nord du cadre — un fût gris clair sur sa console, l'objectif noir vers le couloir (elle était au bout du couloir)
+    {
+      const cam = new THREE.Group(); cam.position.set(15.5, H_SAS - 0.14, -7.45); cam.rotation.y = 2.36; fixe.add(cam);
+      maille(boiteM(0.07, 0.06, 0.06), M.boitier, 0, 0.06, -0.03, 0, cam, { ombre: false });
+      maille(new THREE.CylinderGeometry(0.05, 0.05, 0.17, 16), X.blancMeuble, 0, 0, -0.13, 0, cam, { ombre: false }).rotation.x = Math.PI / 2;
+      maille(new THREE.CylinderGeometry(0.028, 0.028, 0.012, 14), M.noirMat, 0, 0, -0.22, 0, cam, { ombre: false }).rotation.x = Math.PI / 2;
+    }
     const sol = new THREE.Mesh(geoDalles([[X_SAS0, Y_COUR, X_SAS1, Y_PAL]], N2, R2), X.lino);
     sol.receiveShadow = true; sol.name = 'lino du sas du 2e'; sol.userData.solE2 = true; fixe.add(sol);
   }
@@ -676,7 +710,7 @@ export function poserEtage2(ch, renderer = null) {
     // de la salle 1, un pan blanc, l'ouverture du sas, un pan blanc
     mur({ de: [X_FOND, Y_COUR], a: [X_S1, Y_COUR], mats: B0, plinthes: [['S', P]] });
     mur({ de: [X_S1, Y_COUR], a: [12.0, Y_COUR], mats: { N: B0, S: X.rouge }, plinthes: [['S', P], ['N', PS]] });
-    mur({ de: [12.0, Y_COUR], a: [X_BOUT, Y_COUR], mats: B0, plinthes: [['S', P]], ouvertures: [{ c: 12.45, l: 0.9, h: N2 + 2.04 }, { c: 14.75, l: 1.5, h: N2 + 2.3 }] });
+    mur({ de: [12.0, Y_COUR], a: [X_BOUT, Y_COUR], mats: B0, plinthes: [['S', P]], ouvertures: [{ c: 12.45, l: 0.9, h: N2 + 2.04 }, { c: (X_SAS0 + X_SAS1) / 2, l: X_SAS1 - X_SAS0 - EP, h: N2 + 2.3 }] });
     plinthe(12.9, Y_COUR + EP / 2, X_S1E - EP / 2, Y_COUR + EP / 2 + 0.015, PS);
     // LE MUR SUD : la porte (fermée) de la salle Bjarne Stroustrup, la porte D1 de la salle 2 et son imposte
     mur({ de: [X_FOND, Y_RUE], a: [X_S2, Y_RUE], mats: B0, plinthes: [['N', P]], ouvertures: [{ c: 4.35, l: 0.93, h: N2 + 2.04 }] });
@@ -705,16 +739,15 @@ export function poserEtage2(ch, renderer = null) {
     // ---- LE MUR SUD, d'est en ouest : la photo turquoise face au sas, la plaque de la salle 2, la porte D1, l'affiche à
     // bandeau rouge, les trois chaises noires ----
     B(14.75 - 0.33, Y_RUE + EP / 2, 14.75 + 0.33, Y_RUE + EP / 2 + 0.02, N2 + 1.05, N2 + 1.95, M.alu, { ombre: false });
-    panneau(matPan(texPhotoTurquoise(), 0.2), 0.62, 0.85, 14.75, Y_RUE + EP / 2 + 0.022, N2 + 1.5, 'N');
+    // (relecture du 10/10 : à 0,2 de rugosité, la photo renvoyait le couloir et sortait brune ; VO q_0293, #7aa19c)
+    panneau(matPan(texPhotoTurquoise(), 0.6), 0.62, 0.85, 14.75, Y_RUE + EP / 2 + 0.022, N2 + 1.5, 'N');
     panneau(matPan(texPlaque2('Salle de cours', 'S 2.8'), 0.4), 0.2, 0.11, 11.2, Y_RUE + EP / 2 + 0.004, N2 + 1.65, 'N');
     panneau(matPan(texAfficheRouge(), 0.6), 0.42, 0.6, 9.35, Y_RUE + EP / 2 + 0.003, N2 + 1.7, 'N');
     for (const x of [7.0, 7.55, 8.1]) chaiseVisiteur(x, Y_RUE + EP / 2 + 0.27, 'N');
     // ---- LE MUR ROUGE : la plaque de la salle 1 près de sa porte, l'affiche A3 jaune pâle face à la porte D1 ----
     panneau(matPan(texPlaque2('Salle de cours', 'S 2.7'), 0.4), 0.2, 0.11, 11.6, Y_COUR - EP / 2 - 0.004, N2 + 1.65, 'S');
     panneau(matPan(texAfficheA3(), 0.55), 0.32, 0.45, 10.0, Y_COUR - EP / 2 - 0.003, N2 + 1.68, 'S');
-    // le dôme de vidéosurveillance (dans l'angle haut, à l'est) et un haut-parleur
-    const dome = maille(new THREE.SphereGeometry(0.06, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.noirMat, 15.55, H_COUL - 0.005, -4.82, 0, fixe, { ombre: false });
-    dome.rotation.x = Math.PI;
+    // (la caméra de surveillance est dans le sas, en haut de son mur est : construireSas — relecture du 10/10)
   }
   // LA CHAISE « VISITEUR » NOIRE du couloir (VO q_0297-0303) : tube d'acier noir, quatre pieds, assise et dossier
   // rembourrés noirs ; dos au mur
@@ -899,8 +932,10 @@ export function poserEtage2(ch, renderer = null) {
     B(17.45, Y_RUE - EP / 2 - 0.12, 17.7, Y_RUE - EP / 2, N2 + 1.0, N2 + 1.9, M.noirMat, { ombre: false });
     panneau(matPan(texRangeDocs(), 0.5), 0.25, 0.9, 17.575, Y_RUE - EP / 2 - 0.122, N2 + 1.45, 'S');
     // LES TRUMEAUX blancs saillants entre les fenêtres, les colonnes de prises à leur pied, sur l'allège
+    // (les fenêtres 7 et 11, dans leur encadrement rouge, ont 1,20 m : construireFacades)
+    const demi = (k) => (k === 7 || k === 11 ? 0.6 : 0.65);
     for (let k = 7; k < 11; k++) {
-      const xa = centreTravee(k) + 0.65, xb = centreTravee(k + 1) - 0.65;
+      const xa = centreTravee(k) + demi(k), xb = centreTravee(k + 1) - demi(k + 1);
       B(xa, 0, xb, 0.2, N2, H_SALLE, B0, { ombre: false, collision: true });
       plinthe(xa - 0.01, 0.2, xb + 0.01, 0.215, PS);
       B(xa - 0.1, 0, xa - 0.02, 0.025, N2 + 0.35, N2 + 0.75, X.blancMeuble, { ombre: false });
@@ -942,8 +977,14 @@ export function poserEtage2(ch, renderer = null) {
     // ---- SUR RUE : le mur (40 cm, pierre dehors, blanc dedans) percé de ses douze fenêtres (1,30 x 1,25 m, allège 0,95 :
     // la tuile texEtage) ; la salle 2 derrière les travées 7 à 11 (VO q_0318-0327 : sans store) ; derrière les autres, des
     // pièces fermées : leurs stores sont baissés ----
+    // (relecture du 10/10, VO q_0319-0331 : les travées 7 et 11 ont un ENCADREMENT ROUGE en saillie, js/carte_ecole.js
+    // construireFacade, dont le jour ne fait que 1,20 x 1,15 m — par une fenêtre de 1,30 x 1,25, on voyait de la salle 2 le
+    // rouge déborder de 5 cm tout autour de la vitre ; ces deux fenêtres prennent la taille du jour de leur encadrement)
     const F = [];
-    for (let k = 1; k <= 12; k++) F.push({ c: centreTravee(k), l: 1.3, bas: N2 + 0.95, haut: N2 + 2.2, ferme: k < 7 || k > 11 });
+    for (let k = 1; k <= 12; k++) {
+      const cadre = k === 7 || k === 11;
+      F.push({ c: centreTravee(k), l: cadre ? 1.2 : 1.3, bas: N2 + (cadre ? 1.0 : 0.95), haut: N2 + (cadre ? 2.15 : 2.2), ferme: k < 7 || k > 11 });
+    }
     mur({ de: [-0.3, -0.2], a: [20.1, -0.2], ep: 0.4, h: N3, mats: { N: M.blanc, S: X.pierre }, ouvertures: F.map((f) => ({ c: f.c, l: f.l, bas: f.bas, h: f.haut })) });
     const fac = new THREE.Group(); fac.position.set(0, 0, 0.2); fac.rotation.y = Math.PI; fixe.add(fac);
     for (const f of F) {

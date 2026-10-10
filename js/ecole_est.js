@@ -57,6 +57,10 @@ const DALLE2 = 6.4;                 // le dessous de la dalle du 2e
 const H_CAGE = N2;                  // le haut des murs de la cage posés avec le 1er (10/10 : la cage monte au 3e — au-dessus du 2e, poserCageHaute)
 const HC = 2.55;                    // le plafond de plâtre du couloir est et du vestibule (photo 24)
 const H1 = N1 + 2.5;                // le plafond du palier est du 1er (photo 27 : ≈ 2,45 à 2,6 m)
+// LE ROUGE VERMILLON du 2e (l'échiffre côté volée 4 ici, le mur nord du couloir dans js/ecole_etage2.js) : le #d0502c du
+// relevé sortait #d93d18, orange vif, sous la lumière chaude du jeu (relecture du 10/10, côte à côte avec q_0340, même
+// point de vue : VO #cf4c31 ; q_0299 #bd543d, q_0343 #d6563e) — l'albédo #c46050 rend #d04f31
+export const ROUGE_2E = 0xc46050;
 // ---- le plan ----
 export const EST = {
   xJ: 14.6,                         // l'axe du mur jaune (face est en 14,675)
@@ -907,7 +911,7 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
 //  LA CAGE AU-DESSUS DU 2e (crochet de js/ecole_etage2.js : tout se pose dans le groupe du 2e étage)
 // =====================================================================
 // La vidéo officielle (70-71 s, 88,8-90 s ; plan_global § 2.3, synth/volee_cmp.jpg) : au-dessus du 1er, l'échiffre est
-// ROUGE VERMILLON côté volée 4 (#d0502c, la peinture du mur nord du couloir du 2e), son chant ouest clair ; la cage MONTE —
+// ROUGE VERMILLON côté volée 4 (ROUGE_2E, la peinture du mur nord du couloir du 2e), son chant ouest clair ; la cage MONTE —
 // la sous-face de la volée 6 passe en biais au-dessus de la volée 4 (le haut de l'échiffre rouge la suit), le palier à
 // 8,15 m couvre celui à 5,05 m, la volée 5 part du palier du 2e vers l'est dans la bande nord, sa main courante noire à
 // crosse basse sur le mur nord, et celle de l'échiffre fait l'épingle autour du chant (VO q_0356, sheets/z_545).
@@ -932,7 +936,7 @@ export function poserCageHaute(ch, { groupe }) {
   const sof6 = (x) => hP3 - 0.25 + (E.xP - x) * ((hP3 + (E.n - 1) * r - 0.3) - (hP3 - 0.25)) / fin;
   const pl4 = (x) => E.hP2 + r + (E.xP - x) * r / E.g + 0.13;
   {
-    const rouge = new THREE.MeshStandardMaterial({ map: texPeinture(0xd0502c, 4), roughness: 0.6, side: THREE.DoubleSide });
+    const rouge = new THREE.MeshStandardMaterial({ map: texPeinture(ROUGE_2E, 4), roughness: 0.6, side: THREE.DoubleSide });
     rouge.name = 'peinture rouge vermillon (échiffre du 2e)';
     detailPhoto(rouge, 'beton', 1, 1, { relief: 0.035, grain: 0, rugo: false });
     const xa = E.x0 + 0.11, sh = new THREE.Shape();
