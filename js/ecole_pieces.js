@@ -1001,8 +1001,11 @@ function bureauB(ch, P) {
   const pot = groupe(ch, 11.07, 2.05, 'S', 0.75); CY(pot, P.noirMat, 0.035, 0.1, 0, 0.05, 0, 14); for (let i = 0; i < 3; i++) CY(pot, [P.bleu, P.rouge, P.jaune][i], 0.005, 0.15, -0.012 + i * 0.012, 0.11, (i - 1) * 0.008, 6, { ombre: false });
   // le fauteuil (haut dossier) et les deux chaises visiteurs
   chaiseBureau(ch, P, 11.7, 0.86, 'N', { accoudoirs: true, haut: true, nom: 'le fauteuil du bureau', sortie: [-0.8, 0] });
-  chaiseLuge(ch, P, 10.95, 2.8, 'S');
-  chaiseLuge(ch, P, 11.7, 2.8, 'S', -0.12);
+  // (relecture du 10/10 : depuis l'angle écorné, la pièce du nord n'a plus que 1,97 m — les deux chaises se serrent
+  // contre le retour x 12,1 et rendent le passage de l'ouest, x 10,05-11,0, le seul chemin de la porte au fauteuil ; en
+  // x 10,95 et 11,7, elles le bouchaient)
+  chaiseLuge(ch, P, 11.27, 2.8, 'S');
+  chaiseLuge(ch, P, 11.77, 2.8, 'S', -0.12);
   // l'armoire haute (deux portes) au mur est
   ch.boite(12.76, 0.3, 13.2, 2.1, 0, 1.98, P.grisClair, { collision: true });
   ch.boite(12.75, 0.31, 12.76, 1.195, 0.03, 1.95, P.blancMat, { ombre: false });
@@ -1024,11 +1027,12 @@ function bureauB(ch, P) {
   // le tableau (impression encadrée) au-dessus du fauteuil des visiteurs, la grande plante, le porte-manteau
   cadre(ch, P, new THREE.MeshStandardMaterial({ map: texArt(), roughness: 0.7 }), BB.x0, 2.75, 'E', 0.82, 1.02, 1.62, { baguette: P.chene, ep: 0.03 });
   plante(ch, P, 10.48, 4.25, { h: 1.65, graineN: 3 });
-  const pm = groupe(ch, 10.4, 3.6, 'S');
+  // (le porte-manteau : dans l'angle de la fenêtre, à côté de la bibliothèque — au nord, il fermait le passage ; 10/10)
+  const pm = groupe(ch, 10.52, 0.24, 'S');
   CY(pm, P.noirMat, 0.17, 0.02, 0, 0.01, 0, 20); CY(pm, P.noirMat, 0.016, 1.75, 0, 0.88, 0, 8);
   for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + 0.4; const c = CY(pm, P.noirMat, 0.008, 0.18, Math.sin(a) * 0.07, 1.67, Math.cos(a) * 0.07, 6, { ombre: false }); c.rotation.set(Math.cos(a) * 0.8, 0, -Math.sin(a) * 0.8); }
   vetement(pm, P.tissu, 0.0, 1.66, 0.12, { haut: 0.85, rot: 0.3 });  // un manteau sombre (devant le mât, qu'il frôle)
-  C.ajouterCercle(10.4, -3.6, 0.2, { y1: 1.8 });
+  C.ajouterCercle(10.52, -0.24, 0.2, { y1: 1.8 });
   corbeille(ch, P, 12.66, 2.22, null, 0.12, 0.3);
   // (10/10 : la plaque « Bureau B » a cédé la place à celle du bureau de direction B 0.3 et à son drapeau, VO q_0044 :
   // js/ecole_rdc_centre.js)

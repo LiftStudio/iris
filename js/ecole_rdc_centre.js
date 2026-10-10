@@ -34,16 +34,20 @@ const H_DALLE = 3.25;                       // le dessous de la dalle du 1er (la
 export const PILE = { x0: 13.30, x1: 14.675, y0: 4.7, y1: 7.575 };
 // le bureau de direction : le nu nord de son mur (y 4,8, épaisseur 0,12), la plaque, le drapeau
 const Y_BUREAU = 4.86;
-const X_PLAQUE = 10.905;
+const X_PLAQUE = 10.89;
 
 // =====================================================================
 //  LES TEXTURES
 // =====================================================================
 // LE LOGO « ıris » (plaque, totem ; VO q_0028 et le logo officiel de l'écran de chargement) : des i SANS POINT, le premier
 // une barre JAUNE de la hauteur des minuscules, « rıs » en blanc ; `carre` : le carré jaune qui chevauche le coin haut
-// gauche du pavé noir (x, y, côté du pavé)
-function logoIris(g, cx, y, taille) {
-  g.font = `700 ${taille}px "Century Gothic", "Avenir Next", "Futura", "Segoe UI", sans-serif`;
+// gauche du pavé noir (x, y, côté du pavé). `largeur` (relecture du 10/10) : la largeur voulue du mot — la taille est
+// recalculée sur la police réellement chargée (la plaque de la VO q_0028-0034 : le mot remplit 80 % du pavé)
+function logoIris(g, cx, y, taille, largeur = 0) {
+  const police = (t) => `700 ${t}px "Century Gothic", "Avenir Next", "Futura", "Segoe UI", sans-serif`;
+  const large = (t) => { g.font = police(t); return 2 * t * 0.15 + 3 * t * 0.07 + g.measureText('r').width + g.measureText('s').width; };
+  if (largeur > 0) taille *= largeur / large(taille);
+  g.font = police(taille);
   g.textBaseline = 'alphabetic'; g.textAlign = 'left';
   const m = g.measureText('x'), hx = m.actualBoundingBoxAscent || taille * 0.53;
   // (les deux i dessinés en barres : toutes les polices n'ont pas le « ı » sans point)
@@ -54,6 +58,7 @@ function logoIris(g, cx, y, taille) {
   g.fillText('r', x, y); x += wr + esp * 0.6;
   g.fillRect(x, y - hx, e, hx); x += e + esp * 1.2;
   g.fillText('s', x, y);
+  return { x0, hx };
 }
 function carreJaune(g, x, y, h) {
   g.fillStyle = '#f1b40c'; g.fillRect(x - 0.16 * h, y - 0.16 * h, 0.38 * h, 0.38 * h);
@@ -76,36 +81,43 @@ function fleche(g, x, y, sens, r, ep = 4) {
   g.moveTo(x + sens * (r - r * 0.62), y - r * 0.62); g.lineTo(x + sens * r, y); g.lineTo(x + sens * (r - r * 0.62), y + r * 0.62); g.stroke();
 }
 
-// LA PLAQUE « iris » (0,58 x 0,62 m ; VO q_0028-0034, hall_work/c_78_plaque) : fond blanc ; l'équerre jaune « ⌜ » qui
-// chevauche le coin haut gauche du pavé noir (≈ 0,45 x 0,23) ; « ıris » ; dessous, trois lignes de capitales grises
+// LA PLAQUE « iris » (0,58 x 0,62 m ; VO q_0028-0034, hall_work/c_78_plaque et g_74_plaque) : fond blanc ; le carré
+// jaune qui chevauche le coin haut gauche du pavé noir (le pavé : 75 % de la largeur, un peu décalé à gauche, 39 % de la
+// hauteur) ; « ıris » qui REMPLIT le pavé (80 % de sa largeur, lettres à 57 % de sa hauteur) ; dessous, trois lignes de
+// capitales grises étroites, alignées sur le i jaune, à 61, 72 et 83 % de la hauteur (relecture du 10/10 : le mot et les
+// lignes étaient d'un tiers trop petits)
 function texPlaqueIris() {
   return canvasTex(384, 410, (g, w, h) => {
     g.fillStyle = '#f7f7f4'; g.fillRect(0, 0, w, h);
-    const px = 44, py = 50, pw = 296, ph = 150;
+    const px = 38, py = 56, pw = 290, ph = 160;
     g.fillStyle = '#161616'; g.fillRect(px, py, pw, ph);
-    carreJaune(g, px, py, ph);
-    logoIris(g, px + pw / 2 + 6, py + ph * 0.74, 128);
-    g.fillStyle = '#4a4a4a'; g.font = '600 23px "Segoe UI", Arial, sans-serif'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-    ['INSTITUT SUPÉRIEUR', 'DE RESSOURCES', 'INFORMATIQUES'].forEach((t, i) => g.fillText(t, px + 10, 250 + i * 34));
+    carreJaune(g, px, py, ph * 0.86);
+    const { x0 } = logoIris(g, px + pw / 2, py + ph * 0.785, 150, pw * 0.8);
+    g.fillStyle = '#4a4a4a'; g.font = '600 27px "Segoe UI Semibold", "Segoe UI", Arial, sans-serif'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    // (le même serrage pour les trois lignes : la plus longue tient en 60 % de la largeur)
+    const L = ['INSTITUT SUPÉRIEUR', 'DE RESSOURCES', 'INFORMATIQUES'], k = Math.min(1, w * 0.6 / g.measureText(L[0]).width);
+    L.forEach((t, i) => g.fillText(t, x0, 260 + i * 45, g.measureText(t).width * k));
   }, null, false, 8);
 }
-// L'ANNUAIRE DU NIVEAU 0 (0,64 x 0,45 m ; VO 7,9-8,1 s, synth/annuaire_num.jpg) : noir, la bande dorée du niveau et son
-// « 0 », sept lignes blanches séparées de filets gris, les numéros calés à droite avant la flèche. Les codes sont « Si »
-// (salles informatiques), pas « B » (plan_global.md § 2.1).
+// L'ANNUAIRE DU NIVEAU 0 (0,60 x 0,44 m, de la largeur de la plaque : VO 7,8 s, hall_work/c_78_plaque ; texte :
+// synth/annuaire_num.jpg) : noir, la large bande dorée du niveau (un dixième de la largeur) et son « 0 », sept lignes
+// blanches en caractères étroits séparées de filets gris, les numéros calés à droite avant la flèche. Les codes sont
+// « Si » (salles informatiques), pas « B » (plan_global.md § 2.1).
 function texAnnuaire() {
-  return canvasTex(512, 360, (g, w, h) => {
+  return canvasTex(512, 376, (g, w, h) => {
     g.fillStyle = '#1e1e22'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#c8a76c'; g.fillRect(0, 0, 34, h);
-    g.fillStyle = '#f6f2e8'; g.font = '600 30px "Segoe UI", Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('0', 17, 27);
+    g.fillStyle = '#c8a76c'; g.fillRect(0, 0, 48, h);
+    g.fillStyle = '#f6f2e8'; g.font = '600 36px "Segoe UI", Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('0', 24, 30);
     const L = [['Accueil - Réception', '', -1], ['Salle Tim Berners-Lee', 'Si 0.1', -1], ['Salle David Clark', 'Si 0.2', -1], ['Pause extérieure', '', -1],
       ['Vers niveaux 1/2/3/4/5', '', 1], ['Vers niveaux -1/-2', '', 1], ['Direction', '', -1]];
     const lh = h / L.length;
     L.forEach(([t, num, sens], i) => {
       const yc = (i + 0.5) * lh;
-      if (i) { g.fillStyle = 'rgba(255,255,255,0.22)'; g.fillRect(46, i * lh - 1, w - 58, 1.5); }
-      g.fillStyle = '#f2f2f2'; g.textAlign = 'left'; g.font = '600 25px "Segoe UI", Arial, sans-serif'; g.fillText(t, 50, yc + 1);
-      if (num) { g.textAlign = 'right'; g.font = '600 23px "Segoe UI", Arial, sans-serif'; g.fillText(num, w - 64, yc + 1); }
-      fleche(g, w - 32, yc, sens, 13);
+      if (i) { g.fillStyle = 'rgba(255,255,255,0.22)'; g.fillRect(58, i * lh - 1, w - 70, 1.5); }
+      g.fillStyle = '#f2f2f2'; g.textAlign = 'left'; g.font = '600 29px "Segoe UI Semibold", "Segoe UI", Arial, sans-serif';
+      g.fillText(t, 60, yc + 1, num ? 316 : 400);
+      if (num) { g.textAlign = 'right'; g.font = '600 26px "Segoe UI", Arial, sans-serif'; g.fillText(num, w - 60, yc + 1, 72); }
+      fleche(g, w - 27, yc, sens, 13);
     });
     g.textAlign = 'left';
   }, null, false, 8);
@@ -144,15 +156,17 @@ function matHorloge() {
 // avec les noms des étages (plan_global.md § 0)
 function texLames() {
   return canvasTex(256, 1024, (g, w, h) => {
-    g.fillStyle = '#101317'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#13202f'; g.fillRect(0, 0, w, h);
     const noms = [['Accueil - Réception', -1], ['Direction', -1], ['Salle Tim Berners-Lee', -1], ['Salle David Clark', -1],
       ['Pause extérieure', -1], ['Salle de cours S 1.3', 1], ['Salle Robert Kahn', 1], ['Salle G. E. Moore', 1], ['Espace pause', 1],
       ['Salle de cours S 1.6', 1], ['Bureau des Conseillers', 1], ['Salle Bjarne Stroustrup', 1], ['Salles S 2.7 - S 2.8', 1],
       ['Salle de cours S -1.14', 1], ['Espace pause -1', 1], ['Ascenseur', 1]];
+    // (relecture du 10/10 : le bleu ardoise des lames de la plaque du couloir, js/ecole_est.js texDirection — dans la VO,
+    // b_0108 contre b_0125, les deux panneaux ont la même teinte, (98 ; 101 ; 131) et (73 ; 72 ; 103) dans l'ombre)
     const lh = h / noms.length;
     noms.forEach(([t, sens], i) => {
       const y = i * lh + 2, gr = g.createLinearGradient(0, y, 0, y + lh - 4);
-      gr.addColorStop(0, '#39424f'); gr.addColorStop(0.5, '#2a313c'); gr.addColorStop(1, '#1f242d');
+      gr.addColorStop(0, '#36567c'); gr.addColorStop(0.5, '#294566'); gr.addColorStop(1, '#203852');
       g.fillStyle = gr; g.fillRect(0, y, w, lh - 4);
       g.fillStyle = '#eef1f4'; g.font = '600 18px "Segoe UI", Arial, sans-serif'; g.textAlign = 'left'; g.textBaseline = 'middle';
       g.fillText(t, 12, y + lh / 2 - 1, w - 56);
@@ -163,11 +177,11 @@ function texLames() {
 // LA PLAQUE DE PORTE du bureau de direction (VO q_0044, hall_work/c_103_plaque) : noire, deux lignes blanches ; le
 // porte-nom blanc dessous ; LE DRAPEAU noir, trois lignes (hall_work/c_103_drapeau)
 function texPlaqueBureau() {
-  return canvasTex(256, 104, (g, w, h) => {
+  return canvasTex(256, 98, (g, w, h) => {
     g.fillStyle = '#232221'; g.fillRect(0, 0, w, h);
     g.fillStyle = '#f2f2f0'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-    g.font = '600 27px "Segoe UI", Arial, sans-serif'; g.fillText('Bureau de direction', w / 2, 44);
-    g.font = '600 29px "Segoe UI", Arial, sans-serif'; g.fillText('B 0.3', w / 2, 84);
+    g.font = '600 27px "Segoe UI", Arial, sans-serif'; g.fillText('Bureau de direction', w / 2, 42, w - 24);
+    g.font = '600 29px "Segoe UI", Arial, sans-serif'; g.fillText('B 0.3', w / 2, 80);
   }, null, false, 4);
 }
 function texPorteNom() {
@@ -187,31 +201,36 @@ function texDrapeau() {
 }
 // LE TOTEM « 1ère école pour le BTS SIO en France » (VO a_0244-0291, photo 22) : roll-up noir ; l'équerre jaune et le
 // logo ; le texte en capitales À EMPATTEMENTS — « 1ÈRE ÉCOLE / POUR LE BTS SIO / EN FRANCE » en doré (« BTS SIO » en gras),
-// « ÉCOLE / DE L'INFORMATIQUE / ET DU NUMÉRIQUE » en blanc, « BAC À BAC+5 » en doré ; le site et le QR code au pied
+// « ÉCOLE / DE L'INFORMATIQUE / ET DU NUMÉRIQUE » en blanc, « BAC À BAC+5 » en doré ; le site et le QR code au pied.
+// (relecture du 10/10, VO a_0244 et a_0262 : tout le texte tient dans la moitié HAUTE — doré de 25 à 32 % de la
+// hauteur, blanc de 38 à 45 %, « BAC À BAC+5 » à 51 %, interligne serré ; les lignes dorées et les deux dernières
+// blanches sont calées À DROITE, « ÉCOLE » et « BAC À BAC+5 » à gauche ; « INFORMATIQUE » et « NUMÉRIQUE » en gras)
 function texTotem() {
   return canvasTex(320, 800, (g, w, h) => {
     const d = g.createLinearGradient(0, 0, 0, h); d.addColorStop(0, '#1c1c1c'); d.addColorStop(1, '#0e0e0e');
     g.fillStyle = d; g.fillRect(0, 0, w, h);
-    carreJaune(g, 96, 66, 70);
-    logoIris(g, w / 2 + 8, 122, 80);
+    carreJaune(g, 104, 30, 56);
+    logoIris(g, w / 2 + 8, 76, 64);
     const serif = (poids, t) => `${poids} ${t}px "Didot", "Bodoni MT", "Times New Roman", Georgia, serif`;
-    const OR = '#d9a43a';
+    const OR = '#d9a43a', XD = w - 26;
+    // une ligne calée à droite, faite de morceaux [texte, poids, taille, montée]
+    // (resserrée en largeur si la police de repli est plus large que le Didot)
+    const droite = (morceaux, y) => {
+      let L = 0; for (const [t, p, s] of morceaux) { g.font = serif(p, s); L += g.measureText(t).width; }
+      const k = Math.min(1, (XD - 10) / L);
+      g.save(); g.translate(XD - L * k, 0); g.scale(k, 1);
+      let x = 0; for (const [t, p, s, m = 0] of morceaux) { g.font = serif(p, s); g.fillText(t, x, y - m); x += g.measureText(t).width; }
+      g.restore();
+    };
     g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.fillStyle = OR;
-    // « 1ÈRE ÉCOLE » : le « ÈRE » petit, en exposant ; la ligne mesurée puis centrée
-    g.font = serif(400, 42); const w1 = g.measureText('1').width, wE = g.measureText(' ÉCOLE').width;
-    g.font = serif(400, 19); const wr = g.measureText('ÈRE').width;
-    let x = (w - w1 - wr - 1 - wE) / 2;
-    g.font = serif(400, 42); g.fillText('1', x, 246); x += w1;
-    g.font = serif(400, 19); g.fillText('ÈRE', x + 1, 226); x += wr + 1;
-    g.font = serif(400, 42); g.fillText(' ÉCOLE', x, 246);
-    g.font = serif(400, 30); const a = 'POUR LE ', wa = g.measureText(a).width;
-    g.font = serif(700, 30); const wb = g.measureText('BTS SIO').width;
-    x = (w - wa - wb) / 2;
-    g.font = serif(400, 30); g.fillText(a, x, 292); g.font = serif(700, 30); g.fillText('BTS SIO', x + wa, 292);
-    g.font = serif(400, 30); g.textAlign = 'center'; g.fillText('EN FRANCE', w / 2, 332);
-    g.textAlign = 'left'; g.fillStyle = '#f4f2ec'; g.font = serif(400, 27);
-    ['ÉCOLE', "DE L'INFORMATIQUE", 'ET DU NUMÉRIQUE'].forEach((t, i) => g.fillText(t, 30, 420 + i * 34, w - 46));
-    g.fillStyle = OR; g.font = serif(400, 27); g.fillText('BAC À BAC+5', 30, 548);
+    droite([['1', 400, 30], ['ÈRE', 400, 14, 12], [' ÉCOLE', 400, 30]], 206);
+    droite([['POUR LE ', 400, 27], ['BTS SIO', 700, 27]], 234);
+    droite([['EN FRANCE', 400, 27]], 262);
+    g.fillStyle = '#f4f2ec';
+    g.font = serif(400, 24); g.fillText('ÉCOLE', 16, 312);
+    droite([["DE L'", 400, 24], ['INFORMATIQUE', 700, 24]], 340);
+    droite([['ET DU ', 400, 24], ['NUMÉRIQUE', 700, 24]], 368);
+    g.fillStyle = OR; g.font = serif(400, 21); g.fillText('BAC À BAC+5', 24, 412);
     g.fillStyle = '#cfcfcf'; g.font = '600 16px "Segoe UI", Arial, sans-serif'; g.fillText('www.ecoleiris.fr', 22, h - 40);
     qr(g, w - 88, h - 92, 66);
   }, null, false, 8);
@@ -262,7 +281,7 @@ export function poserRdcCentre(ch) {
   ch.boite(xm - 0.185, S - 0.06, xm + 0.185, S, 2.25, 2.58, std({ color: 0x2a2220, roughness: 0.5 }, 'boîtier de l\'horloge'), { ombre: false });
   ch.panneau(matHorloge(), 0.33, 0.29, xm, S - 0.0605, 2.415, 'S');
   plaqueMurale(ch, std({ map: texPlaqueIris(), roughness: 0.4 }, 'plaque iris'), xm, S, 'S', 0.58, 1.54, 2.16, 0.012);
-  plaqueMurale(ch, std({ map: texAnnuaire(), roughness: 0.35 }, 'annuaire du niveau 0'), xm, S, 'S', 0.64, 1.08, 1.52, 0.012);
+  plaqueMurale(ch, std({ map: texAnnuaire(), roughness: 0.35 }, 'annuaire du niveau 0'), xm, S, 'S', 0.6, 1.08, 1.52, 0.012);
 
   // ---- LA FACE EST : le grand annuaire à lames (y 5,05-5,55, de 0,35 à 2,35 m ; VO q_0371-0373) ----
   plaqueMurale(ch, std({ map: texLames(), roughness: 0.4, metalness: 0.15 }, 'annuaire à lames'), P.x1, 5.3, 'E', 0.5, 0.35, 2.35, 0.015);
@@ -274,9 +293,11 @@ export function poserRdcCentre(ch) {
   // =====================================================================
   //  LE BUREAU DE DIRECTION B 0.3 : la plaque, son porte-nom, le drapeau (VO q_0043-0045)
   // =====================================================================
-  // (sur le mur nord du bureau, entre le jour dépoli et la porte vitrée : js/carte_ecole.js)
-  plaqueMurale(ch, std({ map: texPlaqueBureau(), roughness: 0.4 }, 'plaque du bureau de direction'), X_PLAQUE, Y_BUREAU, 'N', 0.18, 1.56, 1.633, 0.006);
-  plaqueMurale(ch, std({ map: texPorteNom(), roughness: 0.5 }, 'porte-nom'), X_PLAQUE, Y_BUREAU, 'N', 0.18, 1.48, 1.535, 0.006);
+  // (sur le mur nord du bureau, entre le jour dépoli et la porte vitrée : js/carte_ecole.js ; relecture du 10/10 : 21 cm
+  // de large et non 18 — dans la VO, a_0260, la plaque est presque aussi large que le drapeau de 0,28 ; le porte-nom
+  // blanc fait les quatre cinquièmes de la hauteur du noir, hall_work/c_103_plaque)
+  plaqueMurale(ch, std({ map: texPlaqueBureau(), roughness: 0.4 }, 'plaque du bureau de direction'), X_PLAQUE, Y_BUREAU, 'N', 0.21, 1.555, 1.635, 0.006);
+  plaqueMurale(ch, std({ map: texPorteNom(), roughness: 0.5 }, 'porte-nom'), X_PLAQUE, Y_BUREAU, 'N', 0.21, 1.48, 1.545, 0.006);
   // le drapeau, perpendiculaire au mur, au-dessus de la porte (de 2,28 à 2,46 m), sur sa potence
   const dr = new THREE.Group(); dr.position.set(X_PLAQUE, 2.37, -(Y_BUREAU + 0.19)); ch.decor.add(dr);
   maille(boiteM(0.012, 0.18, 0.3), M.noir, 0, 0, 0, 0, dr, { ombre: false });
