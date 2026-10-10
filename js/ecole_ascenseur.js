@@ -249,9 +249,9 @@ export function poserAscenseur(ch, { base = 0, groupe = null, ouvert = false, y0
   const vantail = (x0, x1, ya, yb2, bordN) => {
     const v = new THREE.Group(); v.position.set(0, 0, 0); mob.add(v);
     maille(boiteM(x1 - x0, hP - 0.012, yb2 - ya), X.inox, (x0 + x1) / 2, b + 0.006 + (hP - 0.012) / 2, -(ya + yb2) / 2, 0, v, { ombre: false });
-    // le chant de rive (un filet sombre) côté joint
-    const yr = bordN ? yb2 : ya;
-    maille(boiteM(0.004, hP - 0.012, 0.006), X.joint, x0 - 0.002, b + 0.006 + (hP - 0.012) / 2, -(yr + (bordN ? -0.003 : 0.003)), 0, v, { ombre: false });
+    // le chant de rive (un filet sombre) côté joint : sur la face palière du vantail lent, sur la face cabine du rapide
+    const yr = bordN ? yb2 : ya, xr = bordN ? x0 - 0.002 : x1 + 0.002;
+    maille(boiteM(0.004, hP - 0.012, 0.006), X.joint, xr, b + 0.006 + (hP - 0.012) / 2, -(yr + (bordN ? -0.003 : 0.003)), 0, v, { ombre: false });
     return v;
   };
   const vLent = vantail(17.918, 17.94, yP0 - 0.005, yJ + 0.005, true);
