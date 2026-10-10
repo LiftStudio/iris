@@ -15,9 +15,10 @@
 //   le pupitre              x 16,45-17,45 y 2,95-3,55  façade nord de chêne grisé, rainure sombre à 0,8 m, dessus gris
 //   l'open-space            x 17,2-19,8   y 0,3-6,0    derrière le comptoir : bureaux bleu-gris en L le long des fenêtres
 //                                                     et du mitoyen, fauteuils noirs, imprimante, carton, dossiers
-//   le mitoyen est          x 19,8        y 0-7,5      peint GRIS ARDOISE ; l'affiche noire à l'immeuble blanc et cadre
-//                                                     magenta, la photo encadrée d'une tour, le panneau des premiers
-//                                                     secours, la caméra dôme
+//   le mitoyen est          x 19,8        y 0-7,5      peint GRIS ARDOISE ; tout au sud, près de la façade, la photo
+//                                                     encadrée d'un immeuble (y 0,85) et l'affiche noire à l'immeuble
+//                                                     blanc et cadre magenta (y 2,05), le panneau des premiers secours,
+//                                                     la caméra dôme (relecture 10/10, VO 92,6-95,4 s)
 //   l'angle nord-est        x 16,3-19,8   y 5,5-7,5    OUVERT sur le hall (VO 6,4-7,4 s : ni murs ni porte) : le
 //                                                     photocopieur contre le pan cannelé, le caisson et ses corbeilles, le
 //                                                     mur blanc aux étiquettes ocre « INFORMATIQUE », la table blanche et
@@ -328,6 +329,10 @@ export function poserHall(ch) {
   // (16,55 ; 2,54). D'où : le comptoir de y 1,1 à 2,45, la tablette PMR jusqu'à 2,95, le pupitre jusqu'à 3,55 ; derrière
   // lui le fauteuil rayé (≈ 17,95 ; 3,1), et le présentoir de bois plus au nord, vers (17,2 ; 4,9), qui se voit au bord
   // droit à 7,0 s et au bord gauche à 92,6 s.)
+  // (Relecture du 10/10 : gardé. Les rapports de hauteur à 92,6 et 93,6 s — porte 6, pupitre — mettent aussi sa face nord
+  // vers y 3,2-3,6 ; mais à 93,6 et 95,4 s, caméra recalée sur la porte, les fenêtres et les deux cadres du mitoyen, le
+  // pupitre sort 0,2 à 0,45 m plus à l'EST, et la face avant du comptoir semble biaise, son bout nord vers x 16,7 : non
+  // tranché, la vidéo déforme les bords de l'image.)
   // le comptoir haut : socle de bois verni à peine en retrait (relecture 10/10 : photo 03, la bande brune au pied de la
   // face blanche, comme les plinthes du hall — pas un socle sombre), caisson de stratifié blanc gris, la rainure à 0,55 m
   // sur la face avant (ouest) et sur le bout sud, la tablette haute grise qui déborde de 8 cm côté visiteurs
