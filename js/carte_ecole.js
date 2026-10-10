@@ -699,7 +699,8 @@ function construireMurs(ch) {
   // 14 cm de verre et non 10, un noyer de 3,5 cm, la fente presque contre la béquille — son axe à 20 cm du chant). Les
   // plaques et les affiches : js/ecole_pieces.js (les toilettes).
   // (V2, 11/10 — la photo 23 recalée, rdc_ouest.md § 3.3 et ov_23.jpg : le C05 n'a que 3,6 m, de la porte de l'escalier à
-  // la porte bleue, et 1,225 m de large ; son mur ouest est celui de la cage, sans trumeau. Depuis le mur des portes de
+  // la porte bleue, et 1,225 m de large ; son mur ouest est celui de la cage (lot B) — les photos 04, 05 et 23 le montrent
+  // dans le prolongement du jambage est de la porte de l'escalier, sans trumeau. Depuis le mur des portes de
   // l'escalier (Y_ESC) : la porte des hommes à +1,63-2,47, celle des femmes JUSTE AVANT, de -0,85 à 0 — la photo la met
   // 15 cm plus au sud, mais elle doit garder 20 cm de mur au nord du mur safran de la salle d'attente)
   const WC_C05 = [[Y_ESC - 0.425, 'toilettes femmes'], [Y_ESC + 2.05, 'toilettes hommes']];
@@ -759,8 +760,9 @@ function construireMurs(ch) {
   // (le mur nord de la cage, et au bout du C05 le mur de la salle David Clark : sa porte bleue et son imposte, x 4,75-5,6
   // jusqu'à 2,28 m ; la face nord est dans la salle — 09/10)
   // (V2, 11/10 : le mur du fond du C05 n'est plus celui de la cage — il est 3,6 m après le mur des portes de l'escalier,
-  // photo 23 ; derrière lui, l'entrée de la salle David Clark. La cage, x 1,6-4,675, a son mur nord à elle)
-  ch.mur({ de: [4.675, Y_ESC + 3.675], a: [6.05, Y_ESC + 3.675], mats: B, plinthes: ['S', 'N'], ouvertures: [{ c: 5.175, l: 0.85, h: 2.28 }] });
+  // photo 23 ; derrière lui, l'entrée de la salle David Clark. La cage, x 1,6-4,675, a son mur nord à elle. Il part de
+  // x 4,6 : noyé dans le mur de la cage tel que le plan le place, il ferme encore l'angle si ce mur recule à l'ouest)
+  ch.mur({ de: [4.6, Y_ESC + 3.675], a: [6.05, Y_ESC + 3.675], mats: B, plinthes: ['S', 'N'], ouvertures: [{ c: 5.175, l: 0.85, h: 2.28 }] });
   // au 1er étage : le mur sud du palier (avec sa double porte coupe-feu, fermée) et ses retours
   ch.mur({ de: [1.6, 12.525], a: [4.75, 12.525], base: H_DALLE, h: H_CAGE, mats: B, ouvertures: [{ c: 3.5, l: 1.8, bas: 2 * ESC.hPalier, h: 2 * ESC.hPalier + 2.1 }] });
   ch.mur({ de: [1.675, 12.45], a: [1.675, 13.6], base: H_DALLE, h: H_CAGE, mats: B });

@@ -1704,7 +1704,7 @@ function salleDavidClark(ch, P) {
   ch.porte('x', 21.0, 2.0, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'fermee', cote: 'S', notices: 1, nom: 'réserve (salle David Clark)' });
   // les plafonds de dalles, la salle et son entrée
   ch.plafond(DC.x0, DC.y0, DC.x1, DC.y1, 2.6, 'dalles');
-  ch.plafond(DCE.x0, DCE.y0, DCE.x1, DCE.y1, 2.6, 'dalles');
+  ch.plafond(4.6, DCE.y0, DCE.x1, DCE.y1, 2.6, 'dalles');                      // (du nu de la cage, comme le C05)
   // ---- la lumière : neuf dalles LED sur la trame ; le jour des fenêtres (un spot réel, et la lumière cuite des deux) ----
   for (const x of [1.975, 4.375, 6.775]) for (const y of [15.65, 17.45, 19.25]) dalleLED60(ch, P, x, y, 2.6, 'dc');
   ch.lampes.push({ type: 'jour', x: -0.6, z: -15.5, h: 2.5, cx: 3.5, cz: -16.2, sx: 0.8, sz: -15.5, ox: -0.1, oz: -15.5, zone: 'dc', poids: 1.3, cuire: false });
