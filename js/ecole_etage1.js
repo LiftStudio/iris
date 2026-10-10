@@ -597,7 +597,7 @@ export function poserEtage1(ch, renderer = null) {
     // dans le couloir, un seul hublot, au bout ouest, en veilleuse (VO 48 s : derrière la porte, le noir)
     ch.plafond(0, Y_SALLES, 4.6, Y_COUR, H_COUL, 'platre');
     ch.plafond(1.75, Y_COUR, 4.6, 12.45, H_COUL, 'platre');
-    opale(1.2, 7.95, H_COUL, 'e1couloir', { force: 0.5 });
+    opale(1.2, 7.95, H_COUL, 'e1couloir', { force: 0.35, cuireForce: 0.35 });
     for (const y of [10.0, 11.7]) opale(3.2, y, H_COUL, 'e1hall');
   }
 

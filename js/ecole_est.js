@@ -161,12 +161,14 @@ export function texPanneauEtageEst() {
   return canvasTex(768, 402, (g, w, h) => {
     g.fillStyle = '#2b2a28'; g.fillRect(0, 0, w, h);
     g.fillStyle = '#b5703f'; g.fillRect(0, 0, 70, h);
-    g.fillStyle = '#ffffff'; g.font = '700 74px "Segoe UI", Arial, sans-serif'; g.textBaseline = 'alphabetic'; g.fillText('1', 14, 82);
+    // (10/10, VO 43,3 s : le bandeau est fait de cinq cases, une par ligne, des filets fins séparent les lignes)
+    for (let i = 1; i < 5; i++) { const y = i * h / 5; g.fillStyle = '#2b2a28'; g.fillRect(0, y - 2, 70, 4); g.fillStyle = 'rgba(244,244,242,0.28)'; g.fillRect(84, y - 1, w - 104, 2); }
+    g.fillStyle = '#ffffff'; g.font = '700 74px "Segoe UI", Arial, sans-serif'; g.textBaseline = 'alphabetic'; g.fillText('1', 14, 70);
     // (10/10, VO 42,8-43,8 s à 25 i/s : « S 1.3 / Si 1.4 / Si 1.5 / — / S 1.6 » — S salle de cours, Si salle informatique)
     const lignes = [['Salle de cours', 'S 1.3'], ['Salle Robert Kahn', 'Si 1.4'], ['Salle Gordon Earle Moore', 'Si 1.5'], ['Espace pause', ''], ['Salle de cours', 'S 1.6']];
     g.font = '500 40px "Segoe UI", Arial, sans-serif'; g.fillStyle = '#f4f4f2';
     lignes.forEach(([t, num], i) => {
-      const y = 70 + i * 74;
+      const y = h * (i + 0.5) / 5 + 14;
       g.textAlign = 'left'; g.fillText(t, 100, y);
       if (num) { g.textAlign = 'right'; g.font = '600 40px "Segoe UI", Arial, sans-serif'; g.fillText(num, w - 34, y); g.font = '500 40px "Segoe UI", Arial, sans-serif'; }
     });
