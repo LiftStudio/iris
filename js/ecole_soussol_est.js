@@ -270,13 +270,16 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
       [[17.8, yEs, rA(17.8), 'N'], [18.4, yEs, rA(18.4), 'N']]);
     mainCourante(ch, F, [[18.62, 10.8, rB(18.62)], [18.62, yEn, rB(18.62)], [XA + 0.07, yEn, rB(XA + 0.07)], [XA - 0.03, yEn, rB(XA - 0.03) - 0.16]],
       [[18.1, yEn, rB(18.1), 'S'], [17.3, yEn, rB(17.3), 'S']]);
-    // LE PALIER BAS, au mitoyen (es/z_desc.jpg) : la réglette (≈ 1,3 m, à 2,5 m au-dessus du palier) et son voyant rouge
-    // au bout sud, le bloc de sortie juste sous la dalle (flèche vers le sud, la volée A), l'affiche iris sous la réglette
-    reglette(ch, F, EST.xM, 9.5, 10.8, HB + 2.5, 'W');
-    B(EST.xM - 0.1, 9.505, EST.xM - 0.085, 9.525, HB + 2.47, HB + 2.49, L_.voyant, { ombre: false });
-    ch.lampes.push({ x: EST.xM - 0.25, z: -10.15, h: HB + 2.5, zone: 'escEstSS', type: 'tube', force: 1.1, base: HB, cuire: false });
-    ch.sortie(EST.xM - 0.03, 10.2, HB + 2.84, 'W');
-    panneau(new THREE.MeshStandardMaterial({ map: texAfficheIris(), roughness: 0.55 }), 0.4, 0.72, EST.xM - 0.004, 10.35, HB + 1.75, 'W');
+    // LE PALIER BAS, au mitoyen (es/z_desc.jpg) : la réglette (≈ 1,4 m, à 2,5 m au-dessus du palier) et son voyant rouge
+    // au bout sud, le bloc de sortie juste sous la dalle (flèche vers le sud, la volée A), l'affiche iris sous la réglette.
+    // (relecture du 10/10, VO q_0060-0063 recalée sur le jeu : vue de la tête de la volée A, la réglette sort de derrière
+    // le bout de l'échiffre et finit à ≈ 0,8 m de l'angle sud-est ; le bloc et l'affiche sont sous son tiers nord — la
+    // disposition du palier intermédiaire du haut, y 10,0-11,4 : posée en y 9,5-10,8, elle touchait presque l'angle sud)
+    reglette(ch, F, EST.xM, 10.0, 11.4, HB + 2.5, 'W');
+    B(EST.xM - 0.1, 10.005, EST.xM - 0.085, 10.025, HB + 2.47, HB + 2.49, L_.voyant, { ombre: false });
+    ch.lampes.push({ x: EST.xM - 0.25, z: -10.7, h: HB + 2.5, zone: 'escEstSS', type: 'tube', force: 1.1, base: HB, cuire: false });
+    ch.sortie(EST.xM - 0.03, 10.62, HB + 2.84, 'W');
+    panneau(new THREE.MeshStandardMaterial({ map: texAfficheIris(), roughness: 0.55 }), 0.45, 0.72, EST.xM - 0.004, 10.62, HB + 1.75, 'W');
     // LE MONDE SOLIDE DE LA CAMÉRA : sous la volée 2 (au-dessus de la volée A), sous la volée 1 (au-dessus de la volée B),
     // sous le palier intermédiaire : des plafonds en marches, au plus bas de chaque giron (js/ecole_est.js : leurs
     // paillasses montent de 1,50 en x 18,29 à 3,0 en x 16,05, et de -0,25 en x 16,05 à 1,26 en x 18,29)
@@ -297,6 +300,10 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     // le panneau « -1 » au mur ouest, face à qui arrive de la volée B (0,65 x 0,145, centre vers 1,75 m, y ≈ 11,9)
     panneau(new THREE.MeshStandardMaterial({ map: texPanneauMoins1(), roughness: 0.5 }), 0.65, 0.145, 14.681, 11.9, Y_SS + 1.75, 'E');
     B(14.675, 11.57, 14.68, 12.23, Y_SS + 1.672, Y_SS + 1.828, M.noirMat, { ombre: false });
+    // (relecture du 10/10, VO f_0391 à 15,64 s : au mur nord, derrière la crosse du pied de la volée B, un petit
+    // interrupteur blanc — celui de la minuterie, comme dans la niche du rez-de-chaussée)
+    B(16.76, 12.438, 16.84, 12.45, Y_SS + 1.04, Y_SS + 1.12, M.boitier, { ombre: false });
+    B(16.785, 12.43, 16.815, 12.438, Y_SS + 1.06, Y_SS + 1.1, M.boitier, { ombre: false });
     // LA PORTE À DEUX VANTAUX (y 10,725, x 14,70-16,05 : sous celle du vestibule, aux mêmes cotes) : le vantail ouest de
     // 0,85 (oculus étroit cerclé de bois, bâton inox), le vantail est de 0,50 (bâton) ; huisserie de bois crème ; elles
     // s'ouvrent vers le palier, d'où l'on remonte (q_0066-0073 : ouvertes vers la caméra)
