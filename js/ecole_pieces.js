@@ -1005,7 +1005,7 @@ function bureauB(ch, P) {
   // contre le retour x 12,1 et rendent le passage de l'ouest, x 10,05-11,0, le seul chemin de la porte au fauteuil ; en
   // x 10,95 et 11,7, elles le bouchaient)
   chaiseLuge(ch, P, 11.27, 2.8, 'S');
-  chaiseLuge(ch, P, 11.77, 2.8, 'S', -0.12);
+  chaiseLuge(ch, P, 11.77, 2.8, 'S', -0.12, [-0.1, 0.65]);   // (on s'en relève un peu à l'ouest : le retour est à 0,25 m)
   // l'armoire haute (deux portes) au mur est
   ch.boite(12.76, 0.3, 13.2, 2.1, 0, 1.98, P.grisClair, { collision: true });
   ch.boite(12.75, 0.31, 12.76, 1.195, 0.03, 1.95, P.blancMat, { ombre: false });
@@ -1038,7 +1038,7 @@ function bureauB(ch, P) {
   // js/ecole_rdc_centre.js)
 }
 // LA CHAISE VISITEUR « luge » : tube chromé en traîneau, coque et dossier de tissu
-function chaiseLuge(ch, P, x, y, face, rot = 0) {
+function chaiseLuge(ch, P, x, y, face, rot = 0, sortie = null) {
   const g = groupe(ch, x, y, face); g.rotation.y += rot;
   for (const s of [-1, 1]) {
     const pa = CY(g, P.chrome, 0.011, 0.5, s * 0.22, 0.012, 0.0, 8); pa.rotation.x = Math.PI / 2;
@@ -1048,7 +1048,7 @@ function chaiseLuge(ch, P, x, y, face, rot = 0) {
   R(g, P.tissu, 0.5, 0.06, 0.46, 0.025, 0, 0.47, 0.0);
   const dos = R(g, P.tissu, 0.48, 0.34, 0.05, 0.02, 0, 0.75, -0.24); dos.rotation.x = -0.12;
   ch.C.ajouterCercle(x, -y, 0.25, { y1: 0.95 });
-  siege(ch, x, y, 0.47, face, 'la chaise', [-DIR[face][0] * 0.65, DIR[face][1] * 0.65]);
+  siege(ch, x, y, 0.47, face, 'la chaise', sortie || [-DIR[face][0] * 0.65, DIR[face][1] * 0.65]);
   return g;
 }
 
