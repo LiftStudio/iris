@@ -44,7 +44,7 @@ const RAYON_CAM = 0.2;                    // la caméra est une petite sphère :
 //     de 4,3 m, 2,1-2,4 m et 13° : la salle d'attente au premier plan de la photo 06, trop de sol, pas assez de mur) ;
 //   - ÉPAULE : 0,4 m à droite (à gauche si un mur est à moins de 0,6 m à droite), visée 0,24 m à droite à 1,45 m : Haythem
 //     ne bouche plus le point de fuite des couloirs (photo 01, VO q_0300) ;
-//   - jamais dans une AUTRE PIÈCE que lui : sa zone, ou une voisine déclarée par une ouverture large, sinon le recul est
+//   - jamais dans une AUTRE PIÈCE que lui : sa zone, ou une voisine déclarée où l'on passe sans porte, sinon le recul est
 //     raccourci jusqu'au seuil — plus de cadrage à travers un chambranle (photo 24) ;
 //   - recul libre sous 1,5 m : épaule vers le côté libre, à 1,6 m ; sous 1,2 m, champ porté à 69° (« le 0,5x du
 //     téléphone ») ; à moins de 0,6 m de lui, Haythem en demi-transparence (0,35) au lieu d'être masqué.
@@ -52,7 +52,7 @@ const DEG = Math.PI / 180;
 const CHAMP = 63, CHAMP_H_MAX = 108, CHAMP_SPRINT = 7, CHAMP_MAX = 70, CHAMP_SERRE = 69;
 const TANGAGE = 0.12;                     // le piqué de départ (7°)
 const RECUL = 2.6, RECUL_RUE = 4.3, HAUT_CAM = 1.6, EPAULE = 0.4, VISEE_EPAULE = 0.24, VISEE_H = 1.45;
-const BAIE = 2.0;                         // une ouverture plus étroite est une baie de porte (la plus large, la porte 6 : 1,90)
+const BAIE = 2.0;                         // un passage d'au moins 2 m n'est pas une porte (la plus large, la porte 6 : 1,90)
 const OEIL_PHOTO = 1.45;                  // la « vue photo » : l'œil à hauteur de téléphone tenu devant soi
 // le champ vertical pour un écran de rapport `aspect` : 63°, sauf si l'horizontal dépasse alors 108°
 const champBase = (aspect) => Math.min(CHAMP, 2 * Math.atan(Math.tan(CHAMP_H_MAX / 2 * DEG) / Math.max(0.2, aspect || 1)) / DEG);
@@ -504,10 +504,10 @@ export class Game {
 
   // LA PIÈCE DE LA CAMÉRA. La part du segment P -> P + D (au pas de 10 cm, jusqu'à `tMax`) qui reste dans la pièce de
   // Haythem — sa zone `Zh` (js/ecole_lumieres.js zoneEn, à ses pieds `sol` : les étages et le sous-sol ont leurs zones) —
-  // ou dans une voisine DÉCLARÉE (l'une dans les `voisines` de l'autre) où l'on entre par une OUVERTURE LARGE. Moins de
-  // BAIE (2 m) entre les jambages, c'est une porte : la caméra s'arrête 15 cm avant la zone d'à côté (photo 24 : elle ne
-  // passe plus dans le vestibule, derrière le chambranle). Hors de toute zone (l'épaisseur d'un mur, un recoin sans zone),
-  // on passe sans compter. Aucune liste de pièces : tout vient des zones de la carte.
+  // ou dans une voisine DÉCLARÉE (l'une dans les `voisines` de l'autre) où l'on entre SANS PORTE (_seuilOuvert). Par une
+  // porte, la caméra s'arrête 15 cm avant la zone d'à côté (photo 24 : elle ne passe plus dans le vestibule, derrière le
+  // chambranle). Hors de toute zone (l'épaisseur d'un mur, un recoin sans zone), on passe sans compter. Aucune liste de
+  // pièces : tout vient des zones et du monde solide de la carte.
   _partPiece(px, py, pz, dx, dy, dz, sol, Zh, tMax = 1) {
     const Lu = this.carte.lumieres, long = Math.hypot(dx, dz);
     if (!Lu || !Zh || long < 0.05 || tMax <= 0) return tMax;
@@ -520,21 +520,32 @@ export class Game {
       if (!Z) continue;
       if (admises.has(Z)) { tOk = t; continue; }
       const voisine = (Zh.voisines || []).includes(Z.id) || (Z.voisines || []).includes(Zh.id);
-      if (voisine && this._ouvertureLarge(px, py, pz, dx, dy, dz, long, tOk, t)) { admises.add(Z); tOk = t; continue; }
+      if (voisine && this._seuilOuvert(px, py, pz, dx, dy, dz, long, tOk, t, sol, tMax)) { admises.add(Z); tOk = t; continue; }
       return Math.max(0, tOk - 0.15 / long);
     }
     return tMax;
   }
-  // l'ouverture entre deux zones (entre t0 et t1 du segment, 30 cm de part et d'autre) : la plus petite largeur libre prise
-  // en travers, à hauteur de caméra (sous le linteau d'une porte) — vrai si elle atteint BAIE partout
-  _ouvertureLarge(px, py, pz, dx, dy, dz, long, t0, t1) {
-    const C = this.collisions, nx = -dz / long, nz = dx / long, R = BAIE * 0.6;
-    for (let s = t0 * long - 0.3; s <= t1 * long + 0.3; s += 0.1) {
-      const t = Math.max(0, s / long), x = px + dx * t, y = py + dy * t, z = pz + dz * t;
-      const w = (C.rayonLibre(x, y, z, x + nx * R, y, z + nz * R, 0.02) + C.rayonLibre(x, y, z, x - nx * R, y, z - nz * R, 0.02)) * R;
-      if (w < BAIE) return false;
-    }
-    return true;
+  // LE SEUIL entre deux zones voisines (entre t0 et t1 du segment) : un passage ouvert, ou une PORTE ? On prend le point
+  // le plus étroit du passage (largeur libre en travers, à hauteur de caméra) : 2 m ou plus, c'est ouvert ; sinon, une
+  // porte se reconnaît à son LINTEAU (la hauteur libre y tombe d'au moins 8 cm sous celle d'avant et d'après : la porte
+  // du vestibule et la porte nord du hall, 2,08 sous 2,53 ; la paroi vitrée du passage, 2,28 sous 2,38) ou à ses
+  // JAMBAGES (la largeur y pince de 25 cm sous celle des deux côtés). La bouche d'un couloir (le C05 vu du hall ouest,
+  // photo 23 ; le couloir du -1 et son hall) n'a ni l'un ni l'autre : la caméra peut s'y tenir.
+  _seuilOuvert(px, py, pz, dx, dy, dz, long, t0, t1, sol, tMax) {
+    const C = this.collisions, nx = -dz / long, nz = dx / long, R = BAIE * 0.6, sMax = tMax * long;
+    const point = (s) => { const t = Math.max(0, Math.min(sMax, s)) / long; return [px + dx * t, py + dy * t, pz + dz * t]; };
+    const largeur = (s) => {
+      const [x, y, z] = point(s);
+      return (C.rayonLibre(x, y, z, x + nx * R, y, z + nz * R, 0.02) + C.rayonLibre(x, y, z, x - nx * R, y, z - nz * R, 0.02)) * R;
+    };
+    const hauteur = (s) => { const [x, , z] = point(s); return 1.2 + 2 * C.rayonLibre(x, sol + 1.2, z, x, sol + 3.2, z, 0.02); };
+    let sMin = 0, wMin = Infinity;
+    for (let s = t0 * long - 0.3; s <= t1 * long + 0.3; s += 0.1) { const w = largeur(s); if (w < wMin) { wMin = w; sMin = s; } }
+    if (wMin >= BAIE) return true;
+    const sA = Math.max(0, sMin - 0.45), sP = Math.min(sMax, sMin + 0.45);
+    if (wMin < Math.min(largeur(sA), largeur(sP)) - 0.25) return false;                         // des jambages
+    const h0 = Math.min(hauteur(sMin - 0.1), hauteur(sMin), hauteur(sMin + 0.1));
+    return !(h0 < Math.min(hauteur(sA), hauteur(sP)) - 0.08);                                    // un linteau
   }
 
   // LA PLACE VOULUE de la caméra (vues 2 et 3) -> this.camTarget. Son état (this._cam) garde l'épaule et son côté, le
