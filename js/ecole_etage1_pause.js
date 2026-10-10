@@ -91,7 +91,7 @@ function texMoquette() {
   const W = TELEPHONE ? 256 : 512;
   return canvasTex(W, W, (g, w, h) => {
     const r2 = graine(1303), n = 8, c = w / n;
-    const tons = [[62, 67, 82], [100, 107, 121]];
+    const tons = [[64, 69, 84], [90, 97, 112]];
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
       // (un damier, dérangé d'une dalle sur quatre : la pose « irrégulière » de la vidéo)
       const k = ((i + j) % 2) ^ (r2() < 0.27 ? 1 : 0), [r, gg, b] = tons[k], t = (r2() - 0.5) * 8;
@@ -129,7 +129,7 @@ function texLino() {
 function texDossierHetre() {
   return canvasTex(128, 96, (g, w, h) => {
     const r2 = graine(911), gr = g.createLinearGradient(0, 0, w, 0);
-    gr.addColorStop(0, '#b98552'); gr.addColorStop(0.5, '#cf9d68'); gr.addColorStop(1, '#b98552');
+    gr.addColorStop(0, '#c99a68'); gr.addColorStop(0.5, '#dcb385'); gr.addColorStop(1, '#c99a68');
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
     for (let k = 0; k < 40; k++) { g.fillStyle = `rgba(120,78,40,${0.05 + r2() * 0.08})`; g.fillRect(0, r2() * h, w, 1); }
     g.globalCompositeOperation = 'destination-out';
@@ -292,7 +292,9 @@ export function poserPause1(ch, ctx) {
   const P = {
     // (les teintes « à modéliser » de etage1.md § 4.6 ; l'orange un rien plus clair que l'échiffre du palier, photo 28)
     orange: std({ map: texPeinture(0xe47e2c, 4), roughness: 0.7 }, 'peinture orange (espace pause du 1er)'),
-    creme: std({ map: texPeinture(0xeee6d2, 4), roughness: 0.86 }, 'peinture crème (espace pause du 1er)'),
+    // (un léger émissif tient lieu de la lumière renvoyée par le lino et les murs : sur la vidéo, le mur des jours est clair
+    // d'un bout à l'autre, loin des spots)
+    creme: std({ map: texPeinture(0xeee6d2, 4), roughness: 0.86, emissive: 0xeee6d2, emissiveIntensity: 0.1 }, 'peinture crème (espace pause du 1er)'),
     lilas: std({ map: texPeinture(0xa8a4b5, 3), roughness: 0.8 }, 'muret lilas'),
     tablette: std({ color: 0xf0ede6, roughness: 0.42 }, 'tablette blanche des murets'),
     plinthe: std({ color: 0x6e5038, roughness: 0.5 }, 'plinthe brune'),
@@ -305,9 +307,9 @@ export function poserPause1(ch, ctx) {
     chant: std({ color: 0xa48a68, roughness: 0.5 }),
     pietement: std({ color: 0x2b2d33, roughness: 0.45, metalness: 0.5 }, 'piétement anthracite'),
     chrome: std({ color: 0xa8a9ad, roughness: 0.3, metalness: 0.85 }, 'tube chromé'),
-    hetre: std({ color: 0xc4925a, roughness: 0.55 }, 'contreplaqué de hêtre'),
+    hetre: std({ color: 0xd2a676, roughness: 0.55 }, 'contreplaqué de hêtre'),
     dossier: std({ map: texDossierHetre(), roughness: 0.55, alphaTest: 0.5, side: THREE.DoubleSide }, 'dossier de hêtre percé'),
-    laque: std({ color: 0x121212, roughness: 0.12, metalness: 0.1 }, 'laqué noir brillant'),
+    laque: std({ color: 0x1b1b1b, roughness: 0.16, metalness: 0.2 }, 'laqué noir brillant'),
     noir: std({ color: 0x1d1d1c, roughness: 0.5, metalness: 0.15 }, 'acier noir des mange-debout'),
     miura: std({ color: 0x2a2826, roughness: 0.55 }, 'polypropylène noir (tabourets)'),
     jaune: std({ color: 0xe0a01c, roughness: 0.34 }, 'simili jaune moutarde'),
@@ -489,9 +491,11 @@ export function poserPause1(ch, ctx) {
     panneau(lum(texCafe(), 0.32), 0.65, 1.83, xb - 0.028, 9.945, N1 + 0.95, 'E');
     panneau(lum(texSnack(), 0.6), 0.92, 1.83, xb - 0.028, 10.86, N1 + 0.95, 'E');
   }
-  // LE MUR EST : la grande affiche encadrée « ESC… », le bloc de sortie au-dessus de la porte du palier ; dans le recoin,
+  // LE MUR EST : le bloc de sortie au-dessus de la porte du palier, la grande affiche encadrée « ESC… » ; dans le recoin,
   // le déclencheur et le cadre de consignes (VO 67 s)
-  cadre(texAfficheESC(), 0.95, 1.35, 13.49, 9.75, 1.58, 'W');
+  // (la grande affiche est sur le mur du renfoncement nord du palier, x 13,2 : à 67 s, la caméra sort de la Si 1.4 et
+  // l'a à sa gauche, à 1-2 m)
+  cadre(texAfficheESC(), 0.95, 1.35, 13.125, 11.85, 1.58, 'W');
   ch.sortie(13.46, 7.84, N1 + 2.25, 'W');
   declencheur(13.49, 6.86, 1.25, 'W');
   cadre(texConsignes(), 0.32, 0.5, 13.49, 6.5, 1.47, 'W', 0.01);
@@ -601,7 +605,8 @@ export function poserPause1(ch, ctx) {
     s.moveTo(-w + d, -d); s.lineTo(w - d, -d); s.absarc(w - d, 0, d, -Math.PI / 2, Math.PI / 2, false); s.lineTo(-w + d, d); s.absarc(-w + d, 0, d, Math.PI / 2, Math.PI * 1.5, false);
     const geo = new THREE.ExtrudeGeometry(s, { depth: 0.04, bevelEnabled: false, curveSegments: 10 }); geo.rotateX(-Math.PI / 2);
     maille(geo, P.laque, 0, 0.36, 0, 0, g);
-    const pied = maille(geo.clone().scale(0.8, 1, 0.7), P.noir, 0, 0.0, 0, 0, g, { ombre: false }); pied.scale.y = 9;
+    // (le piétement : un socle noir en retrait, sous le plateau)
+    const pied = maille(geo.clone().scale(0.62, 1, 0.45), P.noir, 0, 0.0, 0, 0, g, { ombre: false }); pied.scale.y = 9;
     C.ajouterBoiteOrientee(8.5, -10.2, 0.7, 0.275, -2.04, { y0: N1, y1: N1 + 0.4 });
   }
   // les mange-debout et leurs tabourets, les chaises coque (VO : près de la porte du palier, devant les jours, devant la
@@ -619,8 +624,15 @@ export function poserPause1(ch, ctx) {
   // LE SOL : la moquette en dalles (et celle du bureau de la travée 1), sur la lumière et l'ombre cuites du 1er
   solEtage([[-0.3, 0, 13.2, YR - 0.06], [-0.3, YR - 0.06, XR, Y_S]], P.moquette, 'moquette de la salle S 1.3');
   // LE PLAFOND de dalles (2,70 m), les luminaires 60 x 60 à grille en trois rangs, les diffuseurs d'air
-  ch.plafond(1.71, 0, 13.14, YR - 0.06, HS, 'dalles');
-  ch.plafond(1.71, YR - 0.06, XR - 0.06, 6.915, HS, 'dalles');
+  // (les dalles de la salle, d'un blanc plus froid que celles du reste de l'étage : le jour et les tubes à 4 000 K)
+  const dallesSalle = M.dalles.clone(); dallesSalle.emissive = new THREE.Color(0xe6ebf3); dallesSalle.emissiveIntensity = 0.2; dallesSalle.name = 'plafond en dalles (salle S 1.3)';
+  ch.plafond(1.71, 0, 13.14, YR - 0.06, HS, 'dalles').material = dallesSalle;
+  ch.plafond(1.71, YR - 0.06, XR - 0.06, 6.915, HS, 'dalles').material = dallesSalle;
+  // (VO q_0198-0212 : vu de la salle, le jour des sept fenêtres est éblouissant — l'appareil règle sa pose sur la pièce ;
+  // un voile blanc sur le vitrage, du côté de la salle seulement : de la rue, la vitre reste ce qu'elle est)
+  const voile = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xf2f6fc).multiplyScalar(1.15), transparent: true, opacity: 0.62, depthWrite: false });
+  voile.name = 'jour éblouissant (fenêtres de la salle)';
+  for (let k = 2; k <= 8; k++) { const v = new THREE.Mesh(new THREE.PlaneGeometry(1.18, 1.13), voile); v.position.set(centreTravee(k), N1 + 1.575, 0.14); v.rotation.y = Math.PI; v.renderOrder = 1; groupe.add(v); }
   // (VO : la salle est d'un blanc froid, le jour et les tubes à 4 000 K — pas la lumière chaude des spots de l'espace pause)
   const froid = new THREE.Color(0xeef2fb);
   for (const y of [1.5, 3.45, 5.0]) for (const x of [3.4, 6.0, 8.6, 11.2]) { dalle(x, y, 'e1salle'); Object.assign(ch.lampes[ch.lampes.length - 1], { couleur: froid, force: 1.2 }); }
@@ -659,14 +671,18 @@ export function poserPause1(ch, ctx) {
   // l'ouest, côté espace pause (VO f_001, 49,2 s ; 67 s)
   porte('x', Y_S, PORTE_S13.c, { l: PORTE_S13.l, etat: 'ouverte', angle: 1.57, cote: 'S', charniere: 'd', nom: 'salle S 1.3' });
   plaque('Salle de cours', 'S 1.3', null, PORTE_S13.c - PORTE_S13.l / 2 - 0.24, Y_S + 0.063, 'N', 1.6);
+  // (le nu intérieur de la façade, sous et au-dessus des fenêtres, dans le blanc de la salle : entre les fenêtres, ce sont
+  // les pilastres)
+  panneau(P.blancSalle, 12.965 - 1.885, 0.95, (1.885 + 12.965) / 2, 0.003, N1 + 0.475, 'N');
+  panneau(P.blancSalle, 12.965 - 1.885, HS - N1 - 2.2, (1.885 + 12.965) / 2, 0.003, N1 + 2.2 + (HS - N1 - 2.2) / 2, 'N');
   // LES CONVECTEURS sous les sept fenêtres
   for (let k = 2; k <= 8; k++) radiateur(centreTravee(k), 0.0, 'N', 1.0, 0.1, 0.7);
   // LES VITROPHANIES : la flèche sur la 4e fenêtre en partant de l'est (travée 5), le wifi sur la 6e (travée 3)
   {
     const fl = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.42), new THREE.MeshStandardMaterial({ map: texVitroFleche(), transparent: true, roughness: 0.4, side: THREE.DoubleSide, depthWrite: false }));
-    fl.position.set(centreTravee(5) - 0.28, N1 + 1.55, 0.135); fl.rotation.y = Math.PI; groupe.add(fl);
+    fl.position.set(centreTravee(5) - 0.28, N1 + 1.55, 0.13); fl.rotation.y = Math.PI; fl.renderOrder = 2; groupe.add(fl);
     const wi = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.3), new THREE.MeshStandardMaterial({ map: texVitroWifi(), transparent: true, roughness: 0.4, side: THREE.DoubleSide, depthWrite: false }));
-    wi.position.set(centreTravee(3) - 0.3, N1 + 1.62, 0.135); wi.rotation.y = Math.PI; groupe.add(wi);
+    wi.position.set(centreTravee(3) - 0.3, N1 + 1.62, 0.13); wi.rotation.y = Math.PI; wi.renderOrder = 2; groupe.add(wi);
   }
   // LE TABLEAU TRIPTYQUE au mur ouest (panneau central 2,0 x 1,2 et ses deux volets ouverts, bas à 0,90 m), le haut-
   // parleur au-dessus, le vidéoprojecteur à 2 m du mur

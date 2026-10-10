@@ -594,10 +594,10 @@ export function poserEtage1(ch, renderer = null) {
     ch.plafond(16.5, 0, 19.8, Y_SALLES, H_SALLE, 'plateaux');
     for (const y of [1.8, 4.8]) { dalle(14.85, y, 'e103'); dalle(18.15, y, 'e104'); }
     // le couloir sombre et le palier d'étage : plâtre et hublots opales (comme les couloirs C01 et C05, photos 01, 05) ;
-    // dans le couloir, un seul hublot, au bout ouest, en veilleuse (VO 48 s : derrière la porte, le noir)
+    // le hublot du couloir éteint (VO 48 s : derrière la porte du fond de l'espace pause, le noir)
     ch.plafond(0, Y_SALLES, 4.6, Y_COUR, H_COUL, 'platre');
     ch.plafond(1.75, Y_COUR, 4.6, 12.45, H_COUL, 'platre');
-    opale(1.2, 7.95, H_COUL, 'e1couloir', { force: 0.35, cuireForce: 0.35 });
+    maille(new THREE.CylinderGeometry(0.17, 0.156, 0.07, 36), new THREE.MeshStandardMaterial({ color: 0xd9d7d1, roughness: 0.5 }), 1.2, H_COUL - 0.035, -7.95, 0, groupe, { ombre: false });
     for (const y of [10.0, 11.7]) opale(3.2, y, H_COUL, 'e1hall');
   }
 
