@@ -1245,6 +1245,22 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     };
     amphi = poserAmphi(ch, { Y_SS, DALLE, H_RET, B, mur, plinthe, panneau, siege, solNiveau, lampes, X });
     solsSS.push(...amphi.sols);
+    // LES SORTIES DES SIÈGES (11/10, l'essai des sièges du plan V2) : le point où l'on se relève, derrière le tabouret,
+    // tombait pour sept d'entre eux sur un tabouret voisin ou une table ; on prend alors, autour du siège, le plus proche
+    // qui soit libre — et du même côté des murs (le segment, à hauteur d'épaule, ne traverse rien)
+    for (const s of sieges) {
+      if (C.libre(s.sx, s.sz, 0.3, Y_SS)) continue;
+      const a0 = Math.atan2(s.sz - s.z, s.sx - s.x);
+      let mieux = null;
+      for (const r of [0.55, 0.65, 0.75, 0.9]) {
+        for (let k = 0; k < 24 && !mieux; k++) {
+          const a = a0 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * Math.PI / 12, x = s.x + Math.cos(a) * r, z = s.z + Math.sin(a) * r;
+          if (C.libre(x, z, 0.3, Y_SS) && C.rayonLibre(s.x, Y_SS + 1.5, s.z, x, Y_SS + 1.5, z, 0.05) > 0.999) mieux = [x, z];
+        }
+        if (mieux) break;
+      }
+      if (mieux) { s.sx = mieux[0]; s.sz = mieux[1]; }
+    }
   } finally {
     ch.decor = decor0; ch.portes.decor = portes0;
   }
