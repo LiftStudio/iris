@@ -329,9 +329,8 @@ export function poserAmphi(ch, K) {
   mur({ de: [A.x1 + 0.075, A.yE - 0.15], a: [A.x1 + 0.075, A.y1 + 0.15], mats: Z.mur, plinthes: ['W'], plinthe: P });
   mur({ de: [A.xE, A.yE - 0.075], a: [A.x1 + 0.15, A.yE - 0.075], mats: Z.mur, plinthes: ['N'], plinthe: P });
   mur({ de: [A.xE + 0.075, A.y0 - 0.15], a: [A.xE + 0.075, A.yE], mats: Z.mur, plinthes: ['W'], plinthe: P });
-  // (les faces de la salle des murs du -1 qui la bordent — le mur vert, le mur du hall : un enduit tiède par-dessus)
-  for (const [x0, x1, h0, h1] of [[A.x0, 3.9, 0, A.h], [5.5, 8.82, 0, A.h], [3.9, 5.5, 2.52, A.h], [8.82, A.xE, H_RET - Y_SS, A.h]]) b(x0, A.y0, x1, A.y0 + 0.004, h0, h1, Z.mur, { ombre: false });
-  b(A.x0, A.y0, A.x0 + 0.004, 17.45, 0, A.h, Z.mur, { ombre: false });
+  // (les faces de la salle des murs du -1 qui la bordent — le mur vert, le mur du hall — sont du même blanc : relecture
+  // du 10/10, l'enduit « tiède » qui les doublait n'a plus lieu d'être)
   // LE RETOUR du mur du tableau (f_0082 à f_0105 : une arête verticale passé le convecteur, vers x 13,9 — un doublage,
   // « faible changement de plan », amphi.md § 3.2) et le BANDEAU du mur est, pendant de celui de l'ouest (un plafond
   // plus bas au-dessus de l'arête : f_0086, f_0095)
