@@ -473,7 +473,7 @@ export class Portes {
       // (un vantail qui tourne ne projette pas d'ombre : la carte d'ombre du décor est gardée en cache, js/ombre_cache.js,
       // et sous une lumière presque d'aplomb l'ombre d'une porte n'est qu'un trait)
       for (const v of vantaux) v.g.traverse((x) => { if (x.isMesh) x.castShadow = false; });
-      this.auto.push({ g, vantaux, forme, cx: o.cx, cz: o.cz, rot: o.rot, cote, k: 0, sens: cote, nx: Math.sin(o.rot), nz: Math.cos(o.rot), libre: o.libre || null, base, h });
+      this.auto.push({ g, vantaux, forme, cx: o.cx, cz: o.cz, rot: o.rot, cote, k: 0, sens: cote, nx: Math.sin(o.rot), nz: Math.cos(o.rot), libre: o.libre || null, base, h, l });
     }
     this.decor.add(g);
     return { g, vantaux };
@@ -503,7 +503,16 @@ export class Portes {
       const dx = x - P.cx, dz = z - P.cz, d = Math.hypot(dx, dz);
       const dc = Math.hypot(camX - P.cx, camZ - P.cz);
       const ici = y > P.base - 1.2 && y < P.base + 2.2, camIci = camY > P.base - 0.3 && camY < P.base + P.h + 0.6;
-      const veut = (d < RAYON_AUTO && ici) || (dc < 0.8 && camIci);
+      // (intégration du 10/10 : et tant que la caméra regarde Haythem AU TRAVERS de l'ouverture — de l'autre côté, la
+      // ligne de la caméra à lui passe dans la baie ; au départ, la caméra est dans la rue : la porte 6 se refermait
+      // devant elle quand il s'éloignait, puis se rouvrait quand elle arrivait)
+      const sp = dx * P.nx + dz * P.nz, sc = (camX - P.cx) * P.nx + (camZ - P.cz) * P.nz;
+      let travers = false;
+      if (sp * sc < 0 && d < 5 && ici && camIci) {
+        const t = sp / (sp - sc), qx = dx + t * (camX - x), qz = dz + t * (camZ - z);
+        travers = Math.abs(qx * P.nz - qz * P.nx) < (P.l || 0.9) / 2 + 0.1;
+      }
+      const veut = (d < RAYON_AUTO && ici) || (dc < 0.8 && camIci) || travers;
       if (veut && P.k <= 0.001) {
         // le côté d'où il arrive : la porte s'ouvre de l'autre
         const cote = dx * P.nx + dz * P.nz;
