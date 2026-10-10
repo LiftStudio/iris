@@ -56,6 +56,22 @@ const BAIE = 2.0;                         // un passage d'au moins 2 m n'est pas
 const OEIL_PHOTO = 1.45;                  // la « vue photo » : l'œil à hauteur de téléphone tenu devant soi
 // le champ vertical pour un écran de rapport `aspect` : 63°, sauf si l'horizontal dépasse alors 108°
 const champBase = (aspect) => Math.min(CHAMP, 2 * Math.atan(Math.tan(CHAMP_H_MAX / 2 * DEG) / Math.max(0.2, aspect || 1)) / DEG);
+// LA ZONE D'UN AUTRE NIVEAU (relecture du 11/10). Les zones du rez-de-chaussée et du 1er n'ont pas de hauteur maximale
+// (js/ecole_lumieres.js zoneEn) : sur le 2e, partout où ses propres zones s'arrêtent un peu avant le mur, c'est celle du
+// 1er qui répond (le fond de la salle 1, le bout ouest du couloir rouge) ; au 1er, celle du rez-de-chaussée (le bord
+// ouest de la Robert Kahn : la David Clark) ; au -1, celle du rez-de-chaussée (la pause : la salle A). Ce n'est pas une
+// autre pièce : la caméra y passe comme hors de toute zone (sinon elle se collait à Haythem au milieu de sa salle, dans
+// 3,6 % des cas rejoués). Une zone `Z` en (x, z) est d'un autre niveau quand elle y vaut aussi un étage plus bas (ou plus
+// haut) alors que la zone de Haythem `Zh` n'y vaut nulle part — la règle de zoneEn, sans liste de zones.
+const ETAGE = 3.0;
+const bandeAdmet = (r, y) => !(r[4] > 0 && y < r[4]) && !(r[5] !== undefined && y > r[5]);
+function autreNiveau(Z, Zh, x, z, sol) {
+  for (const y of [sol - ETAGE, sol + ETAGE]) {
+    if (Zh.rects.some((r) => bandeAdmet(r, y))) continue;
+    if (Z.rects.some((r) => x >= r[0] && x <= r[2] && z >= r[1] && z <= r[3] && bandeAdmet(r, y))) return true;
+  }
+  return false;
+}
 
 // HAYTHEM (la fiche de LA CAGE : 1,73 m, sa vitesse — js/player.js —, son avatar Avaturn ; ses couleurs ne servent qu'au
 // bonhomme de secours, si l'avatar ne se charge pas)
@@ -506,8 +522,9 @@ export class Game {
   // Haythem — sa zone `Zh` (js/ecole_lumieres.js zoneEn, à ses pieds `sol` : les étages et le sous-sol ont leurs zones) —
   // ou dans une voisine DÉCLARÉE (l'une dans les `voisines` de l'autre) où l'on entre SANS PORTE (_seuilOuvert). Par une
   // porte, la caméra s'arrête 15 cm avant la zone d'à côté (photo 24 : elle ne passe plus dans le vestibule, derrière le
-  // chambranle). Hors de toute zone (l'épaisseur d'un mur, un recoin sans zone), on passe sans compter. Aucune liste de
-  // pièces : tout vient des zones et du monde solide de la carte.
+  // chambranle). Hors de toute zone (l'épaisseur d'un mur, un recoin sans zone), on passe sans compter — et de même dans
+  // la zone d'un AUTRE NIVEAU (autreNiveau, en tête du fichier). Aucune liste de pièces : tout vient des zones et du monde
+  // solide de la carte.
   _partPiece(px, py, pz, dx, dy, dz, sol, Zh, tMax = 1) {
     const Lu = this.carte.lumieres, long = Math.hypot(dx, dz);
     if (!Lu || !Zh || long < 0.05 || tMax <= 0) return tMax;
@@ -516,9 +533,10 @@ export class Game {
     admises.clear(); admises.add(Zh);
     let tOk = 0;
     for (let i = 1; i <= n; i++) {
-      const t = i * pas, Z = Lu.zoneEn(px + dx * t, pz + dz * t, sol);
+      const t = i * pas, x = px + dx * t, z = pz + dz * t, Z = Lu.zoneEn(x, z, sol);
       if (!Z) continue;
       if (admises.has(Z)) { tOk = t; continue; }
+      if (autreNiveau(Z, Zh, x, z, sol)) continue;
       const voisine = (Zh.voisines || []).includes(Z.id) || (Z.voisines || []).includes(Zh.id);
       if (voisine && this._seuilOuvert(px, py, pz, dx, dy, dz, long, tOk, t, sol, tMax)) { admises.add(Z); tOk = t; continue; }
       return Math.max(0, tOk - 0.15 / long);
@@ -552,7 +570,7 @@ export class Game {
   // recul, la pièce de Haythem, le pivot (l'épaule d'où part le segment) et le recul libre obtenu `dl` (qui règle la
   // hauteur et le champ).
   _cibleCam(p, u, dt, poser = false) {
-    const C = this.collisions, S = this._cam || (this._cam = { cote: 1, epaule: null, recul: null, zone: null, dl: RECUL, px: 0, py: 0, pz: 0 });
+    const C = this.collisions, S = this._cam || (this._cam = { cote: 1, tv: 0, epaule: null, recul: null, zone: null, dl: RECUL, px: 0, py: 0, pz: 0 });
     const v3 = this.vue === 3, sol = p.solAff, tete = sol + p.h * 0.93;
     const cp = Math.cos(this.camPitch), sp = Math.sin(this.camPitch);
     const bx = Math.sin(this.camYaw), bz = Math.cos(this.camYaw), rx = bz, rz = -bx;   // vers l'arrière ; la droite de l'écran
@@ -587,24 +605,27 @@ export class Game {
       const R = 1.0, cD = C.rayonLibre(u.x, tete, u.z, u.x + rx * R, tete, u.z + rz * R, 0.02) * R;
       const cG = C.rayonLibre(u.x, tete, u.z, u.x - rx * R, tete, u.z - rz * R, 0.02) * R;
       const eD = clamp(cD - RAYON_CAM - 0.08, 0, EPAULE), eG = clamp(cG - RAYON_CAM - 0.08, 0, EPAULE);
-      // LE CÔTÉ : à droite, sauf un mur à moins de 0,6 m à droite ; et quand le recul libre tombe sous 1,5 m, le côté où il
-      // est le plus long (avec de l'hystérésis : la caméra ne bat pas d'une épaule à l'autre)
-      const ED = essai(eD);
-      let EG = null;
-      const gauche = () => EG || (EG = essai(-eG));
-      let cote = S.cote;
-      if (poser) cote = cD < 0.6 && cG > cD + 0.05 ? -1 : 1;
-      if (cote > 0) {
-        if ((cD < 0.6 && cG > cD + 0.05) || (ED.dl < 1.5 && gauche().dl > ED.dl + 0.3)) cote = -1;
-      } else {
-        const G = gauche();
-        if ((cD >= 0.75 && ED.dl >= Math.min(1.5, G.dl - 0.1)) || (G.dl < 1.5 && ED.dl > G.dl + 0.3)) cote = 1;
-      }
-      S.cote = cote;
+      // LE CÔTÉ VOULU, dans cet ordre :
+      //   - le RECUL : quand celui du côté actuel tombe sous 1,5 m et que l'autre en donne 0,4 m de plus, l'autre ; et l'on
+      //     ne quitte pas un côté pour un autre qui en donne 0,4 m de moins (quand c'est l'autre qui tombe sous 1,5 m) ;
+      //   - sinon les MURS : à droite, à gauche si un mur est à moins de 0,6 m à droite (retour à droite au-delà de 0,75 m).
+      // Et l'on ne change de côté que s'il est voulu sans interruption 0,6 s (0,15 s pour le recul) : la caméra ne fait plus
+      // gauche-droite à chaque recoin. (Relecture du 11/10 : les deux règles d'avant se contredisaient — dans le cou, le
+      // mur de la pile à 0,58 m envoyait à gauche, le recul plus long ramenait à droite — et le côté changeait à CHAQUE
+      // image : 63 fois sur la marche du hall au 1er par l'escalier principal, aller et retour.)
+      const ED = essai(eD), EG = essai(-eG), cote0 = S.cote;
+      const dC = cote0 > 0 ? ED.dl : EG.dl, dA = cote0 > 0 ? EG.dl : ED.dl;
+      const murs = cD < 0.6 && cG > cD + 0.05 ? -1 : cD >= 0.75 || cG <= cD + 0.05 ? 1 : cote0;
+      const recul = dC < 1.5 && dA > dC + 0.4;
+      const veut = recul ? -cote0 : dA < 1.5 && dC > dA + 0.4 ? cote0 : murs;
+      S.tv = veut !== cote0 && dt > 0 ? (S.tv || 0) + dt : 0;
+      if (poser) S.cote = recul ? -cote0 : murs;
+      else if (S.tv >= (recul ? 0.15 : 0.6)) { S.cote = veut; S.tv = 0; }
+      const cote = S.cote;
       // l'épaule glisse vers son côté (d'une épaule à l'autre en ≈ 0,4 s), sans jamais entrer dans un mur
       const eV = cote > 0 ? eD : -eG;
       S.epaule = clamp(S.epaule === null ? eV : S.epaule + (eV - S.epaule) * lis(5), -eG, eD);
-      E = Math.abs(S.epaule - eD) < 1e-4 ? ED : EG && Math.abs(S.epaule + eG) < 1e-4 ? EG : essai(S.epaule);
+      E = Math.abs(S.epaule - eD) < 1e-4 ? ED : Math.abs(S.epaule + eG) < 1e-4 ? EG : essai(S.epaule);
     }
     // le lissage de la part libre (vite quand un mur ou un seuil arrive, lentement quand il s'en va)
     const c = this._camLibre ?? 1;
