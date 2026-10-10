@@ -44,6 +44,14 @@
 // y 12,69 et ses fenêtres « sur cour », mur est en x 12,5) et l'angle nord-est des toilettes (x 8,25-8,56, y 12,0-12,75)
 // débordent dans les 75 premiers centimètres de la salle : le lot 5 les retire ; les toilettes doivent s'arrêter au mur
 // orange (y 11,925) ou à l'ouest de x 8,175.
+// RELECTURE (10/10) — essayée en jeu avec la branche du lot 5 (v-etage1, ea48d58) : l'appel devient
+//   poserKahn(ch, { groupe, lampes, renderer, ySud: Y_MUR_ORANGE, xPorte: (SI14.x0 + SI14.x1) / 2 }) ;
+//   for (const o of SI14.provisoires) { if (o.isObject3D) o.visible = false; else o.off = true; }
+// (Y_MUR_ORANGE et SI14 exportés par js/ecole_etage1_pause.js, après poserPause1) : la salle tombe en x 7,975-14,375 ×
+// y 12,96-24,26, sans encoche ; on entre, on traverse, on ressort, la zone passe de e1pause à e1kahn au seuil, et la vue
+// de VO 54,98 s se retrouve à travers la vraie porte. Sur la cote provisoire y 12,0, les murs s'arrêtent sous la dalle
+// du 2e au sud de sa façade arrière (Y_ARR_N) et le toit part de celle-ci : rien ne perce le 2e du lot 8 (essayé aussi).
+// L'allée ouest est en cul-de-sac au sud (la desserte et le bout de l'îlot laissent 0,46 m) : on y entre par le nord.
 import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex } from './kit_decor.js';
@@ -363,11 +371,11 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
     // (relecture du 10/10 : plastique MAT — à 0,38 de rugosité et 0,3 de métal, les tours prenaient le reflet de la
     // carte d'environnement : brun chocolat dans celle de l'espace pause orange, gris dans celle de la salle ; les
     // claviers, à plat sous les caissons, sortaient gris clair quand la vidéo les montre noirs — q_0230, q_0265)
-    tour: nommer(std({ color: 0x141418, roughness: 0.6, metalness: 0.05, envMapIntensity: 0.45 }), 'tour noire'),
-    faceTour: std({ map: texFaceTour(), roughness: 0.6, envMapIntensity: 0.45 }),
-    ecran: std({ color: 0x101012, roughness: 0.55, envMapIntensity: 0.45 }),
-    eteint: nommer(std({ color: 0x07080a, roughness: 0.14, metalness: 0.2, envMapIntensity: 0.6 }), 'écran éteint'),
-    clavier: std({ color: 0x141416, roughness: 0.88, envMapIntensity: 0.25 }),
+    tour: nommer(std({ color: 0x141418, roughness: 0.6, metalness: 0.05, envMapIntensity: 0.3 }), 'tour noire'),
+    faceTour: std({ map: texFaceTour(), roughness: 0.6, envMapIntensity: 0.3 }),
+    ecran: std({ color: 0x101012, roughness: 0.55, envMapIntensity: 0.3 }),
+    eteint: nommer(std({ color: 0x07080a, roughness: 0.14, metalness: 0.2, envMapIntensity: 0.25 }), 'écran éteint'),
+    clavier: std({ color: 0x141416, roughness: 0.88, envMapIntensity: 0.15 }),
     switchCorps: std({ color: 0x2c3742, roughness: 0.4, metalness: 0.5 }),
     switchFace: std({ map: texSwitch(), roughness: 0.4 }),
     routeurCorps: std({ color: 0x2a2b2e, roughness: 0.35, metalness: 0.6 }),
@@ -809,12 +817,15 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
       });
       if (i === n - 1) maille(boiteM(0.3, 0.16, 0.34), K.carton, i % 2 ? -0.36 : 0.36, 0.42 + 0.08, -P / 2 + 0.26, 0, g);
     }
-    for (const v of [3.6, 6.6]) {
-      archi(xa, Y(v) - 0.06, xa + 0.04, Y(v) + 0.06, N1 + 1.06, N1 + 1.14, K.plastique);
+    // (relecture du 10/10 : côte à côte, v 5,0 et 5,3, vers 1,2 m — VO q_0265, x 515-565 de l'image, sous les quatre
+    // étiquettes ; le relevé les donnait à v 3,6 et 6,6, où la vidéo n'en montre pas)
+    for (const v of [5.0, 5.3]) {
+      archi(xa, Y(v) - 0.06, xa + 0.04, Y(v) + 0.06, N1 + 1.16, N1 + 1.25, K.plastique);
+      archi(xa + 0.04, Y(v) - 0.04, xa + 0.042, Y(v) + 0.04, N1 + 1.225, N1 + 1.24, K.jaune);
       // (de la prise, le long du mur jusqu'au fond du plateau, puis vers la tour voisine)
       for (let k = 0; k < 2; k++) {
         const y = Y(v) - 0.03 + k * 0.05, s = k ? 1 : -1;
-        tube(groupe, K.rouge, [[xa + 0.035, N1 + 1.08, -y], [xa + 0.045, N1 + 0.92, -(y + s * 0.02)], [xa + 0.05, N1 + H_PLAT + 0.012, -(y + s * 0.06)], [xa + 0.09, N1 + H_PLAT + 0.01, -(y + s * 0.3)], [xa + 0.14, N1 + H_PLAT + 0.012, -(y + s * 0.42)]], 0.0026, 12, false);
+        tube(groupe, K.rouge, [[xa + 0.035, N1 + 1.18, -y], [xa + 0.045, N1 + 0.98, -(y + s * 0.02)], [xa + 0.05, N1 + H_PLAT + 0.012, -(y + s * 0.06)], [xa + 0.09, N1 + H_PLAT + 0.01, -(y + s * 0.3)], [xa + 0.14, N1 + H_PLAT + 0.012, -(y + s * 0.42)]], 0.0026, 12, false);
       }
     }
   }
@@ -949,9 +960,10 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
     // l'affiche A1 turquoise (v 7,9-8,7, de 1,15 à 2,0 m), la prise double dessous
     panneau(new THREE.MeshStandardMaterial({ map: texAfficheTurquoise(), roughness: 0.7 }), 0.6, 0.85, X(0) + 0.002, Y(8.3), N1 + 1.575, 'E');
     archi(X(0), Y(8.3) - 0.07, X(0) + 0.03, Y(8.3) + 0.07, N1 + 1.06, N1 + 1.14, K.plastique);
-    // au mur ouest, vers 1,9 m : le petit boîtier blanc (sonde) et sa rangée d'étiquettes
-    archi(X(0), Y(5.2) - 0.05, X(0) + 0.025, Y(5.2) + 0.05, N1 + 1.85, N1 + 1.97, K.plastique);
-    for (let k = 0; k < 4; k++) archi(X(0), Y(5.45) + k * 0.06, X(0) + 0.002, Y(5.45) + k * 0.06 + 0.04, N1 + 1.9, N1 + 1.93, K.etiquette);
+    // au mur ouest, à hauteur d'œil (VO q_0265 : sur l'horizon de l'appareil, tenu vers 1,5 m — et non vers 1,9 m) : le
+    // petit boîtier blanc (sonde) en v 3,9 ; la rangée de quatre étiquettes au-dessus des prises (v 5,0-5,3)
+    archi(X(0), Y(3.9) - 0.05, X(0) + 0.025, Y(3.9) + 0.05, N1 + 1.45, N1 + 1.57, K.plastique);
+    for (let k = 0; k < 4; k++) archi(X(0), Y(4.98) + k * 0.09, X(0) + 0.002, Y(4.98) + k * 0.09 + 0.05, N1 + 1.58, N1 + 1.61, K.etiquette);
   }
   // ---- le côté de la porte : la desserte bleue, le radiateur, la pile noire en hauteur dans l'angle sud-ouest (VO q_0258,
   // q_0262-0265, pile_ecrans) ----
