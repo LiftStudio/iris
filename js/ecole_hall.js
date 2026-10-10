@@ -134,6 +134,16 @@ function texBrochures() {
     }
   }, null, false, 4);
 }
+// LE PANNEAU VERT DES PREMIERS SECOURS (VO 95,4 s) : la croix blanche, deux lignes de texte
+function texSecours() {
+  return canvasTex(128, 192, (g, w, h) => {
+    g.fillStyle = '#1b8a4c'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = '#ffffff'; g.lineWidth = 4; g.strokeRect(5, 5, w - 10, h - 10);
+    g.fillStyle = '#ffffff'; g.fillRect(w / 2 - 14, 34, 28, 76); g.fillRect(w / 2 - 38, 58, 76, 28);
+    g.font = '700 15px "Segoe UI", Arial, sans-serif'; g.textAlign = 'center';
+    g.fillText('PREMIERS', w / 2, 140); g.fillText('SECOURS', w / 2, 160);
+  }, null, false, 2);
+}
 // LE COUSSIN RAYÉ noir et blanc du fauteuil derrière le pupitre (VO q_0373)
 function texZebre() {
   return canvasTex(64, 64, (g, w, h) => {
@@ -163,7 +173,7 @@ function texHetrePerfore() {
 // =====================================================================
 //  LES MATIÈRES DU HALL
 // =====================================================================
-function matieresHall(M) {
+function matieresHall() {
   const std = (o, nom) => { const m = new THREE.MeshStandardMaterial(o); m.name = nom; return m; };
   const H = {
     // le mitoyen gris ardoise bleuté (VO q_0373-0381 : brut #5A5A74 sous l'étalonnage froid, rééquilibré sur le blanc
@@ -198,13 +208,13 @@ function matieresHall(M) {
   // briller, comme les spots — js/ecole_matieres.js M.spot)
   H.ligne = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff3e2).multiplyScalar(3.6) }); H.ligne.name = 'ligne lumineuse du plafond';
   H.profil = std({ color: 0xd9d9d6, roughness: 0.4, metalness: 0.5 }, 'profil des lignes lumineuses');
-  void M;
   return H;
 }
 
 // =====================================================================
 //  LES OUTILS
 // =====================================================================
+let H = null;                       // les matières du hall (créées par poserHall)
 const ROT = { S: 0, N: Math.PI, E: Math.PI / 2, W: -Math.PI / 2 };
 const DIR = { S: [0, 1], N: [0, -1], E: [1, 0], W: [-1, 0] };      // (en monde : x, z)
 // un groupe posé au point (x, y) du plan, son « avant » (+z local) tourné vers `face`
@@ -223,8 +233,8 @@ function siege(ch, x, y, h, face, sx, sy, nom) {
 
 // LE FAUTEUIL DE BUREAU NOIR (VO q_0373-0380) : piètement étoile à roulettes, vérin, assise rembourrée, dossier résille,
 // accoudoirs. `zebre` : le coussin rayé noir et blanc.
-function fauteuil(ch, x, y, face, { zebre = false, sx, sy, nom = 'le fauteuil', rot = 0 } = {}) {
-  const M = ch.M, g = groupe(ch, x, y, face); g.rotation.y += rot;
+function fauteuil(ch, x, y, face, { zebre = false, sx, sy, nom = 'le fauteuil' } = {}) {
+  const M = ch.M, g = groupe(ch, x, y, face);
   for (let k = 0; k < 5; k++) {
     const a = k / 5 * Math.PI * 2, b = BL(g, M.noir, 0.05, 0.03, 0.3, Math.sin(a) * 0.15, 0.075, Math.cos(a) * 0.15, { ombre: false });
     b.rotation.y = a;
@@ -245,7 +255,7 @@ function fauteuil(ch, x, y, face, { zebre = false, sx, sy, nom = 'le fauteuil', 
 // UNE CHAISE DE HÊTRE des salles de cours (VO q_0027 ; hall_work/c_72_coin) : assise et dossier de contreplaqué, le
 // dossier perforé, le piètement chromé
 function chaiseHetre(ch, x, y, face, sx, sy) {
-  const { M } = ch, H = ch._hall, g = groupe(ch, x, y, face);
+  const { M } = ch, g = groupe(ch, x, y, face);
   for (const [px, pz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
     const p = CL(g, M.inox, 0.011, 0.46, px * 0.19, 0.23, pz * 0.18, 8, { ombre: false });
     p.rotation.z = -px * 0.06;
@@ -259,7 +269,7 @@ function chaiseHetre(ch, x, y, face, sx, sy) {
 }
 // UN ÉCRAN DE BUREAU (pied, dalle noire ; `allume` : l'écran vu de face)
 function ecran(ch, x, y, h, face, allume = false) {
-  const { M } = ch, H = ch._hall, g = groupe(ch, x, y, face); g.position.y = h;
+  const { M } = ch, g = groupe(ch, x, y, face); g.position.y = h;
   BL(g, M.noir, 0.2, 0.012, 0.16, 0, 0.006, 0, { ombre: false });
   BL(g, M.noir, 0.05, 0.16, 0.03, 0, 0.09, -0.03, { ombre: false });
   BL(g, M.noir, 0.56, 0.34, 0.03, 0, 0.33, 0.0);
@@ -272,7 +282,7 @@ function ecran(ch, x, y, h, face, allume = false) {
 // =====================================================================
 export function poserHall(ch) {
   const { M, C } = ch;
-  const H = ch._hall = matieresHall(M);
+  H = matieresHall();
   const B = (x0, y0, x1, y1, h0, h1, mat, o) => ch.boite(Math.min(x0, x1), Math.min(y0, y1), Math.max(x0, x1), Math.max(y0, y1), h0, h1, mat, o);
 
   // =====================================================================
@@ -288,6 +298,8 @@ export function poserHall(ch) {
   // LA PHOTO ENCADRÉE d'une tour (0,65 x 0,95 m, cadre argent, vers y 2,8)
   ch.panneau(new THREE.MeshStandardMaterial({ map: texTour(), roughness: 0.3 }), 0.6, 0.9, xa - 0.004, 2.8, 1.78, 'W');
   for (const [y0, y1, h0, h1] of [[2.475, 3.125, 2.23, 2.255], [2.475, 3.125, 1.305, 1.33], [2.475, 2.5, 1.305, 2.255], [3.1, 3.125, 1.305, 2.255]]) B(xa - 0.018, y0, X_MIT, y1, h0, h1, H.argent, { ombre: false });
+  // LE PANNEAU VERT des premiers secours, plus au nord sur le même mur (VO 95,4 s, au bord gauche de l'image)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texSecours(), roughness: 0.5 }), 0.2, 0.3, X_MIT - 0.006, 5.15, 1.75, 'W');
   // LES DEUX CAMÉRAS DÔMES au plafond : au-dessus des affiches (VO q_0380), dans l'angle nord-est (VO 6,7 s)
   for (const [x, y] of [[19.55, 3.35], [18.95, 7.2]]) {
     const d = maille(new THREE.SphereGeometry(0.06, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.boitier, x, H_PLAF, -y, 0, ch.decor, { ombre: false });

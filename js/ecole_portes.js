@@ -139,9 +139,6 @@ function texVitrophanie(dos = false) {
         for (const q of morceaux) { const c = nuance(base, (alea() - 0.45) * 0.22); facette(q, dos ? dosCouleur(c, 0.62) : c); }
       }
     }
-    // ---- LE TRAIT JAUNE EN ÉQUERRE (le coin du logo, sur le haut gauche du nuage : il plonge sous lui) ----
-    g.fillStyle = dos ? 'rgb(74,72,86)' : '#f1b40c';
-    g.fillRect(X(14.85), Y(1.93), 0.03 * mx, 0.36 * my); g.fillRect(X(14.85), Y(1.93), 0.27 * mx, 0.03 * my);
     // ---- LE NUAGE « LOW POLY » : cinq lobes, le dessous plat ; une grille de points tremblés, triangulée ; chaque facette
     // prend un bleu selon sa place (sombre en bas à gauche, clair en haut à droite) ----
     const lobes = [[14.66, 1.46, 0.17], [14.96, 1.55, 0.34], [15.23, 1.52, 0.24], [15.5, 1.65, 0.33], [15.7, 1.49, 0.17]];
@@ -160,6 +157,10 @@ function texVitrophanie(dos = false) {
         facette(q, (dos ? gris : bleus)[k]);
       }
     }
+    // ---- LE TRAIT JAUNE EN ÉQUERRE (le coin du logo) : il borde le haut gauche du nuage, juste au-dessus du lobe gauche
+    // (photo 16 : la branche verticale en x 14,82 de 1,66 à 1,93 m, la branche horizontale jusqu'en x 15,08) ----
+    g.fillStyle = dos ? 'rgb(96,94,110)' : '#f1b40c';
+    g.fillRect(X(14.82), Y(1.93), 0.03 * mx, 0.27 * my); g.fillRect(X(14.82), Y(1.93), 0.26 * mx, 0.03 * my);
     // ---- L'ORIGAMI VIOLET sous le lobe droit (x 15,46-15,81, h 0,95-1,31) ----
     const oA = [15.47, 1.3], oB = [15.63, 1.29], oC = [15.81, 1.19], oD = [15.66, 0.96], oE = [15.56, 1.11];
     for (const [q, c] of [[[oA, oB, oE], '#bba7df'], [[oB, oC, oE], '#9c83c9'], [[oE, oC, oD], '#7a5fae'], [[oA, oE, oD], '#8d74bf']]) facette(q, dos ? dosCouleur(c, 0.72, 0.15) : c);
