@@ -39,13 +39,24 @@ const X_PLAQUE = 10.905;
 // =====================================================================
 //  LES TEXTURES
 // =====================================================================
-// LE LOGO « ıris » (plaque, totem) : le premier i est une barre JAUNE sans point, « ris » en blanc (VO q_0028)
+// LE LOGO « ıris » (plaque, totem ; VO q_0028 et le logo officiel de l'écran de chargement) : des i SANS POINT, le premier
+// une barre JAUNE de la hauteur des minuscules, « rıs » en blanc ; `carre` : le carré jaune qui chevauche le coin haut
+// gauche du pavé noir (x, y, côté du pavé)
 function logoIris(g, cx, y, taille) {
   g.font = `700 ${taille}px "Century Gothic", "Avenir Next", "Futura", "Segoe UI", sans-serif`;
   g.textBaseline = 'alphabetic'; g.textAlign = 'left';
-  const e = taille * 0.13, esp = taille * 0.08, wr = g.measureText('ris').width, x0 = cx - (e + esp + wr) / 2;
-  g.fillStyle = '#f1b40c'; g.fillRect(x0, y - taille * 0.72, e, taille * 0.72);
-  g.fillStyle = '#ffffff'; g.fillText('ris', x0 + e + esp, y);
+  const m = g.measureText('x'), hx = m.actualBoundingBoxAscent || taille * 0.53;
+  // (les deux i dessinés en barres : toutes les polices n'ont pas le « ı » sans point)
+  const e = taille * 0.15, esp = taille * 0.07, wr = g.measureText('r').width, ws = g.measureText('s').width;
+  const x0 = cx - (2 * e + 3 * esp + wr + ws) / 2;
+  g.fillStyle = '#f1b40c'; g.fillRect(x0, y - hx, e, hx);
+  g.fillStyle = '#ffffff'; let x = x0 + e + esp;
+  g.fillText('r', x, y); x += wr + esp * 0.6;
+  g.fillRect(x, y - hx, e, hx); x += e + esp * 1.2;
+  g.fillText('s', x, y);
+}
+function carreJaune(g, x, y, h) {
+  g.fillStyle = '#f1b40c'; g.fillRect(x - 0.16 * h, y - 0.16 * h, 0.38 * h, 0.38 * h);
 }
 // un QR code figuré (blanc, modules noirs, les trois repères)
 function qr(g, x, y, c) {
@@ -72,8 +83,8 @@ function texPlaqueIris() {
     g.fillStyle = '#f7f7f4'; g.fillRect(0, 0, w, h);
     const px = 44, py = 50, pw = 296, ph = 150;
     g.fillStyle = '#161616'; g.fillRect(px, py, pw, ph);
-    g.fillStyle = '#f1b40c'; g.fillRect(px - 14, py - 14, 50, 11); g.fillRect(px - 14, py - 14, 11, 62);
-    logoIris(g, px + pw / 2, py + ph * 0.76, 118);
+    carreJaune(g, px, py, ph);
+    logoIris(g, px + pw / 2 + 6, py + ph * 0.74, 128);
     g.fillStyle = '#4a4a4a'; g.font = '600 23px "Segoe UI", Arial, sans-serif'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
     ['INSTITUT SUPÉRIEUR', 'DE RESSOURCES', 'INFORMATIQUES'].forEach((t, i) => g.fillText(t, px + 10, 250 + i * 34));
   }, null, false, 8);
@@ -141,7 +152,7 @@ function texLames() {
     const lh = h / noms.length;
     noms.forEach(([t, sens], i) => {
       const y = i * lh + 2, gr = g.createLinearGradient(0, y, 0, y + lh - 4);
-      gr.addColorStop(0, '#3d4f68'); gr.addColorStop(0.5, '#2c3b52'); gr.addColorStop(1, '#212c3e');
+      gr.addColorStop(0, '#39424f'); gr.addColorStop(0.5, '#2a313c'); gr.addColorStop(1, '#1f242d');
       g.fillStyle = gr; g.fillRect(0, y, w, lh - 4);
       g.fillStyle = '#eef1f4'; g.font = '600 18px "Segoe UI", Arial, sans-serif'; g.textAlign = 'left'; g.textBaseline = 'middle';
       g.fillText(t, 12, y + lh / 2 - 1, w - 56);
@@ -181,8 +192,8 @@ function texTotem() {
   return canvasTex(320, 800, (g, w, h) => {
     const d = g.createLinearGradient(0, 0, 0, h); d.addColorStop(0, '#1c1c1c'); d.addColorStop(1, '#0e0e0e');
     g.fillStyle = d; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#f1b40c'; g.fillRect(104, 56, 26, 7); g.fillRect(104, 56, 7, 30);
-    logoIris(g, w / 2 + 8, 128, 76);
+    carreJaune(g, 96, 66, 70);
+    logoIris(g, w / 2 + 8, 122, 80);
     const serif = (poids, t) => `${poids} ${t}px "Didot", "Bodoni MT", "Times New Roman", Georgia, serif`;
     const OR = '#d9a43a';
     g.textBaseline = 'alphabetic'; g.textAlign = 'left'; g.fillStyle = OR;
@@ -277,10 +288,10 @@ export function poserRdcCentre(ch) {
   // =====================================================================
   //  LE TOTEM, contre le mur ouest du cou (x 10,05), tourné vers l'est
   // =====================================================================
-  const totem = new THREE.Group(); totem.position.set(10.2, 0, -6.1); totem.rotation.y = Math.PI / 2; ch.decor.add(totem);
+  const totem = new THREE.Group(); totem.position.set(10.2, 0, -7.9); totem.rotation.y = Math.PI / 2; ch.decor.add(totem);
   maille(boiteM(0.86, 0.03, 0.26), M.aluGris, 0, 0.015, 0, 0, totem);
   maille(boiteM(0.8, 2.0, 0.04), M.noir, 0, 1.03, 0, 0, totem);
   const face = new THREE.Mesh(new THREE.PlaneGeometry(0.78, 1.96), std({ map: texTotem(), roughness: 0.5 }, 'totem BTS SIO'));
   face.position.set(0, 1.03, 0.021); face.receiveShadow = true; totem.add(face);
-  C.ajouterBoite(10.06, -5.66, 10.34, -6.54, { y1: 2.05 });
+  C.ajouterBoite(10.06, -7.46, 10.34, -8.34, { y1: 2.05 });
 }
