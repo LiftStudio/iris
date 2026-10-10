@@ -498,8 +498,10 @@ export function poserPause1(ch, ctx) {
   mur({ de: [13.2, 12.6], a: [13.2, YO + 0.06], mats: { W: P.creme, E: M.blanc } });
 
   // LA PORTE DE LA Si 1.4 : vantail blanc à grande vitre, gonds à l'est, ouvert vers l'espace pause ; l'imposte vitrée
+  // (intégration du 10/10 : ouvert à 80° et non 72° — VO q_0219, il est presque d'équerre ; à 72°, il ne laissait que
+  // 0,62 m de passage, Haythem ne passait qu'au centimètre près, x 12,20)
   const cK = (SI14.x0 + SI14.x1) / 2, lK = SI14.x1 - SI14.x0;
-  porte('x', YO, cK, { l: lK, ep: 0.12, modele: 'vitree', blanc: true, tirant: 'court', etat: 'ouverte', angle: 1.25, cote: 'S', charniere: 'd', nom: 'salle Robert Kahn Si 1.4' });
+  porte('x', YO, cK, { l: lK, ep: 0.12, modele: 'vitree', blanc: true, tirant: 'court', etat: 'ouverte', angle: 1.4, cote: 'S', charniere: 'd', nom: 'salle Robert Kahn Si 1.4' });
   B(SI14.x0, YO - 0.03, SI14.x1, YO + 0.03, N1 + 2.09, N1 + 2.13, M.alu, { ombre: false });
   B(SI14.x0, YO - 0.03, SI14.x1, YO + 0.03, N1 + 2.41, N1 + 2.45, M.alu, { ombre: false });
   const imposteK = new THREE.Mesh(new THREE.PlaneGeometry(lK - 0.04, 0.28), M.verre); imposteK.position.set(cK, N1 + 2.27, -YO); groupe.add(imposteK);

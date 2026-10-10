@@ -1215,7 +1215,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     { id: 'escalierSS', rects: [[0.2, -ESC.yPied, 1.5, -ESC.y0, -10]], voisines: ['palierSS', 'hallSS'], env: { x: 0.85, y: -1.1, z: -12.0 } },
     { id: 'hallSS', rects: [zr(0.4, ESC.yPied, 2.48, Y_FOND)], voisines: ['escalierSS', 'couloirSS'], env: env(1.45, 15.7) },
     { id: 'couloirSS', rects: [zr(1.45, Y_COUL0, 2.48, ESC.yPied)], voisines: ['hallSS'], env: env(1.96, 10.3, 1.5) },
-    { id: 'pauseSS', rects: [zr(2.48, 11.6, 12.95, 15.85), zr(4.95, 6.45, 12.95, 11.6)], voisines: [], env: env(7.4, 12.2) },
+    // (intégration du 10/10 : jusqu'à y 15,9, le bord de la zone de la grande salle — entre les deux, sur le seuil de sa
+    // porte, la zone du local du rez-de-chaussée, au-dessus, prenait la main le temps d'un pas)
+    { id: 'pauseSS', rects: [zr(2.48, 11.6, 12.95, 15.9), zr(4.95, 6.45, 12.95, 11.6)], voisines: [], env: env(7.4, 12.2) },
     amphi.zone,
   ];
 
