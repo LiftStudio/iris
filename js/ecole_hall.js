@@ -75,48 +75,52 @@ function texEtiquette(mot, w, h) {
     g.fillText(mot, W / 2, H * 0.53);
   }, null, false, 4);
 }
-// L'AFFICHE DU MITOYEN (VO q_0378-0381) : fond noir, la façade d'un immeuble en blanc — une grille de fenêtres noires,
-// vue un peu en contre-plongée —, un petit texte blanc en haut à gauche, « iris » en bas à droite (le cadre magenta est
-// une moulure à part)
+// L'AFFICHE DU MITOYEN (VO q_0378-0381 ; relecture 10/10, recadrée à 95,4 s) : fond noir, en haut à gauche quatre lignes
+// d'un petit texte clair ; en bas, sur les deux tiers de la largeur et plus, la façade BLANCHE d'un long immeuble vue de
+// biais (son haut descend vers la droite) — un bandeau magenta en corniche, quatre rangées de dix fenêtres noires, une
+// rangée de vitrines plus larges —, et la pastille noire « iris » en bas à droite, sur le blanc (le cadre magenta est une
+// moulure à part)
 function texImmeuble() {
   return canvasTex(256, 352, (g, w, h) => {
     g.fillStyle = '#121214'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#e9e9e6'; g.font = '600 13px "Segoe UI", Arial, sans-serif';
-    g.fillText('L’ÉCOLE', 18, 30); g.fillStyle = '#9a9aa0'; g.fillRect(18, 38, 70, 4); g.fillRect(18, 46, 52, 4);
-    // la façade : un trapèze (plus large en bas), des rangées de fenêtres qui rétrécissent vers le haut
-    const xb0 = 30, xb1 = 226, xt0 = 52, xt1 = 204, yt = 74, yb = 300;
-    g.fillStyle = '#f2f2ef'; g.beginPath(); g.moveTo(xt0, yt); g.lineTo(xt1, yt); g.lineTo(xb1, yb); g.lineTo(xb0, yb); g.closePath(); g.fill();
-    const rangs = 9, cols = 7;
-    for (let j = 0; j < rangs; j++) {
-      const t0 = (j + 0.22) / rangs, t1 = (j + 0.78) / rangs;
-      const y0 = yt + (yb - yt) * t0, y1 = yt + (yb - yt) * t1;
-      const L0 = xt0 + (xb0 - xt0) * t0, R0 = xt1 + (xb1 - xt1) * t0;
-      for (let i = 0; i < cols; i++) {
-        const u0 = (i + 0.18) / cols, u1 = (i + 0.82) / cols;
-        g.fillStyle = (i + j) % 5 === 0 ? '#3a3a40' : '#141416';
-        g.fillRect(L0 + (R0 - L0) * u0, y0, (R0 - L0) * (u1 - u0), y1 - y0);
-      }
-    }
-    g.fillStyle = '#ffffff'; g.font = '600 26px "Century Gothic", "Avenir", "Segoe UI", sans-serif'; g.fillText('iris', w - 64, h - 18);
-    g.fillStyle = '#f1b40c'; g.fillRect(w - 64, h - 40, 6, 4);
+    g.fillStyle = '#e6dcc0';
+    for (const [y, l] of [[26, 92], [37, 104], [48, 80], [59, 66]]) g.fillRect(20, y, l, 5);
+    // la façade : un quadrilatère (le bord gauche plus haut que le droit), ses fenêtres suivent la perspective
+    const TL = [36, 118], TR = [252, 134], BR = [252, 298], BL = [30, 306];
+    const P = (u, v) => [0, 1].map((k) => (1 - v) * (TL[k] + (TR[k] - TL[k]) * u) + v * (BL[k] + (BR[k] - BL[k]) * u));
+    const quad = (u0, v0, u1, v1, c) => {
+      g.fillStyle = c; g.beginPath(); g.moveTo(...P(u0, v0)); g.lineTo(...P(u1, v0)); g.lineTo(...P(u1, v1)); g.lineTo(...P(u0, v1)); g.closePath(); g.fill();
+    };
+    quad(0, 0, 1, 1, '#f3f2ee');
+    quad(0, 0, 1, 0.06, '#8a2f7a');
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 10; i++) quad(0.03 + i * 0.097, 0.12 + j * 0.13, 0.09 + i * 0.097, 0.2 + j * 0.13, (i * 7 + j * 3) % 11 === 0 ? '#3c3c44' : '#151518');
+    for (const [u0, u1] of [[0.03, 0.2], [0.26, 0.33], [0.37, 0.44], [0.49, 0.62], [0.7, 0.92]]) quad(u0, 0.66, u1, 0.78, '#151518');
+    // la pastille « iris »
+    g.fillStyle = '#151517'; g.fillRect(w - 58, h - 70, 46, 18);
+    g.fillStyle = '#ffffff'; g.font = '600 13px "Century Gothic", "Avenir", "Segoe UI", sans-serif'; g.fillText('iris', w - 50, h - 56);
+    g.fillStyle = '#f1b40c'; g.fillRect(w - 50, h - 67, 3, 2);
   }, null, false, 4);
 }
-// LA PHOTO ENCADRÉE (VO q_0377-0381) : une tour moderne blanche sous un ciel pâle, ses étages en bandeaux, un petit logo
-// en bas à gauche
+// LA PHOTO ENCADRÉE (VO q_0377-0381 ; relecture 10/10, 93,6 et 95,4 s) : la façade blanche d'un immeuble moderne vue
+// d'en bas, de biais — ses rangées de fenêtres sombres montent vers la droite —, un reflet bleu vert, le ciel blanc ; la
+// petite pastille noire « iris » en bas à gauche
 function texTour() {
   return canvasTex(256, 374, (g, w, h) => {
-    const ciel = g.createLinearGradient(0, 0, 0, h); ciel.addColorStop(0, '#b9c8d8'); ciel.addColorStop(1, '#e9edf1');
+    const ciel = g.createLinearGradient(0, 0, w, h); ciel.addColorStop(0, '#f2f4f5'); ciel.addColorStop(1, '#d9e0e4');
     g.fillStyle = ciel; g.fillRect(0, 0, w, h);
-    // la tour, un peu en perspective : la face claire à gauche, l'ombre à droite
-    g.fillStyle = '#f4f4f2'; g.beginPath(); g.moveTo(70, 40); g.lineTo(150, 30); g.lineTo(156, 330); g.lineTo(62, 330); g.closePath(); g.fill();
-    g.fillStyle = '#c9ced4'; g.beginPath(); g.moveTo(150, 30); g.lineTo(196, 48); g.lineTo(200, 330); g.lineTo(156, 330); g.closePath(); g.fill();
-    for (let y = 52; y < 326; y += 11) {
-      g.fillStyle = 'rgba(70,86,104,0.55)'; g.fillRect(70 - (y - 40) * 0.027, y, 82 + (y - 40) * 0.047, 4);
-      g.fillStyle = 'rgba(60,72,88,0.45)'; g.fillRect(157, y + 1, 41, 3);
+    // la façade : un parallélogramme dont les rangées montent vers la droite (cisaillement vertical)
+    g.save(); g.setTransform(1, -0.42, 0, 1, 0, 0);
+    g.fillStyle = '#fbfbf9'; g.fillRect(28, 40, 228, 330 + 0.42 * 256);
+    for (let j = 0; j < 17; j++) for (let i = 0; i < 6; i++) {
+      const x = 40 + i * 36, y = 70 + j * 22 + i * 1.5;
+      g.fillStyle = (i + j) % 4 === 0 ? 'rgba(92,134,140,0.75)' : 'rgba(58,66,76,0.78)'; g.fillRect(x, y, 26, 11);
     }
-    g.fillStyle = '#6f777f'; g.fillRect(0, 330, w, h - 330);
-    g.fillStyle = '#1b1b1d'; g.fillRect(14, h - 30, 46, 18);
-    g.fillStyle = '#ffffff'; g.font = '600 12px "Century Gothic", "Segoe UI", sans-serif'; g.fillText('iris', 22, h - 16);
+    g.restore();
+    // le reflet, l'arête du bâtiment
+    const r = g.createLinearGradient(60, 0, 200, h); r.addColorStop(0, 'rgba(120,200,210,0)'); r.addColorStop(0.5, 'rgba(120,200,210,0.18)'); r.addColorStop(1, 'rgba(120,200,210,0)');
+    g.fillStyle = r; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#1b1b1d'; g.fillRect(14, h - 34, 42, 16);
+    g.fillStyle = '#ffffff'; g.font = '600 11px "Century Gothic", "Segoe UI", sans-serif'; g.fillText('iris', 22, h - 22);
   }, null, false, 4);
 }
 // LES BROCHURES BLANCHES « iris » du présentoir de bois (VO q_0026-0028) : couvertures claires, le pavé noir, une photo
@@ -293,17 +297,22 @@ export function poserHall(ch) {
   // (la vidéo ne le voit qu'au sud de y ≈ 4,5 ; au nord, le coin derrière le présentoir, sous la caméra dôme, sort sombre
   // à 6,7 s — on garde le gris jusqu'au mur nord. Plinthe de bois, comme tout le hall.)
   ch.mur({ de: [19.95, -0.4], a: [19.95, 7.65], ep: 0.3, mats: { W: H.ardoise, E: M.blanc }, plinthes: ['W'] });
-  // L'AFFICHE À L'IMMEUBLE (0,8 x 1,1 m, centre à 1,75 m, vers y 4,3) dans son cadre magenta-violet
-  const xa = X_MIT - 0.012;
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texImmeuble(), roughness: 0.55 }), 0.72, 1.02, xa - 0.004, 4.3, 1.75, 'W');
-  for (const [y0, y1, h0, h1] of [[3.9, 4.7, 2.26, 2.3], [3.9, 4.7, 1.2, 1.24], [3.9, 3.94, 1.2, 2.3], [4.66, 4.7, 1.2, 2.3]]) B(xa - 0.02, y0, X_MIT, y1, h0, h1, H.magenta, { ombre: false });
-  // LA PHOTO ENCADRÉE d'une tour (0,65 x 0,95 m, cadre argent, vers y 2,8)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texTour(), roughness: 0.3 }), 0.6, 0.9, xa - 0.004, 2.8, 1.78, 'W');
-  for (const [y0, y1, h0, h1] of [[2.475, 3.125, 2.23, 2.255], [2.475, 3.125, 1.305, 1.33], [2.475, 2.5, 1.305, 2.255], [3.1, 3.125, 1.305, 2.255]]) B(xa - 0.018, y0, X_MIT, y1, h0, h1, H.argent, { ombre: false });
-  // LE PANNEAU VERT des premiers secours, plus au nord sur le même mur (VO 95,4 s, au bord gauche de l'image)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texSecours(), roughness: 0.5 }), 0.2, 0.3, X_MIT - 0.006, 5.15, 1.75, 'W');
-  // LES DEUX CAMÉRAS DÔMES au plafond : au-dessus des affiches (VO q_0380), dans l'angle nord-est (VO 6,7 s)
-  for (const [x, y] of [[19.55, 3.35], [18.95, 7.2]]) {
+  // (RELECTURE DU 10/10 : les deux cadres sont tout au SUD du mitoyen, pas vers y 4,3 et 2,8. À 92,6 s, depuis la porte
+  // nord, la photo de la tour est déjà au bord gauche de l'image (x 30-75) ; à 93,6, 94,8 et 95,4 s, elle est à 6-7° du
+  // coin mitoyen-façade, l'affiche juste à sa gauche — et seule cette place met aussi la porte 6, les fenêtres et le
+  // pupitre où la vidéo les montre à 95,4 s. La photo centrée vers y 0,85, l'affiche vers y 2,05, le panneau vert collé
+  // à son bord nord, la caméra dôme au-dessus de la photo.)
+  const xa = X_MIT - 0.012, yAff = 2.05, yTour = 0.85;
+  // L'AFFICHE À L'IMMEUBLE (0,8 x 1,1 m, centre à 1,75 m) dans son cadre magenta-violet
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texImmeuble(), roughness: 0.55 }), 0.72, 1.02, xa - 0.004, yAff, 1.75, 'W');
+  for (const [y0, y1, h0, h1] of [[-0.4, 0.4, 2.26, 2.3], [-0.4, 0.4, 1.2, 1.24], [-0.4, -0.36, 1.2, 2.3], [0.36, 0.4, 1.2, 2.3]]) B(xa - 0.02, yAff + y0, X_MIT, yAff + y1, h0, h1, H.magenta, { ombre: false });
+  // LA PHOTO ENCADRÉE d'un immeuble (0,65 x 0,95 m, cadre argent)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texTour(), roughness: 0.3 }), 0.6, 0.9, xa - 0.004, yTour, 1.78, 'W');
+  for (const [y0, y1, h0, h1] of [[-0.325, 0.325, 2.23, 2.255], [-0.325, 0.325, 1.305, 1.33], [-0.325, -0.3, 1.305, 2.255], [0.3, 0.325, 1.305, 2.255]]) B(xa - 0.018, yTour + y0, X_MIT, yTour + y1, h0, h1, H.argent, { ombre: false });
+  // LE PANNEAU VERT des premiers secours, contre le bord nord de l'affiche (VO 95,4 s, au bord gauche de l'image)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texSecours(), roughness: 0.5 }), 0.24, 0.36, X_MIT - 0.006, yAff + 0.6, 1.7, 'W');
+  // LES DEUX CAMÉRAS DÔMES au plafond : au-dessus de la photo (VO 94,8 et 95,4 s), dans l'angle nord-est (VO 6,7 s)
+  for (const [x, y] of [[19.6, yTour + 0.2], [18.95, 7.2]]) {
     const d = maille(new THREE.SphereGeometry(0.06, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.boitier, x, H_PLAF, -y, 0, ch.decor, { ombre: false });
     const c = maille(new THREE.CylinderGeometry(0.075, 0.075, 0.02, 20), M.boitier, x, H_PLAF - 0.01, -y, 0, ch.decor, { ombre: false });
     d.userData.horsAOSol = c.userData.horsAOSol = true;
@@ -380,12 +389,16 @@ export function poserHall(ch) {
   }
   C.ajouterBoite(17.85, -0.75, 19.8, 0, { y1: 0.75 });
   C.ajouterBoite(19.06, -4.6, 19.8, -0.75, { y1: 0.75 });
-  // l'armoire basse au bout nord, l'imprimante et le carton dessus (VO q_0380)
+  // SUR LE BUREAU DU MITOYEN, sous les deux cadres (VO 95,4 s, relecture 10/10) : la petite imprimante blanche à
+  // étiquette noire, le carton, la corbeille à courrier noire sous l'affiche
+  B(19.38, 0.86, 19.74, 1.24, 0.75, 0.95, M.store);
+  B(19.37, 0.92, 19.375, 1.18, 0.86, 0.9, M.noir, { ombre: false });
+  B(19.3, 1.34, 19.72, 1.84, 0.75, 0.99, H.carton);
+  B(19.42, 2.2, 19.74, 2.56, 0.75, 0.81, M.noir);
+  // l'armoire basse au bout nord, ses classeurs (IMAGINÉ : la vidéo ne voit pas ce coin)
   B(19.32, 4.7, 19.78, 5.95, 0, 0.95, H.bureau);
-  B(19.36, 4.8, 19.74, 5.25, 0.95, 1.22, M.store);
-  B(19.36, 4.84, 19.72, 5.2, 1.22, 1.235, M.noir, { ombre: false });
-  B(19.38, 5.35, 19.76, 5.85, 0.95, 1.2, H.carton);
-  C.ajouterBoite(19.32, -5.95, 19.8, -4.7, { y1: 1.25 });
+  ['#1d1d20', '#2f5f9a', '#1d1d20', '#5a6070', '#f0efea'].forEach((c, i) => B(19.4, 4.85 + i * 0.07, 19.7, 4.91 + i * 0.07, 0.95, 1.27, new THREE.MeshStandardMaterial({ color: c, roughness: 0.5 })));
+  C.ajouterBoite(19.32, -5.95, 19.8, -4.7, { y1: 1.27 });
   // les écrans, les dossiers, le pot blanc « iris »
   // (de part et d'autre du trumeau et de son affiche bleue, js/ecole_mobilier.js)
   ecran(ch, 18.75, 0.28, 0.75, 'N', true); ecran(ch, 19.4, 0.28, 0.75, 'N');
@@ -437,7 +450,8 @@ export function poserHall(ch) {
   B(17.85, 7.15, 18.05, 7.3, 0.75, 0.8, M.noir);
   maille(new THREE.CylinderGeometry(0.035, 0.03, 0.1, 14), M.radiateur, 18.42, 0.8, -7.28, 0, ch.decor);
   C.ajouterBoite(17.55, -7.47, 18.75, -6.88, { y1: 0.75 });
-  chaiseHetre(ch, 18.15, 6.55, 'N', 18.15, 5.95);
+  // (relecture 10/10 : à 6,7 et 7,0 s, son dossier est sous le bord gauche de la table, à 26-28° de l'axe de la porte 6)
+  chaiseHetre(ch, 17.8, 6.5, 'N', 17.8, 5.9);
   // LES ÉTIQUETTES OCRE sur le mur blanc (VO q_0027-0028, mesurées contre le semi-fixe de la porte nord : la grande de x
   // 17,54 à 18,38, de 1,98 à 2,36 m ; la petite de 17,76 à 18,16, de 1,50 à 1,88 m)
   ch.panneau(new THREE.MeshStandardMaterial({ map: texEtiquette('INFORMATIQUE', 0.84, 0.38), roughness: 0.6 }), 0.84, 0.38, 17.96, Y_MUR - 0.004, 2.17, 'S');

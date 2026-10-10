@@ -145,7 +145,8 @@ function texVitrophanie(dos = false) {
     const dedans = (x, y) => y > 1.31 && lobes.some(([lx, ly, r]) => (x - lx) ** 2 + (y - ly) ** 2 < r * r);
     const pas = 0.085, gr0 = [];
     for (let j = 0; j <= 9; j++) { gr0.push([]); for (let i = 0; i <= 18; i++) gr0[j].push([14.44 + i * pas + (alea() - 0.5) * pas * 0.7, 1.24 + j * pas + (alea() - 0.5) * pas * 0.7]); }
-    const bleus = ['#2c3d8c', '#3b55a8', '#5573c0', '#7c9bd6', '#a6c1ea'], gris = ['#625e78', '#6e6a84', '#7a7690', '#86839b', '#9390a6'];
+    // (relecture 10/10 : un peu moins saturés — photo 16, VO 5,1 s : du bleu ciel grisé au bleu marine)
+    const bleus = ['#30407e', '#43609f', '#6182bb', '#88a7d2', '#b2c9e6'], gris = ['#625e78', '#6e6a84', '#7a7690', '#86839b', '#9390a6'];
     for (let j = 0; j < 9; j++) for (let i = 0; i < 18; i++) {
       const p00 = gr0[j][i], p10 = gr0[j][i + 1], p01 = gr0[j + 1][i], p11 = gr0[j + 1][i + 1];
       for (const t of [[p00, p10, p11], [p00, p11, p01]]) {
@@ -156,6 +157,22 @@ function texVitrophanie(dos = false) {
         const k = Math.max(0, Math.min(4, Math.round(1.5 + (ty - 1.6) * 5 + (tx - 15.15) * 1.3 + (alea() - 0.5) * 2.2)));
         facette(q, (dos ? gris : bleus)[k]);
       }
+    }
+    // (relecture 10/10 : côté rue, le réseau de fins traits blancs et de points qui court sur le nuage — photo 16 et VO
+    // 5,1 s, une « constellation » clairsemée ; une arête sur six, les sommets touchés pointés)
+    if (!dos) {
+      const ok = ([x, y]) => dedans(x, Math.max(1.315, y)), pts = [];
+      g.strokeStyle = 'rgba(255,255,255,0.42)'; g.lineWidth = 0.9;
+      for (let j = 0; j < 9; j++) for (let i = 0; i < 18; i++) {
+        const a = gr0[j][i];
+        for (const b of [gr0[j][i + 1], gr0[j + 1][i], gr0[j + 1][i + 1]]) {
+          if (alea() > 0.17 || !ok(a) || !ok(b)) continue;
+          const A = [a[0], Math.max(1.315, a[1])], Bp = [b[0], Math.max(1.315, b[1])];
+          g.beginPath(); g.moveTo(X(A[0]), Y(A[1])); g.lineTo(X(Bp[0]), Y(Bp[1])); g.stroke(); pts.push(A, Bp);
+        }
+      }
+      g.fillStyle = 'rgba(255,255,255,0.75)';
+      for (const [x, y] of pts) { g.beginPath(); g.arc(X(x), Y(y), 1.4, 0, 7); g.fill(); }
     }
     // ---- LE TRAIT JAUNE EN ÉQUERRE (le coin du logo) : il borde le haut gauche du nuage, juste au-dessus du lobe gauche
     // (photo 16 : la branche verticale en x 14,82 de 1,66 à 1,93 m, la branche horizontale jusqu'en x 15,08) ----
