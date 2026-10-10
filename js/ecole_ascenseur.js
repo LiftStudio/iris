@@ -38,7 +38,8 @@
 //   poserBandeSud(ch, { groupe, lampes })    le 1er : la bande sud du palier est, son décor, le palier de l'ascenseur
 //   majAscenseur(ch, dt, jeu)                à chaque image (js/ecole_est.js, la mise à jour du rez-de-chaussée)
 // Le 2e (js/ecole_etage2.js) : poserAscenseur(ch, { base: 6.6, groupe }) pose un palier FERMÉ (y0 par défaut 7,43,
-// comme au 1er ; son vestibule plus étroit : y0 jusqu'à 7,9 — le fixe garde alors 10 cm) ; avec `ouvert: true` et la `zone` de son vestibule, la
+// comme au 1er — la gaine est la même à chaque niveau ; un vestibule plus étroit, mur sud en y 7,9, garde y0 = 7,43 et
+// cache le bas du fixe derrière ce mur : au-delà de y0 = 7,535, les vantaux n'auraient plus où s'effacer) ; avec `ouvert: true` et la `zone` de son vestibule, la
 // cabine y monte aussi (il faut alors que le vestibule soit un sol où marcher et que le groupe de l'étage se montre
 // quand Haythem est à 6,6 : le transport le rend visible pour la première image).
 import * as THREE from 'three';
