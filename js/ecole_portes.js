@@ -211,7 +211,7 @@ function texVitrophanie(dos = false) {
       g.beginPath(); g.rect(X(15.55), Y(0.95), 0.63 * mx, 0.95 * my); g.clip();
       // la tête (le bas sous la vitre) ; la peau, éclairée de la gauche
       const peau = g.createRadialGradient(fx - rx * 0.35, fy - ry * 0.35, rx * 0.1, fx, fy, rx * 1.05);
-      peau.addColorStop(0, '#f1c7a8'); peau.addColorStop(0.55, '#d8a183'); peau.addColorStop(1, '#a8705a');
+      peau.addColorStop(0, '#f6d8c2'); peau.addColorStop(0.55, '#e6b99c'); peau.addColorStop(1, '#bc8a72');
       g.fillStyle = peau; g.beginPath(); g.ellipse(fx, fy + ry * 0.12, rx * 0.95, ry, 0, 0, Math.PI * 2); g.fill();
       // l'oreille gauche
       g.fillStyle = '#c48a6e'; g.beginPath(); g.ellipse(fx - rx * 0.97, fy + ry * 0.05, rx * 0.1, ry * 0.2, 0.1, 0, Math.PI * 2); g.fill();
@@ -244,8 +244,8 @@ function texVitrophanie(dos = false) {
       nz.addColorStop(0, 'rgba(150,96,74,0)'); nz.addColorStop(0.6, 'rgba(150,96,74,0.45)'); nz.addColorStop(1, 'rgba(150,96,74,0)');
       g.fillStyle = nz; g.fillRect(fx - rx * 0.12, fy - ry * 0.05, rx * 0.24, ry * 0.6);
       g.restore();
-      // (vu du hall, l'impression est un peu plus sombre)
-      if (dos) { g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(30,24,30,0.28)'; g.fillRect(X(15.55), Y(0.95), 0.63 * mx, 0.95 * my); g.globalCompositeOperation = 'source-over'; }
+      // (vu du hall, l'impression est un rien plus terne)
+      if (dos) { g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(60,52,60,0.12)'; g.fillRect(X(15.55), Y(0.95), 0.63 * mx, 0.95 * my); g.globalCompositeOperation = 'source-over'; }
     }
   }, null, true, 8);
 }

@@ -577,7 +577,9 @@ export function poserEst(ch, { RECT }) {
   for (const x of [16.25, xC - 0.05]) B(ch, D, x, yv - 0.035, x + 0.05, yv + 0.035, 0, 2.46, X.cadre, { ombre: false });
   B(ch, D, 16.25, yv - 0.035, xC, yv + 0.035, 0, 0.05, X.cadre, { ombre: false });
   B(ch, D, 16.25, yv - 0.035, xC, yv + 0.035, 2.4, 2.46, X.cadre, { ombre: false });
-  for (const f of ['N', 'S']) ch.panneau(X.cannele1, xC - 16.35, 2.35, (16.3 + xC - 0.05) / 2, yv + (f === 'N' ? 0.006 : -0.006), 1.225, f);
+  // (côté hall, le dégagement derrière est plus sombre que le hall : le verre y sort gris vert, à peine éclairé — VO 7,0 s)
+  const canHall = X.cannele1.clone(); canHall.emissiveIntensity = 0.05; canHall.color.setRGB(0.8, 0.84, 0.82);
+  for (const f of ['N', 'S']) ch.panneau(f === 'N' ? X.cannele1 : canHall, xC - 16.35, 2.35, (16.3 + xC - 0.05) / 2, yv + (f === 'N' ? 0.006 : -0.006), 1.225, f);
   B(ch, D, 16.25, yv - 0.075, xC, yv + 0.075, 2.46, H_DALLE, B0, { ombre: false });
   C.ajouterBoite(16.25, -(yv - 0.075), xC, -(yv + 0.075), { y1: H_DALLE });
   // (la feuille A4 scotchée côté couloir, photo 24)

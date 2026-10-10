@@ -7,12 +7,12 @@
 // comptoir, colonne de gel, flacons) n'est PAS repris.
 //
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; dans le jeu X = x, Z = -y) :
-//   le comptoir d'accueil   x 16,5-17,2   y 1,0-3,55   NORD-SUD, face à l'ouest (l'axe de la porte 6), 1,10 m, sa rainure
+//   le comptoir d'accueil   x 16,45-17,15 y 1,1-2,45   NORD-SUD, face à l'ouest (l'axe de la porte 6), 1,10 m, sa rainure
 //                                                     à 0,55, sa tablette haute grise en saillie (VO q_0373-0380, photo
 //                                                     03 : vu de biais, son bout nord plus haut que son bout sud)
-//   la tablette PMR         x 16,25-17,2  y 3,55-4,2   le comptoir abaissé à 0,78 contre le pupitre ; l'écran, l'unité
+//   la tablette PMR         x 16,2-17,15  y 2,45-2,95  le comptoir abaissé à 0,78 contre le pupitre ; l'écran, l'unité
 //                                                     centrale et le range-documents violet derrière (VO q_0380)
-//   le pupitre              x 16,2-17,4   y 4,2-5,0    chêne grisé, dessus gris débordant, rainure sombre à 0,8 m
+//   le pupitre              x 16,45-17,45 y 2,95-3,55  façade nord de chêne grisé, rainure sombre à 0,8 m, dessus gris
 //   l'open-space            x 17,2-19,8   y 0,3-6,0    derrière le comptoir : bureaux bleu-gris en L le long des fenêtres
 //                                                     et du mitoyen, fauteuils noirs, imprimante, carton, dossiers
 //   le mitoyen est          x 19,8        y 0-7,5      peint GRIS ARDOISE ; l'affiche noire à l'immeuble blanc et cadre
@@ -34,9 +34,10 @@ import { texPeinture } from './ecole_matieres.js';
 
 // ---- les cotes (plan) ----
 const H_PLAF = 2.6;                                 // le plafond du hall
-const CPT = { x0: 16.5, x1: 17.2, y0: 1.0, y1: 3.55, h: 1.10 };     // le comptoir haut
-const PMR = { y0: 3.55, y1: 4.2, h: 0.78 };                         // la tablette PMR
-const PUP = { x0: 16.2, x1: 17.4, y0: 4.2, y1: 5.0, h: 1.12 };      // le pupitre
+const CPT = { x0: 16.45, x1: 17.15, y0: 1.1, y1: 2.45, h: 1.10 };   // le comptoir haut
+const PMR = { y0: 2.45, y1: 2.95, h: 0.78 };                        // la tablette PMR
+const PUP = { x0: 16.45, x1: 17.45, y0: 2.95, y1: 3.55, h: 1.12 };  // le pupitre
+const X_PERS = 17.78;                                               // le dos du plan de travail du personnel
 const Y_MUR = 7.5;                                  // la face hall du mur nord (y 7,5-7,65)
 const X_MIT = 19.8;                                 // la face du mitoyen est
 
@@ -302,6 +303,13 @@ export function poserHall(ch) {
   // =====================================================================
   //  LE COMPTOIR D'ACCUEIL NORD-SUD, LA TABLETTE PMR, LE PUPITRE (VO q_0373-0384, photo 03)
   // =====================================================================
+  // (RELEVÉ DU 10/10. Les projections au sol de hall.md, à 93 s, mettaient le pupitre en y 4,2-5,0 ; mais à 7,0 s, depuis
+  // la porte 6, on voit le photocopieur EN ENTIER, pied compris, à 18-28° à droite de l'axe — un bloc de 1,12 m en x 16,2
+  // y 4,2-5,0 le cacherait. À 92,6 s, la caméra passe la porte nord (≈ 15,15 ; 7,05, cap ≈ 173°) : le pied de la face
+  // nord du pupitre est à ≈ 3,8 m, celui du bout sud du comptoir à ≈ 6 m ; la face avant passe par (16,3 ; 1,26) et
+  // (16,55 ; 2,54). D'où : le comptoir de y 1,1 à 2,45, la tablette PMR jusqu'à 2,95, le pupitre jusqu'à 3,55 ; derrière
+  // lui le fauteuil rayé (≈ 17,95 ; 3,1), et le présentoir de bois plus au nord, vers (17,2 ; 4,9), qui se voit au bord
+  // droit à 7,0 s et au bord gauche à 92,6 s.)
   // le comptoir haut : socle sombre en retrait, caisson de stratifié blanc gris, la rainure à 0,55 m sur la face avant
   // (ouest) et sur le bout sud, la tablette haute grise qui déborde de 8 cm côté visiteurs
   B(CPT.x0 + 0.06, CPT.y0 + 0.06, CPT.x1, CPT.y1, 0, 0.1, M.socle);
@@ -313,30 +321,36 @@ export function poserHall(ch) {
   B(CPT.x0 + 0.06, PMR.y0, CPT.x1, PMR.y1, 0, 0.1, M.socle);
   B(CPT.x0, PMR.y0, CPT.x1, PMR.y1, 0.1, PMR.h - 0.035, H.comptoir);
   B(CPT.x0 - 0.25, PMR.y0, CPT.x1, PMR.y1, PMR.h - 0.035, PMR.h, H.tablette);
-  B(CPT.x0 - 0.25, PMR.y0, CPT.x0 - 0.22, PMR.y0 + 0.03, 0, PMR.h - 0.035, H.comptoir);      // (son flanc sud, jusqu'au sol)
-  // le pupitre : un bloc de chêne grisé, la rainure sombre à 0,8 m sur ses faces ouest et nord, le dessus gris débordant
+  // (son flanc sud, de chêne grisé, jusqu'au sol : VO 93,6 s, sous la tablette)
+  B(CPT.x0 - 0.25, PMR.y0, CPT.x0, PMR.y0 + 0.025, 0, PMR.h - 0.035, H.chene);
+  B(CPT.x0 - 0.25, PMR.y0 - 0.004, CPT.x0, PMR.y0, 0.79, 0.81, H.rainure, { ombre: false });
+  // le pupitre : un bloc à façade nord de chêne grisé (la rainure sombre à 0,8 m), ses faces ouest et sud blanches comme
+  // le comptoir (VO 92,6-93,6 s), le dessus gris débordant
   B(PUP.x0 + 0.05, PUP.y0, PUP.x1, PUP.y1 - 0.05, 0, 0.08, M.socle);
   B(PUP.x0, PUP.y0, PUP.x1, PUP.y1, 0.08, PUP.h - 0.04, H.chene);
-  B(PUP.x0 - 0.004, PUP.y0, PUP.x0, PUP.y1, 0.79, 0.81, H.rainure, { ombre: false });
+  B(PUP.x0 - 0.004, PUP.y0, PUP.x0, PUP.y1, 0.08, PUP.h - 0.04, H.comptoir, { ombre: false });
+  B(PUP.x0, PUP.y0 - 0.004, PUP.x1, PUP.y0, PMR.h, PUP.h - 0.04, H.comptoir, { ombre: false });
   B(PUP.x0, PUP.y1, PUP.x1, PUP.y1 + 0.004, 0.79, 0.81, H.rainure, { ombre: false });
   B(PUP.x0 - 0.05, PUP.y0 - 0.02, PUP.x1 + 0.02, PUP.y1 + 0.05, PUP.h - 0.04, PUP.h, H.dessus);
-  // derrière (est) : le plan de travail du personnel à 0,75 m, le long du comptoir et du pupitre, sur deux pieds
-  B(CPT.x1, CPT.y0 + 0.05, 17.78, PUP.y1 - 0.03, 0.72, 0.75, H.tablette);
-  for (const y of [CPT.y0 + 0.1, 2.75, PUP.y1 - 0.1]) B(17.72, y - 0.025, 17.76, y + 0.025, 0, 0.72, H.pied, { ombre: false });
+  // derrière (est) : le plan de travail du personnel à 0,75 m, le long du comptoir et du pupitre, sur trois pieds
+  B(CPT.x1, CPT.y0 + 0.05, X_PERS, PUP.y1 - 0.03, 0.72, 0.75, H.tablette);
+  for (const y of [CPT.y0 + 0.1, 2.3, PUP.y1 - 0.1]) B(X_PERS - 0.06, y - 0.025, X_PERS - 0.02, y + 0.025, 0, 0.72, H.pied, { ombre: false });
   // le monde solide : tout le bloc, d'un tenant (la tablette PMR comprise)
-  C.ajouterBoite(CPT.x0 - 0.08, -CPT.y1, 17.78, -(CPT.y0 - 0.02), { y1: CPT.h });
-  C.ajouterBoite(CPT.x0 - 0.25, -PUP.y0, 17.78, -PMR.y0, { y1: PMR.h });
-  C.ajouterBoite(PUP.x0 - 0.05, -(PUP.y1 + 0.05), 17.78, -PUP.y0, { y1: PUP.h });
+  C.ajouterBoite(CPT.x0 - 0.08, -CPT.y1, X_PERS, -(CPT.y0 - 0.02), { y1: CPT.h });
+  C.ajouterBoite(CPT.x0 - 0.25, -PUP.y0, X_PERS, -PMR.y0, { y1: PMR.h });
+  C.ajouterBoite(PUP.x0 - 0.05, -(PUP.y1 + 0.05), X_PERS, -PUP.y0, { y1: PUP.h });
   // SUR LA TABLETTE PMR, côté personnel : l'écran noir (vu de dos par les visiteurs), l'unité centrale, le range-documents
   // violet contre le pupitre (VO q_0380)
-  ecran(ch, 16.98, 3.82, PMR.h, 'E', true);
-  B(17.02, 3.6, 17.18, 3.68, PMR.h, PMR.h + 0.4, M.noir);
-  B(16.62, 3.98, 16.86, 4.18, PMR.h, PMR.h + 0.3, H.violet);
-  // sur le plan de travail : l'écran de l'hôtesse, le téléphone ; sur le comptoir : la pochette de brochures
-  ecran(ch, 17.42, 2.3, 0.75, 'E', true);
-  ecran(ch, 17.52, 4.6, 0.75, 'E', true);
-  B(17.35, 1.55, 17.55, 1.75, 0.75, 0.81, M.noir);
-  B(16.62, 1.4, 16.9, 1.62, CPT.h, CPT.h + 0.012, M.store, { ombre: false });
+  ecran(ch, 16.95, 2.68, PMR.h, 'E', true);
+  B(16.98, 2.47, 17.14, 2.55, PMR.h, PMR.h + 0.4, M.noir);
+  B(16.6, 2.72, 16.84, 2.93, PMR.h, PMR.h + 0.3, H.violet);
+  // sur le plan de travail : l'écran de l'hôtesse, celui du pupitre, le téléphone ; sur le comptoir : des brochures
+  ecran(ch, 17.42, 1.85, 0.75, 'E', true);
+  ecran(ch, 17.6, 3.25, 0.75, 'E', true);
+  B(17.3, 1.25, 17.5, 1.45, 0.75, 0.81, M.noir);
+  B(16.6, 1.35, 16.88, 1.57, CPT.h, CPT.h + 0.012, M.store, { ombre: false });
+  // la petite boîte blanche sur le dessus du pupitre, vers son bout est (VO 92,6 et 93,6 s)
+  B(17.08, 3.22, 17.3, 3.42, PUP.h, PUP.h + 0.15, M.radiateur);
 
   // =====================================================================
   //  L'OPEN-SPACE DU PERSONNEL (VO q_0373-0384)
@@ -366,7 +380,7 @@ export function poserHall(ch) {
   // les écrans, les dossiers, le pot blanc « iris »
   // (de part et d'autre du trumeau et de son affiche bleue, js/ecole_mobilier.js)
   ecran(ch, 18.75, 0.28, 0.75, 'N', true); ecran(ch, 19.4, 0.28, 0.75, 'N');
-  ecran(ch, 19.5, 2.9, 0.75, 'W', true);
+  ecran(ch, 19.5, 3.75, 0.75, 'W', true);
   ['#1d1d20', '#f0efea', '#5a6070', '#1d1d20', '#2f5f9a'].forEach((c, i) => {
     const m = new THREE.MeshStandardMaterial({ color: c, roughness: 0.5 });
     B(17.95 + i * 0.065, 0.12, 18.01 + i * 0.065, 0.42, 0.75, 1.07, m);
@@ -375,10 +389,10 @@ export function poserHall(ch) {
   void pot;
   // LES FAUTEUILS NOIRS : l'hôtesse face au comptoir, le bureau des fenêtres, le bureau du mitoyen ; derrière le pupitre,
   // celui au coussin rayé ; le manteau moutarde sur le dossier de l'un d'eux (photo 03)
-  fauteuil(ch, 18.1, 2.4, 'W', { sx: 18.75, sy: 2.4, nom: 'le fauteuil de l\'accueil' });
+  fauteuil(ch, 18.0, 1.85, 'W', { sx: 18.65, sy: 1.85, nom: 'le fauteuil de l\'accueil' });
   const f2 = fauteuil(ch, 18.4, 1.2, 'S', { sx: 18.4, sy: 1.85, nom: 'le fauteuil' });
-  fauteuil(ch, 18.55, 3.3, 'E', { sx: 18.0, sy: 3.3, nom: 'le fauteuil' });
-  fauteuil(ch, 18.0, 4.62, 'W', { zebre: true, sx: 18.6, sy: 4.62, nom: 'le fauteuil' });
+  fauteuil(ch, 18.6, 3.75, 'E', { sx: 18.05, sy: 3.95, nom: 'le fauteuil' });
+  fauteuil(ch, 18.0, 3.2, 'W', { zebre: true, sx: 18.2, sy: 2.6, nom: 'le fauteuil' });
   BL(f2, new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.9 }), 0.48, 0.5, 0.07, 0, 0.82, -0.27);
 
   // =====================================================================
@@ -420,10 +434,10 @@ export function poserHall(ch) {
   ch.panneau(new THREE.MeshStandardMaterial({ map: texEtiquette('INFORMATIQUE', 0.84, 0.38), roughness: 0.6 }), 0.84, 0.38, 17.96, Y_MUR - 0.004, 2.17, 'S');
   // (le mot de la petite ne se lit pas : sept lettres environ — IMAGINÉ)
   ch.panneau(new THREE.MeshStandardMaterial({ map: texEtiquette('SERVICE', 0.4, 0.38), roughness: 0.6 }), 0.4, 0.38, 17.96, Y_MUR - 0.004, 1.69, 'S');
-  // LE PRÉSENTOIR DE BOIS (≈ 0,5 x 1,5 m, quatre tablettes inclinées, les brochures blanches « iris ») au nord-est du
-  // pupitre, tourné vers l'ouest (VO 6,4-7,4 s au bord droit ; 92,6 s au bord gauche)
+  // LE PRÉSENTOIR DE BOIS (≈ 0,5 x 1,5 m, quatre tablettes inclinées, les brochures blanches « iris ») au nord du
+  // pupitre, tourné vers l'ouest (VO 6,4-7,4 s au bord droit, à ≈ 30° ; 92,6 s au bord gauche)
   {
-    const g = groupe(ch, 17.68, 5.25, 'W'), br = new THREE.MeshStandardMaterial({ map: texBrochures(), roughness: 0.6 });
+    const g = groupe(ch, 17.2, 4.9, 'W'), br = new THREE.MeshStandardMaterial({ map: texBrochures(), roughness: 0.6 });
     for (const s of [-1, 1]) BL(g, H.boisPres, 0.02, 1.5, 0.34, s * 0.25, 0.75, 0);
     BL(g, H.boisPres, 0.5, 1.5, 0.015, 0, 0.75, -0.165);
     BL(g, H.boisPres, 0.52, 0.02, 0.36, 0, 1.5, 0);
@@ -432,7 +446,7 @@ export function poserHall(ch) {
       BL(g, H.boisPres, 0.48, 0.05, 0.012, 0, h + 0.02, 0.16, { ombre: false });
       const b = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.22), br); b.position.set(0, h + 0.12, 0.06); b.rotation.x = -0.32; g.add(b);
     }
-    C.ajouterBoite(17.5, -5.5, 17.86, -5.0, { y1: 1.5 });
+    C.ajouterBoite(17.02, -5.15, 17.38, -4.65, { y1: 1.5 });
   }
 
   // =====================================================================

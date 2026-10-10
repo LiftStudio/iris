@@ -543,19 +543,23 @@ function construireEntree(ch) {
   const { M, C } = ch, Y = 0.3, z = -Y, hP = 2.25, hT = 2.6;
   const vit = vitrophanies();
   const matRue = new THREE.MeshStandardMaterial({ map: vit.rue, alphaTest: 0.5, roughness: 0.4 });
-  const matHall = new THREE.MeshStandardMaterial({ map: vit.hall, alphaTest: 0.5, roughness: 0.6 });
+  // (côté hall, l'adhésif est vu à contre-jour, la rue derrière lui : il s'éclaire un peu de lui-même — VO 93-95 s, le
+  // visage et les arcs y sont clairs ; 10/10)
+  const matHall = new THREE.MeshStandardMaterial({ map: vit.hall, alphaTest: 0.5, roughness: 0.6, emissive: 0xffffff, emissiveMap: vit.hall, emissiveIntensity: 0.32 });
   // un morceau de vitrophanie : la bande x a-b de la texture (13,45 -> 16,35), collée des deux côtés d'un vitrage
+  // (10/10 : côté hall, le plan est tourné d'un demi-tour et ses u retournés — plus d'échelle négative : cousu par
+  // l'optimisation du décor, le morceau du fixe ouest, miroir, tournait le dos au hall et disparaissait)
   const morceau = (parent, a, b, xl, zl) => {
     for (const [mat, s] of [[matRue, 1], [matHall, -1]]) {
       const g = new THREE.PlaneGeometry(b - a, hP);
       const uv = g.attributes.uv;
       for (let i = 0; i < uv.count; i++) {
-        const u = uv.getX(i), uu = ((a + u * (b - a)) - 13.45) / 2.9;
-        uv.setX(i, s > 0 ? uu : uu);
+        const u = uv.getX(i), uu = ((a + (s > 0 ? u : 1 - u) * (b - a)) - 13.45) / 2.9;
+        uv.setX(i, uu);
       }
       const m = new THREE.Mesh(g, mat);
       m.position.set(xl, hP / 2, zl + s * 0.008);
-      if (s < 0) { m.rotation.y = Math.PI; m.scale.x = -1; }
+      if (s < 0) m.rotation.y = Math.PI;
       m.castShadow = false; parent.add(m);
     }
   };
@@ -744,7 +748,7 @@ function construirePorteFond(ch) {
 }
 
 // L'ACCUEIL ET LE HALL D'ENTRÉE (VO 6,4-7,4 s et 92,5-95,8 s, photos 03, 16, 24 ; 10/10) : le comptoir n'est pas le long
-// de la façade mais NORD-SUD, face à l'ouest (x 16,5-17,2, y 1,0-4,2), terminé au nord par la tablette PMR et le
+// de la façade mais NORD-SUD, face à l'ouest (x 16,45-17,15, y 1,1-3,55), terminé au nord par la tablette PMR et le
 // pupitre de chêne grisé ; derrière lui l'open-space du personnel, le mitoyen gris ardoise et ses affiches ; l'angle
 // nord-est ouvert (photocopieur, étiquettes « INFORMATIQUE », table, présentoir de bois) ; les lignes lumineuses du
 // plafond : js/ecole_hall.js. (Importé ici, à côté de son appel : l'en-tête des imports est celui des autres lots.)
