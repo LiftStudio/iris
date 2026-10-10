@@ -608,7 +608,9 @@ export function poserEst(ch, { RECT }) {
   // porte l'affiche violette « POINT ÉCOUTE » côté couloir. (Au jambage ouest, côté couloir, le mur jaune prend la place
   // du chambranle.)
   chambranle(ch, D, 'x', E.yH, 14.70, 16.10, 0, 2.06, 0.15, { 1: [false, true], [-1]: [true, true] });
-  ch.porte('x', E.yH, 15.16, { l: 0.92, h: 2.06, modele: 'grise', etat: 'auto', cote: 'S', huisserie: false, oculus: 'long', matVantail: X.taupe, nom: 'couloir est (hall)' });
+  // (10/10 : le vantail ouest est OUVERT À DEMEURE, rabattu côté hall contre la face jaune de la pile — VO q_0027-0031 :
+  // son chant contre l'angle de la pile, le couloir vu au travers ; photo 24 (2026) : toujours ouvert)
+  ch.porte('x', E.yH, 15.16, { l: 0.92, h: 2.06, modele: 'grise', etat: 'ouverte', angle: 1.5, cote: 'S', huisserie: false, oculus: 'long', matVantail: X.taupe, nom: 'couloir est (hall)' });
   ch.porte('x', E.yH, 15.86, { l: 0.48, h: 2.06, modele: 'grise', etat: 'fermee', cote: 'N', huisserie: false, oculus: false, poignee: null, fermePorte: false, matVantail: X.taupe, nom: 'couloir est (semi-fixe)' });
   ch.panneau(matPanneau(texPointEcoute(), 0.6), 0.21, 0.297, 15.85, E.yH + 0.068, 1.6, 'N');
   ch.sortie(15.4, E.yH + 0.1, 2.33, 'N');
@@ -704,7 +706,9 @@ export function poserEst(ch, { RECT }) {
   mur(ch, D, { de: [14.525, E.yE], a: [E.x0, E.yE], mats: B0, ouvertures: [{ c: 15.375, l: 1.35, h: 2.1 }] });
   // (côté vestibule, le jambage est descend jusqu'au sol : le bout de la 1re marche bute dessus, photo 26)
   chambranle(ch, D, 'x', E.yE, 14.70, E.x0, 0, 2.06, 0.15, { 1: [false, true], [-1]: [false, true] });
-  ch.porte('x', E.yE, 15.125, { l: 0.85, h: 2.06, modele: 'grise', etat: 'auto', cote: 'S', huisserie: false, oculus: 'long', poignee: 'tirant', feu: true, matVantail: X.taupe, nom: 'vestibule est' });
+  // (10/10 : OUVERT À DEMEURE, rabattu côté couloir devant le mur jaune — VO q_0051-0055 et q_0151 : on voit sa face, son
+  // oculus et son bâton contre le mur jaune ; photo 24 (2026) : ouvert aussi)
+  ch.porte('x', E.yE, 15.125, { l: 0.85, h: 2.06, modele: 'grise', etat: 'ouverte', angle: 1.45, cote: 'S', huisserie: false, oculus: 'long', poignee: 'tirant', feu: true, matVantail: X.taupe, nom: 'vestibule est' });
   // (relecture du 09/10, photo 26 : le petit vantail n'est qu'ENTREBÂILLÉ — une quinzaine de degrés ; ouvert à 70°, il
   // cachait le couloir et la cloison vitrée qu'on voit par la porte. Sa face côté vestibule est lisse : pas de ferme-porte)
   ch.porte('x', E.yE, 15.8, { l: 0.5, h: 2.06, modele: 'grise', etat: 'ouverte', angle: 0.28, cote: 'N', charniere: 'd', huisserie: false, oculus: false, poignee: null, fermePorte: false, matVantail: X.taupe, nom: 'vestibule est (petit vantail)' });

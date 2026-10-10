@@ -307,9 +307,12 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     // LA PORTE À DEUX VANTAUX (y 10,725, x 14,70-16,05 : sous celle du vestibule, aux mêmes cotes) : le vantail ouest de
     // 0,85 (oculus étroit cerclé de bois, bâton inox), le vantail est de 0,50 (bâton) ; huisserie de bois crème ; elles
     // s'ouvrent vers le palier, d'où l'on remonte (q_0066-0073 : ouvertes vers la caméra)
+    // (vérification du 10/10 : OUVERTES À DEMEURE, comme sur toute la VO — q_0065-0069 : le grand vantail rabattu contre
+    // le mur ouest, son chant au pied du panneau « -1 » ; q_0071 : le petit, bâton en bas, contre le jambage est —, comme
+    // celles du vestibule et du hall au-dessus, que la photo 24 montre ouvertes en 2026)
     chambranle(ch, F, 'x', 10.725, 14.70, 16.05, Y_SS, 2.06, 0.15, { 1: [false, true], [-1]: [false, true] });
-    ch.porte('x', 10.725, 15.125, { l: 0.85, h: 2.06, base: Y_SS, modele: 'grise', etat: 'auto', libre: -1, cote: 'N', huisserie: false, oculus: 'long', poignee: 'tirant', matVantail: X.taupe, nom: 'palier -1 (escalier est)' });
-    ch.porte('x', 10.725, 15.8, { l: 0.5, h: 2.06, base: Y_SS, modele: 'grise', etat: 'auto', libre: -1, cote: 'N', charniere: 'd', huisserie: false, oculus: false, poignee: 'tirant', matVantail: X.taupe, nom: 'palier -1 (petit vantail)' });
+    ch.porte('x', 10.725, 15.125, { l: 0.85, h: 2.06, base: Y_SS, modele: 'grise', etat: 'ouverte', angle: 1.45, cote: 'N', huisserie: false, oculus: 'long', poignee: 'tirant', matVantail: X.taupe, nom: 'palier -1 (escalier est)' });
+    ch.porte('x', 10.725, 15.8, { l: 0.5, h: 2.06, base: Y_SS, modele: 'grise', etat: 'ouverte', angle: 1.45, cote: 'N', charniere: 'd', huisserie: false, oculus: false, poignee: 'tirant', matVantail: X.taupe, nom: 'palier -1 (petit vantail)' });
     B(14.71, 10.69, 16.04, 10.76, Y_SS, Y_SS + 0.006, M.inox, { ombre: false });
     // le sol (vinyle taupe foncé), le plafond (le dessous de la dalle du vestibule ; au-delà de x 16,05, la paillasse de
     // la volée 1), son hublot ; le chant de la dalle au départ de la volée 1

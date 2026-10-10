@@ -425,7 +425,9 @@ function construireFacade(ch) {
   // les fenêtres (repère du mur : +z vers l'intérieur = le nord du plan, donc tourné de PI)
   const fac = new THREE.Group(); fac.position.set(0, 0, 0.2); fac.rotation.y = Math.PI; ch.decor.add(fac);
   // (dans ce groupe tourné, x local = -x du plan : on passe -x)
-  for (const c of BAIES_HAUTES) fenetreFacade(fac, M, { x: -c, l: 1.2, bas: 0.95, haut: 2.5, stores: c > 17 });
+  // (10/10 : plus de stores à lames aux deux baies de l'accueil — VO q_0373-0383 et photo 03 recadrée : le jour et les
+  // barreaux s'y voient, aucune lame ; les bandes claires de la photo 03 sont les barreaux sur le ciel)
+  for (const c of BAIES_HAUTES) fenetreFacade(fac, M, { x: -c, l: 1.2, bas: 0.95, haut: 2.5 });
   for (const c of BAIES_BUREAU) fenetreFacade(fac, M, { x: -c, l: 1.2, bas: 1.75, haut: 2.5, imposte: false });
   // (les vitres arrêtent la caméra ; la lumière du jour, elle, passe : `vitre`)
   for (const c of BAIES_HAUTES) ch.C.ajouterBoite(c - 0.6, 0.4, c + 0.6, 0, { y0: 0.95, y1: 2.5, vitre: true });

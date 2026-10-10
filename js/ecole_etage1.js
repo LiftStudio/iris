@@ -1039,7 +1039,9 @@ export function poserEtage1(ch, renderer = null) {
     // plus dessiné pour rien ; ni depuis le hall du -1, sous la cage principale — intégration du 10/10)
     // (10/10, le 2e : au-dessus de ses plafonds, hors des deux cages et du sas, le 1er n'est plus vu — il n'est plus
     // dessiné ; de la cage est, on voit la volée 4 et le palier du 1er ; dans la cage ouest, son palier du 2e est le nôtre)
-    const cage = (cam.x > 1.4 && cam.x < 5.0 && cam.z < -12.2 && cam.z > -19.0 && cam.y > -0.3) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7);
+    // (vérification du 10/10 : la cage est, elle aussi, à partir du rez-de-chaussée — sur le palier du -1 et la volée B,
+    // sous la paillasse de la volée 1 et le palier intermédiaire, l'étage entier était dessiné pour rien : 352 objets)
+    const cage = (cam.x > 1.4 && cam.x < 5.0 && cam.z < -12.2 && cam.z > -19.0 && cam.y > -0.3) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7 && cam.y > -0.3);
     const au2e = cam.y > 7.0 && u.y > 6.0 && cam.z < -0.05 && !cage && !(cam.x > 13.4 && cam.z < -6.45 && cam.z > -12.75);
     const vis = (cage || cam.y > 2.7 || cam.z > -0.05 || u.y > 2.0) && !au2e;
     if (vis !== groupe.visible) groupe.visible = vis;
