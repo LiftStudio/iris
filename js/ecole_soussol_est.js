@@ -194,9 +194,11 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
   // plafonniers éclaire tout le -1 sans ombre de plafond : ses murs et son plafond, d'un blanc éteint, rendent la
   // pénombre ; sa seule galette est faible. Relecture du 11/10 : à 0,45 (linéaire), la baie sortait gris clair vue de la
   // pause ; sur v_066 et v_067, le dedans fait 0,26 du mur blanc d'à côté — 47 contre 178 —, d'où 0,1, et un reflet
-  // d'environnement réduit)
-  P.blancEteint = froid(M.blanc); P.blancEteint.color.multiplyScalar(0.1); P.blancEteint.envMapIntensity = 0.4; P.blancEteint.name = 'peinture blanche (passage sombre, éteint)';
-  P.platreEteint = froid(M.platre, 0.02); P.platreEteint.color.multiplyScalar(0.1); P.platreEteint.envMapIntensity = 0.4; P.platreEteint.name = 'plâtre (passage sombre, éteint)';
+  // d'environnement réduit. Lot 5, 11/10 : mesuré dans le jeu au même point de vue que v_066, le dedans ne faisait plus que
+  // 0,12 du mur d'à côté — 12 contre 101 —, et de l'intérieur, en vue de jeu, murs et plafond étaient noirs : 0,2 rend le
+  // 0,26 de la vidéo)
+  P.blancEteint = froid(M.blanc); P.blancEteint.color.multiplyScalar(0.2); P.blancEteint.envMapIntensity = 0.4; P.blancEteint.name = 'peinture blanche (passage sombre, éteint)';
+  P.platreEteint = froid(M.platre, 0.02); P.platreEteint.color.multiplyScalar(0.2); P.platreEteint.envMapIntensity = 0.4; P.platreEteint.name = 'plâtre (passage sombre, éteint)';
   const L_ = {
     plafonnier: new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff4e4).multiplyScalar(4.2) }),
     voyant: new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 0.25, 0.15) }),
@@ -392,6 +394,20 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     galette(15.75, 9.95, H_SAS, 'sasSS');
     galette(13.525, 8.2, H_PASS, 'passageSS', 0.35);
     ch.sortie(15.375, 10.62, Y_SS + 2.3, 'S');
+    // (lot 5, 11/10 — en vue de jeu, le passage sombre sortait NOIR, murs, sol et plafond confondus dès qu'on avait
+    // passé la galette.) Il reste éteint, mais on s'y retrouve, comme dans une circulation de nuit : au bout, sur le retour
+    // nord (y 10,30), le BLOC DE SORTIE tourné vers l'espace pause — l'issue est par P et le sas, celui du sas montre
+    // l'escalier — et sa lueur verte, faible ; juste après la porte sombre, une VEILLEUSE à 40 cm du sol sur le mur est (un
+    // pavé de 9 cm, sa face ambre) qui pose une flaque chaude au pied des murs et du mur du fond. Leurs lampes ne
+    // s'allument qu'avec Haythem dans le passage ou le sas (js/ecole_lumieres.js) ; la veilleuse, basse, n'éclaire qu'à
+    // 90 cm autour d'elle : rien ne passe sous le mur de l'espace pause (x 12,98-13,05).
+    ch.sortie(13.525, 10.272, Y_SS + 2.05, 'S', { simple: true });
+    const baes = { x: 13.525, z: -10.15, h: Y_SS + 2.0, zone: 'passageSS', type: 'spot', base: Y_SS, cuire: false, force: 0.1, cuireForce: 0.12, couleur: new THREE.Color(0.72, 1.0, 0.8) };
+    const veilleuse = { x: 13.86, z: -6.2, h: Y_SS + 0.45, zone: 'passageSS', type: 'spot', base: Y_SS, cuire: false, force: 0.16, cuireForce: 0.32, couleur: new THREE.Color(1.0, 0.78, 0.5) };
+    for (const L of [baes, veilleuse]) { ch.lampes.push(L); lampes.push(L); }
+    B(13.982, 6.155, 14.0, 6.245, Y_SS + 0.355, Y_SS + 0.445, M.blanc, { ombre: false });
+    const lueur = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.72, 0.38).multiplyScalar(1.6) }); lueur.name = 'veilleuse allumée';
+    panneau(lueur, 0.07, 0.07, 13.981, 6.2, Y_SS + 0.4, 'W');
     // la barre de seuil à l'entrée du passage sombre, côté espace pause (sous la porte de 2026)
     B(12.9, 5.11, 13.05, 6.01, Y_SS, Y_SS + 0.006, M.inox, { ombre: false });
   }

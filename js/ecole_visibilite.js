@@ -352,8 +352,11 @@ export function poserVisibilite(scene) {
   // 3. le tri, à chaque rendu de la scène par la caméra du jeu ou par celle de la carte d'environnement (une
   // CubeCamera) : rien ailleurs (la carte d'ombre et son cache, les cuissons, un miroir voient tout, comme avant). Les
   // rendus imbriqués (le miroir des toilettes, le reflet du sol mouillé) gardent le tri de celui qui les contient.
-  let camJeu = null, prof = 0, H = 0, cle = NaN;
+  let camJeu = null, prof = 0, H = 0, cle = NaN, fond = null;
   const caches = [], montres = [];
+  // (au -1, pas une fenêtre : le ciel ne s'y voit jamais, mais par les fentes du décor — au-dessus de la porte G de l'aile —
+  // on voyait le dessous de la rue, sombre, que le tri ne dessine plus ; le fond y est donc sombre lui aussi)
+  const FOND_SS = new THREE.Color(0x101010);
   const V = { actif: true, regles: null, cachees: 0, maillages: n, blocs: blocs.length, lots: lots.length, ms: 0, msCoupe: 0 };
   const avant = scene.onBeforeRender, apres = scene.onAfterRender;
   const cacher = (o) => { if (o.visible) { o.visible = false; caches.push(o); } };
@@ -364,6 +367,7 @@ export function poserVisibilite(scene) {
     const p = cam.getWorldPosition(_v);
     const k = Math.round(p.x * 50) * 1e8 + Math.round(p.y * 50) * 1e4 + Math.round(p.z * 50);
     if (k !== cle || V.regles) { cle = k; H = (V.regles || zonesCachees)(p.x, p.y, p.z); V.cachees = H; }
+    if (p.y < -0.15 && p.z < 0.3 && sc.background && sc.background.isColor) { fond = sc.background; sc.background = FOND_SS; }
     if (!H) return;
     for (const [m, L] of lots) if ((m & ~H) === 0) for (const o of L) cacher(o);
     // les blocs coupés : entiers si tout s'en voit, rien si rien, sinon une suite par série de familles visibles
@@ -389,6 +393,7 @@ export function poserVisibilite(scene) {
     for (const o of caches) o.visible = true;
     for (const o of montres) o.visible = false;
     caches.length = 0; montres.length = 0;
+    if (fond) { sc.background = fond; fond = null; }
   };
   V.ms = Math.round(performance.now() - t0); V.msCoupe = Math.round(COUPE.ms);
   console.info('[visibilité] %d zones · %d blocs rangés par famille (%d ms de coupe en tout) · %d maillages en %d jeux de zones · pose %d ms', ZONES.length, blocs.length, V.msCoupe, n, lots.length, V.ms);
@@ -404,6 +409,7 @@ export function poserVisibilite(scene) {
         for (const o of caches) o.visible = true;
         for (const o of montres) o.visible = false;
         caches.length = 0; montres.length = 0;
+        if (fond) { scene.background = fond; fond = null; }
       }
     },
   };
