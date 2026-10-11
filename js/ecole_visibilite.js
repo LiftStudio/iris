@@ -37,6 +37,12 @@
 // palier est du 1er 1 482 -> 809 ; couloir du 2e 702 -> 389 ; palier du 2e 1 282 -> 804. Seule la Si 0.2 y perd : 241 -> 255
 // (des blocs dessinés en plusieurs suites au lieu d'un seul : ce qu'on y cache rapporte moins que les appels ajoutés).
 // (Débogage : __visibilite.actif = false montre tout ; __visibilite.regles = (x, h, z) => masque remplace les règles.)
+// RELECTURE du 11/10 : plus de 4 000 vues de jeu rendues tri actif puis coupé, sur le même fond, comparées pixel à pixel
+// — tirées au hasard parmi les 16 152 cellules où l'on marche (cap, tangage et les quatre vues au hasard), le long des
+// parcours des quatre niveaux et de la rue, montée et descente des trois escaliers, dans l'ascenseur et sur 35 places
+// assises — : identiques, hors des fentes du décor (sous une porte, au plus 33 pixels sur 320 × 180). Mêmes appels
+// remesurés sur PC ; en ?tel=1 (1 280 × 720, moyenne) : départ 447 -> 368, rue 1 163 -> 761, hall ouest 428 -> 273, pause
+// du -1 626 -> 324, pause du 1er 541 -> 306, palier du 2e 697 -> 420.
 // Rien n'est construit ni déplacé ici : la géométrie, la caméra et la lumière sont celles des autres modules.
 import * as THREE from 'three';
 
