@@ -751,16 +751,21 @@ function construireMurs(ch) {
   // (Relecture du 11/10 : de la pose de la photo 01, dans le C01 du lot D, ce jour est caché derrière le mur ouest du C01
   // et la pile masque la porte vitrée, quand la photo voit le jour juste à gauche de ce mur et la porte avec le hall
   // derrière elle : c'est l'écart entre le C01 et la pile du plan V2 qui est en cause, pas l'angle — gardé)
-  // (Relecture du 11/10, r02 : LES DEUX JOURS SONT PLUS PETITS ET PLUS HAUTS. Sur la photo 21 en pleine définition comme
-  // sur la photo 02 — rejouées à leurs poses, les deux à la fois —, le haut de leur cadre touche presque la bande de
-  // dalles lisses du plafond, l'appui est au-dessus des dossiers des chaises, à 0,2 m de la lisse grise, et le jour est
-  // finit à 1,26 m de l'arête droite du pilier, là où la borne le recouvre : verre de 1,0 x 1,28, de 1,12 à 2,40 (cadre
-  // compris, 1,035-2,485 ; ils faisaient 1,3 x 1,35, de 0,95 à 2,3) ; trumeau de 0,18 entre eux. Le jour ouest, 6,1-7,27
-  // hors tout, la photo 02 le mettait déjà là ; le jour est, 7,45-8,62, sort sur r02 à 10 px de son bord est)
+  // (RELECTURE DU 11/10, r02 : LE MUR SUD A TROIS JOURS, ET NON DEUX, PLUS PETITS ET PLUS HAUTS. La photo 02, prise du bout
+  // est vers l'ouest, voit de près un jour à affiches et au loin un jour nu ; r02, prise du bout ouest vers l'est, voit
+  // elle aussi de près un jour à affiches et au loin un jour nu — et ce sont les MÊMES affiches (la blanche à titre rouge
+  // sur la blanche aux six carrés noir, rouge, vert, agrandies sur les deux photos). Le jour à affiches est donc au
+  // milieu, entre deux jours nus : l'ouest, que voit la 02, et l'est, que voit r02 ; d'où la « contradiction » des deux
+  // photos sur les affiches. La photo 02 posée sur la porte grise du hall ouest — taille comprise — et sur l'angle ouest du
+  // mur sud, qu'elle voit à x 4,49 (le jeu : 4,5), met les bords des jours en 5,23 | 6,42 — 6,55 | … ; r02, ses jours du
+  // milieu et de l'est en … | 7,74 — 7,87 | 9,06 : trois jours de 1,19 hors tout, trumeaux de 0,13. Sur les deux photos, le
+  // haut du cadre touche presque la bande de dalles lisses du plafond et l'appui est bien au-dessus des dossiers, à 0,2 m
+  // de la lisse grise : verre de 1,02 x 1,28, de 1,12 à 2,40 — cadre compris, 1,035-2,485. Ils faisaient 1,3 x 1,35, de 0,95
+  // à 2,3, c 6,65 et 8,35 : vus du bout ouest, le jour est sortait 100 px trop à gauche et 0,3 m trop bas.)
   const YS = ATT.ys, X_B = 11.55, JOURS_S = [5.825, 7.145, 8.465], J_L = 1.02, J_BAS = 1.12, J_H = 2.4, JOUR_B = { c: 10.42, l: 0.6, bas: 1.05, h: 2.5 };
-  // LA PORTE DE LA Si 0.1 (IMAGINÉE) : c 9,5, entre le jour c 8,35 et le mur du bureau — le seul pan du mur sud que ni la
-  // photo 02 (le trumeau ouest est nu) ni la photo 21 ne montrent : la borne est devant. Grise, gonds à l'est, elle s'ouvre
-  // toujours dans la salle et s'y rabat contre son mur est ; 0,8 m (0,9 mordait sur le cadre du jour)
+  // LA PORTE DE LA Si 0.1 (IMAGINÉE) : c 9,5, entre le jour est et le mur du bureau — le seul pan du mur sud que ni la
+  // photo 02 ni la photo 21 ne montrent : la borne est devant. Grise, gonds à l'est, elle s'ouvre toujours dans la salle et
+  // s'y rabat contre son mur est ; 0,8 m. (Relecture du 11/10 : on l'atteint par l'est du pilier, 0,7 m entre lui et le mur)
   const P_SI = { c: 9.5, l: 0.8 };
   ch.mur({ de: [4.5, YS], a: [X_B + EP / 2, YS], mats: B, plinthes: ['N', 'S'], ouvertures: [...JOURS_S.map((c) => ({ c, l: J_L, bas: J_BAS, h: J_H })), { c: P_SI.c, l: P_SI.l, h: 2.04 }, { c: JOUR_B.c, l: JOUR_B.l, bas: JOUR_B.bas, h: JOUR_B.h }] });
   const sud = new THREE.Group(); sud.position.set(0, 0, -YS); ch.decor.add(sud);
@@ -770,9 +775,10 @@ function construireMurs(ch) {
   fenetreDepolie(sud, M, { x: JOUR_B.c, l: JOUR_B.l, haut: JOUR_B.h, bas: JOUR_B.bas, ep: EP, bandeClaire: 0.5 });
   ch.C.ajouterBoite(JOUR_B.c - JOUR_B.l / 2, -(YS - 0.05), JOUR_B.c + JOUR_B.l / 2, -(YS + 0.05), { y0: JOUR_B.bas, y1: JOUR_B.h, vitre: true });
   ch.porte('x', YS, P_SI.c, { l: P_SI.l, h: 2.04, modele: 'grise', etat: 'auto', cote: 'S', charniere: 'd', libre: 1, nom: 'Si 0.1' });
-  // la double lisse gris clair du mur sud (DY_A), jusqu'au cadre du jour c 8,35 : la porte la coupe
+  // la double lisse gris clair du mur sud (DY_A), jusqu'au cadre du jour est : la porte la coupe
   // (retour de Haythem du 11/10, r02 : « sous les fenêtres, la double lisse grise court le long du mur » — sur les photos
-  // 21 et 02, ses deux filets passent SOUS l'appui des jours, à 6-12 cm ; à 0,82-0,98, le second mordait sur le cadre)
+  // 21 et 02, ses deux filets passent SOUS l'appui des jours ; à 0,82-0,98, le second mordait sur le cadre. Relecture : les
+  // jours remontés, elle est à 0,2 m sous leur appui, comme sur les deux photos)
   for (const h of [0.73, 0.81]) ch.boite(4.9, YS + 0.075, 9.05, YS + 0.1, h, h + 0.04, M.lisseGrise, { ombre: false });
   // le nord : LE MUR SAFRAN (de x 5,8, le pilier jaune de l'entrée du C05 — photos 04, 05 —, à 11,7, l'entrée du C01), sa
   // lisse de PVC blanc, son panneau DAE (DY_A)
@@ -864,6 +870,14 @@ function construireMurs(ch) {
   // donnent cette place ; vu du bout ouest, l'écart à r02 tombe de 7,5° à 2,5° (le jeu le veut d'un rien plus à l'est que
   // la photo 21 : seule la photo 02, dont la pose est sûre — 12 points, 8,6 px —, le place en absolu). La porte de la Si 0.1
   // reste atteignable par sa moitié ouest, entre la borne et lui.)
+  // (RELECTURE DU 11/10 : r02 et la photo 02 rejouées ENSEMBLE, chacune à sa pose — la 02 posée sur la porte grise du
+  // hall ouest, taille comprise, et sur l'angle ouest du mur sud ; r02 sur ses jours et le fond. Le rayon de r02 vers
+  // l'arête nord-ouest du pilier (925 px) et celui de la photo 02 vers la même arête (le bord de sa bande grise, 16 px)
+  // se croisent en (8,80 ; 6,02) — et, de là, les deux pieds tombent où les photos les montrent : 2 599 px sur r02 (photo :
+  // 2 580), 1 303 sur la 02 (photo : 1 313). Les arêtes sud-ouest (1 075 px) et nord-est (831 px) de r02 donnent le reste :
+  // un pilier de 0,86 x 0,43, plus long que large — sa face ouest est juste assez large pour l'A2 qui la remplit sur r02 —,
+  // à 0,72 m du mur sud, au milieu de la salle comme sur la VO q_0038-0046. On passe entre lui et le mur vers la porte de
+  // la Si 0.1.)
   // (et il est plus SOMBRE que les murs : sur r02, sa face ouest est à 0,78 de la luminance du mur du fond, à la même
   // lumière ; le jeu le rendait à 0,92 — sa peinture grise, rien qu'ici, d'un ton plus bas)
   const grisPilier = M.pilier.clone(); grisPilier.color.multiplyScalar(0.84); grisPilier.name = 'pilier gris (salle d\'attente)';

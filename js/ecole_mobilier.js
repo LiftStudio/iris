@@ -24,7 +24,9 @@ const ATT_YS = 9.0 + DY_A;          // la ligne du mur sud de la salle d'attente
 // ---- LES CHAISES COQUE (type Eames DAR) : coque moulée, piètement « tour Eiffel » chromé ----
 // Couleurs relevées (photos 02, 21, rééquilibrées sur le blanc des murs) : blanc cassé, bleu canard (un bleu-vert
 // grisé, pas un bleu), grège (taupe rosé), vert anis, noir, gris rosé (rose poudré).
-const COQUE = { blanc: 0xefebe0, canard: 0x6b9294, grege: 0x8e8580, citron: 0xb8bc28, noir: 0x2e2c2c, rose: 0xc6aca0 };
+// (relecture du 11/10 : sur r02 agrandie, la canard est un bleu grisé où le bleu passe le vert — 0x6b9294 tirait sur le
+// vert d'eau : 0x678e9b)
+const COQUE = { blanc: 0xefebe0, canard: 0x678e9b, grege: 0x8e8580, citron: 0xb8bc28, noir: 0x2e2c2c, rose: 0xc6aca0 };
 let _coque = null, _ourlet = null;
 // LA COQUE, une surface paramétrée sur un plan presque RECTANGULAIRE (super-ellipse : la coque Eames est plus large que
 // profonde, aux angles arrondis). (09/10/2026, refaite d'après les photos 02 et 21 : la première, un bord qui montait
@@ -154,10 +156,12 @@ export function poserMobilier(ch) {
   // blanc ; au sud, noir, rose, canard sous le jour ouest — 10 cm plus à l'ouest, la borne est à côté. La rangée nord
   // recule de 2 cm : sur les photos, le haut des dossiers touche la lisse blanche du mur safran)
   // (Relecture du 11/10 — r02 et la photo 02 rejouées ENSEMBLE, la 02 posée sur la porte grise du hall ouest, taille
-  // comprise, et sur l'angle ouest du mur sud qu'elle voit en x 4,49 : au sud, la canard est en x 6,85, la rose en 6,05 et
-  // la noire en 5,25, sous le jour ouest et le jour aux affiches — la canard 0,75 m plus à l'ouest qu'on ne l'avait mise :
-  // vue du bout ouest, elle se levait sous la borne, là où r02 ne montre que le sol et le socle. Au nord, les cinq
-  // tombent à leur place)
+  // comprise, et sur l'angle ouest du mur sud qu'elle voit en x 4,49. AU SUD, le bord avant des assises, rétroprojeté sur
+  // les deux photos, met la canard vers x 6,7-6,9, la rose vers 6,0, la noire vers 5,1-5,4 : sous le jour ouest et le jour
+  // aux affiches — la canard était 0,6 m trop à l'est : vue du bout ouest, elle se levait sous la borne, là où r02 ne
+  // montre que le sol et le socle. On garde 7,0 / 6,2 / 5,4. AU NORD, la blanche du bout ouest a sa coque à 1,2 m de
+  // l'appareil de r02 (son assise à 3 400 px, son dossier à 2 800) et la 02 met celle du bout est vers 9,4 : la rangée
+  // glisse de 0,3 m vers l'est, au même pas de 0,7)
   [[6.8, 'blanc'], [7.5, 'canard'], [8.2, 'grege'], [8.9, 'citron'], [9.6, 'blanc']].forEach(([x, c]) => chaise(ch, x, 7.42, 'S', COQUE[c]));
   [[5.4, 'noir'], [6.2, 'rose'], [7.0, 'canard']].forEach(([x, c]) => chaise(ch, x, A(9.45), 'N', COQUE[c]));
   C.ajouterBoite(6.45, -7.75, 9.95, -7.05, { y1: 0.8 });
@@ -179,19 +183,23 @@ export function poserMobilier(ch) {
   // renversé ; l'écran de 0,54 x 1,28, de 0,6 à 1,88 m — dessous, le pied noir du fût et son petit logo.
   {
     // (Relecture du 11/10 : r02 et la photo 02 rejouées ensemble. Sur r02, le pied du fût est à 4,1 m de l'appareil
-    // — 565 px sous l'horizon —, sous les relèvements de ses deux bords : la borne est CONTRE LE MUR SUD, en x 8,75, devant
-    // le bout est du jour nu (7,87-9,06), à côté du jambage de la porte de la Si 0.1 ; sur la photo 02, elle est bien hors
-    // du cadre. Son haut n'est qu'à 100 px au-dessus de l'horizon quand son pied est à 565 px dessous : 1,82 m hors tout)
-    const bx = 8.6, by = 5.08, th = -2.53;
+    // — 565 px sous l'horizon —, sous les relèvements de ses deux bords : la borne est CONTRE LE MUR SUD, en x 8,6, devant
+    // le jour est, le nu (7,87-9,06), à 0,2 m du jambage de la porte de la Si 0.1 ; sur la photo 02, elle est bien hors du
+    // cadre. Son haut n'est qu'à 100 px au-dessus de l'horizon quand son pied est à 565 px dessous : 1,82 m hors tout)
+    // Et elle regarde le NORD, droit dans la salle, le dos au mur : vu du bout ouest, son écran n'a que 95 px de large pour
+    // 160 de borne, son flanc noir à droite — un écran de 0,54 vu sous 60°. Tournée vers le nord-ouest, elle faisait face
+    // à l'appareil.
+    const bx = 8.6, by = 5.08, th = Math.PI;
     const borne = new THREE.Group(); borne.position.set(bx, 0, -by); borne.rotation.y = th; ch.decor.add(borne);
     maille(boiteM(0.62, 0.025, 0.42), M.noir, 0, 0.0125, 0.1, 0, borne);
     const fut = new THREE.Group(); fut.position.y = 0.025; fut.rotation.x = -0.025; borne.add(fut);
-    // (relecture : fût de 1,795, l'écran sur ses trois quarts hauts — r02 : 520 px d'écran sur 674 de fût —, de 0,44 à 1,76)
+    // (relecture : fût de 1,795 ; l'écran n'en couvre que les deux tiers hauts — r02 agrandie : 175 px d'écran sur 275 de
+    // fût —, de 0,62 à 1,77 ; dessous, le fût noir et son logo)
     maille(boiteM(0.62, 1.795, 0.07), M.noir, 0, 0.8975, 0, 0, fut);
-    const mos = new THREE.Mesh(new THREE.PlaneGeometry(0.54, 1.32), new THREE.MeshBasicMaterial({ map: texMosaique(), color: new THREE.Color(1.08, 1.08, 1.08) }));
-    mos.position.set(0, 1.1, 0.0355); fut.add(mos);
+    const mos = new THREE.Mesh(new THREE.PlaneGeometry(0.54, 1.15), new THREE.MeshBasicMaterial({ map: texMosaique(), color: new THREE.Color(1.08, 1.08, 1.08) }));
+    mos.position.set(0, 1.195, 0.0355); fut.add(mos);
     const logo = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.035), new THREE.MeshBasicMaterial({ color: 0x6d6f73 }));
-    logo.position.set(0, 0.3, 0.0356); fut.add(logo);
+    logo.position.set(0, 0.45, 0.0356); fut.add(logo);
     // (la boîte du socle, tournée avec lui : un objet tourné de rotation.y = θ a a = -θ ; le socle avance de 0,1 devant)
     C.ajouterBoiteOrientee(bx + Math.sin(th) * 0.1, -by + Math.cos(th) * 0.1, 0.31, 0.21, -th, { y1: 2 });
   }
@@ -408,7 +416,7 @@ export function poserMobilier(ch) {
 // tailles, penchés, coupés par le bord, serrés les uns contre les autres, puis le tout passé au flou d'objectif, teinté
 // du bleu de l'écran et grainé.)
 function texMosaique() {
-  return canvasTex(384, 912, (g, w, h) => {
+  return canvasTex(384, 818, (g, w, h) => {
     let germe = 11;
     const rnd = () => { germe = (germe * 16807) % 2147483647; return germe / 2147483647; };
     const choix = (t) => t[Math.floor(rnd() * t.length)];
@@ -441,7 +449,7 @@ function texMosaique() {
     // une vignette est peinte à part, puis recopiée floutée, teintée du bleu de l'écran et grainée
     const peindre = (cw, chh, type) => {
       const cv = document.createElement('canvas'); cv.width = cw; cv.height = chh; const c = cv.getContext('2d');
-      const d = c.createLinearGradient(0, 0, 0, chh), f = type === 'couverture' ? ['#203c7a', '#13234a'] : choix([['#dbe9f0', '#8fa8ba'], ['#e8e4dc', '#a49c90'], ['#cfe3f0', '#7d97ab'], ['#f0ece6', '#b7aa98']]);
+      const d = c.createLinearGradient(0, 0, 0, chh), f = type === 'couverture' ? ['#203c7a', '#13234a'] : type === 'brun' ? ['#c9a27a', '#5e3f28'] : choix([['#dbe9f0', '#8fa8ba'], ['#e8e4dc', '#a49c90'], ['#d8b48c', '#8a6440'], ['#f0ece6', '#b7aa98']]);
       d.addColorStop(0, f[0]); d.addColorStop(1, f[1]); c.fillStyle = d; c.fillRect(0, 0, cw, chh);
       if (type !== 'couverture') for (let i = 0; i < 40; i++) tache(c, rnd() * cw, rnd() * chh, 6 + rnd() * cw * 0.35, 0.18 + rnd() * 0.3);
       if (type === 'saumon') { c.fillStyle = 'rgb(217,140,108)'; c.fillRect(cw * 0.3, 0, cw * 0.3, chh * 0.6); }
@@ -458,13 +466,15 @@ function texMosaique() {
       }
       return cv;
     };
-    const grille = [['groupe', 'portrait', 'groupe'], ['portrait', 'saumon', 'groupe'], ['groupe', 'couverture', 'salle']];
-    const m = 6, cw = Math.floor((w - 4 * m) / 3), chh = Math.floor((h - 4 * m) / 3);
-    for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) {
+    // (relecture du 11/10, r02 agrandie : QUATRE rangées de trois, et des vignettes plus chaudes — des bruns, des ocres,
+    // du blanc — sous un voile bleu plus léger : c'est l'écran qui bleuit, pas les photos)
+    const grille = [['brun', 'portrait', 'groupe'], ['portrait', 'saumon', 'brun'], ['groupe', 'brun', 'portrait'], ['salle', 'couverture', 'groupe']];
+    const m = 6, cw = Math.floor((w - 4 * m) / 3), chh = Math.floor((h - 5 * m) / 4);
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 3; i++) {
       const x = m + i * (cw + m), y = m + j * (chh + m), cv = peindre(cw, chh, grille[j][i]);
       g.save(); g.beginPath(); g.rect(x, y, cw, chh); g.clip();
       g.filter = 'blur(1.6px) saturate(0.9)'; g.drawImage(cv, x, y); g.filter = 'none';
-      g.fillStyle = 'rgba(110,190,240,0.34)'; g.fillRect(x, y, cw, chh);
+      g.fillStyle = 'rgba(110,190,240,0.22)'; g.fillRect(x, y, cw, chh);
       for (let k = 0; k < cw * chh / 30; k++) { g.fillStyle = rnd() < 0.5 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.09)'; g.fillRect(x + rnd() * cw, y + rnd() * chh, 1.5, 1.5); }
       g.restore();
     }
