@@ -44,6 +44,9 @@ const LOCO_LAT_D = ['walk_side', 'def_slide_r'];           // pas chasses vers l
 const LOCO_LAT_G = ['walk_side_m', 'def_slide_l'];         // ... vers la gauche
 // Clips d'ATTENTE dont on recale la semelle au sol, avatar par avatar (voir Player._mesurerSol)
 const SOL_REPOS = ['idle'];
+// LES RANGS SERRÉS (voir Player._glisserRang) : le pas chassé de qui se faufile jusqu'à sa place, et la distance à la ligne
+// d'un rang d'où on y entre (moins de la moitié du pas des rangs de la grande salle, 0,95 m)
+const VITESSE_RANG = 1.1, PRISE_RANG = 0.4;
 
 const loader = new GLTFLoader();
 const modelCache = {};
@@ -164,6 +167,7 @@ export class Player {
     this.walkPhase = 0; this.animT = 0;
     this.cur = { ...REST };
     this.assis = null;                // assis : { de, a, bob, sx, sz, k, sortir }
+    this.rang = null;                 // faufilé dans un rang serré : { R, t, ox, oz } (voir _glisserRang)
     this.couches = new Couches(this); // inclinaison, regard, respiration, pas (js/couches.js)
     this.cibleRegard = null;          // ce que le joueur regarde (posé par le jeu), ou null
     this.avatar = null; this.anim = null; this.animKey = null;
@@ -376,8 +380,11 @@ export class Player {
   // prendre une fois posé. `bob` descend le maillage pour que la hanche arrive à 8 cm au-dessus de l'assise.
   sasseoir(siege) {
     if (this.assis) return;
+    // (dans un rang serré, on se relèvera sur sa ligne, devant la place, et non dans l'allée : voir _glisserRang)
+    const G = this.rang && siege.rang === this.rang.R ? this.rang : null;
+    if (G) { G.t = clamp(siege.t, G.R.t0, G.R.t1); G.ox = 0; G.oz = 0; } else this.rang = null;
     this.assis = { de: { x: this.pos.x, z: this.pos.z }, a: { x: siege.x, z: siege.z }, bob: siege.y + 0.08 - 0.53 * this.h,
-      sx: siege.sx, sz: siege.sz === undefined ? siege.z : siege.sz, k: 0, sortir: false };
+      sx: G ? G.R.ax + G.R.ux * G.t : siege.sx, sz: G ? G.R.az + G.R.uz * G.t : siege.sz === undefined ? siege.z : siege.sz, k: 0, sortir: false };
     this.vel.set(0, 0, 0);
     this.stopEmote();
     this.setFacing(siege.fx, siege.fz);
@@ -671,6 +678,8 @@ export class Player {
       return;
     }
     const moving = dir.lengthSq() > 0.001;
+    // DANS UN RANG SERRÉ (_glisserRang) : on n'y va que le long de sa ligne ; on y entre en poussant contre son bout
+    if (this.rang || (moving && !this.airborne && this._entrerRang(dir))) { this._glisserRang(dir, dt); return; }
     // VITESSE (les réglages de LA CAGE) : 3,1 m/s + la vitesse de la fiche, sprint x1,32 qui use l'endurance
     let sp = (3.1 + (this.def.spd / 100) * 2.4) * this.speedMul;
     this.sprinting = false;
@@ -716,6 +725,101 @@ export class Player {
       if (moving && !this.airborne) this.faceWant.set(dir.x, 0, dir.z);
     }
     this.turnTo(this.faceWant, dt);
+  }
+
+  // ---------- les rangs serrés ----------
+  // LES RANGS SERRÉS (11/10, finitions du plan V2 — rapport final V2 § 5 : 75 places au milieu des rangées, 61 dans la
+  // grande salle S -1.14, 10 dans la S 1.3, 4 dans la salle 2 du 2e, qu'aucun endroit où l'on marche ne mettait à moins de
+  // 1,1 m). Les rangées gardent leur pas (la VO les montre serrées : 0,95 m dans la grande salle) ; c'est Haythem qui s'y
+  // FAUFILE, comme on le fait pour gagner sa place : poussé contre le bout ouvert d'un rang (à 12 cm près, à PRISE_RANG au
+  // plus de sa ligne, la poussée à moins de 57° de la ligne), il se tourne vers l'avant de la salle et passe en pas
+  // chassés, à VITESSE_RANG, le long de la ligne libre — entre le plateau et les dossiers, ou derrière les chaises —, en
+  // les frôlant. La place devant laquelle il se trouve est proposée (js/game.js updateSieges : celles de son rang
+  // seulement) ; il se relève devant elle, sur la ligne. Une poussée le long du rang l'y mène ; une poussée en travers
+  // (vers le plateau, les dossiers) le ramène vers le bout ouvert le plus proche : on ne reste jamais planté dans un rang.
+  // Il en ressort par un bout ouvert, là où il se tenait pour y entrer. Ni meuble ni mur ne bouge : le monde solide garde
+  // le rang en un bloc, la ligne ne vaut que pour celui qui s'y est faufilé.
+  // Un rang est posé par sa pièce sur ses sièges (`s.rang`, le même objet pour toute la rangée : js/ecole_amphi.js,
+  // js/ecole_etage1_pause.js, js/ecole_etage2.js) :
+  //   { nom, sol, ax, az, bx, bz : les deux bouts de sa ligne (monde), fx, fz : l'avant de la salle, sieges }
+  // Un bout est OUVERT quand Haythem y tient (libre : c'est là qu'il se trouve, poussé contre le bout du rang), sauf s'il
+  // est déclaré fermé (`ouvA` / `ouvB` à false) ; un bout fermé (un mur, les fenêtres) arrête la ligne 5 cm après la
+  // dernière place. Le reste se calcule ici, une fois.
+  static poserRangs(sieges) {
+    const C = Player.collisions, rangs = [];
+    for (const s of sieges) if (s.rang && !rangs.includes(s.rang)) rangs.push(s.rang);
+    for (const R of rangs) {
+      const dx = R.bx - R.ax, dz = R.bz - R.az, L = Math.hypot(dx, dz);
+      R.L = L; R.ux = dx / L; R.uz = dz / L;
+      for (const s of R.sieges) s.t = (s.x - R.ax) * R.ux + (s.z - R.az) * R.uz;
+      const ts = R.sieges.map((s) => s.t);
+      R.ouvA = R.ouvA !== false && (!C || C.libre(R.ax, R.az, RAYON_JOUEUR, R.sol));
+      R.ouvB = R.ouvB !== false && (!C || C.libre(R.bx, R.bz, RAYON_JOUEUR, R.sol));
+      R.t0 = R.ouvA ? 0 : Math.max(0, Math.min(...ts) - 0.05);
+      R.t1 = R.ouvB ? L : Math.min(L, Math.max(...ts) + 0.05);
+      if (!R.ouvA && !R.ouvB) console.warn('[rangs] %s : aucun bout ouvert', R.nom);
+    }
+    Player.rangs = rangs;
+    return rangs;
+  }
+  // contre le bout ouvert d'un rang de son niveau, en poussant vers l'intérieur : il s'y faufile (rend vrai)
+  _entrerRang(dir) {
+    for (const R of Player.rangs) {
+      if (Math.abs(R.sol - this.pos.y) > 0.3) continue;
+      for (const b of [0, 1]) {
+        if (!(b ? R.ouvB : R.ouvA)) continue;
+        const s = b ? -1 : 1, ux = R.ux * s, uz = R.uz * s;          // vers l'intérieur du rang
+        const ex = this.pos.x - (b ? R.bx : R.ax), ez = this.pos.z - (b ? R.bz : R.az);
+        const le = ex * ux + ez * uz, tr = ez * ux - ex * uz;
+        if (le < -0.12 || le > 0.3 || Math.abs(tr) > PRISE_RANG || dir.x * ux + dir.z * uz < 0.55) continue;
+        const t = clamp(b ? R.L - le : le, R.t0, R.t1);
+        // (l'écart à la ligne s'efface en un dixième de seconde : il glisse sur elle, sans saut)
+        this.rang = { R, t, ox: this.pos.x - (R.ax + R.ux * t), oz: this.pos.z - (R.az + R.uz * t) };
+        this.stopEmote();
+        return true;
+      }
+    }
+    return false;
+  }
+  _glisserRang(dir, dt) {
+    const G = this.rang, R = G.R, moving = dir.lengthSq() > 0.001;
+    let a = moving ? dir.x * R.ux + dir.z * R.uz : 0;
+    if (moving && Math.abs(a) < 0.35) {
+      // (en travers : vers le bout ouvert le plus proche)
+      const dA = R.ouvA ? G.t - R.t0 : Infinity, dB = R.ouvB ? R.t1 - G.t : Infinity;
+      a = dA <= dB ? -1 : 1;
+    } else if (moving) a = Math.sign(a);
+    // (la même inertie qu'en marchant : 0,13 s pour partir, 0,085 s pour s'arrêter)
+    const v0 = this.vel.x * R.ux + this.vel.z * R.uz;
+    let v = v0 + (a * VITESSE_RANG - v0) * (1 - Math.exp(-dt / (moving ? 0.13 : 0.085)));
+    if (!moving && Math.abs(v) < 0.01) v = 0;
+    G.t += v * dt;
+    const kd = 1 - Math.exp(-dt / 0.1); G.ox -= G.ox * kd; G.oz -= G.oz * kd;
+    if (G.t < R.t0) { if (R.ouvA) { this._sortirRang(R.ax, R.az, v); return; } G.t = R.t0; v = 0; }
+    else if (G.t > R.t1) { if (R.ouvB) { this._sortirRang(R.bx, R.bz, v); return; } G.t = R.t1; v = 0; }
+    this.pos.x = R.ax + R.ux * G.t + G.ox; this.pos.z = R.az + R.uz * G.t + G.oz;
+    const C = Player.collisions;
+    if (C) this.pos.y = C.solEn(this.pos.x, this.pos.z, this.pos.y);
+    this.vel.set(R.ux * v, 0, R.uz * v);
+    this.speedNow = Math.abs(v); this.sprinting = false; this.sprintVu = Math.max(0, this.sprintVu - dt);
+    this.stamina = Math.min(100, this.stamina + 13 * dt);
+    // (face à l'avant de la salle : le déplacement est de côté — l'échelle des pas chassés, _sensLoco)
+    if (this.speedNow > 0.1) {
+      const nx = this.vel.x / this.speedNow, nz = this.vel.z / this.speedNow, lat = nx * -this.facing.z + nz * this.facing.x;
+      this.lateral = Math.abs(lat); this.lateralDir = Math.sign(lat);
+      this.backward = -(nx * this.facing.x + nz * this.facing.z);
+    } else { this.lateral = 0; this.backward = 0; this.sensLoco = 'av'; this.sensT = 0; }
+    this.faceWant.set(R.fx, 0, R.fz);
+    this.turnTo(this.faceWant, dt);
+  }
+  // sorti par le bout ouvert (x, z) : la marche reprend là, avec son élan
+  _sortirRang(x, z, v) {
+    const R = this.rang.R;
+    this.rang = null;
+    this.pos.x = x; this.pos.z = z;
+    this.vel.set(R.ux * v, 0, R.uz * v);
+    const C = Player.collisions;
+    if (C) { C.resoudre(this.pos, RAYON_JOUEUR, this.vel, this.pos.y + this.jumpY); this.pos.y = C.solEn(this.pos.x, this.pos.z, this.pos.y); }
   }
 
   // ROTATION AVEC ÉLAN : la vitesse de rotation monte et redescend avec une accélération bornée. 13 rad/s jusqu'à 3 m/s,
@@ -1043,6 +1147,8 @@ export class Player {
 
 // Le monde solide de la carte (js/collisions.js), posé par js/game.js : propriété de CLASSE, comme les obstacles de LA CAGE.
 Player.collisions = null;
+// Les rangs serrés de la carte (Player.poserRangs, appelé par js/game.js) : où l'on se faufile jusqu'à sa place.
+Player.rangs = [];
 // Vrai sur le DERNIER pas de simulation avant une image (les couches ne posent leur IK que là : js/couches.js).
 Player.poseVisible = true;
 // Prépare le rendu d'un avatar qui arrive (programmes compilés en parallèle) : posé par js/game.js.

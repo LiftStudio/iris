@@ -120,6 +120,7 @@ export class Game {
     this.collisions = this.carte.collisions;
     Player.collisions = this.collisions;
     this.sieges = this.carte.sieges || [];
+    Player.poserRangs(this.sieges);   // (les rangs serrés, où l'on se faufile jusqu'à sa place : tous les niveaux, avant le tri)
     if (new URLSearchParams(location.search).get('debug') === 'murs') this.collisions.afficherDebug(this.scene);
 
     this.fx = new PostFX(this.renderer, this.scene, this.camera);
@@ -313,7 +314,7 @@ export class Game {
   // Haythem au point de départ de la carte, la caméra derrière lui
   placerAuDepart() {
     const u = this.user, D = this.carte.depart;
-    u.stopEmote(); u.assis = null; u.tel = null;
+    u.stopEmote(); u.assis = null; u.rang = null; u.tel = null;
     u.pos.set(D.x, 0, D.z); u.vel.set(0, 0, 0); u.setFacing(D.fx, D.fz);
     u.pos.y = this.collisions.solEn(D.x, D.z, D.y || 0);   // (un départ sur un palier de l'escalier)
     u.airborne = false; u.jumpY = 0; u.jumpVel = 0;
@@ -483,14 +484,16 @@ export class Game {
     u.marche = !inp.sprint() && (inp.down('walk') || (() => { const amp = inp.amplitude(); return amp > 0.02 && amp < 0.58; })());
     u.move(_dir, inp.sprint(), dt);
     // LE SAUT (la touche de tir de LA CAGE, sans ballon : elle faisait déjà sauter en balade)
-    if (inp.pressed('jump') && !u.airborne && !u.assis && !inp.blocked) { if (u.emote) u.stopEmote(); u.jump(2.6); }
+    // (pas dans un rang serré : on s'y faufile entre le plateau et les dossiers)
+    if (inp.pressed('jump') && !u.airborne && !u.assis && !u.rang && !inp.blocked) { if (u.emote) u.stopEmote(); u.jump(2.6); }
     u.update(dt);
     this.hud.stamina(u.stamina);
   }
 
   // ---------- s'asseoir ----------
   // Les sièges de la carte (js/carte_ecole.js : chaises, bancs). Le plus proche à moins de 1,1 m est proposé ; la touche
-  // d'action assoit, et le moindre déplacement (ou la même touche, ou le saut) relève.
+  // d'action assoit, et le moindre déplacement (ou la même touche, ou le saut) relève. Faufilé dans un rang serré
+  // (js/player.js _glisserRang), seulement les places de ce rang : celle devant laquelle il se trouve.
   updateSieges(u, a) {
     const S = this.sieges;
     if (!S.length || this.input.blocked) return;
@@ -502,7 +505,7 @@ export class Game {
     }
     let best = null, bd = 1.1;
     if (!u.airborne && !u.emote) {
-      for (const s of S) {
+      for (const s of u.rang ? u.rang.R.sieges : S) {
         const d = Math.hypot(u.pos.x - s.x, u.pos.z - s.z);
         if (d < bd) { bd = d; best = s; }
       }
