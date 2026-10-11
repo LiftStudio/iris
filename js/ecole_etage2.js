@@ -1068,8 +1068,8 @@ export function poserEtage2(ch, renderer = null) {
   //  LES FAÇADES : sur rue au 2e (vraies fenêtres, travées 1 à 12), arrière (y 12,45 : la salle 1, le palier)
   // =====================================================================
   function construireFacades() {
-    // ---- SUR RUE : le mur (40 cm, pierre dehors, blanc dedans) percé de ses douze fenêtres (1,30 x 1,25 m, allège 0,95 :
-    // la tuile texEtage) ; la salle 2 derrière les travées 7 à 11 (VO q_0318-0327 : sans store) ; derrière les autres, des
+    // ---- SUR RUE : le mur (40 cm, pierre dehors, blanc dedans) percé de ses douze fenêtres (1,20 x 1,35 m, allège 0,85 :
+    // la tuile texEtage, FENETRE_ETAGE) ; la salle 2 derrière les travées 7 à 11 (VO q_0318-0327 : sans store) ; derrière les autres, des
     // pièces fermées : leurs stores sont baissés ----
     // (relecture du 10/10, VO q_0319-0331 : la travée 7 a un ENCADREMENT ROUGE en saillie, js/carte_ecole.js
     // construireFacade, dont le jour ne fait que 1,20 x 1,15 m — par une fenêtre de 1,30 x 1,25, on voyait de la salle 2 le

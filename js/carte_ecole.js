@@ -591,18 +591,22 @@ function construireFacade(ch) {
   const etages = maille(geoEtages, M.etage, 9.9, H_RDC + 2 * 3.1 + 3.1, 0.2, 0, ch.decor, { ombre: false });
   etages.userData.horsAOSol = true;
   // LE 5e ÉTAGE ET LA TOITURE (lot façade du 11/10 : la photo 12 redressée — iris_vues/X4_p12_redressee.jpg — montre une
-  // CINQUIÈME rangée, dans le plan de la façade : une allège de pierre jusqu'à 0,95 m au-dessus du plancher (16,85), un
-  // appui, puis un bandeau vitré noir, coupé à chaque travée d'un poteau clair de 30 cm jusqu'à 17,95, puis plein jusqu'au
-  // nez de la toiture plate, 18,95-19,55 ; l'encadrement rouge de la travée 12 y monte jusque sous le nez. Le jeu
+  // CINQUIÈME rangée, dans le plan de la façade : une allège de pierre jusqu'à 0,85 m au-dessus du plancher (16,75), un
+  // appui, puis un bandeau vitré noir, coupé à chaque travée d'un poteau clair de 20 cm jusqu'à 17,9, puis plein jusqu'au
+  // nez de la toiture plate, 18,6-19,2 ; l'encadrement rouge de la travée 12 est celui des autres étages. Le jeu
   // posait à 15,90 une corniche saillante, un garde-corps à barreaux et un attique en retrait de 1,2 m, que la photo
   // n'a pas : en retrait, l'attique y tomberait trois mètres plus bas, sur la rangée du 4e)
-  const N5 = H_RDC + 4 * 3.1, hA = N5 + 0.95, hP = 17.95, hN = 18.95, hT = 19.55;
+  // (cotes relues sur la photo 12 redressée, à côté du jeu redressé de même — iris_vues/X4_pl_p12_redressee.jpg : ce qui
+  // est en saillie y monte de 2 à 3 %, le nez et les cadres sont comparés à leur image dans le jeu, non à la grille)
+  const N5 = H_RDC + 4 * 3.1, hA = N5 + 0.85, hP = 17.9, hN = 18.6, hT = 19.2;
   ch.boite(-0.3, -0.4, 20.1, 0, N5, hA, M.pierre, { ombre: false });
   ch.boite(-0.3, -0.45, 20.1, 0.05, hA, hA + 0.07, M.pierre, { ombre: false });
-  ch.boite(0, -0.28, 19.8, 6, hA + 0.07, hN, M.noir, { ombre: false });
-  for (let k = 0; k <= 12; k++) ch.boite(Math.max(-0.3, k * 1.65 - 0.15), -0.4, Math.min(20.1, k * 1.65 + 0.15), -0.28, hA + 0.07, hP, M.pierre, { ombre: false });
+  ch.boite(0, -0.28, 19.8, 6, hA + 0.07, hN, M.noirMat, { ombre: false });
+  for (let k = 0; k <= 12; k++) ch.boite(Math.max(-0.3, k * 1.65 - 0.1), -0.4, Math.min(20.1, k * 1.65 + 0.1), -0.28, hA + 0.07, hP, M.pierre, { ombre: false });
   ch.boite(-0.3, -0.33, 20.1, -0.28, hP, hP + 0.06, M.menuiserie, { ombre: false });
   ch.boite(-0.3, -0.5, 20.1, 6.2, hN, hT, M.pierre, { ombre: false });
+  // (la sous-face du nez, dans l'ombre : vue d'en bas, une bande sombre au-dessus du vitrage — photo 12)
+  ch.boite(-0.3, -0.5, 20.1, -0.28, hN - 0.02, hN, M.noirMat, { ombre: false });
   ch.boite(-0.3, -0.47, 20.1, 6.2, hT, hT + 0.05, M.aluGris, { ombre: false });
   // LES BANDES NOIRES DES DEUX BOUTS (photos 10, 12 redressée, 16 : 30 cm d'un noir mat, de toute la hauteur, à la jonction
   // des mitoyens — le jeu n'y posait que deux descentes d'eau de 12 cm)
@@ -612,7 +616,7 @@ function construireFacade(ch) {
   // js/ecole_etage2.js)
   const K = CADRE, y0 = -0.4 - K.saillie, y1 = -0.4;
   for (const { t, e, o } of CADRES) {
-    const x = 0.825 + (t - 1) * 1.65, N = H_RDC + (e - 1) * 3.1, b0 = N + K.bas, b1 = e === 5 ? hN : N + K.haut, a = x - K.l / 2, c = x + K.l / 2;
+    const x = 0.825 + (t - 1) * 1.65, N = H_RDC + (e - 1) * 3.1, b0 = N + K.bas, b1 = N + K.haut, a = x - K.l / 2, c = x + K.l / 2;
     ch.boite(a, y0, c, y1, b1 - K.linteau, b1, M.rougeCadre, { ombre: false });
     ch.boite(a, y0, c, y1, b0, b0 + K.traverse, M.rougeCadre, { ombre: false });
     ch.boite(a, y0, a + K.montant, y1, b0 + K.traverse, b1 - K.linteau, M.rougeCadre, { ombre: false });
@@ -620,7 +624,7 @@ function construireFacade(ch) {
     // l'appui blanc de la fenêtre, sur la traverse basse, du nu du cadre à la menuiserie
     ch.boite(a + K.montant, y0, c - K.montant, -0.25, b0 + K.traverse, b0 + K.traverse + 0.05, M.blanc, { ombre: false });
     if (e < 3) continue;
-    if (e === 5) { ch.boite(a + K.montant, -0.42, c - K.montant, -0.4, b0 + K.traverse + 0.05, b1 - K.linteau, M.noir, { ombre: false }); continue; }
+    if (e === 5) { ch.boite(a + K.montant, -0.42, c - K.montant, -0.4, b0 + K.traverse + 0.05, b1 - K.linteau, M.noirMat, { ombre: false }); continue; }
     const p = new THREE.Mesh(new THREE.PlaneGeometry(K.jour.l, K.jour.haut - K.jour.bas), jourDehors(new THREE.MeshStandardMaterial({ map: texFenetreCadre(o), roughness: 0.35 }), 0.15));
     p.position.set(x, N + (K.jour.bas + K.jour.haut) / 2, 0.412); p.userData.horsAOSol = true; ch.decor.add(p);
   }

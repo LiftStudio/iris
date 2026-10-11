@@ -2,8 +2,8 @@
 //  LE 1er ÉTAGE DE L'ÉCOLE IRIS (crochet de js/carte_ecole.js)
 // =====================================================================
 // Ce qui est SÛR vient des photos — la double porte coupe-feu du palier (photos 06 et 20), le palier est (27 à 29), la
-// FAÇADE (11, 12, 16 à 18 : douze travées de 1,65 m, une fenêtre par travée à menuiserie brun-noir, la grande baie dans
-// son encadrement rouge à l'ouest, travée 1, la fenêtre étroite rouge à l'est, travée 12, les pastilles des pompiers) —
+// FAÇADE (11, 12, 16 à 18 : douze travées de 1,65 m, une fenêtre d'un vantail par travée à menuiserie brun-noir, les
+// fenêtres hautes des encadrements rouges aux deux bouts, travées 1 et 12, et leurs pastilles des pompiers ; lot façade) —
 // et, depuis le 10/10, de la VIDÉO OFFICIELLE DE VISITE (2021), qui parcourt l'étage de 41 à 68 s : l'espace pause
 // orange derrière la porte du palier est, la salle de cours S 1.3 sur les travées 2 à 8, la porte de la salle Robert
 // Kahn (js/ecole_etage1_pause.js). Le reste (le bureau 103, la salle 104, le couloir sombre, le palier d'étage ouest)
@@ -15,7 +15,7 @@
 // (PLAN V2 du 11/10, plan_v2.md § 2.4 — retour de Haythem du 10/10 : « les salles sont trop compressées ». Le mur des
 // jours descend de 2 m, y 6,975 → 4,95 : l'espace pause en prend 2 de plus, la S 1.3 en perd 2, le couloir sombre et le
 // palier d'étage ouest descendent avec lui ; la salle Robert Kahn rentre dans le bâtiment ; le palier est rétrécit au nord)
-//   le bureau de la travée 1             x 0-1,59    y 0-4,89    la grande baie rouge (photo 12 : un bureau allumé)
+//   le bureau de la travée 1             x 0-1,59    y 0-4,89    la fenêtre haute au cadre rouge (photo 12 : un bureau allumé)
 //   la salle de cours S 1.3              x 1,71-13,14 y 0-4,89   travées 2 à 8, sept fenêtres (VO q_0198-0213)
 //   bureau 103 (pédagogie)               x 13,61-16,44 y 0-6,9   travées 9 et 10 (au-dessus de la porte 6 ; au sud de
 //                                        y 3,39, il commence en x 13,26, derrière la cloison de la S 1.3)
