@@ -358,6 +358,14 @@ solide : il s'y coinçait en tremblant.
 `?debug=murs` dessine les formes des étages et du sous-sol à leur hauteur et les sols (dalles, rampes) en magenta.
 Restent à venir : les étages 3 à 5 (la cage est y monte déjà) et le -2.
 
+**Rejouer une photo** (la méthode du plan V2, à garder pour toute nouvelle pièce) : retrouver la pose de l'appareil
+(place, hauteur, cap, tangage, roulis) par moindres carrés sur quelques points du plan visibles sur la photo, puis, dans
+la console, `__game.freeCam = true`, la caméra à cette pose et au champ de la photo (f ≈ 600 px pour 1 600 sur les
+photos 01-21 : champ de 106° sur le grand côté), quelques `__game.frame(0.033)`, `__game.fx.render(0.016)` et
+`__game.renderer.domElement.toDataURL()` ; comparer côte à côte et en fondu. Regarder aussi la même place en **vue de
+jeu** (la caméra V2 derrière Haythem) et en **vue photo** : c'est ainsi que Haythem juge. Les proportions — distances
+entre portes, murs et meubles, largeurs, profondeurs — sont celles des photos ; on ne grandit jamais tout d'un bloc.
+
 **L'écran de chargement** : après avoir ajouté des fichiers chargés au démarrage, relever les profils
 (`?chargement=trace`, puis `?chargement=trace&tel=1`) et relancer `python tools/liste_chargement.py` (voir son en-tête).
 Changer aussi la version de `sw.js` (aujourd'hui `iris-v1.5`) quand index.html, le style, un module ou un fichier lourd
