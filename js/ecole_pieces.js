@@ -1057,36 +1057,42 @@ function bureauB(ch, P) {
   const tapis = new THREE.MeshStandardMaterial({ map: texTapis(), roughness: 1 });
   // (relecture du 11/10 : le mur nord sur la ligne 2,925, nu sud 2,85 — le tapis, le bureau de chêne et tout ce qu'il porte
   // reculent encore de 0,1 m vers la façade, les chaises des visiteurs de 0,15, le fauteuil de 0,06)
-  ch.boite(10.25, 0.3, 12.25, 2.6, 0, 0.01, tapis, { ombre: false });
+  // (intégration v1.7 : encore 0,08 m vers la façade, tout le groupe du bureau de chêne — tapis, bureau, fauteuil, chaises
+  // des visiteurs ; à 1,98, derrière les chaises, il ne restait que 0,62 m jusqu'au mur — 0,02 de jeu pour Haythem, rayon
+  // 0,30 — et 0,25 entre l'angle du bureau et la plante : de la porte, on n'y passait qu'en forçant, et l'on se relevait de la
+  // chaise ouest dans son propre cercle. Maintenant 0,70 derrière elles, et 0,35 au coin du bureau)
+  ch.boite(10.25, 0.22, 12.25, 2.52, 0, 0.01, tapis, { ombre: false });
   // le bureau de chêne clair sur piètement noir, son caisson blanc
-  ch.boite(10.4, 0.9, 11.9, 1.7, 0.72, 0.75, P.chene);
-  for (const x of [10.44, 11.86]) for (const y of [0.94, 1.66]) ch.boite(x - 0.02, y - 0.02, x + 0.02, y + 0.02, 0.01, 0.72, P.noirMat);
-  ch.boite(10.44, 1.64, 11.86, 1.66, 0.62, 0.7, P.noirMat, { ombre: false });
-  ch.boite(11.38, 0.97, 11.82, 1.53, 0.02, 0.6, P.blancMat);
-  for (const h of [0.08, 0.27, 0.45]) ch.boite(11.43, 0.955, 11.77, 0.97, h, h + 0.12, P.grisClair, { ombre: false });
-  C.ajouterBoite(10.4, -0.9, 11.9, -1.7, { y1: 0.75 });
+  ch.boite(10.4, 0.82, 11.9, 1.62, 0.72, 0.75, P.chene);
+  for (const x of [10.44, 11.86]) for (const y of [0.86, 1.58]) ch.boite(x - 0.02, y - 0.02, x + 0.02, y + 0.02, 0.01, 0.72, P.noirMat);
+  ch.boite(10.44, 1.56, 11.86, 1.58, 0.62, 0.7, P.noirMat, { ombre: false });
+  ch.boite(11.38, 0.89, 11.82, 1.45, 0.02, 0.6, P.blancMat);
+  for (const h of [0.08, 0.27, 0.45]) ch.boite(11.43, 0.875, 11.77, 0.89, h, h + 0.12, P.grisClair, { ombre: false });
+  C.ajouterBoite(10.4, -0.82, 11.9, -1.62, { y1: 0.75 });
   // sur le bureau : l'écran, le portable ouvert, le téléphone, des papiers, la lampe, le pot à crayons
-  ecranPC(ch, P, 11.02, 1.5, 0.75, 'S', P.ecrans[2]);
-  clavier(ch, P, 10.98, 1.15, 0.75, 'S');
-  const lp = groupe(ch, 11.6, 1.27, 'S', 0.75); lp.rotation.y = -0.35;
+  ecranPC(ch, P, 11.02, 1.42, 0.75, 'S', P.ecrans[2]);
+  clavier(ch, P, 10.98, 1.07, 0.75, 'S');
+  const lp = groupe(ch, 11.6, 1.19, 'S', 0.75); lp.rotation.y = -0.35;
   R(lp, P.alu, 0.32, 0.016, 0.22, 0.006, 0, 0.008, 0, { ombre: false });
   const cou = new THREE.Group(); cou.position.set(0, 0.016, -0.11); cou.rotation.x = -0.25; lp.add(cou);
   B(cou, P.alu, 0.32, 0.21, 0.007, 0, 0.105, 0);
   plan(cou, P.ecrans[3], 0.3, 0.18, 0, 0.108, 0.0040);
-  const tel = groupe(ch, 10.53, 1.4, 'S', 0.75); R(tel, P.plastique, 0.18, 0.05, 0.2, 0.015, 0, 0.025, 0, { ombre: false }); R(tel, P.plastique, 0.05, 0.035, 0.19, 0.015, -0.055, 0.065, 0, { ombre: false });
-  const pap = groupe(ch, 10.56, 1.07, 'S', 0.75); pap.rotation.y = 0.2; B(pap, P.blancMat, 0.21, 0.012, 0.297, 0, 0.006, 0, { ombre: false });
-  const lampe = groupe(ch, 11.78, 1.55, 'S', 0.75);
+  const tel = groupe(ch, 10.53, 1.32, 'S', 0.75); R(tel, P.plastique, 0.18, 0.05, 0.2, 0.015, 0, 0.025, 0, { ombre: false }); R(tel, P.plastique, 0.05, 0.035, 0.19, 0.015, -0.055, 0.065, 0, { ombre: false });
+  const pap = groupe(ch, 10.56, 0.99, 'S', 0.75); pap.rotation.y = 0.2; B(pap, P.blancMat, 0.21, 0.012, 0.297, 0, 0.006, 0, { ombre: false });
+  const lampe = groupe(ch, 11.78, 1.47, 'S', 0.75);
   CY(lampe, P.noirMat, 0.07, 0.015, 0, 0.008, 0, 18); CY(lampe, P.noirMat, 0.008, 0.42, 0, 0.22, 0, 6);
   maille(new THREE.ConeGeometry(0.08, 0.12, 18, 1, true), P.noirMat, -0.05, 0.43, 0.04, 0, lampe).rotation.z = 0.5;
-  const pot = groupe(ch, 10.47, 1.6, 'S', 0.75); CY(pot, P.noirMat, 0.035, 0.1, 0, 0.05, 0, 14); for (let i = 0; i < 3; i++) CY(pot, [P.bleu, P.rouge, P.jaune][i], 0.005, 0.15, -0.012 + i * 0.012, 0.11, (i - 1) * 0.008, 6, { ombre: false });
+  const pot = groupe(ch, 10.47, 1.52, 'S', 0.75); CY(pot, P.noirMat, 0.035, 0.1, 0, 0.05, 0, 14); for (let i = 0; i < 3; i++) CY(pot, [P.bleu, P.rouge, P.jaune][i], 0.005, 0.15, -0.012 + i * 0.012, 0.11, (i - 1) * 0.008, 6, { ombre: false });
   // le fauteuil (haut dossier), dont on se relève vers l'est, et les deux chaises visiteurs, devant la moitié ouest du
   // bureau ; à l'est, le passage de la porte vers le fond du bureau
   // (retour r02 du 11/10 : le bureau n'a plus que 3 m de profondeur, son mur nord en y 3,1 — le bureau de chêne, son
   // fauteuil et les chaises reculent de 0,2 m vers la façade ; on se relève des chaises derrière elles, à 0,3 m du mur)
   // (relecture : à 1,98, on se relève derrière elles à 0,52 — hors de leur propre cercle —, à 0,35 m du nu du mur)
-  chaiseBureau(ch, P, 11.1, 0.52, 'N', { accoudoirs: true, haut: true, nom: 'le fauteuil du bureau', sortie: [0.75, 0] });
-  chaiseLuge(ch, P, 10.3, 1.98, 'S', 0.1, [0.08, 0.52]);
-  chaiseLuge(ch, P, 10.85, 1.98, 'S', -0.12, [0, 0.52]);
+  // (intégration v1.7 : à 1,90, on se relève derrière elles à 0,56 — leur cercle de 0,25 et le rayon de Haythem, 0,30 —, à
+  // 0,39 m du nu du mur ; le fauteuil en 0,44)
+  chaiseBureau(ch, P, 11.1, 0.44, 'N', { accoudoirs: true, haut: true, nom: 'le fauteuil du bureau', sortie: [0.75, 0] });
+  chaiseLuge(ch, P, 10.3, 1.9, 'S', 0.1, [0.08, 0.56]);
+  chaiseLuge(ch, P, 10.85, 1.9, 'S', -0.12, [0, 0.56]);
   // l'armoire (deux portes) au mur est, au sud du débattement de la porte (y 1,7-2,45)
   ch.boite(12.76, 0.3, 13.2, 1.5, 0, 1.98, P.grisClair, { collision: true });
   ch.boite(12.75, 0.31, 12.76, 0.895, 0.03, 1.95, P.blancMat, { ombre: false });
@@ -1109,8 +1115,10 @@ function bureauB(ch, P) {
   // (retour r02 du 11/10 : le mur nord en y 3,1 — le tableau redescend au-dessus des chaises, la plante passe dans l'angle
   // nord-est, à côté de la porte, hors de son passage)
   // (relecture : le mur nord en 2,925 — le tableau en 2,2, la plante en (12,1 ; 2,5), à 0,33 m des deux murs de l'angle)
+  // (intégration v1.7 : la plante 5 cm plus avant dans l'angle, à 0,28 et 0,30 m des deux murs — son cercle de 0,23 fermait
+  // avec l'angle du bureau de chêne le passage vers les chaises des visiteurs)
   cadre(ch, P, new THREE.MeshStandardMaterial({ map: texArt(), roughness: 0.7 }), BB.x0, 2.2, 'E', 0.82, 1.02, 1.62, { baguette: P.chene, ep: 0.03 });
-  plante(ch, P, 12.1, 2.5, { h: 1.65, graineN: 3 });
+  plante(ch, P, 12.15, 2.55, { h: 1.65, graineN: 3 });
   // (le porte-manteau : dans l'angle de la fenêtre, à côté de la bibliothèque — au nord, il fermait le passage ; 10/10)
   const pm = groupe(ch, 10.52, 0.24, 'S');
   CY(pm, P.noirMat, 0.17, 0.02, 0, 0.01, 0, 20); CY(pm, P.noirMat, 0.016, 1.75, 0, 0.88, 0, 8);
