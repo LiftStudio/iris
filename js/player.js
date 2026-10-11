@@ -728,17 +728,18 @@ export class Player {
   }
 
   // ---------- les rangs serrés ----------
-  // LES RANGS SERRÉS (11/10, finitions du plan V2 — rapport final V2 § 5 : 75 places au milieu des rangées, 61 dans la
-  // grande salle S -1.14, 10 dans la S 1.3, 4 dans la salle 2 du 2e, qu'aucun endroit où l'on marche ne mettait à moins de
-  // 1,1 m). Les rangées gardent leur pas (la VO les montre serrées : 0,95 m dans la grande salle) ; c'est Haythem qui s'y
-  // FAUFILE, comme on le fait pour gagner sa place : poussé contre le bout ouvert d'un rang (à 12 cm près, à PRISE_RANG au
-  // plus de sa ligne, la poussée à moins de 57° de la ligne), il se tourne vers l'avant de la salle et passe en pas
-  // chassés, à VITESSE_RANG, le long de la ligne libre — entre le plateau et les dossiers, ou derrière les chaises —, en
-  // les frôlant. La place devant laquelle il se trouve est proposée (js/game.js updateSieges : celles de son rang
-  // seulement) ; il se relève devant elle, sur la ligne. Une poussée le long du rang l'y mène ; une poussée en travers
-  // (vers le plateau, les dossiers) le ramène vers le bout ouvert le plus proche : on ne reste jamais planté dans un rang.
-  // Il en ressort par un bout ouvert, là où il se tenait pour y entrer. Ni meuble ni mur ne bouge : le monde solide garde
-  // le rang en un bloc, la ligne ne vaut que pour celui qui s'y est faufilé.
+  // LES RANGS SERRÉS (11/10, finitions du plan V2 — rapport final V2 § 5 : les places au milieu des rangées, 61 dans la
+  // grande salle S -1.14, 10 à 15 dans la S 1.3, 4 dans la salle 2 du 2e, qu'aucun endroit où l'on marche ne mettait à
+  // moins de 1,1 m). Les rangées gardent leur pas (la VO les montre serrées : 0,95 m dans la grande salle) ; c'est
+  // Haythem qui s'y FAUFILE, comme on le fait pour gagner sa place : poussé contre le bout ouvert d'un rang (à 12 cm
+  // près, à PRISE_RANG au plus de sa ligne, la poussée à moins de 41° de la ligne — en biais, il longe les bouts des
+  // rangs comme avant : on n'est pas happé par un rang en remontant l'allée), il se tourne vers l'avant de la salle et
+  // passe en pas chassés, à VITESSE_RANG, le long de la ligne libre — entre le plateau et les dossiers, ou derrière les
+  // chaises —, en les frôlant. La place devant laquelle il se trouve est proposée (js/game.js updateSieges : celles de
+  // son rang seulement) ; il se relève devant elle, sur la ligne. Une poussée le long du rang l'y mène ; une poussée en
+  // travers (vers le plateau, les dossiers) le ramène vers le bout ouvert le plus proche : on ne reste jamais planté dans
+  // un rang. Il en ressort par un bout ouvert, là où il se tenait pour y entrer. Ni meuble ni mur ne bouge : le monde
+  // solide garde le rang en un bloc, la ligne ne vaut que pour celui qui s'y est faufilé.
   // Un rang est posé par sa pièce sur ses sièges (`s.rang`, le même objet pour toute la rangée : js/ecole_amphi.js,
   // js/ecole_etage1_pause.js, js/ecole_etage2.js) :
   //   { nom, sol, ax, az, bx, bz : les deux bouts de sa ligne (monde), fx, fz : l'avant de la salle, sieges }
@@ -771,7 +772,7 @@ export class Player {
         const s = b ? -1 : 1, ux = R.ux * s, uz = R.uz * s;          // vers l'intérieur du rang
         const ex = this.pos.x - (b ? R.bx : R.ax), ez = this.pos.z - (b ? R.bz : R.az);
         const le = ex * ux + ez * uz, tr = ez * ux - ex * uz;
-        if (le < -0.12 || le > 0.3 || Math.abs(tr) > PRISE_RANG || dir.x * ux + dir.z * uz < 0.55) continue;
+        if (le < -0.12 || le > 0.3 || Math.abs(tr) > PRISE_RANG || dir.x * ux + dir.z * uz < 0.75) continue;
         const t = clamp(b ? R.L - le : le, R.t0, R.t1);
         // (l'écart à la ligne s'efface en un dixième de seconde : il glisse sur elle, sans saut)
         this.rang = { R, t, ox: this.pos.x - (R.ax + R.ux * t), oz: this.pos.z - (R.az + R.uz * t) };

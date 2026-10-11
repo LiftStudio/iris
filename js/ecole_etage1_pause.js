@@ -982,8 +982,8 @@ export function poserPause1(ch, ctx) {
     // LE RANG où Haythem se faufile jusqu'aux places du bloc sud (js/player.js _glisserRang ; 11/10, finitions V2 : dix
     // places, contre les fenêtres, ne se prenaient pas en marchant) : derrière les dossiers (xr + 0,64), devant le chant
     // ouest des tables du rang suivant (xr + 1,0), de l'allée centrale (y 2,97, où Haythem se tient, poussé contre le
-    // coin de la table) à la dernière place (y 0,6) ; le 1er rang se prend de l'estrade, le dernier du passage du mur est
-    const R = i >= 1 && i < rangs.length - 1 ? { nom: `rang x ${xr} (S 1.3)`, sol: N1, ax: xr + 0.825, az: -2.97, bx: xr + 0.825, bz: -0.6, ouvB: false, fx: -1, fz: 0, sieges: [] } : null;
+    // coin de la table) à la dernière place (y 0,6) ; le dernier rang se prend du passage du mur est
+    const R = i < rangs.length - 1 ? { nom: `rang x ${xr} (S 1.3)`, sol: N1, ax: xr + 0.825, az: -2.97, bx: xr + 0.825, bz: -0.6, ouvB: false, fx: -1, fz: 0, sieges: [] } : null;
     for (const yc of blocs) {
       tableDouble(xr, yc);
       // (V2 : on se relève dans l'allée, du côté de sa chaise — depuis ce point, c'est elle qu'on propose, et non sa

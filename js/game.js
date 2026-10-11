@@ -342,10 +342,11 @@ export class Game {
   }
 
   // L'AIDE AU MILIEU DE L'ÉCRAN quand rien de particulier ne se passe : la proposition de siège s'il y en a une, sinon
-  // l'aide des touches tant qu'elle n'est pas effacée (_aideT), sinon rien
+  // l'aide des touches tant qu'elle n'est pas effacée (_aideT), sinon rien. (Au bout d'un rang serré, on dit qu'on peut
+  // y avancer jusqu'à une autre place : js/player.js _glisserRang.)
   aideRepos() {
     if (this._presSiege === 'assis') return `${actionKey('interact')} : se lever · ou bouge pour te lever`;
-    if (this._presSiege) return `${actionKey('interact')} : s’asseoir sur ${this._presSiege.nom || 'le siège'}`;
+    if (this._presSiege) return `${actionKey('interact')} : s’asseoir sur ${this._presSiege.nom || 'le siège'}${this._presSiege.rang && !this.user.rang ? ' · ou avance dans le rang' : ''}`;
     return this._aideT > 0 ? this.lobbyHint() : '';
   }
   majAide() { this.hud.hint(this.aideRepos()); }
@@ -510,9 +511,9 @@ export class Game {
         if (d < bd) { bd = d; best = s; }
       }
     }
-    if (best !== this._presSiege) {
+    if (best !== this._presSiege || !!u.rang !== !!this._presRang) {
       const avant = this._presSiege;
-      this._presSiege = best;
+      this._presSiege = best; this._presRang = !!u.rang;
       if (best || avant) this.majAide();
       window.__touch?.refresh();
     }
