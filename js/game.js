@@ -561,7 +561,10 @@ export class Game {
     for (let s = t0 * long - 0.3; s <= t1 * long + 0.3; s += 0.1) { const w = largeur(s); if (w < wMin) { wMin = w; sMin = s; } }
     if (wMin >= BAIE) return true;
     const sA = Math.max(0, sMin - 0.45), sP = Math.min(sMax, sMin + 0.45);
-    if (wMin < Math.min(largeur(sA), largeur(sP)) - 0.25) return false;                         // des jambages
+    // (des jambages : la largeur s'élargit des DEUX côtés dès 25 cm, l'épaisseur d'un mur — relecture du 11/10 : jugée à
+    // 45 cm seulement, la bouche d'une volée vue du palier — l'escalier est, au 1er et au 2e — ou celle du C01 passaient
+    // pour des portes dans 8 à 23 % des cas, et la caméra se collait à Haythem au bord du palier)
+    if (wMin < Math.min(largeur(sMin - 0.25), largeur(sA), largeur(sMin + 0.25), largeur(sP)) - 0.25) return false;
     const h0 = Math.min(hauteur(sMin - 0.1), hauteur(sMin), hauteur(sMin + 0.1));
     return !(h0 < Math.min(hauteur(sA), hauteur(sP)) - 0.08);                                    // un linteau
   }
