@@ -19,9 +19,18 @@
 // faux plafond de dalles 60 x 60 à 2,70 m, une vingtaine de luminaires à grille en lumière CHAUDE (des tubes fluo : la
 // vidéo est orangée ici, blanche dans l'espace pause), aucune fenêtre (on est sous la cour).
 //   Le mur du vestibule (x 10,3) borde l'ENCOCHE sud-est (le bloc des toilettes, derrière le sas de 2026) : fermée, son
-// dedans n'est pas modélisé. Le mur est (x 15,2, ± 0,6) n'est jamais vu en entier : nu, sous un bandeau, et le mur du
-// tableau y fait un retour (l'arête vers x 13,9). 109 fauteuils et la chaise seule : 110 places. L'état de 2026 de la
-// salle n'est pas connu (aucune photo de Haythem) : tout vient de 2021.
+// dedans n'est pas modélisé. Le mur est n'est jamais vu en entier : nu, sous un bandeau, et le mur du tableau y fait un
+// retour (une arête passé le convecteur). L'état de 2026 de la salle n'est pas connu (aucune photo de Haythem) : tout
+// vient de 2021.
+//   PLAN V2 (11/10, scratchpad iris_audit/plan_v2.md § 1.2, § 2.1, § 2.3 ; retour de Haythem du 10/10 : « la porte n'est
+// pas aussi loin ») : la porte grise du hall ouest recule de 4,09 m, et avec elle tout l'ouest du -1 — la salle, derrière
+// le mur vert de l'espace pause, recule de DY_SS, sans rien changer à son dedans. Elle RENTRE ainsi DANS LA PARCELLE (le
+// gabarit IGN, mesure/gabarit_reel.md : le fond du bâtiment est en y 23,7, et à l'est, x 13,3 pour y < 16,4) : son mur du
+// tableau passe de y 25,5 à 21,41 ; son mur est, ramené de x 15,2 à x 13,3, coupe le bloc est, dont les rangs s'arrêtent
+// en x 13,1 — cinq places au lieu de sept. 97 fauteuils et la chaise seule : 98 places. (Doute, relecture du 11/10 : la
+// VO, f_0082-f_0101, mène le rang 1 du bloc est jusque vers x 14,5, et le gabarit IGN a un REDENT x 13,33-15,07 ×
+// y 16,44-20,72 qui recevrait les rangs 1 à 3 entiers ; mais le mur du tableau, en y 21,41, reste borné à x 13,4 — la
+// salle serait en L. Sans photo de 2026 de la salle, on garde le mur droit du plan V2.)
 //   RELECTURE DU 10/10 (captures du jeu aux points de vue de f_0060, f_0082, f_0143, f_0160, f_0185, f_0200, f_0228,
 // f_0250, côte à côte) : les fauteuils vus de face (écu, assise relevée à fente noire, lisse murale du dernier rang), leur
 // ocre ramené à la vidéo, les blancs du -1 au lieu d'un blanc teinté, le 2e portrait en gris doux, le poteau lisible, la
@@ -29,13 +38,13 @@
 // voisine (les spots, sans ombre, éclairaient la pause au travers du mur vert, et inversement).
 //
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; X = x, Z = -y ; sol à Y_SS = -3,06) :
-//   la salle            x 2,55-15,2   y 15,95-25,5   moins l'encoche x 10,3-15,2 y 15,95-17,875 ; plafond à 2,70 m
-//   la porte d'entrée   x 8,85-10,25 (mur vert y 15,875) : fixe x 8,85-9,35, vantail x 9,35-10,25 (gonds à l'est)
+//   la salle            x 2,55-13,3   y 11,86-21,41  moins l'encoche x 10,3-13,3 y 11,86-13,785 ; plafond à 2,70 m
+//   la porte d'entrée   x 8,85-10,25 (mur vert y 11,785) : fixe x 8,85-9,35, vantail x 9,35-10,25 (gonds à l'est)
 //   la porte verte      x 3,93-5,47 : vantail (gonds à l'ouest) x 3,93-4,85, fixe x 4,85-5,47 — fermée
-//   les rangs           chant avant (nord) des tables en y 23,55 - 0,95 (k - 1), k = 1 … 8 ; plateau de 0,42, sièges au sud
+//   les rangs           chant avant (nord) des tables en y 19,46 - 0,95 (k - 1), k = 1 … 8 ; plateau de 0,42, sièges au sud
 //   bloc ouest          x 3,3-9,0 (rangs 1-6 : 9 places ; 7 : 8 places, au-delà du poteau ; 8 : x 5,6-9,0, 5 places)
-//   bloc est            x 10,3-14,5 (rangs 1-6 : 7 places) ; allée x 9,0-10,3
-//   le poteau           x 3,25-3,60 y 17,50-17,85 ; la retombée y 17,55-17,85 sous 2,40, du mur ouest au vestibule
+//   bloc est            x 10,3-13,1 (rangs 1-6 : 5 places) ; allée x 9,0-10,3
+//   le poteau           x 3,25-3,60 y 13,41-13,76 ; la retombée y 13,46-13,76 sous 2,40, du mur ouest au vestibule
 //
 //   poserAmphi(ch, K) -> { sols, zone, maj(dt, jeu) }
 //     K : les outils du sous-sol (js/ecole_soussol.js : B, mur, plinthe, panneau, siege, solNiveau, lampes, X, Y_SS,
@@ -46,12 +55,19 @@ import { canvasTex, normalesDepuisGrille, avecRelief } from './kit_decor.js';
 import { texAffiche } from './ecole_matieres.js';
 import { TELEPHONE } from './appareil.js';
 
+// ---- le décalage du plan V2 ----
+// DY_SS : le recul de TOUT L'OUEST DU -1 (scratchpad iris_audit/plan_v2.md § 1.2 et § 2.1 : la porte grise du hall
+// ouest passe de c 9,575 à c 5,485 ; la volée, le hall du -1, le couloir, l'espace pause et cette salle la suivent).
+// Nommé ici, le module évalué le premier (js/ecole_soussol.js l'importe).
+export const DY_SS = -4.09;
 // ---- la salle ----
-export const AMPHI = { x0: 2.55, x1: 15.2, y0: 15.95, y1: 25.5, xE: 10.3, yE: 17.875, h: 2.70 };
+// (plan V2 : y 15,95-25,5 -> 11,86-21,41, et le mur est de x 15,2 à x 13,3 — dans le gabarit IGN)
+export const AMPHI = { x0: 2.55, x1: 13.3, y0: 15.95 + DY_SS, y1: 25.5 + DY_SS, xE: 10.3, yE: 17.875 + DY_SS, h: 2.70 };
 // L'EMPRISE (murs compris) : la dalle du -1 dessous, et au-dessus les dalles à 0 (le joueur du rez-de-chaussée — salle
-// David Clark, cour, C01 — ne doit pas tomber dedans), la boîte de la caméra sous la dalle, la dalle-boîte d'ombre
-export const EMPRISE_AMPHI = [2.4, 15.8, 15.4, 25.7];
-const RANG1 = 23.55, PAS_RANG = 0.95, PROF_TABLE = 0.42;     // le chant avant du rang 1, le pas des rangs, le plateau
+// David Clark, C01, locaux du fond — ne doit pas tomber dedans), la boîte de la caméra sous la dalle, la dalle-boîte
+// d'ombre
+export const EMPRISE_AMPHI = [2.4, 11.7, 13.45, 21.6];
+const RANG1 = 23.55 + DY_SS, PAS_RANG = 0.95, PROF_TABLE = 0.42;     // le chant avant du rang 1 (19,46), le pas, le plateau
 const ya = (k) => RANG1 - (k - 1) * PAS_RANG;                 // le chant avant (nord) de la table du rang k
 const X_ALLEE = 9.65;                                         // l'axe de l'allée (et de la porte)
 // la lumière des luminaires à grille : des tubes fluorescents d'un blanc chaud (la vidéo est orangée dans la salle,
@@ -324,11 +340,11 @@ export function poserAmphi(ch, K) {
   //  LES MURS, LE SOL, LE PLAFOND
   // =====================================================================
   // le sol (et le seuil de la porte, dans l'épaisseur du mur vert) ; la barre de seuil inox
-  solNiveau([[A.x0, A.y0, A.xE, A.y1], [A.xE, A.yE, A.x1, A.y1], [9.35, 15.8, 10.25, A.y0]], matSol, 'sol de la salle S -1.14');
-  b(9.35, 15.8, 10.25, 15.95, 0, 0.006, M.inox, { ombre: false });
+  solNiveau([[A.x0, A.y0, A.xE, A.y1], [A.xE, A.yE, A.x1, A.y1], [9.35, 11.71, 10.25, A.y0]], matSol, 'sol de la salle S -1.14');
+  b(9.35, 11.71, 10.25, 11.86, 0, 0.006, M.inox, { ombre: false });
   // LE MUR OUEST, dans le prolongement du mur du couloir et du hall (x 2,42-2,55) ; au-delà, l'inconnu reste plein
-  mur({ de: [2.485, 17.45], a: [2.485, A.y1 + 0.15], ep: 0.13, mats: { E: Z.mur, W: M.blanc }, plinthes: ['E'], plinthe: P });
-  plinthe('y', A.x0, A.y0, 17.45, 1, Y_SS, P);
+  mur({ de: [2.485, 13.36], a: [2.485, A.y1 + 0.15], ep: 0.13, mats: { E: Z.mur, W: M.blanc }, plinthes: ['E'], plinthe: P });
+  plinthe('y', A.x0, A.y0, 13.36, 1, Y_SS, P);
   // LE MUR DU TABLEAU (nord) ; LE MUR EST ; L'ENCOCHE (mur nord des toilettes, mur du vestibule)
   mur({ de: [2.42, A.y1 + 0.075], a: [A.x1 + 0.15, A.y1 + 0.075], mats: Z.mur });
   mur({ de: [A.x1 + 0.075, A.yE - 0.15], a: [A.x1 + 0.075, A.y1 + 0.15], mats: Z.mur, plinthes: ['W'], plinthe: P });
@@ -336,23 +352,25 @@ export function poserAmphi(ch, K) {
   mur({ de: [A.xE + 0.075, A.y0 - 0.15], a: [A.xE + 0.075, A.yE], mats: Z.mur, plinthes: ['W'], plinthe: P });
   // (les faces de la salle des murs du -1 qui la bordent — le mur vert, le mur du hall — sont du même blanc : relecture
   // du 10/10, l'enduit « tiède » qui les doublait n'a plus lieu d'être)
-  // LE RETOUR du mur du tableau (f_0082 à f_0105 : une arête verticale passé le convecteur, vers x 13,9 — un doublage,
-  // « faible changement de plan », amphi.md § 3.2) et le BANDEAU du mur est, pendant de celui de l'ouest (un plafond
-  // plus bas au-dessus de l'arête : f_0086, f_0095)
-  b(13.9, A.y1 - 0.12, A.x1, A.y1, 0, A.h + 0.01, Z.mur, { ombre: false, collision: true });
+  // LE RETOUR du mur du tableau (f_0082 à f_0105 : une arête verticale passé le convecteur — un doublage, « faible
+  // changement de plan », amphi.md § 3.2) et le BANDEAU du mur est, pendant de celui de l'ouest (un plafond plus bas
+  // au-dessus de l'arête : f_0086, f_0095). (Plan V2 : avec le mur est ramené en x 13,3, l'arête passe de x 13,9 à 12,95,
+  // juste après le convecteur, x 12,5-12,92 ; le bandeau garde ses 35 cm)
+  const X_ARETE = A.x1 - 0.35;
+  b(X_ARETE, A.y1 - 0.12, A.x1, A.y1, 0, A.h + 0.01, Z.mur, { ombre: false, collision: true });
   // (au pied du mur vert, côté salle : la plinthe grise, la porte verte exceptée)
   for (const [a0, a1] of [[A.x0, 3.88], [5.52, 8.82]]) plinthe('x', A.y0, a0, a1, 1, Y_SS, P);
   // LA GOULOTTE NOIRE au pied du mur du tableau (≈ 10 cm, f_0082) et ses deux boîtiers de prises blancs
-  b(A.x0, A.y1 - 0.03, 13.9, A.y1, 0, 0.1, Z.goulotte, { ombre: false });
-  b(13.9, A.y1 - 0.15, A.x1, A.y1 - 0.12, 0, 0.1, Z.goulotte, { ombre: false });
+  b(A.x0, A.y1 - 0.03, X_ARETE, A.y1, 0, 0.1, Z.goulotte, { ombre: false });
+  b(X_ARETE, A.y1 - 0.15, A.x1, A.y1 - 0.12, 0, 0.1, Z.goulotte, { ombre: false });
   for (const x of [9.2, 11.5]) b(x - 0.045, A.y1 - 0.045, x + 0.045, A.y1 - 0.03, 0.015, 0.085, X.blancMat, { ombre: false });
   // LE POTEAU carré (f_0188-f_0200) et le pilier au bout du vestibule (VO q_0105 : le radiateur « s'arrête à un pilier »)
-  b(3.25, 17.5, 3.6, 17.85, 0, A.h + 0.01, Z.mur, { ombre: false, collision: true });
-  for (const [y0, y1] of [[17.495, 17.5], [17.85, 17.855]]) b(3.25, y0, 3.6, y1, 0, A.h, Z.ombre, { ombre: false });
-  plinthe('x', 17.5, 3.25, 3.6, -1, Y_SS, P); plinthe('x', 17.85, 3.25, 3.6, 1, Y_SS, P);
-  plinthe('y', 3.25, 17.5, 17.85, -1, Y_SS, P); plinthe('y', 3.6, 17.5, 17.85, 1, Y_SS, P);
-  b(10.18, 17.62, A.xE, A.yE, 0, A.h + 0.01, Z.mur, { ombre: false, collision: true });
-  plinthe('y', 10.18, 17.62, A.yE, -1, Y_SS, P); plinthe('x', 17.62, 10.18, A.xE, -1, Y_SS, P);
+  b(3.25, 13.41, 3.6, 13.76, 0, A.h + 0.01, Z.mur, { ombre: false, collision: true });
+  for (const [y0, y1] of [[13.405, 13.41], [13.76, 13.765]]) b(3.25, y0, 3.6, y1, 0, A.h, Z.ombre, { ombre: false });
+  plinthe('x', 13.41, 3.25, 3.6, -1, Y_SS, P); plinthe('x', 13.76, 3.25, 3.6, 1, Y_SS, P);
+  plinthe('y', 3.25, 13.41, 13.76, -1, Y_SS, P); plinthe('y', 3.6, 13.41, 13.76, 1, Y_SS, P);
+  b(10.18, 13.53, A.xE, A.yE, 0, A.h + 0.01, Z.mur, { ombre: false, collision: true });
+  plinthe('y', 10.18, 13.53, A.yE, -1, Y_SS, P); plinthe('x', 13.53, 10.18, A.xE, -1, Y_SS, P);
   // LE FAUX PLAFOND : dalles minérales de 60 x 60 à 2,70 m (la salle est plus haute que l'espace pause, 2,55) ; la
   // RETOMBÉE de la poutre (sous 2,40, du mur ouest au pilier, par le poteau) ; le BANDEAU du mur ouest (sous 2,35)
   ch.plafond(A.x0, A.y0, A.x1, A.y1, H, 'dalles', { retombees: false }).material = Z.dalles;
@@ -360,9 +378,9 @@ export function poserAmphi(ch, K) {
     b(x0, y0, x1, y1, hb, A.h + 0.01, Z.platre, { ombre: false });
     C.plafond(x0, -y1, x1, -y0, Y_SS + hb, A.h - hb + 0.3);
   };
-  retombee(2.9, 17.55, A.xE, 17.85, 2.4);
+  retombee(2.9, 13.46, A.xE, 13.76, 2.4);
   retombee(A.x0, A.y0, 2.9, A.y1, 2.35);
-  retombee(14.85, A.yE, A.x1, A.y1 - 0.12, 2.35);
+  retombee(X_ARETE, A.yE, A.x1, A.y1 - 0.12, 2.35);
   // la caméra ne se glisse pas au-dessus du plafond de l'encoche (fermée)
   C.ajouterBoite(A.xE, -A.yE, A.x1, -A.y0, { y0: Y_SS, y1: DALLE, joueur: false });
 
@@ -370,11 +388,12 @@ export function poserAmphi(ch, K) {
   //  LA LUMIÈRE : une vingtaine de luminaires à grille, en lumière chaude
   // =====================================================================
   // amphi.md § 3.3 : une trame d'environ 2,4 x 2,4 m sur toute la salle (5 colonnes x 4 rangées), moins l'encoche ; ici
-  // calée sur le calepinage des dalles (partant de l'angle sud-ouest : x 2,55, y 15,95)
+  // calée sur le calepinage des dalles (partant de l'angle sud-ouest : x 2,55, y 11,86). (Plan V2 : la colonne de
+  // x 13,65 tombe au-delà du mur est, ramené en x 13,3 — quatre colonnes)
   const matLum = new THREE.MeshBasicMaterial({ map: texLuminaire(), color: CHAUD_AMPHI.clone().multiplyScalar(1.75) });
   matLum.name = 'luminaire à grille allumé (S -1.14)';
   const _geoLum = new THREE.PlaneGeometry(0.58, 0.58).rotateX(Math.PI / 2);
-  for (const x of [4.05, 6.45, 8.85, 11.25, 13.65]) for (const y of [16.85, 19.25, 21.65, 24.05]) {
+  for (const x of [4.05, 6.45, 8.85, 11.25]) for (const y of [12.76, 15.16, 17.56, 19.96]) {
     if (x > A.xE && y < A.yE + 0.4) continue;
     b(x - 0.31, y - 0.31, x + 0.31, y + 0.31, A.h - 0.012, A.h + 0.02, M.boitier, { ombre: false });
     maille(_geoLum, matLum, x, H - 0.0125, -y, 0, ch.decor, { ombre: false, recoit: false });
@@ -384,7 +403,7 @@ export function poserAmphi(ch, K) {
   }
   // les diffuseurs d'air carrés à fentes
   const matDiff = std({ map: texDiffuseur(), roughness: 0.5 });
-  for (const [x, y] of [[11.55, 24.65], [7.65, 24.65], [5.25, 20.45], [12.45, 20.45], [8.85, 18.05]]) {
+  for (const [x, y] of [[11.55, 20.56], [7.65, 20.56], [5.25, 16.36], [12.45, 16.36], [8.85, 13.96]]) {
     const d = maille(new THREE.PlaneGeometry(0.4, 0.4).rotateX(Math.PI / 2), matDiff, x, H - 0.004, -y, 0, ch.decor, { ombre: false, recoit: false });
     void d;
   }
@@ -397,7 +416,7 @@ export function poserAmphi(ch, K) {
   // l'est, béquille inox et cylindre), une imposte dépolie ; elle s'ouvre en poussant depuis la pause, VERS LA SALLE, et
   // se rabat contre le mur du vestibule. La petite pastille rouge sur l'huisserie ; la plaque noire à l'ouest, côté pause.
   {
-    const yS = 15.8, yM = 15.875, yN = 15.95, hT = Y_SS + 2.06;
+    const yS = 11.71, yM = 11.785, yN = 11.86, hT = Y_SS + 2.06;
     // (le verre dépoli du -1, son dégradé calé sur la hauteur : une boîte a ses UV centrés, le bas reprenait le haut)
     const dep = X.depoli.clone(); dep.map = X.depoli.map.clone(); dep.map.offset.set(0, 0.5); dep.map.needsUpdate = true;
     dep.color.setRGB(0.76, 0.79, 0.84);                                    // (f_0245 : de dedans, un gris bleuté, pas un blanc)
@@ -482,14 +501,14 @@ export function poserAmphi(ch, K) {
     b(10.33, y - 0.012, 10.48, y, 1.04, 1.12, X.blancMat, { ombre: false });
     b(12.5, y - 0.08, 12.92, y, 0.45, 1.33, Z.convecteur);
     // LE MEUBLE MULTIMÉDIA (pupitre roulant : caisson noir, cadre de tube chromé, tablette en débord) et LA CHAISE SEULE
-    b(2.95, 24.62, 3.95, 25.18, 0.12, 0.92, Z.meuble, { collision: true });
-    b(2.9, 24.55, 4.0, 25.2, 0.92, 0.95, Z.meuble);
-    b(3.15, 24.75, 3.55, 25.05, 0.95, 1.2, X.acierGris);
-    for (const [px, py] of [[2.93, 24.6], [3.97, 24.6], [2.93, 25.17], [3.97, 25.17]]) {
+    b(2.95, 20.53, 3.95, 21.09, 0.12, 0.92, Z.meuble, { collision: true });
+    b(2.9, 20.46, 4.0, 21.11, 0.92, 0.95, Z.meuble);
+    b(3.15, 20.66, 3.55, 20.96, 0.95, 1.2, X.acierGris);
+    for (const [px, py] of [[2.93, 20.51], [3.97, 20.51], [2.93, 21.08], [3.97, 21.08]]) {
       b(px - 0.012, py - 0.012, px + 0.012, py + 0.012, 0.04, 0.98, X.chrome, { ombre: false });
       maille(new THREE.CylinderGeometry(0.03, 0.03, 0.035, 10), X.noir, px, Y_SS + 0.03, -py, 0, ch.decor, { ombre: false });
     }
-    b(2.93, 24.6, 3.97, 24.62, 0.6, 0.62, X.chrome, { ombre: false });
+    b(2.93, 20.51, 3.97, 20.53, 0.6, 0.62, X.chrome, { ombre: false });
   }
 
   // =====================================================================
@@ -497,8 +516,8 @@ export function poserAmphi(ch, K) {
   // =====================================================================
   {
     const grille = std({ map: texGrilleVentil(), roughness: 0.6 });
-    for (const y of [16.5, 20.5, 23.0]) pan(grille, 0.45, 0.12, 2.9, y, 2.52, 'E', 0.003);
-    b(A.x0, 24.67, A.x0 + 0.08, 24.92, 0.4, 1.0, Z.convecteur);            // le convecteur près de l'angle avant
+    for (const y of [12.41, 16.41, 18.91]) pan(grille, 0.45, 0.12, 2.9, y, 2.52, 'E', 0.003);
+    b(A.x0, 20.58, A.x0 + 0.08, 20.83, 0.4, 1.0, Z.convecteur);            // le convecteur près de l'angle avant
     // le mur du fond (l'envers du mur vert) : petit convecteur et grille au ras du sol à l'ouest de la porte verte ; deux
     // interrupteurs doubles (x 5,7 et 8,6, à 1,1 m)
     b(3.18, A.y0, 3.43, A.y0 + 0.08, 0.4, 1.0, Z.convecteur);
@@ -506,7 +525,7 @@ export function poserAmphi(ch, K) {
     for (const x of [5.7, 8.6]) b(x - 0.075, A.y0, x + 0.075, A.y0 + 0.012, 1.06, 1.14, X.blancMat, { ombre: false });
     // le RADIATEUR blanc à panneau du mur du vestibule (VO q_0105 ; un rien plus au nord que relevé : le vantail ouvert
     // vient s'y rabattre)
-    b(A.xE - 0.08, 16.95, A.xE, 17.55, 0.15, 1.05, M.radiateur, { collision: true });
+    b(A.xE - 0.08, 12.86, A.xE, 13.46, 0.15, 1.05, M.radiateur, { collision: true });
   }
 
   // =====================================================================
@@ -580,13 +599,15 @@ export function poserAmphi(ch, K) {
   for (let k = 1; k <= 6; k++) rang(k, 3.3, 9.0, 9, [2.9, X_ALLEE]);
   rang(7, 3.72, 9.0, 8, [2.95, X_ALLEE]);
   rang(8, 5.6, 9.0, 5, [5.2, X_ALLEE]);
-  for (let k = 1; k <= 6; k++) rang(k, A.xE, 14.5, 7, [X_ALLEE, 14.85]);
+  // (plan V2 : le mur est en x 13,3 — les rangs du bloc est s'arrêtent en x 13,1, cinq places de 0,56 au lieu de sept
+  // de 0,60 ; plus de passage le long du mur est, on se relève dans l'allée)
+  for (let k = 1; k <= 6; k++) rang(k, A.xE, 13.1, 5, [X_ALLEE, X_ALLEE]);
   // LA LISSE MURALE derrière le dernier rang (f_0215, f_0228 : une barre claire sur le mur du fond, à mi-hauteur des
   // dossiers, qui déborde le rang à ses deux bouts ; relecture du 10/10)
   b(5.35, A.y0, 8.78, A.y0 + 0.04, 0.7, 0.76, Z.voile);
   // LA CHAISE SEULE près du meuble multimédia (f_0165-f_0175) : la même coque, sur quatre pieds noirs, l'assise baissée
   {
-    const x = 4.32, y = 25.02, g = new THREE.Group(); g.position.set(x, Y_SS, -y); g.rotation.y = Math.PI + 0.35; ch.decor.add(g);
+    const x = 4.32, y = 20.93, g = new THREE.Group(); g.position.set(x, Y_SS, -y); g.rotation.y = Math.PI + 0.35; ch.decor.add(g);
     maille(geoDos, Z.coque, 0, 0, 0.21, 0, g);
     maille(boiteM(0.44, 0.02, 0.4), Z.coque, 0, 0.45, 0.02, 0, g);
     for (const [px, pz] of [[-0.19, -0.16], [0.19, -0.16], [-0.19, 0.17], [0.19, 0.17]]) maille(boiteM(0.022, 0.44, 0.022), Z.acier, px, 0.22, pz, 0, g);
@@ -604,11 +625,12 @@ export function poserAmphi(ch, K) {
   // (relecture du 10/10 : PAS de voisine — les spots ne portent pas d'ombre ; voisine de l'espace pause, la salle prêtait
   // ses luminaires au vestibule et aux mange-debout au travers du mur vert, et la pause les siens au dernier rang. Les
   // deux pièces ne s'ouvrent que par une porte, comme la pause et le hall du -1)
-  const zone = { id: 'salleSS', rects: [zr(A.x0 - 0.05, 15.9, A.xE, A.y1 + 0.05), zr(A.xE, A.yE, A.x1 + 0.05, A.y1 + 0.05)], voisines: [],
-    env: { x: X_ALLEE, y: Y_SS + 1.6, z: -20.6 } };
+  const zone = { id: 'salleSS', rects: [zr(A.x0 - 0.05, 11.81, A.xE, A.y1 + 0.05), zr(A.xE, A.yE, A.x1 + 0.05, A.y1 + 0.05)], voisines: [],
+    env: { x: X_ALLEE, y: Y_SS + 1.6, z: -16.51 } };
 
   // LE FILET DE SÉCURITÉ du joueur (js/player.js bounds) : la carte le borne à z -25 (le fond de la salle David Clark) ;
-  // le mur du tableau est en y 25,5 — on recule la borne une fois, à la première image
+  // si le mur du tableau passait au-delà, on reculerait la borne une fois, à la première image (plan V2 : il est en
+  // y 21,41, en deçà — la borne ne bouge plus)
   let borne = false;
   const maj = (dt, jeu) => {
     if (borne) return;

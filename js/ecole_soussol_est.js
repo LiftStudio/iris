@@ -14,6 +14,12 @@
 // électrique) ; au mur ouest, la porte crème « RÉSERVÉ AU PERSONNEL », ⚡ elle aussi, un boîtier noir, puis LE PASSAGE
 // (1,1 m, retours de plâtre profonds, q_0084-0088) qui débouche dans l'espace pause : c'est la « porte du local sombre »
 // de 2026 (js/ecole_soussol.js) — le local n'existe pas, c'est le passage, éteint quand Haythem a filmé.
+// (PLAN V2 du 11/10, scratchpad iris_audit/plan_v2.md § 1.2 : l'espace pause a reculé de 4,09 m avec la porte grise du
+// hall ouest ; l'escalier est, photographié en 2026, tient le sas et P en place. La porte sombre de 2026 tombe désormais
+// en y 5,11-6,01, P en y 9,2-10,3 : un PASSAGE SOMBRE EN BAÏONNETTE les relie (IMAGINÉ, éteint, une galette faible),
+// x 13,05-14,0 de y 5,0 à 10,3, sous la pile et la bande morte du couloir est ; P est raccourci à x 14,0-14,525, et la
+// porte crème ⚡ du sas ouvre sur un placard de 0,45 m. Variante, si une photo prise de la porte sombre le refuse : P
+// muré côté pause, la porte sombre sur un local noir, et l'escalier est n'atteint plus la pause au -1.)
 // Les murs de la cage sont BLANCS (le jaune de la vidéo est la lumière des réglettes : est_soussol.md § 0.6) ; la coupe
 // de 15,64 s cache le palier bas et le nombre de marches : 2 x 8 contremarches de 19,1 cm, girons de 25 cm (proposition).
 // IMAGINÉ : ce qu'il y a derrière les portes ⚡ et « réservé au personnel » (fermées), le plafond du sas (2,40 m, deux
@@ -29,7 +35,9 @@
 //   le palier du -1             x 14,6-16,95   y 10,8-12,45   plafond : le dessous de la dalle du vestibule (-0,30)
 //   la porte à deux vantaux     y 10,725       x 14,70-16,05  0,85 + 0,50, automatique, vers le palier
 //   le sas technique            x 14,6-17,6    y 7,8-9,0, et x 14,6-16,8 y 9,0-10,65 ; plafond à 2,40 m
-//   le passage                  x 12,9-14,6    y 9,2-10,3     plafond à 2,20 m ; à l'ouest, la porte de 2026
+//   le passage P                x 14,0-14,6    y 9,2-10,3     plafond à 2,20 m (plan V2 : raccourci, il partait de x 12,9)
+//   le passage sombre           x 13,05-14,0   y 5,0-10,3     plafond à 2,20 m ; à l'ouest, en y 5,11-6,01, la porte de 2026
+//   le placard ⚡               x 14,075-14,525 y 7,8-9,05    derrière la porte crème du sas (fermé)
 //
 // LES PIÈGES (ceux du sous-sol, js/ecole_soussol.js) : des dalles à 0 au-dessus de tout, sauf la volée A ; un sol au -1
 // sous tout ce qu'on foule ; des zones à hauteur maximale, en tête de liste ; des lampes { base, cuire: false } ; une
@@ -57,8 +65,9 @@ const PENTE = R / G;                                         // 0,765
 const nezA = (x) => -PENTE * (x - XA);                       // la ligne des nez de la volée A (0 en tête)
 const nezB = (x) => Y_SS + R + PENTE * (x - XA);             // celle de la volée B
 const MC = 0.95, MCA = 0.98;                                 // la main courante au-dessus des nez (volée B, volée A)
-// le rectangle du sol cuit d'ici (lumière et ombre douce, uv1 de 0 à 1, v = 1 au nord)
-const R_SSE = { x0: 12.9, x1: 20.1, y0: 6.5, y1: 13.0 };
+// le rectangle du sol cuit d'ici (lumière et ombre douce, uv1 de 0 à 1, v = 1 au nord ; plan V2 : jusqu'au bout sud du
+// passage sombre)
+const R_SSE = { x0: 12.9, x1: 20.1, y0: 4.8, y1: 13.0 };
 const LED = new THREE.Color(0xf3f6f8);                      // les LED du -1 (le blanc neutre de js/ecole_soussol.js)
 
 // =====================================================================
@@ -181,6 +190,13 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     rap: std({ color: 0x9a9893, roughness: 0.45 }, 'vantail gris (réservé au personnel)'),
     huisserieGrise: std({ color: 0xb3b1ab, roughness: 0.45, metalness: 0.2 }, 'huisserie grise (local électrique)'),
   };
+  // (plan V2 : le passage sombre est ÉTEINT — v_065 à v_067, la porte ouvre sur du noir. Le « soleil » qui figure les
+  // plafonniers éclaire tout le -1 sans ombre de plafond : ses murs et son plafond, d'un blanc éteint, rendent la
+  // pénombre ; sa seule galette est faible. Relecture du 11/10 : à 0,45 (linéaire), la baie sortait gris clair vue de la
+  // pause ; sur v_066 et v_067, le dedans fait 0,26 du mur blanc d'à côté — 47 contre 178 —, d'où 0,1, et un reflet
+  // d'environnement réduit)
+  P.blancEteint = froid(M.blanc); P.blancEteint.color.multiplyScalar(0.1); P.blancEteint.envMapIntensity = 0.4; P.blancEteint.name = 'peinture blanche (passage sombre, éteint)';
+  P.platreEteint = froid(M.platre, 0.02); P.platreEteint.color.multiplyScalar(0.1); P.platreEteint.envMapIntensity = 0.4; P.platreEteint.name = 'plâtre (passage sombre, éteint)';
   const L_ = {
     plafonnier: new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff4e4).multiplyScalar(4.2) }),
     voyant: new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 0.25, 0.15) }),
@@ -234,9 +250,24 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     // LE MUR NORD (sous celui du vestibule) : plinthe au palier seulement (la volée B a sa plinthe rampante)
     mur(ch, F, { de: [14.525, 12.525], a: [XA, 12.525], base, h: 0, mats: B0, plinthes: ['S'] });
     mur(ch, F, { de: [XA, 12.525], a: [19.95, 12.525], base, h: 0, mats: B0 });
-    // LE PASSAGE (x 13,05-14,525) : ses deux retours de plâtre blanc, profonds de 1,5 m
-    mur(ch, F, { de: [13.05, 9.125], a: [14.525, 9.125], base, h: -0.01, mats: W, plinthes: ['N'] });
-    mur(ch, F, { de: [13.05, 10.375], a: [14.525, 10.375], base, h: -0.01, mats: W, plinthes: ['S'] });
+    // LE PASSAGE P : ses deux retours de plâtre blanc. (Plan V2 : le retour sud, raccourci à x 14,0-14,525, ferme aussi
+    // le placard ⚡ au nord ; le retour nord, gardé de x 13,05 à 14,525, ferme le passage sombre)
+    mur(ch, F, { de: [14.075, 9.125], a: [14.525, 9.125], base, h: -0.01, mats: W, plinthes: ['N'] });
+    mur(ch, F, { de: [13.05, 10.375], a: [14.525, 10.375], base, h: -0.01, mats: { N: B0, S: P.blancEteint } });
+    // LE PASSAGE SOMBRE (IMAGINÉ ; plan V2 § 1.2) : de la porte sombre de l'espace pause (y 5,11-6,01) à P, en
+    // baïonnette, sous la pile et la bande morte du couloir est (au-dessus, des dalles à 0 : js/ecole_soussol.js
+    // DALLES_RDC) — son mur est (le dos du placard), son mur sud ; à l'ouest, le mur est de l'espace pause, doublé ici
+    // de sa face éteinte (la porte sombre exceptée). (Relecture du 11/10 : sans plinthes claires — dans la pénombre, elles
+    // dessinaient trois traits blancs au pied des murs ; et la face éteinte descend jusqu'au sol, où le blanc du mur de la
+    // pause dépassait de 10 cm)
+    mur(ch, F, { de: [14.0375, 4.85], a: [14.0375, 9.2], ep: 0.075, base, h: -0.01, mats: { W: P.blancEteint, E: W } });
+    mur(ch, F, { de: [12.975, 4.925], a: [14.075, 4.925], base, h: -0.01, mats: { N: P.blancEteint, S: B0 } });
+    for (const [a, b] of [[5.0, 5.085], [6.035, 10.3]]) B(13.05, a, 13.054, b, Y_SS, H_PASS, P.blancEteint, { ombre: false });
+    // LE PLACARD ⚡ derrière la porte crème du sas (x 14,075-14,525, y 7,8-9,05 : fermé, son dedans n'est pas modélisé) :
+    // le mur sud du sas le ferme au sud
+    // (relecture du 11/10 : il part du dos du mur du passage, x 14,075 — depuis x 14,0, son bout blanc perçait la face
+    // éteinte en mouchetures)
+    mur(ch, F, { de: [14.075, 7.725], a: [14.525, 7.725], base, h: -0.01, mats: W });
   }
 
   // =====================================================================
@@ -351,16 +382,18 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     // LE BOÎTIER NOIR (8 x 8 cm, à 1,65 m) entre la porte crème et le passage
     B(14.675, 9.01, 14.69, 9.09, Y_SS + 1.61, Y_SS + 1.69, M.noirMat, { ombre: false });
     // LES SOLS (carreaux gris foncé, jusqu'à l'axe de la porte à deux vantaux ; le vinyle du palier ensuite) ; LES
-    // PLAFONDS de plâtre ; les galettes LED (deux dans le sas, une dans le passage) ; le bloc de sortie au-dessus de la
-    // porte de l'escalier (l'issue : on remonte)
+    // PLAFONDS de plâtre ; les galettes LED (deux dans le sas ; plan V2 : une seule, faible, dans le passage sombre —
+    // « éteint » quand Haythem a filmé : par la porte, on le voit sombre) ; le bloc de sortie au-dessus de la porte de
+    // l'escalier (l'issue : on remonte)
     for (const m of [ch.plafond(14.675, 7.8, 17.6, 9.0, H_SAS, 'platre', { retombees: false }), ch.plafond(14.675, 9.0, 16.8, 10.65, H_SAS, 'platre', { retombees: false }),
-      ch.plafond(13.05, 9.2, 14.525, 10.3, H_PASS, 'platre', { retombees: false })]) m.material = P.platreSas;
+      ch.plafond(14.0, 9.2, 14.525, 10.3, H_PASS, 'platre', { retombees: false })]) m.material = P.platreSas;
+    ch.plafond(13.05, 5.0, 14.0, 10.3, H_PASS, 'platre', { retombees: false }).material = P.platreEteint;
     galette(15.65, 8.4, H_SAS, 'sasSS');
     galette(15.75, 9.95, H_SAS, 'sasSS');
-    galette(13.8, 9.75, H_PASS, 'sasSS', 0.85);
+    galette(13.525, 8.2, H_PASS, 'passageSS', 0.35);
     ch.sortie(15.375, 10.62, Y_SS + 2.3, 'S');
-    // la barre de seuil à l'entrée du passage, côté espace pause (sous la porte de 2026)
-    B(12.9, 9.2, 13.05, 10.1, Y_SS, Y_SS + 0.006, M.inox, { ombre: false });
+    // la barre de seuil à l'entrée du passage sombre, côté espace pause (sous la porte de 2026)
+    B(12.9, 5.11, 13.05, 6.01, Y_SS, Y_SS + 0.006, M.inox, { ombre: false });
   }
 
   // =====================================================================
@@ -371,9 +404,10 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
       const m = new THREE.Mesh(geoDalles(rects, Y_SS, R_SSE), mat);
       m.receiveShadow = true; m.castShadow = false; m.name = nom; m.userData.solSS = true; groupe.add(m);
     };
-    sol([[14.675, 7.8, 17.6, 9.0], [14.675, 9.0, 16.8, 10.725], [12.9, 9.2, 14.675, 10.3]], P.sas, 'sol du sas technique du -1');
+    sol([[14.675, 7.8, 17.6, 9.0], [14.675, 9.0, 16.8, 10.725], [14.0, 9.2, 14.675, 10.3], [13.05, 5.0, 14.0, 10.3], [12.9, 5.11, 13.05, 6.01]], P.sas, 'sol du sas technique du -1');
     sol([[14.675, 10.725, XA, 12.45]], P.vinyle, 'sol du palier du -1 (escalier est)');
-    // AU -1 : le sas, le passage, le palier (la volée B a sa rampe, le palier bas sa dalle)
+    // AU -1 : le sas, le passage sombre et P, le palier (la volée B a sa rampe, le palier bas sa dalle)
+    C.sol(13.0, -4.9, 14.1, -7.65, Y_SS);
     C.sol(12.9, -7.65, 17.6, -9.0, Y_SS);
     C.sol(12.9, -9.0, 16.8, -10.725, Y_SS);
     C.sol(14.6, -10.725, XA, -12.5, Y_SS);
@@ -439,7 +473,11 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     { id: 'descenteEst', rects: [zr(XA, 9.1, XB, 10.7, -0.05)], voisines: ['couloirEst', 'escEstSS'], env: { x: 17.7, y: 0.3, z: -9.9 } },
     { id: 'escEstSS', rects: [zr(XB, 9.1, 19.85, 12.5, -0.9), zr(XA, 10.7, XB, 12.5, -0.9)], voisines: ['descenteEst', 'palierSSE'], env: { x: 19.25, y: HB + 1.5, z: -11.4 } },
     { id: 'palierSSE', rects: [zr(14.55, 10.725, XA, 12.55)], voisines: ['escEstSS', 'sasSS'], env: { x: 15.9, y: Y_SS + 1.6, z: -11.7 } },
-    { id: 'sasSS', rects: [zr(14.55, 7.7, 17.65, 9.05), zr(14.55, 9.05, 16.85, 10.725), zr(12.95, 9.15, 14.55, 10.35)], voisines: ['palierSSE', 'pauseSS'], env: { x: 15.6, y: Y_SS + 1.6, z: -9.0 } },
+    { id: 'sasSS', rects: [zr(14.55, 7.7, 17.65, 9.05), zr(14.55, 9.05, 16.85, 10.725), zr(14.0, 9.15, 14.55, 10.35)], voisines: ['palierSSE', 'passageSS'], env: { x: 15.6, y: Y_SS + 1.6, z: -9.0 } },
+    // (plan V2 : le passage sombre, sa galette faible ; pas de voisine côté espace pause — ses plafonniers, sans ombre,
+    // l'éclaireraient au travers du mur. Dès x 12,95, le bord de la zone de l'espace pause : sur le seuil de la porte
+    // sombre, la zone du rez-de-chaussée, au-dessus, prenait la main le temps d'un pas — audit au pas de 5 cm, 11/10)
+    { id: 'passageSS', rects: [zr(12.95, 4.95, 14.0, 10.35)], voisines: ['sasSS'], env: { x: 13.525, y: Y_SS + 1.5, z: -7.6 } },
   ];
 
   // =====================================================================
@@ -450,7 +488,8 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
   // sienne — la règle de js/ecole_soussol.js. VISIBLE quand la caméra peut le voir : en bas, ou au rez-de-chaussée dans le
   // couloir est, la niche, le vestibule et le nord du hall (par la porte du couloir, on voit la tête de la descente).
   let bas = false, rdc = null;
-  const colonne = new THREE.Box3(new THREE.Vector3(12.85, -4, -12.7), new THREE.Vector3(20.2, 12, -7.45));
+  // (plan V2 : jusqu'au bout sud du passage sombre, sous la pile)
+  const colonne = new THREE.Box3(new THREE.Vector3(12.85, -4, -12.7), new THREE.Vector3(20.2, 12, -4.4));
   const releverRDC = (jeu) => {
     const L = [], bb = new THREE.Box3(), sauter = new Set([groupe, dalleOmbre, ch.scene.getObjectByName('1er étage'), ch.scene.getObjectByName('sous-sol'), jeu.user && jeu.user.mesh].filter(Boolean));
     const visiter = (o) => {
@@ -463,7 +502,7 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
   };
   const maj = (dt, jeu) => {
     const u = jeu.user.pos, cam = jeu.camera.position;
-    const dessous = cam.y < -0.1 && cam.x > 12.85 && cam.z < -7.45 && cam.z > -12.7;
+    const dessous = cam.y < -0.1 && cam.x > 12.85 && cam.z < -4.4 && cam.z > -12.7;
     if (u.y < -0.6 || dessous) bas = true; else if (u.y > -0.35) bas = false;
     const pres = cam.x > 12.8 && cam.z < -4.5 && cam.z > -12.7 && cam.y < 3.45;
     const vis = bas || cam.y < -0.1 || pres;
