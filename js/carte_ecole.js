@@ -54,7 +54,8 @@ import * as THREE from 'three';
 import { Collisions } from './collisions.js';
 import { carteLocale, poserSondeLocale, planifierOcclusionSol, optimiserDecor, nePasFusionner, animerVent } from './kit_decor.js';
 import { materiauxEcole, texDAE, jourDehors } from './ecole_matieres.js';
-import { Portes, boiteM, maille, fenetreFacade, fenetreDepolie, fusionnerLocal, vitrophanies } from './ecole_portes.js';
+import { Portes, boiteM, maille, fenetreFacade, fenetreDepolie, fusionnerLocal, vitrophanies, poserCoupe } from './ecole_portes.js';
+import { couperParZones, poserVisibilite } from './ecole_visibilite.js';
 import { LumieresEcole, cuireLumiereSol } from './ecole_lumieres.js';
 import { poserMobilier } from './ecole_mobilier.js';
 import { poserRue } from './ecole_rue.js';
@@ -931,6 +932,8 @@ function radiateur(ch, x, y, face, l, h0, h1) {
 export function construireCarte(scene, renderer = null) {
   const ch = new Chantier(scene);
   const { C, M } = ch;
+  // (lot 5, 11/10 : les blocs cousus des niveaux coupés par zones de l'école, à leur couture — js/ecole_visibilite.js)
+  poserCoupe(couperParZones);
   // (une copie du carrelage pour les paliers : sans l'ombre ni la lumière cuites du rez-de-chaussée)
   // (une rugosité à peine différente : l'optimisation du décor ne doit pas la confondre avec celui du rez-de-chaussée)
   M.solEtage = M.sol.clone(); M.solEtage.roughness = 0.94;
@@ -1213,11 +1216,16 @@ export function construireCarte(scene, renderer = null) {
   scene.userData.aoCanal = 1;
   optimiserDecor(scene);
   planifierOcclusionSol(scene, renderer, court, W, L, { cx, cz });
+  // CE QUE LA CAMÉRA PEUT VOIR (lot 5, 11/10) : le décor cousu du rez-de-chaussée et de la rue coupé par zones à son
+  // tour, chaque morceau rangé ; à chaque rendu par la caméra du jeu, ce qu'elle ne peut pas voir n'est pas dessiné
+  poserCoupe(null);
+  const visibilite = poserVisibilite(scene);
 
   // ---- LA CARTE VIVANTE (js/game.js, à chaque image) ----
   let cuit = -1;
   const maj = (dt, jeu) => {
     const u = jeu.user.pos, cam = jeu.camera.position;
+    visibilite.maj(dt, jeu);
     ch.portes.maj(dt, u.x, u.z, cam.x, cam.z, u.y, cam.y);
     lumieres.maj(dt, u.x, u.z, jeu.renderer, u.y);
     etage1.maj(dt, jeu);
