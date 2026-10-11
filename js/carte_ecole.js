@@ -758,12 +758,16 @@ function construireMurs(ch) {
   const P_SI = { c: 9.5, l: 0.8 };
   ch.mur({ de: [4.5, YS], a: [X_B + EP / 2, YS], mats: B, plinthes: ['N', 'S'], ouvertures: [...JOURS_S.map((c) => ({ c, l: 1.3, bas: 0.95, h: 2.3 })), { c: P_SI.c, l: P_SI.l, h: 2.04 }, { c: JOUR_B.c, l: JOUR_B.l, bas: JOUR_B.bas, h: JOUR_B.h }] });
   const sud = new THREE.Group(); sud.position.set(0, 0, -YS); ch.decor.add(sud);
-  for (const c of JOURS_S) { fenetreDepolie(sud, M, { x: c, l: 1.3, bas: 0.95, haut: 2.3, ep: EP }); ch.C.ajouterBoite(c - 0.65, -(YS - 0.05), c + 0.65, -(YS + 0.05), { y0: 0.95, y1: 2.3, vitre: true }); }
+  // (retour de Haythem du 11/10, r02 : « deux fenêtres à cadre blanc ÉPAIS » — 8,5 cm sur la photo 21, et non 6 ; le verre
+  // est un dépoli opaque vert pâle : js/ecole_portes.js fenetreDepolie)
+  for (const c of JOURS_S) { fenetreDepolie(sud, M, { x: c, l: 1.3, bas: 0.95, haut: 2.3, ep: EP, cadre: 0.085 }); ch.C.ajouterBoite(c - 0.65, -(YS - 0.05), c + 0.65, -(YS + 0.05), { y0: 0.95, y1: 2.3, vitre: true }); }
   fenetreDepolie(sud, M, { x: JOUR_B.c, l: JOUR_B.l, haut: JOUR_B.h, bas: JOUR_B.bas, ep: EP, bandeClaire: 0.5 });
   ch.C.ajouterBoite(JOUR_B.c - JOUR_B.l / 2, -(YS - 0.05), JOUR_B.c + JOUR_B.l / 2, -(YS + 0.05), { y0: JOUR_B.bas, y1: JOUR_B.h, vitre: true });
   ch.porte('x', YS, P_SI.c, { l: P_SI.l, h: 2.04, modele: 'grise', etat: 'auto', cote: 'S', charniere: 'd', libre: 1, nom: 'Si 0.1' });
-  // la double lisse gris clair du mur sud, à 0,85 et 1,00 (DY_A), jusqu'au cadre du jour c 8,35 : la porte la coupe
-  for (const h of [0.82, 0.94]) ch.boite(4.9, YS + 0.075, 9.05, YS + 0.1, h, h + 0.04, M.lisseGrise, { ombre: false });
+  // la double lisse gris clair du mur sud (DY_A), jusqu'au cadre du jour c 8,35 : la porte la coupe
+  // (retour de Haythem du 11/10, r02 : « sous les fenêtres, la double lisse grise court le long du mur » — sur les photos
+  // 21 et 02, ses deux filets passent SOUS l'appui des jours, à 6-12 cm ; à 0,82-0,98, le second mordait sur le cadre)
+  for (const h of [0.73, 0.81]) ch.boite(4.9, YS + 0.075, 9.05, YS + 0.1, h, h + 0.04, M.lisseGrise, { ombre: false });
   // le nord : LE MUR SAFRAN (de x 5,8, le pilier jaune de l'entrée du C05 — photos 04, 05 —, à 11,7, l'entrée du C01), sa
   // lisse de PVC blanc, son panneau DAE (DY_A)
   const YN = ATT.yn;
@@ -846,7 +850,15 @@ function construireMurs(ch) {
   // du 11/10 : à la pose de la photo 21 résolue sur ses deux jours dépolis et le bout du mur jaune, (4,94 ; 7,33), h 1,45,
   // cap 110,7, les jours, le mur jaune et le présentoir tombent à leur place, mais le pilier et la borne 0,7 m trop au
   // nord ; or la photo 02 ne laisse le pilier au bord gauche de son cadre que là où il est : gardé, le doute demeure)
-  pilier(10.3, 9.75 + DY_A, 10.9, 10.35 + DY_A, M.pilier);
+  // (Retour de Haythem du 11/10, r02 — la photo 21 en pleine définition, 1 848 x 4 000 — : le pilier recule de 0,85 m vers
+  // l'OUEST, x 9,45-10,05. Vu du bout ouest, sur la photo, il se lève juste à droite de l'angle de la pile, son pied à 4 m
+  // de l'appareil ; dans le jeu, il était 7,5° trop à gauche et 1,5 m trop loin. Mais la photo 02 le veut au bord gauche de
+  // son cadre : c'est lui, la bande grise des 15 premiers pixels, son pied à 1,6-1,8 m de l'appareil, (9,7-10,0 ; 5,85-6,05)
+  // pour son angle nord-est — et la VO q_0036 tire son angle nord-est sur la même droite. x 9,45-10,05 est la place la plus
+  // à l'ouest que la photo 02 tolère (son angle nord-est à 13 px du bord) ; vu du bout ouest, l'écart à r02 tombe de 7,5° à
+  // 3,5°. Les photos 21 et 02 le voudraient aussi à 0,4 m du mur sud ; il en reste à 0,625 (y 5,5) : le passage qu'il faut
+  // à Haythem pour atteindre la porte de la Si 0.1, qui est derrière lui.)
+  pilier(9.45, 5.5, 10.05, 6.1, M.pilier);
   // ---- LE HALL D'ENTRÉE ----
   // (09/10, photo 24 : la porte du mur nord n'est pas en x 17 mais en face de la porte 6 — 1,5 vantail, x 14,70-16,10 ;
   // à l'est, la cloison vitrée cannelée, le photocopieur devant elle côté hall (10/10 : l'angle nord-est est ouvert, VO
@@ -991,7 +1003,10 @@ export function construireCarte(scene, renderer = null) {
   // sous le haut-parleur et l'affichette WIFI (photo 03), son bout à 0,3 m de l'angle sud-ouest — l'angle au-delà duquel
   // la photo 03 voit le hall (10/10). (11/10, plan V2 : c'est LE MÊME radiateur sur les deux photos ; celui du mur x 13,5,
   // en y 10,5, était un doublon)
-  radiateur(ch, 13.3, 5.32, 'W', 0.6, 0.12, 1.15);
+  // (retour de Haythem du 11/10, r02 — « juste à droite du présentoir, un RADIATEUR blanc vertical, à panneau » : vu du
+  // bout ouest, sur la photo 21 en pleine définition, il fait 0,5 de large sur 1,25 de haut — plus haut que large, son
+  // sommet sous les affichettes, comme sur la photo 03 — et ses bords tombent en y 5,2 et 5,7 : 0,13 plus au nord)
+  radiateur(ch, 13.3, 5.45, 'W', 0.5, 0.12, 1.25);
   // la caméra de surveillance du hall ouest et son haut-parleur (au mur des portes, à droite du jambage, sous le plafond
   // à 2,30) ; le déclencheur manuel rouge (au bout ouest du mur sud de la salle d'attente : DY_A)
   // (Relecture du 11/10 : le dôme est en (4,75 ; 7,75), contre la retombée du plafond de la salle d'attente, pas devant
@@ -1041,7 +1056,11 @@ export function construireCarte(scene, renderer = null) {
   // la salle d'attente : les plateaux perforés, sauf au bout ouest, devant le couloir C05, où ce sont des dalles lisses
   // de 60 x 60 sur ossature (photos 04, 05 : au-dessus du photographe ; 09/10). (11/10 : DY_A ; les plateaux vont jusqu'à
   // x 13,5 — le bout est passe dans la pile, et le coin x 13,3-13,5 au nord de la pile, devant le C01, reste couvert)
-  ch.plafond(6.5, ATT.ys, 13.5, ATT.yn - 0.075, 2.6, 'plateaux');
+  // (Retour de Haythem du 11/10, r02 — le plafond : le long du mur sud, sur la photo 21 en pleine définition comme sur la
+  // photo 02, les plateaux perforés laissent place à une BANDE de dalles lisses, large d'une dalle, un rien plus basse — un
+  // ressaut de 2 cm, le trait clair au-dessus du jour c 8,35 —, où sont pris les spots de la rangée sud)
+  ch.plafond(6.5, ATT.ys + 0.675, 13.5, ATT.yn - 0.075, 2.6, 'plateaux');
+  ch.plafond(6.5, ATT.ys, 13.5, ATT.ys + 0.675, 2.58, 'dalles');
   ch.plafond(5.3, ATT.ys, 6.5, ATT.yn - 0.075, 2.6, 'dalles', { retombees: false });
   ch.plafond(11.7, 7.8, 13.5, 14.4, 2.45, 'platre');                 // C01 (V2 : de l'entrée, y 7,8, au fond)
   ch.plafond(13.35, 0.3, 19.8, 7.5, 2.6, 'platre');                  // le hall d'entrée
@@ -1078,7 +1097,12 @@ export function construireCarte(scene, renderer = null) {
   ch.opale(5.5, Y_ESC + 0.4, 2.4, 'c05', { r: 0.18 }); ch.opale(5.15, Y_ESC + 2.0, 2.3, 'c05', { r: 0.18 });
   // (la salle d'attente : DY_A ; les deux spots du « cou » disparaissent avec lui, celui du passage de la pile est posé
   // avec elle, js/ecole_rdc_centre.js)
-  for (const [x, y] of [[6.6, 9.9], [9.0, 9.9], [11.4, 9.9], [7.8, 11.1], [10.2, 11.1], [12.6, 11.1]]) ch.spot(x, y + DY_A, 2.6, 'attente');
+  // (Retour de Haythem du 11/10, r02 — « l'éclairage : plus chaud sur la photo » ; les spots relevés sur les photos 21 et
+  // 02 rétroprojetés au plafond : une rangée SUD dans la bande de dalles lisses, à 0,3 m du mur — x 5,5 / 7,15 / 8,8 /
+  // 10,45, au pas de la façade, 1,65 —, et une rangée nord vers y 6,8 — x 5,35 / 8,7 / 12,05. Sur la photo 21, aucun spot
+  // au-dessus des chaises entre 6 et 8 m : le jeu en avait un en (7,8 ; 6,9). La lumière : un blanc chaud de 2 900 K.)
+  const chaudAtt = new THREE.Color(0xffd5a3);
+  for (const [x, y, h] of [[5.5, 5.15, 2.6], [7.15, 5.15, 2.58], [8.8, 5.15, 2.58], [10.45, 5.15, 2.58], [5.35, 6.8, 2.6], [8.7, 6.8, 2.6], [12.05, 6.8, 2.6]]) ch.spot(x, y, h, 'attente', { couleur: chaudAtt });
   // (V2, 11/10 : la photo 01 recalée met le hublot qu'elle voit en (12,3 ; 10,7), au-dessus du local et de la gaine, un peu
   // à l'ouest de l'axe ; l'autre est derrière l'appareil, vers le fond)
   for (const [x, y] of [[12.3, 10.7], [12.3, 13.4]]) ch.opale(x, y, 2.45, 'c01');

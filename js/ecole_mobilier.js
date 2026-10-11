@@ -19,6 +19,7 @@ import { canvasTex } from './kit_decor.js';
 // carte, js/carte_ecole.js) : son contenu, relevé sur les photos 02 et 21, la suit d'un bloc
 const DY_A = -4.2;
 const A = (y) => y + DY_A;
+const ATT_YS = 9.0 + DY_A;          // la ligne du mur sud de la salle d'attente (4,8) : le verre des jours est sur elle
 
 // ---- LES CHAISES COQUE (type Eames DAR) : coque moulée, piètement « tour Eiffel » chromé ----
 // Couleurs relevées (photos 02, 21, rééquilibrées sur le blanc des murs) : blanc cassé, bleu canard (un bleu-vert
@@ -31,15 +32,23 @@ let _coque = null, _ourlet = null;
 // ASSISE presque plate (légèrement creusée), puis un large CONGÉ qui redresse la paroi presque à la verticale (72°) —
 // un baquet. La hauteur de la paroi suit le tour : le bord avant RETOMBE sous les genoux (-3 cm, la « cascade »), les
 // accoudoirs montent à 18 cm au-dessus de l'assise, le dossier à 38 cm, renversé vers l'arrière.
+// (Retour de Haythem du 11/10, r02 : « les chaises de gauche ressemblent à des palettes plates ; sur la photo, ce sont de
+// vraies coques : bord relevé, accoudoirs, dossier, galbe ». La coque de la veille ne relevait son bord qu'à partir du
+// milieu des flancs — les coins avant à 1 cm de l'assise — et sa paroi s'étalait sur la moitié du rayon : vue de trois
+// quarts, une selle plate. Refaite d'après les photos 02, 21 et r02 — et les cotes de la DAR : 0,63 x 0,56, assise à
+// 0,45, accoudoirs à 0,65, dossier à 0,82.) La coque est un BAQUET : une assise un peu creusée, plus haute devant, sur les
+// deux tiers du rayon ; puis une paroi qui se redresse en 11 cm jusqu'à 83° ; le bord fait l'ACCOUDOIR dès les coins avant
+// (13 cm au-dessus de l'assise), court à 20 cm le long des flancs, puis monte en DOSSIER (37,5 cm), renversé de 15° ; à
+// l'avant, entre les coins, il retombe de 3,5 cm sous les genoux (la « cascade »). Le plan se resserre vers le dos.
 function geoCoque() {
   if (_coque) return _coque;
-  const NA = 56, NS = 8, NC = 12, A = 0.31, P = 0.27, Y = 0.43, n = 3.2, T0 = 0.5, K = 0.8;
+  const NA = 72, NS = 7, NC = 16, A = 0.312, P = 0.278, Y = 0.45, n = 3.6, T0 = 0.66, K = 0.92;
   const pos = [], idx = [], ourlet = [];
   const lisse = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
   const NR = NS + NC;
   for (let j = 0; j <= NR; j++) {
     // ρ : la fraction du rayon ; η : la part de la paroi déjà montée (0 sur l'assise, 1 au bord). Le congé est un arc de
-    // 72° (K = 0,8 du quart de cercle) : la paroi finit raide mais pas verticale — la coque s'évase un peu vers le haut.
+    // 83° (K = 0,92 du quart de cercle) : la paroi finit presque verticale, comme la fibre moulée de la DAR.
     let rho, eta;
     if (j <= NS) { rho = (j / NS) * T0; eta = 0; }
     else {
@@ -50,10 +59,11 @@ function geoCoque() {
       const phi = i / NA * Math.PI * 2, s = Math.sin(phi), c = Math.cos(phi);
       const r = 1 / Math.pow(Math.pow(Math.abs(s), n) + Math.pow(Math.abs(c), n), 1 / n);
       const dos = (1 - c) / 2;                                       // 0 devant, 1 derrière
-      const bord = -0.03 + 0.21 * lisse(0.1, 0.5, dos) + 0.2 * lisse(0.55, 1, dos);
-      const creux = -0.022 * (1 - rho * rho);
+      const larg = 1 - 0.1 * dos * dos;                              // le plan se resserre vers le dos (0,63 -> 0,57)
+      const bord = -0.035 + 0.235 * lisse(0.015, 0.22, dos) + 0.175 * lisse(0.48, 1, dos);
+      const assise = (-0.02 * (1 - rho * rho) + 0.018 * c * rho) * (1 - eta);
       const h = bord * eta;
-      const p = [s * A * r * rho, Y + creux + h, c * P * r * rho - 0.22 * Math.max(0, h) * dos * dos];
+      const p = [s * A * r * rho * larg, Y + assise + h, c * P * r * rho - 0.26 * Math.max(0, h) * dos * dos];
       pos.push(...p);
       if (j === NR) ourlet.push(new THREE.Vector3(...p));
     }
@@ -65,9 +75,9 @@ function geoCoque() {
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   g.setIndex(idx); g.computeVertexNormals();
-  // L'OURLET : le bord roulé de la coque (6 mm), qui accroche la lumière et donne l'épaisseur de la fibre
+  // L'OURLET : le bord roulé de la coque (8,5 mm), qui accroche la lumière et donne l'épaisseur de la fibre
   ourlet.pop();
-  _ourlet = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ourlet, true), NA * 2, 0.006, 6, true);
+  _ourlet = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ourlet, true), NA * 2, 0.0085, 6, true);
   return (_coque = g);
 }
 const _matsCoque = new Map();
@@ -85,7 +95,7 @@ function matVoile() {
 function chaise(ch, x, y, face, couleur) {
   const M = ch.M, fx = face === 'S' ? 0 : face === 'N' ? 0 : face === 'E' ? 1 : -1, fz = face === 'S' ? 1 : face === 'N' ? -1 : 0;
   const g = new THREE.Group(); g.position.set(x, 0, -y); g.rotation.y = Math.atan2(fx, fz);
-  if (!_matsCoque.has(couleur)) _matsCoque.set(couleur, new THREE.MeshStandardMaterial({ color: couleur, roughness: 0.32, side: THREE.DoubleSide }));
+  if (!_matsCoque.has(couleur)) _matsCoque.set(couleur, new THREE.MeshStandardMaterial({ color: couleur, roughness: 0.38, side: THREE.DoubleSide }));
   // L'OMBRE DE LA COQUE. Ni dans l'ombre cuite au sol (vue de dessus, la coque faisait une tache noire de sa taille
   // posée sur des pieds fins), ni dans la carte d'ombre de la lumière principale (presque d'aplomb, elle découpait sous
   // chaque chaise un pavé noir à bord net) : sur les photos 02 et 21, la lumière vient de tous les plafonniers à la fois
@@ -98,16 +108,23 @@ function chaise(ch, x, y, face, couleur) {
   voile.position.set(0, 0.003, -0.02); voile.renderOrder = 1; voile.userData.horsAOSol = true; g.add(voile);
   // le piètement chromé (sans ombre portée : sous une lumière presque d'aplomb, la platine et les croisillons
   // découpaient un rectangle noir crénelé ; le voile suffit) et ses patins gris foncé de 15 mm
+  // (11/10, r02 : le vrai piètement « tour Eiffel » — quatre pieds écartés, la ceinture de fil à 19 cm qui les relie, et
+  // de chaque pied, à hauteur de la ceinture, un fil qui remonte sous le centre de l'assise : le X des photos 02 et 21)
+  const tige = (a, b, r) => {
+    const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b);
+    const m = maille(new THREE.CylinderGeometry(r, r, va.distanceTo(vb), 6), M.inox, 0, 0, 0, 0, g, { ombre: false });
+    m.position.copy(va).add(vb).multiplyScalar(0.5);
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), vb.sub(va).normalize());
+    return m;
+  };
+  const pied = (px, pz, y) => [px * (0.235 - 0.08 * y / 0.4), y, pz * (0.212 - 0.082 * y / 0.4)];
   for (const [px, pz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-    const p = maille(new THREE.CylinderGeometry(0.008, 0.008, 0.44, 6), M.inox, px * 0.17, 0.21, pz * 0.15, 0, g, { ombre: false });
-    p.rotation.z = -px * 0.2; p.rotation.x = pz * 0.2;
-    maille(new THREE.CylinderGeometry(0.0075, 0.0085, 0.01, 8), M.patin || (M.patin = new THREE.MeshStandardMaterial({ color: 0x45433f, roughness: 0.6 })), px * 0.215, 0.005, pz * 0.195, 0, g, { ombre: false });
+    tige(pied(px, pz, 0.01), pied(px, pz, 0.405), 0.0075);
+    tige(pied(px, pz, 0.19), [0, 0.39, 0], 0.0045);
+    maille(new THREE.CylinderGeometry(0.0075, 0.0085, 0.012, 8), M.patin || (M.patin = new THREE.MeshStandardMaterial({ color: 0x45433f, roughness: 0.6 })), px * 0.235, 0.006, pz * 0.212, 0, g, { ombre: false });
   }
-  for (const s of [-1, 1]) {
-    const e = maille(new THREE.CylinderGeometry(0.006, 0.006, 0.5, 5), M.inox, 0, 0.2, 0, 0, g, { ombre: false });
-    e.rotation.z = Math.PI / 2; e.rotation.y = s * 0.72;
-  }
-  maille(boiteM(0.22, 0.012, 0.2), M.inox, 0, 0.37, -0.01, 0, g, { ombre: false });
+  for (const [a, b] of [[[-1, -1], [-1, 1]], [[1, -1], [1, 1]], [[-1, 1], [1, 1]], [[-1, -1], [1, -1]]]) tige(pied(...a, 0.19), pied(...b, 0.19), 0.0045);
+  maille(boiteM(0.24, 0.012, 0.21), M.inox, 0, 0.4, -0.01, 0, g, { ombre: false });
   ch.decor.add(g);
   // l'assise (le jeu y pose les hanches) et d'où l'on se relève, 60 cm devant (en monde : z = -y)
   ch.sieges.push({ x: x + fx * 0.02, z: -y + fz * 0.02, y: 0.45, fx, fz, sx: x + fx * 0.7, sz: -y + fz * 0.7, nom: 'la chaise' });
@@ -133,83 +150,132 @@ export function poserMobilier(ch) {
   //  LA SALLE D'ATTENTE (photos 02, 03, 21 ; 11/10 : y 4,8-7,875, DY_A)
   // =====================================================================
   // la rangée nord, dos au mur safran, tournée vers le sud ; la rangée sud sous les jours dépolis, tournée vers le nord
-  [[6.5, 'blanc'], [7.2, 'canard'], [7.9, 'grege'], [8.6, 'citron'], [9.3, 'blanc']].forEach(([x, c]) => chaise(ch, x, A(11.55), 'S', COQUE[c]));
+  // (11/10, r02 : l'ordre et les couleurs se relisent tels quels — au nord, d'ouest en est, blanc, canard, grège, citron,
+  // blanc ; au sud, noir, rose, canard sous le jour ouest. La rangée nord recule de 5 cm : sur les photos, le haut des
+  // dossiers touche la lisse blanche du mur safran)
+  [[6.5, 'blanc'], [7.2, 'canard'], [7.9, 'grege'], [8.6, 'citron'], [9.3, 'blanc']].forEach(([x, c]) => chaise(ch, x, 7.42, 'S', COQUE[c]));
   [[6.3, 'noir'], [7.0, 'rose'], [7.7, 'canard']].forEach(([x, c]) => chaise(ch, x, A(9.45), 'N', COQUE[c]));
-  C.ajouterBoite(6.15, -A(11.9), 9.65, -A(11.2), { y1: 0.8 });
+  C.ajouterBoite(6.15, -7.75, 9.65, -7.05, { y1: 0.8 });
   C.ajouterBoite(5.95, -A(9.8), 8.05, -A(9.1), { y1: 0.8 });
   // l'écran de 65 pouces (x 6,5-7,95, h 1,55-2,40) et l'affiche blanche aux graphismes vert pâle (x 8,4-9,4)
   ch.boite(6.5, A(11.94), 7.95, A(12.0), 1.55, 2.4, M.noir);
   ch.panneau(new THREE.MeshBasicMaterial({ map: texEcran(), color: new THREE.Color(1.25, 1.25, 1.25) }), 1.39, 0.79, 7.225, A(11.935), 1.975, 'S');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#cfe8d2', '#fbfbf8', 3), roughness: 0.7 }), 1.0, 1.5, 8.9, A(11.994), 1.8, 'S');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#ffffff', '#f5f5f0', 4), roughness: 0.7 }), 0.15, 0.21, 7.0, A(11.994), 1.4, 'S');
-  // la borne numérique noire, son écran en mosaïque de photos, tournée vers l'ouest-nord-ouest : on la voit de face
-  // depuis le bout ouest de la salle (photo 21 ; 09/10 : elle était tournée vers le nord-est, vue de chant), entre le
-  // pilier gris et le mur sud. (11/10 : DY_A, et x 9,7 -> 10,05 — le mur sud est maintenant d'un seul tenant et la porte
-  // de la Si 0.1 s'ouvre derrière elle, x 9,1-9,9 : il fallait 0,6 m pour passer ; sur la photo 21, son bord gauche frôle
-  // toujours le pilier)
-  // (Intégration du 11/10 : x 10,05 -> 10,2, et son socle en boîte TOURNÉE — en boîte droite, de x 9,72 à 10,38 contre le
-  // mur sud, il ne laissait que 2 cm de jeu pour viser la porte de la Si 0.1 : le remplissage au pas de 5 cm ne la
-  // trouvait pas, la salle était inaccessible. Maintenant 0,75 m entre le jambage ouest de la porte et le coin de la
-  // borne ; son coin nord-est passe au sud du pilier gris, sans le toucher)
-  const borne = new THREE.Group(); borne.position.set(10.2, 0, -A(9.42)); borne.rotation.y = -Math.PI * 0.62; ch.decor.add(borne);
-  maille(boiteM(0.6, 0.02, 0.5), M.noir, 0, 0.01, 0, 0, borne);
-  maille(boiteM(0.6, 1.95, 0.08), M.noir, 0, 0.995, 0, 0, borne);
-  const mos = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 1.6), new THREE.MeshBasicMaterial({ map: texMosaique(), color: new THREE.Color(1.1, 1.1, 1.1) }));
-  mos.position.set(0, 1.05, 0.041); borne.add(mos);
-  // (le socle de 0,6 x 0,5 tourné de 112° : sa boîte tournée — un objet tourné de rotation.y = θ a a = -θ)
-  C.ajouterBoiteOrientee(10.2, -A(9.42), 0.3, 0.25, Math.PI * 0.62, { y1: 2 });
-  // LES PRÉSENTOIRS à brochures noirs, tournés vers l'ouest :
-  //  - l'un adossé au bout nord de la face ouest de la pile (11/10, plan V2 : photo 21, juste à gauche du radiateur — il
-  //    était contre le mur x 13,5 du jeu d'avant, en y 11,3) ;
-  //  - l'autre à l'entrée du C01, contre son mur est (relecture du 11/10 : la photo 01, prise dans le C01 vers le sud, le
-  //    montre de profil au bout de ce mur, juste avant l'ouverture sur la salle — et la photo 21, de la salle, en voit une
-  //    tranche sombre juste après le bout du mur jaune ; c'est là que le jeu posait le kakémono des formations, qu'aucune
-  //    photo de 2026 ne montre — il venait de la photo 22, d'avant 2021 : retiré).
-  // (Relecture du 11/10 : six tablettes inclinées sur 1,80 m, et non cinq sur 1,55 — on les compte sur les photos 21 et 01,
-  // où leur haut tombe vers 1,75 m)
+  // LA BORNE numérique noire (retour de Haythem du 11/10, r02 : « sur la photo, elle est debout sur son socle noir plat, un
+  // peu à l'écart à droite du pilier ; son écran montre une mosaïque de vraies photos en couleurs — dans le jeu, elle est
+  // collée au pilier et montre des pictogrammes de personnages bleus »). Sur la photo 21 en pleine définition, vue du bout
+  // ouest : à droite du pilier, à 50 px de lui, devant le bout est du jour c 8,35 — le haut de son cadre dépasse au-dessus
+  // d'elle —, le pied de son socle à 4 m de l'appareil : (8,75 ; 5,2), le dos à 0,15 m du mur sud, tournée vers le
+  // nord-ouest (on voit son écran et, à droite, son flanc) ; elle laisse libre le jambage ouest de la porte de la Si 0.1.
+  // Le socle est une plaque noire de 0,62 x 0,42, épaisse de 2,5 cm, qui avance devant l'écran ; le fût de 1,92 m, un rien
+  // renversé ; l'écran de 0,54 x 1,28, de 0,6 à 1,88 m — dessous, le pied noir du fût et son petit logo.
+  {
+    const bx = 8.75, by = 5.2, th = -2.53;
+    const borne = new THREE.Group(); borne.position.set(bx, 0, -by); borne.rotation.y = th; ch.decor.add(borne);
+    maille(boiteM(0.62, 0.025, 0.42), M.noir, 0, 0.0125, 0.1, 0, borne);
+    const fut = new THREE.Group(); fut.position.y = 0.025; fut.rotation.x = -0.025; borne.add(fut);
+    maille(boiteM(0.62, 1.92, 0.07), M.noir, 0, 0.96, 0, 0, fut);
+    const mos = new THREE.Mesh(new THREE.PlaneGeometry(0.54, 1.28), new THREE.MeshBasicMaterial({ map: texMosaique(), color: new THREE.Color(1.08, 1.08, 1.08) }));
+    mos.position.set(0, 1.215, 0.0355); fut.add(mos);
+    const logo = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.035), new THREE.MeshBasicMaterial({ color: 0x6d6f73 }));
+    logo.position.set(0, 0.45, 0.0356); fut.add(logo);
+    // (la boîte du socle, tournée avec lui : un objet tourné de rotation.y = θ a a = -θ ; le socle avance de 0,1 devant)
+    C.ajouterBoiteOrientee(bx + Math.sin(th) * 0.1, -by + Math.cos(th) * 0.1, 0.31, 0.21, -th, { y1: 2 });
+  }
+  // LES PRÉSENTOIRS à brochures noirs, tournés vers l'ouest : CINQ tablettes inclinées, et non six (retour de Haythem du
+  // 11/10, r02 : « noir, à cinq étagères de brochures » — on les compte aussi sur la photo 01), 1,75 m de haut
+  //  - LE SEUL qu'on voie de la salle (r02 : « le jeu en met DEUX côte à côte sur le mur du fond ; sur la photo, il y en a
+  //    UN seul ») : adossé à la face ouest de la pile, à gauche du radiateur, à 0,3 m de lui (photo 21 en pleine
+  //    définition : y 6,0-6,8 ; le jeu le mettait 0,25 plus au sud) ;
+  //  - celui de la photo 01, sur roulettes, contre le mur est du C01 : il y est, mais PLUS LOIN dans le couloir, y 8,85 —
+  //    son pied, sur la photo 01, à 3,8 m de l'appareil —, là où le bout du mur safran le cache à qui regarde depuis le
+  //    bout ouest de la salle. En y 8,2, il dépassait du mur jaune, à côté de l'autre : les « deux présentoirs » de r02.
   const br = new THREE.MeshStandardMaterial({ map: texBrochures(), roughness: 0.6 });
-  const presentoir = (x, y) => {
+  const presentoir = (x, y, roulettes) => {
     const pres = new THREE.Group(); pres.position.set(x, 0, -y); pres.rotation.y = -Math.PI / 2; ch.decor.add(pres);
-    for (const sx of [-0.39, 0.39]) maille(boiteM(0.02, 1.8, 0.35), M.noir, sx, 0.92, 0, 0, pres);
-    for (let i = 0; i < 6; i++) {
-      const t = maille(boiteM(0.76, 0.02, 0.28), M.noir, 0, 0.3 + i * 0.26, 0.02, 0, pres); t.rotation.x = -0.35;
-      const b = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.23), br);
-      b.position.set(0, 0.4 + i * 0.26, 0.05); b.rotation.x = -0.3; pres.add(b);
+    const b0 = roulettes ? 0.07 : 0.02;
+    for (const sx of [-0.39, 0.39]) maille(boiteM(0.022, 1.73, 0.36), M.noir, sx, b0 + 0.865, 0, 0, pres);
+    maille(boiteM(0.76, 1.62, 0.012), M.noir, 0, b0 + 0.88, -0.17, 0, pres);
+    maille(boiteM(0.8, 0.03, 0.36), M.noir, 0, b0 + 1.715, 0, 0, pres);
+    maille(boiteM(0.76, 0.05, 0.3), M.noir, 0, b0 + 0.025, 0, 0, pres);
+    for (let i = 0; i < 5; i++) {
+      const t = maille(boiteM(0.76, 0.02, 0.3), M.noir, 0, b0 + 0.3 + i * 0.3, 0.02, 0, pres); t.rotation.x = -0.35;
+      const b = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.25), br);
+      b.position.set(0, b0 + 0.42 + i * 0.3, 0.05); b.rotation.x = -0.3; pres.add(b);
+      maille(boiteM(0.76, 0.05, 0.012), M.noir, 0, b0 + 0.3 + i * 0.3, 0.165, 0, pres);
     }
-    C.ajouterBoite(x - 0.38, -(y - 0.42), x + 0.22, -(y + 0.42), { y1: 1.85 });
+    if (roulettes) for (const [sx, sz] of [[-0.36, -0.14], [0.36, -0.14], [-0.36, 0.14], [0.36, 0.14]]) {
+      const r = maille(new THREE.CylinderGeometry(0.03, 0.03, 0.022, 12), M.noirMat, sx, 0.03, sz, 0, pres, { ombre: false });
+      r.rotation.z = Math.PI / 2;
+    }
+    C.ajouterBoite(x - 0.25, -(y - 0.42), x + 0.19, -(y + 0.42), { y1: 1.8 });
   };
-  // (vérification finale du 11/10, photo 21 relue au pixel : sur le mur du fond, le bord droit du présentoir n'est qu'à
-  // 14 px du radiateur — 0,18 m —, quand les affichettes, à 0,44 m du radiateur, en sont à 40 px ; il était à 0,79 m :
-  // y 6,8 -> 6,15, contre le radiateur)
-  presentoir(13.08, 6.15);
-  presentoir(13.32, 8.2);
+  presentoir(13.11, 6.4, false);
+  presentoir(13.31, 8.85, true);
+  // LE KAKÉMONO « 1ère école pour le BTS SIO en France » (retour de Haythem du 11/10, r02 : « le panneau noir au bout du
+  // mur » — sur la photo 21 en pleine définition, un panneau noir à lettres blanches et dorées, plus haut qu'un homme,
+  // juste après la fin du jaune ; le même que la VO de 2021, q_0038-0047, au bout est du mur safran, devant lui). Vu du
+  // bout ouest, presque de chant : il est donc DEVANT le mur, à 0,25 m, de x 11,0 à 11,75, un rien tourné vers la salle ;
+  // sa cassette d'aluminium au sol, son mât, sa barre haute. Il ne gêne ni les chaises ni l'entrée du C01.
+  {
+    const kx = 11.375, ky = 7.54, th = -0.105;
+    const k = new THREE.Group(); k.position.set(kx, 0, -ky); k.rotation.y = th; ch.decor.add(k);
+    maille(boiteM(0.86, 0.085, 0.11), M.aluGris, 0, 0.0425, 0, 0, k);
+    for (const s of [-1, 1]) maille(boiteM(0.04, 0.012, 0.3), M.aluGris, s * 0.36, 0.006, 0, 0, k, { ombre: false });
+    maille(new THREE.CylinderGeometry(0.008, 0.008, 2.0, 8), M.aluGris, 0, 1.08, -0.035, 0, k, { ombre: false });
+    maille(boiteM(0.82, 0.02, 0.02), M.aluGris, 0, 2.09, -0.012, 0, k, { ombre: false });
+    const tk = new THREE.MeshStandardMaterial({ map: texKakemono(), roughness: 0.55, side: THREE.DoubleSide });
+    const toile = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 2.0), tk); toile.position.set(0, 1.08, -0.008); toile.castShadow = true; k.add(toile);
+    C.ajouterBoiteOrientee(kx, -ky, 0.43, 0.13, -th, { y1: 2.1 });
+  }
+  // LE DRAPEAU NOIR au bout est du jour c 8,35 (r02 : « l'ouverture vers le hall, sombre, avec un pictogramme noir
+  // au-dessus » — sur la photo 21 en pleine définition, une enseigne noire à pictogramme blanc, perpendiculaire au mur sud,
+  // vers 2,2 m, juste à gauche du cadre du jour : x 9,14). La porte de la Si 0.1 s'ouvre juste là : c'est le sien.
+  {
+    const d = new THREE.Group(); d.position.set(9.14, 2.22, -(ATT_YS + 0.075 + 0.17)); ch.decor.add(d);
+    maille(boiteM(0.012, 0.16, 0.3), M.noir, 0, 0, 0, 0, d, { ombre: false });
+    const td = new THREE.MeshStandardMaterial({ map: texDrapeauSalle(), roughness: 0.45 });
+    for (const s of [1, -1]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.144), td); p.position.x = s * 0.0065; p.rotation.y = s * Math.PI / 2; d.add(p); }
+    maille(boiteM(0.016, 0.016, 0.05), M.aluGris, 0, 0.09, 0.17, 0, d, { ombre: false });
+    d.traverse((m) => { m.userData.horsAOSol = true; });
+  }
   // LES AFFICHETTES DU FOND (photo orange, carte WIFI) : au bout du mur, près de l'angle du hall, sous le haut-parleur
   // (photo 03) — sur la face ouest de la pile du hall, x 13,30, js/ecole_rdc_centre.js ; son angle sud-ouest, y 4,7.
   // (Relecture du 10/10 : sur la photo 03 recalée — caméra (12,2 ; 5,4), cap 136,5 —, les affichettes sont à 0,1-0,25 m
   // de l'angle et le haut-parleur juste au-dessus, y 4,9 et non 5,15.) (11/10, plan V2 : ce sont les MÊMES que celles du
   // fond de la photo 21, à côté du radiateur — le jeu les avait aussi posées sur le mur x 13,5, en y 10,05 : retirées)
+  // (11/10, r02 : sur la photo 21 en pleine définition, elles sont à mi-chemin du radiateur et de l'angle — y 4,98, la
+  // moyenne des photos 03 et 21 ; le haut-parleur au-dessus d'elles)
   const wifi = new THREE.MeshStandardMaterial({ map: texWifi(), roughness: 0.45 });
-  ch.panneau(wifi, 0.2, 0.17, 13.294, 4.88, 1.45, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c7783a', '#f4ead9', 12), roughness: 0.6 }), 0.26, 0.19, 13.294, 4.88, 1.72, 'W');
-  // (relecture du 11/10 : le radiateur de la pile — js/carte_ecole.js, y 5,02-5,62 — n'est pas tout blanc : un cadre
-  // blanc autour d'une façade gris clair, des photos 03 et 21 ; 0,63 de la luminance du mur, mesurée sur la photo 03)
-  ch.panneau(new THREE.MeshStandardMaterial({ color: 0xa0a19c, roughness: 0.55 }), 0.52, 0.83, 13.219, 5.32, 0.585, 'W');
-  const hp = new THREE.Group(); hp.position.set(13.24, 2.32, -4.93); ch.decor.add(hp);
+  ch.panneau(wifi, 0.2, 0.17, 13.294, 4.98, 1.45, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c7783a', '#f4ead9', 12), roughness: 0.6 }), 0.26, 0.19, 13.294, 4.98, 1.72, 'W');
+  // (relecture du 11/10 : le radiateur de la pile — js/carte_ecole.js — n'est pas tout blanc : un cadre blanc autour d'une
+  // façade gris clair, des photos 03 et 21 ; 0,63 de la luminance du mur, mesurée sur la photo 03) (r02 : y 5,2-5,7, 1,25 m)
+  ch.panneau(new THREE.MeshStandardMaterial({ color: 0xa0a19c, roughness: 0.55 }), 0.42, 0.98, 13.219, 5.45, 0.66, 'W');
+  const hp = new THREE.Group(); hp.position.set(13.24, 2.32, -5.0); ch.decor.add(hp);
   maille(boiteM(0.1, 0.17, 0.13), M.boitier, 0, 0, 0, 0, hp, { ombre: false });
   maille(new THREE.CylinderGeometry(0.035, 0.035, 0.01, 16), M.grille, -0.051, 0.01, 0, 0, hp, { ombre: false }).rotation.z = Math.PI / 2;
-  // les affiches du pilier gris (planté dans la salle, x 10,3-10,9 × y 5,55-6,15 : DY_A) : sur la face ouest, l'A3 blanche
-  // aux dessins de couleur et le tract orange dessous ; sur la face nord, une feuille étroite (photo 21)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e8eef8', '#ffffff', 9), roughness: 0.7 }), 0.42, 0.6, 10.294, A(10.05), 1.72, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#f08a3c', '#ffffff', 10), roughness: 0.7 }), 0.3, 0.42, 10.294, A(10.05), 1.2, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3e9b6b', '#ffffff', 11), roughness: 0.7 }), 0.21, 0.42, 10.45, A(10.356), 1.55, 'N');
+  // les affiches du pilier gris (planté dans la salle, x 9,45-10,05 × y 5,5-6,1 : js/carte_ecole.js, retour r02)
+  // (r02, photo 21 en pleine définition : sur sa face OUEST, l'affiche blanche aux dessins de couleur, de 1,48 à 2,12, et
+  // l'orange dessous, de 1,0 à 1,45 ; sur sa face NORD, deux feuilles l'une sur l'autre — une crème en haut, une rouge
+  // en bas —, près de l'angle nord-ouest ; la feuille verte unique du jeu n'y est pas)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheDessins(), roughness: 0.7 }), 0.44, 0.64, 9.444, 5.8, 1.8, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheOrange(), roughness: 0.7 }), 0.32, 0.45, 9.444, 5.8, 1.23, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e9dcc0', '#f8f3e6', 70), roughness: 0.7 }), 0.24, 0.44, 9.65, 6.106, 1.71, 'N');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c9443f', '#f4e4e0', 71), roughness: 0.7 }), 0.24, 0.42, 9.65, 6.106, 1.22, 'N');
   // (10/10, VO q_0039-0050 : sa face EST, vers le hall — l'A3 bleu-gris au dessin d'écran d'ordinateur, de 1,5 à 1,9 m,
   // et l'A4 blanche à vignettes de photos dessous. La plaque « iris », l'annuaire et l'horloge qu'il portait sur sa face
   // sud sont sur la pile du hall : js/ecole_rdc_centre.js)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texEcranA3(), roughness: 0.7 }), 0.3, 0.42, 10.906, A(10.05), 1.7, 'E');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texVignettes(), roughness: 0.7 }), 0.21, 0.297, 10.906, A(10.05), 1.25, 'E');
-  // les affiches scotchées sur les jours dépolis
-  [[6.3, 1.7, '#e07b2a'], [6.95, 1.85, '#2f6fb0'], [8.0, 1.75, '#3e9b6b'], [8.65, 1.9, '#7b2a6e']].forEach(([x, h, c], i) =>
-    ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche(c, '#fbfbf8', 20 + i), roughness: 0.7 }), 0.21, 0.297, x, A(9.088), h, 'N'));
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texEcranA3(), roughness: 0.7 }), 0.3, 0.42, 10.056, 5.8, 1.7, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texVignettes(), roughness: 0.7 }), 0.21, 0.297, 10.056, 5.8, 1.25, 'E');
+  // LES AFFICHES COLLÉES SUR LE VERRE (retour de Haythem du 11/10, r02 : « les affiches sont collées sur le verre » — elles
+  // flottaient à 8 cm devant lui, au nu du mur). Sur la photo 21 en pleine définition, deux grandes affiches, l'une sur
+  // l'autre, sur la moitié est du jour OUEST (c 6,65) : en haut, une blanche à titre rouge (0,42 x 0,48), en bas, une
+  // blanche à vignettes de couleur (0,40 x 0,66), qui descend presque à l'appui ; le jour est (c 8,35) est nu. (Les A4 du
+  // jeu, deux par jour, n'y sont pas.) Contre le verre, au milieu du mur : y 4,806 + 2 mm.
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheTitre(), roughness: 0.7 }), 0.42, 0.48, 6.95, ATT_YS + 0.008, 1.98, 'N');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheVignettesCouleur(), roughness: 0.7 }), 0.4, 0.66, 6.95, ATT_YS + 0.008, 1.36, 'N');
 
   // =====================================================================
   //  LE HALL OUEST (photo 06 ; plan V2, 11/10 — scratchpad iris_audit/plan_v2.md § 2.2 : la photo 06 rejouée au
@@ -309,20 +375,156 @@ export function poserMobilier(ch) {
 // L'ÉCRAN DE LA BORNE (photo 21) : une mosaïque de PHOTOS d'étudiants — des vignettes à dominante bleue et grise, des
 // visages, quelques touches chaudes —, pas des aplats de couleurs vives (09/10). Chaque vignette : un ciel ou un mur en
 // dégradé, une silhouette sombre, un visage clair.
+// (Retour de Haythem du 11/10, r02 : « dans le jeu, l'écran montre des pictogrammes de personnages bleus ; sur la photo,
+// une mosaïque de vraies photos en couleurs ». Refaite : un collage sur deux colonnes de vignettes de hauteurs inégales,
+// comme sur la photo 21 en pleine définition — des scènes, pas des icônes : groupes d'étudiants devant un mur ou le ciel,
+// une salle d'ordinateurs, une façade sous le ciel, un portrait serré, une affiche de couleur ; fonds dominés par le bleu
+// ciel et le blanc, des touches chaudes ; le tout adouci d'un flou d'objectif et d'un grain, pour que l'œil y lise des
+// photos.)
 function texMosaique() {
-  return canvasTex(256, 744, (g, w, h) => {
-    g.fillStyle = '#0d0f12'; g.fillRect(0, 0, w, h);
-    const fonds = [['#7f9fc4', '#3d5878'], ['#a9b7c8', '#59677a'], ['#6b84a6', '#27364f'], ['#c9b49a', '#6d5a48'], ['#8fb0c9', '#4a6a86'], ['#b0a8a0', '#4c4744']];
+  return canvasTex(256, 608, (g, w, h) => {
+    let germe = 7;
+    const rnd = () => { germe = (germe * 16807) % 2147483647; return germe / 2147483647; };
+    const choix = (t) => t[Math.floor(rnd() * t.length)];
+    g.fillStyle = '#07080a'; g.fillRect(0, 0, w, h);
+    const peaux = ['#e9c4a6', '#d7a07c', '#b9805c', '#8d5a3f', '#f1d2b8', '#a46b4c'], cheveux = ['#1b1410', '#3a2618', '#5b3a22', '#0e0e10', '#7a5634', '#c9a36b'];
+    const habits = ['#1f2f57', '#f2f2ee', '#b8302a', '#d9a32a', '#2c2c30', '#3f7f6b', '#6c8fc0', '#8a3d6e', '#e8e0d0'];
+    const personne = (x, y, r, dos = false) => {
+      g.fillStyle = choix(habits); g.beginPath(); g.ellipse(x, y + r * 2.9, r * 1.9, r * 2.1, 0, Math.PI, 0); g.fill();
+      g.fillRect(x - r * 1.9, y + r * 2.9, r * 3.8, r * 2);
+      g.fillStyle = choix(peaux); g.beginPath(); g.ellipse(x, y + r * 0.2, r * 0.85, r, 0, 0, 7); g.fill();
+      g.fillStyle = choix(cheveux); g.beginPath(); g.ellipse(x, y - r * (dos ? -0.1 : 0.35), r * 0.92, r * (dos ? 1.0 : 0.62), 0, Math.PI, dos ? 3 * Math.PI : 0); g.fill();
+    };
+    const scene = (x, y, cw, chh, type) => {
+      g.save(); g.beginPath(); g.rect(x, y, cw, chh); g.clip();
+      g.filter = 'blur(0.7px)';
+      const d = g.createLinearGradient(0, y, 0, y + chh);
+      if (type === 0) {                // un groupe devant le ciel ou un mur clair
+        const f = choix([['#9cc9ec', '#e4f0f7'], ['#dfe6ec', '#b9c4cf'], ['#bfe0f5', '#f4f1ea'], ['#e9e2d6', '#c8b9a3']]);
+        d.addColorStop(0, f[0]); d.addColorStop(1, f[1]); g.fillStyle = d; g.fillRect(x, y, cw, chh);
+        const n = 2 + Math.floor(rnd() * 4), r = chh * (0.1 + rnd() * 0.05);
+        for (let i = 0; i < n; i++) personne(x + cw * (i + 0.5 + (rnd() - 0.5) * 0.4) / n, y + chh * (0.35 + rnd() * 0.15), r);
+      } else if (type === 1) {         // une salle d'ordinateurs : écrans bleus, dos des étudiants
+        d.addColorStop(0, '#d7dde3'); d.addColorStop(1, '#8a939c'); g.fillStyle = d; g.fillRect(x, y, cw, chh);
+        for (let i = 0; i < 4; i++) { const ex = x + 6 + i * (cw - 12) / 4; g.fillStyle = '#1d232b'; g.fillRect(ex, y + chh * 0.32, (cw - 12) / 4 - 6, chh * 0.24); g.fillStyle = choix(['#4f8fd6', '#6fb3e8', '#e8f1f8', '#3a6fb0']); g.fillRect(ex + 2, y + chh * 0.32 + 2, (cw - 12) / 4 - 10, chh * 0.24 - 5); }
+        g.fillStyle = '#c9c2b5'; g.fillRect(x, y + chh * 0.58, cw, chh * 0.07);
+        for (let i = 0; i < 3; i++) personne(x + cw * (0.2 + i * 0.3), y + chh * 0.66, chh * 0.11, true);
+      } else if (type === 2) {         // une façade sous le ciel
+        d.addColorStop(0, '#6fa8dc'); d.addColorStop(0.55, '#cfe3f2'); g.fillStyle = d; g.fillRect(x, y, cw, chh);
+        const t = choix(['#e2d6c2', '#cdbfa8', '#b8b4ae']); g.fillStyle = t; g.fillRect(x, y + chh * 0.3, cw, chh * 0.7);
+        g.fillStyle = 'rgba(40,52,66,0.85)';
+        for (let i = 0; i < 5; i++) for (let j = 0; j < 3; j++) g.fillRect(x + 6 + i * cw / 5, y + chh * (0.38 + j * 0.19), cw / 5 - 12, chh * 0.12);
+        g.fillStyle = '#5d8a4a'; g.fillRect(x, y + chh * 0.9, cw, chh * 0.1);
+      } else if (type === 3) {         // un portrait serré
+        const f = choix([['#f3efe8', '#d9d2c6'], ['#2d4f7a', '#16263c'], ['#e9b949', '#c47d2a'], ['#bcd7e8', '#7aa3c1']]);
+        d.addColorStop(0, f[0]); d.addColorStop(1, f[1]); g.fillStyle = d; g.fillRect(x, y, cw, chh);
+        personne(x + cw * (0.4 + rnd() * 0.2), y + chh * 0.3, chh * 0.2);
+      } else {                         // une affiche de couleur : aplat, titre, ligne de texte
+        g.fillStyle = choix(['#e86a2a', '#2a63b8', '#f2f2ee', '#7b2a6e', '#14935f', '#f2b705']); g.fillRect(x, y, cw, chh);
+        g.fillStyle = 'rgba(255,255,255,0.92)'; g.fillRect(x + 8, y + chh * 0.25, cw * 0.7, chh * 0.12); g.fillRect(x + 8, y + chh * 0.45, cw * 0.5, chh * 0.07);
+        g.fillStyle = 'rgba(20,20,20,0.55)'; g.fillRect(x + 8, y + chh * 0.7, cw * 0.6, 4); g.fillRect(x + 8, y + chh * 0.78, cw * 0.45, 4);
+      }
+      g.filter = 'none';
+      for (let i = 0; i < 140; i++) { g.fillStyle = rnd() < 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'; g.fillRect(x + rnd() * cw, y + rnd() * chh, 2, 2); }
+      g.restore();
+    };
+    const types = [0, 1, 0, 3, 2, 0, 4, 3, 0, 1, 2, 0, 3, 4];
     let k = 0;
-    for (let y = 6; y < h - 6; y += 92) for (let x = 6; x < w - 6; x += 124) {
-      const f = fonds[(k * 5 + (k >> 1)) % fonds.length], d = g.createLinearGradient(0, y, 0, y + 86);
-      d.addColorStop(0, f[0]); d.addColorStop(1, f[1]); g.fillStyle = d; g.fillRect(x, y, 118, 86);
-      const cx = x + 30 + ((k * 37) % 60), r = 11 + (k % 3) * 3;
-      g.fillStyle = ['#1d2430', '#3a2c2a', '#2b3b55', '#e7e2da'][k % 4]; g.beginPath(); g.ellipse(cx, y + 86, r * 2.1, r * 2.4, 0, Math.PI, 0); g.fill();
-      g.fillStyle = ['#d8ae90', '#a87458', '#e3c2a6', '#8a5a42'][(k + 1) % 4]; g.beginPath(); g.arc(cx, y + 86 - r * 2.6, r, 0, 7); g.fill();
-      g.fillStyle = '#20180f'; g.beginPath(); g.arc(cx, y + 86 - r * 2.9, r * 1.02, Math.PI, 0); g.fill();
-      k++;
+    for (const [x0, cw] of [[4, 122], [130, 122]]) {
+      let y = 4 + (x0 > 100 ? 26 : 0);
+      if (x0 > 100) scene(x0, 4, cw, 22, 4);
+      while (y < h - 4) {
+        const chh = Math.min(h - 4 - y, 70 + Math.floor(rnd() * 70));
+        if (chh > 18) scene(x0, y, cw, chh, types[k++ % types.length]);
+        y += chh + 4;
+      }
     }
+  }, null, false, 4);
+}
+// LE KAKÉMONO (VO q_0038-0047 ; photo 21 en pleine définition, de chant) : noir ; en haut, le logo « iris » blanc dans son
+// cadre à crochet ; « 1ÈRE ÉCOLE POUR LE BTS SIO EN FRANCE » en lettres dorées, « ÉCOLE DE L'INFORMATIQUE ET DU NUMÉRIQUE »
+// en blanc, « BAC À BAC+5 » doré ; en bas, l'adresse du site et un code QR
+function texKakemono() {
+  return canvasTex(256, 640, (g, w, h) => {
+    g.fillStyle = '#121214'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = '#d8d8d8'; g.lineWidth = 3; g.beginPath(); g.moveTo(70, 24); g.lineTo(58, 24); g.lineTo(58, 56); g.stroke();
+    g.fillStyle = '#f4f4f2'; g.font = '600 46px "Century Gothic", "Avenir", "Segoe UI", sans-serif'; g.textAlign = 'center'; g.fillText('iris', w / 2, 70);
+    g.fillStyle = '#e9a01c'; g.fillRect(w / 2 - 34, 30, 12, 7);
+    const dore = '#d9aa48', blanc = '#f1efe9';
+    const ligne = (t, y, c, taille, poids = 700) => { g.fillStyle = c; g.font = `${poids} ${taille}px Georgia, "Times New Roman", serif`; g.fillText(t, w / 2, y, w - 30); };
+    ligne('1ÈRE ÉCOLE', 160, dore, 26); ligne('POUR LE BTS SIO', 192, dore, 26); ligne('EN FRANCE', 224, dore, 26);
+    ligne('ÉCOLE', 300, blanc, 22, 500); ligne('DE L\'INFORMATIQUE', 328, blanc, 22, 500); ligne('ET DU NUMÉRIQUE', 356, blanc, 22, 500);
+    ligne('BAC À BAC+5', 420, dore, 22);
+    g.fillStyle = '#9a9a9a'; g.font = '500 13px "Segoe UI", Arial, sans-serif'; g.fillText('www.iris.fr', w / 2 - 30, 600);
+    g.fillStyle = '#f1efe9'; g.fillRect(w - 64, 566, 44, 44); g.fillStyle = '#121214';
+    for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++) if ((i * 5 + j * 3 + i * j) % 3 === 0) g.fillRect(w - 61 + i * 6.5, 569 + j * 6.5, 6, 6);
+  }, null, false, 8);
+}
+// LE DRAPEAU de la Si 0.1 (photo 21 en pleine définition) : noir, pictogramme blanc — un poste et son utilisateur — et le
+// numéro de la salle
+function texDrapeauSalle() {
+  return canvasTex(128, 66, (g, w, h) => {
+    g.fillStyle = '#141416'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = '#f2f2f2'; g.lineWidth = 3; g.strokeRect(14, 12, 30, 21); g.fillStyle = '#f2f2f2'; g.fillRect(25, 34, 8, 5); g.fillRect(18, 39, 22, 3);
+    g.beginPath(); g.arc(56, 24, 6, 0, 7); g.fill(); g.beginPath(); g.ellipse(56, 46, 10, 12, 0, Math.PI, 0); g.fill();
+    g.font = '700 17px "Segoe UI", Arial, sans-serif'; g.textAlign = 'left'; g.fillText('Si 0.1', 74, 30);
+    g.font = '500 9px "Segoe UI", Arial, sans-serif'; g.fillText('T. Berners-Lee', 74, 46);
+  }, null, false, 4);
+}
+// L'AFFICHE BLANCHE AUX DESSINS DE COULEUR du pilier (photo 21 en pleine définition) : des coups de pinceau et des
+// pictogrammes bleus, orange et violets en haut, des colonnes de texte orangé au milieu, les logos en bas
+function texAfficheDessins() {
+  return canvasTex(256, 372, (g, w, h) => {
+    g.fillStyle = '#fbfaf6'; g.fillRect(0, 0, w, h);
+    g.lineCap = 'round';
+    for (const [c, x0, y0, x1, y1, e] of [['#3d6fd0', 20, 40, 70, 110, 16], ['#e8862c', 80, 30, 110, 80, 12], ['#7a4cc4', 60, 120, 120, 90, 10], ['#2fa3d9', 150, 60, 230, 120, 14], ['#e04e3a', 200, 30, 230, 60, 9], ['#f2b705', 120, 120, 150, 135, 10]]) {
+      g.strokeStyle = c; g.lineWidth = e; g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo((x0 + x1) / 2 + 20, (y0 + y1) / 2 - 25, x1, y1); g.stroke();
+    }
+    for (const [x, y, c] of [[170, 30, '#e8862c'], [200, 150, '#3d6fd0'], [40, 150, '#2fa3d9']]) { g.strokeStyle = c; g.lineWidth = 4; g.beginPath(); g.arc(x, y, 13, 0, 7); g.stroke(); }
+    g.fillStyle = '#e59a62';
+    for (let c = 0; c < 3; c++) for (let l = 0; l < 7; l++) g.fillRect(18 + c * 80, 182 + l * 15, 50 + ((c + l) % 3) * 8, 6);
+    g.fillStyle = '#2a2a2a'; g.fillRect(18, h - 34, 40, 14); g.fillStyle = '#3d6fd0'; g.fillRect(200, h - 36, 38, 18);
+    g.strokeStyle = '#1f1f1f'; g.lineWidth = 4; g.beginPath(); g.moveTo(150, h - 30); g.lineTo(240, h - 70); g.stroke();
+  }, null, false, 4);
+}
+// LE TRACT ORANGE du pilier : le haut orange à titre blanc, un bandeau noir et la photo d'un écran, des vignettes en bas
+function texAfficheOrange() {
+  return canvasTex(256, 360, (g, w, h) => {
+    g.fillStyle = '#fbfaf6'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#f08a24'; g.fillRect(0, 0, w, h * 0.42);
+    g.fillStyle = '#ffffff'; g.font = '800 26px Impact, "Arial Black", sans-serif'; g.textAlign = 'center'; g.fillText('REJOINS L\'AVENTURE', w / 2, 46, w - 20);
+    g.fillStyle = '#1b1b1d'; g.fillRect(40, 70, w - 80, 70); g.fillStyle = '#e8e8e8'; g.fillRect(60, 84, w - 120, 40);
+    g.fillStyle = '#f08a24'; g.fillRect(0, 150, w, 10);
+    for (let i = 0; i < 3; i++) { g.fillStyle = ['#3a3f47', '#59616b', '#2c3138'][i]; g.fillRect(14 + i * 80, 196, 70, 54); }
+    g.fillStyle = '#9aa0a6'; for (let l = 0; l < 3; l++) g.fillRect(16, 276 + l * 14, 150 - l * 30, 5);
+    g.fillStyle = '#f08a24'; g.fillRect(w - 60, h - 46, 46, 34);
+  }, null, false, 4);
+}
+// LES DEUX GRANDES AFFICHES DU JOUR OUEST (photo 21 en pleine définition) : la blanche à titre rouge — un en-tête rouge,
+// un titre, des paragraphes —, et la blanche à vignettes de couleur — un titre rouge, six images vertes, orange, rouges
+// et bleues, du texte et des logos en bas
+function texAfficheTitre() {
+  return canvasTex(256, 292, (g, w, h) => {
+    g.fillStyle = '#fbfaf7'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#c8332c'; g.fillRect(150, 12, 90, 14); g.fillStyle = '#2b2b2b'; g.fillRect(16, 14, 60, 8);
+    g.fillStyle = '#c8332c'; g.font = '800 19px "Segoe UI", Arial, sans-serif'; g.fillText('INFORMATIONS', 16, 58);
+    g.fillStyle = '#4a4a4a'; for (let l = 0; l < 13; l++) g.fillRect(16, 76 + l * 14, (l % 4 === 3 ? 0.5 : 0.85) * (w - 32), 5);
+    g.fillStyle = '#c8332c'; g.fillRect(16, h - 30, 70, 6);
+  }, null, false, 4);
+}
+function texAfficheVignettesCouleur() {
+  return canvasTex(256, 422, (g, w, h) => {
+    g.fillStyle = '#fbfaf7'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#c8332c'; g.font = '800 20px "Segoe UI", Arial, sans-serif'; g.fillText('PORTES OUVERTES', 16, 40, w - 30);
+    g.fillStyle = '#4a4a4a'; g.fillRect(16, 54, 150, 6); g.fillRect(16, 66, 110, 6);
+    const c = [['#5aa35a', '#2e6b33'], ['#f08a24', '#b8561a'], ['#d6453a', '#8f241d'], ['#3d7ac9', '#1f4a86'], ['#e3c04a', '#a7841b'], ['#7fbf6a', '#3f7d33']];
+    for (let i = 0; i < 6; i++) {
+      const x = 16 + (i % 3) * 77, y = 96 + Math.floor(i / 3) * 86, d = g.createLinearGradient(0, y, 0, y + 74);
+      d.addColorStop(0, c[i][0]); d.addColorStop(1, c[i][1]); g.fillStyle = d; g.fillRect(x, y, 70, 74);
+      g.fillStyle = 'rgba(255,240,225,0.75)'; g.beginPath(); g.arc(x + 35, y + 30, 11, 0, 7); g.fill();
+    }
+    g.fillStyle = '#5a5a5a'; for (let l = 0; l < 6; l++) g.fillRect(16, 290 + l * 13, (0.5 + (l % 3) * 0.15) * w, 5);
+    for (let i = 0; i < 4; i++) { g.fillStyle = ['#1f1f1f', '#c8332c', '#3d7ac9', '#5aa35a'][i]; g.fillRect(16 + i * 58, h - 34, 44, 18); }
   }, null, false, 4);
 }
 // LES BROCHURES du présentoir (photos 01, 21) : des couvertures de magazine — fond blanc ou clair, une grande photo aux
