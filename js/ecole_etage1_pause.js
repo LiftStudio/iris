@@ -841,7 +841,8 @@ export function poserPause1(ch, ctx) {
   // un voile blanc sur le vitrage, du côté de la salle seulement : de la rue, la vitre reste ce qu'elle est)
   const voile = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xf2f6fc).multiplyScalar(1.15), transparent: true, opacity: 0.62, depthWrite: false });
   voile.name = 'jour éblouissant (fenêtres de la salle)';
-  for (let k = 2; k <= 8; k++) { const v = new THREE.Mesh(new THREE.PlaneGeometry(1.18, 1.13), voile); v.position.set(centreTravee(k), N1 + 1.575, 0.14); v.rotation.y = Math.PI; v.renderOrder = 1; groupe.add(v); }
+  // (lot façade du 11/10 : le vitrage de la fenêtre d'un vantail, 1,20 x 1,35 à 0,85 du plancher, moins son dormant)
+  for (let k = 2; k <= 8; k++) { const v = new THREE.Mesh(new THREE.PlaneGeometry(1.06, 1.21), voile); v.position.set(centreTravee(k), N1 + 1.525, 0.14); v.rotation.y = Math.PI; v.renderOrder = 1; groupe.add(v); }
   // (VO : la salle est d'un blanc froid, le jour et les tubes à 4 000 K — pas la lumière chaude des spots de l'espace pause)
   const froid = new THREE.Color(0xeef2fb);
   // (relecture 10/10 : les grilles des luminaires aussi, d'un blanc bleuté — celles du reste de l'étage sont jaunâtres)
@@ -894,7 +895,8 @@ export function poserPause1(ch, ctx) {
   plaque('Salle de cours', 'S 1.3', null, PORTE_S13.c - PORTE_S13.l / 2 - 0.24, Y_S + 0.063, 'N', 1.6);
   // (le nu intérieur de la façade, sous et au-dessus des fenêtres, dans le blanc de la salle : entre les fenêtres, ce sont
   // les pilastres)
-  panneau(P.blancSalle, 12.965 - 1.885, 0.95, (1.885 + 12.965) / 2, 0.003, N1 + 0.475, 'N');
+  // (lot façade du 11/10 : l'allège des fenêtres est à 0,85, comme au 2e — photo 12 redressée — et non plus à 0,95)
+  panneau(P.blancSalle, 12.965 - 1.885, 0.85, (1.885 + 12.965) / 2, 0.003, N1 + 0.425, 'N');
   panneau(P.blancSalle, 12.965 - 1.885, HS - N1 - 2.2, (1.885 + 12.965) / 2, 0.003, N1 + 2.2 + (HS - N1 - 2.2) / 2, 'N');
   // LES CONVECTEURS sous les sept fenêtres
   for (let k = 2; k <= 8; k++) radiateur(centreTravee(k), 0.0, 'N', 1.0, 0.1, 0.7);

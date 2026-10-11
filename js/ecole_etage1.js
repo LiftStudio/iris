@@ -60,7 +60,7 @@
 import * as THREE from 'three';
 import { maille, boiteM, fenetreFacade, fusionnerLocal } from './ecole_portes.js';
 import { canvasTex, nePasFusionner } from './kit_decor.js';
-import { jourDehors, texAffiche, texConsignes, texPictoExtincteur } from './ecole_matieres.js';
+import { jourDehors, texAffiche, texConsignes, texPictoExtincteur, CADRE, cadreEn, FENETRE_ETAGE, TEINTE_PIERRE } from './ecole_matieres.js';
 import { cuireLumiereSol } from './ecole_lumieres.js';
 import { TELEPHONE } from './appareil.js';
 import { poserPalierEst } from './ecole_est.js';
@@ -337,7 +337,7 @@ export function poserEtage1(ch, renderer = null) {
   // ---- les matières propres à l'étage ----
   const std = (o) => new THREE.MeshStandardMaterial(o);
   const X = {
-    pierre: jourDehors(std({ map: texPierreEtage(), roughness: 0.75 }), 0.1),
+    pierre: jourDehors(std({ map: texPierreEtage(), roughness: 0.75, color: TEINTE_PIERRE }), 0.1),    // (la teinte froide : lot façade)
     chene: std({ map: texChene(), roughness: 0.48 }),
     blancTable: std({ color: 0xeeece6, roughness: 0.42 }),
     anthracite: std({ color: 0x34363b, roughness: 0.45, metalness: 0.55 }),
@@ -451,16 +451,24 @@ export function poserEtage1(ch, renderer = null) {
   //  LA FAÇADE DU 1er ÉTAGE (photos 11, 12, 16 à 18)
   // =====================================================================
   // Le mur de façade de l'étage (40 cm, pierre dehors, enduit blanc dedans), percé de ses douze fenêtres : celles des
-  // travées 2 à 11 comme les étages du dessus (1,30 x 1,25 m, allège à 0,95 m : la tuile de js/ecole_matieres.js
-  // texEtage), la grande baie de la travée 1 et la fenêtre étroite de la travée 12 aux mesures de leurs encadrements
-  // rouges (js/carte_ecole.js cadre). Menuiserie brun-noir en retrait de 25 cm, tablette blanche, et pour la baie et la
-  // fenêtre des pompiers, la pastille rouge collée sur la vitre (photos 12, 16).
+  // travées 2 à 11 comme les étages du dessus (la tuile de js/ecole_matieres.js texEtage, FENETRE_ETAGE), celles des
+  // travées 1 et 12 au jour de leurs encadrements rouges (CADRE). Menuiserie brun-noir en retrait de 25 cm, tablette
+  // blanche, et pour les deux fenêtres des pompiers, la pastille rouge collée sur la vitre (photos 10, 12, 16).
+  // (Lot façade du 11/10 — photo 12 redressée sur les quatre rangées, photos 10, 16, 17 de face : iris_vues/X4_*. Les dix
+  // fenêtres courantes sont celles du 2e et des étages du dessus, 1,20 x 1,35, allège à 0,85 (la photo 12 donne 1,24 x
+  // 1,36, appui à 4,34), d'UN SEUL vantail : ni meneau ni imposte. Les deux encadrements rouges, travées 1 et 12, sont
+  // plus hauts que larges et descendent sous le plancher (js/ecole_matieres.js CADRE) : leur fenêtre est haute, de 6 cm
+  // au-dessus du plancher à 2,17 — par la vitre basse de la travée 1, la photo 10 montre une chaise du bureau —, un
+  // grand carreau et, côté mitoyen, un ouvrant étroit et sombre ; les pastilles des pompiers à un mètre, sur le bord du
+  // grand carreau opposé (photo 16 : x 18,51, 4,52 ; photos 10 et 12 : x 1,2). Le jeu y posait une baie de 1,9 x 1,55 et
+  // une fenêtre étroite de 1,1 x 1,49, à 0,8 du plancher.)
   function construireFacade1() {
-    const F = [];
-    // (la baie et la fenêtre des pompiers : des châssis fixes, deux vantaux pour la baie, un seul pour l'étroite)
-    F.push({ c: 0.825, l: 1.9, bas: N1 + 0.8, haut: N1 + 2.35, simple: 2, pompiers: [1.11, 1.45] });
-    for (let k = 2; k <= 11; k++) F.push({ c: centreTravee(k), l: 1.3, bas: N1 + 0.95, haut: N1 + 2.2 });
-    F.push({ c: centreTravee(12), l: 1.1, bas: N1 + 0.83, haut: N1 + 2.32, simple: 1, pompiers: [18.53, 1.95] });
+    const F = [], J = CADRE.jour;
+    for (let k = 1; k <= 12; k++) {
+      const cd = cadreEn(k, 1);
+      if (cd) F.push({ c: centreTravee(k), l: J.l, bas: N1 + J.bas, haut: N1 + J.haut, cadre: cd, pompiers: k === 1 ? [1.22, 1.15] : [18.52, 1.0] });
+      else F.push({ c: centreTravee(k), l: FENETRE_ETAGE.l, bas: N1 + FENETRE_ETAGE.bas, haut: N1 + FENETRE_ETAGE.haut });
+    }
     mur({ de: [-0.3, -0.2], a: [20.1, -0.2], ep: 0.4, h: N2, mats: { N: M.blanc, S: X.pierre },
       ouvertures: F.map((f) => ({ c: f.c, l: f.l, bas: f.bas, h: f.haut })) });
     // (repère de js/ecole_portes.js fenetreFacade : +z vers l'intérieur, donc tourné de PI ; x local = -x du plan)
@@ -469,12 +477,14 @@ export function poserEtage1(ch, renderer = null) {
     // LE REFLET DE LA RUE : dehors, en plein jour, une vitre se voit d'abord par ce qu'elle reflète (photos 12, 17 : les
     // immeubles d'en face, le ciel) ; une seconde face, sombre et brillante, tournée vers la rue seulement — vue de la
     // salle, elle n'existe pas (face arrière), la vitre reste claire
-    const vitreRue = new THREE.MeshStandardMaterial({ color: 0x4d5862, roughness: 0.05, metalness: 0.6, transparent: true, opacity: 0.55, depthWrite: false, envMapIntensity: 1.5 });
+    // (lot façade du 11/10 : sur les photos 11, 12, 16 à 18, les vitres du 1er renvoient la rue et le ciel et ne laissent
+    // presque rien voir des bureaux — plus couvrante et plus claire : 0,55 -> 0,78, #4D5862 -> #76828C)
+    const vitreRue = new THREE.MeshStandardMaterial({ color: 0x76828c, roughness: 0.05, metalness: 0.6, transparent: true, opacity: 0.78, depthWrite: false, envMapIntensity: 1.5 });
     vitreRue.name = 'vitre de l\'étage vue de la rue';
     for (const f of F) {
       // (les bureaux ont des stores à lames verticales, comme l'accueil du rez-de-chaussée, photo 03)
-      if (f.simple) fenetreSimple(f);
-      else fenetreFacade(fac, M, { x: -f.c, l: f.l, bas: f.bas, haut: f.haut, ep: 0.4, barreaux: false, imposte: true, stores: f.c > 13.2 });
+      if (f.cadre) fenetreSimple(f);
+      else fenetreFacade(fac, M, { x: -f.c, l: f.l, bas: f.bas, haut: f.haut, ep: 0.4, barreaux: false, imposte: false, vantail: true, stores: f.c > 13.2 });
       const r = new THREE.Mesh(new THREE.PlaneGeometry(f.l - 0.1, f.haut - f.bas - 0.1), vitreRue);
       r.position.set(f.c, (f.bas + f.haut) / 2, 0.158); r.castShadow = false; groupe.add(r);
       // (les vitres arrêtent la caméra ; le jour, lui, passe : `vitre`)
@@ -493,22 +503,29 @@ export function poserEtage1(ch, renderer = null) {
     // fenêtre, découpée depuis dehors), et pour les spots, une lampe froide dehors par salle, qui vise l'intérieur
     const zoneDe = (x) => (x < 1.65 ? 'e1bureau' : x < 13.2 ? 'e1salle' : x < 16.5 ? 'e103' : 'e104');
     for (const f of F) {
-      const L = { type: 'jour', x: f.c, z: 0.9, h: N1 + 2.4, sx: f.c, sz: -0.45, ox: f.c, oz: 0.5, zone: zoneDe(f.c), reel: false, cuire: false, base: N1, cuireForce: f.l > 1.5 ? 1.0 : 0.8 };
+      const L = { type: 'jour', x: f.c, z: 0.9, h: N1 + 2.4, sx: f.c, sz: -0.45, ox: f.c, oz: 0.5, zone: zoneDe(f.c), reel: false, cuire: false, base: N1, cuireForce: f.cadre ? 1.0 : 0.8 };
       ch.lampes.push(L); lampes.push(L);
     }
     for (const x of [1.6, 4.9, 8.3, 11.5, 14.85, 18.15]) ch.lampes.push({ type: 'jour', x, z: 1.2, h: N1 + 2.6, cx: x, cz: -3.4, zone: zoneDe(x), base: N1, cuire: false, poids: 1.6 });
   }
-  // UN CHÂSSIS FIXE de la façade (la baie rouge, la fenêtre des pompiers) : la menuiserie brun-noir dans le plan des
-  // autres (25 cm en retrait du nu), `simple` vantaux, l'appui de pierre dehors, la tablette blanche dedans
+  // LA FENÊTRE HAUTE D'UN ENCADREMENT ROUGE (travées 1 et 12) : la menuiserie brun-noir dans le plan des autres (25 cm en
+  // retrait du nu), le grand carreau, et du côté `o` de l'encadrement (le mitoyen) l'ouvrant étroit, plein et sombre
+  // (photos 10, 16, 17) ; l'appui blanc au fond du tableau (celui de devant, sur la traverse rouge : js/carte_ecole.js)
   function fenetreSimple(f) {
-    const x0 = f.c - f.l / 2, x1 = f.c + f.l / 2, c = 0.06, ya = -0.185, yb = -0.115;
+    const x0 = f.c - f.l / 2, x1 = f.c + f.l / 2, c = 0.06, ya = -0.185, yb = -0.115, o = f.cadre.o, e = CADRE.etroit;
     B(x0, ya, x1, yb, f.bas, f.bas + c, M.menuiserie); B(x0, ya, x1, yb, f.haut - c, f.haut, M.menuiserie);
     B(x0, ya, x0 + c, yb, f.bas, f.haut, M.menuiserie); B(x1 - c, ya, x1, yb, f.bas, f.haut, M.menuiserie);
-    for (let k = 1; k < f.simple; k++) { const x = x0 + k * f.l / f.simple; B(x - 0.03, ya, x + 0.03, yb, f.bas, f.haut, M.menuiserie); }
-    const v = new THREE.Mesh(new THREE.PlaneGeometry(f.l - 2 * c, f.haut - f.bas - 2 * c), M.vitreJour);
-    v.position.set(f.c, (f.bas + f.haut) / 2, 0.15); groupe.add(v);
-    B(x0 - 0.03, -0.42, x1 + 0.03, ya, f.bas - 0.05, f.bas, M.pierreAppui || M.pierre);
-    B(x0, yb, x1, 0.02, f.bas - 0.025, f.bas, M.blanc, { ombre: false });
+    let g0 = x0, g1 = x1;
+    if (o) {
+      const xm = o < 0 ? x0 + e : x1 - e, n0 = o < 0 ? x0 + c : xm + 0.03, n1 = o < 0 ? xm - 0.03 : x1 - c;
+      B(xm - 0.03, ya, xm + 0.03, yb, f.bas, f.haut, M.menuiserie);
+      B(n0, ya + 0.02, n1, yb - 0.02, f.bas + c, f.haut - c, M.menuiserie);
+      B((n0 + n1) / 2 - 0.01, ya - 0.004, (n0 + n1) / 2 + 0.01, ya, f.bas + c, f.haut - c, X.anthracite, { ombre: false });
+      if (o < 0) g0 = xm; else g1 = xm;
+    }
+    const v = new THREE.Mesh(new THREE.PlaneGeometry(g1 - g0 - 2 * c, f.haut - f.bas - 2 * c), M.vitreJour);
+    v.position.set((g0 + g1) / 2, (f.bas + f.haut) / 2, 0.15); groupe.add(v);
+    B(x0, -0.4, x1, ya, f.bas - 0.02, f.bas, M.blanc, { ombre: false });
   }
 
   // =====================================================================

@@ -351,37 +351,77 @@ function texPierre() {
   }, [1 / PIERRE.u, 1 / PIERRE.v], false, 8);
 }
 
-// LES ÉTAGES DE LA FAÇADE (vus de la rue) : une travée de 1,65 m sur un étage de 3,1 m — la pierre, la fenêtre à deux
-// vantaux et imposte (menuiserie brun-noir #2B282A), le vitrage sombre qui reflète le ciel. Tuile de dessin : une travée.
+// LES ÉTAGES DE LA FAÇADE (vus de la rue) : une travée de 1,65 m sur un étage de 3,1 m — la pierre, la fenêtre d'un seul
+// vantail (menuiserie brun-noir #2B282A), le vitrage qui reflète le ciel. Tuile de dessin : une travée.
+// (Lot façade du 11/10 : la photo 12 redressée sur les quatre rangées — iris_vues/X4_p12_redressee.jpg — donne la MÊME
+// fenêtre à tous les étages, du 1er au 4e : 1,22 x 1,36 m, allège à 0,84-0,86 du plancher, linteau à 2,20-2,24 — et la VO
+// le confirme au 2e, 1,18 x 1,33, allège 0,84 ; un seul vantail, sans meneau ni imposte, un dormant épais. Le jeu dessinait
+// 1,30 x 1,25 à 0,95, deux vantaux et une imposte, un store une fois sur deux.)
 export const TRAVEE = { u: 1.65, v: 3.1 };
+export const FENETRE_ETAGE = { l: 1.2, bas: 0.85, haut: 2.2 };
+export const TEINTE_PIERRE = 0xebf6ff;                     // (la teinte froide de la pierre de la façade : materiauxEcole)
+// LES ENCADREMENTS ROUGES (photos 10, 11, 12, 16, 17, 18 ; lot façade du 11/10) : plus HAUTS que larges, 1,47 x 2,53 m —
+// de 0,18 sous le plancher à 2,35 au-dessus, le haut un peu au-dessus des linteaux voisins, le bas un mètre sous leurs
+// appuis —, en saillie de 15 cm ; montants de 16 cm, traverse haute de 18, basse de 21 et, sur elle, l'appui blanc de la
+// fenêtre. Dedans, une fenêtre haute (1,15 x 2,11) : un grand carreau à la pastille rouge des pompiers et, côté mitoyen
+// (photos 10, 16, 17), un ouvrant étroit et sombre de 0,28. Leur place, relevée sur la photo 12 redressée (les quatre
+// rangées et le haut de la cinquième) : travées 1 et 12 au 1er et au 3e, 7 au 2e, 6 au 4e, 12 au 5e (sous la toiture) ;
+// `o` : le côté de l'ouvrant étroit (-1 ouest, 1 est, 0 aucun)
+export const CADRE = { l: 1.47, bas: -0.18, haut: 2.35, montant: 0.16, linteau: 0.18, traverse: 0.21, saillie: 0.15, etroit: 0.28 };
+CADRE.jour = { l: CADRE.l - 2 * CADRE.montant, bas: CADRE.bas + CADRE.traverse + 0.05, haut: CADRE.haut - CADRE.linteau };
+export const CADRES = [{ t: 1, e: 1, o: -1 }, { t: 12, e: 1, o: 1 }, { t: 7, e: 2, o: 0 }, { t: 1, e: 3, o: -1 }, { t: 12, e: 3, o: 1 },
+  { t: 6, e: 4, o: 1 }, { t: 12, e: 5, o: 1 }];
+export const cadreEn = (travee, etage) => CADRES.find((c) => c.t === travee && c.e === etage) || null;
 function texEtage() {
   const W = TELEPHONE ? 256 : 512, H = Math.round(W * TRAVEE.v / TRAVEE.u), [br, bg, bb] = octets(0xd9dad5);
   return canvasTex(W, H, (g, w, h) => {
-    const r2 = graine(42), mx = w / TRAVEE.u, my = h / TRAVEE.v;
+    const r2 = graine(42), mx = w / TRAVEE.u, my = h / TRAVEE.v, F = FENETRE_ETAGE;
     g.fillStyle = rgb(br, bg, bb); g.fillRect(0, 0, w, h);
     for (let k = 0; k < 500; k++) { const v = 205 + (r2() - 0.5) * 36; g.fillStyle = rgb(v, v, v - 3, 0.25); g.fillRect(r2() * w, r2() * h, 1.3, 1.3); }
     g.fillStyle = '#bdbdb8'; g.fillRect(0, h * 0.5, w, 2); g.fillRect(w - 1, 0, 1, h);
-    // la fenêtre : 1,3 x 1,2 m, appui à 0,95 m au-dessus du plancher (le haut de la tuile est le plafond de l'étage)
-    const fw = 1.3 * mx, fh = 1.25 * my, fx = (w - fw) / 2, fy = h - (0.95 + 1.25) * my;
-    g.fillStyle = 'rgba(80,78,74,0.55)'; g.fillRect(fx - 4, fy - 4, fw + 8, fh + 8);           // l'ombre du tableau
+    // la fenêtre : 1,20 x 1,35 m, appui à 0,85 m au-dessus du plancher (le haut de la tuile est le plafond de l'étage)
+    const fw = F.l * mx, fh = (F.haut - F.bas) * my, fx = (w - fw) / 2, fy = h - F.haut * my;
+    // le tableau : vu d'en bas, le dessous du linteau dans l'ombre et un tableau gris d'un côté (photo 12)
     g.fillStyle = '#2b282a'; g.fillRect(fx, fy, fw, fh);
+    g.fillStyle = '#16161a'; g.fillRect(fx, fy, fw, 0.1 * my);
+    g.fillStyle = '#8b8a86'; g.fillRect(fx + fw - 0.07 * mx, fy + 0.1 * my, 0.07 * mx, fh - 0.1 * my);
+    // le vitrage : le ciel couvert en haut, les immeubles d'en face qui s'y reflètent en bas
+    const cad = Math.max(4, 0.075 * mx), ouv = Math.max(3, 0.045 * mx);
     const verre = g.createLinearGradient(0, fy, 0, fy + fh);
-    verre.addColorStop(0, '#9fb0c0'); verre.addColorStop(0.45, '#56636f'); verre.addColorStop(1, '#2e3640');
-    const cad = Math.max(3, 0.05 * mx), imp = fh * 0.3;
-    g.fillStyle = verre;
-    g.fillRect(fx + cad, fy + cad, fw - 2 * cad, imp - cad * 1.5);
-    g.fillRect(fx + cad, fy + imp + cad / 2, fw / 2 - cad * 1.5, fh - imp - cad * 1.5);
-    g.fillRect(fx + fw / 2 + cad / 2, fy + imp + cad / 2, fw / 2 - cad * 1.5, fh - imp - cad * 1.5);
-    // un store à moitié baissé dans une fenêtre sur trois, un reflet de ciel en biais
-    if (r2() < 0.6) { g.fillStyle = 'rgba(214,210,200,0.85)'; g.fillRect(fx + cad, fy + imp + cad / 2, fw - 2 * cad, (fh - imp) * 0.35); }
-    g.fillStyle = 'rgba(255,255,255,0.10)';
-    g.beginPath(); g.moveTo(fx + fw * 0.2, fy); g.lineTo(fx + fw * 0.5, fy); g.lineTo(fx + fw * 0.2, fy + fh); g.lineTo(fx - fw * 0.1, fy + fh); g.fill();
+    // (vus d'en bas, ces carreaux renvoient le ciel couvert : presque aussi clairs que lui — photo 12)
+    verre.addColorStop(0, '#eef3f8'); verre.addColorStop(0.55, '#d8e1ea'); verre.addColorStop(1, '#aab5bf');
+    g.fillStyle = verre; g.fillRect(fx + cad + ouv, fy + 0.1 * my + ouv, fw - 2 * cad - 2 * ouv - 0.07 * mx, fh - 0.1 * my - cad - 2 * ouv);
+    if (r2() < 0.5) { g.fillStyle = 'rgba(90,96,104,0.25)'; g.fillRect(fx + cad + ouv, fy + fh * 0.66, fw - 2 * cad - 2 * ouv - 0.07 * mx, fh * 0.26); }
+    // l'ouvrant : son cadre, plus mince, la poignée
+    g.strokeStyle = '#2b282a'; g.lineWidth = ouv; g.strokeRect(fx + cad + ouv / 2, fy + 0.1 * my + ouv / 2, fw - 2 * cad - ouv - 0.07 * mx, fh - 0.1 * my - cad - ouv);
+    g.fillStyle = '#9a9c9e'; g.fillRect(fx + fw - cad - 0.07 * mx - ouv - 4, fy + fh * 0.5, 3, 0.1 * my);
+    g.fillStyle = 'rgba(255,255,255,0.12)';
+    g.beginPath(); g.moveTo(fx + fw * 0.25, fy + 0.1 * my); g.lineTo(fx + fw * 0.5, fy + 0.1 * my); g.lineTo(fx + fw * 0.25, fy + fh); g.lineTo(fx + fw * 0.02, fy + fh); g.fill();
     // l'appui de pierre, et sa coulure
     g.fillStyle = '#c9c9c3'; g.fillRect(fx - 6, fy + fh, fw + 12, 0.05 * my);
     const cg = g.createLinearGradient(0, fy + fh, 0, fy + fh + 0.6 * my);
     cg.addColorStop(0, 'rgba(160,158,150,0.35)'); cg.addColorStop(1, 'rgba(160,158,150,0)');
     g.fillStyle = cg; g.fillRect(fx, fy + fh + 0.05 * my, fw, 0.6 * my);
   }, [1 / TRAVEE.u, 1 / TRAVEE.v], false, 8);
+}
+// LA FENÊTRE HAUTE D'UN ENCADREMENT ROUGE, dessinée (les étages dessinés, 3e à 5e) : le jour de l'encadrement, 1,15 x
+// 2,11 m — l'appui blanc, le grand carreau au ciel et sa pastille rouge, l'ouvrant étroit et sombre du côté `o`
+export function texFenetreCadre(o = 1) {
+  const J = CADRE.jour, W = 256, H = Math.round(W * (J.haut - J.bas) / J.l);
+  return canvasTex(W, H, (g, w, h) => {
+    const m = w / J.l, cad = 0.06 * m;
+    g.fillStyle = '#2b282a'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#efeee9'; g.fillRect(0, h - 0.05 * m, w, 0.05 * m);
+    const e = o ? CADRE.etroit * m : 0, xe = o > 0 ? w - e : 0, xg = o < 0 ? e : 0;
+    const verre = g.createLinearGradient(0, 0, 0, h);
+    verre.addColorStop(0, '#eaf0f5'); verre.addColorStop(0.55, '#cdd7e0'); verre.addColorStop(1, '#8f9aa5');
+    g.fillStyle = verre; g.fillRect(xg + cad, cad, w - e - 2 * cad, h - 0.05 * m - 2 * cad);
+    if (o) { g.fillStyle = '#34363a'; g.fillRect(xe + cad * 0.8, cad, e - 1.6 * cad, h - 0.05 * m - 2 * cad); g.fillStyle = '#4a4d52'; g.fillRect(xe + e / 2 - 1, cad, 2, h - 0.05 * m - 2 * cad); }
+    g.fillStyle = 'rgba(255,255,255,0.13)';
+    g.beginPath(); g.moveTo(xg + (w - e) * 0.3, cad); g.lineTo(xg + (w - e) * 0.55, cad); g.lineTo(xg + (w - e) * 0.3, h * 0.9); g.lineTo(xg + (w - e) * 0.08, h * 0.9); g.fill();
+    // la pastille des pompiers, à un mètre du plancher, près du bord du grand carreau opposé à l'ouvrant (photos 10, 16)
+    g.fillStyle = '#d8262c'; g.beginPath(); g.arc(o > 0 ? xg + (w - e) * 0.15 : o < 0 ? xg + (w - e) * 0.85 : w * 0.55, h - (1.0 - J.bas) * m, 0.075 * m, 0, 7); g.fill();
+  }, null, false, 4);
 }
 
 // =====================================================================
@@ -622,8 +662,10 @@ export function materiauxEcole() {
   M.noir = std({ color: 0x151517, roughness: 0.35 });
 
   // ---- la façade ----
-  M.pierre = std({ map: texPierre(), roughness: 0.82 }); M.pierre.name = 'pierre calcaire de la façade';
-  M.etage = std({ map: texEtage(), roughness: 0.7 }); M.etage.name = 'étages de la façade';
+  // (lot façade du 11/10 : mesurée sur les photos 12, 16, 17, 18 au même point de vue que le jeu, la pierre de l'école est
+  // d'un gris neutre — R/B 1,01-1,03 —, le jeu la rendait crème — R/B 1,13-1,15 — : une teinte froide la ramène)
+  M.pierre = std({ map: texPierre(), roughness: 0.82, color: TEINTE_PIERRE }); M.pierre.name = 'pierre calcaire de la façade';
+  M.etage = std({ map: texEtage(), roughness: 0.7, color: TEINTE_PIERRE }); M.etage.name = 'étages de la façade';
   for (const m of [M.pierre, M.etage]) jourDehors(m, 0.1);
 
   // ---- ce qui ÉCLAIRE (couleurs au-dessus de 1 : le bloom les fait briller) ----

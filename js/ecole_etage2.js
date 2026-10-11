@@ -74,7 +74,7 @@
 import * as THREE from 'three';
 import { maille, boiteM, fusionnerLocal } from './ecole_portes.js';
 import { canvasTex, nePasFusionner, detailPhoto } from './kit_decor.js';
-import { jourDehors, texPeinture, texPictoExtincteur, texConsignes } from './ecole_matieres.js';
+import { jourDehors, texPeinture, texPictoExtincteur, texConsignes, CADRE, cadreEn, FENETRE_ETAGE, TEINTE_PIERRE } from './ecole_matieres.js';
 import { cuireLumiereSol } from './ecole_lumieres.js';
 import { TELEPHONE } from './appareil.js';
 import { EST, ROUGE_2E, poserCageHaute } from './ecole_est.js';
@@ -483,7 +483,7 @@ export function poserEtage2(ch, renderer = null) {
     // (10/10, q_0305 et q_0331 : la marine est éteinte, presque grise ; le damier de la salle 2 à peine marqué)
     moquette1: std({ map: texMoquette([40, 43, 60], [54, 55, 61], 5), roughness: 0.971 }, 'moquette marine (salle 1 du 2e)'),
     moquette2: std({ map: texMoquette([50, 49, 51], [63, 60, 60], 6), roughness: 0.962 }, 'moquette anthracite (salle 2 du 2e)'),
-    pierre: jourDehors(std({ map: texPierreEtage(), roughness: 0.75 }, 'pierre de la façade (2e)'), 0.1),
+    pierre: jourDehors(std({ map: texPierreEtage(), roughness: 0.75, color: TEINTE_PIERRE }, 'pierre de la façade (2e)'), 0.1),
     enduit: jourDehors(std({ color: 0xd8d6cf, roughness: 0.92 }, 'enduit de la façade arrière'), 0.12),
     plinthe: std({ color: 0x6e6358, roughness: 0.5 }, 'plinthe taupe foncé (couloir du 2e)'),
     plinthePal: std({ color: 0x5b544d, roughness: 0.5 }, 'plinthe gris foncé (palier du 2e)'),
@@ -510,8 +510,13 @@ export function poserEtage2(ch, renderer = null) {
   detailPhoto(X.rouge, 'beton', 1, 1, { relief: 0.035, grain: 0, rugo: false });
   // le jour des fenêtres côté cour (non éclairé : il éclaire) et la vitre vue de dehors
   const ciel = new THREE.MeshBasicMaterial({ map: texCielCour(), color: new THREE.Color(1.12, 1.14, 1.17) }); ciel.name = 'le jour côté cour';
-  const vitreDehors = new THREE.MeshStandardMaterial({ color: 0x4d5862, roughness: 0.05, metalness: 0.6, transparent: true, opacity: 0.55, depthWrite: false, envMapIntensity: 1.5 });
+  // (lot façade du 11/10 : comme au 1er — photos 11, 12, 17, 18 : la rue et le ciel dans les vitres, pas de store —,
+  // plus couvrante et plus claire : 0,55 -> 0,78, #4D5862 -> #76828C)
+  const vitreDehors = new THREE.MeshStandardMaterial({ color: 0x76828c, roughness: 0.05, metalness: 0.6, transparent: true, opacity: 0.78, depthWrite: false, envMapIntensity: 1.5 });
   vitreDehors.name = 'vitre du 2e vue de dehors';
+  // (l'allège vitrée de la fenêtre encadrée de rouge, travée 7 : un verre sombre qui renvoie la rue, comme le carreau)
+  const allegeVitree = new THREE.MeshStandardMaterial({ color: 0x66717b, roughness: 0.06, metalness: 0.6, envMapIntensity: 1.5 });
+  allegeVitree.name = 'allège vitrée (travée 7 du 2e)';
   const storeFerme = new THREE.MeshStandardMaterial({ map: texStoreFerme(), roughness: 0.7 }); storeFerme.name = 'store baissé';
   const storesOuverts = new THREE.MeshStandardMaterial({ map: texStoresOuverts(), roughness: 0.7, alphaTest: 0.5, side: THREE.DoubleSide }); storesOuverts.name = 'stores à lamelles ouverts';
   const matDalle = new THREE.MeshBasicMaterial({ map: texGrille(), color: new THREE.Color(0xfff1dc).multiplyScalar(1.75) }); matDalle.name = 'luminaire à grille allumé (2e)';
@@ -1019,10 +1024,10 @@ export function poserEtage2(ch, renderer = null) {
     B(17.45, Y_RUE - EP / 2 - 0.12, 17.7, Y_RUE - EP / 2, N2 + 1.0, N2 + 1.9, M.noirMat, { ombre: false });
     panneau(matPan(texRangeDocs(), 0.5), 0.25, 0.9, 17.575, Y_RUE - EP / 2 - 0.122, N2 + 1.45, 'S');
     // LES TRUMEAUX blancs saillants entre les fenêtres, les colonnes de prises à leur pied, sur l'allège
-    // (la fenêtre 7, dans son encadrement rouge, a 1,20 m : construireFacades)
+    // (la fenêtre 7, dans son encadrement rouge, a 1,15 m, les autres 1,20 : construireFacades)
     // (plan V2, etage2.md § 3 : sur la VO, de gros piliers blancs très lisibles à contre-jour — faces de ≈ 0,4 m, 0,25 à
     // 0,30 de saillie, q_0320-0326 — ; à 0,20, on ne les voyait presque pas : 0,28)
-    const demi = (k) => (k === 7 ? 0.6 : 0.65);
+    const demi = (k) => (cadreEn(k, 2) ? CADRE.jour.l : FENETRE_ETAGE.l) / 2;     // (lot façade : 1,15 et 1,20)
     for (let k = 7; k < 11; k++) {
       const xa = centreTravee(k) + demi(k), xb = centreTravee(k + 1) - demi(k + 1);
       B(xa, 0, xb, 0.28, N2, H_SALLE, B0, { ombre: false, collision: true });
@@ -1076,13 +1081,26 @@ export function poserEtage2(ch, renderer = null) {
     // brun-noir de 7 cm, la poignée à gauche vue de la salle (à l'est), à mi-hauteur —, sans meneau ni imposte ; dehors,
     // sur les photos 11 et 12, la rangée du 2e aussi. L'allège est à 0,84 sur q_0322 calée sur les travées (0,75-0,84 sur
     // q_0326) : 0,85 au lieu de 0,95, le haut reste à 2,20 ; la fenêtre 7 garde le jour de son encadrement rouge)
-    const F = [];
+    // (lot façade du 11/10 : la photo 12 redressée donne au 2e la fenêtre de tous les étages, 1,22 x 1,35 — la VO 1,18 x
+    // 1,33 — : 1,20 et non 1,30. L'encadrement rouge de la travée 7 est plus haut que large et descend sous le plancher
+    // (js/ecole_matieres.js CADRE) : dehors, son jour est vitré de 6 cm au-dessus du plancher jusqu'à 2,17 ; dedans, la
+    // VO q_0319-0322 y montre une fenêtre comme les autres, appui à 0,85 — sous elle, une allège pleine, vitrée de sombre
+    // côté rue)
+    const F = [], J = CADRE.jour;
     for (let k = 1; k <= 12; k++) {
-      const cadre = k === 7;
-      F.push({ c: centreTravee(k), l: cadre ? 1.2 : 1.3, bas: N2 + (cadre ? 1.0 : 0.85), haut: N2 + (cadre ? 2.15 : 2.2), ferme: k < 7 || k > 11 });
+      const cadre = cadreEn(k, 2);
+      F.push({ c: centreTravee(k), l: cadre ? J.l : FENETRE_ETAGE.l, bas: N2 + FENETRE_ETAGE.bas, haut: N2 + (cadre ? J.haut : FENETRE_ETAGE.haut), ferme: k < 7 || k > 11, cadre });
     }
-    mur({ de: [-0.3, -0.2], a: [20.1, -0.2], ep: 0.4, h: N3, mats: { N: M.blanc, S: X.pierre }, ouvertures: F.map((f) => ({ c: f.c, l: f.l, bas: f.bas, h: f.haut })) });
+    mur({ de: [-0.3, -0.2], a: [20.1, -0.2], ep: 0.4, h: N3, mats: { N: M.blanc, S: X.pierre }, ouvertures: F.map((f) => ({ c: f.c, l: f.l, bas: f.cadre ? N2 + J.bas : f.bas, h: f.haut })) });
     for (const f of F) {
+      if (f.cadre) {
+        // l'allège de la fenêtre encadrée : vitrage sombre dans le plan de la menuiserie, blanc côté salle
+        const x0 = f.c - f.l / 2, x1 = f.c + f.l / 2;
+        B(x0, -0.185, x1, -0.165, N2 + J.bas, f.bas, allegeVitree, { ombre: false });
+        B(x0, -0.165, x1, 0, N2 + J.bas, f.bas, M.blanc, { ombre: false });
+        B(x0, -0.4, x1, -0.185, N2 + J.bas - 0.02, N2 + J.bas, M.blanc, { ombre: false });
+        C.ajouterBoite(x0, 0.4, x1, 0, { y0: N2 + J.bas, y1: f.bas });
+      }
       fenetreRue(f);
       const r = new THREE.Mesh(new THREE.PlaneGeometry(f.l - 0.1, f.haut - f.bas - 0.1), vitreDehors);
       r.position.set(f.c, (f.bas + f.haut) / 2, 0.158); r.castShadow = false; fixe.add(r);
