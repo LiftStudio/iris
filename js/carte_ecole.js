@@ -941,7 +941,9 @@ export function construireCarte(scene, renderer = null) {
     // pile, et devant elle l'entrée du C01 ; au sud, la Si 0.1, le bureau B et le passage de la pile ; au nord, le fond)
     [5.3, -0.4, 13.5, ATT.ys, 'ns', 1.75, 0], [5.3, ATT.ys, 13.5, ATT.yn, 'ew', 5.8, ATT.ys],
     // (le hall ; au nord, le lino du couloir est et de l'escalier est remplace le carrelage : js/ecole_est.js)
-    [13.5, -0.4, 20.1, 7.575, 'ns', 1.75, 0], [13.5, 7.575, 14.6, 20.75, 'ns', 1.75, 0], [14.6, 12.45, 20.1, 20.75, 'ns', 1.75, 0],
+    // (plan V2, lot H, 11/10 : la partie est s'arrête en y 13,8 — IGN, gabarit_reel.md ; plus de carrelage au nord de
+    // y 13,5 : le local de 0,9 m et le mur du fond, js/ecole_est.js fondPartieEst)
+    [13.5, -0.4, 20.1, 7.575, 'ns', 1.75, 0], [13.5, 7.575, 14.6, 13.5, 'ns', 1.75, 0], [14.6, 12.45, 20.1, 13.5, 'ns', 1.75, 0],
     // (V2, 11/10 — le fond, au nord du mur des portes de l'escalier (Y_ESC) et du mur safran (y 7,875) : la cage, le C05 et
     // l'entrée de la salle David Clark, les toilettes, le local, la PMR, le C01, puis la salle David Clark. Rien au-delà
     // de y 21,075 : le bâtiment s'arrête à 23,7 (IGN) et les locaux fermés du fond n'ont pas de sol ; la réserve ouest non
