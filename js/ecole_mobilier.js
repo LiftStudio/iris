@@ -151,12 +151,12 @@ export function poserMobilier(ch) {
   // =====================================================================
   // la rangée nord, dos au mur safran, tournée vers le sud ; la rangée sud sous les jours dépolis, tournée vers le nord
   // (11/10, r02 : l'ordre et les couleurs se relisent tels quels — au nord, d'ouest en est, blanc, canard, grège, citron,
-  // blanc ; au sud, noir, rose, canard sous le jour ouest. La rangée nord recule de 5 cm : sur les photos, le haut des
-  // dossiers touche la lisse blanche du mur safran)
+  // blanc ; au sud, noir, rose, canard sous le jour ouest — 10 cm plus à l'ouest, la borne est à côté. La rangée nord
+  // recule de 2 cm : sur les photos, le haut des dossiers touche la lisse blanche du mur safran)
   [[6.5, 'blanc'], [7.2, 'canard'], [7.9, 'grege'], [8.6, 'citron'], [9.3, 'blanc']].forEach(([x, c]) => chaise(ch, x, 7.42, 'S', COQUE[c]));
-  [[6.3, 'noir'], [7.0, 'rose'], [7.7, 'canard']].forEach(([x, c]) => chaise(ch, x, A(9.45), 'N', COQUE[c]));
+  [[6.2, 'noir'], [6.9, 'rose'], [7.6, 'canard']].forEach(([x, c]) => chaise(ch, x, A(9.45), 'N', COQUE[c]));
   C.ajouterBoite(6.15, -7.75, 9.65, -7.05, { y1: 0.8 });
-  C.ajouterBoite(5.95, -A(9.8), 8.05, -A(9.1), { y1: 0.8 });
+  C.ajouterBoite(5.85, -A(9.8), 7.95, -A(9.1), { y1: 0.8 });
   // l'écran de 65 pouces (x 6,5-7,95, h 1,55-2,40) et l'affiche blanche aux graphismes vert pâle (x 8,4-9,4)
   ch.boite(6.5, A(11.94), 7.95, A(12.0), 1.55, 2.4, M.noir);
   ch.panneau(new THREE.MeshBasicMaterial({ map: texEcran(), color: new THREE.Color(1.25, 1.25, 1.25) }), 1.39, 0.79, 7.225, A(11.935), 1.975, 'S');
@@ -166,12 +166,13 @@ export function poserMobilier(ch) {
   // peu à l'écart à droite du pilier ; son écran montre une mosaïque de vraies photos en couleurs — dans le jeu, elle est
   // collée au pilier et montre des pictogrammes de personnages bleus »). Sur la photo 21 en pleine définition, vue du bout
   // ouest : à droite du pilier, à 50 px de lui, devant le bout est du jour c 8,35 — le haut de son cadre dépasse au-dessus
-  // d'elle —, le pied de son socle à 4 m de l'appareil : (8,75 ; 5,2), le dos à 0,15 m du mur sud, tournée vers le
-  // nord-ouest (on voit son écran et, à droite, son flanc) ; elle laisse libre le jambage ouest de la porte de la Si 0.1.
+  // d'elle —, le pied de son socle à 4 m de l'appareil : (8,4 ; 5,14), le dos contre le mur sud, tournée vers le
+  // nord-ouest (on voit son écran et, à droite, son flanc) ; entre elle et le pilier, 1 m : le passage vers la porte de
+  // la Si 0.1.
   // Le socle est une plaque noire de 0,62 x 0,42, épaisse de 2,5 cm, qui avance devant l'écran ; le fût de 1,92 m, un rien
   // renversé ; l'écran de 0,54 x 1,28, de 0,6 à 1,88 m — dessous, le pied noir du fût et son petit logo.
   {
-    const bx = 8.75, by = 5.2, th = -2.53;
+    const bx = 8.4, by = 5.14, th = -2.53;
     const borne = new THREE.Group(); borne.position.set(bx, 0, -by); borne.rotation.y = th; ch.decor.add(borne);
     maille(boiteM(0.62, 0.025, 0.42), M.noir, 0, 0.0125, 0.1, 0, borne);
     const fut = new THREE.Group(); fut.position.y = 0.025; fut.rotation.x = -0.025; borne.add(fut);
@@ -256,19 +257,19 @@ export function poserMobilier(ch) {
   const hp = new THREE.Group(); hp.position.set(13.24, 2.32, -5.0); ch.decor.add(hp);
   maille(boiteM(0.1, 0.17, 0.13), M.boitier, 0, 0, 0, 0, hp, { ombre: false });
   maille(new THREE.CylinderGeometry(0.035, 0.035, 0.01, 16), M.grille, -0.051, 0.01, 0, 0, hp, { ombre: false }).rotation.z = Math.PI / 2;
-  // les affiches du pilier gris (planté dans la salle, x 9,45-10,05 × y 5,5-6,1 : js/carte_ecole.js, retour r02)
+  // les affiches du pilier gris (planté dans la salle, x 9,71-10,31 × y 5,23-5,83 : js/carte_ecole.js, retour r02)
   // (r02, photo 21 en pleine définition : sur sa face OUEST, l'affiche blanche aux dessins de couleur, de 1,48 à 2,12, et
   // l'orange dessous, de 1,0 à 1,45 ; sur sa face NORD, deux feuilles l'une sur l'autre — une crème en haut, une rouge
   // en bas —, près de l'angle nord-ouest ; la feuille verte unique du jeu n'y est pas)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheDessins(), roughness: 0.7 }), 0.44, 0.64, 9.444, 5.8, 1.8, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheOrange(), roughness: 0.7 }), 0.32, 0.45, 9.444, 5.8, 1.23, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e9dcc0', '#f8f3e6', 70), roughness: 0.7 }), 0.24, 0.44, 9.65, 6.106, 1.71, 'N');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c9443f', '#f4e4e0', 71), roughness: 0.7 }), 0.24, 0.42, 9.65, 6.106, 1.22, 'N');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheDessins(), roughness: 0.7 }), 0.44, 0.64, 9.704, 5.53, 1.8, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheOrange(), roughness: 0.7 }), 0.32, 0.45, 9.704, 5.53, 1.23, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e9dcc0', '#f8f3e6', 70), roughness: 0.7 }), 0.24, 0.44, 9.86, 5.836, 1.71, 'N');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c9443f', '#f4e4e0', 71), roughness: 0.7 }), 0.24, 0.42, 9.86, 5.836, 1.22, 'N');
   // (10/10, VO q_0039-0050 : sa face EST, vers le hall — l'A3 bleu-gris au dessin d'écran d'ordinateur, de 1,5 à 1,9 m,
   // et l'A4 blanche à vignettes de photos dessous. La plaque « iris », l'annuaire et l'horloge qu'il portait sur sa face
   // sud sont sur la pile du hall : js/ecole_rdc_centre.js)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texEcranA3(), roughness: 0.7 }), 0.3, 0.42, 10.056, 5.8, 1.7, 'E');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texVignettes(), roughness: 0.7 }), 0.21, 0.297, 10.056, 5.8, 1.25, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texEcranA3(), roughness: 0.7 }), 0.3, 0.42, 10.316, 5.53, 1.7, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texVignettes(), roughness: 0.7 }), 0.21, 0.297, 10.316, 5.53, 1.25, 'E');
   // LES AFFICHES COLLÉES SUR LE VERRE (retour de Haythem du 11/10, r02 : « les affiches sont collées sur le verre » — elles
   // flottaient à 8 cm devant lui, au nu du mur). Sur la photo 21 en pleine définition, deux grandes affiches, l'une sur
   // l'autre, sur la moitié est du jour OUEST (c 6,65) : en haut, une blanche à titre rouge (0,42 x 0,48), en bas, une
@@ -373,71 +374,75 @@ export function poserMobilier(ch) {
 
 // ---- les petites textures du mobilier ----
 // L'ÉCRAN DE LA BORNE (photo 21) : une mosaïque de PHOTOS d'étudiants — des vignettes à dominante bleue et grise, des
-// visages, quelques touches chaudes —, pas des aplats de couleurs vives (09/10). Chaque vignette : un ciel ou un mur en
-// dégradé, une silhouette sombre, un visage clair.
+// visages, quelques touches chaudes —, pas des aplats de couleurs vives (09/10).
 // (Retour de Haythem du 11/10, r02 : « dans le jeu, l'écran montre des pictogrammes de personnages bleus ; sur la photo,
-// une mosaïque de vraies photos en couleurs ». Refaite : un collage sur deux colonnes de vignettes de hauteurs inégales,
-// comme sur la photo 21 en pleine définition — des scènes, pas des icônes : groupes d'étudiants devant un mur ou le ciel,
-// une salle d'ordinateurs, une façade sous le ciel, un portrait serré, une affiche de couleur ; fonds dominés par le bleu
-// ciel et le blanc, des touches chaudes ; le tout adouci d'un flou d'objectif et d'un grain, pour que l'œil y lise des
-// photos.)
+// une mosaïque de vraies photos en couleurs ». Relue sur la photo 21 en pleine définition : TROIS colonnes de trois
+// grandes vignettes en hauteur, séparées d'un filet sombre — des photos d'étudiants et des couvertures de plaquettes,
+// toutes baignées d'un bleu ciel pâle, leurs sujets en bruns, gris et bleu nuit ; une bande saumon dans la vignette du
+// milieu, une couverture bleu nuit à titre jaune en bas. Pour qu'on y lise des PHOTOS et non des icônes, chaque vignette
+// est peinte comme une photo floue : un décor fait de dizaines de taches de lumière et d'ombre, des gens de toutes
+// tailles, penchés, coupés par le bord, serrés les uns contre les autres, puis le tout passé au flou d'objectif, teinté
+// du bleu de l'écran et grainé.)
 function texMosaique() {
-  return canvasTex(256, 608, (g, w, h) => {
-    let germe = 7;
+  return canvasTex(384, 912, (g, w, h) => {
+    let germe = 11;
     const rnd = () => { germe = (germe * 16807) % 2147483647; return germe / 2147483647; };
     const choix = (t) => t[Math.floor(rnd() * t.length)];
-    g.fillStyle = '#07080a'; g.fillRect(0, 0, w, h);
-    const peaux = ['#e9c4a6', '#d7a07c', '#b9805c', '#8d5a3f', '#f1d2b8', '#a46b4c'], cheveux = ['#1b1410', '#3a2618', '#5b3a22', '#0e0e10', '#7a5634', '#c9a36b'];
-    const habits = ['#1f2f57', '#f2f2ee', '#b8302a', '#d9a32a', '#2c2c30', '#3f7f6b', '#6c8fc0', '#8a3d6e', '#e8e0d0'];
-    const personne = (x, y, r, dos = false) => {
-      g.fillStyle = choix(habits); g.beginPath(); g.ellipse(x, y + r * 2.9, r * 1.9, r * 2.1, 0, Math.PI, 0); g.fill();
-      g.fillRect(x - r * 1.9, y + r * 2.9, r * 3.8, r * 2);
-      g.fillStyle = choix(peaux); g.beginPath(); g.ellipse(x, y + r * 0.2, r * 0.85, r, 0, 0, 7); g.fill();
-      g.fillStyle = choix(cheveux); g.beginPath(); g.ellipse(x, y - r * (dos ? -0.1 : 0.35), r * 0.92, r * (dos ? 1.0 : 0.62), 0, Math.PI, dos ? 3 * Math.PI : 0); g.fill();
+    g.fillStyle = '#0a0c10'; g.fillRect(0, 0, w, h);
+    const peaux = [[226, 188, 160], [205, 152, 118], [178, 124, 92], [132, 88, 62], [238, 206, 182], [160, 108, 80]];
+    const cheveux = [[29, 22, 18], [59, 42, 30], [90, 61, 38], [18, 18, 22], [122, 90, 58], [180, 142, 92]];
+    const habits = [[34, 46, 78], [222, 226, 230], [96, 104, 116], [60, 64, 70], [150, 112, 84], [44, 70, 110], [180, 92, 70], [120, 130, 140], [200, 190, 170]];
+    const decor = [[214, 222, 228], [176, 190, 204], [120, 140, 160], [196, 180, 160], [90, 100, 110], [230, 232, 230], [150, 160, 150]];
+    const rgb = (c, k = 1, a = 1) => `rgba(${Math.min(255, Math.round(c[0] * k))},${Math.min(255, Math.round(c[1] * k))},${Math.min(255, Math.round(c[2] * k))},${a})`;
+    const tache = (c, x, y, r, a) => { const gr = c.createRadialGradient(x, y, 0, x, y, r), col = choix(decor); gr.addColorStop(0, rgb(col, 1, a)); gr.addColorStop(1, rgb(col, 1, 0)); c.fillStyle = gr; c.fillRect(x - r, y - r, 2 * r, 2 * r); };
+    // UNE PERSONNE en volumes, un peu penchée : épaules et bras (plusieurs ellipses), buste éclairé d'en haut, cou, visage
+    // à modelé (clair au front, ombré à la mâchoire), cheveux, ombre portée floue sur le décor
+    const personne = (c, x, y, r) => {
+      const hab = choix(habits), p = choix(peaux), ch = choix(cheveux), a = (rnd() - 0.5) * 0.35;
+      c.save(); c.translate(x, y); c.rotate(a);
+      c.fillStyle = 'rgba(20,24,30,0.25)'; c.beginPath(); c.ellipse(r * 0.4, r * 3.4, r * 2.6, r * 2.6, 0, 0, 7); c.fill();
+      const dc = c.createLinearGradient(0, r * 1.2, 0, r * 6); dc.addColorStop(0, rgb(hab, 1.2)); dc.addColorStop(1, rgb(hab, 0.5)); c.fillStyle = dc;
+      c.beginPath(); c.ellipse(-r * 1.3, r * 2.8, r * 0.9, r * 1.6, 0.3, 0, 7); c.ellipse(r * 1.3, r * 2.8, r * 0.9, r * 1.6, -0.3, 0, 7); c.fill();
+      c.beginPath(); c.moveTo(-r * 2.2, r * 6.5); c.quadraticCurveTo(-r * 2.1, r * 1.8, 0, r * 1.6); c.quadraticCurveTo(r * 2.1, r * 1.8, r * 2.2, r * 6.5); c.fill();
+      c.fillStyle = rgb(p, 0.72); c.fillRect(-r * 0.33, r * 0.75, r * 0.66, r * 1.0);
+      const dv = c.createRadialGradient(-r * 0.25, -r * 0.3, r * 0.1, 0, 0, r * 1.2);
+      dv.addColorStop(0, rgb(p, 1.14)); dv.addColorStop(0.7, rgb(p, 0.92)); dv.addColorStop(1, rgb(p, 0.62));
+      c.fillStyle = dv; c.beginPath(); c.ellipse(0, 0, r * 0.8, r * 1.0, 0, 0, 7); c.fill();
+      c.fillStyle = rgb(ch); c.beginPath(); c.ellipse(0, -r * 0.48, r * 0.88, r * 0.6, 0, Math.PI * 1.0, Math.PI * 2.0); c.fill();
+      c.beginPath(); c.ellipse(rnd() < 0.5 ? -r * 0.5 : r * 0.5, -r * 0.2, r * 0.42, r * 0.7, 0, 0, 7); c.fill();
+      c.fillStyle = 'rgba(40,24,16,0.4)'; c.fillRect(-r * 0.36, -r * 0.05, r * 0.18, r * 0.07); c.fillRect(r * 0.18, -r * 0.05, r * 0.18, r * 0.07);
+      c.fillStyle = 'rgba(120,50,40,0.35)'; c.fillRect(-r * 0.2, r * 0.45, r * 0.4, r * 0.08);
+      c.restore();
     };
-    const scene = (x, y, cw, chh, type) => {
+    // une vignette est peinte à part, puis recopiée floutée, teintée du bleu de l'écran et grainée
+    const peindre = (cw, chh, type) => {
+      const cv = document.createElement('canvas'); cv.width = cw; cv.height = chh; const c = cv.getContext('2d');
+      const d = c.createLinearGradient(0, 0, 0, chh), f = type === 'couverture' ? ['#203c7a', '#13234a'] : choix([['#dbe9f0', '#8fa8ba'], ['#e8e4dc', '#a49c90'], ['#cfe3f0', '#7d97ab'], ['#f0ece6', '#b7aa98']]);
+      d.addColorStop(0, f[0]); d.addColorStop(1, f[1]); c.fillStyle = d; c.fillRect(0, 0, cw, chh);
+      if (type !== 'couverture') for (let i = 0; i < 40; i++) tache(c, rnd() * cw, rnd() * chh, 6 + rnd() * cw * 0.35, 0.18 + rnd() * 0.3);
+      if (type === 'saumon') { c.fillStyle = 'rgb(217,140,108)'; c.fillRect(cw * 0.3, 0, cw * 0.3, chh * 0.6); }
+      if (type === 'couverture') { c.fillStyle = '#e9c84a'; c.fillRect(8, 12, cw * 0.72, 11); c.fillRect(8, 30, cw * 0.46, 7); }
+      if (type === 'salle') {
+        for (let i = 0; i < 4; i++) { c.fillStyle = 'rgba(40,46,56,0.9)'; c.fillRect(4 + i * cw / 4, chh * 0.42, cw / 4 - 6, chh * 0.13); c.fillStyle = 'rgba(160,205,236,0.9)'; c.fillRect(6 + i * cw / 4, chh * 0.43, cw / 4 - 10, chh * 0.1); }
+      }
+      // les gens : du plus loin au plus près, de plus en plus grands, coupés par les bords
+      const n = type === 'portrait' ? 1 : type === 'couverture' ? 1 : 3 + Math.floor(rnd() * 4);
+      for (let i = 0; i < n; i++) {
+        const t = n === 1 ? 1 : i / (n - 1), r = cw * (n === 1 ? 0.26 : 0.07 + 0.09 * t + rnd() * 0.03);
+        const x = n === 1 ? cw * (0.45 + rnd() * 0.1) : cw * (-0.05 + rnd() * 1.1), y = n === 1 ? chh * 0.32 : chh * (0.3 + 0.35 * t + rnd() * 0.08);
+        personne(c, x, y, r);
+      }
+      return cv;
+    };
+    const grille = [['groupe', 'portrait', 'groupe'], ['portrait', 'saumon', 'groupe'], ['groupe', 'couverture', 'salle']];
+    const m = 6, cw = Math.floor((w - 4 * m) / 3), chh = Math.floor((h - 4 * m) / 3);
+    for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) {
+      const x = m + i * (cw + m), y = m + j * (chh + m), cv = peindre(cw, chh, grille[j][i]);
       g.save(); g.beginPath(); g.rect(x, y, cw, chh); g.clip();
-      g.filter = 'blur(0.7px)';
-      const d = g.createLinearGradient(0, y, 0, y + chh);
-      if (type === 0) {                // un groupe devant le ciel ou un mur clair
-        const f = choix([['#9cc9ec', '#e4f0f7'], ['#dfe6ec', '#b9c4cf'], ['#bfe0f5', '#f4f1ea'], ['#e9e2d6', '#c8b9a3']]);
-        d.addColorStop(0, f[0]); d.addColorStop(1, f[1]); g.fillStyle = d; g.fillRect(x, y, cw, chh);
-        const n = 2 + Math.floor(rnd() * 4), r = chh * (0.1 + rnd() * 0.05);
-        for (let i = 0; i < n; i++) personne(x + cw * (i + 0.5 + (rnd() - 0.5) * 0.4) / n, y + chh * (0.35 + rnd() * 0.15), r);
-      } else if (type === 1) {         // une salle d'ordinateurs : écrans bleus, dos des étudiants
-        d.addColorStop(0, '#d7dde3'); d.addColorStop(1, '#8a939c'); g.fillStyle = d; g.fillRect(x, y, cw, chh);
-        for (let i = 0; i < 4; i++) { const ex = x + 6 + i * (cw - 12) / 4; g.fillStyle = '#1d232b'; g.fillRect(ex, y + chh * 0.32, (cw - 12) / 4 - 6, chh * 0.24); g.fillStyle = choix(['#4f8fd6', '#6fb3e8', '#e8f1f8', '#3a6fb0']); g.fillRect(ex + 2, y + chh * 0.32 + 2, (cw - 12) / 4 - 10, chh * 0.24 - 5); }
-        g.fillStyle = '#c9c2b5'; g.fillRect(x, y + chh * 0.58, cw, chh * 0.07);
-        for (let i = 0; i < 3; i++) personne(x + cw * (0.2 + i * 0.3), y + chh * 0.66, chh * 0.11, true);
-      } else if (type === 2) {         // une façade sous le ciel
-        d.addColorStop(0, '#6fa8dc'); d.addColorStop(0.55, '#cfe3f2'); g.fillStyle = d; g.fillRect(x, y, cw, chh);
-        const t = choix(['#e2d6c2', '#cdbfa8', '#b8b4ae']); g.fillStyle = t; g.fillRect(x, y + chh * 0.3, cw, chh * 0.7);
-        g.fillStyle = 'rgba(40,52,66,0.85)';
-        for (let i = 0; i < 5; i++) for (let j = 0; j < 3; j++) g.fillRect(x + 6 + i * cw / 5, y + chh * (0.38 + j * 0.19), cw / 5 - 12, chh * 0.12);
-        g.fillStyle = '#5d8a4a'; g.fillRect(x, y + chh * 0.9, cw, chh * 0.1);
-      } else if (type === 3) {         // un portrait serré
-        const f = choix([['#f3efe8', '#d9d2c6'], ['#2d4f7a', '#16263c'], ['#e9b949', '#c47d2a'], ['#bcd7e8', '#7aa3c1']]);
-        d.addColorStop(0, f[0]); d.addColorStop(1, f[1]); g.fillStyle = d; g.fillRect(x, y, cw, chh);
-        personne(x + cw * (0.4 + rnd() * 0.2), y + chh * 0.3, chh * 0.2);
-      } else {                         // une affiche de couleur : aplat, titre, ligne de texte
-        g.fillStyle = choix(['#e86a2a', '#2a63b8', '#f2f2ee', '#7b2a6e', '#14935f', '#f2b705']); g.fillRect(x, y, cw, chh);
-        g.fillStyle = 'rgba(255,255,255,0.92)'; g.fillRect(x + 8, y + chh * 0.25, cw * 0.7, chh * 0.12); g.fillRect(x + 8, y + chh * 0.45, cw * 0.5, chh * 0.07);
-        g.fillStyle = 'rgba(20,20,20,0.55)'; g.fillRect(x + 8, y + chh * 0.7, cw * 0.6, 4); g.fillRect(x + 8, y + chh * 0.78, cw * 0.45, 4);
-      }
-      g.filter = 'none';
-      for (let i = 0; i < 140; i++) { g.fillStyle = rnd() < 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'; g.fillRect(x + rnd() * cw, y + rnd() * chh, 2, 2); }
+      g.filter = 'blur(1.6px) saturate(0.9)'; g.drawImage(cv, x, y); g.filter = 'none';
+      g.fillStyle = 'rgba(110,190,240,0.34)'; g.fillRect(x, y, cw, chh);
+      for (let k = 0; k < cw * chh / 30; k++) { g.fillStyle = rnd() < 0.5 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.09)'; g.fillRect(x + rnd() * cw, y + rnd() * chh, 1.5, 1.5); }
       g.restore();
-    };
-    const types = [0, 1, 0, 3, 2, 0, 4, 3, 0, 1, 2, 0, 3, 4];
-    let k = 0;
-    for (const [x0, cw] of [[4, 122], [130, 122]]) {
-      let y = 4 + (x0 > 100 ? 26 : 0);
-      if (x0 > 100) scene(x0, 4, cw, 22, 4);
-      while (y < h - 4) {
-        const chh = Math.min(h - 4 - y, 70 + Math.floor(rnd() * 70));
-        if (chh > 18) scene(x0, y, cw, chh, types[k++ % types.length]);
-        y += chh + 4;
-      }
     }
   }, null, false, 4);
 }
@@ -529,20 +534,25 @@ function texAfficheVignettesCouleur() {
 }
 // LES BROCHURES du présentoir (photos 01, 21) : des couvertures de magazine — fond blanc ou clair, une grande photo aux
 // tons doux, un bandeau de titre de couleur — et non des tranches de couleurs vives (09/10)
+// (11/10, r02 : sur la photo 21 en pleine définition, QUATRE couvertures par tablette, de la taille d'un A5, qui se
+// chevauchent un peu — lilas, vert pomme, blanc, gris, une rouge — et non neuf vignettes étroites de 7 cm)
 function texBrochures() {
   return canvasTex(512, 168, (g, w, h) => {
     g.fillStyle = '#111'; g.fillRect(0, 0, w, h);
-    const fonds = ['#f4f2ee', '#eceae4', '#f6f4f0', '#dfe4ea', '#f2efe8'];
-    const photos = [['#8aa0b8', '#4e5f73'], ['#c8a07a', '#6e4e38'], ['#9fb39a', '#4f6650'], ['#b9b4c8', '#5d566e'], ['#d6c2a8', '#7d6650'], ['#7f95a8', '#3a4a5c']];
-    const titres = ['#e04e3a', '#2f6fb0', '#f2b705', '#7b2a6e', '#3e9b6b', '#f08a3c', '#222222'];
-    for (let i = 0; i < 9; i++) {
-      const x = 6 + i * 56, y = 10, cw = 50, chh = h - 20;
-      g.fillStyle = fonds[i % fonds.length]; g.fillRect(x, y, cw, chh);
-      const p = photos[(i * 4 + 1) % photos.length], d = g.createLinearGradient(0, y + 18, 0, y + chh - 16);
-      d.addColorStop(0, p[0]); d.addColorStop(1, p[1]); g.fillStyle = d; g.fillRect(x + 3, y + 18, cw - 6, chh - 38);
-      g.fillStyle = 'rgba(240,226,210,0.8)'; g.beginPath(); g.arc(x + cw * 0.55, y + 50, 7, 0, 7); g.fill();
-      g.fillStyle = titres[(i * 3) % titres.length]; g.fillRect(x + 3, y + 4, cw - 6, 10);
-      g.fillStyle = 'rgba(40,40,40,0.55)'; g.fillRect(x + 4, y + chh - 14, cw * 0.7, 3); g.fillRect(x + 4, y + chh - 8, cw * 0.5, 3);
+    const fonds = ['#ece6f2', '#eef3e6', '#f6f4f0', '#e2e4e8', '#f4ece8', '#e9e4f0'];
+    const photos = [['#b3a2cf', '#5f4e86'], ['#a9c98a', '#4f7a3a'], ['#c8a07a', '#6e4e38'], ['#9aa8b8', '#4e5a6c'], ['#d98a7a', '#8a3a30'], ['#c4b6dc', '#6a5a92']];
+    const titres = ['#7b4fb0', '#5aa33e', '#e04e3a', '#2f6fb0', '#222222', '#9a62c8'];
+    for (let r = 0; r < 2; r++) for (let i = 0; i < 4; i++) {
+      const k = r * 4 + i, x = 6 + i * 126 + (r ? 60 : 0), y = r ? 30 : 6, cw = 118, chh = h - 12 - (r ? 24 : 0);
+      if (r && i === 3) continue;
+      g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(x + 4, y + 4, cw, chh);
+      g.fillStyle = fonds[k % fonds.length]; g.fillRect(x, y, cw, chh);
+      const p = photos[(k * 5 + 2) % photos.length], d = g.createLinearGradient(0, y + 26, 0, y + chh - 22);
+      d.addColorStop(0, p[0]); d.addColorStop(1, p[1]); g.fillStyle = d; g.fillRect(x + 5, y + 26, cw - 10, chh - 50);
+      g.fillStyle = 'rgba(240,222,204,0.85)'; g.beginPath(); g.ellipse(x + cw * (0.35 + (k % 3) * 0.15), y + 62, 10, 12, 0, 0, 7); g.fill();
+      g.fillStyle = 'rgba(30,30,40,0.55)'; g.beginPath(); g.ellipse(x + cw * (0.35 + (k % 3) * 0.15), y + 98, 20, 22, 0, Math.PI, 0); g.fill();
+      g.fillStyle = titres[k % titres.length]; g.fillRect(x + 5, y + 5, cw - 10, 16);
+      g.fillStyle = 'rgba(40,40,40,0.55)'; g.fillRect(x + 6, y + chh - 18, cw * 0.7, 4); g.fillRect(x + 6, y + chh - 10, cw * 0.5, 4);
     }
   }, null, false, 4);
 }

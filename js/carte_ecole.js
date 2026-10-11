@@ -850,15 +850,15 @@ function construireMurs(ch) {
   // du 11/10 : à la pose de la photo 21 résolue sur ses deux jours dépolis et le bout du mur jaune, (4,94 ; 7,33), h 1,45,
   // cap 110,7, les jours, le mur jaune et le présentoir tombent à leur place, mais le pilier et la borne 0,7 m trop au
   // nord ; or la photo 02 ne laisse le pilier au bord gauche de son cadre que là où il est : gardé, le doute demeure)
-  // (Retour de Haythem du 11/10, r02 — la photo 21 en pleine définition, 1 848 x 4 000 — : le pilier recule de 0,85 m vers
-  // l'OUEST, x 9,45-10,05. Vu du bout ouest, sur la photo, il se lève juste à droite de l'angle de la pile, son pied à 4 m
-  // de l'appareil ; dans le jeu, il était 7,5° trop à gauche et 1,5 m trop loin. Mais la photo 02 le veut au bord gauche de
-  // son cadre : c'est lui, la bande grise des 15 premiers pixels, son pied à 1,6-1,8 m de l'appareil, (9,7-10,0 ; 5,85-6,05)
-  // pour son angle nord-est — et la VO q_0036 tire son angle nord-est sur la même droite. x 9,45-10,05 est la place la plus
-  // à l'ouest que la photo 02 tolère (son angle nord-est à 13 px du bord) ; vu du bout ouest, l'écart à r02 tombe de 7,5° à
-  // 3,5°. Les photos 21 et 02 le voudraient aussi à 0,4 m du mur sud ; il en reste à 0,625 (y 5,5) : le passage qu'il faut
-  // à Haythem pour atteindre la porte de la Si 0.1, qui est derrière lui.)
-  pilier(9.45, 5.5, 10.05, 6.1, M.pilier);
+  // (Retour de Haythem du 11/10, r02 — la photo 21 en pleine définition, 1 848 x 4 000 — : le pilier recule de 0,6 m vers
+  // l'OUEST et de 0,3 m vers le SUD, x 9,71-10,31 × y 5,23-5,83. Vu du bout ouest, sur la photo, il se lève juste à droite
+  // de l'angle de la pile, son pied à 4 m de l'appareil et à 0,4 m du mur sud ; dans le jeu, il était 7,5° trop à gauche
+  // et 1,5 m trop loin. La photo 02, elle, le voit au bord gauche de son cadre : c'est lui, la bande grise des 15 premiers
+  // pixels — son angle nord-ouest, dont le pied est à 1,8 m de l'appareil : (9,71 ; 5,83). Ces deux contraintes réunies
+  // donnent cette place ; vu du bout ouest, l'écart à r02 tombe de 7,5° à 2,5° (le jeu le veut d'un rien plus à l'est que
+  // la photo 21 : seule la photo 02, dont la pose est sûre — 12 points, 8,6 px —, le place en absolu). La porte de la Si 0.1
+  // reste atteignable par sa moitié ouest, entre la borne et lui.)
+  pilier(9.71, 5.23, 10.31, 5.83, M.pilier);
   // ---- LE HALL D'ENTRÉE ----
   // (09/10, photo 24 : la porte du mur nord n'est pas en x 17 mais en face de la porte 6 — 1,5 vantail, x 14,70-16,10 ;
   // à l'est, la cloison vitrée cannelée, le photocopieur devant elle côté hall (10/10 : l'angle nord-est est ouvert, VO
@@ -1059,9 +1059,14 @@ export function construireCarte(scene, renderer = null) {
   // (Retour de Haythem du 11/10, r02 — le plafond : le long du mur sud, sur la photo 21 en pleine définition comme sur la
   // photo 02, les plateaux perforés laissent place à une BANDE de dalles lisses, large d'une dalle, un rien plus basse — un
   // ressaut de 2 cm, le trait clair au-dessus du jour c 8,35 —, où sont pris les spots de la rangée sud)
-  ch.plafond(6.5, ATT.ys + 0.675, 13.5, ATT.yn - 0.075, 2.6, 'plateaux');
-  ch.plafond(6.5, ATT.ys, 13.5, ATT.ys + 0.675, 2.58, 'dalles');
-  ch.plafond(5.3, ATT.ys, 6.5, ATT.yn - 0.075, 2.6, 'dalles', { retombees: false });
+  // (r02 encore : vu du bout ouest, les plateaux perforés couvrent le plafond jusqu'au-dessus de l'appareil ; les dalles
+  // lisses de la photo 04 ne font qu'une rangée, x 5,3-5,9, au droit du pilier jaune. Et ce plafond est plus sombre et
+  // plus chaud que les murs — 0,6 de leur luminance, un beige où le rouge passe le bleu de moitié, quand le jeu le
+  // rendait aussi blanc qu'eux : une copie des plateaux, rien qu'ici, d'un ton chaud un peu éteint)
+  const chaudPlafond = (m) => { const c = m.material.clone(); c.color.multiply(new THREE.Color(0.93, 0.87, 0.76)); c.emissiveIntensity *= 0.6; m.material = c; return m; };
+  chaudPlafond(ch.plafond(5.9, ATT.ys + 0.675, 13.5, ATT.yn - 0.075, 2.6, 'plateaux'));
+  chaudPlafond(ch.plafond(5.9, ATT.ys, 13.5, ATT.ys + 0.675, 2.58, 'dalles'));
+  ch.plafond(5.3, ATT.ys, 5.9, ATT.yn - 0.075, 2.6, 'dalles', { retombees: false });
   ch.plafond(11.7, 7.8, 13.5, 14.4, 2.45, 'platre');                 // C01 (V2 : de l'entrée, y 7,8, au fond)
   ch.plafond(13.35, 0.3, 19.8, 7.5, 2.6, 'platre');                  // le hall d'entrée
   // le bureau B (visitable : js/ecole_pieces.js) et le passage au sud-ouest de la pile, d'un seul tenant (plateaux à 2,60)
