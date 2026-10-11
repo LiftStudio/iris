@@ -585,11 +585,18 @@ export function poserAmphi(ch, K) {
       b(x - 0.05, yb - 0.025, x + 0.05, yb + 0.075, 0, 0.01, Z.acier, { ombre: false });
     }
     b(xa, yb + 0.005, xb, yb + 0.045, 0.24, 0.28, Z.acier);
+    // LE RANG où Haythem se faufile jusqu'à sa place (js/player.js _glisserRang ; 11/10, finitions V2 : 61 places au milieu
+    // des rangs ne se prenaient pas en marchant) : la ligne libre entre le chant sud du plateau (yN - 0,42) et le nu des
+    // dossiers (yb + 0,06), à 0,63 du chant avant ; ses bouts à 0,31 de ceux du bloc, là où Haythem se tient, poussé contre
+    // lui — le passage ouest, l'allée, la porte verte ; le bout est du bloc est, contre le mur, est fermé
+    const yl = yN - 0.63;
+    const R = { nom: `rang ${k} (bloc ${xa < X_ALLEE ? 'ouest' : 'est'})`, sol: Y_SS, ax: xa - 0.34, az: -yl, bx: xb + 0.34, bz: -yl, fx: 0, fz: -1, sieges: [] };
     for (let i = 0; i < n; i++) {
       const x = xa + (i + 0.5) * p;
       fauteuil(x, yb);
       const v = Math.abs(x - voies[0]) < Math.abs(x - voies[1]) ? voies[0] : voies[1];
-      siege(x, yb + 0.3, 0.47, 0, -1, v, yb + 0.3, 'le fauteuil');
+      const s = siege(x, yb + 0.3, 0.47, 0, -1, v, yb + 0.3, 'le fauteuil');
+      s.rang = R; R.sieges.push(s);
       nSieges++;
     }
     C.ajouterBoite(xa - 0.03, -yN, xb + 0.03, -(yb - 0.02), { y0: Y_SS, y1: Y_SS + 0.86 });

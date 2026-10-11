@@ -1038,10 +1038,17 @@ export function poserEtage2(ch, renderer = null) {
     // long des fenêtres, l'allée au milieu ; les élèves regardent l'est
     // (10/10, en jouant : rangs au pas de 1,15 m — au pas de 1,25 le dernier rang venait contre le vantail ouvert de la
     // porte D1, on n'entrait plus dans la salle ; le long du mur ouest, un passage de 0,7 m)
+    // (11/10, finitions V2 : les quatre places contre les fenêtres ne se prenaient pas en marchant — LE RANG où Haythem se
+    // faufile, js/player.js _glisserRang : entre le chant est de la table d'à côté, xr - 0,9, et le dos des chaises, xr -
+    // 0,755, de l'allée, y 2,02, à la place des fenêtres ; le 1er rang, x 11,6, se prend du passage du mur ouest)
     for (const xr of [16.2, 15.05, 13.9, 12.75, 11.6]) {
+      const R = xr > 12 ? { nom: `rang x ${xr} (salle 2)`, sol: N2, ax: xr - 0.825, az: -2.02, bx: xr - 0.825, bz: -0.72, ouvB: false, fx: 1, fz: 0, sieges: [] } : null;
       for (const [yc, allee] of [[3.58, 2.55], [1.05, 2.15]]) {
         table(xr, yc, 0.5, 1.3, { pied: X.chrome });
-        for (const s of [-1, 1]) chaiseLuge(xr - 0.55, yc + s * 0.33, 'E', { trous: true, coque: X.coque2, pied: X.chrome, sortie: [xr - 0.62, allee] });
+        for (const s of [-1, 1]) {
+          chaiseLuge(xr - 0.55, yc + s * 0.33, 'E', { trous: true, coque: X.coque2, pied: X.chrome, sortie: [xr - 0.62, allee] });
+          if (R && yc < 2) { const S = sieges[sieges.length - 1]; S.rang = R; R.sieges.push(S); }
+        }
       }
     }
   }

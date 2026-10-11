@@ -671,8 +671,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     ch.lampes.push(L); lampes.push(L);
   };
   // UN SIÈGE (js/game.js) : le point d'assise, sa hauteur au-dessus du sol, la direction regardée, le point où l'on se
-  // relève (en plan) ; `sol` : le -1
-  const siege = (x, y, h, fx, fz, sx, sy, nom) => sieges.push({ x, z: -y, y: h, fx, fz, sx, sz: -sy, nom, sol: Y_SS });
+  // relève (en plan) ; `sol` : le -1. Rend le siège (la grande salle y pose son rang : js/ecole_amphi.js)
+  const siege = (x, y, h, fx, fz, sx, sy, nom) => { const s = { x, z: -y, y: h, fx, fz, sx, sz: -sy, nom, sol: Y_SS }; sieges.push(s); return s; };
 
   // =====================================================================
   //  LE PALIER (au niveau 0, dans le décor du rez-de-chaussée : on le voit du hall ouest, porte ouverte)
