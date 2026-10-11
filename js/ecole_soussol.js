@@ -25,11 +25,13 @@
 // et la volée, le hall du -1, le couloir et l'entrée de l'espace pause forment avec elle une chaîne rigide : TOUT L'OUEST
 // DU -1 RECULE DE DY_SS = -4,09 (le palier, la volée, le hall, le couloir, la pause et son aile, le sas des toilettes, et
 // la grande salle derrière le mur vert, js/ecole_amphi.js). Les coordonnées ci-dessous sont celles d'après le décalage.
-// Avec lui : le COULOIR gagne 1,1 m (v_047 à v_051 : la plinthe du fond à 7,1-8,3 m), le REBORD du mitoyen reprend son
-// profil (de niveau, puis plongeant), l'EXTINCTEUR du hall descend et recule, l'espace pause se DÉGAGE (baby-foot
-// nord-sud, îlot de trois tables, l'aile sans meubles imaginés), et la grande salle RENTRE DANS LA PARCELLE. Rejoué au
-// jeu aux points de vue des images, trois cotes du plan ont été reprises : l'extincteur du hall (v_010), l'objet jaune du
-// rebord (v_010) et la cloison vitrée du mur vert (v_064 et 20,98 s) — chacune avec sa preuve, là où elle est posée.)
+// Avec lui : le REBORD du mitoyen reprend son profil (de niveau, puis plongeant), l'EXTINCTEUR du hall descend et
+// recule, l'espace pause se DÉGAGE (baby-foot nord-sud, îlot de trois tables, l'aile sans meubles imaginés), et la
+// grande salle RENTRE DANS LA PARCELLE. Rejoué au jeu aux points de vue des images, trois cotes du plan ont été reprises :
+// l'extincteur du hall (v_010), l'objet jaune du rebord (v_010) et la cloison vitrée du mur vert (v_064 et 20,98 s) —
+// chacune avec sa preuve, là où elle est posée. RELECTURE DU 11/10 : la focale de la vidéo vaut ≈ 1 000 px et non 1 200
+// (la pose de v_010 refaite, la porte de v_042) ; le couloir garde donc ses 7,8 m, que le plan allongeait de 1,1 m, le
+// rampant de la volée remonte à 2,95 m des nez, et l'espace pause redevient traversable jusqu'à la grande salle.)
 //
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; dans le jeu X = x, Z = -y) :
 //   le palier (niveau 0)       x 0-1,6      y 5,0-6,01    derrière la porte grise du hall ouest (x 1,675, c 5,485) ; son
@@ -37,7 +39,7 @@
 //   la volée                   x 0,40-1,25  y 6,01-10,09  nez du rang k en y 6,01 + 0,255 k, à -0,18 k (k = 0 … 16)
 //   le rebord du mitoyen       x 0,20-0,45  de niveau (-0,03) jusqu'en y 7,91, puis jusqu'à -0,30 en y 9,51
 //   le hall du -1              x 0,40-2,42  y 10,09-13,21 plafond à 2,36 m ; « -1 », extincteur, consignes
-//   le couloir                 x 1,50-2,42  y 1,21-10,09  0,92 m de large, plafond à 2,50 m, caisson et grille au fond ;
+//   le couloir                 x 1,50-2,42  y 2,31-10,09  0,92 m de large, plafond à 2,50 m, caisson et grille au fond ;
 //                                                         il passe sous le couloir de service et le passage du RDC
 //   l'espace pause             x 2,55-12,9  y 7,51-11,71  et son aile x 5,0-12,9 y 2,41-7,51 ; dalles à 2,55 m
 //   le sas des toilettes       x 10,55-12,9 y 9,56-10,86  deux portes crème à plaque rouge (fermées)
@@ -112,9 +114,13 @@ const Y_RAMP1 = Y_RET;                                        // 9,99 : ... et b
 const X_MUR = 2.485, EP_MUR = 0.13;       // le mur entre couloir (et hall) et espace pause
 const PORTE_PAUSE = 12.15 + DY_SS, PORTE_HALL = 14.85 + DY_SS, L_PORTE = 1.0;      // 8,06 et 10,76
 const Y_FOND = 17.3 + DY_SS;              // le nu du mur du fond du hall du -1 (13,21)
-// le nu du mur du fond (sud) du couloir : 5,3 avant le décalage, et non plus 6,4 (soussol.md § 2.3 : sur v_047, v_048,
-// v_050, v_051, la plinthe du fond mesure 133 à 155 px, soit 7,1 à 8,3 m de la caméra) — le couloir fait 8,9 m
-const Y_COUL0 = 5.3 + DY_SS;              // 1,21
+// le nu du mur du fond (sud) du couloir : 6,4 avant le décalage, comme avant le plan V2 — le couloir fait 7,8 m.
+// (Relecture du 11/10 : le plan le portait à 5,3 — soussol.md § 2.3, la plinthe du fond de 133 à 155 px sur v_047 à
+// v_051, soit 7,1 à 8,3 m de la caméra, pour une focale de 1 200 px. Mais la focale de la vidéo est plus courte : la pose
+// de v_010 refaite sur 12 nez, 4 montants et l'ouverture du hall donne f ≈ 1 025 à 4 px près — à 1 200, 13 px —, et le
+// vantail de la porte du hall, v_042, f ≈ 950. À f ≈ 1 000, le fond est à 5,9 m de la caméra placée par l'audit : la
+// largeur du fond, 157 px sur v_050, est celle du couloir de 7,8 m (159 px) ; celui de 8,9 m la donnait à 133 px)
+const Y_COUL0 = 6.4 + DY_SS;              // 2,31
 // l'extincteur du hall (mur ouest), plus bas et plus trapu qu'avant (garnirHall). Sa place : le plan V2 le met en
 // y 12,21 (16,3 avant le décalage), d'après sa taille sur v_035, lue pour un corps de 0,45 m ; mais ce corps est plus
 // court, et la planche de contrôle v_010 — la pose recalée sur les 16 nez — le montre au même rang d'image que le pied
@@ -894,9 +900,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     B(0.4, 11.86, 2.42, 12.06, H_HALL - 0.12, H_HALL + 0.01, M.platre, { ombre: false });
     C.plafond(0.4, -12.06, 2.42, -11.86, H_HALL - 0.12, 0.13);
     ch.plafond(1.5, Y_COUL0, 2.42, ESC.yPied, H_COUL, 'platre', { retombees: false });
-    // (plan V2 : le couloir a gagné 1,1 m — cinq spots au pas de 1,625, le premier à 1,18 m du hall et le dernier à
-    // 0,4 m du caisson, comme avant)
-    for (const y of [8.91, 7.285, 5.66, 4.035, 2.41]) spot(1.96, y, H_COUL, 'couloirSS');
+    // (quatre spots au pas de 1,8, le premier à 1,18 m du hall et le dernier à 0,4 m du caisson ; v_050 en montre deux
+    // avant le caisson, le troisième s'y cache)
+    for (const y of [8.91, 7.11, 5.31, 3.51]) spot(1.96, y, H_COUL, 'couloirSS');
     B(1.5, Y_COUL0, 2.42, Y_COUL0 + 0.8, Y_SS + 2.1, H_COUL, M.platre, { ombre: false });
     B(1.6, Y_COUL0 + 0.795, 2.32, Y_COUL0 + 0.8, Y_SS + 2.18, Y_SS + 2.26, std({ color: 0x141414, roughness: 0.6 }), { ombre: false });
     C.plafond(1.5, -(Y_COUL0 + 0.8), 2.42, -Y_COUL0, Y_SS + 2.1, H_COUL - Y_SS - 2.1);
