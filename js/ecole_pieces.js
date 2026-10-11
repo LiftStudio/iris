@@ -24,7 +24,7 @@
 //        long du mur est, deux vasques et leur miroir au mur ouest, au nord de la porte
 //   LES TOILETTES HOMMES       x 6,125-8,85 y 10,6-13,925 (porte du C05, y 11,05) deux cabines, trois urinoirs et leurs
 //        écrans au mur nord, deux vasques et leur miroir ; dans les deux : faïence blanche, grès 30 x 30, sèche-mains
-//   LES TOILETTES PMR          x 9,0-11,55  y 12,1-14,4 (porte « toilettes PMR » du C01, y 13,115 — sa plaque montre un
+//   LES TOILETTES PMR          x 9,0-11,55  y 12,1-14,4 (porte « toilettes PMR » du C01, y 12,9 — sa plaque montre un
 //        fauteuil roulant, photo 01) cuvette, barres d'appui, lave-mains accessible, miroir, un cercle de 1,50 m libre
 //   LE LOCAL TECHNIQUE         x 9,0-11,55  y 7,95-11,95 (porte « local » du couloir C01, y 10,6)
 //        baies serveurs aux diodes qui clignotent, onduleur, tableau électrique, étagère, établi, climatiseur, chemins
@@ -70,7 +70,7 @@ const Y_ESC = 13.675 + DY_S;                                 // 9,0 : le mur des
 const LT = { x0: 9.0, x1: 11.55, y0: 7.95, y1: 11.95 };      // le local technique (porte du C01, y 10,6)
 const WF = { x0: 6.125, x1: 8.85, y0: 7.95, y1: 10.45 };     // les toilettes femmes (porte du C05, y 8,575)
 const WH = { x0: 6.125, x1: 8.85, y0: 10.6, y1: 13.925 };    // les toilettes hommes (porte du C05, y 11,05)
-const PM = { x0: 9.0, x1: 11.55, y0: 12.1, y1: 14.4 };       // les toilettes PMR (porte du C01, y 13,115)
+const PM = { x0: 9.0, x1: 11.55, y0: 12.1, y1: 14.4 };       // les toilettes PMR (porte du C01, y 12,9)
 const DC = { x0: 0.475, x1: 8.85, y0: 14.15, y1: 20.925 };   // la salle David Clark, Si 0.2 (59 m² avec son entrée)
 const DCE = { x0: 4.75, x1: 5.975, y0: Y_ESC + 3.75, y1: 14.15 };   // son entrée, derrière la porte bleue du C05
 const CO = { x0: -4.1, x1: 0.175, y0: 12.75, y1: 16.8 };     // la courette ouest, entre les deux ailes (dehors)
@@ -1351,10 +1351,12 @@ function poubelleWC(ch, P, x, y) {
 // LA PLAQUE « Toilettes » côté C05, au nord de la porte (côté serrure), et LES DEUX AFFICHES A4 scotchées sur le vantail
 // (photo 23) : elles partent avec lui quand il s'ouvre. (Relecture du 09/10 : la plaque touche presque l'huisserie — sur
 // la photo 23, à peine 4-5 cm entre les deux, le tiers de sa largeur ; elle était à 19 cm : centre à 0,58 du milieu de
-// la porte, et non plus 0,72.) (V2, 11/10 : le mur est du C05 est la ligne x 6,05, sa face ouest en 5,975.)
+// la porte, et non plus 0,72.) (V2, 11/10 : le mur est du C05 est la ligne x 6,05, sa face ouest en 5,975. Relecture du
+// 11/10, photo 23 à sa pose, jeu à la même pose : les deux plaques sont à 1,60-1,65 m de leur milieu, pas 1,54 — dans le
+// jeu, elles tombaient 0,1 m sous celles de la photo)
 let _affichesWC = null;
 function signaletiqueC05(ch, P, yPorte, picto) {
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaqueWC(picto), roughness: 0.4 }), 5.975, yPorte + 0.58, 'W', 0.12, 0.16, 1.54, { ep: 0.005 });
+  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaqueWC(picto), roughness: 0.4 }), 5.975, yPorte + 0.58, 'W', 0.12, 0.16, 1.62, { ep: 0.005 });
   if (!_affichesWC) _affichesWC = [texAfficheProtections(), texAffichePersonnages()].map((t) => new THREE.MeshStandardMaterial({ map: t, roughness: 0.75 }));
   const porte = ch.portes.auto.find((q) => Math.abs(q.cx - 6.05) < 0.01 && Math.abs(q.cz + yPorte) < 0.01);
   const v = porte && porte.vantaux[0];
@@ -1428,12 +1430,13 @@ function urinoir(ch, P, x, y) {
   B(g, P.robinet, 0.07, 0.09, 0.02, 0, 1.52, 0.012, { ombre: false });
   CY(g, P.robinet, 0.02, 0.04, 0, 0.52, 0.16, 10);
 }
-// LES TOILETTES PMR (x 9,0-11,55, y 12,1-14,4 ; porte du C01 en y 13,115) : la cuvette contre le mur nord, la barre
+// LES TOILETTES PMR (x 9,0-11,55, y 12,1-14,4 ; porte du C01 en y 12,9) : la cuvette contre le mur nord, la barre
 // d'appui au mur ouest et la barre relevable à côté (le transfert se fait par l'est), le lave-mains accessible au mur
 // ouest et son miroir, le cordon d'appel rouge ; un cercle de 1,50 m libre au milieu (V2, 11/10 : centré en (10,3 ;
-// 13,25), la pièce n'a plus que 2,3 m de profondeur)
+// 13,25), la pièce n'a plus que 2,3 m de profondeur). (Relecture du 11/10 : la porte recule à 12,9, photo 01 recalée —
+// js/carte_ecole.js ; la poubelle passe sous le sèche-mains, hors du balayage du vantail)
 function toilettesPMR(ch, P) {
-  const { C } = ch, yP = 13.115;
+  const { C } = ch, yP = 12.9;
   ch.plafond(PM.x0, PM.y0, PM.x1, PM.y1, 2.5, 'platre');
   faience(ch, P, PM, [['E', yP - 0.51, yP + 0.51]]);
   solGres(ch, PM);
@@ -1460,10 +1463,11 @@ function toilettesPMR(ch, P) {
   miroir(ch, P, PM.x0 + 0.012, yL, 1.4, 0.5, 0.7, 'E', PM);
   const sav = groupe(ch, PM.x0 + 0.012, yL + 0.41, 'E', 1.05); R(sav, P.blancMat, 0.1, 0.18, 0.09, 0.02, 0, 0.09, 0.045);
   secheMains(ch, P, 10.5, PM.y0 + 0.012, 'N');
-  poubelleWC(ch, P, 11.2, 12.4);
-  // la plaque côté C01, au sud de la porte (photo 01 : le fauteuil roulant et « Toilettes » ; recalée sur la photo,
-  // y 12,48-12,62, de 1,40 à 1,53 m)
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaqueWC('pmr'), roughness: 0.4 }), 11.7, 12.55, 'E', 0.15, 0.2, 1.47, { ep: 0.006 });
+  poubelleWC(ch, P, 10.5, 12.3);
+  // la plaque côté C01, au sud de la porte, contre son huisserie (photo 01 : le fauteuil roulant et « Toilettes »). Relecture
+  // du 11/10, à la pose refaite : y 12,21-12,39, de 1,51 à 1,66 m — la plaque des toilettes du C05, 0,12 x 0,16 ; elle
+  // faisait 0,15 x 0,20 et paraissait, au même point de vue, deux fois plus haute que sur la photo
+  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaqueWC('pmr'), roughness: 0.4 }), 11.7, 12.3, 'E', 0.12, 0.16, 1.59, { ep: 0.005 });
 }
 // UN MIROIR contre un mur, regardant vers `face` : cadre d'aluminium, glace de w x h centrée à la hauteur `h0`.
 //   - le VRAI miroir (`reel`, sur PC) : un miroir planaire (Reflector de three, comme le reflet du sol mouillé de
