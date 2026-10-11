@@ -6,12 +6,14 @@
 // IMAGINÉ — plausible pour une école de commerce et du numérique parisienne — EN ATTENDANT DES PHOTOS : quand elles
 // arriveront, c'est ce module qu'on reprend (la coque, elle, reste celle de js/carte_ecole.js).
 //
-//   LA SALLE A (informatique)  x 4,9-9,9    y 0-8,925  trois rangées de cinq postes tournés vers le nord (écrans,
-//        claviers, unités centrales, chaises de bureau où l'on s'assoit), le bureau de l'enseignant, la toile de
-//        projection descendue devant les jours dépolis et son vidéoprojecteur, le tableau blanc du mur est, les stores
-//        enrouleurs des trois fenêtres sur rue, six dalles LED dans le plafond à plateaux, l'imprimante, l'horloge
-//   LE BUREAU B                x 10,05-13,2 y 0-4,74   bureau de chêne clair, fauteuil, deux chaises visiteurs (on s'y
-//        assoit), armoire, bibliothèque, tableau, grande plante, tapis, porte-manteau
+//   LA Si 0.1 « TIM BERNERS-LEE » (l'ex-salle A, informatique)  x 4,575-9,9  y 0-4,725 (11/10, plan V2)  deux rangs de
+//        cinq postes tournés vers le nord (écrans, claviers, unités centrales, chaises de bureau où l'on s'assoit), le
+//        poste de l'enseignant, la toile de projection descendue devant les jours dépolis et son vidéoprojecteur, le
+//        tableau blanc du mur est, les stores enrouleurs des trois fenêtres sur rue, quatre dalles LED dans le plafond à
+//        plateaux, l'imprimante, l'horloge ; sa porte s'ouvre dans le mur sud de la salle d'attente
+//   LE BUREAU DE DIRECTION B 0.3  x 10,05-13,2 y 0-4,725, l'angle nord-est écorné (11/10)  bureau de chêne clair, fauteuil,
+//        deux chaises visiteurs (on s'y assoit), armoire, bibliothèque, tableau, grande plante, tapis, porte-manteau ; sa
+//        porte vitrée au bout du passage de la pile (photos 01, 03)
 //   LE COULOIR DE SERVICE      x 0-1,6      y 0-8,95   derrière la porte blanche « Sortie » du passage : il mène à la
 //        porte de secours de la façade (barre anti-panique) ; bacs roulants, chariot de ménage, escabeau, cartons,
 //        extincteur, goulotte. (09/10 : la vidéo du sous-sol montre que la porte grise du hall ouest ouvre sur le palier de
@@ -52,8 +54,11 @@ import { texAffiche, texConsignes, texPictoExtincteur, jourDehors } from './ecol
 
 const H_DALLE = 3.25;                       // le dessous de la dalle du 1er étage
 // ---- les pièces, en plan (le nu intérieur des murs) ----
-const SA = { x0: 4.9, x1: 9.9, y0: 0, y1: 8.925 };          // la salle A
-const BB = { x0: 10.05, x1: 13.2, y0: 0, y1: 4.74 };        // le bureau B
+// (11/10, plan V2 — scratchpad iris_audit/plan_v2.md § 2.2 : la salle d'attente recule de DY_A = -4,20, son mur sud est la
+// ligne y 4,8 ; la salle A, devenue la Si 0.1, perd 4,2 m de profondeur ; son mur ouest est le mur est du passage, x 4,5)
+const SA = { x0: 4.575, x1: 9.9, y0: 0, y1: 4.725 };       // la Si 0.1, l'ex-salle A
+const BB = { x0: 10.05, x1: 13.2, y0: 0, y1: 4.725 };       // le bureau B (côté ouest, jusqu'au mur sud de la salle d'attente)
+// (son angle nord-est est écorné : de x 11,475 à 12,425 il s'arrête en y 3,025, de 12,425 à 13,2 en y 2,425 — js/carte_ecole.js)
 // le couloir de service (plan V2, 11/10 : arrêté au mur sud du palier « 0 » du sous-sol, ligne 4,95, qui a suivi la
 // porte grise)
 const SV = { x0: 0, x1: 1.6, y0: 0, y1: 4.925 };
@@ -70,10 +75,13 @@ const DC = { x0: 1.75, x1: 8.85, y0: 18.75, y1: 24.35 };    // la salle David Cl
 // vue de la carte d'environnement (au-dessus des meubles, au milieu de la pièce)
 const zone = (id, R, env) => ({ id, rects: [[R.x0, -R.y1, R.x1, -R.y0, -1]], voisines: [], env });
 const ZONES = [
-  zone('salleA', SA, { x: 7.4, y: 1.6, z: -4.0 }),
-  // (10/10 : le bureau B a perdu son angle nord-est — x 12,1-13,2 × y 2,5-4,74 —, le passage au sud-ouest de la pile du hall,
-  // js/carte_ecole.js et js/ecole_rdc_centre.js : deux rectangles)
-  { ...zone('bureauB', BB, { x: 11.3, y: 1.55, z: -2.6 }), rects: [[BB.x0, -2.425, BB.x1, -BB.y0, -1], [BB.x0, -BB.y1, 12.025, -2.425, -1]] },
+  // (11/10, plan V2 : la salle A est la Si 0.1 — jusqu'aux axes de ses murs, x 4,5-9,975 × y 0-4,8. Sans voisine, comme
+  // les autres pièces : sa porte n'est pas une ouverture, et les spots de la salle d'attente, qui n'ont pas d'ombre,
+  // l'éclaireraient à travers le mur)
+  { ...zone('si01', SA, { x: 7.7, y: 1.6, z: -2.55 }), rects: [[4.5, -4.8, 9.975, -SA.y0, -1]] },
+  // (10/10 : le bureau B a perdu son angle nord-est, le passage au sud-ouest de la pile du hall ; 11/10 : en deux redents,
+  // trois rectangles jusqu'aux axes de ses murs — js/carte_ecole.js et js/ecole_rdc_centre.js)
+  { ...zone('bureauB', BB, { x: 11.0, y: 1.6, z: -3.2 }), rects: [[BB.x0, -4.8, 11.55, -BB.y0, -1], [11.55, -3.1, 12.5, -BB.y0, -1], [12.5, -2.5, 13.275, -BB.y0, -1]] },
   { ...zone('service', SV, { x: 0.8, y: 1.5, z: -2.6 }), rects: [[0, -4.95, 1.675, 0, -1]] },
   zone('local', LT, { x: 10.2, y: 1.7, z: -14.9 }),
   // (relecture du 09/10 : les deux toilettes du C05 prennent leur vue HAUT, à 2,20 m, et loin des portes safran des
@@ -593,14 +601,14 @@ function texPlaqueWC(picto) {
   }, null, false, 2);
 }
 // LA PLAQUE DE LA SALLE (photo 23, à droite de la porte bleue) : noire, trois lignes blanches — « Si 0.2 », une salle
-// informatique (l'annuaire du hall, VO 7,9-8,1 s ; 10/10)
-function texPlaqueSalle() {
+// informatique (l'annuaire du hall, VO 7,9-8,1 s ; 10/10). (11/10 : la même pour la Si 0.1 « Tim Berners-Lee »)
+function texPlaqueSalle(nom = 'David Clark', code = 'Si 0.2') {
   return canvasTex(192, 112, (g, w, h) => {
     g.fillStyle = '#242322'; g.fillRect(0, 0, w, h);
     g.fillStyle = '#f2f2f2'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
     g.font = '600 19px "Segoe UI", Arial, sans-serif'; g.fillText('Salle', w / 2, 30);
-    g.font = '500 21px "Segoe UI", Arial, sans-serif'; g.fillText('David Clark', w / 2, 62);
-    g.font = '600 19px "Segoe UI", Arial, sans-serif'; g.fillText('Si 0.2', w / 2, 94);
+    g.font = '500 21px "Segoe UI", Arial, sans-serif'; g.fillText(nom, w / 2, 62, w - 16);
+    g.font = '600 19px "Segoe UI", Arial, sans-serif'; g.fillText(code, w / 2, 94);
   }, null, false, 4);
 }
 // L'AFFICHE DES PORTES DES TOILETTES (photo 23) : « DES PROTECTIONS HYGIÉNIQUES GRATUITES / À VOTRE DISPOSITION » sur
@@ -851,59 +859,83 @@ function corbeille(ch, P, x, y, mat = null, r = 0.14, h = 0.34) {
   return g;
 }
 
+// L'AFFICHE DE LA PORTE DU BUREAU DE DIRECTION (photo 01 : collée dans le haut du vantail vitré, côté gonds) : une photo en
+// noir et blanc, un étudiant en tee-shirt blanc sur un fond gris sombre, de trois quarts
+function texAfficheEtudiant() {
+  return canvasTex(176, 264, (g, w, h) => {
+    const d = g.createLinearGradient(0, 0, w, h); d.addColorStop(0, '#5d5d5b'); d.addColorStop(1, '#262625');
+    g.fillStyle = d; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(255,255,255,0.06)'; g.fillRect(w * 0.62, 0, w * 0.38, h);
+    // le tee-shirt blanc (épaules, manches), les bras croisés, sombres
+    g.fillStyle = '#e6e5e1'; g.beginPath(); g.moveTo(w * 0.16, h); g.lineTo(w * 0.2, h * 0.5); g.quadraticCurveTo(w * 0.5, h * 0.38, w * 0.82, h * 0.5);
+    g.lineTo(w * 0.88, h); g.closePath(); g.fill();
+    g.fillStyle = '#c9c8c3'; g.fillRect(w * 0.2, h * 0.52, w * 0.1, h * 0.2); g.fillRect(w * 0.72, h * 0.52, w * 0.1, h * 0.2);
+    g.fillStyle = '#4a4744'; g.beginPath(); g.ellipse(w * 0.52, h * 0.78, w * 0.3, h * 0.07, -0.08, 0, 7); g.fill();
+    // le cou, le visage (de trois quarts), les cheveux courts
+    g.fillStyle = '#9b9893'; g.fillRect(w * 0.45, h * 0.33, w * 0.12, h * 0.08);
+    g.fillStyle = '#b3b0aa'; g.beginPath(); g.ellipse(w * 0.52, h * 0.26, w * 0.13, h * 0.1, 0.1, 0, 7); g.fill();
+    g.fillStyle = '#1d1c1b'; g.beginPath(); g.ellipse(w * 0.5, h * 0.19, w * 0.14, h * 0.06, 0.1, Math.PI, 0); g.fill();
+    g.fillStyle = 'rgba(30,30,30,0.5)'; g.fillRect(w * 0.47, h * 0.25, w * 0.04, h * 0.012); g.fillRect(w * 0.56, h * 0.25, w * 0.04, h * 0.012);
+    // le bandeau de titre en bas
+    g.fillStyle = 'rgba(245,245,240,0.92)'; g.fillRect(0, h * 0.9, w, h * 0.1);
+    g.fillStyle = '#2b2b2b'; g.fillRect(w * 0.1, h * 0.935, w * 0.55, h * 0.025);
+  }, null, false, 4);
+}
+
 // =====================================================================
-//  LA SALLE A (informatique)
+//  LA Si 0.1 « TIM BERNERS-LEE » (l'ex-salle A, informatique ; IMAGINÉE)
 // =====================================================================
-// Rangées face au NORD (la toile de projection descend devant les jours dépolis du mur de la salle d'attente) ; la porte
-// du hall ouest (y = 6,85) ouvre sur l'allée ouest (x 4,9-5,95) et le devant de la classe. Trois rangées de deux tables
-// accolées (deux postes + trois postes, 78 cm chacun), espacées de 2 m : 70 cm de passage derrière chaque rangée de
-// chaises (le joueur fait 60 cm de large).
-const RANGEES = [[6.0, 6.7], [4.0, 4.7], [2.0, 2.7]];          // (côté chaises, côté écrans)
-const POSTES = [6.34, 7.12, 7.9, 8.68, 9.46];
+// (11/10, plan V2 : l'annuaire du hall et sa plaque donnent Si 0.1 et Si 0.2 au niveau 0, côté ouest — la salle A est la
+// Si 0.1. Elle perd 4,2 m de profondeur avec la salle d'attente, dont le mur sud est son mur nord : x 4,575-9,9 × y
+// 0-4,725 ; sa porte, dans ce mur (x 9,1-9,9, js/carte_ecole.js), s'ouvre dans la salle et se rabat contre son mur est.)
+// Deux rangs de cinq postes face au NORD (la toile descend devant les jours dépolis), tables arrêtées à x 9,4 : 0,5 m le
+// long du mur est, là où la porte se rabat ; 0,6 m de passage derrière chaque rangée de chaises (le joueur en fait 0,6),
+// 1,2 m d'une table à l'autre, 0,9 m devant le premier rang. L'allée ouest (1,4 m) mène à l'imprimante, dans
+// l'angle sud-ouest, et au poste de l'enseignant, dans l'angle nord-ouest, contre le mur nord. Plus de sac, de patère ni
+// de veste : « ne pas meubler l'imaginé ».
+const RANGEES = [[1.3, 1.95], [3.15, 3.8]];          // (côté chaises, côté écrans)
+const POSTES = [6.34, 7.02, 7.7, 8.38, 9.06];
 function salleA(ch, P) {
-  const { M, C } = ch;
+  const { C } = ch;
   // la plinthe qui manque (le mur du passage, côté salle) et les radiateurs sous les fenêtres
-  plinthe(ch, 'y', SA.x0, 0, 5.0, 1);
+  plinthe(ch, 'y', SA.x0, 0, SA.y1, 1);
   for (const c of [5.78, 7.43, 9.08]) radiateur(ch, c - 0.5, 0, c + 0.5, 0.09, 0.15, 0.78);
-  // ---- les postes ----
+  // ---- les postes (0,68 m chacun : deux tables accolées, deux postes + trois postes) ----
   let k = 0;
   for (const [ya, yb] of RANGEES) {
-    table(ch, P, 5.95, 7.508, ya, yb); table(ch, P, 7.512, 9.85, ya, yb);
+    table(ch, P, 6.0, 7.358, ya, yb); table(ch, P, 7.362, 9.4, ya, yb);
     POSTES.forEach((x, i) => {
       ecranPC(ch, P, x, yb - 0.22, 0.745, 'S', P.ecrans[(k + i * 2) % P.ecrans.length]);
       clavier(ch, P, x - 0.04, ya + 0.2, 0.745, 'S');
-      unite(ch, P, x + 0.21, yb - 0.26, 'S');
+      unite(ch, P, x + 0.2, yb - 0.26, 'S');
       // les chaises ne sont pas toutes rangées pile sous la table
       const r = graine(k * 11 + i * 3 + 1);
       chaiseBureau(ch, P, x + (r() - 0.5) * 0.08, ya - 0.38 - r() * 0.04, 'N', { rot: (r() - 0.5) * 0.35, rayon: 0.17, sortie: [0, -0.55] });
     });
     k++;
   }
-  // un peu de vie : une gourde, un cahier, un sac à dos appuyé contre le bureau de l'enseignant
-  const gourde = groupe(ch, 7.45, 4.4, 'S', 0.745); CY(gourde, P.bleu, 0.035, 0.22, 0, 0.11, 0, 14); CY(gourde, P.chrome, 0.025, 0.03, 0, 0.235, 0, 10);
-  const cahier = groupe(ch, 8.95, 2.32, 'S', 0.745); B(cahier, P.jaune, 0.21, 0.012, 0.29, 0, 0.006, 0, { ombre: false }); cahier.rotation.y = 0.3;
-  const sac = new THREE.Group(); sac.rotation.x = -0.16; groupe(ch, 6.38, 7.62, 'E').add(sac);
-  R(sac, P.tissuBleu, 0.3, 0.42, 0.17, 0.07, 0, 0.21, 0); R(sac, P.tissuBleu, 0.22, 0.16, 0.06, 0.03, 0, 0.16, 0.1);
-  C.ajouterCercle(6.38, -7.62, 0.15, { y1: 0.45 });
-  // ---- le bureau de l'enseignant (devant à gauche), son voile de façade safran, son poste tourné vers lui ----
-  table(ch, P, 4.95, 6.2, 8.25, 7.55, { voile: false });
-  ch.boite(4.99, 7.55, 6.16, 7.57, 0.12, 0.72, M.orange);
-  ecranPC(ch, P, 5.55, 7.78, 0.745, 'N', P.ecrans[4]);
-  clavier(ch, P, 5.5, 8.08, 0.745, 'N');
-  const doc = groupe(ch, 6.0, 7.9, 'N', 0.745); B(doc, P.blancMat, 0.21, 0.02, 0.3, 0, 0.01, 0, { ombre: false }); doc.rotation.y += 0.25;
-  chaiseBureau(ch, P, 5.55, 8.56, 'S', { accoudoirs: true, nom: 'le fauteuil de l’enseignant', sortie: [0.95, -0.35] });
-  corbeille(ch, P, 5.12, 8.68);
-  C.ajouterCercle(5.12, -8.68, 0.16, { y1: 0.4 });
-  // ---- la toile de projection, descendue devant les jours dépolis ----
-  const tl = groupe(ch, 7.45, 8.66, 'S');
+  // un peu de vie : une gourde, un cahier
+  const gourde = groupe(ch, 7.36, 3.45, 'S', 0.745); CY(gourde, P.bleu, 0.035, 0.22, 0, 0.11, 0, 14); CY(gourde, P.chrome, 0.025, 0.03, 0, 0.235, 0, 10);
+  const cahier = groupe(ch, 8.72, 1.62, 'S', 0.745); B(cahier, P.jaune, 0.21, 0.012, 0.29, 0, 0.006, 0, { ombre: false }); cahier.rotation.y = 0.3;
+  // ---- le poste de l'enseignant (devant à gauche pour les élèves), contre le mur nord ; il s'y assoit face au mur, son
+  // écran tourné vers lui ; derrière le fauteuil, l'allée ouest reste libre (0,75 m jusqu'au premier rang) ----
+  table(ch, P, 4.63, 5.43, 4.1, 4.7, { voile: false });
+  ecranPC(ch, P, 5.03, 4.5, 0.745, 'S', P.ecrans[4]);
+  clavier(ch, P, 4.99, 4.24, 0.745, 'S');
+  const doc = groupe(ch, 5.3, 4.32, 'S', 0.745); B(doc, P.blancMat, 0.21, 0.02, 0.3, 0, 0.01, 0, { ombre: false }); doc.rotation.y += 0.25;
+  chaiseBureau(ch, P, 5.03, 3.72, 'N', { accoudoirs: true, nom: 'le fauteuil de l’enseignant', sortie: [0.55, -0.45] });
+  corbeille(ch, P, 4.76, 3.3);
+  C.ajouterCercle(4.76, -3.3, 0.16, { y1: 0.4 });
+  // ---- la toile de projection, descendue devant les jours dépolis, au droit des rangs ----
+  const tl = groupe(ch, 7.7, 4.6, 'S');
   CY(tl, P.blancMat, 0.055, 2.5, 0, 2.52, 0.0, 16).rotation.z = Math.PI / 2;                 // le carter
   for (const s of [-1, 1]) B(tl, P.plastiqueGris, 0.03, 0.06, 0.08, s * 1.27, 2.55, 0);      // les embouts
   plan(tl, P.diapo, 2.24, 1.37, 0, 1.76, 0.0);
   B(tl, P.plastique, 2.28, 0.03, 0.025, 0, 1.065, 0);                                        // la barre de charge
   CY(tl, P.plastiqueGris, 0.004, 0.25, 0.4, 0.93, 0.0, 4, { ombre: false });                  // la cordelette
-  C.ajouterBoite(6.3, -8.59, 8.6, -8.71, { y0: 1.05, y1: 2.6 });
-  // ---- le vidéoprojecteur au plafond, tourné vers la toile ----
-  const vp = groupe(ch, 7.45, 4.3, 'N', 2.6);
+  C.ajouterBoite(6.55, -4.54, 8.85, -4.66, { y0: 1.05, y1: 2.6 });
+  // ---- le vidéoprojecteur au plafond, tourné vers la toile, à 3 m d'elle ----
+  const vp = groupe(ch, 7.7, 1.6, 'N', 2.6);
   CY(vp, P.alu, 0.02, 0.22, 0, -0.11, 0, 8);
   B(vp, P.alu, 0.18, 0.02, 0.14, 0, -0.22, 0);
   R(vp, P.blancMat, 0.34, 0.11, 0.27, 0.025, 0, -0.29, 0);
@@ -911,8 +943,8 @@ function salleA(ch, P) {
   maille(new THREE.CircleGeometry(0.03, 18), P.led, 0.07, -0.29, 0.153, 0, vp, { ombre: false, recoit: false });
   B(vp, P.plastiqueGris, 0.12, 0.004, 0.1, -0.08, -0.234, 0, { ombre: false });
   vp.traverse((m) => { m.userData.horsAOSol = true; });
-  // ---- le tableau blanc, au mur est, son auget et ses feutres ----
-  const tb = groupe(ch, SA.x1, 7.7, 'W', 1.475);
+  // ---- le tableau blanc, au mur est, entre les deux rangs, son auget et ses feutres ----
+  const tb = groupe(ch, SA.x1, 2.5, 'W', 1.475);
   B(tb, P.alu, 1.64, 1.19, 0.022, 0, 0, 0.011);
   plan(tb, P.tableauBlanc, 1.6, 1.15, 0, 0, 0.0225);
   B(tb, P.alu, 1.2, 0.025, 0.07, 0, -0.6, 0.04);
@@ -922,7 +954,7 @@ function salleA(ch, P) {
   });
   B(tb, P.plastiqueGris, 0.14, 0.035, 0.05, 0.3, -0.57, 0.045, { ombre: false });
   // l'horloge au-dessus
-  const hz = groupe(ch, SA.x1, 7.7, 'W', 2.33);
+  const hz = groupe(ch, SA.x1, 2.5, 'W', 2.33);
   CY(hz, P.plastique, 0.155, 0.035, 0, 0, 0.018, 28).rotation.x = Math.PI / 2;
   const cad = new THREE.Mesh(new THREE.CircleGeometry(0.145, 32), new THREE.MeshStandardMaterial({ map: texHorloge(), roughness: 0.3 }));
   cad.position.set(0, 0, 0.036); hz.add(cad);
@@ -935,29 +967,33 @@ function salleA(ch, P) {
     B(g, P.alu, 1.34, 0.03, 0.015, 0, bas, -0.01);
     CY(g, P.alu, 0.003, 1.0, 0.69, 1.95, -0.02, 4, { ombre: false });
   });
-  // ---- les dalles LED du plafond (sur la trame des plateaux : 60 x 120, y = 9,0 - 1,2 k) ----
-  for (const x of [6.25, 8.65]) for (const y of [2.4, 4.8, 7.2]) dalleLED(ch, P, x, y, 2.6, 'salleA');
+  // ---- les dalles LED du plafond (sur la trame des plateaux 60 x 120 posée depuis l'angle x 4,575, y 0), au-dessus des
+  // deux rangs ----
+  for (const x of [6.675, 8.475]) for (const y of [1.8, 3.6]) dalleLED(ch, P, x, y, 2.6, 'si01');
   // le point d'accès wifi et le détecteur de fumée
-  const ap = groupe(ch, 7.45, 6.6, 'S', 2.6); CY(ap, P.blancMat, 0.1, 0.035, 0, -0.018, 0, 24, { ombre: false }); maille(new THREE.CircleGeometry(0.012, 10), P.led, 0, -0.0365, 0.05, 0, ap, { recoit: false }).rotation.x = Math.PI / 2;
-  const df = groupe(ch, 5.4, 3.6, 'S', 2.6); CY(df, P.blancMat, 0.055, 0.045, 0, -0.023, 0, 18, { ombre: false });
+  const ap = groupe(ch, 7.7, 2.55, 'S', 2.6); CY(ap, P.blancMat, 0.1, 0.035, 0, -0.018, 0, 24, { ombre: false }); maille(new THREE.CircleGeometry(0.012, 10), P.led, 0, -0.0365, 0.05, 0, ap, { recoit: false }).rotation.x = Math.PI / 2;
+  const df = groupe(ch, 5.3, 2.4, 'S', 2.6); CY(df, P.blancMat, 0.055, 0.045, 0, -0.023, 0, 18, { ombre: false });
   for (const o of [ap, df]) o.traverse((m) => { m.userData.horsAOSol = true; });
-  // ---- le fond de la classe : l'imprimante sur son meuble bas, deux affiches au mur de l'allée, les patères ----
-  const im = groupe(ch, 5.24, 0.42, 'E');
+  // ---- le fond de la classe : l'imprimante sur son meuble bas, dans l'angle sud-ouest ; deux affiches au mur de l'allée ----
+  const im = groupe(ch, SA.x0 + 0.34, 0.42, 'E');
   B(im, P.grisClair, 0.5, 0.7, 0.55, 0, 0.35, 0);
   B(im, P.plastiqueGris, 0.46, 0.01, 0.5, 0, 0.705, 0, { ombre: false });
   R(im, P.blancMat, 0.46, 0.34, 0.44, 0.02, 0, 0.88, -0.01);
   B(im, P.plastiqueGris, 0.3, 0.012, 0.2, 0, 1.06, -0.04);
   B(im, P.plastique, 0.12, 0.05, 0.02, 0.12, 0.98, 0.215, { ombre: false });
   B(im, P.blancMat, 0.2, 0.004, 0.28, -0.05, 0.85, 0.05, { ombre: false });
-  C.ajouterBoite(4.95, -0.15, 5.53, -0.69, { y1: 1.1 });
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texAffiche('#7b2a6e', '#fbfbf8', 61), roughness: 0.6 }), SA.x0, 1.9, 'E', 0.52, 0.72, 1.6);
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texAffiche('#e9a01c', '#fbfbf8', 62), roughness: 0.6 }), SA.x0, 3.5, 'E', 0.52, 0.72, 1.6);
-  const pat = groupe(ch, SA.x0, 5.35, 'E', 1.72);
-  B(pat, P.chene, 1.0, 0.1, 0.02, 0, 0, 0.01);
-  for (let i = 0; i < 5; i++) { const p = CY(pat, P.chrome, 0.008, 0.07, -0.4 + i * 0.2, 0.0, 0.05, 8, { ombre: false }); p.rotation.x = Math.PI / 2 - 0.3; }
-  vetement(pat, P.tissuBleu, -0.2, 0.0, 0.1, { haut: 0.62 });            // une veste accrochée
-  // ---- la plaque « Salle A » côté hall, du côté de la poignée (comme la plaque « Toilettes » du C01, photo 01) ----
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaque('Salle A', 'ecran'), roughness: 0.4 }), 4.75, 6.08, 'W', 0.17, 0.17, 1.6, { ep: 0.006 });
+  C.ajouterBoite(SA.x0 + 0.05, -0.15, SA.x0 + 0.63, -0.69, { y1: 1.1 });
+  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texAffiche('#7b2a6e', '#fbfbf8', 61), roughness: 0.6 }), SA.x0, 1.55, 'E', 0.52, 0.72, 1.6);
+  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texAffiche('#e9a01c', '#fbfbf8', 62), roughness: 0.6 }), SA.x0, 2.65, 'E', 0.52, 0.72, 1.6);
+  // ---- LA PLAQUE « Salle Tim Berners-Lee — Si 0.1 », côté salle d'attente (IMAGINÉE, le modèle de celle de la Si 0.2,
+  // photo 23) : sur le vantail, côté gonds — de part et d'autre de la porte, le cadre du jour dépoli et le mur du bureau
+  // ne laissent pas de place ; elle part avec lui ----
+  const pSi = ch.portes.auto.find((Q) => Math.abs(Q.cx - 9.5) < 0.01 && Math.abs(Q.cz + 4.8) < 0.01);
+  const vSi = pSi && pSi.vantaux[0];
+  if (vSi) {
+    const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.17, 0.099), new THREE.MeshStandardMaterial({ map: texPlaqueSalle('Tim Berners-Lee', 'Si 0.1'), roughness: 0.4 }));
+    pl.position.set(vSi.s * 0.22, 1.6, -0.024); pl.rotation.y = Math.PI; pl.castShadow = false; vSi.g.add(pl);
+  }
 }
 // UNE DALLE LED encastrée dans le plafond à plateaux : cadre d'aluminium blanc, diffuseur allumé ; c'est une LAMPE
 function dalleLED(ch, P, x, y, h, zone) {
@@ -970,50 +1006,52 @@ function dalleLED(ch, P, x, y, h, zone) {
 }
 
 // =====================================================================
-//  LE BUREAU B
+//  LE BUREAU DE DIRECTION B 0.3 (le « bureau B » ; IMAGINÉ, sauf sa porte)
 // =====================================================================
+// (11/10, plan V2 : son angle nord-est est écorné en deux redents — js/carte_ecole.js — et sa porte vitrée est au bout du
+// passage de la pile, dans le retour y 2,5, x 12,5-13,275 : elle s'ouvre dans le bureau, gonds à l'ouest. Le mobilier se
+// range autour : le bureau de chêne et le fauteuil sous les deux fenêtres hautes, les chaises des visiteurs devant, la
+// bibliothèque et le tableau au mur ouest, l'armoire au mur est, raccourcie au sud du débattement de la porte ; de la
+// porte au fauteuil, on passe entre l'armoire et le bout du bureau, 0,86 m.)
 function bureauB(ch, P) {
   const { C } = ch;
   plinthe(ch, 'y', BB.x1, 0, 0.3, -1);
   radiateur(ch, 11.15, 0, 12.05, 0.09, 0.15, 0.65);
-  // le tapis
+  // le tapis (sous le bureau, le fauteuil et les chaises des visiteurs)
   const tapis = new THREE.MeshStandardMaterial({ map: texTapis(), roughness: 1 });
-  // (10/10 : sous le bureau et le fauteuil seulement — l'angle nord-est est devenu le passage de la pile)
-  ch.boite(10.45, 0.35, 12.95, 2.35, 0, 0.01, tapis, { ombre: false });
+  ch.boite(10.25, 0.35, 12.25, 2.85, 0, 0.01, tapis, { ombre: false });
   // le bureau de chêne clair sur piètement noir, son caisson blanc
-  ch.boite(11.0, 1.35, 12.5, 2.15, 0.72, 0.75, P.chene);
-  for (const x of [11.04, 12.46]) for (const y of [1.39, 2.11]) ch.boite(x - 0.02, y - 0.02, x + 0.02, y + 0.02, 0.01, 0.72, P.noirMat);
-  ch.boite(11.04, 2.09, 12.46, 2.11, 0.62, 0.7, P.noirMat, { ombre: false });
-  ch.boite(11.98, 1.42, 12.42, 1.98, 0.02, 0.6, P.blancMat);
-  for (const h of [0.08, 0.27, 0.45]) ch.boite(12.03, 1.405, 12.37, 1.42, h, h + 0.12, P.grisClair, { ombre: false });
-  C.ajouterBoite(11.0, -1.35, 12.5, -2.15, { y1: 0.75 });
+  ch.boite(10.4, 1.2, 11.9, 2.0, 0.72, 0.75, P.chene);
+  for (const x of [10.44, 11.86]) for (const y of [1.24, 1.96]) ch.boite(x - 0.02, y - 0.02, x + 0.02, y + 0.02, 0.01, 0.72, P.noirMat);
+  ch.boite(10.44, 1.94, 11.86, 1.96, 0.62, 0.7, P.noirMat, { ombre: false });
+  ch.boite(11.38, 1.27, 11.82, 1.83, 0.02, 0.6, P.blancMat);
+  for (const h of [0.08, 0.27, 0.45]) ch.boite(11.43, 1.255, 11.77, 1.27, h, h + 0.12, P.grisClair, { ombre: false });
+  C.ajouterBoite(10.4, -1.2, 11.9, -2.0, { y1: 0.75 });
   // sur le bureau : l'écran, le portable ouvert, le téléphone, des papiers, la lampe, le pot à crayons
-  ecranPC(ch, P, 11.62, 1.95, 0.75, 'S', P.ecrans[2]);
-  clavier(ch, P, 11.58, 1.6, 0.75, 'S');
-  const lp = groupe(ch, 12.2, 1.72, 'S', 0.75); lp.rotation.y = -0.35;
+  ecranPC(ch, P, 11.02, 1.8, 0.75, 'S', P.ecrans[2]);
+  clavier(ch, P, 10.98, 1.45, 0.75, 'S');
+  const lp = groupe(ch, 11.6, 1.57, 'S', 0.75); lp.rotation.y = -0.35;
   R(lp, P.alu, 0.32, 0.016, 0.22, 0.006, 0, 0.008, 0, { ombre: false });
   const cou = new THREE.Group(); cou.position.set(0, 0.016, -0.11); cou.rotation.x = -0.25; lp.add(cou);
   B(cou, P.alu, 0.32, 0.21, 0.007, 0, 0.105, 0);
   plan(cou, P.ecrans[3], 0.3, 0.18, 0, 0.108, 0.0040);
-  const tel = groupe(ch, 11.13, 1.85, 'S', 0.75); R(tel, P.plastique, 0.18, 0.05, 0.2, 0.015, 0, 0.025, 0, { ombre: false }); R(tel, P.plastique, 0.05, 0.035, 0.19, 0.015, -0.055, 0.065, 0, { ombre: false });
-  const pap = groupe(ch, 11.16, 1.52, 'S', 0.75); pap.rotation.y = 0.2; B(pap, P.blancMat, 0.21, 0.012, 0.297, 0, 0.006, 0, { ombre: false });
-  const lampe = groupe(ch, 12.38, 2.0, 'S', 0.75);
+  const tel = groupe(ch, 10.53, 1.7, 'S', 0.75); R(tel, P.plastique, 0.18, 0.05, 0.2, 0.015, 0, 0.025, 0, { ombre: false }); R(tel, P.plastique, 0.05, 0.035, 0.19, 0.015, -0.055, 0.065, 0, { ombre: false });
+  const pap = groupe(ch, 10.56, 1.37, 'S', 0.75); pap.rotation.y = 0.2; B(pap, P.blancMat, 0.21, 0.012, 0.297, 0, 0.006, 0, { ombre: false });
+  const lampe = groupe(ch, 11.78, 1.85, 'S', 0.75);
   CY(lampe, P.noirMat, 0.07, 0.015, 0, 0.008, 0, 18); CY(lampe, P.noirMat, 0.008, 0.42, 0, 0.22, 0, 6);
   maille(new THREE.ConeGeometry(0.08, 0.12, 18, 1, true), P.noirMat, -0.05, 0.43, 0.04, 0, lampe).rotation.z = 0.5;
-  const pot = groupe(ch, 11.07, 2.05, 'S', 0.75); CY(pot, P.noirMat, 0.035, 0.1, 0, 0.05, 0, 14); for (let i = 0; i < 3; i++) CY(pot, [P.bleu, P.rouge, P.jaune][i], 0.005, 0.15, -0.012 + i * 0.012, 0.11, (i - 1) * 0.008, 6, { ombre: false });
-  // le fauteuil (haut dossier) et les deux chaises visiteurs
-  chaiseBureau(ch, P, 11.7, 0.86, 'N', { accoudoirs: true, haut: true, nom: 'le fauteuil du bureau', sortie: [-0.8, 0] });
-  // (relecture du 10/10 : depuis l'angle écorné, la pièce du nord n'a plus que 1,97 m — les deux chaises se serrent
-  // contre le retour x 12,1 et rendent le passage de l'ouest, x 10,05-11,0, le seul chemin de la porte au fauteuil ; en
-  // x 10,95 et 11,7, elles le bouchaient)
-  chaiseLuge(ch, P, 11.27, 2.8, 'S');
-  chaiseLuge(ch, P, 11.77, 2.8, 'S', -0.12, [-0.1, 0.65]);   // (on s'en relève un peu à l'ouest : le retour est à 0,25 m)
-  // l'armoire haute (deux portes) au mur est
-  ch.boite(12.76, 0.3, 13.2, 2.1, 0, 1.98, P.grisClair, { collision: true });
-  ch.boite(12.75, 0.31, 12.76, 1.195, 0.03, 1.95, P.blancMat, { ombre: false });
-  ch.boite(12.75, 1.205, 12.76, 2.09, 0.03, 1.95, P.blancMat, { ombre: false });
-  for (const y of [1.14, 1.26]) ch.boite(12.72, y - 0.01, 12.75, y + 0.01, 0.95, 1.2, P.chrome, { ombre: false });
-  const boites = groupe(ch, 12.98, 1.2, 'W', 1.98);
+  const pot = groupe(ch, 10.47, 1.9, 'S', 0.75); CY(pot, P.noirMat, 0.035, 0.1, 0, 0.05, 0, 14); for (let i = 0; i < 3; i++) CY(pot, [P.bleu, P.rouge, P.jaune][i], 0.005, 0.15, -0.012 + i * 0.012, 0.11, (i - 1) * 0.008, 6, { ombre: false });
+  // le fauteuil (haut dossier), dont on se relève vers l'est, et les deux chaises visiteurs, devant la moitié ouest du
+  // bureau : à l'est, 0,67 m entre elles et l'angle du mur x 11,55 — le passage de la porte vers le fond du bureau, la plante
+  chaiseBureau(ch, P, 11.1, 0.75, 'N', { accoudoirs: true, haut: true, nom: 'le fauteuil du bureau', sortie: [0.75, 0] });
+  chaiseLuge(ch, P, 10.3, 2.35, 'S', 0.1);
+  chaiseLuge(ch, P, 10.85, 2.35, 'S', -0.12);
+  // l'armoire (deux portes) au mur est, au sud du débattement de la porte (y 1,7-2,45)
+  ch.boite(12.76, 0.3, 13.2, 1.5, 0, 1.98, P.grisClair, { collision: true });
+  ch.boite(12.75, 0.31, 12.76, 0.895, 0.03, 1.95, P.blancMat, { ombre: false });
+  ch.boite(12.75, 0.905, 12.76, 1.49, 0.03, 1.95, P.blancMat, { ombre: false });
+  for (const y of [0.84, 0.96]) ch.boite(12.72, y - 0.01, 12.75, y + 0.01, 0.95, 1.2, P.chrome, { ombre: false });
+  const boites = groupe(ch, 12.98, 0.9, 'W', 1.98);
   R(boites, P.carton, 0.4, 0.28, 0.32, 0.01, -0.35, 0.14, 0); R(boites, P.blancMat, 0.34, 0.12, 0.3, 0.01, 0.15, 0.06, 0);
   // la bibliothèque au mur ouest, ses classeurs
   const bib = groupe(ch, BB.x0 + 0.14, 0.95, 'E');
@@ -1026,7 +1064,7 @@ function bureauB(ch, P) {
     if (i < 4) { B(bib, P.plastique, 1.1, 0.3, 0.22, 0, h + 0.16, -0.01, { ombre: false }); plan(bib, cl[i % 3], 1.1, 0.3, 0, h + 0.16, 0.101); }
   }
   ch.C.ajouterBoite(BB.x0, -0.3, BB.x0 + 0.29, -1.6, { y1: 1.85 });
-  // le tableau (impression encadrée) au-dessus du fauteuil des visiteurs, la grande plante, le porte-manteau
+  // le tableau (impression encadrée) au-dessus des chaises des visiteurs, la grande plante, le porte-manteau
   cadre(ch, P, new THREE.MeshStandardMaterial({ map: texArt(), roughness: 0.7 }), BB.x0, 2.75, 'E', 0.82, 1.02, 1.62, { baguette: P.chene, ep: 0.03 });
   plante(ch, P, 10.48, 4.25, { h: 1.65, graineN: 3 });
   // (le porte-manteau : dans l'angle de la fenêtre, à côté de la bibliothèque — au nord, il fermait le passage ; 10/10)
@@ -1035,7 +1073,18 @@ function bureauB(ch, P) {
   for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + 0.4; const c = CY(pm, P.noirMat, 0.008, 0.18, Math.sin(a) * 0.07, 1.67, Math.cos(a) * 0.07, 6, { ombre: false }); c.rotation.set(Math.cos(a) * 0.8, 0, -Math.sin(a) * 0.8); }
   vetement(pm, P.tissu, 0.0, 1.66, 0.12, { haut: 0.85, rot: 0.3 });  // un manteau sombre (devant le mât, qu'il frôle)
   C.ajouterCercle(10.52, -0.24, 0.2, { y1: 1.8 });
-  corbeille(ch, P, 12.66, 2.22, null, 0.12, 0.3);
+  corbeille(ch, P, 10.6, 0.62, null, 0.12, 0.3);
+  // L'AFFICHE DE LA PORTE VITRÉE (photo 01 : vue du C01, de face, dans le haut du vantail, côté gonds ; son dos blanc côté
+  // bureau) : elle part avec le vantail
+  const pB = ch.portes.auto.find((Q) => Math.abs(Q.cx - 12.89) < 0.01 && Math.abs(Q.cz + 2.5) < 0.01);
+  const vB = pB && pB.vantaux[0];
+  if (vB) {
+    const geo = new THREE.PlaneGeometry(0.44, 0.66);
+    const af = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: texAfficheEtudiant(), roughness: 0.6 }));
+    af.position.set(vB.s * 0.3, 1.66, -0.004); af.rotation.y = Math.PI; af.castShadow = false; af.userData.vitre = true; vB.g.add(af);
+    const dos = new THREE.Mesh(geo, P.blancMat);
+    dos.position.set(vB.s * 0.3, 1.66, 0.004); dos.castShadow = false; dos.userData.vitre = true; vB.g.add(dos);
+  }
   // (10/10 : la plaque « Bureau B » a cédé la place à celle du bureau de direction B 0.3 et à son drapeau, VO q_0044 :
   // js/ecole_rdc_centre.js)
 }
