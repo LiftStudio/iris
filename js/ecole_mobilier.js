@@ -154,22 +154,25 @@ export function poserMobilier(ch) {
   mos.position.set(0, 1.05, 0.041); borne.add(mos);
   // (le socle de 0,6 x 0,5 tourné de 112° : ± 0,33 m en x, ± 0,36 en y)
   C.ajouterBoite(9.72, -A(9.06), 10.38, -A(9.78), { y1: 2 });
-  // LES PRÉSENTOIRS à brochures noirs, tournés vers l'ouest, cinq tablettes inclinées :
+  // LES PRÉSENTOIRS à brochures noirs, tournés vers l'ouest :
   //  - l'un adossé au bout nord de la face ouest de la pile (11/10, plan V2 : photo 21, juste à gauche du radiateur — il
   //    était contre le mur x 13,5 du jeu d'avant, en y 11,3) ;
   //  - l'autre à l'entrée du C01, contre son mur est (relecture du 11/10 : la photo 01, prise dans le C01 vers le sud, le
-  //    montre de profil au bout de ce mur, juste avant l'ouverture sur la salle ; c'est là que le jeu posait le kakémono
-  //    des formations, qu'elle ne montre pas — il venait de la photo 22, d'avant 2021 : retiré)
-  const br = texBrochures();
+  //    montre de profil au bout de ce mur, juste avant l'ouverture sur la salle — et la photo 21, de la salle, en voit une
+  //    tranche sombre juste après le bout du mur jaune ; c'est là que le jeu posait le kakémono des formations, qu'aucune
+  //    photo de 2026 ne montre — il venait de la photo 22, d'avant 2021 : retiré).
+  // (Relecture du 11/10 : six tablettes inclinées sur 1,80 m, et non cinq sur 1,55 — on les compte sur les photos 21 et 01,
+  // où leur haut tombe vers 1,75 m)
+  const br = new THREE.MeshStandardMaterial({ map: texBrochures(), roughness: 0.6 });
   const presentoir = (x, y) => {
     const pres = new THREE.Group(); pres.position.set(x, 0, -y); pres.rotation.y = -Math.PI / 2; ch.decor.add(pres);
-    for (const sx of [-0.39, 0.39]) maille(boiteM(0.02, 1.55, 0.35), M.noir, sx, 0.8, 0, 0, pres);
-    for (let i = 0; i < 5; i++) {
-      const t = maille(boiteM(0.76, 0.02, 0.28), M.noir, 0, 0.32 + i * 0.27, 0.02, 0, pres); t.rotation.x = -0.35;
-      const b = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.24), new THREE.MeshStandardMaterial({ map: br, roughness: 0.6 }));
-      b.position.set(0, 0.42 + i * 0.27, 0.05); b.rotation.x = -0.3; pres.add(b);
+    for (const sx of [-0.39, 0.39]) maille(boiteM(0.02, 1.8, 0.35), M.noir, sx, 0.92, 0, 0, pres);
+    for (let i = 0; i < 6; i++) {
+      const t = maille(boiteM(0.76, 0.02, 0.28), M.noir, 0, 0.3 + i * 0.26, 0.02, 0, pres); t.rotation.x = -0.35;
+      const b = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.23), br);
+      b.position.set(0, 0.4 + i * 0.26, 0.05); b.rotation.x = -0.3; pres.add(b);
     }
-    C.ajouterBoite(x - 0.38, -(y - 0.42), x + 0.22, -(y + 0.42), { y1: 1.6 });
+    C.ajouterBoite(x - 0.38, -(y - 0.42), x + 0.22, -(y + 0.42), { y1: 1.85 });
   };
   presentoir(13.08, 6.8);
   presentoir(13.32, 8.2);

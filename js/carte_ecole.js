@@ -931,7 +931,10 @@ export function construireCarte(scene, renderer = null) {
   ch.opale(3.2, 13.4, H_CAGE, 'palier1', { r: 0.18, base: 2 * ESC.hPalier });
   // (la volée 3 passe maintenant au-dessus de la volée 1 : sa lumière est une applique au mur est, sous la volée 3)
   ch.opale(4.6, 15.5, 2.95, 'escalier', { r: 0.15, mur: 'W', cuire: false });
-  ch.sortie(11.2, 9.6 + DY_A, 2.4, 'W', { suspendu: true });          // (près du pilier gris, photo 21 : DY_A)
+  // (relecture du 11/10 : le bloc de sortie de la photo 21 n'est pas suspendu près du pilier gris — ni elle, ni la VO
+  // q_0038-0046 n'en montrent là ; il est fixé en haut du mur du fond, la face ouest de la pile, au-dessus de l'écart entre
+  // le présentoir et le radiateur, sous le plafond)
+  ch.sortie(13.27, 6.0, 2.45, 'W');
   // LE JOUR qui entre (pour les spots : une lampe froide dehors, qui vise l'intérieur ; pour la lumière cuite : la source
   // au pied de l'ouverture, `ox/oz` le point d'où l'on découpe sa visibilité, dehors)
   const jour = (x, y, cible, zone, o = {}) => ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.6, cx: cible[0], cz: -cible[1], sx: x, sz: -(y + 0.3), ox: x, oz: -(y - 0.5), zone, ...o });
