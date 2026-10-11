@@ -5,7 +5,13 @@ y promène **Haythem**, et rien que lui, dans l'école **IRIS** (MediaSchool) : 
 s'asseoir, danser, sortir son téléphone, prendre l'ascenseur. Pas de match, pas de score, pas de boutique : une balade
 libre.
 
-> État actuel (v1.5, 11/10, **le plan V2**) : après avoir joué, Haythem a dit « les salles sont trop compressées »,
+> État actuel (v1.6, 11/10, **les finitions du plan V2**) : la caméra qui garde Haythem dans l'image dans les volées et
+> au passage des portes, les places au milieu des rangées serrées (on s'y faufile en pas chassés), le bas de l'escalier
+> principal refait sur les photos 20, 06 et r01, la façade sur l'impasse recalée sur les photos 10 à 18, et l'école
+> dessinée par ce que la caméra peut voir (deux fois moins d'appels de dessin aux endroits lourds) — voir « Les
+> finitions » plus bas.
+>
+> Le plan V2 (v1.5, 11/10) : après avoir joué, Haythem a dit « les salles sont trop compressées »,
 > « il y a des erreurs sur la ressemblance des salles » et, photo à l'appui, « la porte (grise du hall ouest) n'est pas
 > aussi loin ». Sept audits ont rejoué chaque photo et chaque vidéo **au même point de vue** dans le jeu, et le plan a
 > été recalé sur le **vrai gabarit** du bâtiment (l'emprise IGN : 19,8 m de façade, 23,7 m de fond à l'ouest et au
@@ -68,6 +74,11 @@ Adresses utiles :
 | Pause | Échap | Start | pause |
 
 Toutes les touches se changent dans **Options › Commandes** ; les huit emotes de la roue dans **Options › Emotes**.
+Les **rangées serrées** (grande salle S -1.14, S 1.3, rang des fenêtres de la salle 2 du 2e : 129 places dans 24 rangs) :
+au bout d'un rang, l'aide dit « ou avance dans le rang » — pousser dans le rang (à moins de 41° de sa ligne) fait passer
+Haythem en pas chassés, face à l'avant de la salle, et propose la place devant lui ; il se relève devant elle et ressort
+par un bout ouvert (une poussée en travers le ramène au bout le plus proche). Au tactile, le bouton du moment est nommé
+dans l'aide (« S'ASSEOIR : … », « DEBOUT : se lever ») et SAUT s'efface dans un rang.
 L'**ascenseur** n'a pas de touche : devant sa porte, on l'appelle (le bouton s'allume) ; dedans, au bout de deux
 secondes, il part vers le niveau suivant (va-et-vient du rez-de-chaussée au 2e).
 
@@ -84,13 +95,20 @@ secondes, il part vers le niveau suivant (va-et-vient du rez-de-chaussée au 2e)
   des photos de Haythem, pour comparer pièce par pièce), le **clavier/souris**, la **manette** (avec la navigation dans
   les menus), le **tactile** (boutons déplaçables), la **roue des emotes**, le **téléphone** (le groupe s'appelle
   maintenant IRIS), les **options**, l'**écran de chargement** (le logo officiel de l'école sur fond blanc, barre et
-  astuces au jaune du logo), la **PWA** (`manifest.webmanifest`, `sw.js`, cache `iris-v1.5`).
+  astuces au jaune du logo), la **PWA** (`manifest.webmanifest`, `sw.js`, cache `iris-v1.6`).
 - **La caméra V2** (`js/game.js`, 11/10) : champ vertical de 63° (celui des photos, l'horizontal plafonné à 108°),
   recul de 2,6 m à l'intérieur (4,3 m dans la rue), à ≈ 1,9 m de haut avec 7° de piqué, 0,4 m sur l'épaule droite (à
   gauche, ou dans l'axe, quand un mur la gêne : le côté est choisi par une note, sans battement) ; elle ne filme
   **jamais depuis une autre pièce** que celle de Haythem (sa zone, ou une voisine ouverte : sinon le recul est raccourci
   jusqu'au seuil) ; serrée, elle ouvre son champ à 69° et rend Haythem translucide au lieu de le cacher. Au départ, elle
   est dans le hall, comme la vidéo officielle, et non plus dans la rue.
+  **Finitions** (v1.6) : dans une volée, elle suit la PENTE (plus haute quand les marches montent derrière lui, dans
+  l'axe quand elles descendent, sous les plafonds de son chemin) ; à l'étroit, elle passe AU-DESSUS DE L'ÉPAULE au lieu
+  de se coller dans sa nuque ; elle SUIT LE SEUIL d'une porte derrière lui au lieu de bondir ; elle VOIT SA TÊTE (l'os de
+  l'avatar : sinon elle se rapproche sur sa ligne, et sa tête reste à 78 % du demi-champ) ; au clavier seul, au
+  joystick et à la manette, quand on ne la tourne pas soi-même, le CAP ASSISTÉ la range derrière sa marche (0,8 s après
+  le dernier geste ; 2 s quand la souris est capturée). Mesuré sur 22 parcours des volées et des passages étroits :
+  Haythem hors de l'image ou caché 21 % → 0,4 % des images au joystick en courant, 24 % → 0,8 % au clavier seul.
 
 ## Ce qui a été retiré
 
@@ -140,6 +158,10 @@ js/ecole_soussol.js   le SOUS-SOL (la vidéo de Haythem) : palier, volée de tô
                       coupe les ombres du rez-de-chaussée, sa visibilité ; appelle :
 js/ecole_amphi.js     la grande salle S -1.14, derrière le mur vert
 js/ecole_soussol_est.js   la descente de l'escalier est au -1, le palier « -1 », le sas technique et le passage
+js/ecole_visibilite.js  CE QUE LA CAMÉRA PEUT VOIR : l'école en zones (la rue, les cages et la trémie par niveau, l'est,
+                      les pièces fermées, l'avant et le fond des étages), le décor cousu rangé par familles de zones,
+                      et à chaque rendu les zones cachées tirées de la position de la caméra (__visibilite.actif = false
+                      montre tout)
 js/collisions.js      le monde solide : murs, portes, piliers, plafonds, sols et rampes (escalier)
 js/kit_decor.js       les outils de décor repris de LA CAGE : textures dessinées, relief, carte d'environnement
                       prise sur place, ombre cuite au sol, fusion des matériaux, vent des feuillages
@@ -168,9 +190,9 @@ en secondes ; * = imaginé.
 | Le palier et la volée (ouest) | derrière la porte grise du hall ouest : le palier de béton peint taupe (le panneau jaune « 0 », un hublot, l'interrupteur à voyant vert), une longue volée droite de 17 contremarches en tôle larmée, garde-corps inox à quatre lisses, le rampant du plafond à 2,95 m des nez ; le rebord du mitoyen et son objet jaune (V2 : toute la chaîne suit la porte grise, 4,09 m plus près de la rue) | V (v_001 à v_030) |
 | Le hall du -1 et le couloir | un hall presque carré à la résine grise (« -1 », extincteur, consigne, poutre, bloc lumineux, porte grise), son mur est en décrochement ; le couloir étroit de 0,92 m qui revient vers le sud sur 7,8 m, grès gris foncé, quatre spots | V (v_026 à v_058) |
 | L'espace pause | grand carrelage beige, mur vert anis et cloisons de verre dépoli, mange-debout noirs, tabourets (on s'y assoit : 21), l'îlot de trois tables, le baby-foot nord-sud sous la dalle manquante, grande table en X, distributeurs, trombinoscope, casiers, sas des toilettes (fermé) ; l'**aile** de 2021 (tablette haute, micro-ondes noir et blanc, trois A4, chaise filaire, tabouret) ; la porte grise G du mur sud (fermée) ; la porte sombre de 2026 | V (v_059 à v_067) ; l'aile : VO 22-27 s, 34-35 s |
-| La grande salle S -1.14 | derrière la porte vitrée dépolie du mur vert (« Salle de cours S -1.14 ») : sol plat, 8 + 6 rangs de tables filantes de hêtre, 98 fauteuils coque jaune moutarde (on s'assoit), tableau triptyque sous le carter de l'écran et ses enceintes, le portrait d'Einstein et un second en gris, meuble multimédia, poteau et retombée, convecteurs, goulotte, luminaires à grille ; la porte verte du fond (V2 : dans la parcelle, y 11,86-21,41, son mur est en x 13,3) | VO 26,7-33,9 s ; son état de 2026 n'est pas vu |
+| La grande salle S -1.14 | derrière la porte vitrée dépolie du mur vert (« Salle de cours S -1.14 ») : sol plat, 8 + 6 rangs de tables filantes de hêtre, 98 fauteuils coque jaune moutarde (on s'assoit, et on se faufile en pas chassés jusqu'au milieu des rangs ; le bout ouest du rang 7 s'ouvre contre le poteau), tableau triptyque sous le carter de l'écran et ses enceintes, le portrait d'Einstein et un second en gris, meuble multimédia, poteau et retombée, convecteurs, goulotte, luminaires à grille ; la porte verte du fond (V2 : dans la parcelle, y 11,86-21,41, son mur est en x 13,3) | VO 26,7-33,9 s ; son état de 2026 n'est pas vu |
 | La descente est | la volée A sous la volée 2 du rez-de-chaussée, le palier bas à -1,53 (réglette, voyant, bloc de sortie, affiche iris), la volée B, le palier du -1 (le panneau cuivré « -1 » : « Salle de cours S -1.14 / Espace pause », l'interrupteur), la porte à deux vantaux (ouverte à demeure vers le palier, comme sur la vidéo) | VO 12,4-18,2 s, 35,5-41 s ; P 24 (la tête) |
-| Le sas technique, le passage P, le passage sombre * | la porte grise « RÉSERVÉ AU PERSONNEL », la plaque du trumeau, la porte double ⚡ du local électrique, la porte crème ⚡ (un placard), un boîtier noir ; le PASSAGE P, puis un passage sombre en baïonnette (éteint) jusqu'à la porte sombre de l'espace pause | VO 18,2-21,8 s ; V (la porte sombre) |
+| Le sas technique, le passage P, le passage sombre * | la porte grise « RÉSERVÉ AU PERSONNEL », la plaque du trumeau, la porte double ⚡ du local électrique, la porte crème ⚡ (un placard), un boîtier noir ; le PASSAGE P, puis un passage sombre en baïonnette (éteint, mais lisible : le bloc de sortie vert au bout et sa lueur, une veilleuse ambre au ras du sol sur le mur est — imaginés) jusqu'à la porte sombre de l'espace pause | VO 18,2-21,8 s ; V (la porte sombre) |
 | **Rez-de-chaussée** | | |
 | Le hall d'entrée | porte n° 6 (automatique) et ses vitrophanies (quart de cible, nuage et sa constellation, équerre jaune, pavé « iris », phrase, visage ; les trois bandes du vantail est), tapis ; l'ACCUEIL nord-sud (comptoir sur socle de bois, tablette PMR, pupitre de chêne grisé), l'open-space du personnel et son mitoyen gris ardoise (affiche à l'immeuble, photo de la façade, premiers secours, caméras, imprimante) ; les huit lignes lumineuses du plafond ; l'angle nord-est ouvert (pan cannelé, photocopieur, étiquettes « INFORMATIQUE », table et chaise de hêtre — on s'y assoit —, présentoir) ; deux fenêtres à barreaux | P 03, 16, 24 ; VO 3-7 s, 92,5-97,8 s |
 | La pile du hall | face sud : l'horloge ambre (à l'heure de l'ordinateur), la plaque « iris » et l'annuaire du niveau 0 (Si 0.1, Si 0.2) ; face est, jaune : le grand annuaire à seize lames ; face ouest, le fond de la salle d'attente : radiateur à façade grise, affichettes « WIFI », haut-parleur, bloc de sortie, présentoir | VO 6,4-12,4 s, 92,6 s ; P 03, 21, 22 |
@@ -179,7 +201,7 @@ en secondes ; * = imaginé.
 | La Si 0.1 Tim Berners-Lee * | l'ex-salle A, derrière la porte grise du mur sud de la salle d'attente : deux rangs de cinq postes face au nord, la toile devant les jours dépolis, le poste de l'enseignant, le tableau blanc, l'imprimante ; trois fenêtres sur la rue | nom : annuaire de la pile (VO) |
 | Le passage des étudiants | 2,25 × 4,45 m : grille noire ouverte sur la rue, réglettes fluorescentes de la façade à la paroi, panneaux de liège, petit tableau à six feuilles, plinthes de carrelage gris, porte blanche « Sortie », double porte vitrée aux autocollants « iris » (automatique, sans fixes), le bloc de sortie et le hublot près de la rue | P 07, 10, 19 |
 | Le hall ouest | 4,9 m de la paroi vitrée aux portes de l'escalier (8,6 m avant le V2) : la pile du plan d'évacuation (0,70 × 0,92), puis, 0,97 m après la paroi, la porte grise de l'escalier du sous-sol dans son renfoncement de 2,25 m, l'extincteur, le radiateur à façade grise contre l'avancée nord, l'affiche jaune du tri, les portes coupe-feu de 2 × 1,0 m (le vantail ouest ouvert à plat) ; plafond de plâtre à 2,30 qui remonte contre la paroi vitrée, un hublot, le dôme de la caméra | P 06 et r01, 02, 04, 07, 20 ; V |
-| L'escalier principal | deux volées de 10 marches, palier à 1,75 m, garde-corps à barreaux, main courante ; il s'arrête au palier du 1er (double porte ouverte), plafond de la cage à 6,40 m | P 20, 06, 23 |
+| L'escalier principal | refait par le bas (finitions) : par la porte, la volée 1 de quatre contremarches vers le nord (girons de 0,30, le poteau à platine au pied), le palier à 0,70 devant le mur à affiches (A4 violette, écusson vert, affiche A2, grand panneau, main courante horizontale), puis la volée 2 de seize contremarches vers le sud, à l'ouest, au-dessus d'un mur d'échiffre blanc à plinthe (lisse basse et main courante sombres, barreaux gris) — la cage va du nu 0,75 au nu 4,45 et passe au-dessus de la trémie de la volée de tôle ; il s'arrête au palier du 1er (même arrivée, double porte ouverte), plafond de la cage à 6,40 m | P 20, 06 et r01, 04, 23 |
 | Le couloir C05 | 1,4 × 3,6 m, qui commence au jambage des portes de l'escalier : les deux portes des toilettes à fente vitrée haute, leurs plaques et leurs affiches, la retombée et ses hublots ; au fond, la porte bleue de la salle David Clark (automatique) | P 05, 23 |
 | Les toilettes du C05 * | femmes : deux cabines aux portes safran, les vasques et leur miroir ; hommes : deux cabines, trois urinoirs, deux vasques ; faïence, grès, sèche-mains, un vrai miroir sur PC | portes : P 23 |
 | La salle David Clark Si 0.2 * | derrière la porte bleue et son entrée, une salle informatique de 8,4 × 6,8 m : deux colonnes de trois tables pour deux, un poste par place (écran, clavier, souris, unité centrale ; on s'assoit), tableau blanc, écran, vidéoprojecteur, bureau de l'enseignant ; deux fenêtres sur la courette ouest *, entre les deux ailes du bâtiment | plaque et porte : P 23, 05 ; nom : VO 7,9 s |
@@ -188,12 +210,12 @@ en secondes ; * = imaginé.
 | Le couloir est et le vestibule | lino moucheté, mur jaune et sa plaque directionnelle bleue (Si 0.1, Si 0.2), cannelé gris-vert, plinthes gris foncé, plafond de plâtre et hublots, poteau gris ; la niche : la tête de la descente au -1 (poteaux à crosse, portillons repliés, tapis) ; le dégagement et, au bout, l'ascenseur ; le vestibule jaune, son affiche à la pomme et le déclencheur rouge, la porte nord crème ; au fond, un local fermé de 0,9 m et le mur du fond de la partie est (y 13,8, IGN) | P 24, 26 ; VO 12-15 s, 38-41 s, 90-92 s |
 | L'ascenseur | au bout du dégagement (rez-de-chaussée), de la bande sud (1er) et du vestibule (2e) : la façade palière inox (fixe, deux vantaux télescopiques, afficheur bleu, platine d'appel) ; la cabine * (inox, granit, main courante, boutons) qui porte Haythem d'un niveau à l'autre | VO 68,2-70 s (au 1er) ; rez-de-chaussée et 2e déduits |
 | L'escalier est | en U contre le mitoyen : 2 x 9 marches sombres à nez noirs et arête d'aluminium, mains courantes noires, palier à 1,75 m (réglette, bloc de sortie, affiche « la vie à l'école »), l'échiffre ORANGE jusqu'au 1er puis ROUGE jusqu'au 2e, le palier à 5,05 m ; la cage monte au 3e (volées 5 à 7 *, portillon *) | P 25, 26 ; VO 41-44 s, 68-72 s, 88,8-90 s |
-| La rue | trottoirs, chaussée, façade de l'école (drapeaux, écusson), les deux totems « iris », jardinières de zinc, bambou, palmier, bancs (on s'y assoit), huit voitures garées, motos, scooters, vélos, le jardin, l'impasse, le carrefour | P 07 à 18 |
+| La rue | trottoirs, chaussée ; la façade de l'école recalée sur les photos (finitions) : les encadrements rouges plus hauts que larges (1,47 × 2,53) aux vraies travées, une fenêtre d'un vantail par travée dans un épais cadre brun-noir au nu de la pierre (bavette sombre), des vitres qui renvoient la rue et le ciel, le 5e étage et la toiture plate, le portail n° 6, l'écusson, les drapeaux, les projecteurs, une pierre grise un cran froide ; le n° 8 en brique chamois et son trumeau de pierre ; les deux totems « iris », quatre grands bacs de zinc, le cyprès en pot noir, bambou, palmier contre le portail, bancs (on s'y assoit), corbeille, poubelle, trottinette — chaque pied relevé sur les photos 16 à 18 ; huit voitures garées, motos, scooters, vélos, le jardin, l'impasse, le carrefour | P 07 à 18 |
 | **1er étage (3,50 m)** | | |
 | Le palier est | vinyle moucheté foncé, le panneau d'étage (« 1 » : S 1.3, Si 1.4, Si 1.5, Espace pause, S 1.6), « WIFI IRIS », « POINT ÉCOUTE », l'échiffre orange et son chant gris, la porte gris taupe de l'espace pause ; au fond du renfoncement nord, la porte d'un local (fermée) | P 27, 28, 29 ; VO 41-45 s |
 | La bande sud | le doublage, le grand tableau abstrait, le disque de laiton, le boîtier vert, la réglette, l'extincteur, la porte de l'ascenseur ; aucune porte (le 103 et la 104 ne s'y ouvrent pas) | VO 68,2-70 s |
 | L'espace pause | 7 m de profondeur (V2 : le mur des jours 2 m plus au sud — ce n'est plus un couloir de 0,78 m) : murs crème et orange, plan en L ; le local fermé du coin nord-ouest * et, sur sa face est, la niche des distributeurs (machine à café, machine à snacks à deux portes vitrées) ; trois poteaux serrés et leurs murets lilas à tablette, la porte de service à vitre lilas-bleu ; banquettes courbes jaune et rouge, table basse, cinq mange-debout, tabourets « Miura », chaises coque (on s'assoit : 23 places) ; lino taupe, dalles et spots, trois jours dépolis ; au fond, le mur orange et la porte vitrée de la Si 1.4 | VO 44,9-49,2 s, 53,2-54,8 s, 66,6-68,1 s ; P 28 |
-| La salle de cours S 1.3 | 4,7 m de profondeur, plafond à 2,50 : sept fenêtres sur la rue, moquette en dalles bleu-gris, tables doubles de hêtre clair, chaises de hêtre percé, tableau de 2,0 m et son volet, vidéoprojecteur ; un blanc froid | VO 49,2-53,2 s |
+| La salle de cours S 1.3 | 4,7 m de profondeur, plafond à 2,50 : sept fenêtres sur la rue, moquette en dalles bleu-gris, tables doubles de hêtre clair, chaises de hêtre percé (on se faufile derrière les dossiers jusqu'aux places des fenêtres), tableau de 2,0 m et son volet, vidéoprojecteur ; un blanc froid | VO 49,2-53,2 s |
 | Le recoin sud-est | un renfoncement qui file au sud jusqu'à une porte taupe fermée (la seconde porte de la salle) | VO 67 s |
 | La salle Robert Kahn Si 1.4 | la salle réseau aveugle, dans le gabarit du bâtiment (sa porte à 4,4 m de son mur ouest) : six caissons lumineux, poutre et deux poteaux, 30 postes (tours noires, écrans, consoles), commutateurs, routeurs, borne Wi-Fi, cordons rouges et cyan, deux tableaux à schémas, bureau de l'enseignant, étagère miel, extincteur, desserte bleue, prises et sonde, porte grise fermée ; moquette marine, lumière froide (31 places) ; son toit à lanterneaux | VO 54,7-66,6 s |
 | Le couloir sombre, le palier d'étage ouest * | derrière la porte du fond de l'espace pause : le couloir jusqu'à l'escalier principal (banc, plan d'évacuation, extincteur, local ménage fermé) | — |
@@ -203,7 +225,7 @@ en secondes ; * = imaginé.
 | La porte coupe-feu et le sas | bâton inox, oculus, huisserie de bois côté palier, rabattue contre le mur ; côté sas, la plaque noire, le plan d'évacuation, la caméra | VO 72-73 s, 88 s |
 | Le couloir | le mur nord ROUGE VERMILLON, lino taupe, plafond lisse à 2,45, six spots, trois chaises noires, la photo turquoise, deux affiches, les plaques ; au fond, une porte grise fermée | VO 73,1-75,7 s, 84,2-88,7 s |
 | La salle 1 (S 2.7, côté cour) | 9,35 × 4,9 m, plafond à 2,40 (V2 : elle prend la place du haut de l'escalier principal, que rien ne montre) : six fenêtres à stores de toute la hauteur, embrasures brun-noir, la sixième plus large et sans store ; neuf luminaires, vidéoprojecteur, moquette marine en damier, cinq rangées, chaises de hêtre à dossier plein (31 places), tableau blanc, coin du professeur (caisson gris, meuble noir), poteaux | VO 75,8-78,4 s |
-| La salle 2 (S 2.8, côté rue) | plafond à 2,40, cinq fenêtres d'un seul vantail, moquette anthracite, deux colonnes de tables pour deux, chaises à six trous, triptyque, range-documents | VO 78,4-84,2 s |
+| La salle 2 (S 2.8, côté rue) | plafond à 2,40, cinq fenêtres d'un seul vantail et, dans le cadre rouge de la travée 7, la fenêtre haute qui descend au sol (photos 11, 12), moquette anthracite, deux colonnes de tables pour deux, chaises à six trous (rang des fenêtres : on s'y faufile), triptyque, range-documents | VO 78,4-84,2 s ; P 11, 12 |
 | Fermés * | la Si 2.6, le B 2.3, le dégagement ouest | — |
 
 Le départ est dans le hall d'entrée, juste passé la porte 6, face à la pile et à sa plaque « iris » — là où entre la
@@ -243,6 +265,23 @@ fermées à l'ouest et une courette entre elles).
 Les coordonnées du V2 sont celles du plan de `js/carte_ecole.js` ; les constantes de décalage sont en tête des modules
 qui s'en servent (`DY_A`, `DY_S`, `DY_SS`, `Y_ESC`).
 
+### Les finitions (v1.6, 11/10/2026)
+
+Cinq lots, chacun construit puis relu en jouant (au même point de vue que les photos, et en vue de jeu), puis fusionnés
+et rejoués ensemble :
+
+| Ce qui a changé | Avant | Finitions | D'où |
+|---|---|---|---|
+| La caméra dans les volées, les paliers, les passages étroits (`js/game.js`) | collée dans sa nuque, translucide, ou Haythem hors de l'image (21 % des images au joystick en courant) | la pente, au-dessus de l'épaule, le seuil suivi, la tête toujours vue, le cap assisté : **0,4 %** | P 25 ; V v_010 ; banc de 22 parcours × 5 façons de jouer |
+| Les places au milieu des rangées serrées (`js/player.js` `poserRangs`) | 80 places qu'on ne prenait qu'au bout du rang | on s'y faufile en pas chassés : **129 places dans 24 rangs**, 314 places sur 331 se prennent en marchant (les 17 autres sont dans des pièces fermées) | VO q_0108-0130, q_0204, q_0324 |
+| Le bas de l'escalier principal (`js/carte_ecole.js` `construireEscalier`) | un U de 2 × 10, palier à 1,75 : par la porte, le flanc de la volée 1 | quatre contremarches dans la porte, palier à 0,70 devant le mur à affiches, volée 2 à l'ouest au-dessus d'un échiffre ; garde-corps hors de l'occlusion de l'écran (plus de moucheté gris) | P 20, 06 et r01, 04 |
+| La façade sur l'impasse (`js/carte_ecole.js`, `js/ecole_etage1.js`, `js/ecole_etage2.js`, `js/ecole_matieres.js`, `js/ecole_rue*.js`) | cadres rouges carrés, fenêtres à meneau et imposte, tableaux de pierre claire, attique en retrait, plafonniers vus par les vitres | cadres 1,47 × 2,53 aux vraies travées, une fenêtre d'un vantail dans un cadre brun-noir, 5e étage et toiture plate, reflets de la rue, mobilier du trottoir à sa place | P 10 à 18 (recalées à 2-9 px) |
+| Le rendu (`js/ecole_visibilite.js`) | le rez-de-chaussée et la rue dessinés partout, le 1er et le 2e en entier depuis la rue | ce que la caméra ne peut pas voir n'est pas dessiné : rue 2 150 → 1 380 appels, palier est du 1er 1 482 → 807, pause du -1 1 166 → 597 ; le passage sombre du -1 lisible | V v_066, v_067 |
+
+À l'intégration : le tri par zones a suivi l'escalier refait (la cage part de x 0,60, la volée 2 surplombe la trémie de
+la volée de tôle) — rejoué tri actif puis coupé, pixel à pixel, sur les trois escaliers en montée et en descente, les
+couloirs des quatre niveaux, la rue et plus de 500 poses tirées au hasard là où l'on marche.
+
 ### Ce qui reste imaginé
 
 Les pièces étoilées n'ont été vues ni sur les photos ni sur la vidéo (ou seulement leur porte) : leur intérieur est
@@ -256,8 +295,11 @@ Restent aussi imaginés ou incertains (avec la photo qui trancherait) :
 - **Rez-de-chaussée** :
   - la longueur du passage des étudiants (4,45 m gardés ; les photos 07 et 10 donnent plutôt 3,85 : une photo du
     passage prise de la paroi vitrée, le sol visible) ;
-  - l'intérieur de l'escalier principal (2 × 10 marches gardé ; la photo 20 verrait un palier après ≈ 5 marches : une
-    photo depuis la porte ouverte, vers le haut) ;
+  - le haut de l'escalier principal : vue du hall, la volée 2 passe 0,5 à 0,8 m plus haut que sur les photos r01, 06
+    et 20 (la photo 04 n'y voit plus les barreaux), parce qu'elle garde l'arrivée du jeu au palier du 1er (y 8,35) ;
+    à sa vraie pente (0,53, girons de ≈ 0,33), elle arriverait au 1er vers y 6,3-7,0, dans le couloir sombre imaginé —
+    c'est déplacer le palier du 1er et sa double porte, imaginés (une photo depuis le palier intermédiaire vers le haut,
+    puis du palier du 1er) ; le vantail ouest reste à plat (entrouvert sur la photo 20) ;
   - le pilier gris et la borne (les photos 21 et 02 diffèrent de ≈ 0,7 m) ; l'écart entre le C01 et la pile vu de la
     photo 01 (≈ 1 m) ; l'angle nord-est du bureau B (± 0,3 m : une photo de l'angle sud-est de la salle vers le sud) ;
   - la porte de la Si 0.1 et tout son intérieur, la Si 0.2 et ses fenêtres, la courette ouest, les toilettes, le local,
@@ -275,8 +317,18 @@ Restent aussi imaginés ou incertains (avec la photo qui trancherait) :
 - **2e** : aucune photo de 2026 ; la salle 2 en plan (son mur ouest) ; la profondeur du recoin de l'extincteur ; les
   Si 2.6 et B 2.3, le dégagement ouest ; laquelle des deux salles est S 2.7 ou S 2.8 ; la cage au-dessus (volées 5 à 7,
   portillon) ; les étages 3 à 5 et le -2 n'existent pas encore.
-- **La façade** : les encadrements rouges sont des carrés dans le jeu ; sur les photos 11 et 12, ils sont plus hauts
-  que larges et enferment une fenêtre plus haute ; les fenêtres du 1er gardent leur meneau.
+- **La façade** : le tableau sombre des fenêtres est une doublure de 25 cm (la menuiserie reste à sa place pour ne pas
+  toucher aux salles : vue très en biais, la bande sombre est un peu large) ; le côté de l'ouvrant de la fenêtre haute
+  de la travée 7 du 2e (les deux photos sont prises de l'ouest) ; le reflet des vitres est une seule tuile, qui se répète
+  de près ; le premier banc (± 0,4 m), le totem du passage et la trottinette (± 0,3 m) ; le n° 4 haussmannien reste plat,
+  le passage reste blanc (jaune sur les photos 10 et 11).
+- **Les places des rangées serrées** : dans la salle 2 du 2e, il n'y a que 0,145 m entre la table d'à côté et le dos des
+  chaises : en passant vers la place des fenêtres, les jambes de Haythem entrent de 5 à 8 cm dans la chaise côté allée
+  (sur la VO q_0324, les chaises sont rentrées sous les tables : les rentrer de 0,10-0,15 m réglerait cela).
+- **La caméra** : garder sa tête dans l'image fait tourner la vue plus vite aux demi-tours des paliers (le réglage :
+  le 0.78 de `_dansLImage` dans `js/game.js`) ; à la pose de la photo 25 (vestibule est, Haythem dos au mur jaune), la
+  vue reste plongeante, 65 cm au-dessus de sa tête, faute de recul derrière lui ; au pied de la volée de tôle (palier tournant de 0,85 m), Haythem reste translucide
+  quelques dixièmes de seconde.
 - Les couleurs de 2026 des murs vus seulement en 2021 : le vestibule (jaune), le mitoyen de l'accueil (gris), le
   couloir du 2e (rouge), l'espace pause du 1er (orange).
 
@@ -368,5 +420,16 @@ entre portes, murs et meubles, largeurs, profondeurs — sont celles des photos 
 
 **L'écran de chargement** : après avoir ajouté des fichiers chargés au démarrage, relever les profils
 (`?chargement=trace`, puis `?chargement=trace&tel=1`) et relancer `python tools/liste_chargement.py` (voir son en-tête).
-Changer aussi la version de `sw.js` (aujourd'hui `iris-v1.5`) quand index.html, le style, un module ou un fichier lourd
+Changer aussi la version de `sw.js` (aujourd'hui `iris-v1.6`) quand index.html, le style, un module ou un fichier lourd
 changent.
+
+**Ce que la caméra peut voir** (`js/ecole_visibilite.js`) : les ZONES sont écrites en dur, en coordonnées du plan V2 (les
+cages, la trémie, l'est, les pièces fermées, l'avant et le fond des étages), et les règles de `zonesCachees` disent, selon
+la place de la caméra, quelles zones elle ne peut pas voir. **Qui déplace un mur, une cage ou une pièce reprend ses
+boîtes et ses règles**, puis vérifie : `__visibilite.actif = false` montre tout ; rendre la même vue tri actif puis coupé
+et comparer pixel à pixel (le long des escaliers, en montée et en descente, et en des poses tirées au hasard là où l'on
+marche) ; il ne doit rester que les fentes du décor.
+
+**Les rangs serrés** (`js/player.js` `poserRangs`) : une pièce qui pose une rangée de sièges serrés donne à chacun le
+même objet `s.rang` — `{ nom, sol, ax, az, bx, bz` (les deux bouts de la ligne libre, en monde), `fx, fz` (l'avant de la
+salle), `sieges }` — ; un bout est ouvert si Haythem y tient à 5 cm près (`ouvA` / `ouvB` à false : fermé).
