@@ -257,11 +257,12 @@ class Chantier {
     this.lampes.push({ x: x + s * 0.25, z: -(y0 + y1) / 2, h, zone, type: 'tube', force: 1.1 });
   }
   // LE BLOC DE SORTIE (vert, autonome, il éclaire) : regarde vers `face`. `suspendu` : sous deux tiges (près du pilier).
-  sortie(x, y, h, face, { suspendu = false } = {}) {
+  // `simple` : une seule face verte, le dos est le boîtier (relecture du 11/10 : celui du passage, côté rue — photo 10)
+  sortie(x, y, h, face, { suspendu = false, simple = false } = {}) {
     const M = this.M, g = new THREE.Group(); g.position.set(x, h, -y);
     g.rotation.y = { S: 0, N: Math.PI, E: Math.PI / 2, W: -Math.PI / 2 }[face];
     maille(boiteM(0.36, 0.13, 0.05), M.boitier, 0, 0, 0, 0, g, { ombre: false });
-    for (const z of [0.026, -0.026]) {
+    for (const z of simple ? [0.026] : [0.026, -0.026]) {
       const p = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.11), M.sortie); p.position.z = z; if (z < 0) p.rotation.y = Math.PI; g.add(p);
     }
     if (suspendu) for (const sx of [-0.12, 0.12]) maille(new THREE.CylinderGeometry(0.004, 0.004, 0.25, 6), M.inox, sx, 0.19, 0, 0, g, { ombre: false });
@@ -459,9 +460,13 @@ function construireFacade(ch) {
   ch.boite(0.1, -0.44, 1.6, -0.4, 2.25, 2.75, M.noirMat);
   for (let h = 2.29; h < 2.74; h += 0.045) ch.boite(0.12, -0.47, 1.58, -0.44, h, h + 0.012, M.acierNoir, { ombre: false });
   ch.panneau(new THREE.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.6 }), 0.3, 0.2, 0.8, -0.45, 1.75, 'S');
-  // le linteau d'acier noir du passage (35 cm) et ses deux boîtiers de contact
+  // le linteau d'acier noir du passage (35 cm) et, dessous, au milieu, le boîtier noir aux deux étiquettes blanches
+  // (relecture du 11/10, photo 10 rejouée : un seul boîtier de 0,59 m, x 3,01-3,6, de 2,32 à 2,45 — pas deux petits
+  // boîtiers aux jambages ; c'est lui qu'on voit de la rue, et non un bloc de sortie vert)
   ch.boite(2.175, -0.44, 4.425, -0.4, 2.45, 2.8, M.acierNoir);
-  for (const x of [2.6, 4.0]) ch.boite(x - 0.06, -0.48, x + 0.06, -0.44, 2.38, 2.45, M.noirMat, { ombre: false });
+  ch.boite(3.01, -0.45, 3.6, -0.35, 2.32, 2.45, M.noirMat, { ombre: false });
+  const etiq = new THREE.MeshStandardMaterial({ color: 0xeeeeea, roughness: 0.5 });
+  for (const x of [3.12, 3.49]) ch.panneau(etiq, 0.15, 0.035, x, -0.452, 2.385, 'S');
   // (plan V2, photo 10 : entre la porte de secours et le passage, le cadre noir commun — un panneau d'acier noir jusqu'au
   // linteau, sur les 0,7 m de façade que l'ouverture rétrécie découvre)
   ch.boite(1.46, -0.44, 2.175, -0.4, 0, 2.8, M.noirMat);
@@ -649,15 +654,15 @@ function construireParoiPassage(ch) {
   // le pan plein : le dos de la pile (construireMurs), peint en crème côté passage (son affiche : js/ecole_mobilier.js)
   ch.panneau(M.creme, X0 - 1.75, hT, (1.75 + X0) / 2, Y - 0.002, hT / 2, 'S');
   // LES AUTOCOLLANTS « iris » (photos 07, 19) : deux rangées de quatre sur le vantail EST (s = -1 : à droite vu du
-  // passage), un seul au milieu du vantail ouest
-  const rangs = (s) => (s < 0 ? [[0.9, 4], [1.4, 4]] : [[1.25, 1]]);
+  // passage), un seul au milieu du vantail ouest (relecture du 11/10, photo 07 rejouée à sa pose, (3,86 ; 5,27) h 1,30
+  // cap 193 : les rangées à 0,99 et 1,46, le seul du vantail ouest à 1,29)
+  const rangs = (s) => (s < 0 ? [[0.99, 4], [1.46, 4]] : [[1.29, 1]]);
   ch.porte('x', Y, (X0 + X1) / 2, { l: X1 - X0, h: hP, ep: 0.08, modele: 'vitree2', autocollants: rangs, etat: 'auto', cote: 'S', huisserie: false, nom: 'passage' });
-  // (le bloc de sortie qui était côté hall, en (3,2 ; 5,12) à 2,45, se perdait au-dessus du plafond du hall ; plan V2 :
-  // (3,3 ; 4,17). Mais sous le plafond à 2,30, on le verrait du passage, en haut des vantaux — la photo 19 n'y montre
-  // rien, et la photo 07, prise du hall, montre à sa place, au-dessus des vantaux, le boîtier noir du détecteur de la
-  // porte automatique et son voyant ambre : c'est lui, collé sous le plafond, derrière la traverse haute)
-  ch.boite(3.15, 4.09, 3.45, 4.15, 2.255, 2.3, M.noirMat, { ombre: false });
-  ch.boite(3.37, 4.15, 3.41, 4.152, 2.265, 2.28, M.embout, { ombre: false });
+  // LE BLOC DE SORTIE côté hall, au-dessus des vantaux, au milieu (plan V2 : (3,3 ; 4,17)). (Relecture du 11/10 : la photo
+  // 07 rejouée à sa pose le montre AU-DESSUS de la traverse haute, de 2,33 à 2,45, un bloc à pictogramme — le coureur et
+  // sa porte —, et non un boîtier de détecteur : le plafond du hall remonte contre la paroi, construireCarte. Du passage,
+  // le bandeau plein le cache, comme sur la photo 19.)
+  ch.sortie(3.3, Y + 0.065, 2.39, 'N', { simple: true });
 }
 
 // =====================================================================
@@ -675,8 +680,15 @@ function construireMurs(ch) {
   // L'ouverture sur la rue garde ses 2,25 m : à l'ouest, un trumeau de 0,43 m dans l'épaisseur de la façade, noir dehors.
   // Le mur ouest reste donc sur la ligne x 1,675 de master, et le pan plein du fond est tout le dos de la pile du plan
   // d'évacuation, 0,70 m — la photo 10 y montre une affiche et une grille de ventilation basse.)
-  ch.mur({ de: [1.675, -0.2], a: [1.675, 4.05], mats: { E: CR, W: B }, plinthes: ['E'], ouvertures: [{ c: 1.6, l: 0.9, h: 2.04 }] });
+  // (Relecture du 11/10 : les plinthes du passage sont de carrelage gris, pas de bois — photo 07, le long des deux murs,
+  // et photo 10 ; celles du hall sont de bois, photo 06. Posées à part : `mur` ne pose que du bois.)
+  const PG = new THREE.MeshStandardMaterial({ color: 0x9a9b99, roughness: 0.55 });
+  PG.name = 'plinthe de carrelage gris (passage)';
+  ch.mur({ de: [1.675, -0.2], a: [1.675, 4.05], mats: { E: CR, W: B }, ouvertures: [{ c: 1.6, l: 0.9, h: 2.04 }] });
   ch.porte('y', 1.675, 1.6, { l: 0.9, h: 2.04, modele: 'blanche', etat: 'auto', cote: 'E', charniere: 'd', nom: 'service (passage)' });
+  for (const [a0, a1] of [[0, 1.15], [2.05, 4.05]]) ch.boite(1.75, a0, 1.762, a1, 0, 0.09, PG, { ombre: false });
+  ch.boite(4.413, 0, 4.425, 4.05, 0, 0.09, PG, { ombre: false });
+  ch.boite(1.75, 4.038, 2.45, 4.05, 0, 0.09, PG, { ombre: false });
   // le mur ouest du hall (ligne x 1,675), derrière la pile, le renfoncement de la porte grise et l'avancée nord
   ch.mur({ de: [1.675, 4.05], a: [1.675, 8.925], mats: B, plinthes: ['E'], ouvertures: [{ c: 9.575 + DY_SS, l: 0.95, h: 2.04 }] });
   // (09/10, la vidéo du sous-sol : elle ouvre sur le palier de l'escalier du -1, js/ecole_soussol.js ; on la TIRE depuis le
@@ -702,12 +714,10 @@ function construireMurs(ch) {
     if (faces.includes('S')) ch.boite(1.75, ya - 0.015, xa + 0.015, ya, 0, 0.08, M.bois, { ombre: false });
     if (faces.includes('N')) ch.boite(1.75, yb, xa + 0.015, yb + 0.015, 0, 0.08, M.bois, { ombre: false });
   }
-  // (côté passage, au pied du pan plein de la pile)
-  ch.boite(1.75, 4.035, 2.45, 4.05, 0, 0.08, M.bois, { ombre: false });
   // le mur est du passage : la ligne x 4,5 (plan V2 : le trumeau des travées 3 et 4 ; derrière, la Si 0.1), jusqu'au mur
   // sud de la salle d'attente (ligne y 4,8) ; au nord, le hall s'ouvre sur la salle. (La porte de l'ex-salle A n'est plus
-  // ici : sur le mur sud de la salle d'attente.)
-  ch.mur({ de: [4.5, -0.4], a: [4.5, 4.05], mats: { W: CR, E: B }, plinthes: ['W'] });
+  // ici : sur le mur sud de la salle d'attente.) (Côté passage, sa plinthe grise : plus haut.)
+  ch.mur({ de: [4.5, -0.4], a: [4.5, 4.05], mats: { W: CR, E: B } });
   ch.mur({ de: [4.5, 4.05], a: [4.5, 4.875], mats: B, plinthes: ['W'] });
   // ---- LA SALLE D'ATTENTE ----
   // (10/10, ARBITRAGE de la visite officielle : de la porte 6, en 2021, le bout est du mur jaune et le totem se voient à
@@ -905,7 +915,10 @@ export function construireCarte(scene, renderer = null) {
   radiateur(ch, 13.3, 5.32, 'W', 0.6, 0.12, 1.15);
   // la caméra de surveillance du hall ouest et son haut-parleur (au mur des portes, à droite du jambage, sous le plafond
   // à 2,30) ; le déclencheur manuel rouge (au bout ouest du mur sud de la salle d'attente : DY_A)
-  const dome = maille(new THREE.SphereGeometry(0.06, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.boitier, 4.2, 2.3, -8.4, 0, ch.decor, { ombre: false });
+  // (Relecture du 11/10 : le dôme est en (4,75 ; 7,75), contre la retombée du plafond de la salle d'attente, pas devant
+  // les portes de l'escalier — photo 04 rejouée à sa pose, (6,53 ; 6,81) h 1,41 cap −49, à 5 px sur les deux vantaux ; le
+  // diffuseur d'alarme y retombe à 4 cm de sa place ; la photo 20, prise devant les portes, ne le voit pas)
+  const dome = maille(new THREE.SphereGeometry(0.06, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.boitier, 4.75, 2.3, -7.75, 0, ch.decor, { ombre: false });
   dome.userData.horsAOSol = true;
   ch.boite(4.53, 8.855, 4.67, 8.925, 2.14, 2.26, M.boitier, { ombre: false });
   ch.boite(4.9, 9.075 + DY_A, 5.0, 9.11 + DY_A, 1.25, 1.35, M.rougeEtiquette, { ombre: false });
@@ -914,9 +927,28 @@ export function construireCarte(scene, renderer = null) {
   ch.plafond(1.75, 0, 4.425, 4.05, 2.6, 'platre');                   // le passage
   // le hall ouest (plan V2 : plâtre à 2,30 — photo 06, 2,25-2,30 ; le jeu avait 2,40) : la gorge derrière la paroi
   // vitrée, le hall jusqu'aux dalles de la salle d'attente (x 5,3), et devant le C05, au nord du mur safran
-  ch.plafond(1.75, 4.05, 4.5, 4.875, 2.3, 'platre');
-  ch.plafond(1.75, 4.875, 5.3, 8.925, 2.3, 'platre');
-  ch.plafond(5.3, 12.0 + DY_A, 5.975, 8.925, 2.3, 'platre');
+  // (Relecture du 11/10 : contre la paroi vitrée, le plafond de la gorge REMONTE en pente jusqu'au haut du bandeau,
+  // 2,60. Photo 06 rejouée à sa pose : l'arête du haut de la pile, rapportée sur son nu x 2,45, passe de 2,57 en y 4,16 à
+  // 2,45 en 4,42, 2,35 en 4,64 et 2,24 en 4,91 — une droite, pas un ressaut, et le bas de la même photo tombe juste,
+  // ce n'est pas la déformation de l'objectif ; photo 07 rejouée : le bloc de sortie est au-dessus de la traverse
+  // haute, de 2,33 à 2,45. Le rampant va de y 4,075 (2,60) à y 4,77 (2,30), sur toute la largeur de la gorge.)
+  {
+    const ya = 4.075, yb = 4.77, ha = 2.6, hb = 2.3, xa = 2.45, xb = 4.5;
+    const g = new THREE.BufferGeometry(), L = Math.hypot(yb - ya, ha - hb);
+    g.setAttribute('position', new THREE.Float32BufferAttribute([xa, ha, -ya, xb, ha, -ya, xb, hb, -yb, xa, hb, -yb], 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute([xa, 0, xb, 0, xb, L, xa, L], 2));
+    g.setIndex([0, 2, 1, 0, 3, 2]); g.computeVertexNormals();
+    const m = maille(g, M.platre, 0, 0, 0, 0, ch.decor, { ombre: false }); m.userData.horsAOSol = true;
+    ch.C.plafond(1.75, -yb, 4.5, -4.05, hb);
+    ch.plafond(1.75, yb, 4.5, 4.875, 2.3, 'platre', { retombees: false });
+  }
+  // (Relecture du 11/10, photo 04 rejouée : le plafond bas du hall s'arrête à la retombée, en x 4,85, et ne passe à l'est
+  // qu'au nord de y 8,05, devant le C05 ; entre les deux, le plafond de dalles de 60 de la salle d'attente, à 2,60 —
+  // ses joints calés sur ceux des dalles de la salle, qui partent de x 5,3 et de y 7,8 (plan V2, lot C) ; au nord de
+  // 8,05, le plafond bas les cache)
+  ch.plafond(1.75, 4.875, 4.85, 8.925, 2.3, 'platre');
+  ch.plafond(4.85, 8.05, 5.975, 8.925, 2.3, 'platre');
+  ch.plafond(4.7, 4.8, 5.3, 8.4, 2.6, 'dalles', { retombees: false });
   // C05 : au premier tiers (y 15,2), une RETOMBÉE — le fond du couloir est plus bas (2,30), l'imposte de la porte bleue
   // vient juste sous son plafond (photos 05 et 23 : le premier hublot avant le ressaut, le second après ; 09/10)
   ch.plafond(4.6, 13.6, 5.8, 15.2, 2.4, 'platre');
@@ -932,12 +964,26 @@ export function construireCarte(scene, renderer = null) {
   ch.plafond(4.75, 0, 9.9, 9.0, 2.6, 'plateaux');                      // la salle A (visitable : js/ecole_pieces.js)
 
   // ---- les luminaires (et les lampes : ce sont les mêmes) ----
-  // (plan V2 : les deux réglettes au-dessus des lièges, vers la rue — photos 07, 10)
-  ch.tube(1.75, 0.9, 2.4, 2.35, 1, 'passage'); ch.tube(4.425, 0.9, 2.4, 2.35, -1, 'passage');
-  ch.sortie(3.3, 0.12, 2.3, 'N');
+  // (plan V2 : les deux réglettes au-dessus des lièges, vers la rue — photos 07, 10. Relecture du 11/10 : elles partent
+  // de la façade — photo 10, leurs bouts touchent le linteau — et vont jusqu'à y ≈ 3,0, photo 07 rejouée ; deux tubes
+  // bout à bout, photo 19 : la jonction au milieu. Une lampe chacune, comme avant.)
+  for (const [x, s] of [[1.75, 1], [4.425, -1]]) {
+    ch.tube(x, 0.35, 2.95, 2.35, s, 'passage');
+    const xj = x + s * 0.06;
+    ch.boite(xj - 0.025, 1.62, xj + 0.025, 1.68, 2.3, 2.37, M.boitier, { ombre: false });
+  }
+  // le bloc de sortie près de la rue, côté passage : sous le plafond, au-dessus de l'ouverture — de la rue, le linteau
+  // le cache et l'on ne voit que le boîtier noir (photo 10), du hall il est vert (photo 07) ; et à côté de lui, à l'est,
+  // le hublot rond du plafond, allumé (photo 07)
+  ch.sortie(3.3, 0.2, 2.52, 'N', { simple: true });
+  ch.opale(3.6, 0.3, 2.6, 'passage', { r: 0.16 });
   // (09/10 : plus de hublot en (5,2 ; 12,9), à l'entrée du C05 — ni la photo 05 ni la photo 23 n'en montrent : les deux
   // qu'on y voit sont ceux du C05 ; plan V2 : les deux du hall, l'un devant la porte grise, l'autre devant l'escalier)
-  for (const [x, y] of [[3.5, 5.9], [3.6, 8.2]]) ch.opale(x, y, 2.3, 'hallO');
+  // (Relecture du 11/10 : UN SEUL hublot dans le hall, en (3,7 ; 6,5), entre la porte grise et l'extincteur — photo 02
+  // rejouée à sa pose, (10,52 ; 5,62) h 1,45 cap −87, à 3-6 px : y 6,48 ; la photo 06 ne le voit pas, il est donc à
+  // l'est de x 3,5 ; la photo 19 le montre au fond, au milieu. Devant les portes de l'escalier, il n'y en a pas : ni la
+  // photo 04 ni la photo 20, qui voient ce plafond, n'en montrent.)
+  ch.opale(3.7, 6.5, 2.3, 'hallO');
   // (les deux hublots du C05, photos 23 et 05 : le premier au droit de la porte des toilettes femmes, avant la
   // retombée, le second passé la retombée, sous le plafond bas — Ø 38 cm ; 09/10)
   ch.opale(5.25, 14.2, 2.4, 'c05', { r: 0.18 }); ch.opale(5.25, 16.5, 2.3, 'c05', { r: 0.18 });
@@ -963,7 +1009,9 @@ export function construireCarte(scene, renderer = null) {
   // au pied de l'ouverture, `ox/oz` le point d'où l'on découpe sa visibilité, dehors)
   const jour = (x, y, cible, zone, o = {}) => ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.6, cx: cible[0], cz: -cible[1], sx: x, sz: -(y + 0.3), ox: x, oz: -(y - 0.5), zone, ...o });
   jour(15.25, 0.3, [15.25, 3.2], 'hall', { poids: 1.6 });
-  jour(3.3, -0.4, [3.3, 2.0], 'passage', { poids: 1.4 });
+  // (relecture du 11/10 : sa source, dehors, sous le linteau — à 2,60, à 0,5 m de lui, elle faisait une tache blanche sous
+  // le linteau, vue de la rue ; la lumière cuite ne lit pas sa hauteur)
+  jour(3.3, -0.4, [3.3, 2.0], 'passage', { poids: 1.4, h: 2.2 });
   for (const x of [17.33, 18.98]) ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.4, sx: x, sz: -0.4, ox: x, oz: 0.5, zone: 'hall', reel: false, cuireForce: 0.55 });
   for (const x of [5.78, 7.43, 9.08]) ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.4, sx: x, sz: -0.4, ox: x, oz: 0.5, zone: 'salleA', reel: false, cuireForce: 0.8 });
   for (const x of [10.73, 12.38]) ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.4, sx: x, sz: -0.6, ox: x, oz: 0.5, zone: 'bureauB', reel: false, cuireForce: 0.5 });
