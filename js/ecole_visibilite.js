@@ -1,31 +1,42 @@
 // =====================================================================
 //  CE QUE LA CAMÉRA PEUT VOIR : L'ÉCOLE DESSINÉE PAR ZONES (lot 5 « rendu-perf », 11/10/2026)
 // =====================================================================
-// Ce qui coûte dans une image, c'est le nombre d'APPELS DE DESSIN (js/kit_decor.js optimiserDecor). Les niveaux avaient
-// déjà leurs règles (un groupe par étage, montré quand la caméra peut le voir : js/ecole_etage1.js, ecole_etage2.js,
-// ecole_soussol.js, ecole_soussol_est.js), mais le rez-de-chaussée et la rue, eux, étaient dessinés PARTOUT : au 2e, au -1,
-// dans la salle Robert Kahn ; et depuis la rue, le 1er et le 2e en entier, l'espace pause, la Kahn, le palier — pour ce
-// qu'on en voit par les fenêtres. Mesuré (1 600 × 900, haute, Radeon intégrée) : 2 150 appels dans la rue, 1 480 sur le
-// palier est du 1er, 1 280 sur celui du 2e, 1 190 dans le sas du -1.
+// Ce qui coûte dans une image, c'est le nombre d'APPELS DE DESSIN (js/kit_decor.js optimiserDecor) : sur la Radeon
+// intégrée, ANGLE en passe chacun à Direct3D pour 20 à 35 µs de processeur. Les niveaux avaient déjà leurs règles (un
+// groupe par étage, montré quand la caméra peut le voir : js/ecole_etage1.js, ecole_etage2.js, ecole_soussol.js,
+// ecole_soussol_est.js), mais le rez-de-chaussée et la rue étaient dessinés PARTOUT : au 2e, au -1, dans la salle Robert
+// Kahn ; et depuis la rue, le 1er et le 2e en entier — l'espace pause, la Kahn, le palier —, pour ce qu'on en voit par
+// les fenêtres. Mesuré (1 600 × 900, haute) : 2 150 appels dans la rue, 1 480 sur le palier est du 1er, 1 280 sur celui
+// du 2e, 1 190 dans le sas du -1.
 //
 // LA MÉTHODE.
-//   1. L'école est partagée en ZONES : des boîtes du plan (x, y) et de hauteur — la rue, chaque cage d'escalier sur toute sa
-//      hauteur, les grandes parties de chaque niveau (`ZONES`). Ce qui n'est dans aucune boîte (les mitoyens, le toit, la
-//      courette, l'arrière) est « dehors » : toujours dessiné.
-//   2. Chaque TRIANGLE du décor cousu est rangé dans les zones que touche sa boîte grossie de 6 cm : une face de mur va
-//      dans la pièce qu'elle regarde (le mur a 12 cm au moins : sa boîte grossie n'atteint pas l'autre pièce), une vitre ou
-//      une cloison mince dans les deux. Les blocs cousus par matériau (js/kit_decor.js, js/ecole_portes.js fusionnerLocal)
-//      sont COUPÉS par jeu de zones : même matériau, mêmes sommets (partagés, rien n'est recopié), un intervalle d'indices
-//      par morceau, chacun sa sphère englobante (l'élagage par la pyramide de vue y gagne aussi). Une porte est rangée en
-//      entier dans les zones de ses deux côtés ; un maillage qu'on ne coupe pas (un sol à carte de lumière, un miroir), dans
-//      toutes les zones que touche sa boîte.
+//   1. L'école est partagée en ZONES : des boîtes du plan (x, y) et de hauteur (`ZONES`) — la rue ; les deux cages et la
+//      trémie, coupées par niveau ; à chaque niveau, l'est autour de la cage est ; au rez-de-chaussée, les pièces fermées
+//      par une porte automatique ; au 1er et au 2e, les pièces sur rue (et leur dedans sous l'appui des fenêtres) et le
+//      reste. Ce qui n'est dans aucune boîte (les mitoyens, le toit, la courette, l'arrière) est « dehors » : toujours
+//      dessiné.
+//   2. Chaque TRIANGLE du décor cousu (js/kit_decor.js optimiserDecor, js/ecole_portes.js fusionnerLocal) est rangé dans
+//      les zones que touche sa boîte grossie de 6 cm (une face de mur, dans la pièce qu'elle regarde : le mur a 12 cm au
+//      moins ; une vitre ou une cloison mince, dans les deux), et dans la FAMILLE de la zone qu'il regarde. Le bloc garde
+//      ses sommets et son matériau ; ses triangles sont seulement rangés par famille (`couper`). Quand tout s'en voit, il
+//      est dessiné entier, comme avant (pas un appel de dessin de plus) ; sinon, seules ses suites de familles visibles.
+//      Une porte est rangée en entier dans les zones de ses deux côtés ; un maillage qu'on ne coupe pas (un sol à carte de
+//      lumière, un miroir), dans toutes les zones que touche sa boîte.
 //   3. À chaque rendu par la caméra du jeu (et par la caméra de la carte d'environnement, à son point de prise), les zones
-//      CACHÉES sont tirées de la position de la caméra (`zonesCachees`, des règles simples : le niveau, les cages, la
-//      façade) ; un morceau dont toutes les zones sont cachées n'est pas dessiné. Rien n'est caché hors de ces rendus : la
-//      carte d'ombre, l'ombre cuite au sol, les ombres de contact, la précompilation des programmes voient tout, comme avant.
-//   4. Les règles ont été VÉRIFIÉES en rendant, depuis 3 000 positions de caméra sur les quatre niveaux et la rue (celles que
-//      prend la caméra du jeu derrière Haythem, et son œil en 1re personne), une image des zones vues dans les six
-//      directions : aucune zone vue n'y est cachée par les règles (portes et vitres comptées comme ouvertes).
+//      CACHÉES sont tirées de la position de la caméra (`zonesCachees`) : le niveau, les cages, la trémie, la façade, la
+//      distance aux portes des pièces fermées. Rien n'est caché hors de ces rendus : la carte d'ombre et son cache, l'ombre
+//      cuite au sol, les ombres de contact, la précompilation des programmes voient tout, comme avant.
+//   4. Les règles sont tirées d'un RELEVÉ : depuis 14 966 positions de la caméra (Haythem posé partout où l'on marche, sur
+//      les quatre niveaux, les volées et la rue ; la caméra du jeu derrière lui dans quatre directions et cinq tangages, et
+//      son œil), une image des zones vues dans les six directions, portes automatiques ouvertes ou fermées comme en jeu,
+//      vitres comptées comme ouvertes. Ce que les règles cachent n'y est vu que par des fentes du décor (voir LES RÈGLES).
+//      Puis, sur 660 vues de jeu tirées au hasard, l'image rendue avec et sans le tri, comparée pixel à pixel : identique,
+//      hors ces fentes.
+// Mesuré (1 600 × 900, haute, Radeon intégrée, appels de dessin par image) : dans la rue 2 150 -> 1 432 ; au départ
+// 839 -> 693 ; hall ouest 796 -> 522 ; pause du -1 1 166 -> 605 ; sas du -1 1 191 -> 780 ; pause du 1er 1 006 -> 567 ;
+// palier est du 1er 1 482 -> 809 ; couloir du 2e 702 -> 389 ; palier du 2e 1 282 -> 804. Seule la Si 0.2 y perd : 241 -> 255
+// (des blocs dessinés en plusieurs suites au lieu d'un seul : ce qu'on y cache rapporte moins que les appels ajoutés).
+// (Débogage : __visibilite.actif = false montre tout ; __visibilite.regles = (x, h, z) => masque remplace les règles.)
 // Rien n'est construit ni déplacé ici : la géométrie, la caméra et la lumière sont celles des autres modules.
 import * as THREE from 'three';
 
@@ -298,7 +309,6 @@ function fermeesVues(x, y) {
   }
   return vu;
 }
-const T_FERMEES = T('r0wc', 'r0lt', 'r0si', 'r0sv');
 export function zonesCachees(x, h, z) {
   const y = -z;
   let vu;
