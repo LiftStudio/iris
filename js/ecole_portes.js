@@ -594,21 +594,40 @@ export function fenetreFacade(parent, M, { x, l = 1.2, bas = 0.95, haut = 2.5, e
 }
 
 // UN JOUR DE SOUFFRANCE DÉPOLI (photos 02, 21 : salle d'attente ; photo 01 : bureau B) dans un mur intérieur d'épaisseur
-// `ep` : cadre blanc de 6 cm des deux côtés, verre dépoli menthe au milieu de l'épaisseur. `bandeClaire` : une bande de
-// verre clair en haut (bureau B).
-export function fenetreDepolie(parent, M, { x, l, bas, haut, ep, bandeClaire = 0 }) {
+// `ep` : cadre blanc de `cadre` (6 cm par défaut) des deux côtés, verre dépoli menthe au milieu de l'épaisseur.
+// `bandeClaire` : une bande de verre clair en haut (bureau B).
+// (Retour de Haythem du 11/10, r02 : « dans le jeu, ce sont de grandes vitres transparentes, on voit la salle voisine au
+// travers et les affiches y flottent ; sur la photo, c'est du verre dépoli OPAQUE vert pâle ». Le verre n'est plus le
+// M.depoli à 86 % d'opacité — qui laissait voir les postes de la Si 0.1 — mais un dépoli plein, vert pâle, à peine
+// lumineux du jour de la salle derrière lui (photo 21 rééquilibrée sur le blanc des murs : verre #C8D5C7 à #A4BDCC, 0,80
+// à 0,85 de la luminance du mur), grainé d'un sablage fin, un peu plus clair en haut.)
+export function fenetreDepolie(parent, M, { x, l, bas, haut, ep, bandeClaire = 0, cadre = 0.06 }) {
   const g = new THREE.Group(); g.position.x = x; parent.add(g);
-  const h = haut - bas, ym = (bas + haut) / 2, c = 0.06;
+  const h = haut - bas, ym = (bas + haut) / 2, c = cadre;
   for (const z of [1, -1]) {
     const zz = z * (ep / 2 + 0.006);
     maille(boiteM(l + 2 * c, c, 0.02), M.alu, 0, haut + c / 2, zz, 0, g, { ombre: false });
-    maille(boiteM(l + 2 * c, c, 0.02), M.alu, 0, bas - c / 2, zz, 0, g, { ombre: false });
+    // (l'appui : la traverse basse du cadre, un peu plus saillante — photo 21, sous chaque jour)
+    maille(boiteM(l + 2 * c, c, 0.03), M.alu, 0, bas - c / 2, z * (ep / 2 + 0.011), 0, g, { ombre: false });
     maille(boiteM(c, h, 0.02), M.alu, -l / 2 - c / 2, ym, zz, 0, g, { ombre: false });
     maille(boiteM(c, h, 0.02), M.alu, l / 2 + c / 2, ym, zz, 0, g, { ombre: false });
   }
   maille(boiteM(l, 0.02, ep), M.alu, 0, bas + 0.01, 0, 0, g, { ombre: false });
   const hd = h - bandeClaire;
-  const d = new THREE.Mesh(boiteM(l, hd, 0.012), M.depoli); d.position.set(0, bas + hd / 2, 0); d.castShadow = false; g.add(d);
+  if (!M.depoliOpaque) {
+    const t = new THREE.CanvasTexture((() => {
+      const cv = document.createElement('canvas'); cv.width = 64; cv.height = 128; const k = cv.getContext('2d');
+      const d = k.createLinearGradient(0, 0, 0, 128); d.addColorStop(0, '#d2e2d9'); d.addColorStop(1, '#bfd2c8');
+      k.fillStyle = d; k.fillRect(0, 0, 64, 128);
+      for (let i = 0; i < 900; i++) { k.fillStyle = Math.random() < 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(60,80,70,0.04)'; k.fillRect(Math.random() * 64, Math.random() * 128, 1, 1); }
+      return cv;
+    })());
+    t.colorSpace = THREE.SRGBColorSpace;
+    M.depoliOpaque = new THREE.MeshStandardMaterial({ map: t, roughness: 0.66, metalness: 0, emissive: 0xc3d6cb, emissiveIntensity: 0.1 });
+    M.depoliOpaque.name = 'verre dépoli opaque vert pâle';
+  }
+  // (UV de 0 à 1 sur chaque face : le dégradé couvre toute la hauteur du verre)
+  const d = new THREE.Mesh(new THREE.BoxGeometry(l, hd, 0.012), M.depoliOpaque); d.position.set(0, bas + hd / 2, 0); d.castShadow = false; g.add(d);
   if (bandeClaire > 0) {
     maille(boiteM(l, 0.03, 0.04), M.alu, 0, bas + hd, 0, 0, g, { ombre: false });
     const v = new THREE.Mesh(new THREE.PlaneGeometry(l, bandeClaire - 0.02), M.verre); v.position.set(0, haut - bandeClaire / 2, 0); g.add(v);

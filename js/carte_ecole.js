@@ -33,8 +33,10 @@
 //   la salle d'attente         x 5,8-13,3    y 4,8-7,875  le mur safran, les chaises coque, l'écran (photos 02, 03, 21) ;
 //                                                         au fond, la face ouest de la pile (11/10, plan V2 : DY_A)
 //   le couloir C01             x 11,7-13,5   y 12,0-20,6  toilettes, gaine technique (photo 01)
-//   le passage de la pile      x 11,625-13,3 y 2,575-4,8  entre l'angle écorné du bureau de direction et la pile ; au bout,
-//                                                         la porte vitrée du bureau (photos 01, 03)
+//   l'antichambre, le passage  x 9,24-13,3   y 3,0-4,875   derrière le bout du mur sud de la salle d'attente, devant le mur
+//   de la pile                                            nord du bureau de direction (porte de la Si 0.1, jour du
+//                                                         bureau) ; il rejoint le hall au sud-ouest de la pile ; au
+//                                                         bout, la porte vitrée du bureau (photos 01, 03, r02 ; 11/10)
 //   la pile du hall            x 13,3-14,65  y 4,7-7,575  la plaque « iris », l'horloge, les annuaires (VO 6,4-12,4 s) :
 //                                                         js/ecole_rdc_centre.js
 //   le hall d'entrée, accueil  x 13,35-19,8  y 0,3-7,5    porte n° 6, le comptoir nord-sud et l'open-space, l'angle nord-est
@@ -53,7 +55,7 @@
 //                              S -1.14 (js/ecole_amphi.js) ; à l'est, le palier -1 et le sas (js/ecole_soussol_est.js)
 import * as THREE from 'three';
 import { Collisions } from './collisions.js';
-import { carteLocale, poserSondeLocale, planifierOcclusionSol, optimiserDecor, nePasFusionner, animerVent } from './kit_decor.js';
+import { carteLocale, poserSondeLocale, planifierOcclusionSol, optimiserDecor, nePasFusionner, animerVent, canvasTex } from './kit_decor.js';
 import { materiauxEcole, texDAE, jourDehors, texAffiche, CADRE, CADRES, texFenetreCadre } from './ecole_matieres.js';
 import { Portes, boiteM, maille, fenetreFacade, fenetreDepolie, fusionnerLocal, vitrophanies, poserCoupe } from './ecole_portes.js';
 import { couperParZones, poserVisibilite } from './ecole_visibilite.js';
@@ -924,29 +926,42 @@ function construireMurs(ch) {
   // même haut-parleur au fond de la photo 21 et à gauche de la photo 03 ; de la porte 6, la VO q_0036-0041 la voit à gauche
   // de la pile, son mur jaune tout de suite derrière. DY_A la ramène de y 9,0-12,075 à y 4,8-7,875 ; sa largeur (2,925 nu à
   // nu), sa longueur et tout son contenu ne changent pas)
-  // LE MUR SUD, d'un seul tenant, du mur est du passage (x 4,5) à l'angle du bureau de direction (X_B, plus bas) : les deux
-  // jours dépolis de la Si 0.1 (photos 02, 21), sa porte, puis le jour du bureau (photo 01 : à 0,91 m de l'angle — sa bande
-  // haute, claire, laisse voir les barreaux de la fenêtre de façade c 10,73 derrière lui ; 0,58 de large, de 1,05 à 2,5 m).
-  // Plus de porte du bureau sur ce mur : le pan de 0,9 m entre son jour et l'angle est nu sur la photo 01.
-  // X_B, L'ANGLE NORD-EST DU BUREAU (la ligne de son mur est, au nord) : 11,55, et non 11,8 comme le plan V2 — à la pose
-  // résolue de la photo 03, (11,47 ; 5,68 ; cap 134), l'angle en x 11,875 tombait à 153°, dans l'image, en grand mur blanc à
-  // 0,9 m ; la photo n'y montre que la porte vitrée et le hall : l'angle est hors du cadre (au-delà de 165,7°, x ≤ 11,675).
-  // (Relecture du 11/10 : de la pose de la photo 01, dans le C01 du lot D, ce jour est caché derrière le mur ouest du C01
-  // et la pile masque la porte vitrée, quand la photo voit le jour juste à gauche de ce mur et la porte avec le hall
-  // derrière elle : c'est l'écart entre le C01 et la pile du plan V2 qui est en cause, pas l'angle — gardé)
-  const YS = ATT.ys, X_B = 11.55, JOURS_S = [6.65, 8.35], JOUR_B = { c: 10.42, l: 0.6, bas: 1.05, h: 2.5 };
-  // LA PORTE DE LA Si 0.1 (IMAGINÉE) : c 9,5, entre le jour c 8,35 et le mur du bureau — le seul pan du mur sud que ni la
-  // photo 02 (le trumeau ouest est nu) ni la photo 21 ne montrent : la borne est devant. Grise, gonds à l'est, elle s'ouvre
-  // toujours dans la salle et s'y rabat contre son mur est ; 0,8 m (0,9 mordait sur le cadre du jour)
-  const P_SI = { c: 9.5, l: 0.8 };
-  ch.mur({ de: [4.5, YS], a: [X_B + EP / 2, YS], mats: B, plinthes: ['N', 'S'], ouvertures: [...JOURS_S.map((c) => ({ c, l: 1.3, bas: 0.95, h: 2.3 })), { c: P_SI.c, l: P_SI.l, h: 2.04 }, { c: JOUR_B.c, l: JOUR_B.l, bas: JOUR_B.bas, h: JOUR_B.h }] });
+  // LE MUR SUD, d'un seul tenant, du mur est du passage (x 4,5) au bout de mur de la plaque du bureau de direction (XE,
+  // plus bas) : les trois jours dépolis de la Si 0.1 (photos 02, 21, r02). (Il allait jusqu'à l'angle du bureau, x 11,55,
+  // avec la porte de la Si 0.1 et le jour du bureau : l'un et l'autre sont maintenant dans l'antichambre, plus bas.)
+  // (RELECTURE DU 11/10, r02 : LE MUR SUD A TROIS JOURS, ET NON DEUX, PLUS PETITS ET PLUS HAUTS. La photo 02, prise du bout
+  // est vers l'ouest, voit de près un jour à affiches et au loin un jour nu ; r02, prise du bout ouest vers l'est, voit
+  // elle aussi de près un jour à affiches et au loin un jour nu — et ce sont les MÊMES affiches (la blanche à titre rouge
+  // sur la blanche aux six carrés noir, rouge, vert, agrandies sur les deux photos). Le jour à affiches est donc au
+  // milieu, entre deux jours nus : l'ouest, que voit la 02, et l'est, que voit r02 ; d'où la « contradiction » des deux
+  // photos sur les affiches. La photo 02 posée sur la porte grise du hall ouest — taille comprise — et sur l'angle ouest du
+  // mur sud, qu'elle voit à x 4,49 (le jeu : 4,5), met les bords des jours en 5,23 | 6,42 — 6,55 | … ; r02, ses jours du
+  // milieu et de l'est en … | 7,74 — 7,87 | 9,06 : trois jours de 1,19 hors tout, trumeaux de 0,13. Sur les deux photos, le
+  // haut du cadre touche presque la bande de dalles lisses du plafond et l'appui est bien au-dessus des dossiers, à 0,2 m
+  // de la lisse grise : verre de 1,02 x 1,28, de 1,12 à 2,40 — cadre compris, 1,035-2,485. Ils faisaient 1,3 x 1,35, de 0,95
+  // à 2,3, c 6,65 et 8,35 : vus du bout ouest, le jour est sortait 100 px trop à gauche et 0,3 m trop bas.)
+  // (RETOUR DE HAYTHEM DU 11/10, r02 — LA JONCTION AVEC LE HALL. Sur sa photo, À DROITE DU PILIER, entre lui et la borne,
+  // une ouverture sombre et profonde : au fond, le hall — une fenêtre à barreaux de la façade, des spots à 12-18 m de
+  // l'appareil, le comptoir —, et au-dessus le drapeau noir ; le jeu y montrait le mur sud, la porte grise de la Si 0.1 et,
+  // plus loin, le mur nord du bureau, en y 4,8 jusqu'à x 11,55 : le hall ne se voyait de nulle part. r02 agrandie (pose du
+  // relecteur, (5,28 ; 7,20) h 1,55 cap 110,7, f 1 502) : LE MUR SUD S'ARRÊTE NET, 48 px à gauche du cadre du jour est —
+  // le jeu rejoué au même point de vue met 75 px pour 0,29 m à cet endroit : 0,18 m après le cadre, x 9,24 —, et le drapeau
+  // est sur ce bout de mur ; au-delà, le hall, entre le pilier et lui. VO q_0040-0043 : à l'angle, le drapeau ; sur le
+  // retour, face à l'est, la plaque « Bureau de direction B 0.3 » ; les jours dépolis juste à droite de l'angle — la
+  // caméra de la visite passe à côté. Derrière, une ANTICHAMBRE, jusqu'au mur nord du bureau : plus bas.)
+  const YS = ATT.ys, XE = 9.24, JOURS_S = [5.825, 7.145, 8.465], J_L = 1.02, J_BAS = 1.12, J_H = 2.4;
+  ch.mur({ de: [4.5, YS], a: [XE, YS], mats: B, plinthes: ['N', 'S'], ouvertures: JOURS_S.map((c) => ({ c, l: J_L, bas: J_BAS, h: J_H })) });
+  // (la plinthe du chant, au bout du mur : elle rejoint celle de l'antichambre)
+  ch.boite(XE, YS - EP / 2, XE + 0.015, YS + EP / 2 + 0.015, 0, 0.08, M.bois, { ombre: false });
   const sud = new THREE.Group(); sud.position.set(0, 0, -YS); ch.decor.add(sud);
-  for (const c of JOURS_S) { fenetreDepolie(sud, M, { x: c, l: 1.3, bas: 0.95, haut: 2.3, ep: EP }); ch.C.ajouterBoite(c - 0.65, -(YS - 0.05), c + 0.65, -(YS + 0.05), { y0: 0.95, y1: 2.3, vitre: true }); }
-  fenetreDepolie(sud, M, { x: JOUR_B.c, l: JOUR_B.l, haut: JOUR_B.h, bas: JOUR_B.bas, ep: EP, bandeClaire: 0.5 });
-  ch.C.ajouterBoite(JOUR_B.c - JOUR_B.l / 2, -(YS - 0.05), JOUR_B.c + JOUR_B.l / 2, -(YS + 0.05), { y0: JOUR_B.bas, y1: JOUR_B.h, vitre: true });
-  ch.porte('x', YS, P_SI.c, { l: P_SI.l, h: 2.04, modele: 'grise', etat: 'auto', cote: 'S', charniere: 'd', libre: 1, nom: 'Si 0.1' });
-  // la double lisse gris clair du mur sud, à 0,85 et 1,00 (DY_A), jusqu'au cadre du jour c 8,35 : la porte la coupe
-  for (const h of [0.82, 0.94]) ch.boite(4.9, YS + 0.075, 9.05, YS + 0.1, h, h + 0.04, M.lisseGrise, { ombre: false });
+  // (retour de Haythem du 11/10, r02 : « deux fenêtres à cadre blanc ÉPAIS » — 8,5 cm sur la photo 21, et non 6 ; le verre
+  // est un dépoli opaque vert pâle : js/ecole_portes.js fenetreDepolie)
+  for (const c of JOURS_S) { fenetreDepolie(sud, M, { x: c, l: J_L, bas: J_BAS, haut: J_H, ep: EP, cadre: 0.085 }); ch.C.ajouterBoite(c - J_L / 2, -(YS - 0.05), c + J_L / 2, -(YS + 0.05), { y0: J_BAS, y1: J_H, vitre: true }); }
+  // la double lisse gris clair du mur sud (DY_A), jusqu'au bout du mur (plus de porte pour la couper)
+  // (retour de Haythem du 11/10, r02 : « sous les fenêtres, la double lisse grise court le long du mur » — sur les photos
+  // 21 et 02, ses deux filets passent SOUS l'appui des jours ; à 0,82-0,98, le second mordait sur le cadre. Relecture : les
+  // jours remontés, elle est à 0,2 m sous leur appui, comme sur les deux photos)
+  for (const h of [0.73, 0.81]) ch.boite(4.9, YS + 0.075, XE - 0.005, YS + 0.1, h, h + 0.04, M.lisseGrise, { ombre: false });
   // le nord : LE MUR SAFRAN (de x 5,8, le pilier jaune de l'entrée du C05 — photos 04, 05 —, à 11,7, l'entrée du C01), sa
   // lisse de PVC blanc, son panneau DAE (DY_A)
   const YN = ATT.yn;
@@ -996,17 +1011,54 @@ function construireMurs(ch) {
   ch.porte('x', 14.475, 12.6, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'S', nom: 'fond du C01' });
   // ---- LE BUREAU DE DIRECTION B 0.3 (le « bureau B ») ET LE PASSAGE AU SUD-OUEST DE LA PILE ----
   // (11/10, plan V2 : le « cou » n'existe pas — la salle d'attente touche le bureau ; son trumeau blanc était le pilier gris)
-  // le mur entre la Si 0.1 et le bureau, arrêté au mur sud de la salle d'attente
-  ch.mur({ de: [9.975, 0], a: [9.975, YS], mats: B, plinthes: ['W', 'E'] });
-  // L'ANGLE NORD-EST ÉCORNÉ (photo 03, pose résolue (11,47 ; 5,68), cap 134 : de la salle, rien ne cache le hall, le comptoir
-  // et la porte 6 entre l'angle de la pile, à 125°, et le bord du mur de droite, à 157° — la face nord du retour y 3,1, à
-  // 2,9 m, qui finit en (12,575 ; 3,175), mesuré sur sa plinthe) : le mur nord du bureau s'arrête à X_B, puis deux redents
-  // (X_B de y 4,8 à 3,1 ; retour y 3,1 jusqu'à x 12,5 ; x 12,5 de 3,1 à 2,5) : le PASSAGE s'ouvre sur le hall sur 2,1 m
-  // (y 2,575-4,7) et fait 1,68 m entre le bureau et la pile (x 11,625-13,3), contre un couloir de 1,13 m derrière le mur
-  // x 12,1 dans le jeu d'avant. (± 0,3 m : une photo prise de l'angle sud-est de la salle vers le sud trancherait.)
-  ch.mur({ de: [X_B, 3.025], a: [X_B, YS], mats: B, plinthes: ['E', 'W'] });
-  ch.mur({ de: [X_B - EP / 2, 3.1], a: [12.575, 3.1], mats: B, plinthes: ['N', 'S'] });
-  ch.mur({ de: [12.5, 2.425], a: [12.5, 3.175], mats: B, plinthes: ['E', 'W'] });
+  // L'ANTICHAMBRE (retour de Haythem du 11/10, r02 ; x 9,24-13,3 × y 3,175-4,875). Le mur sud de la salle d'attente
+  // s'arrête en x 9,24 (plus haut) ; derrière lui, jusqu'au mur nord du bureau, un dégagement de 1,7 m qui rejoint le
+  // passage de la pile et le hall — par là, du bout ouest de la salle, on voit le hall à droite du pilier (r02). Trois
+  // photos le bornent :
+  //  - la photo 03, de l'angle sud-est de la salle vers le hall : à droite, le sol libre jusqu'au mur blanc dont la plinthe
+  //    file vers l'ouest, la face nord de la ligne y 3,1, qui finit en (12,575 ; 3,175) (sa plinthe rétroprojetée à la pose
+  //    du lot C met cette face entre 3,0 et 3,1 : gardée) ; dans le bas du cadre, le sol en (11,7 ; 4,65), là où le jeu
+  //    dressait le mur nord du bureau ;
+  //  - la photo 01, du C01 vers le sud : au fond, ce même mur de face, son jour dépoli à 0,9 m de l'angle, et 0,7 m plus
+  //    loin la porte vitrée du bureau (hauteurs comparées : 79 px/m pour le mur, 71 pour la porte) — la porte est en y 2,5
+  //    (photos 03, 22), le mur en y 3,1, et non en 4,8 ;
+  //  - r02 : le mur sud s'arrête en x 9,24, le hall se voit au-delà.
+  // Le mur nord du bureau devient donc la ligne y 3,1, de la Si 0.1 (x 9,09) à l'angle du passage (12,575) ; le mur ouest de
+  // l'antichambre, le retour x 9,165, ferme la Si 0.1, qui perd son angle nord-est (x 9,09-9,9 × y 3,175-4,725) ; le mur
+  // entre la Si 0.1 et le bureau s'arrête à la ligne y 3,1. (Avant : mur nord du bureau en y 4,8 jusqu'à x 11,55, redent en
+  // x 11,55 ; le passage n'avait que 1,68 m, entre ce redent et la pile.)
+  // (RELECTURE DU 11/10, r02 : LA LIGNE 2,925, nu nord 3,0, et non 3,1. La photo 03 rejouée à sa pose avec le jeu : la
+  // plinthe du mur de droite tombe 15-20 px trop bas dans le jeu — le mur y est trop près de l'appareil ; rétroprojetés, le
+  // pied de l'angle est en (12,65 ; 2,93) et le bord droit du cadre en (12,11 ; 2,96-3,04) : le nu est vers 3,0. Et sur r02,
+  // à droite de l'ouverture, le jeu montrait sur 45 px le nu nord du bureau en plein jour (x 12,1-12,575) quand la photo n'y
+  // laisse qu'un filet gris-bleu de 12 px contre le bout du mur : reculé de 0,175 m, l'angle ne mord plus que d'un filet.
+  // La photo 01 le voudrait plutôt plus au nord — mais elle ne le dit qu'à travers la hauteur supposée de la porte vitrée :
+  // les deux autres l'emportent.)
+  const YB = 2.925;
+  // le mur entre la Si 0.1 et le bureau, arrêté au mur nord du bureau
+  ch.mur({ de: [9.975, 0], a: [9.975, YB - EP / 2], mats: B, plinthes: ['W', 'E'] });
+  // LE MUR NORD DU BUREAU, ligne y 2,925 (x 9,09-12,575), et son JOUR DÉPOLI (photo 01 : 0,6 m, de 1,05 à 2,5, sa bande haute
+  // claire laisse voir les barreaux de la fenêtre de façade c 10,73 derrière lui ; son bord est à 0,91 m de l'angle, en
+  // x 11,63 — rétroprojeté du C01 sur la ligne 3,1, il tombe en x 11,03-11,63, devant cette fenêtre)
+  const JOUR_B = { c: 11.33, l: 0.6, bas: 1.05, h: 2.5 };
+  ch.mur({ de: [XE - EP, YB], a: [12.575, YB], mats: B, plinthes: ['N', 'S'], ouvertures: [{ c: JOUR_B.c, l: JOUR_B.l, bas: JOUR_B.bas, h: JOUR_B.h }] });
+  const nordB = new THREE.Group(); nordB.position.set(0, 0, -YB); ch.decor.add(nordB);
+  fenetreDepolie(nordB, M, { x: JOUR_B.c, l: JOUR_B.l, haut: JOUR_B.h, bas: JOUR_B.bas, ep: EP, bandeClaire: 0.5 });
+  ch.C.ajouterBoite(JOUR_B.c - JOUR_B.l / 2, -(YB - 0.05), JOUR_B.c + JOUR_B.l / 2, -(YB + 0.05), { y0: JOUR_B.bas, y1: JOUR_B.h, vitre: true });
+  // LE RETOUR x 9,165 (nu est 9,24 ; y 3,0-4,725), entre le bout du mur sud et le mur du bureau, et LA PORTE DE LA Si 0.1
+  // (IMAGINÉE : aucune photo ne la montre — r02 voit ce retour de dos ; sur la VO q_0040-0042, le bord gauche du cadre ne
+  // montre que la plaque du bureau de direction, à l'angle, et le chant d'une huisserie juste au sud) : grise, 0,8 m,
+  // c 3,98, elle s'ouvre toujours dans la salle, gonds au nord — son vantail ouvert se range le long du mur nord de la
+  // salle, dans l'allée entre le rang du fond et la toile, et non sur le bout des tables
+  const XR = XE - EP / 2, P_SI = { c: 3.98, l: 0.8 };
+  ch.mur({ de: [XR, YB + EP / 2], a: [XR, YS - EP / 2], mats: B, plinthes: ['E', 'W'], ouvertures: [{ c: P_SI.c, l: P_SI.l, h: 2.04 }] });
+  ch.porte('y', XR, P_SI.c, { l: P_SI.l, h: 2.04, modele: 'grise', etat: 'auto', cote: 'W', charniere: 'd', libre: -1, nom: 'Si 0.1' });
+  // L'ANGLE NORD-EST ÉCORNÉ DU BUREAU (photo 03, pose résolue (11,47 ; 5,68), cap 134 : de la salle, rien ne cache le hall,
+  // le comptoir et la porte 6 entre l'angle de la pile, à 125°, et le bord du mur de droite, à 157° — la face nord de la
+  // ligne y 3,1, à 2,9 m, qui finit en (12,575 ; 3,175), mesuré sur sa plinthe — relecture : la ligne 2,925, nu 3,0) :
+  // x 12,5 de 2,925 à 2,5, puis le retour y 2,5 et la porte vitrée ; le PASSAGE s'ouvre sur le hall sur 2,1 m (y 2,575-4,7),
+  // au bout de l'antichambre.
+  ch.mur({ de: [12.5, 2.425], a: [12.5, YB + EP / 2], mats: B, plinthes: ['E', 'W'] });
   // LA PORTE DU BUREAU : la porte vitrée à cadre d'aluminium blanc et à affiche des photos 01, 03 et 22, au bout du
   // passage, dans le retour y 2,5 (x 12,5-13,275 ; ses huisseries mordent sur les deux murs en retour). Gonds à l'ouest,
   // tirant court à l'est : sur la photo 03 on la voit presque fermée, la poignée côté hall ; sur la photo 01, de face, son
@@ -1029,7 +1081,26 @@ function construireMurs(ch) {
   // du 11/10 : à la pose de la photo 21 résolue sur ses deux jours dépolis et le bout du mur jaune, (4,94 ; 7,33), h 1,45,
   // cap 110,7, les jours, le mur jaune et le présentoir tombent à leur place, mais le pilier et la borne 0,7 m trop au
   // nord ; or la photo 02 ne laisse le pilier au bord gauche de son cadre que là où il est : gardé, le doute demeure)
-  pilier(10.3, 9.75 + DY_A, 10.9, 10.35 + DY_A, M.pilier);
+  // (Retour de Haythem du 11/10, r02 — la photo 21 en pleine définition, 1 848 x 4 000 — : le pilier recule de 0,6 m vers
+  // l'OUEST et de 0,3 m vers le SUD, x 9,71-10,31 × y 5,23-5,83. Vu du bout ouest, sur la photo, il se lève juste à droite
+  // de l'angle de la pile, son pied à 4 m de l'appareil et à 0,35 m du mur sud ; dans le jeu, il était 7,5° trop à gauche
+  // et 1,5 m trop loin. La photo 02, elle, le voit au bord gauche de son cadre : c'est lui, la bande grise des 15 premiers
+  // pixels — son angle nord-ouest, dont le pied est à 1,8 m de l'appareil : (9,71 ; 5,83). Ces deux contraintes réunies
+  // donnent cette place ; vu du bout ouest, l'écart à r02 tombe de 7,5° à 2,5° (le jeu le veut d'un rien plus à l'est que
+  // la photo 21 : seule la photo 02, dont la pose est sûre — 12 points, 8,6 px —, le place en absolu). La porte de la Si 0.1
+  // reste atteignable par sa moitié ouest, entre la borne et lui.)
+  // (RELECTURE DU 11/10 : r02 et la photo 02 rejouées ENSEMBLE, chacune à sa pose — la 02 posée sur la porte grise du
+  // hall ouest, taille comprise, et sur l'angle ouest du mur sud ; r02 sur ses jours et le fond. Le rayon de r02 vers
+  // l'arête nord-ouest du pilier (925 px) et celui de la photo 02 vers la même arête (le bord de sa bande grise, 16 px)
+  // se croisent en (8,80 ; 6,02) — et, de là, les deux pieds tombent où les photos les montrent : 2 599 px sur r02 (photo :
+  // 2 580), 1 303 sur la 02 (photo : 1 313). Les arêtes sud-ouest (1 075 px) et nord-est (831 px) de r02 donnent le reste :
+  // un pilier de 0,86 x 0,43, plus long que large — sa face ouest est juste assez large pour l'A2 qui la remplit sur r02 —,
+  // à 0,72 m du mur sud, au milieu de la salle comme sur la VO q_0038-0046. On passe entre lui et le mur vers la porte de
+  // la Si 0.1.)
+  // (et il est plus SOMBRE que les murs : sur r02, sa face ouest est à 0,78 de la luminance du mur du fond, à la même
+  // lumière ; le jeu le rendait à 0,92 — sa peinture grise, rien qu'ici, d'un ton plus bas)
+  const grisPilier = M.pilier.clone(); grisPilier.color.multiplyScalar(0.84); grisPilier.name = 'pilier gris (salle d\'attente)';
+  pilier(8.8, 5.59, 9.66, 6.02, grisPilier);
   // ---- LE HALL D'ENTRÉE ----
   // (09/10, photo 24 : la porte du mur nord n'est pas en x 17 mais en face de la porte 6 — 1,5 vantail, x 14,70-16,10 ;
   // à l'est, la cloison vitrée cannelée, le photocopieur devant elle côté hall (10/10 : l'angle nord-est est ouvert, VO
@@ -1186,7 +1257,10 @@ export function construireCarte(scene, renderer = null) {
   // sous le haut-parleur et l'affichette WIFI (photo 03), son bout à 0,3 m de l'angle sud-ouest — l'angle au-delà duquel
   // la photo 03 voit le hall (10/10). (11/10, plan V2 : c'est LE MÊME radiateur sur les deux photos ; celui du mur x 13,5,
   // en y 10,5, était un doublon)
-  radiateur(ch, 13.3, 5.32, 'W', 0.6, 0.12, 1.15);
+  // (retour de Haythem du 11/10, r02 — « juste à droite du présentoir, un RADIATEUR blanc vertical, à panneau » : vu du
+  // bout ouest, sur la photo 21 en pleine définition, il fait 0,5 de large sur 1,25 de haut — plus haut que large, son
+  // sommet sous les affichettes, comme sur la photo 03 — et ses bords tombent en y 5,2 et 5,7 : 0,13 plus au nord)
+  radiateur(ch, 13.3, 5.45, 'W', 0.5, 0.12, 1.25);
   // la caméra de surveillance du hall ouest et son haut-parleur (au mur des portes, à droite du jambage, sous le plafond
   // à 2,30) ; le déclencheur manuel rouge (au bout ouest du mur sud de la salle d'attente : DY_A)
   // (Relecture du 11/10 : le dôme est en (4,75 ; 7,75), contre la retombée du plafond de la salle d'attente, pas devant
@@ -1196,6 +1270,8 @@ export function construireCarte(scene, renderer = null) {
   dome.userData.horsAOSol = true;
   ch.boite(4.46, 8.855, 4.6, 8.925, 2.14, 2.26, M.boitier, { ombre: false });
   ch.boite(4.9, ATT.ys + 0.075, 5.0, ATT.ys + 0.11, 1.25, 1.35, M.rougeEtiquette, { ombre: false });   // (sur le mur sud : DY_A)
+  // (11/10, r02 : vu de près, un cube rouge plein ; c'est un boîtier à membrane blanche au milieu de sa face)
+  ch.boite(4.925, ATT.ys + 0.11, 4.975, ATT.ys + 0.112, 1.275, 1.325, M.blanc, { ombre: false });
 
   // ---- les plafonds ----
   ch.plafond(1.75, 0, 4.425, 4.05, 2.6, 'platre');                   // le passage
@@ -1239,8 +1315,53 @@ export function construireCarte(scene, renderer = null) {
   // la salle d'attente : les plateaux perforés, sauf au bout ouest, devant le couloir C05, où ce sont des dalles lisses
   // de 60 x 60 sur ossature (photos 04, 05 : au-dessus du photographe ; 09/10). (11/10 : DY_A ; les plateaux vont jusqu'à
   // x 13,5 — le bout est passe dans la pile, et le coin x 13,3-13,5 au nord de la pile, devant le C01, reste couvert)
-  ch.plafond(6.5, ATT.ys, 13.5, ATT.yn - 0.075, 2.6, 'plateaux');
-  ch.plafond(5.3, ATT.ys, 6.5, ATT.yn - 0.075, 2.6, 'dalles', { retombees: false });
+  // (Retour de Haythem du 11/10, r02 — le plafond : le long du mur sud, sur la photo 21 en pleine définition comme sur la
+  // photo 02, les plateaux perforés laissent place à une BANDE de dalles lisses, large d'une dalle, un rien plus basse — un
+  // ressaut de 2 cm, le trait clair au-dessus du jour c 8,35 —, où sont pris les spots de la rangée sud)
+  // (r02 encore : vu du bout ouest, les plateaux perforés couvrent le plafond jusqu'au-dessus de l'appareil ; les dalles
+  // lisses de la photo 04 ne font qu'une rangée, x 5,3-5,9, au droit du pilier jaune. Et ce plafond est plus sombre et
+  // plus chaud que les murs — 0,6 de leur luminance, un beige où le rouge passe le bleu de moitié, quand le jeu le
+  // rendait aussi blanc qu'eux : une copie des plateaux, rien qu'ici, d'un ton chaud un peu éteint)
+  const chaudPlafond = (m) => { const c = m.material.clone(); c.color.multiply(new THREE.Color(0.97, 0.93, 0.84)); c.emissiveIntensity *= 0.8; m.material = c; return m; };
+  // (RELECTURE DU 11/10 — r02 et la photo 02 agrandies, leurs joints rétroprojetés au plafond : ce ne sont pas des plateaux
+  // de 60 x 120 en damier, mais des LAMES perforées de 30 cm, posées en travers de la salle, du sud au nord, d'un seul tenant
+  // de la bande lisse du mur sud jusqu'à un joint en long, à y 7,42 — à 0,38 m du mur safran, le même sur les deux photos —,
+  // au-delà duquel une rangée de lames courtes borde le mur jaune. Vu du bout ouest, on lit donc une suite de longues bandes
+  // claires et serrées, presque parallèles, et non la grille de grands carreaux que le jeu dessinait. Les mêmes trous, la
+  // même bordure lisse, le même joint creux que les plateaux : js/ecole_matieres.js.)
+  const Y_LONG = 7.425;
+  const lames = (L) => {
+    const W = 768, H = Math.round(768 * L / 1.2);
+    return canvasTex(W, H, (g, w, h) => {
+      // (les trous, sur r02 agrandie : des TIRETS dans le fil de la lame, 9 x 4 mm, en files serrées ; plus pâles que ceux
+      // des plateaux — la lame paraît beige, pas grise ; la bordure lisse, large de 3 cm, fait entre deux lames la bande
+      // claire de 6 cm qu'on suit d'un mur à l'autre)
+      const mm = w / 1200, pas = 300 * mm, joint = Math.max(2, 5 * mm), bl = 30 * mm, bb = 50 * mm;
+      g.fillStyle = '#ece9e2'; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 4; i++) {
+        const x0 = i * pas;
+        g.fillStyle = 'rgba(205,200,190,0.3)'; g.fillRect(x0 + bl, bb, pas - 2 * bl, h - 2 * bb);
+        g.fillStyle = 'rgba(78,72,64,0.5)';
+        const pu = 10 * mm, pv = 14 * mm, cu = Math.max(1, 4 * mm), cv = Math.max(2, 9 * mm);
+        for (let y = bb + pv / 2; y < h - bb - cv / 2; y += pv) for (let x = x0 + bl + pu / 2; x < x0 + pas - bl - cu / 2; x += pu) g.fillRect(x - cu / 2, y - cv / 2, cu, cv);
+        g.fillStyle = 'rgba(255,254,250,0.55)';
+        g.fillRect(x0 + joint, 0, bl * 0.7, h); g.fillRect(x0 + pas - bl * 0.7, 0, bl * 0.7 - joint / 2, h);
+        g.fillRect(x0, joint, pas, bb * 0.5); g.fillRect(x0, h - bb * 0.5, pas, bb * 0.5 - joint / 2);
+      }
+      g.fillStyle = '#7c776e';
+      for (let i = 0; i <= 4; i++) g.fillRect(i * pas - joint / 2, 0, joint, h);
+      g.fillRect(0, -joint / 2, w, joint); g.fillRect(0, h - joint / 2, w, joint);
+      g.fillStyle = 'rgba(255,255,255,0.6)';
+      for (let i = 0; i <= 4; i++) g.fillRect(i * pas - joint / 2 - Math.max(1, 2 * mm), 0, Math.max(1, 2 * mm), h);
+    }, [1 / 1.2, 1 / L], false, 8);
+  };
+  const enLames = (m, L) => {
+    const c = m.material; c.map = c.emissiveMap = lames(L); c.normalMap = null; c.name = 'plafond en lames perforées (salle d\'attente)'; c.needsUpdate = true; return m;
+  };
+  enLames(chaudPlafond(ch.plafond(5.9, ATT.ys + 0.675, 13.5, Y_LONG, 2.6, 'plateaux')), Y_LONG - ATT.ys - 0.675);
+  enLames(chaudPlafond(ch.plafond(5.9, Y_LONG, 13.5, ATT.yn - 0.075, 2.6, 'plateaux', { retombees: false })), ATT.yn - 0.075 - Y_LONG);
+  chaudPlafond(ch.plafond(5.9, ATT.ys, 13.5, ATT.ys + 0.675, 2.58, 'dalles'));
+  ch.plafond(5.3, ATT.ys, 5.9, ATT.yn - 0.075, 2.6, 'dalles', { retombees: false });
   ch.plafond(11.7, 7.8, 13.5, 14.4, 2.45, 'platre');                 // C01 (V2 : de l'entrée, y 7,8, au fond)
   ch.plafond(13.35, 0.3, 19.8, 7.5, 2.6, 'platre');                  // le hall d'entrée
   // le bureau B (visitable : js/ecole_pieces.js) et le passage au sud-ouest de la pile, d'un seul tenant (plateaux à 2,60)
@@ -1276,7 +1397,18 @@ export function construireCarte(scene, renderer = null) {
   ch.opale(5.5, Y_ESC + 0.4, 2.4, 'c05', { r: 0.18 }); ch.opale(5.15, Y_ESC + 2.0, 2.3, 'c05', { r: 0.18 });
   // (la salle d'attente : DY_A ; les deux spots du « cou » disparaissent avec lui, celui du passage de la pile est posé
   // avec elle, js/ecole_rdc_centre.js)
-  for (const [x, y] of [[6.6, 9.9], [9.0, 9.9], [11.4, 9.9], [7.8, 11.1], [10.2, 11.1], [12.6, 11.1]]) ch.spot(x, y + DY_A, 2.6, 'attente');
+  // (Retour de Haythem du 11/10, r02 — « l'éclairage : plus chaud sur la photo » ; les spots relevés sur les photos 21 et
+  // 02 rétroprojetés au plafond : une rangée SUD dans la bande de dalles lisses, à 0,3 m du mur — x 5,5 / 7,15 / 8,8 /
+  // 10,45, au pas de la façade, 1,65 —, et une rangée nord vers y 6,8 — x 5,35 / 8,7 / 12,05. Sur la photo 21, aucun spot
+  // au-dessus des chaises entre 6 et 8 m : le jeu en avait un en (7,8 ; 6,9). La lumière : un blanc chaud de 2 900 K.)
+  const chaudAtt = new THREE.Color(0xffd5a3);
+  // (retour r02 du 11/10 : l'ANTICHAMBRE n'a pas de spot à elle — par l'ouverture, r02 ne montre que ceux du hall, à 12-18 m,
+  // et l'ouverture est SOMBRE : elle prend la lumière de la rangée sud de la salle, x 10,45, et du spot du passage de la
+  // pile, js/ecole_rdc_centre.js) (RELECTURE DU 11/10 : r02 agrandie montre UN spot tout en haut de l'ouverture, contre
+  // l'arête du pilier, 280 px au-dessus de l'horizon — rétroprojeté au plafond, (9,8-10,2 ; 4,65-4,9), aux deux poses de
+  // r02 : c'est le quatrième de la rangée sud, au-dessus de l'entrée de l'antichambre. En (10,45 ; 5,15), le jeu le cachait
+  // derrière le pilier et laissait le haut de l'ouverture sans lumière : il passe en (9,95 ; 4,8))
+  for (const [x, y, h] of [[5.5, 5.15, 2.6], [7.15, 5.15, 2.58], [8.8, 5.15, 2.58], [9.95, 4.8, 2.6], [5.35, 6.8, 2.6], [8.7, 6.8, 2.6], [12.05, 6.8, 2.6]]) ch.spot(x, y, h, 'attente', { couleur: chaudAtt });
   // (V2, 11/10 : la photo 01 recalée met le hublot qu'elle voit en (12,3 ; 10,7), au-dessus du local et de la gaine, un peu
   // à l'ouest de l'axe ; l'autre est derrière l'appareil, vers le fond)
   for (const [x, y] of [[12.3, 10.7], [12.3, 13.4]]) ch.opale(x, y, 2.45, 'c01');
@@ -1299,7 +1431,15 @@ export function construireCarte(scene, renderer = null) {
   // (relecture du 11/10 : le bloc de sortie de la photo 21 n'est pas suspendu près du pilier gris — ni elle, ni la VO
   // q_0038-0046 n'en montrent là ; il est fixé en haut du mur du fond, la face ouest de la pile, au-dessus de l'écart entre
   // le présentoir et le radiateur, sous le plafond)
-  ch.sortie(13.27, 6.0, 2.45, 'W');
+  // (Relecture du 11/10, r02 agrandie : ce n'est pas un bloc vert à pictogramme mais un boîtier BLANC à deux voyants
+  // ronds, côte à côte, d'un blanc bleuté — le bloc d'ambiance de l'issue vers le hall)
+  {
+    const b = new THREE.Group(); b.position.set(13.27, 2.45, -6.0); b.rotation.y = -Math.PI / 2; ch.decor.add(b);
+    maille(boiteM(0.3, 0.11, 0.06), M.blanc, 0, 0, 0, 0, b, { ombre: false });
+    const voy = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.95, 1.3, 1.6) });
+    for (const sx of [-0.065, 0.065]) { const v = new THREE.Mesh(new THREE.CircleGeometry(0.03, 20), voy); v.position.set(sx, 0, 0.031); b.add(v); }
+    b.traverse((m) => { m.userData.horsAOSol = true; });
+  }
   // LE JOUR qui entre (pour les spots : une lampe froide dehors, qui vise l'intérieur ; pour la lumière cuite : la source
   // au pied de l'ouverture, `ox/oz` le point d'où l'on découpe sa visibilité, dehors)
   const jour = (x, y, cible, zone, o = {}) => ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.6, cx: cible[0], cz: -cible[1], sx: x, sz: -(y + 0.3), ox: x, oz: -(y - 0.5), zone, ...o });
@@ -1380,7 +1520,9 @@ export function construireCarte(scene, renderer = null) {
     { id: 'c01', rects: [zr(11.6, 7.875, 13.6, 14.475)], voisines: ['attente'], env: { x: 12.6, y: 1.5, z: -11.1 } },
     // (11/10, plan V2 : la salle d'attente (DY_A) et le passage au sud-ouest de la pile, au droit des deux redents du
     // bureau B, jusqu'à la face ouest de la pile — plus de « cou » ; le hall perd la pile, js/ecole_rdc_centre.js)
-    { id: 'attente', rects: [zr(5.8, ATT.ys, 13.3, ATT.yn), zr(11.55, 3.1, 13.3, ATT.ys), zr(12.5, 2.5, 13.3, 3.1)], voisines: ['hallO', 'c01', 'hall'], env: { x: 9.2, y: 1.6, z: -(10.5 + DY_A) } },
+    // (retour r02 du 11/10 : et l'antichambre, de l'axe du retour x 9,165 à la pile, jusqu'à l'axe du mur nord du bureau)
+    // (relecture : le mur nord du bureau sur la ligne 2,925)
+    { id: 'attente', rects: [zr(5.8, ATT.ys, 13.3, ATT.yn), zr(9.165, 2.925, 13.3, ATT.ys), zr(12.5, 2.5, 13.3, 2.925)], voisines: ['hallO', 'c01', 'hall'], env: { x: 9.2, y: 1.6, z: -(10.5 + DY_A) } },
     { id: 'hall', rects: [zr(13.3, -0.45, 20.1, 4.7), zr(14.675, 4.7, 20.1, 7.6)], voisines: ['attente', 'rue', 'couloirEst'], env: { x: 15.8, y: 1.6, z: -4.0 } },
     { id: 'rue', rects: [zr(-25, -12, 50, -0.4)], voisines: ['hall', 'passage'], env: { x: 9.5, y: 1.7, z: 3.4 } },
     ...pieces.zones,
