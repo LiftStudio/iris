@@ -76,7 +76,7 @@ const RECUL_SEUIL = 1.1;
 //     redescendre derrière sa nuque — c'est sa tête qui bouchait l'image, d'où la demi-transparence ;
 //   - LE CAP ASSISTÉ (ASSIST_*) : au clavier seul, au joystick tactile ou à la manette, quand on ne tourne pas la caméra
 //     soi-même et qu'elle est à l'étroit (moins de 1,8 m de recul libre), elle se range doucement derrière sa marche —
-//     dans l'axe de la volée, du couloir, du palier — au plus à 100°/s, en accélérant et freinant ; la direction tenue au
+//     dans l'axe de la volée, du couloir, du palier — à 100°/s, 200°/s collée au mur, en accélérant et freinant ; la direction tenue au
 //     clavier ou au pouce garde son cap dans le monde tant qu'on la tient (on ne repart pas dans le mur parce que la
 //     caméra a tourné), et le rend dès qu'on la change dans le sens où l'on rattrape la caméra ;
 //   - LE SEUIL SUIVI (SEUIL_FONTE) : au passage d'une porte, la caméra garde son recul et passe la porte derrière lui, au
@@ -86,9 +86,9 @@ const RECUL_SEUIL = 1.1;
 //   - LE COIN (dans updateCamera) : si la caméra, en glissant, perd Haythem de vue derrière un angle, elle passe du côté de
 //     sa place voulue en gardant sa distance, au lieu de se jeter dans sa nuque (de 1,5 m à 0,12 m d'un coup).
 const PENTE = 0.6, PENTE_MIN = 0.3, PENTE_MAX = 1.9;
-const LEVE = 0.38;
-const ASSIST_GENE = 1.8, ASSIST_PLEIN = 0.9, ASSIST_MAX = 1.75, ASSIST_K = 3.0, ASSIST_MANU = 0.8;
-const SEUIL_FONTE = 0.8, SEUIL_FONTE_V = 0.5;
+const LEVE = 0.38, LEVE_COLLE = 0.27;
+const ASSIST_GENE = 1.8, ASSIST_PLEIN = 0.9, ASSIST_MAX = 1.6, ASSIST_K = 2.8, ASSIST_MANU = 0.8;
+const SEUIL_FONTE = 1.2, SEUIL_FONTE_V = 0.3;
 const PIECE_IN = 7, PIECE_OUT = 3;
 const OEIL_PHOTO = 1.45;                 // la « vue photo » : l'œil à hauteur de téléphone tenu devant soi
 // le champ vertical pour un écran de rapport `aspect` : 63°, sauf si l'horizontal dépasse alors 108°
@@ -501,7 +501,11 @@ export class Game {
     const phi = a.x || a.y ? Math.atan2(a.x, a.y) : null;
     if (phi === null) this._decalCmd = 0;
     else if (this._decalCmd && this._phiCmd !== null && this._phiCmd !== undefined) {
-      const dphi = angle(phi - this._phiCmd), nd = this._decalCmd + dphi;
+      // (un demi-tour de la commande — de « reculer » à « avancer » une fois la caméra passée derrière lui — se compte
+      // toujours vers zéro : son signe, à ±180°, ne dit rien)
+      let dphi = angle(phi - this._phiCmd);
+      if (Math.abs(dphi) > 2.6) dphi = -Math.sign(this._decalCmd) * Math.abs(dphi);
+      const nd = this._decalCmd + dphi;
       if (dphi * this._decalCmd < 0) this._decalCmd = nd * this._decalCmd <= 0 ? 0 : nd;
       if (Math.abs(phi) < 0.6) this._decalCmd -= Math.sign(this._decalCmd) * Math.min(Math.abs(this._decalCmd), 2 * dt);
     }
@@ -633,19 +637,28 @@ export class Game {
 
   // LE SOL SOUS LA CAMÉRA (la règle de la PENTE, en tête du fichier) : l'écart, compté depuis les pieds de Haythem `sol`,
   // du plus haut des sols déclarés (dalles, rampes des volées : js/collisions.js) qui couvrent (x, z) entre 2,5 m plus
-  // bas et 2 m plus haut ; 0 sur le plat (moins de 30 cm : une marche, une estrade) et là où aucun sol n'est déclaré (le
-  // rez-de-chaussée), borné à 1,9 m (une demi-volée)
+  // bas et 2 m plus haut, borné à 1,9 m (une demi-volée) ; 0 là où aucun sol n'est déclaré (le rez-de-chaussée). Un sol
+  // qu'un plafond SÉPARE de Haythem (autre que le dessous de sa propre dalle, à moins de 40 cm) n'est pas le sien : vu de
+  // la volée de tôle, le sol du rez-de-chaussée, au-dessus du plafond du hall du -1
   _solSous(x, z, sol) {
     const C = this.collisions;
     let h = null;
     for (const r of C.sols) {
       if (x < r.x0 || x > r.x1 || z < r.z0 || z > r.z1) continue;
       const v = C._hSol(r, x, z);
-      if (v <= sol + 2.0 && v >= sol - 2.5 && (h === null || v > h)) h = v;
+      if (v > sol + 2.0 || v < sol - 2.5 || (h !== null && v <= h)) continue;
+      const bas = Math.min(v, sol) + 0.3, haut = Math.max(v, sol) - 0.4;
+      let separe = false;
+      for (const p of C.plafonds) if (p.y > bas && p.y < haut && x >= p.x0 && x <= p.x1 && z >= p.z0 && z <= p.z1) { separe = true; break; }
+      if (!separe) h = v;
     }
-    if (h === null) return 0;
-    const dS = clamp(h - sol, -PENTE_MAX, PENTE_MAX);
-    return Math.abs(dS) < PENTE_MIN ? 0 : dS;
+    return h === null ? 0 : clamp(h - sol, -PENTE_MAX, PENTE_MAX);
+  }
+  // le plafond au-dessus de (x, z) pour la caméra : au-dessus des pieds de Haythem, et du sol qu'elle survole — sur la
+  // volée 2 de l'escalier principal, à 25 cm sous le palier du 1er, le dessous de sa dalle (3,25, le plafond du hall
+  // ouest) passait pour celui du palier, et la caméra descendait sous la tête de Haythem
+  _plafondCam(x, z, sol, yMin) {
+    return this.collisions.plafondEn(x, z, Math.max(yMin, sol + this._solSous(x, z, sol) + 0.3));
   }
 
   // UN ESSAI de la caméra, cap (bx, bz) vers l'arrière, depuis l'épaule `e` (en mètres, + à droite), avec le contexte `K`
@@ -654,12 +667,26 @@ export class Game {
   // SUIVI)
   _essaiCam(K, bx, bz, e) {
     const C = this.collisions, { ux, uz, sol, tete, d, cp, ty0, yMin, plafU, Zh, seuil } = K;
+    // (l'épaule elle-même à plus de 20 cm de tout : à moins, le monde solide ignore la forme qu'elle touche — c'est la
+    // règle de rayonLibre pour la tête — et le segment passait au ras d'un jambage que la caméra posée, elle, heurtait :
+    // elle tombait alors dans la nuque, de 2,7 m à rien, au seuil de la grande salle du -1 et de l'escalier principal)
+    if (e) { const lp = C.rayonLibre(ux, tete, uz, ux + bz * e, tete, uz - bx * e, RAYON_CAM); if (lp < 1) e *= Math.max(0, lp - 0.05); }
     const px = ux + bz * e, pz = uz - bx * e, tx = px + bx * d * cp, tz = pz + bz * d * cp;
-    // LA PENTE : des marches qui MONTENT derrière lui (il descend) relèvent la caméra d'autant (60 %)
-    const dS = this._solSous(tx, tz, sol);
+    // LA PENTE : des marches qui MONTENT derrière lui (il descend) relèvent la caméra d'autant (60 % ; moins de 30 cm,
+    // une marche, une estrade : rien)
+    const dB = this._solSous(tx, tz, sol), dS = Math.abs(dB) < PENTE_MIN ? 0 : dB;
     let ty = ty0 + (dS > 0 ? PENTE * dS : 0);
-    const plaf = Math.min(plafU, C.plafondEn(tx, tz, yMin));
+    const plaf = Math.min(plafU, this._plafondCam(tx, tz, sol, yMin));
     if (Number.isFinite(plaf)) ty = Math.min(ty, Math.max(tete + 0.05, plaf - 0.28));
+    // (et SOUS LES PLAFONDS DU CHEMIN : le segment passe à 28 cm sous chacun, au quart, à la moitié, aux trois quarts — sur
+    // la volée 1 de l'escalier est, la tête de Haythem est déjà au niveau du plafond du vestibule, à 2,55 : la caméra,
+    // à sa hauteur, butait contre son bord à 1 m ; elle redescend pour passer dessous, comme qui monterait derrière lui ;
+    // jamais à moins de 70 cm du sol qu'elle survole : le sol n'arrête pas la caméra, ce n'est pas une forme)
+    const plancher = sol + dB + 0.7;
+    for (const s of [0.25, 0.5, 0.75]) {
+      const pS = this._plafondCam(px + (tx - px) * s, pz + (tz - pz) * s, sol, yMin);
+      if (Number.isFinite(pS)) ty = Math.min(ty, Math.max(plancher, tete + (pS - 0.28 - tete) / s));
+    }
     let libre = C.rayonLibre(px, tete, pz, tx, ty, tz, RAYON_CAM);
     // ... des marches qui DESCENDENT derrière lui (il monte) : la caméra suit la volée vers le bas si elle y gagne du recul
     // (sous le rampant de la volée de tôle, à hauteur de tête, elle butait à 0,6-1 m ; dans la cage ouverte de l'escalier
@@ -755,6 +782,12 @@ export class Game {
       const eV = cote > 0 ? eD : cote < 0 ? -eG : 0;
       S.epaule = clamp(S.epaule === null ? eV : S.epaule + (eV - S.epaule) * lis(5), -eG, eD);
       E = Math.abs(S.epaule - eD) < 1e-4 ? ED : Math.abs(S.epaule + eG) < 1e-4 ? eg() : Math.abs(S.epaule) < 1e-4 ? ec() : essai(S.epaule);
+      // (lot X1 : en chemin vers son côté, l'épaule peut frôler un jambage — dans une porte de 0,86 m, le pivot à 19 cm du
+      // milieu menait le segment droit dans le fixe dépoli de la grande salle, et la caméra tombait dans la nuque pour
+      // 0,4 s ; on prend alors tout de suite la place du côté choisi, libre : 20 cm de côté, que la glissade de la caméra
+      // adoucit)
+      const Ev = cote > 0 ? ED : cote < 0 ? eg() : ec();
+      if (E !== Ev && E.fM < Ev.fM - 0.15) { E = Ev; S.epaule = eV; }
     }
     // le lissage de la part libre : les MURS, vite quand ils arrivent (25 /s), lentement quand ils s'en vont (4 /s) ; la
     // PIÈCE, en douceur dans les deux sens (7 /s et 3 /s : au seuil d'une porte, plus de bond de 2,6 à 1,1 m en 0,1 s) ;
@@ -772,9 +805,12 @@ export class Game {
     const s9 = v3 ? clamp((S.dl - 1.5) / 0.3, 0, 1) : 1;
     let cy = tete + (E.ty - tete) * k * s9;
     if (v3 && s9 < 1) {
-      const lat = Math.min(1, Math.abs(S.epaule || 0) / EPAULE);
-      let leve = (1 - s9) * LEVE * (1 - 0.6 * lat);
-      const plaf = Math.min(plafU, C.plafondEn(cx, cz, yMin));
+      // (collée — moins de 1 m —, plus haut encore, jusqu'à 65 cm, et l'épaule ne compte plus : à 40 cm derrière lui, une
+      // épaule de 40 cm la mettait contre son oreille, sa tête translucide en travers de l'image — le vestibule de la photo
+      // 25, le palier de v_010, le palier de l'escalier principal ; d'en haut, on le voit, et la volée devant lui)
+      const lat = Math.min(1, Math.abs(S.epaule || 0) / EPAULE) * clamp((S.dl - 0.5) / 0.5, 0, 1);
+      let leve = (1 - s9) * (LEVE + LEVE_COLLE * clamp((1 - S.dl) / 0.5, 0, 1)) * (1 - 0.6 * lat);
+      const plaf = Math.min(plafU, this._plafondCam(cx, cz, sol, yMin));
       if (Number.isFinite(plaf)) leve = Math.min(leve, Math.max(0, plaf - 0.28 - cy));
       let ok = 0;
       for (const fr of [1, 0.5, 0.25]) {
@@ -789,7 +825,8 @@ export class Game {
   // LE CAP ASSISTÉ (en tête du fichier), après _cibleCam, pour l'image suivante : quand la caméra est à l'étroit (recul
   // libre sous 1,8 m) pendant que Haythem marche et qu'on ne la tourne pas soi-même (souris, doigt, stick droit : depuis
   // 0,8 s), elle vise le cap qui la met derrière sa marche — ou à 23° ou 46° de là, s'il lui rend nettement plus de recul
-  // (le palier d'une volée, l'angle d'un couloir) — et s'y range, au plus à 100°/s, la vitesse lissée (pas d'à-coup).
+  // (le palier d'une volée, l'angle d'un couloir) — et s'y range, à 100°/s au plus, jusqu'à 200°/s quand elle est collée
+  // (Haythem qui dévale la volée de tôle, 0,85 m de large, la caméra contre le mur), la vitesse lissée (pas d'à-coup).
   // Commencée, la manœuvre va au bout (le recul qui revient en chemin ne l'arrête pas à mi-course). La direction tenue au
   // clavier ou au pouce garde son cap dans le monde (this._decalCmd, lu par update).
   _assistCap(dt) {
@@ -813,7 +850,7 @@ export class Game {
         const D = angle(best - this.camYaw);
         // (arrivée : moins de 4° d'écart, ou plus rien à gagner — le recul actuel vaut celui du cap visé)
         if (Math.abs(D) < 0.07 || Math.min(S.dl, 2.0) - 0.5 * Math.abs(angle(this.camYaw - yH)) >= nb - 0.05) this._assistOn = false;
-        else voulu = clamp(D * ASSIST_K, -ASSIST_MAX, ASSIST_MAX);
+        else { const m = ASSIST_MAX * (1 + clamp((ASSIST_GENE - S.dl) / (ASSIST_GENE - ASSIST_PLEIN), 0, 1)); voulu = clamp(D * ASSIST_K, -m, m); }
       }
     }
     // la vitesse de rotation lissée (≈ 0,12 s pour lancer, autant pour freiner)
@@ -822,7 +859,7 @@ export class Game {
     if (this._omCap && dt > 0) {
       this.camYaw += this._omCap * dt;
       // (la direction tenue, si elle n'est pas vers l'avant, garde son cap dans le monde : voir update)
-      if (this._phiCmd !== null && this._phiCmd !== undefined && Math.abs(this._phiCmd) >= 0.6) this._decalCmd = (this._decalCmd || 0) - this._omCap * dt;
+      if (this._phiCmd !== null && this._phiCmd !== undefined && Math.abs(this._phiCmd) >= 0.6) this._decalCmd = clamp((this._decalCmd || 0) - this._omCap * dt, -Math.PI, Math.PI);
     }
   }
 
@@ -919,6 +956,7 @@ export class Game {
     if (poser) this.camPos.copy(this.camTarget); else this.camPos.lerp(this.camTarget, damp(v3 ? 12 : 16, dt));
     // la caméra RÉELLEMENT posée ne passe jamais derrière un mur (pendant qu'elle glisse vers sa place), vue de l'épaule
     const f2 = C.rayonLibre(S.px, S.py, S.pz, this.camPos.x, this.camPos.y, this.camPos.z, RAYON_CAM * 0.9);
+    let coupe = false;
     if (f2 < 1) {
       const k = Math.max(0, f2 - 0.02), cP = this.camPos, T = this.camTarget;
       const rC = Math.hypot(cP.x - S.px, cP.y - S.py, cP.z - S.pz), rT = Math.hypot(T.x - S.px, T.y - S.py, T.z - S.pz);
@@ -926,16 +964,44 @@ export class Game {
       // pendant qu'elle glissait) — elle passe plutôt sur la ligne de sa place voulue, libre, à la même distance
       const rV = Math.min(rC, rT), s = rT > 0.05 ? rV / rT : 0;
       const ax = S.px + (T.x - S.px) * s, ay = S.py + (T.y - S.py) * s, az = S.pz + (T.z - S.pz) * s;
-      if (k * rC < 0.7 * rV && s > 0 && C.rayonLibre(S.px, S.py, S.pz, ax, ay, az, RAYON_CAM * 0.9) >= 0.999) cP.set(ax, ay, az);
+      // (seulement pour un petit écart d'angle, 15° au plus : au-delà, l'image pivoterait d'un coup — mieux vaut alors
+      // qu'elle se rapproche sur sa ligne, le décor reste orienté)
+      const cosA = rC > 0.05 && rT > 0.05 ? ((cP.x - S.px) * (T.x - S.px) + (cP.y - S.py) * (T.y - S.py) + (cP.z - S.pz) * (T.z - S.pz)) / (rC * rT) : -1;
+      if (k * rC < 0.7 * rV && s > 0 && cosA > 0.966 && C.rayonLibre(S.px, S.py, S.pz, ax, ay, az, RAYON_CAM * 0.9) >= 0.999) { cP.set(ax, ay, az); coupe = true; }
       else cP.set(S.px + (cP.x - S.px) * k, S.py + (cP.y - S.py) * k, S.pz + (cP.z - S.pz) * k);
+      // (un vrai saut — plus de 50 cm : le regard saute avec elle, d'un coup, plutôt que de balayer l'image sur 4 ou 5
+      // images à 800°/s pour rattraper sa nouvelle place)
+      if (rC - Math.hypot(cP.x - S.px, cP.y - S.py, cP.z - S.pz) > 0.5) coupe = true;
     }
     // LE POINT VISÉ : Haythem, 0,24 m à droite (du côté de l'épaule), à 1,45 m ; vue épaule : dans l'axe, à 1,5 m. De près,
     // le regard porte devant lui (sinon, à 40 cm, il plongerait de 20° vers le sol).
     const ve = v3 ? (S.epaule || 0) * (VISEE_EPAULE / EPAULE) : 0;
     _v.set(u.x + bz * ve, (v3 ? VISEE_H : 1.5) + p.jumpY * 0.5 + p.solAff, u.z - bx * ve);
     const dh = Math.hypot(this.camPos.x - _v.x, this.camPos.z - _v.z);
-    if (v3 && dh < 1.5) { const a = 1.5 - dh; _v.x -= bx * cp * a; _v.y -= sp * a; _v.z -= bz * cp * a; }
-    if (poser) this.lookCur.copy(_v); else this.lookCur.lerp(_v, damp(v3 ? 14 : 18, dt));
+    if (v3 && dh < 1.5) {
+      const a = 1.5 - dh, cP = this.camPos, vx = _v.x, vy = _v.y, vz = _v.z;
+      _v.x -= bx * cp * a; _v.y -= sp * a; _v.z -= bz * cp * a;
+      // (lot X1 : mais Haythem reste DANS L'IMAGE — sa visée à 27° au plus du centre, l'image en couvre 31° de part et
+      // d'autre. Vue d'au-dessus de son épaule, le regard porté droit devant passait au-dessus de lui : sur le palier de la
+      // volée de tôle, on ne voyait qu'un mur blanc)
+      let hx = vx - cP.x, hy = vy - cP.y, hz = vz - cP.z, lx = _v.x - cP.x, ly = _v.y - cP.y, lz = _v.z - cP.z;
+      const nh = Math.hypot(hx, hy, hz), nl = Math.hypot(lx, ly, lz);
+      if (nh > 0.05 && nl > 0.05) {
+        hx /= nh; hy /= nh; hz /= nh;
+        const demi = Math.min(this.camera.fov / 2 * DEG, Math.atan(Math.tan(this.camera.fov / 2 * DEG) * this.camera.aspect));
+        const co = (hx * lx + hy * ly + hz * lz) / nl, M = Math.min(27 * DEG, 0.85 * demi);   // (au téléphone tenu droit, moins)
+        if (co < Math.cos(M)) {
+          let qx = lx / nl - hx * co, qy = ly / nl - hy * co, qz = lz / nl - hz * co;
+          const nq = Math.hypot(qx, qy, qz);
+          if (nq > 1e-4) {
+            qx /= nq; qy /= nq; qz /= nq;
+            const c = Math.cos(M), s = Math.sin(M);
+            _v.set(cP.x + (hx * c + qx * s) * nl, cP.y + (hy * c + qy * s) * nl, cP.z + (hz * c + qz * s) * nl);
+          }
+        }
+      }
+    }
+    if (poser || coupe) this.lookCur.copy(_v); else this.lookCur.lerp(_v, damp(v3 ? 14 : 18, dt));
     this.camera.position.copy(this.camPos); this.camera.lookAt(this.lookCur); this._applyShake(dt);
     this._champ(p, dt, poser);
     // TOUT PRÈS DE LUI : en demi-transparence sous 0,6 m de sa tête (fondu depuis 0,8 m) ; masqué seulement quand la
