@@ -187,8 +187,10 @@ function texGrains() {
 function texBetonTaupe() {
   return canvasTex(256, 256, (g, w, h) => {
     const r2 = graine(2023);
-    g.fillStyle = '#5e5a50'; g.fillRect(0, 0, w, h);
-    nuees(g, w, h, r2, 60, [94, 90, 80], 12, 0.4, 10, 60);
+    // (relecture du 11/10 : v_003, v_004 — le sol fait 0,47 du mur, d'un taupe olive (89, 82, 60) ; sous les plafonniers
+    // chauds du rez-de-chaussée, l'ancien #5e5a50 sortait brun-rouge et trop sombre, (73, 60, 42))
+    g.fillStyle = '#6a6c5e'; g.fillRect(0, 0, w, h);
+    nuees(g, w, h, r2, 60, [106, 108, 94], 12, 0.4, 10, 60);
     for (let k = 0; k < 40; k++) { g.strokeStyle = rgb(120, 116, 104, 0.25); g.lineWidth = 0.6; g.beginPath(); const x = r2() * w, y = r2() * h; g.moveTo(x, y); g.lineTo(x + (r2() - 0.5) * 40, y + (r2() - 0.5) * 12); g.stroke(); }
     for (let k = 0; k < 8; k++) { g.fillStyle = rgb(40, 38, 34, 0.5); g.beginPath(); g.arc(r2() * w, r2() * h, 1 + r2() * 2, 0, 7); g.fill(); }
   }, [1, 1], false, 8);
@@ -1117,13 +1119,22 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // v_059 et v_060, de la porte, montrent TROIS MÈTRES DE CARRELAGE NU devant soi — le premier tabouret à plus de
     // 3 m, la grande table en X à ≈ 4,5 m droit devant, le baby-foot derrière elle, la table grise à droite au bord de
     // l'aile ; l'îlot posé à 1 m de la porte barrait l'entrée. Plan V2, soussol.md § 2.4 : de trois tables, décalé de
-    // 0,7 m vers l'est — la quatrième et ses deux tabourets en moins ; l'entrée reste libre sur 3,5 à 4 m) ----
-    mangeDebout(6.8, 9.61, 'trepied'); autour(6.8, 9.61, 0.5, [200, 300], ['miura', 'tolix']);
-    mangeDebout(8.0, 9.76, 'trepied'); autour(8.0, 9.76, 0.5, [160, 340], ['tolix', 'miura']);
-    mangeDebout(9.1, 9.01, 'trepied'); autour(9.1, 9.01, 0.5, [60, 220]);
+    // 0,7 m vers l'est — la quatrième et ses deux tabourets en moins ; l'entrée reste libre sur 3,5 à 4 m.
+    // RELECTURE DU 11/10, en jouant : ainsi posés, l'îlot, le baby-foot tourné et le mur du sas des toilettes FERMAIENT
+    // le nord de l'espace pause — on n'atteignait plus ni la porte de la grande salle ni le sas (remplissage au pas de
+    // 5 cm depuis le hall du -1). Or la vidéo montre, de l'entrée vers le nord, le carrelage nu devant les cinq
+    // mange-debout du mur vert jusqu'à la porte de la grande salle et au sas — 5 im/s de 18,4 à 22,5 s. D'où : l'îlot
+    // reculé de 0,25 à 0,35 m vers le sud, ses tabourets tournés hors du passage — un couloir de 0,9 m devant les
+    // tabourets du mur vert —, et le baby-foot 0,26 m plus au sud, sous la dalle qui manque au plafond (x 9,75-10,35 ×
+    // y 7,66-8,26) : 0,85 m entre son bout nord et l'angle du sas) ----
+    mangeDebout(6.8, 9.35, 'trepied'); autour(6.8, 9.35, 0.5, [200, 300], ['miura', 'tolix']);
+    mangeDebout(8.0, 9.4, 'trepied'); autour(8.0, 9.4, 0.5, [200, 340], ['tolix', 'miura']);
+    mangeDebout(9.1, 9.01, 'trepied'); autour(9.1, 9.01, 0.5, [120, 220]);
     // ---- le baby-foot (nord-sud), la grande table en X devant lui, l'autre devant les distributeurs ----
-    babyFoot(9.9, 8.16);
-    grandeTable(7.2, 8.01); autour(7.2, 8.01, 0.62, [60, 180, 300]);
+    babyFoot(9.9, 7.9);
+    // (relecture du 11/10 : le tabouret sud-est de la grande table passe au sud-ouest — entre elle et la table grise, on
+    // rejoint le baby-foot depuis l'aile ; sinon le coin du baby-foot était clos, et trois tabourets y relevaient Haythem)
+    grandeTable(7.2, 8.01); autour(7.2, 8.01, 0.62, [60, 180, 240]);
     grandeTable(11.0, 4.21); autour(11.0, 4.21, 0.62, [90, 200, 320]);
     // ---- la table grise, au bord de l'aile (v_060 : à droite de la table en X, un peu plus loin) ----
     B(8.0, 6.46, 9.2, 7.04, Y_SS + 0.92, Y_SS + 0.95, X.tablette, { collision: true });
