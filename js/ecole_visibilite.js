@@ -59,10 +59,13 @@ export const ZONES = [
   ['ss', [b(XO, YF, XE, YT, SS)]],
   // le rez-de-chaussée, sa façade comprise
   ['r0', [b(XO, YF, XE, YT, R0)]],
-  // le 1er : les pièces sur rue (la S 1.3, le bureau de la travée 1, le 103 et la Si 1.5), le reste
+  // le 1er : les pièces sur rue (la S 1.3, le bureau de la travée 1, le 103 et la Si 1.5) — le dedans sous l'appui de leurs
+  // fenêtres (4,45 m : les tables, les chaises, le bas des murs), puis la façade et le haut —, le reste
+  ['e1avb', [b(XO, 0, 13.55, 4.95, [E1[0], 4.45]), b(13.55, 0, XE, 6.95, [E1[0], 4.45])]],
   ['e1av', [b(XO, YF, 13.55, 4.95, E1), b(13.55, YF, XE, 6.95, E1)]],
   ['e1', [b(XO, 4.95, 13.55, YT, E1), b(13.55, 6.95, XE, YT, E1)]],
-  // le 2e : la salle 2 et les pièces fermées sur rue, le reste
+  // le 2e : la salle 2 et les pièces fermées sur rue (sous l'appui, 7,60 m, et au-dessus), le reste
+  ['e2avb', [b(XO, 0, XE, 4.6, [E2[0], 7.6])]],
   ['e2av', [b(XO, YF, XE, 4.6, E2)]],
   ['e2', [b(XO, 4.6, XE, YT, E2)]],
   // la rue, devant la façade, jusqu'au haut des immeubles d'en face
@@ -76,9 +79,9 @@ export const DEHORS = 1 << 30;                    // hors de toute zone : jamais
 // la cage est. Un triangle va dans la famille de la zone qu'il regarde (le point à 3 cm devant son centre) ; le morceau
 // garde toutes les zones de ses triangles.
 const FAMILLE = { rue: 0, r0: 1, tremie0: 2, cageO0: 2, cageE0: 2, ss: 3, tremieS: 3, cageES: 3, e1av: 4, e1: 5, cageO1: 5, cageE1: 5,
-  e2av: 6, e2: 7, cageE2: 7, sse: 9, r0e: 10, e1e: 11, e2e: 12, r0wc: 13, r0lt: 13, r0si: 13, r0sv: 13 };
+  e2av: 6, e2: 7, cageE2: 7, sse: 9, r0e: 10, e1e: 11, e2e: 12, r0wc: 13, r0lt: 13, r0si: 13, r0sv: 13, e1avb: 14, e2avb: 15 };
 const FAM = new Map(ZONES.map(([n], i) => [1 << i, FAMILLE[n]]));
-const F_DEHORS = 8, N_FAM = 14;
+const F_DEHORS = 8, N_FAM = 16;
 const BOITES = [];
 ZONES.forEach(([, bs], i) => { for (const B of bs) BOITES.push([...B, 1 << i]); });
 
@@ -149,9 +152,10 @@ const ONBR = THREE.Object3D.prototype.onBeforeRender;
 // ensemble : le -1, le rez-de-chaussée et le bas des cages, le dehors, la rue, l'avant et le fond du 1er, ceux du 2e.
 // Ne coupe que du fixe : un maillage d'un seul matériau, sans morphes ni instances ni rendu à soi (onBeforeRender), et
 // rien sous une porte ou un vantail (ils tournent).
-// (-1, -1 est, bas des cages, rez-de-chaussée est, rez-de-chaussée, dehors, rue, 1er avant, 1er, 1er est, 2e avant, 2e, 2e est,
-// et pour finir les pièces fermées du rez-de-chaussée : cachées presque partout, elles ne font qu'écourter la suite)
-const ORDRE = [3, 9, 2, 10, 1, 8, 0, 4, 5, 11, 6, 7, 12, 13];
+// (-1, -1 est, bas des cages, rez-de-chaussée est, rez-de-chaussée, dehors, rue, bas puis haut du 1er avant, 1er, 1er est,
+// bas puis haut du 2e avant, 2e, 2e est, et pour finir les pièces fermées du rez-de-chaussée : cachées presque partout,
+// elles ne font qu'écourter la suite)
+const ORDRE = [3, 9, 2, 10, 1, 8, 0, 14, 4, 5, 11, 15, 6, 7, 12, 13];
 const COUPE = { ms: 0, blocs: 0 };
 export function couperParZones(o) {
   const t0 = performance.now();
@@ -279,9 +283,9 @@ const PIED_TREMIE_S = [-0.4, 4.8, 5.0, 14.5];    // -1 : et à son pied, le hall
 // (les zones du rez-de-chaussée et des étages qu'on voit d'un niveau)
 const VU_RUE = T('tremie0', 'cageO0', 'cageE0', 'r0e', 'r0', 'e1av', 'e2av', 'rue');
 const VU_S = T('tremieS', 'cageES', 'sse', 'ss');
-const VU_R = T('tremie0', 'cageO0', 'cageE0', 'r0e', 'r0', 'e1av', 'rue');
-const VU_E1 = T('cageO1', 'cageE1', 'e1e', 'e1av', 'e1', 'rue');
-const VU_E2 = T('cageE2', 'e2e', 'e2av', 'e2', 'rue');
+const VU_R = T('tremie0', 'cageO0', 'cageE0', 'r0e', 'r0', 'e1avb', 'e1av', 'rue');
+const VU_E1 = T('cageO1', 'cageE1', 'e1e', 'e1avb', 'e1av', 'e1', 'rue');
+const VU_E2 = T('cageE2', 'e2e', 'e2avb', 'e2av', 'e2', 'rue');
 // LES PIÈCES FERMÉES (posées par poserVisibilite, d'après les portes automatiques de chacune) : on les voit de dedans, ou à
 // moins de 8 m d'une de leurs portes — Haythem l'ouvre à 2,10 m (js/ecole_portes.js), la caméra le suit à 2,60 m au plus,
 // et la porte met 0,38 s à se refermer derrière lui ; plus loin, elle est fermée
@@ -299,11 +303,13 @@ export function zonesCachees(x, h, z) {
   const y = -z;
   let vu;
   if (y < -0.3) {
-    // DANS LA RUE : ni le -1, ni le fond du 1er tant que la caméra est sous 2,40 m (au-dessus, par les fenêtres de la
-    // S 1.3 et sa porte ouverte, on voit l'espace pause et jusqu'à la Kahn), ni le fond du 2e sous 3,00 m
+    // DANS LA RUE : ni le -1, ni le fond du 1er ni le dedans de ses pièces sur rue sous l'appui des fenêtres tant que la
+    // caméra est sous 2,40 m (au-dessus, par les fenêtres de la S 1.3 et sa porte ouverte, on voit l'espace pause et
+    // jusqu'à la Kahn) ; ni le fond du 2e sous 3,00 m, ni le dedans de la salle 2 sous son appui, sous 4,00 m
     vu = VU_RUE | fermeesVues(x, y);
-    if (h >= 2.4) vu |= T('e1', 'e1e', 'cageE1');
+    if (h >= 2.4) vu |= T('e1avb', 'e1', 'e1e', 'cageE1');
     if (h >= 3.0) vu |= T('e2');
+    if (h >= 4.0) vu |= T('e2avb');
   } else if (h < -0.15) {
     // AU -1 : rien des étages ; ni la rue ni le rez-de-chaussée, sauf du pied des deux escaliers
     vu = VU_S;
