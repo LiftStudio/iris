@@ -51,7 +51,7 @@ const DEFAULTS = {
   controls: { sensitivity: 1.0, invertY: false, bindings: defaultBindings(),
     pad: { bindings: defaultPadBindings(), deadzone: 0.15, sens: 1.0, invertY: false, vibrations: true },
     tactile: { taille: 1, opacite: 0.8, stick: 'flottant', vibrations: true, places: {} } },
-  // `vue` : la vue de la balade (3 = 3e personne, 2 = épaule, 1 = première personne) ; `emotes` : les identifiants des
+  // `vue` : la vue de la balade (3 = 3e personne, 2 = épaule, 1 = première personne, 4 = vue photo) ; `emotes` : les identifiants des
   // emotes mises sur la roue (huit au plus, js/emotes.js ; vide = les huit de départ)
   game: { vue: 3, emotes: [] },
 };

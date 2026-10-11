@@ -538,7 +538,14 @@ export class Game {
       if (admises.has(Z)) { tOk = t; continue; }
       if (autreNiveau(Z, Zh, x, z, sol)) continue;
       const voisine = (Zh.voisines || []).includes(Z.id) || (Z.voisines || []).includes(Zh.id);
-      if (voisine && this._seuilOuvert(px, py, pz, dx, dy, dz, long, tOk, t, sol, tMax)) { admises.add(Z); tOk = t; continue; }
+      // (le seuil d'une voisine n'est jugé qu'une fois par image, pour tous les essais d'épaule : ils passent par le même)
+      let ouvert = false;
+      if (voisine) {
+        const S = this._seuils || (this._seuils = new Map());
+        ouvert = S.get(Z);
+        if (ouvert === undefined) { ouvert = this._seuilOuvert(px, py, pz, dx, dy, dz, long, tOk, t, sol, tMax); S.set(Z, ouvert); }
+      }
+      if (ouvert) { admises.add(Z); tOk = t; continue; }
       return Math.max(0, tOk - 0.15 / long);
     }
     return tMax;
@@ -576,6 +583,7 @@ export class Game {
     const C = this.collisions, S = this._cam || (this._cam = { cote: 1, tv: 0, murs: 1, epaule: null, recul: null, zone: null, dl: RECUL, px: 0, py: 0, pz: 0 });
     const v3 = this.vue === 3, sol = p.solAff, tete = sol + p.h * 0.93;
     const cp = Math.cos(this.camPitch), sp = Math.sin(this.camPitch);
+    if (this._seuils) this._seuils.clear();
     const bx = Math.sin(this.camYaw), bz = Math.cos(this.camYaw), rx = bz, rz = -bx;   // vers l'arrière ; la droite de l'écran
     const lis = (v) => (poser ? 1 : dt > 0 ? damp(v, dt) : 0);
     // la PIÈCE de Haythem (sur le seuil d'une porte, entre deux zones : celle d'où il vient)
@@ -617,12 +625,19 @@ export class Game {
       // contredisaient — dans le cou, le mur de la pile à 0,58 m envoyait à gauche, le recul plus long ramenait à droite —
       // et le côté changeait à CHAQUE image : 126 fois sur la marche du hall au 1er par l'escalier principal, aller et
       // retour, 55 sur celle de l'escalier est jusqu'au 2e.)
-      const ED = essai(eD), EG = essai(-eG), EC = essai(0), cote0 = S.cote;
+      // (les essais à gauche et dans l'axe ne se font que s'ils peuvent l'emporter : à droite, côté des murs, avec 1,5 m
+      // de recul ou plus — le cas courant —, rien ne bat la droite)
+      const ED = essai(eD), cote0 = S.cote;
+      let EG = null, EC = null;
+      const eg = () => EG || (EG = essai(-eG)), ec = () => EC || (EC = essai(0));
       S.murs = cD < 0.6 && cG > cD + 0.05 ? -1 : cD >= 0.75 || cG <= cD + 0.05 ? 1 : S.murs || 1;
       const note = (c, e) => Math.min(e.dl, 1.5) + (c === S.murs ? 0.2 : 0) + (c === cote0 && !poser ? 0.15 : 0);
-      const nD = note(1, ED), nC = note(0, EC), nG = note(-1, EG);
-      const veut = nD >= nC && nD >= nG ? 1 : nG >= nC ? -1 : 0;
-      const dlC = (cote0 > 0 ? ED : cote0 < 0 ? EG : EC).dl;
+      let veut = 1;
+      if (!(S.murs > 0 && ED.dl >= 1.5 && (cote0 > 0 || poser))) {
+        const nD = note(1, ED), nC = note(0, ec()), nG = note(-1, eg());
+        veut = nD >= nC && nD >= nG ? 1 : nG >= nC ? -1 : 0;
+      }
+      const dlC = (cote0 > 0 ? ED : cote0 < 0 ? eg() : ec()).dl;
       S.tv = veut !== cote0 && dt > 0 ? (S.tv || 0) + dt : 0;
       S.tc = (S.tc || 0) + (dt > 0 ? dt : 0);
       if (poser) S.cote = veut;
@@ -631,13 +646,13 @@ export class Game {
         // recul du nouveau côté lui est rendu sans attendre la remontée lente de la part libre : la glissade de l'épaule
         // et celle de la caméra, 12 /s, adoucissent le passage)
         S.cote = veut; S.tv = 0; S.tc = 0;
-        this._camLibre = Math.max(this._camLibre ?? 1, (veut > 0 ? ED : veut < 0 ? EG : EC).f);
+        this._camLibre = Math.max(this._camLibre ?? 1, (veut > 0 ? ED : veut < 0 ? eg() : ec()).f);
       }
       const cote = S.cote;
       // l'épaule glisse vers son côté (d'une épaule à l'autre en ≈ 0,4 s), sans jamais entrer dans un mur
       const eV = cote > 0 ? eD : cote < 0 ? -eG : 0;
       S.epaule = clamp(S.epaule === null ? eV : S.epaule + (eV - S.epaule) * lis(5), -eG, eD);
-      E = Math.abs(S.epaule - eD) < 1e-4 ? ED : Math.abs(S.epaule + eG) < 1e-4 ? EG : Math.abs(S.epaule) < 1e-4 ? EC : essai(S.epaule);
+      E = Math.abs(S.epaule - eD) < 1e-4 ? ED : Math.abs(S.epaule + eG) < 1e-4 ? eg() : Math.abs(S.epaule) < 1e-4 ? ec() : essai(S.epaule);
     }
     // le lissage de la part libre (vite quand un mur ou un seuil arrive, lentement quand il s'en va)
     const c = this._camLibre ?? 1;

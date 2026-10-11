@@ -22,7 +22,7 @@ import { NavMenus } from './manette_menus.js';
 // ---- aides à l'écran quand la dernière entrée est la manette (Game.lobbyHint les demande) ----
 export const manetteActive = () => entree.manette;
 export function aideBalade() {
-  return `stick droit = caméra · ${actionKey('camera')} = vue (3e / épaule / 1re personne) · stick à moitié ou ${actionKey('walk')} = marcher · ${actionKey('sprint')} = sprint · ${actionKey('jump')} = sauter · ${actionKey('emote')} = emotes · ${actionKey('phone')} = téléphone`;
+  return `stick droit = caméra · ${actionKey('camera')} = vue (3e / épaule / 1re personne / photo) · stick à moitié ou ${actionKey('walk')} = marcher · ${actionKey('sprint')} = sprint · ${actionKey('jump')} = sauter · ${actionKey('emote')} = emotes · ${actionKey('phone')} = téléphone`;
 }
 
 // ---- réglages fins (pas dans les options : ce sont des constantes de jouabilité) ----

@@ -49,7 +49,7 @@ export function buildOptions(settings, cb = {}) {
       [d('jump'), 'Sauter'],
       [d('interact'), 'S’asseoir, se lever'],
       [d('emote'), 'Roue des emotes (vise au stick droit, relâche ou valide)'],
-      [d('camera'), 'Changer de vue (3e personne, épaule, 1re personne)'],
+      [d('camera'), 'Changer de vue (3e personne, épaule, 1re personne, vue photo)'],
       [d('phone'), 'Téléphone'],
       [d('pause'), 'Pause'],
       [d('walk'), 'Marcher (garder le pas)'],
