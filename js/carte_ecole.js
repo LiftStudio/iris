@@ -439,7 +439,8 @@ function construireEscalier(ch) {
 // Douze travées de 1,65 m. Au rez-de-chaussée, d'ouest en est : la porte de secours noire sous sa ventilation, le
 // passage des étudiants (grille noire ouverte), trois grandes fenêtres à barreaux (salle A), deux fenêtres hautes
 // (bureau B), le portail noir de l'entrée n° 6 en retrait (drapeaux, numéro), deux grandes fenêtres (accueil). Au-dessus,
-// quatre étages de pierre claire à une fenêtre par travée, quelques encadrements rouges en saillie, l'attique en retrait.
+// quatre étages de pierre claire à une fenêtre par travée, quelques encadrements rouges en saillie, puis le 5e étage, son
+// bandeau vitré noir sous la toiture plate (lot façade du 11/10 : plus d'attique en retrait).
 const BAIES_HAUTES = [5.78, 7.43, 9.08, 17.33, 18.98];      // fenêtres de 1,2 m, allège 1,10, linteau 2,75
 const BAIES_BUREAU = [10.73, 12.38];                       // allège 1,75
 // (lot façade du 11/10 : les photos 12 et 17 redressées sur les fenêtres du 1er — 1,3 px d'écart sur la 17 — mettent le
@@ -584,7 +585,7 @@ function construireFacade(ch) {
   const ecusson = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.6), jourDehors(new THREE.MeshStandardMaterial({ map: texDrapeau('ecusson'), transparent: true, roughness: 0.5 }), 0.3));
   ecusson.position.set(PORTAIL.c, PORTAIL.h + 0.34, 0.43); ch.decor.add(ecusson);
 
-  // ---- LES ÉTAGES (pierre et fenêtres dessinées, une travée par tuile), la corniche, l'attique en retrait ----
+  // ---- LES ÉTAGES (pierre et fenêtres dessinées, une travée par tuile), le 5e étage et la toiture ----
   // (centrée sur x = 9,9 : la tuile de 1,65 m tombe juste sur les travées ; débordant de 30 cm sur les mitoyens)
   // (le 1er et le 2e ont leurs façades à eux, percées de vraies fenêtres : js/ecole_etage1.js, js/ecole_etage2.js — 10/10 ;
   // les étages dessinés partent du 3e, à 9,70 m — la boîte fait deux étages : le bas de sa tuile, à -3,10, tombe déjà

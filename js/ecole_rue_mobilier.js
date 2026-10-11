@@ -1046,8 +1046,9 @@ export function poserMobilierRue(ch, R) {
   // 0,5 à 0,7, de 6,3 à 9,85. La corbeille (8,87 ; -1,36), la poubelle haute (9,72 ; -1,65), le premier banc (x 6,2-7,5 :
   // entre les photos 11 et 18, qui ne s'accordent qu'à 0,4 m près), le second (son pied avant ouest en 11,07 ; -1,37), le
   // totem de la porte 6 (x 12,75, le haut de son panneau relevé sur les photos 11, 17 et 18), le bambou (son pied avant
-  // en 12,95 ; -2,06 sur les photos 17 et 18, 12,6 sur la 11) : tous de 0,3 à 0,7 m plus à l'est. Les plantes gardent
-  // leur tirage : le bac de derrière le second banc a le sien)
+  // en 12,95 ; -2,06 sur les photos 17 et 18, 12,6 sur la 11) : de 0,2 à 0,7 m de leur ancienne place — la corbeille, la
+  // poubelle et le premier banc vers l'ouest, le second banc, le totem et le bambou vers l'est. Les plantes gardent leur
+  // tirage : le bac de derrière le second banc a le sien)
   const rE = alea(1105);
   let h = jardiniere(ch, A, M, 6.02, -0.67, 0.85, 0.5, 0.95); olivier(F, A, M, 6.02, -0.67, h, 1.9, r);
   h = jardiniere(ch, A, M, 7.22, -0.67, 1.05, 0.5, 0.95); arbuste(F, A, M, 7.22, -0.67, h, 0.46, 0.5, PLANCHE.fleurs, r, 34);
