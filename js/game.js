@@ -53,6 +53,12 @@ const CHAMP = 63, CHAMP_H_MAX = 108, CHAMP_SPRINT = 7, CHAMP_MAX = 70, CHAMP_SER
 const TANGAGE = 0.12;                     // le piqué de départ (7°)
 const RECUL = 2.6, RECUL_RUE = 4.3, HAUT_CAM = 1.6, EPAULE = 0.4, VISEE_EPAULE = 0.24, VISEE_H = 1.45;
 const BAIE = 2.0;                         // un passage d'au moins 2 m n'est pas une porte (la plus large, la porte 6 : 1,90)
+// LE SEUIL FRANCHI (vérification finale du 11/10) : la règle de la pièce collait la caméra au dos de Haythem sur les
+// 2,6 premiers mètres après chaque porte — sur le tour du -1 et de l'escalier est, 47 % des images à moins de 1 m de lui
+// et 27 % à moins de 0,6 m (Haythem translucide) : le hall du -1, le passage sombre, le sas, le couloir est, chaque seuil de
+// l'espace pause. Elle peut repasser le seuil d'où il vient jusqu'à 1,1 m derrière lui — par la baie, entre les jambages
+// (les murs et les portes fermées l'arrêtent toujours) ; au-delà, la pièce reste la règle.
+const RECUL_SEUIL = 1.1;
 const OEIL_PHOTO = 1.45;                  // la « vue photo » : l'œil à hauteur de téléphone tenu devant soi
 // le champ vertical pour un écran de rapport `aspect` : 63°, sauf si l'horizontal dépasse alors 108°
 const champBase = (aspect) => Math.min(CHAMP, 2 * Math.atan(Math.tan(CHAMP_H_MAX / 2 * DEG) / Math.max(0.2, aspect || 1)) / DEG);
@@ -607,7 +613,8 @@ export class Game {
       const libre = C.rayonLibre(px, tete, pz, tx, ty, tz, RAYON_CAM);
       const L = Math.max(0.3, Math.hypot(tx - px, ty - tete, tz - pz));
       let f = libre < 1 ? Math.max(0, libre - 0.08 / L) : 1;          // (8 cm de marge devant un mur, pas en plein air)
-      f = Math.min(f, this._partPiece(px, tete, pz, tx - px, ty - tete, tz - pz, sol, Zh, f));
+      // (la pièce de Haythem, sauf sur le premier RECUL_SEUIL du chemin : voir en tête du fichier)
+      f = Math.max(Math.min(f, this._partPiece(px, tete, pz, tx - px, ty - tete, tz - pz, sol, Zh, f)), Math.min(f, RECUL_SEUIL / L));
       return { px, pz, tx, ty, tz, f, dl: f * d * cp };
     };
     let E;
