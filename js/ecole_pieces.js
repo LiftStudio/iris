@@ -1363,10 +1363,11 @@ function signaletiqueC05(ch, P, yPorte, picto) {
   if (!v) return;
   // (dans le repère du vantail : le gond en x = 0, le vantail vers +x — le nord —, la face du C05 en -z ; la fente
   // vitrée a son axe à 0,20 du bord libre, son noyer s'arrête à 0,305 : la première affiche juste à côté, à un doigt, la
-  // seconde vers les gonds ; de 1,27 à 1,57 m, juste au-dessus de la béquille, photo 23)
+  // seconde vers les gonds ; de 1,32 à 1,62 m, au-dessus de la béquille, photo 23 — relecture du 11/10, à sa pose :
+  // 1,31-1,62, le jeu les mettait 5 cm plus bas)
   [[0.43, 0], [0.215, 1]].forEach(([x, k]) => {
     const a = new THREE.Mesh(new THREE.PlaneGeometry(0.205, 0.29), _affichesWC[k]);
-    a.position.set(x, 1.42 + k * 0.012, -0.0235); a.rotation.y = Math.PI; a.rotation.z = (k ? -0.012 : 0.008); a.castShadow = false;
+    a.position.set(x, 1.47 + k * 0.012, -0.0235); a.rotation.y = Math.PI; a.rotation.z = (k ? -0.012 : 0.008); a.castShadow = false;
     v.g.add(a);
   });
 }
@@ -1383,8 +1384,10 @@ function toilettesFemmes(ch, P) {
   const bords = [WF.y0 + 0.012, 9.2, WF.y1 - 0.012];
   cabines(ch, P, 7.4, WF.x1 - 0.012, bords);
   lavabos(ch, P, WF, yP + 0.545, WF.y1 - 0.012, 'wcF', [[9.355, 10.283]]);
-  secheMains(ch, P, 7.0, WF.y0 + 0.012, 'N');
-  poubelleWC(ch, P, 7.0, 8.16);
+  // (relecture du 11/10 : le vantail, gonds au sud à 0,2 m du mur sud, balaie 0,85 m dans la pièce — ouvert à 83°, son
+  // bout passait dans la poubelle en (7,0 ; 8,16) ; elle et le sèche-mains glissent contre la première cabine)
+  secheMains(ch, P, 7.2, WF.y0 + 0.012, 'N');
+  poubelleWC(ch, P, 7.2, 8.12);
   for (const [x, y] of [[6.65, 8.55], [6.65, 9.85], [8.1, 9.2]]) ch.spot(x, y, 2.5, 'wcF');
   signaletiqueC05(ch, P, yP, 'femme');
 }
