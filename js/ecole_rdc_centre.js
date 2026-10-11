@@ -41,9 +41,11 @@ export const PILE = { x0: 13.30, x1: 14.675, y0: 4.7, y1: 7.575 };
 // retour, à gauche de l'angle. Ils étaient en x 11,0, sur un mur qui n'existe pas : c'est par là que r02 voit le hall.
 // (RELECTURE DU 11/10, VO q_0041 et q_0042 agrandies : la plaque est TOUT CONTRE L'ANGLE — son bord nord à 7 px de
 // l'arête quand elle en fait 38 de large, 4 cm — et non à 0,2 m : centrée en y 4,73, de 4,625 à 4,835 ; elle était en
-// 4,47-4,68)
+// 4,47-4,68) (Et le drapeau sur le cadre du jour : r02 rejouée à la même pose, sa base tombait 24 px à gauche de celle de
+// la photo, où elle touche le cadre du jour est — x 9,06 — et non le milieu du bout de mur ; la VO de 2021 le voit plutôt
+// à l'angle, mais les photos de 2026 priment : x 9,09)
 const Y_BUREAU = 4.875, X_RETOUR = 9.24;
-const Y_PLAQUE = 4.73, X_DRAPEAU = 9.14;
+const Y_PLAQUE = 4.73, X_DRAPEAU = 9.09;
 
 // =====================================================================
 //  LES TEXTURES
