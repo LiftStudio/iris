@@ -559,7 +559,10 @@ function construireFacade(ch) {
     ch.boite(x - w / 2, y0, x - w / 2 + f, y1, hc - h / 2, hc + h / 2, M.rougeCadre, { ombre: false });
     ch.boite(x + w / 2 - f, y0, x + w / 2, y1, hc - h / 2, hc + h / 2, M.rougeCadre, { ombre: false });
   };
-  cadre(1, 1, 2.3, 2.0); cadre(12, 1, 1.5, 1.9); cadre(7, 2, 1.6, 1.55); cadre(11, 2, 1.6, 1.55); cadre(9, 3, 1.6, 1.55);
+  // (plan V2 du 11/10, lot du 2e : au 2e, un seul encadrement, travée 7 — photos 11 et 12 de Haythem, iris_audit/e2x/p12z.jpg :
+  // à droite du cadre rouge, cinq fenêtres simples jusqu'au mitoyen ; celui de droite est un étage plus haut, au bout de la
+  // rangée du 3e, au-dessus de la fenêtre 12 du 2e)
+  cadre(1, 1, 2.3, 2.0); cadre(12, 1, 1.5, 1.9); cadre(7, 2, 1.6, 1.55); cadre(12, 3, 1.6, 1.55); cadre(9, 3, 1.6, 1.55);
   cadre(3, 4, 1.6, 1.55); cadre(8, 4, 1.6, 1.55);
 }
 // les drapeaux et l'écusson (dessinés)

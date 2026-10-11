@@ -19,17 +19,21 @@
 // Laquelle des deux salles est S 2.7 ou S 2.8 : inconnu (plaques illisibles) — S 2.7 pour la salle 1, la première vue.
 //
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; plancher à 6,60 m) :
-//   le palier du 2e         x 13,55-16,05  y 7,9-12,45   mur du panneau (face est x 14,225, y 8,6-12,3), recoin de
-//                                                       l'extincteur x 13,55-14,225 y 7,9-8,65 ; au nord, la fenêtre DANS
+//   le palier du 2e         x 13,78-16,05  y 7,96-12,3   mur du panneau (face est x 14,225, y 8,6-12,3), recoin de
+//                                                       l'extincteur x 13,78-14,225 y 7,96-8,59 ; au nord, la fenêtre DANS
 //                                                       le mur du panneau (y 11,1-11,8 : elle donne sur une courette)
-//   le vestibule (ascenseur) x 16,05-17,9  y 7,0-9,0    ouvert sur le palier au sud de la cage
-//   la porte coupe-feu      x 14,275-15,225 dans le mur y 7,9 (gonds à l'est, s'ouvre vers le palier)
-//   le sas                  x 13,72-15,5   y 6,5-7,9    (relecture : 0,55 m de mur à l'ouest de la porte, sa plaque)
-//   le couloir              x 3,3-15,9     y 4,65-6,5   mur nord rouge de x 4,9 à 12,0 ; porte du fond (x 3,3) fermée
-//   la salle 1 (cour)       x 4,9-12,95    y 6,62-12,3  porte x 12,0-12,9 (gonds à l'est, s'ouvre vers la salle)
+//   le vestibule (ascenseur) x 16,05-17,9  y 6,94-9,0   ouvert sur le palier au sud de la cage
+//   la porte coupe-feu      x 14,275-15,225 dans le mur y 7,9 (gonds à l'est, ouverte à demeure, rabattue côté palier)
+//   le sas                  x 13,72-15,5   y 6,5-7,84   (relecture : 0,55 m de mur à l'ouest de la porte, sa plaque)
+//   le couloir              x 3,3-15,9     y 4,65-6,5   mur nord rouge de x 4,84 à 12,0 ; porte du fond (x 3,3) fermée
+//   la salle 1 (cour)       x 3,6-12,95    y 6,62-11,55 porte x 12,0-12,9 (gonds à l'est, s'ouvre vers la salle)
 //   la salle 2 (rue)        x 9,96-18,15   y 0-4,53     travées 7 à 11 ; porte D1 x 10,05-11,0 (gonds à l'ouest)
 //   fermés                  Si 2.6 (x 0-9,9 côté rue, porte x 4,35), B 2.3 (bout est, x 15,96), le dégagement ouest
-//   la façade arrière       y 12,45 (ép. 0,30) au 2e ; au-dessus, la cage est monte (js/ecole_est.js poserCageHaute)
+//                           (x 0-3,48 y 4,65-12,3, derrière la porte du fond)
+//   la façade arrière       y 11,70 derrière la salle 1 (nu 11,55), y 12,45 ailleurs (ép. 0,30), un ressaut en x 13,0 ;
+//                           au-dessus, la cage est monte (js/ecole_est.js poserCageHaute)
+//   (plan V2 du 11/10, iris_audit/plan_v2.md § 1.3 et § 2.5 : l'escalier principal s'arrête au 1er — le plafond de sa cage
+//   est à 6,40, le dessous de notre dalle ; au-dessus de x 1,6-4,75 y 7,775-14,075, la salle 1 et le dégagement fermé)
 // (Cotes de la vidéo à ± 0,4 m en y, ± 0,7 m en x. Recalages sur le relevé, images en grand à l'appui : la cloison ouest
 // de la salle 2 passe au trumeau entre les travées 6 et 7, x 9,9 — une cloison ne bute pas sur une fenêtre — et la porte
 // D1 la suit, 0,45 m plus à l'est ; les fenêtres de la salle 1 sont réparties sur son mur, pas de 1,30 m ; la fenêtre du
@@ -42,6 +46,18 @@
 // ni bâton côté sas, sans scintillement dans ses tableaux ; le sas élargi à l'ouest et sa caméra ; la photo turquoise sans
 // la « silhouette » (un reflet) ; le verre des portes des salles gris vert ; l'extincteur du recoin sur son mur ouest ;
 // l'allée de la porte de la salle 1 assez large pour passer le poteau ; le lino un peu plus clair.
+// LE PLAN V2 DU 11/10 (retour de Haythem du 10/10, « les salles sont trop compressées » ; iris_audit/plan_v2.md § 2.5 et
+// etage2.md, planches VO/jeu au même point de vue) : les plafonds à 2,40 (salles) et 2,45 (couloir, sas) au lieu de 2,70
+// et 2,58 ; la salle 1 de 9,35 x 4,93 au lieu de 8,05 x 5,68 — mur ouest en x 3,6, façade en y 11,70 —, ses fenêtres de
+// 0,88 x 1,10 au pas de 1,35, ses rangées au pas de 1,45 avec 2,0 m devant le tableau, le coin du professeur dans l'angle
+// nord-ouest, le second poteau en x 9,0 ; les chaises du couloir contre D1 ; les trumeaux de la salle 2 saillants de
+// 0,28 ; le recoin de l'extincteur en x 13,78 ; la porte coupe-feu rabattue, son bois côté gonds seulement ; la fenêtre
+// 11 sans cadre rouge (il est au 3e) ; plus de cage de l'escalier principal au 2e.
+// LA RELECTURE DU PLAN V2 (11/10 ; la VO projetée sur le plan aux poses du faisceau, la caméra de q_0304 dans la porte en
+// x 12,22 — celle qui met les fenêtres du plan sur la VO —, et q_0308 calée sur les fenêtres) : dans la salle 1, neuf
+// luminaires en 3 x 3 et pas de diffuseur à fentes, le vidéoprojecteur au sud du milieu du tableau, le caisson gris et
+// le meuble noir à 1,25 m, les stores de toute la hauteur, les embrasures brun-noir, la 6e fenêtre plus large et d'un
+// seul vantail, pas de convecteur ; dans la salle 2, des fenêtres d'un seul vantail et l'allège à 0,85.
 //
 // LES PIÈGES D'UN NIVEAU DE PLUS (ceux du 1er, js/ecole_etage1.js, et du sous-sol, js/ecole_soussol.js) :
 //   1. des SOLS (C.sol à 6,60) sous tout ce qu'on foule, la cage exceptée : sinon solEn rendrait le plancher du 1er ;
@@ -56,7 +72,7 @@
 //
 //   poserEtage2(ch, renderer) -> { zones, maj(dt, jeu), groupe }
 import * as THREE from 'three';
-import { maille, boiteM, fusionnerLocal, fenetreFacade } from './ecole_portes.js';
+import { maille, boiteM, fusionnerLocal } from './ecole_portes.js';
 import { canvasTex, nePasFusionner, detailPhoto } from './kit_decor.js';
 import { jourDehors, texPeinture, texPictoExtincteur, texConsignes } from './ecole_matieres.js';
 import { cuireLumiereSol } from './ecole_lumieres.js';
@@ -69,19 +85,29 @@ import { ASC, poserAscenseur } from './ecole_ascenseur.js';
 const N2 = 6.6;                     // le plancher du 2e
 const N3 = N2 + 3.1;                // celui du 3e (un étage courant, la tuile de la façade)
 const DALLE3 = N3 - 0.2;            // le dessous de la dalle du 3e : les cloisons y montent
-const H_SALLE = N2 + 2.7;           // les dalles 60 x 60 des deux salles (VO : ≈ 2,7 m)
-const H_COUL = N2 + 2.58;           // le plâtre lisse du couloir (VO : 2,55 à 2,6)
-const H_PAL = N2 + 2.5;             // le plafond du palier (comme au 1er, photo 27)
-const H_SAS = N2 + 2.55, H_RET = N2 + 2.3;       // le sas et sa retombée côté porte
+// (plan V2 du 11/10, retour de Haythem du 10/10 « les salles sont trop compressées » : les plafonds du jeu étaient trop
+// hauts — 2,70 et 2,58 —, une pièce trop haute paraît étroite et courte. VO calée sur les travées de façade (1,65 m) :
+// salle 2 à 2,26-2,49 (q_0322, q_0330), salle 1 à 2,38-2,46 (haut des trumeaux, q_0304), le haut des fenêtres à
+// ≈ 0,15 m du plafond dans les deux salles ; couloir 2,39-2,58 (q_0300, q_0302), sas ≈ 2,45 au droit de la porte, q_0354)
+const H_SALLE = N2 + 2.40;          // les dalles 60 x 60 des deux salles (VO : ≈ 2,40 m)
+const H_COUL = N2 + 2.45;           // le plâtre lisse du couloir (VO : 2,39 à 2,58)
+const H_PAL = N2 + 2.5;             // le plafond du palier (comme au 1er, photo 27 ; VO : > 2,42, hors cadre)
+const H_SAS = N2 + 2.45, H_RET = N2 + 2.25;      // le sas et sa retombée côté porte
 const EP = 0.12;                    // les cloisons
 // ---- le plan ----
 const Y_RUE = 4.59;                 // la cloison sud du couloir (nu côté couloir 4,65 ; côté salle 2 : 4,53)
 const Y_COUR = 6.56;                // la cloison nord du couloir (nu côté couloir 6,50 ; côté salle 1 : 6,62)
 const X_FOND = 3.24, X_BOUT = 15.96;            // les deux bouts du couloir (nus 3,30 et 15,90)
-const X_S1 = 4.84, X_S1E = 13.01;               // la salle 1 (nus 4,90 et 12,95)
-const Y_ARR = 12.45, EP_ARR = 0.3;              // la façade arrière (nu intérieur 12,30)
+// (plan V2 : la salle 1 prend sa longueur de la VO — 9,35 m au lieu de 8,05. Calcul en faisceau sur q_0304, q_0309 et
+// q_0313 — fenêtres, angle nord-ouest, pied et haut du mur ouest, 5,4 px — : mur ouest en x 3,6 ± 0,4, 1,45 m de mur
+// aveugle avant la 1re fenêtre ; mur nord en y 11,55 avec un plafond à 2,40. L'escalier principal, jamais vu au-dessus
+// du 1er, ne monte plus jusqu'ici : la salle 1 et le dégagement ouest couvrent son ancienne cage, plan_v2 § 1.3)
+const X_S1 = 3.54, X_S1E = 13.01;               // la salle 1 (nus 3,60 et 12,95)
+const Y_S1N = 11.70;                            // la façade arrière de la salle 1 (nu intérieur 11,55), x 3,5-13,0
+const Y_ARR = 12.45, EP_ARR = 0.3;              // la façade arrière ailleurs : dégagement, palier (nu intérieur 12,30)
 const X_S2 = 9.9, X_S2E = 18.21;                // la salle 2 (nus 9,96 et 18,15)
 const Y_PAL = 7.9;                  // le mur sud du palier (nu côté palier 7,96)
+const X_REC = 13.78;                // le nu du mur ouest du recoin de l'extincteur, au sud-ouest du palier (VO q_0285)
 const X_SAS0 = 13.66, X_SAS1 = 15.56;           // les murs du sas (nus 13,72 et 15,50 ; relecture du 10/10, 88,0-88,7 s :
                                                 // le mur ouest est à 0,55 m de la porte, la plaque noire carrée entre eux)
 const X_ASC = 17.96, Y_VEST = 6.94;             // le vestibule de l'ascenseur : son mur du fond (nu 17,90), son mur sud
@@ -90,8 +116,12 @@ const Y_FEN = 11.45;                // le milieu de la fenêtre du palier, dans 
 // ---- la façade sur rue : une fenêtre par travée (js/carte_ecole.js, js/ecole_matieres.js texEtage) ----
 const TRAVEE = 1.65;
 const centreTravee = (k) => 0.825 + (k - 1) * TRAVEE;
-// les fenêtres de la salle 1 (façade arrière) : six, réparties au pas de 1,30 m (VO q_0304-0309)
-const FEN_S1 = [0, 1, 2, 3, 4, 5].map((k) => (X_S1 + X_S1E) / 2 + (k - 2.5) * 1.3);
+// les fenêtres de la salle 1 (façade arrière) : six de 0,88 x 1,10 m, allège 1,10, au pas de 1,35 depuis le mur est —
+// trumeaux de 0,47 ; 1,47 m de mur aveugle à l'ouest de la première (faisceau q_0304-0313, e2x/bundle2.py)
+// (relecture, 11/10 : la 6e, contre la porte, est plus large — 1,06 m de x 11,77 à 12,83, sans traverse ni store, une
+// poignée à gauche : sur q_0304 en grand, à la pose du faisceau, son cadre sombre déborde de 8 à 10 px de chaque côté
+// d'une baie de 0,88 et le trumeau qui la sépare de la 5e n'a que 31 px au lieu de 50 ; les cinq autres tombent juste)
+const FEN_S1 = [5.51, 6.86, 8.21, 9.56, 10.91, 12.30], L_FEN_S1 = [0.88, 0.88, 0.88, 0.88, 0.88, 1.06];
 // le rectangle du plancher (lumière et ombre cuites, uv1 de 0 à 1, v = 1 au nord)
 const R2 = { x0: -0.3, x1: 20.1, y0: -0.2, y1: 12.8 };
 
@@ -604,13 +634,13 @@ export function poserEtage2(ch, renderer = null) {
     B(13.55, Y_PAL, E.x0, Y_ARR, N2 - 0.2, N2 - 0.005, X.beton, { ombre: false });
     B(E.x0, Y_VEST, X_ASC, 9.0, N2 - 0.2, N2 - 0.005, X.beton, { ombre: false });
     // LE MUR DU PANNEAU (face est x 14,225, de y 8,6 à la façade arrière), son retour au sud (y 8,65) et le recoin de
-    // l'extincteur (mur ouest x 13,55) ; le mur sud du palier (y 7,9), percé de la porte coupe-feu
+    // l'extincteur (mur ouest, nu X_REC) ; le mur sud du palier (y 7,9), percé de la porte coupe-feu
     mur({ de: [X_PAN, 8.59], a: [X_PAN, Y_ARR - EP_ARR / 2], ep: 0.15, mats: B0, plinthes: [['E', P]], ouvertures: [{ c: Y_FEN, l: 0.75, bas: N2 + 1.0, h: N2 + 2.25 }] });
-    mur({ de: [13.61, 8.65], a: [14.075, 8.65], mats: B0, plinthes: [['S', P]] });
-    mur({ de: [13.55, Y_PAL - 0.06], a: [13.55, 8.71], mats: B0, plinthes: [['E', P]] });
+    mur({ de: [X_REC, 8.65], a: [14.075, 8.65], mats: B0, plinthes: [['S', P]] });
+    mur({ de: [X_REC - EP / 2, Y_PAL - 0.06], a: [X_REC - EP / 2, 8.71], mats: B0, plinthes: [['E', P]] });
     // (l'ouverture de la porte coupe-feu à 2,05 m : côté sas, le vantail affleure sous l'enduit, sans jour au-dessus)
     mur({ de: [13.49, Y_PAL], a: [E.x0 + 0.06, Y_PAL], mats: B0, plinthes: [['N', P], ['S', X.plinthe]], ouvertures: [{ c: 14.75, l: 0.95, h: N2 + 2.05 }] });
-    // LE VESTIBULE DE L'ASCENSEUR (x 16,05-17,9, y 7,0-9,0 : la bande sud du 1er, au-dessus — non vu) : son mur ouest, son
+    // LE VESTIBULE DE L'ASCENSEUR (x 16,05-17,9, y 6,94-9,0 : la bande sud du 1er, au-dessus — non vu) : son mur ouest, son
     // mur sud, et au fond, en x 17,9, la PORTE PALIÈRE (intégration du 10/10, js/ecole_ascenseur.js) : la gaine est la même
     // qu'au 1er — la façade de y 7,43 à 9,0, le passage en 8,0-8,81 —, un retour de mur la borde au sud (au 1er, le
     // doublage), la platine d'appel est sur le mur de la cage ; le 2e est desservi (la cabine va du rez-de-chaussée au 2e)
@@ -619,7 +649,7 @@ export function poserEtage2(ch, renderer = null) {
     mur({ de: [X_ASC, Y_VEST - 0.06], a: [X_ASC, ASC.yS1], mats: B0, plinthes: [['W', P]] });
     poserAscenseur(ch, { base: N2, groupe, ouvert: true, hMur: H_PAL, zone: 'e2palier', bouton: 'N' });
     // LE SOL : le vinyle du palier (le même qu'au 1er, photo 28), du recoin au vestibule ; le tapis devant le mur du panneau
-    const vin = new THREE.Mesh(geoDalles([[13.55, Y_PAL, X_PAN, 8.65], [X_PAN, Y_PAL, E.x0, Y_ARR], [E.x0, Y_VEST, X_ASC, 9.0]], N2, R2), X.vinyle);
+    const vin = new THREE.Mesh(geoDalles([[X_REC - EP / 2, Y_PAL, X_PAN, 8.65], [X_PAN, Y_PAL, E.x0, Y_ARR], [E.x0, Y_VEST, X_ASC, 9.0]], N2, R2), X.vinyle);
     vin.receiveShadow = true; vin.name = 'vinyle du palier du 2e'; vin.userData.solE2 = true; fixe.add(vin); sols.push(X.vinyle);
     B(14.8, 9.05, 15.4, 10.65, N2, N2 + 0.008, X.tapis, { ombre: false });
     // LE PANNEAU « 2 » (centre y 9,3 à 1,70 m), la réglette au-dessus (de son milieu à 1,26 m au-delà, 2,12 m), le poussoir
@@ -639,9 +669,11 @@ export function poserEtage2(ch, renderer = null) {
     // l'ouverture du sas, un pan blanc frontal de 0,7 m (le mur sud, à l'ouest de la porte), un angle rentrant, puis le mur
     // de l'extincteur, de face quand on regarde l'ouest (q_0285) et fuyant quand on regarde le sud (q_0290) : le mur OUEST
     // du recoin, comme le relevé — l'extincteur est au pied de ce mur, contre l'angle sud-ouest)
-    extincteur(13.63, 8.12, 'E');
-    panneau(matPan(texPictoExtincteur(), 0.5), 0.15, 0.15, 13.613, 8.12, N2 + 1.9, 'E');
-    panneau(matPan(texPictoAlarme(), 0.5), 0.1, 0.1, 13.613, 8.12, N2 + 1.35, 'E');
+    // (plan V2 : ce mur est en x 13,78 — q_0285, son pied ; 72,1 s, le pan blanc entre la porte et l'angle fait ≈ 0,5 m et
+    // non 0,725 : le recoin est un peu plus petit, l'extincteur et ses pictogrammes suivent)
+    extincteur(X_REC + 0.02, 8.12, 'E');
+    panneau(matPan(texPictoExtincteur(), 0.5), 0.15, 0.15, X_REC + 0.003, 8.12, N2 + 1.9, 'E');
+    panneau(matPan(texPictoAlarme(), 0.5), 0.1, 0.1, X_REC + 0.003, 8.12, N2 + 1.35, 'E');
     // LA PORTE COUPE-FEU (VO q_0288-0292, g140, g152 ; 88,3 s vue du couloir) : un vantail de 0,95 m, gonds à l'est, qui
     // s'ouvre vers le palier (on la tire du palier, on la pousse du couloir) — bâton inox, oculus étroit cerclé de bois côté
     // serrure (ouest), étiquette rouge, ferme-porte côté sas, une feuille A4 côté couloir ; l'huisserie de bois brun
@@ -649,7 +681,10 @@ export function poserEtage2(ch, renderer = null) {
     // (relecture du 10/10, 88,0-88,7 s à 25 i/s, contraste poussé : CÔTÉ SAS, ni huisserie de bois ni étiquette rouge ni
     // bâton — le vantail gris clair affleure dans l'enduit blanc, une béquille inox sous l'oculus ; le bâton, l'étiquette
     // et le bois sont côté palier seulement. Le gris taupe sortait brun sous les spots chauds : un gris plus froid)
-    const CF = ch.porte('x', Y_PAL, 14.75, { l: 0.95, h: 2.04, base: N2, ep: EP, modele: 'grise', etat: 'auto', cote: 'N', charniere: 'd', libre: -1,
+    // (plan V2 du 11/10, etage2.md § 5 : automatique, le vantail s'ouvrait à 83° vers le palier et restait dressé en
+    // x 15,2, de y 7,96 à 8,9 — il barrait la vue et le passage direct de la porte au vestibule de l'ascenseur. Ouvert à
+    // demeure, rabattu contre le mur sud du palier à 165°, comme celui du palier est du 1er : la plaque verte est derrière)
+    const CF = ch.porte('x', Y_PAL, 14.75, { l: 0.95, h: 2.04, base: N2, ep: EP, modele: 'grise', etat: 'ouverte', angle: 2.88, cote: 'N', charniere: 'd',
       oculus: { bas: 0.85, haut: 1.85, l: 0.12, bord: 0.2 }, poignee: null, feu: false, notices: 1, huisserie: false, matVantail: X.grisCF, nom: 'coupe-feu du 2e' });
     // (dans le repère du vantail : les gonds en x = 0, le vantail vers s ; +z côté sas, -z côté palier)
     for (const v of CF.vantaux) {
@@ -661,20 +696,20 @@ export function poserEtage2(ch, renderer = null) {
       for (const dy of [-0.12, 0.12]) maille(boiteM(0.018, 0.018, 0.045), M.inox, sv * (w - 0.08), 1.05 + dy, -(e / 2 + 0.022), 0, v.g, o);
       maille(boiteM(0.12, 0.04, 0.004), M.rougeEtiquette, sv * (w - 0.18), 2.04 - 0.12, -(e / 2 + 0.003), 0, v.g, o);
     }
-    // l'huisserie de bois côté palier (montants et traverse de 8 cm) ; les tableaux de l'ouverture, de bois côté palier,
-    // blancs côté sas (à 3 mm dans le jour : ils ne se battent plus avec les tranches du mur)
+    // l'huisserie de bois côté palier, CÔTÉ GONDS SEULEMENT (plan V2, etage2.md § 5 : à 72,2-72,9 s, on ne voit de bois que
+    // le chant miel du vantail et l'huisserie sombre à l'est ; le jambage ouest et le linteau sont blancs, sous le rail du
+    // ferme-porte) : le montant est de 8 cm ; les tableaux de l'ouverture blancs, sauf la moitié côté palier du tableau est
+    // (à 3 mm dans le jour : ils ne se battent plus avec les tranches du mur)
     const ya = Y_PAL + EP / 2, yb = ya + 0.02;
-    B(14.275 - 0.08, ya, 14.275, yb, N2, N2 + 2.12, X.boisBrun, { ombre: false });
     B(15.225, ya, 15.225 + 0.08, yb, N2, N2 + 2.12, X.boisBrun, { ombre: false });
-    B(14.275 - 0.08, ya, 15.225 + 0.08, yb, N2 + 2.04, N2 + 2.12, X.boisBrun, { ombre: false });
-    for (const [x0, x1] of [[14.235, 14.278], [15.222, 15.265]]) {
-      B(x0, Y_PAL, x1, Y_PAL + EP / 2, N2, N2 + 2.06, X.boisBrun, { ombre: false });
-      B(x0, Y_PAL - EP / 2, x1, Y_PAL, N2, N2 + 2.06, M.blanc, { ombre: false });
-    }
+    B(15.222, Y_PAL, 15.265, Y_PAL + EP / 2, N2, N2 + 2.06, X.boisBrun, { ombre: false });
+    B(15.222, Y_PAL - EP / 2, 15.265, Y_PAL, N2, N2 + 2.06, M.blanc, { ombre: false });
+    B(14.235, Y_PAL - EP / 2, 14.278, Y_PAL + EP / 2, N2, N2 + 2.06, M.blanc, { ombre: false });
     // les blocs de sortie : au-dessus de la porte côté palier ; côté couloir, sur le linteau de l'entrée du sas (VO 88,0 s :
-    // haut, au ras du plafond, au-dessus de l'ouverture — rien au-dessus de la porte côté sas)
+    // haut, au ras du plafond, au-dessus de l'ouverture — rien au-dessus de la porte côté sas ; plan V2 : sous le plafond
+    // du couloir à 2,45, sur le linteau du sas à 2,25)
     ch.sortie(14.75, Y_PAL + EP / 2 + 0.035, N2 + 2.3, 'N');
-    ch.sortie((X_SAS0 + X_SAS1) / 2, Y_COUR - EP / 2 - 0.035, N2 + 2.44, 'S');
+    ch.sortie((X_SAS0 + X_SAS1) / 2, Y_COUR - EP / 2 - 0.035, N2 + 2.32, 'S');
     // la plaque verte à l'est de la porte, côté palier (VO 72,6 s) ; la plaque noire carrée à l'ouest, côté sas (88,3 s)
     panneau(matPan(texPlaqueVerte(), 0.5), 0.2, 0.35, 15.55, Y_PAL + EP / 2 + 0.003, N2 + 1.5, 'N');
     B(14.07, Y_PAL - EP / 2 - 0.006, 14.19, Y_PAL - EP / 2, N2 + 1.5, N2 + 1.62, M.noirMat, { ombre: false });
@@ -684,7 +719,7 @@ export function poserEtage2(ch, renderer = null) {
     // française, menuiserie anthracite, poignée à gauche, tableau blanc de 15 cm, allège à 1,0 m ; dehors, le jour
     fenetrePanneau();
     // LE PLAFOND (plâtre à 2,50 m), le spot devant la porte, la galette du vestibule ; le chant du plafond sur la cage
-    ch.plafond(13.61, Y_PAL + EP / 2, E.x0, Y_ARR - EP_ARR / 2, H_PAL, 'platre');
+    ch.plafond(X_REC, Y_PAL + EP / 2, E.x0, Y_ARR - EP_ARR / 2, H_PAL, 'platre');
     ch.plafond(E.x0, Y_VEST + EP / 2, X_ASC - EP / 2, 9.0, H_PAL, 'platre');
     B(E.x0 - 0.02, E.yS, E.x0, Y_ARR - EP_ARR / 2, H_PAL, N3 - 0.25, M.blanc, { ombre: false });
     spot(14.75, 8.45, H_PAL, 'e2palier');
@@ -704,7 +739,7 @@ export function poserEtage2(ch, renderer = null) {
     B(X_SAS1 + EP / 2, Y_COUR, E.x0, Y_PAL - EP / 2, N2, DALLE3, B0, { ombre: false });
     const xs0 = X_SAS0 + EP / 2, xs1 = X_SAS1 - EP / 2;
     ch.plafond(xs0, Y_COUR - EP / 2, xs1, Y_PAL - EP / 2, H_SAS, 'platre');
-    // la retombée côté porte (2,30 m)
+    // la retombée côté porte (2,25 m)
     B(xs0, Y_PAL - EP / 2 - 0.22, xs1, Y_PAL - EP / 2, H_RET, H_SAS, B0, { ombre: false });
     spot(14.75, 7.15, H_SAS, 'e2sas');
     // le grand cadre noir du mur est (plan d'évacuation sous verre, 0,6 x 1,1 m, de 1,0 à 2,1 m) ; le disque blanc au
@@ -729,15 +764,18 @@ export function poserEtage2(ch, renderer = null) {
   // =====================================================================
   function construireCouloir() {
     const B0 = M.blanc, P = X.plinthe, PS = X.plintheSalle;
-    // LE MUR NORD : blanc au fond ouest, ROUGE VERMILLON côté couloir de x 4,9 à 12,0 (le mur de la salle 1), puis la porte
-    // de la salle 1, un pan blanc, l'ouverture du sas, un pan blanc
+    // LE MUR NORD : blanc au fond ouest, ROUGE VERMILLON côté couloir de x 4,84 à 12,0 (le mur de la salle 1), puis la
+    // porte de la salle 1, un pan blanc, l'ouverture du sas, un pan blanc
+    // (plan V2 : la salle 1 commence en x 3,6 ; sur la VO, le rouge s'arrête en x ≈ 4,9 — q_0300, calée à 4,93 — : il ne
+    // bouge pas, le mur est blanc des deux côtés jusqu'à 4,84, la salle 1 derrière dès 3,6)
     mur({ de: [X_FOND, Y_COUR], a: [X_S1, Y_COUR], mats: B0, plinthes: [['S', P]] });
-    mur({ de: [X_S1, Y_COUR], a: [12.0, Y_COUR], mats: { N: B0, S: X.rouge }, plinthes: [['S', P], ['N', PS]] });
-    mur({ de: [12.0, Y_COUR], a: [X_BOUT, Y_COUR], mats: B0, plinthes: [['S', P]], ouvertures: [{ c: 12.45, l: 0.9, h: N2 + 2.04 }, { c: (X_SAS0 + X_SAS1) / 2, l: X_SAS1 - X_SAS0 - EP, h: N2 + 2.3 }] });
+    mur({ de: [X_S1, Y_COUR], a: [4.84, Y_COUR], mats: B0, plinthes: [['S', P], ['N', PS]] });
+    mur({ de: [4.84, Y_COUR], a: [12.0, Y_COUR], mats: { N: B0, S: X.rouge }, plinthes: [['S', P], ['N', PS]] });
+    mur({ de: [12.0, Y_COUR], a: [X_BOUT, Y_COUR], mats: B0, plinthes: [['S', P]], ouvertures: [{ c: 12.45, l: 0.9, h: N2 + 2.04 }, { c: (X_SAS0 + X_SAS1) / 2, l: X_SAS1 - X_SAS0 - EP, h: N2 + 2.25 }] });
     plinthe(12.9, Y_COUR + EP / 2, X_S1E - EP / 2, Y_COUR + EP / 2 + 0.015, PS);
     // LE MUR SUD : la porte (fermée) de la salle Bjarne Stroustrup, la porte D1 de la salle 2 et son imposte
     mur({ de: [X_FOND, Y_RUE], a: [X_S2, Y_RUE], mats: B0, plinthes: [['N', P]], ouvertures: [{ c: 4.35, l: 0.93, h: N2 + 2.04 }] });
-    mur({ de: [X_S2, Y_RUE], a: [X_S2E, Y_RUE], mats: B0, ouvertures: [{ c: 10.52, l: 0.95, h: N2 + 2.5 }] });
+    mur({ de: [X_S2, Y_RUE], a: [X_S2E, Y_RUE], mats: B0, ouvertures: [{ c: 10.52, l: 0.95, h: N2 + 2.4 }] });
     plinthe(X_S2, Y_RUE + EP / 2, 10.0, Y_RUE + EP / 2 + 0.015, P); plinthe(11.0, Y_RUE + EP / 2, X_BOUT - EP / 2, Y_RUE + EP / 2 + 0.015, P);
     plinthe(X_S2 + EP / 2, Y_RUE - EP / 2 - 0.015, 10.0, Y_RUE - EP / 2, PS); plinthe(11.0, Y_RUE - EP / 2 - 0.015, X_S2E - EP / 2, Y_RUE - EP / 2, PS);
     // LES DEUX BOUTS : au fond ouest, la porte grise à oculus (fermée) sous son bloc de sortie, plus près du mur sud ; au
@@ -751,14 +789,14 @@ export function poserEtage2(ch, renderer = null) {
     panneau(matPan(texPlaque2('Bureau des Conseillers', 'B 2.3'), 0.4), 0.2, 0.11, X_BOUT - EP / 2 - 0.004, 6.25, N2 + 1.62, 'W');
     ch.porte('x', Y_RUE, 4.35, { l: 0.93, h: 2.04, base: N2, ep: EP, modele: 'blanche', etat: 'fermee', cote: 'S', nom: 'salle Bjarne Stroustrup Si 2.6' });
     panneau(matPan(texPlaque2('Salle Bjarne Stroustrup', 'Si 2.6'), 0.4), 0.2, 0.11, 5.05, Y_RUE + EP / 2 + 0.004, N2 + 1.62, 'N');
-    // LE SOL (lino taupe satiné), LE PLAFOND (plâtre lisse à 2,58 m) et ses six spots sur l'axe, tous les 2,15 m ; la
+    // LE SOL (lino taupe satiné), LE PLAFOND (plâtre lisse à 2,45 m) et ses six spots sur l'axe, tous les 2,15 m ; la
     // bouche de ventilation près du fond
     const sol = new THREE.Mesh(geoDalles([[X_FOND, Y_RUE, X_BOUT, Y_COUR]], N2, R2), X.lino);
     sol.receiveShadow = true; sol.name = 'lino du couloir du 2e'; sol.userData.solE2 = true; fixe.add(sol); sols.push(X.lino);
     ch.plafond(X_FOND + EP / 2, Y_RUE + EP / 2, X_BOUT - EP / 2, Y_COUR - EP / 2, H_COUL, 'platre');
     for (const x of [14.75, 12.6, 10.45, 8.3, 6.15, 4.0]) spot(x, 5.575, H_COUL, 'e2couloir');
     B(4.55, 5.0, 4.85, 5.3, H_COUL - 0.01, H_COUL, M.grille, { ombre: false });
-    // (au-dessus de l'ouverture du sas, le mur du couloir descend jusqu'à 2,30 m : le linteau du sas)
+    // (au-dessus de l'ouverture du sas, le mur du couloir descend jusqu'à 2,25 m : le linteau du sas)
     // ---- LE MUR SUD, d'est en ouest : la photo turquoise face au sas, la plaque de la salle 2, la porte D1, l'affiche à
     // bandeau rouge, les trois chaises noires ----
     B(14.75 - 0.33, Y_RUE + EP / 2, 14.75 + 0.33, Y_RUE + EP / 2 + 0.02, N2 + 1.05, N2 + 1.95, M.alu, { ombre: false });
@@ -766,7 +804,9 @@ export function poserEtage2(ch, renderer = null) {
     panneau(matPan(texPhotoTurquoise(), 0.3), 0.62, 0.85, 14.75, Y_RUE + EP / 2 + 0.022, N2 + 1.5, 'N');
     panneau(matPan(texPlaque2('Salle de cours', 'S 2.8'), 0.4), 0.2, 0.11, 11.2, Y_RUE + EP / 2 + 0.004, N2 + 1.65, 'N');
     panneau(matPan(texAfficheRouge(), 0.6), 0.42, 0.6, 9.35, Y_RUE + EP / 2 + 0.003, N2 + 1.7, 'N');
-    for (const x of [7.0, 7.55, 8.1]) chaiseVisiteur(x, Y_RUE + EP / 2 + 0.27, 'N');
+    // (plan V2, etage2.md § 4 : sur la VO, juste à l'ouest de D1, sous l'affiche à bandeau rouge — q_0300 : assises en
+    // x ≈ 7,5-9,5 ; q_0316 : la 1re chaise touche presque le chambranle ouest de D1. Elles étaient 1,2 m trop à l'ouest)
+    for (const x of [8.3, 8.85, 9.4]) chaiseVisiteur(x, Y_RUE + EP / 2 + 0.27, 'N');
     // ---- LE MUR ROUGE : la plaque de la salle 1 près de sa porte, l'affiche A3 jaune pâle face à la porte D1 ----
     panneau(matPan(texPlaque2('Salle de cours', 'S 2.7'), 0.4), 0.2, 0.11, 11.6, Y_COUR - EP / 2 - 0.004, N2 + 1.65, 'S');
     panneau(matPan(texAfficheA3(), 0.55), 0.32, 0.45, 10.0, Y_COUR - EP / 2 - 0.003, N2 + 1.68, 'S');
@@ -796,7 +836,8 @@ export function poserEtage2(ch, renderer = null) {
   const _dossierTrous = geoPlaque(0.41, 0.25, 0.012, 0.05, [-0.1, 0, 0.1].flatMap((x) => [[x, 0.045, 0.021], [x, -0.04, 0.021]]));
   const _tube = (L) => new THREE.CylinderGeometry(0.011, 0.011, L, 6);
   const _patin = _tube(0.44), _montant = _tube(0.44), _barre = _tube(0.4), _dos = _tube(0.34);
-  const chaiseLuge = (x, y, dir, { trous = false, coque = X.coque1, pied = X.noir, sortie = null, nom = 'la chaise' } = {}) => {
+  // (`rc`, `dc` : le rayon de sa forme solide et son avance sous l'assise — la salle 1, où l'on passe derrière les dossiers)
+  const chaiseLuge = (x, y, dir, { trous = false, coque = X.coque1, pied = X.noir, sortie = null, nom = 'la chaise', rc = 0.2, dc = 0 } = {}) => {
     const [fx, fz] = DIR[dir];
     const g = new THREE.Group(); g.position.set(x, N2, -y); g.rotation.y = Math.atan2(fx, fz); fixe.add(g);
     maille(_assise, coque, 0, 0.455, 0.02, 0, g);
@@ -809,7 +850,7 @@ export function poserEtage2(ch, renderer = null) {
       maille(_montant, pied, sx, 0.23, -0.21, 0, g);
     }
     const b = maille(_barre, pied, 0, 0.43, 0.19, 0, g); b.rotation.z = Math.PI / 2;
-    C.ajouterCercle(g.position.x, g.position.z, 0.2, { y0: N2, y1: N2 + 0.9 });
+    C.ajouterCercle(g.position.x + fx * dc, g.position.z + fz * dc, rc, { y0: N2, y1: N2 + 0.9 });
     const s = sortie || [x - fx * 0.6, y + fz * 0.6];
     sieges.push({ x: g.position.x + fx * 0.04, z: g.position.z + fz * 0.04, y: 0.46, fx, fz, sx: s[0], sz: -s[1], nom, sol: N2 });
     return g;
@@ -872,53 +913,73 @@ export function poserEtage2(ch, renderer = null) {
   //  LA SALLE 1, CÔTÉ COUR (VO 75,8-78,4 s, q_0304-0314 ; g304, g311, c1_tableau, fenetres_c1)
   // =====================================================================
   function construireSalle1() {
-    const B0 = M.blanc, PS = X.plintheSalle;
+    const B0 = M.blanc, PS = X.plintheSalle, yi = Y_S1N - EP_ARR / 2;
     // les murs ouest (contre le dégagement) et est (contre une gaine) ; la façade arrière : construireFacades
-    mur({ de: [X_S1, Y_COUR + EP / 2], a: [X_S1, Y_ARR - EP_ARR / 2], mats: B0, plinthes: [['E', PS]] });
-    mur({ de: [X_S1E, Y_COUR + EP / 2], a: [X_S1E, Y_ARR - EP_ARR / 2], mats: B0, plinthes: [['W', PS]] });
+    mur({ de: [X_S1, Y_COUR + EP / 2], a: [X_S1, yi], mats: B0, plinthes: [['E', PS]] });
+    mur({ de: [X_S1E, Y_COUR + EP / 2], a: [X_S1E, yi], mats: B0, plinthes: [['W', PS]] });
     // LA PORTE (VO q_0303, q_0349-0352) : vantail vitré dépoli dans un cadre blanc, gonds à l'est, ouvert vers la salle
     porteVitree('x', Y_COUR, 12.45, { l: 0.9, cote: 'N', charniere: 'd', libre: -1, nom: 'salle 1 du 2e (S 2.7)' });
     ch.sortie(12.45, Y_COUR + EP / 2 + 0.03, N2 + 2.3, 'N');
-    // LE SOL (moquette en dalles, damier marine et anthracite), LE PLAFOND (dalles 60 x 60), huit luminaires à grille sur
-    // deux lignes est-ouest, deux diffuseurs à fentes
-    const sol = new THREE.Mesh(geoDalles([[X_S1, Y_COUR, X_S1E, Y_ARR - EP_ARR / 2]], N2, R2), X.moquette1);
+    // LE SOL (moquette en dalles, damier marine et anthracite), LE PLAFOND (dalles 60 x 60 à 2,40 m), neuf luminaires à
+    // grille en trois rangées de trois
+    // (relecture du plan V2, 11/10 : les luminaires relevés sur quatre vues de la VO aux poses calées sur les fenêtres
+    // — q_0304, q_0308, q_0309, q_0313, seize luminaires vus — : une grille de 3 x 3, colonnes en x ≈ 6,5 / 9,1 / 11,7,
+    // rangées en y ≈ 7,8 / 9,5 / 11,1 (deux d'entre eux recoupés sur deux vues tombent à 2,36-2,40 m : le plafond est
+    // confirmé). Aucun luminaire dans le tiers ouest, au-dessus du coin du professeur, ni de diffuseur à fentes. Les dix
+    // luminaires en deux rangées laissaient neuf luminaires sans répondant dans les quatre vues)
+    const sol = new THREE.Mesh(geoDalles([[X_S1, Y_COUR, X_S1E, yi]], N2, R2), X.moquette1);
     sol.receiveShadow = true; sol.name = 'moquette de la salle 1 du 2e'; sol.userData.solE2 = true; fixe.add(sol); sols.push(X.moquette1);
-    ch.plafond(X_S1 + EP / 2, Y_COUR + EP / 2, X_S1E - EP / 2, Y_ARR - EP_ARR / 2, H_SALLE, 'dalles');
-    for (const x of [6.1, 8.0, 9.9, 11.8]) for (const y of [8.4, 10.8]) dalle(x, y, 'e2s1');
-    fente(6.45, 7.65, 9.6); fente(10.25, 11.45, 9.6);
-    // LE MUR OUEST : le tableau blanc en trois panneaux (1,1 + 2,0 + 1,0 m, de 0,95 à 1,95 m), le vidéoprojecteur à 1,5 m
-    // du mur, le haut-parleur dans l'angle sud-ouest ; le poteau et l'extincteur dans cet angle (ses deux pictogrammes)
-    tableau(X_S1 + EP / 2, 9.55, 'E', [1.1, 2.0, 1.0], 0.95, 1.95);
-    projecteur(X_S1 + 1.55, 9.55, 'W');
-    hautParleur(X_S1 + EP / 2, 7.15, 'E');
+    ch.plafond(X_S1 + EP / 2, Y_COUR + EP / 2, X_S1E - EP / 2, yi, H_SALLE, 'dalles');
+    for (const x of [6.6, 9.1, 11.6]) for (const y of [7.8, 9.4, 11.0]) dalle(x, y, 'e2s1');
+    // LE MUR OUEST, du sud au nord (VO q_0313 projetée sur le mur, faisceau e2x/bundle2.py) : le poteau de l'angle
+    // sud-ouest, l'extincteur et ses deux pictogrammes (rouge à 1,8 m, rouge et bleu à 1,35 m) et le haut-parleur au-dessus,
+    // puis le tableau blanc en trois panneaux (VO : 1,0 + 2,07 + 1,1 m, de y 7,23 à 11,4 ; de 0,95 à 1,95 m), presque
+    // contre l'angle nord-ouest ; le vidéoprojecteur à 1,5 m du mur
+    // (plan V2 : tableau centré en y ≈ 9,1 sur le mur raccourci — ici 9,25, de 7,20 à 11,30 : q_0313 projetée sur le mur le
+    // met de 7,23 à 11,4, l'extincteur à son sud, entre le poteau et le tableau, et son bout nord à 0,05 m de l'angle)
+    // (relecture, 11/10 : le vidéoprojecteur recoupé sur q_0309 et q_0313 est en (5,3 ; 8,7) à 2,05 m — pas dans l'axe du
+    // tableau, 0,5 m au sud de son milieu ; on voit sous lui le joint sombre du plafond, pas de boîtier d'écran)
+    tableau(X_S1 + EP / 2, 9.25, 'E', [1.0, 2.05, 1.05], 0.95, 1.95);
+    projecteur(5.3, 8.75, 'W');
+    hautParleur(X_S1 + EP / 2, 7.06, 'E');
     B(X_S1 + EP / 2, Y_COUR + EP / 2, X_S1 + 0.36, 6.95, N2, H_SALLE, B0, { ombre: false, collision: true });
     plinthe(X_S1 + 0.36, Y_COUR + EP / 2 + 0.015, X_S1 + 0.375, 6.95, PS); plinthe(X_S1 + EP / 2, 6.95, X_S1 + 0.375, 6.965, PS);
-    // (10/10, q_0310-0313 : un second poteau, plein, contre le mur du couloir à 1,5 m de la porte — au premier plan quand
-    // on entre et qu'on regarde le tableau)
-    // (relecture du 10/10, en jouant : entre ce poteau et le bout des rangées, 0,65 m — Haythem y butait en longeant l'allée
-    // de la porte ; le poteau a 30 cm de saillie et les rangées reculent de 10 cm : 0,78 m)
-    B(10.6, Y_COUR + EP / 2, 10.95, 6.92, N2, H_SALLE, B0, { ombre: false, collision: true });
-    plinthe(10.585, Y_COUR + EP / 2, 10.6, 6.935, PS); plinthe(10.95, Y_COUR + EP / 2, 10.965, 6.935, PS); plinthe(10.6, 6.92, 10.95, 6.935, PS);
-    extincteur(X_S1 + EP / 2 + 0.02, 7.2, 'E');
-    panneau(matPan(texPictoExtincteur(), 0.5), 0.15, 0.15, X_S1 + EP / 2 + 0.003, 7.2, N2 + 2.0, 'E');
-    panneau(matPan(texPictoAlarme(), 0.5), 0.1, 0.1, X_S1 + EP / 2 + 0.003, 7.2, N2 + 1.5, 'E');
-    // LE BUREAU DU PROFESSEUR, côté fenêtres : la table, l'écran et l'unité centrale, le meuble bas noir, le fauteuil
-    table(5.75, 11.3, 0.7, 1.4, { pied: X.marine });
-    poste(5.75, 11.25, 'E');
-    B(5.6, 11.95, 6.2, 12.25, N2, N2 + 0.8, M.noirMat, { collision: true });
-    chaiseLuge(5.2, 11.3, 'E', { sortie: [5.4, 10.3], nom: 'la chaise du professeur' });
-    // LES TABLES DES ÉLÈVES : cinq rangées nord-sud (les élèves regardent l'ouest), trois tables de 1,4 m bout à bout de
-    // y 7,7 à 11,9 (l'allée de la porte au sud), deux chaises par table ; passe-câbles au bord ouest, quelques multiprises
+    // (10/10, q_0310-0313 : un second poteau, plein, contre le mur du couloir — au premier plan quand on entre et qu'on
+    // regarde le tableau ; plan V2, etage2.md § 2 : au sud-ouest de la caméra de q_0313, en x ≈ 9,0-9,35 et non 10,6-10,95)
+    // (entre ce poteau et le bout des rangées, 0,88 m : l'allée de la porte, VO ≈ 1,25 hors poteau)
+    B(9.0, Y_COUR + EP / 2, 9.35, 6.92, N2, H_SALLE, B0, { ombre: false, collision: true });
+    plinthe(8.985, Y_COUR + EP / 2, 9.0, 6.935, PS); plinthe(9.35, Y_COUR + EP / 2, 9.365, 6.935, PS); plinthe(9.0, 6.92, 9.35, 6.935, PS);
+    extincteur(X_S1 + EP / 2 + 0.02, 7.04, 'E');
+    panneau(matPan(texPictoExtincteur(), 0.5), 0.15, 0.15, X_S1 + EP / 2 + 0.003, 7.04, N2 + 1.8, 'E');
+    panneau(matPan(texPictoAlarme(), 0.5), 0.1, 0.1, X_S1 + EP / 2 + 0.003, 7.04, N2 + 1.35, 'E');
+    // LE COIN DU PROFESSEUR, dans l'angle nord-ouest (VO q_0304, q_0309, q_0313 ; plan V2) : le mur aveugle de 1,47 m entre
+    // l'angle et la 1re fenêtre, au nu des trumeaux (q_0304 : rien ne le sépare du trumeau de la 1re fenêtre) ; contre lui,
+    // le meuble noir (x 4,35-4,95) et un caisson gris, l'affiche A4 bleue et blanche au-dessus (x 4,5) ; devant le
+    // tableau, le bureau en x 4,5 (l'écran en y ≈ 10,5 sur q_0313), son poste tourné vers le professeur, sa chaise
+    B(X_S1 + EP / 2, yi - 0.2, FEN_S1[0] - L_FEN_S1[0] / 2, yi, N2, H_SALLE, B0, { ombre: false, collision: true });
+    plinthe(X_S1 + EP / 2, yi - 0.215, FEN_S1[0] - L_FEN_S1[0] / 2 + 0.015, yi - 0.2, PS);
+    // (relecture, 11/10 : sur q_0308, q_0309 et q_0313 aux poses calées, les deux meubles ont le même dessus, à 1,2-1,3 m —
+    // sur q_0313, prise à 1,22 m, on ne voit pas leur dessus —, ils remplissent le mur aveugle : le caisson gris dans
+    // l'angle, le meuble noir jusqu'à 0,1 m du tableau de la 1re fenêtre ; l'affiche juste au-dessus)
+    B(4.22, yi - 0.5, 4.97, yi - 0.2, N2, N2 + 1.25, M.noirMat, { collision: true });
+    B(X_S1 + EP / 2, yi - 0.45, 4.2, yi - 0.2, N2, N2 + 1.25, X.grisCF, { collision: true });
+    panneau(matPan(texConsignes(), 0.5), 0.21, 0.297, 4.5, yi - 0.2 - 0.003, N2 + 1.7, 'S');
+    table(4.5, 10.3, 0.7, 1.4, { pied: X.marine });
+    poste(4.55, 10.45, 'W');
+    chaiseLuge(4.0, 10.3, 'E', { sortie: [4.0, 9.25], nom: 'la chaise du professeur' });
+    // LES TABLES DES ÉLÈVES : cinq rangées nord-sud (les élèves regardent l'ouest), trois tables de 1,15 m bout à bout de
+    // y 7,80 à 11,25 (l'allée de la porte au sud), deux chaises par table ; passe-câbles au bord ouest, quelques multiprises
+    // (plan V2, etage2.md § 2 : rangées au pas de 1,45 — VO 1,39-1,45, q_0309 —, 2,0 m entre le tableau et la 1re ; les
+    // chaises rentrées à 0,40 m de l'axe des tables et leur forme resserrée sous l'assise : 0,65 m libres derrière les
+    // dossiers, Haythem passe entre deux rangées et s'assied aux 30 places)
     let n = 0;
-    for (const xr of [6.75, 8.05, 9.35, 10.65, 11.95]) {
-      for (const yc of [8.4, 9.8, 11.2]) {
-        table(xr, yc, 0.6, 1.4, { pied: X.marine, passe: 'W', multi: (n % 5) === 2 });
-        for (const s of [-1, 1]) chaiseLuge(xr + 0.48, yc + s * 0.35, 'W', { coque: X.coque1, pied: X.noir, sortie: [xr + 0.62, s > 0 ? 11.95 : 7.35] });
+    for (const xr of [5.95, 7.40, 8.85, 10.30, 11.75]) {
+      for (const yc of [8.375, 9.525, 10.675]) {
+        table(xr, yc, 0.6, 1.15, { pied: X.marine, passe: 'W', multi: (n % 5) === 2 });
+        for (const s of [-1, 1]) chaiseLuge(xr + 0.4, yc + s * 0.29, 'W', { coque: X.coque1, pied: X.noir, sortie: [xr + 0.825, yc + s * 0.29], rc: 0.15, dc: 0.05 });
         n++;
       }
     }
-    // l'affiche A4 bleue et blanche sur le trumeau nord-ouest
-    panneau(matPan(texConsignes(), 0.5), 0.21, 0.297, 5.04, Y_ARR - EP_ARR / 2 - 0.003, N2 + 1.7, 'S');
   }
 
   // =====================================================================
@@ -935,10 +996,11 @@ export function poserEtage2(ch, renderer = null) {
     B(10.03, Y_RUE - EP / 2 - 0.006, 11.01, Y_RUE + EP / 2 + 0.006, N2 + 2.06, N2 + 2.1, M.alu, { ombre: false });
     for (const s of [1, -1]) {
       const yy = Y_RUE + s * (EP / 2 + 0.003);
-      for (const [x0, x1, h0, h1] of [[10.03, 11.01, N2 + 2.1, N2 + 2.14], [10.03, 11.01, N2 + 2.46, N2 + 2.5], [10.03, 10.07, N2 + 2.1, N2 + 2.5], [10.97, 11.01, N2 + 2.1, N2 + 2.5]]) B(x0, yy - 0.005, x1, yy + 0.005, h0, h1, M.alu, { ombre: false });
+      for (const [x0, x1, h0, h1] of [[10.03, 11.01, N2 + 2.1, N2 + 2.14], [10.03, 11.01, N2 + 2.36, N2 + 2.4], [10.03, 10.07, N2 + 2.1, N2 + 2.4], [10.97, 11.01, N2 + 2.1, N2 + 2.4]]) B(x0, yy - 0.005, x1, yy + 0.005, h0, h1, M.alu, { ombre: false });
     }
-    const imp = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.32), depoli); imp.position.set(10.52, N2 + 2.3, -Y_RUE); fixe.add(imp);
-    C.ajouterBoite(10.03, -(Y_RUE - EP / 2), 11.01, -(Y_RUE + EP / 2), { y0: N2 + 2.06, y1: N2 + 2.5 });
+    // (plan V2 : l'imposte sous le plafond de la salle, à 2,40 — son verre de 0,22 m entre la traverse et le haut du cadre)
+    const imp = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.22), depoli); imp.position.set(10.52, N2 + 2.25, -Y_RUE); fixe.add(imp);
+    C.ajouterBoite(10.03, -(Y_RUE - EP / 2), 11.01, -(Y_RUE + EP / 2), { y0: N2 + 2.06, y1: N2 + 2.4 });
     // la prise double, dedans, à côté de la porte (1,1 m)
     B(11.3, Y_RUE - EP / 2 - 0.02, 11.44, Y_RUE - EP / 2, N2 + 1.06, N2 + 1.14, X.blancMeuble, { ombre: false });
     // LE SOL (moquette en dalles, damier anthracite et gris foncé), LE PLAFOND (dalles 60 x 60), six luminaires à grille
@@ -957,12 +1019,14 @@ export function poserEtage2(ch, renderer = null) {
     B(17.45, Y_RUE - EP / 2 - 0.12, 17.7, Y_RUE - EP / 2, N2 + 1.0, N2 + 1.9, M.noirMat, { ombre: false });
     panneau(matPan(texRangeDocs(), 0.5), 0.25, 0.9, 17.575, Y_RUE - EP / 2 - 0.122, N2 + 1.45, 'S');
     // LES TRUMEAUX blancs saillants entre les fenêtres, les colonnes de prises à leur pied, sur l'allège
-    // (les fenêtres 7 et 11, dans leur encadrement rouge, ont 1,20 m : construireFacades)
-    const demi = (k) => (k === 7 || k === 11 ? 0.6 : 0.65);
+    // (la fenêtre 7, dans son encadrement rouge, a 1,20 m : construireFacades)
+    // (plan V2, etage2.md § 3 : sur la VO, de gros piliers blancs très lisibles à contre-jour — faces de ≈ 0,4 m, 0,25 à
+    // 0,30 de saillie, q_0320-0326 — ; à 0,20, on ne les voyait presque pas : 0,28)
+    const demi = (k) => (k === 7 ? 0.6 : 0.65);
     for (let k = 7; k < 11; k++) {
       const xa = centreTravee(k) + demi(k), xb = centreTravee(k + 1) - demi(k + 1);
-      B(xa, 0, xb, 0.2, N2, H_SALLE, B0, { ombre: false, collision: true });
-      plinthe(xa - 0.01, 0.2, xb + 0.01, 0.215, PS);
+      B(xa, 0, xb, 0.28, N2, H_SALLE, B0, { ombre: false, collision: true });
+      plinthe(xa - 0.01, 0.28, xb + 0.01, 0.295, PS);
       B(xa - 0.1, 0, xa - 0.02, 0.025, N2 + 0.35, N2 + 0.75, X.blancMeuble, { ombre: false });
     }
     // LE BUREAU DU PROFESSEUR, dans l'angle sud-est devant la dernière fenêtre : la table, le poste, la gourde blanche
@@ -1002,18 +1066,24 @@ export function poserEtage2(ch, renderer = null) {
     // ---- SUR RUE : le mur (40 cm, pierre dehors, blanc dedans) percé de ses douze fenêtres (1,30 x 1,25 m, allège 0,95 :
     // la tuile texEtage) ; la salle 2 derrière les travées 7 à 11 (VO q_0318-0327 : sans store) ; derrière les autres, des
     // pièces fermées : leurs stores sont baissés ----
-    // (relecture du 10/10, VO q_0319-0331 : les travées 7 et 11 ont un ENCADREMENT ROUGE en saillie, js/carte_ecole.js
+    // (relecture du 10/10, VO q_0319-0331 : la travée 7 a un ENCADREMENT ROUGE en saillie, js/carte_ecole.js
     // construireFacade, dont le jour ne fait que 1,20 x 1,15 m — par une fenêtre de 1,30 x 1,25, on voyait de la salle 2 le
-    // rouge déborder de 5 cm tout autour de la vitre ; ces deux fenêtres prennent la taille du jour de leur encadrement)
+    // rouge déborder de 5 cm tout autour de la vitre ; cette fenêtre prend la taille du jour de son encadrement)
+    // (plan V2 du 11/10 : les photos 11 et 12 de Haythem — recadrées, iris_audit/e2x/p12z.jpg — ne montrent au 2e qu'UN
+    // cadre rouge, travée 7, suivi de cinq fenêtres simples jusqu'au mitoyen est ; celui de droite est un étage plus haut,
+    // au bout de la rangée du 3e, au-dessus de la fenêtre 12 du 2e : la fenêtre 11 retrouve 1,30 x 1,25)
+    // (relecture, 11/10 : dedans, sur q_0319-0326 en grand, les fenêtres de la salle 2 sont d'UN SEUL vantail — un cadre
+    // brun-noir de 7 cm, la poignée à gauche vue de la salle (à l'est), à mi-hauteur —, sans meneau ni imposte ; dehors,
+    // sur les photos 11 et 12, la rangée du 2e aussi. L'allège est à 0,84 sur q_0322 calée sur les travées (0,75-0,84 sur
+    // q_0326) : 0,85 au lieu de 0,95, le haut reste à 2,20 ; la fenêtre 7 garde le jour de son encadrement rouge)
     const F = [];
     for (let k = 1; k <= 12; k++) {
-      const cadre = k === 7 || k === 11;
-      F.push({ c: centreTravee(k), l: cadre ? 1.2 : 1.3, bas: N2 + (cadre ? 1.0 : 0.95), haut: N2 + (cadre ? 2.15 : 2.2), ferme: k < 7 || k > 11 });
+      const cadre = k === 7;
+      F.push({ c: centreTravee(k), l: cadre ? 1.2 : 1.3, bas: N2 + (cadre ? 1.0 : 0.85), haut: N2 + (cadre ? 2.15 : 2.2), ferme: k < 7 || k > 11 });
     }
     mur({ de: [-0.3, -0.2], a: [20.1, -0.2], ep: 0.4, h: N3, mats: { N: M.blanc, S: X.pierre }, ouvertures: F.map((f) => ({ c: f.c, l: f.l, bas: f.bas, h: f.haut })) });
-    const fac = new THREE.Group(); fac.position.set(0, 0, 0.2); fac.rotation.y = Math.PI; fixe.add(fac);
     for (const f of F) {
-      fenetreFacade(fac, M, { x: -f.c, l: f.l, bas: f.bas, haut: f.haut, ep: 0.4, barreaux: false, imposte: true });
+      fenetreRue(f);
       const r = new THREE.Mesh(new THREE.PlaneGeometry(f.l - 0.1, f.haut - f.bas - 0.1), vitreDehors);
       r.position.set(f.c, (f.bas + f.haut) / 2, 0.158); r.castShadow = false; fixe.add(r);
       C.ajouterBoite(f.c - f.l / 2, 0.4, f.c + f.l / 2, 0, { y0: f.bas, y1: f.haut, vitre: true });
@@ -1026,36 +1096,44 @@ export function poserEtage2(ch, renderer = null) {
       }
     }
     for (const x of [11.5, 14.85, 17.2]) ch.lampes.push({ type: 'jour', x, z: 1.2, h: N2 + 2.6, cx: x, cz: -3.0, zone: 'e2s2', base: N2, cuire: false, poids: 1.6 });
-    // ---- ARRIÈRE (y 12,45) : le mur (30 cm, enduit dehors), les six fenêtres de la salle 1 (1,0 x 1,3 m, allège 0,95 ;
-    // VO q_0304-0313) ; dehors, le jour (surexposé sur la vidéo). Pas devant
-    // la cage ouest (x 1,6-4,75 : sa porte double du 2e, js/ecole_etage1.js) ----
-    const FA = FEN_S1.map((c) => ({ c, l: 1.0, bas: N2 + 0.95, haut: N2 + 2.25 }));
-    mur({ de: [-0.3, Y_ARR], a: [1.6, Y_ARR], ep: EP_ARR, h: N3, mats: { S: M.blanc, N: X.enduit } });
-    mur({ de: [4.75, Y_ARR], a: [E.x0, Y_ARR], ep: EP_ARR, h: N3, mats: { S: M.blanc, N: X.enduit }, ouvertures: FA.map((f) => ({ c: f.c, l: f.l, bas: f.bas, h: f.haut })) });
-    plinthe(X_S1 + EP / 2, Y_ARR - EP_ARR / 2 - 0.015, X_S1E - EP / 2, Y_ARR - EP_ARR / 2, X.plintheSalle);
+    // ---- ARRIÈRE : derrière la salle 1, la façade en y 11,70 (nu 11,55), percée de ses six fenêtres (0,88 x 1,10 m, la
+    // 6e de 1,06 ; allège 1,10, haut 2,20 : le linteau à 0,2 m du plafond ; faisceau q_0304-0313, e2x/bundle2.py) ; ailleurs en
+    // y 12,45 — le dégagement fermé à l'ouest, la courette et le palier à l'est —, un ressaut de 0,75 m à chaque bout de
+    // la salle (plan V2 § 2.5). L'escalier principal ne monte plus au 2e : la façade est pleine au-dessus de son ancienne
+    // cage (plan V2 § 1.3). Dehors, le jour (surexposé sur la vidéo) ----
+    const FA = FEN_S1.map((c, k) => ({ c, l: L_FEN_S1[k], bas: N2 + 1.1, haut: N2 + 2.2, store: k < 5, traverse: k < 5 }));
+    const yi = Y_S1N - EP_ARR / 2, FAC = { ep: EP_ARR, h: N3, mats: { S: M.blanc, N: X.enduit } };
+    mur({ de: [-0.3, Y_ARR], a: [X_S1 + EP / 2, Y_ARR], ...FAC });
+    mur({ de: [X_S1 - EP / 2, Y_S1N], a: [X_S1E + EP / 2, Y_S1N], ...FAC, ouvertures: FA.map((f) => ({ c: f.c, l: f.l, bas: f.bas, h: f.haut })) });
+    mur({ de: [X_S1E - EP / 2, Y_ARR], a: [E.x0, Y_ARR], ...FAC });
+    mur({ de: [X_S1, Y_S1N + EP_ARR / 2], a: [X_S1, Y_ARR - EP_ARR / 2], h: N3, mats: { W: M.blanc, E: X.enduit } });
+    mur({ de: [X_S1E, Y_S1N + EP_ARR / 2], a: [X_S1E, Y_ARR - EP_ARR / 2], h: N3, mats: X.enduit });
+    plinthe(FEN_S1[0] - L_FEN_S1[0] / 2, yi - 0.015, FEN_S1[5] + L_FEN_S1[5] / 2, yi, X.plintheSalle);
     plinthe(X_PAN + 0.075, Y_ARR - EP_ARR / 2 - 0.015, E.x0, Y_ARR - EP_ARR / 2, X.plinthePal);
     for (const f of FA) fenetreCour(f);
-    // les trumeaux saillants de la salle 1 (VO : blancs, ≈ 0,3 m, 0,2 de saillie), la goulotte à 0,8 m sur l'allège, les
-    // convecteurs sous trois fenêtres
-    const yi = Y_ARR - EP_ARR / 2;
-    for (let k = 0; k < FEN_S1.length - 1; k++) {
-      const xa = FEN_S1[k] + 0.5, xb = FEN_S1[k + 1] - 0.5;
+    // les trumeaux saillants de la salle 1 (VO : blancs, 0,47 m, 0,2 de saillie ; q_0304, q_0309 : le dernier, à l'est de
+    // la 6e fenêtre, fait l'angle — le mur aveugle de l'ouest, au même nu, est posé avec le coin du professeur), la
+    // goulotte à 0,8 m sous l'allège
+    // (relecture, 11/10 : pas de convecteur — sous W4, W5 et W6, en grand sur q_0304 et q_0306, l'allège entre deux
+    // trumeaux n'est qu'un panneau blanc lisse, de la tablette au sol ; les trois radiateurs à grille n'y étaient pas)
+    const piles = FEN_S1.slice(0, -1).map((c, k) => [c + L_FEN_S1[k] / 2, FEN_S1[k + 1] - L_FEN_S1[k + 1] / 2]);
+    piles.push([FEN_S1[5] + L_FEN_S1[5] / 2, X_S1E - EP / 2]);
+    for (const [xa, xb] of piles) {
       B(xa, yi - 0.2, xb, yi, N2, H_SALLE, M.blanc, { ombre: false, collision: true });
-      plinthe(xa - 0.015, yi - 0.215, xb + 0.015, yi - 0.2, X.plintheSalle);
+      plinthe(xa - 0.015, yi - 0.215, Math.min(xb + 0.015, X_S1E - EP / 2), yi - 0.2, X.plintheSalle);
     }
-    for (const c of FEN_S1) B(c - 0.5, yi - 0.04, c + 0.5, yi, N2 + 0.76, N2 + 0.84, X.blancMeuble, { ombre: false });
-    for (const k of [1, 3, 5]) {
-      const c = FEN_S1[k];
-      B(c - 0.4, yi - 0.1, c + 0.4, yi, N2 + 0.15, N2 + 0.6, M.radiateur, { collision: true });
-      for (let h = N2 + 0.2; h < N2 + 0.58; h += 0.04) B(c - 0.38, yi - 0.104, c + 0.38, yi - 0.1, h, h + 0.012, M.grille, { ombre: false });
-    }
+    for (const f of FA) B(f.c - f.l / 2, yi - 0.04, f.c + f.l / 2, yi, N2 + 0.76, N2 + 0.84, X.blancMeuble, { ombre: false });
     // le jour des fenêtres côté cour : cuit au pied de chacune, et trois lampes de jour pour les spots
-    for (const f of FA) lampe({ type: 'jour', x: f.c, z: -(Y_ARR + 1.0), h: N2 + 2.4, sx: f.c, sz: -(yi - 0.45), ox: f.c, oz: -(Y_ARR + 0.6), zone: 'e2s1', reel: false, cuireForce: 0.6 });
-    for (const x of [6.3, 8.95, 11.6]) ch.lampes.push({ type: 'jour', x, z: -(Y_ARR + 1.2), h: N2 + 2.6, cx: x, cz: -(Y_ARR - 3.0), zone: 'e2s1', base: N2, cuire: false, poids: 1.6 });
-    // ---- AU-DESSUS : les étages 3 et 4 côté cour (la tuile de la façade sur rue), jusqu'à la corniche ----
+    for (const f of FA) lampe({ type: 'jour', x: f.c, z: -(Y_S1N + 1.0), h: N2 + 2.4, sx: f.c, sz: -(yi - 0.45), ox: f.c, oz: -(Y_S1N + 0.6), zone: 'e2s1', reel: false, cuireForce: 0.6 });
+    for (const x of [5.5, 8.55, 11.6]) ch.lampes.push({ type: 'jour', x, z: -(Y_S1N + 1.2), h: N2 + 2.6, cx: x, cz: -(Y_S1N - 3.0), zone: 'e2s1', base: N2, cuire: false, poids: 1.6 });
+    // ---- AU-DESSUS : les étages 3 et 4 côté cour (la tuile de la façade sur rue), jusqu'à la corniche ; le ressaut de la
+    // salle 1 monte avec eux ----
     const hT = 3.5 + 4 * 3.1;
-    const haut = new THREE.Mesh(geoMonde(-0.3, Y_ARR + EP_ARR / 2, 20.1, Y_ARR + EP_ARR / 2 + 0.15, N3, hT), etageArr);
-    haut.castShadow = false; haut.receiveShadow = false; fixe.add(haut);
+    for (const [x0, x1, y] of [[-0.3, X_S1, Y_ARR], [X_S1, X_S1E, Y_S1N], [X_S1E, 20.1, Y_ARR]]) {
+      const m = new THREE.Mesh(geoMonde(x0, y + EP_ARR / 2, x1, y + EP_ARR / 2 + 0.15, N3, hT), etageArr);
+      m.castShadow = false; m.receiveShadow = false; fixe.add(m);
+    }
+    for (const x of [X_S1, X_S1E]) B(x - 0.075, Y_S1N + EP_ARR / 2, x + 0.075, Y_ARR + EP_ARR / 2, N3, hT, X.enduit, { ombre: false });
   }
   // LA FENÊTRE DU PALIER, dans le mur du panneau (x 14,15, ép. 0,15) : menuiserie anthracite au milieu de l'épaisseur, un
   // ouvrant à la française (son cadre en retrait côté palier) et sa poignée à gauche (au sud), la tablette blanche, le
@@ -1077,25 +1155,54 @@ export function poserEtage2(ch, renderer = null) {
     lampe({ type: 'jour', x: X_PAN - 1.0, z: -Y_FEN, h: N2 + 2.4, sx: X_PAN + 0.45, sz: -Y_FEN, ox: X_PAN - 0.6, oz: -Y_FEN, zone: 'e2palier', reel: false, cuireForce: 0.5 });
     ch.lampes.push({ type: 'jour', x: X_PAN - 1.2, z: -Y_FEN, h: N2 + 2.6, cx: X_PAN + 2.5, cz: -Y_FEN, zone: 'e2palier', base: N2, cuire: false, poids: 1.2 });
   }
+  // UNE FENÊTRE SUR RUE du 2e, dans le mur de façade (ép. 0,40, nu intérieur y 0) : un seul vantail (VO q_0319-0326 ;
+  // photos 11 et 12) — le cadre brun-noir de 7 cm à 0,15 m du nu intérieur, le jour, la poignée à l'est à mi-hauteur,
+  // l'appui de pierre dehors, la tablette blanche dedans
+  function fenetreRue({ c, l, bas, haut }) {
+    const ym = -0.15, e = 0.035, c0 = 0.07, mat = M.menuiserie, x0 = c - l / 2, x1 = c + l / 2, mi = (bas + haut) / 2;
+    B(x0, ym - e, x1, ym + e, bas, bas + c0, mat, { ombre: false }); B(x0, ym - e, x1, ym + e, haut - c0, haut, mat, { ombre: false });
+    B(x0, ym - e, x0 + c0, ym + e, bas, haut, mat, { ombre: false }); B(x1 - c0, ym - e, x1, ym + e, bas, haut, mat, { ombre: false });
+    const v = new THREE.Mesh(new THREE.PlaneGeometry(l - 2 * c0, haut - bas - 2 * c0), M.vitreJour);
+    v.position.set(c, mi, -ym); v.rotation.y = Math.PI; fixe.add(v);
+    B(x1 - c0 - 0.035, ym + e, x1 - c0 - 0.015, ym + e + 0.035, mi - 0.1, mi + 0.03, M.alu, { ombre: false });
+    B(x1 - c0 - 0.035, ym + e + 0.035, x1 - c0 + 0.005, ym + e + 0.05, mi, mi + 0.025, M.alu, { ombre: false });
+    B(x0 - 0.03, -0.42, x1 + 0.03, -0.2, bas - 0.05, bas, M.pierreAppui || X.pierre, { ombre: false });
+    B(x0, ym + e, x1, 0.02, bas - 0.025, bas, M.blanc, { ombre: false });
+  }
   // UNE FENÊTRE CÔTÉ COUR de la salle 1, dans la façade arrière (VO crops/fenetres_c1) : la menuiserie brun-noir au
   // milieu de l'épaisseur et sa traverse aux deux cinquièmes, les stores à lamelles verticales au-dessus, la tablette
-  // blanche, le jour derrière, la vitre vue de dehors
-  function fenetreCour({ c, l, bas, haut }) {
-    const ym = Y_ARR, c0 = 0.075, x0 = c - l / 2, x1 = c + l / 2, mat = M.menuiserie, e = 0.035, yi = Y_ARR - EP_ARR / 2;
+  // blanche, le jour derrière, la vitre vue de dehors. `store` : false, le store est relevé (plan V2 : la 6e fenêtre, à
+  // l'est, en plein jour sur q_0304 ; les cinq autres ont leurs lamelles)
+  // `traverse` : false, un seul vantail sans traverse, sa poignée à l'ouest (la 6e : q_0304, à 1,4 m)
+  function fenetreCour({ c, l, bas, haut, store = true, traverse = true }) {
+    const ym = Y_S1N, c0 = 0.075, x0 = c - l / 2, x1 = c + l / 2, mat = M.menuiserie, e = 0.035, yi = Y_S1N - EP_ARR / 2;
     B(x0, ym - e, x1, ym + e, bas, bas + c0, mat, { ombre: false }); B(x0, ym - e, x1, ym + e, haut - c0, haut, mat, { ombre: false });
     B(x0, ym - e, x0 + c0, ym + e, bas, haut, mat, { ombre: false }); B(x1 - c0, ym - e, x1, ym + e, bas, haut, mat, { ombre: false });
     const ht = bas + (haut - bas) * 0.4;
-    B(x0, ym - e, x1, ym + e, ht - 0.035, ht + 0.035, mat, { ombre: false });
+    if (traverse) B(x0, ym - e, x1, ym + e, ht - 0.035, ht + 0.035, mat, { ombre: false });
+    else {
+      B(x0 + c0 + 0.015, ym - e - 0.035, x0 + c0 + 0.035, ym - e, bas + 0.22, bas + 0.35, M.alu, { ombre: false });
+      B(x0 + c0 + 0.015, ym - e - 0.05, x0 + c0 + 0.13, ym - e - 0.035, bas + 0.32, bas + 0.345, M.alu, { ombre: false });
+    }
+    // (relecture, 11/10 : sur q_0304-0311 en grand, l'embrasure est habillée de brun-noir jusqu'au nu de la salle — le
+    // cadre sombre de la VO couvre toute la baie au nu intérieur ; avec un tableau blanc, la fenêtre du jeu paraissait
+    // 15 à 20 % plus étroite au même point de vue. La tablette reste blanche)
+    B(x0, yi, x0 + 0.012, ym - e, bas, haut, mat, { ombre: false }); B(x1 - 0.012, yi, x1, ym - e, bas, haut, mat, { ombre: false });
+    B(x0, yi, x1, ym - e, haut - 0.012, haut, mat, { ombre: false });
     const v = new THREE.Mesh(new THREE.PlaneGeometry(l - 2 * c0, haut - bas - 2 * c0), ciel);
     v.position.set(c, (bas + haut) / 2, -(ym + 0.005)); fixe.add(v);
     const d = new THREE.Mesh(new THREE.PlaneGeometry(l - 2 * c0, haut - bas - 2 * c0), vitreDehors);
     d.position.set(c, (bas + haut) / 2, -(ym + 0.02)); d.rotation.y = Math.PI; d.castShadow = false; fixe.add(d);
     B(x0, yi - 0.02, x1, ym - e, bas - 0.025, bas, M.blanc, { ombre: false });
-    C.ajouterBoite(x0, -yi, x1, -(Y_ARR + EP_ARR / 2), { y0: bas, y1: haut, vitre: true });
+    C.ajouterBoite(x0, -yi, x1, -(Y_S1N + EP_ARR / 2), { y0: bas, y1: haut, vitre: true });
     // les stores à lamelles verticales claires (9 cm), ouvertes — vues de la salle, des traits clairs sur le jour (VO
-    // crops/fenetres_c1, fen_c1_225), sur les trois cinquièmes du haut : un plan découpé (les lames vues par la tranche)
-    const hl = haut - ht - 0.08, st = new THREE.Mesh(new THREE.PlaneGeometry(l - 0.1, hl), storesOuverts);
-    st.position.set(c, ht + 0.03 + hl / 2, -(yi - 0.05)); fixe.add(st);
+    // crops/fenetres_c1, fen_c1_225) : un plan découpé (les lames vues par la tranche)
+    // (relecture, 11/10 : de toute la hauteur — sur q_0304 (W5) et q_0311 (W1 à W3) en grand, les lames descendent devant
+    // la traverse jusqu'à la tablette ; seulement sur les trois cinquièmes du haut, le bas de la fenêtre restait nu)
+    if (store) {
+      const hl = haut - bas - 0.1, st = new THREE.Mesh(new THREE.PlaneGeometry(l - 0.1, hl), storesOuverts);
+      st.position.set(c, bas + 0.05 + hl / 2, -(yi - 0.05)); fixe.add(st);
+    }
     B(x0 + 0.03, yi - 0.1, x1 - 0.03, yi - 0.03, haut - 0.05, haut + 0.01, M.alu, { ombre: false });
   }
 
@@ -1166,7 +1273,7 @@ export function poserEtage2(ch, renderer = null) {
     // tous les blancs du couloir au saumon, #c5987f à côté de la photo turquoise, et la photo au brun ; prise au bout est,
     // contre le mur sud, le mur rouge n'y est plus qu'une bande : #b8aa94, la photo #789a8b — VO q_0293 #e5d4bf, #7aa29d)
     { id: 'e2couloir', rects: [zr(X_FOND, Y_RUE, X_BOUT, Y_COUR)], voisines: ['e2sas', 'e2s1', 'e2s2'], env: env(13.6, 4.95) },
-    { id: 'e2s1', rects: [zr(X_S1, Y_COUR, X_S1E, Y_ARR)], voisines: ['e2couloir'], env: env(9.0, 9.6) },
+    { id: 'e2s1', rects: [zr(X_S1, Y_COUR, X_S1E, Y_S1N)], voisines: ['e2couloir'], env: env(8.3, 9.1) },
     { id: 'e2s2', rects: [zr(X_S2, -0.2, X_S2E, Y_RUE)], voisines: ['e2couloir'], env: env(14.0, 2.3) },
   ];
 
