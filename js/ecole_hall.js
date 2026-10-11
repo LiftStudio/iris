@@ -419,8 +419,11 @@ export function poserHall(ch) {
   // celui au coussin rayé ; le manteau moutarde sur le dossier de l'un d'eux (photo 03)
   fauteuil(ch, 18.0, 1.85, 'W', { sx: 18.65, sy: 1.85, nom: 'le fauteuil de l\'accueil' });
   const f2 = fauteuil(ch, 18.4, 1.2, 'S', { sx: 18.4, sy: 1.85, nom: 'le fauteuil' });
-  fauteuil(ch, 18.6, 3.75, 'E', { sx: 18.05, sy: 3.95, nom: 'le fauteuil' });
-  fauteuil(ch, 18.0, 3.2, 'W', { zebre: true, sx: 18.2, sy: 2.6, nom: 'le fauteuil' });
+  // (vérification finale du 11/10 : le fauteuil au coussin rayé, celui du bureau du mitoyen et le bout du pupitre
+  // fermaient l'arrière du comptoir — 0,33 m et 0,58 m de passage : trois des quatre places s'y relevaient sans pouvoir en
+  // sortir. Le premier recule de 0,15 m à l'ouest et 0,25 au sud, le second de 0,1 m à l'est et au nord : 0,76 m et 0,71 m)
+  fauteuil(ch, 18.7, 3.85, 'E', { sx: 18.1, sy: 4.05, nom: 'le fauteuil' });
+  fauteuil(ch, 17.85, 2.95, 'W', { zebre: true, sx: 18.2, sy: 2.6, nom: 'le fauteuil' });
   BL(f2, new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.9 }), 0.48, 0.5, 0.07, 0, 0.82, -0.27);
 
   // =====================================================================

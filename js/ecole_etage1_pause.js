@@ -775,7 +775,10 @@ export function poserPause1(ch, ctx) {
   banquette([[8.7, 11.1], [9.3, 11.45], [10.05, 11.45], [10.6, 11.15], [10.75, 10.65]].map(([x, y]) => [x + DXN, Yv(y)]), P.rouge, 'banquette rouge', [-1]);
   {
     // (V2 : 0,3 m plus à l'est — étirée, la banquette jaune l'approchait : ses places de l'est se relevaient dans la table)
-    const xt = 10.3 + DXN, yt = Yv(10.2);
+    // (vérification finale du 11/10 : encore 0,3 m à l'est. Entre la jaune, la rouge et la table, l'intérieur du haricot
+    // était clos pour le joueur — 0,59 m entre la jaune et le bout ouest de la table, 0,29 entre les deux banquettes — : sept
+    // places de la rouge et de la jaune se relevaient dans une poche d'où l'on ne sortait plus. 0,89 m maintenant.)
+    const xt = 10.6 + DXN, yt = Yv(10.2);
     const g = new THREE.Group(); g.position.set(xt, N1, -yt); g.rotation.y = 3.0; groupe.add(g);
     const s = new THREE.Shape(), w = 0.7, d = 0.275;
     s.moveTo(-w + d, -d); s.lineTo(w - d, -d); s.absarc(w - d, 0, d, -Math.PI / 2, Math.PI / 2, false); s.lineTo(-w + d, d); s.absarc(-w + d, 0, d, Math.PI / 2, Math.PI * 1.5, false);
