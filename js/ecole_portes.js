@@ -56,7 +56,12 @@ function plan(parent, mat, w, h, x, y, z, face = 1) {
 
 // LA FUSION LOCALE : les maillages opaques d'un groupe (un vantail) cousus en UN maillage par matériau, dans le repère
 // du groupe — un vantail qui tourne ne coûte plus que quelques appels de dessin. Les transparents restent à part.
+// (lot 5, 11/10 : `_coupe`, posée par js/carte_ecole.js — js/ecole_visibilite.js couperParZones —, coupe chaque bloc
+// cousu d'un niveau par zones de l'école, pour n'en dessiner que ce que la caméra peut voir ; elle ne touche ni aux portes
+// ni aux vantaux)
 const _inv = new THREE.Matrix4(), _m = new THREE.Matrix4();
+let _coupe = null;
+export function poserCoupe(f) { _coupe = f; }
 export function fusionnerLocal(g) {
   g.updateMatrixWorld(true);
   _inv.copy(g.matrixWorld).invert();
@@ -76,6 +81,7 @@ export function fusionnerLocal(g) {
     const bloc = new THREE.Mesh(melange, lot[0].material);
     bloc.castShadow = lot[0].castShadow; bloc.receiveShadow = true;
     g.add(bloc);
+    if (_coupe) _coupe(bloc);
     for (const o of lot) aRetirer.push(o);
   }
   for (const o of aRetirer) { o.parent.remove(o); o.geometry.dispose(); }
