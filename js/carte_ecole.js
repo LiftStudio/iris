@@ -852,7 +852,7 @@ function construireMurs(ch) {
   // nord ; or la photo 02 ne laisse le pilier au bord gauche de son cadre que là où il est : gardé, le doute demeure)
   // (Retour de Haythem du 11/10, r02 — la photo 21 en pleine définition, 1 848 x 4 000 — : le pilier recule de 0,6 m vers
   // l'OUEST et de 0,3 m vers le SUD, x 9,71-10,31 × y 5,23-5,83. Vu du bout ouest, sur la photo, il se lève juste à droite
-  // de l'angle de la pile, son pied à 4 m de l'appareil et à 0,4 m du mur sud ; dans le jeu, il était 7,5° trop à gauche
+  // de l'angle de la pile, son pied à 4 m de l'appareil et à 0,35 m du mur sud ; dans le jeu, il était 7,5° trop à gauche
   // et 1,5 m trop loin. La photo 02, elle, le voit au bord gauche de son cadre : c'est lui, la bande grise des 15 premiers
   // pixels — son angle nord-ouest, dont le pied est à 1,8 m de l'appareil : (9,71 ; 5,83). Ces deux contraintes réunies
   // donnent cette place ; vu du bout ouest, l'écart à r02 tombe de 7,5° à 2,5° (le jeu le veut d'un rien plus à l'est que
@@ -1016,6 +1016,8 @@ export function construireCarte(scene, renderer = null) {
   dome.userData.horsAOSol = true;
   ch.boite(4.46, 8.855, 4.6, 8.925, 2.14, 2.26, M.boitier, { ombre: false });
   ch.boite(4.9, ATT.ys + 0.075, 5.0, ATT.ys + 0.11, 1.25, 1.35, M.rougeEtiquette, { ombre: false });   // (sur le mur sud : DY_A)
+  // (11/10, r02 : vu de près, un cube rouge plein ; c'est un boîtier à membrane blanche au milieu de sa face)
+  ch.boite(4.925, ATT.ys + 0.11, 4.975, ATT.ys + 0.112, 1.275, 1.325, M.blanc, { ombre: false });
 
   // ---- les plafonds ----
   ch.plafond(1.75, 0, 4.425, 4.05, 2.6, 'platre');                   // le passage
@@ -1063,7 +1065,7 @@ export function construireCarte(scene, renderer = null) {
   // lisses de la photo 04 ne font qu'une rangée, x 5,3-5,9, au droit du pilier jaune. Et ce plafond est plus sombre et
   // plus chaud que les murs — 0,6 de leur luminance, un beige où le rouge passe le bleu de moitié, quand le jeu le
   // rendait aussi blanc qu'eux : une copie des plateaux, rien qu'ici, d'un ton chaud un peu éteint)
-  const chaudPlafond = (m) => { const c = m.material.clone(); c.color.multiply(new THREE.Color(0.93, 0.87, 0.76)); c.emissiveIntensity *= 0.6; m.material = c; return m; };
+  const chaudPlafond = (m) => { const c = m.material.clone(); c.color.multiply(new THREE.Color(0.97, 0.93, 0.84)); c.emissiveIntensity *= 0.8; m.material = c; return m; };
   chaudPlafond(ch.plafond(5.9, ATT.ys + 0.675, 13.5, ATT.yn - 0.075, 2.6, 'plateaux'));
   chaudPlafond(ch.plafond(5.9, ATT.ys, 13.5, ATT.ys + 0.675, 2.58, 'dalles'));
   ch.plafond(5.3, ATT.ys, 5.9, ATT.yn - 0.075, 2.6, 'dalles', { retombees: false });

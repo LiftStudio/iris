@@ -157,10 +157,11 @@ export function poserMobilier(ch) {
   [[6.2, 'noir'], [6.9, 'rose'], [7.6, 'canard']].forEach(([x, c]) => chaise(ch, x, A(9.45), 'N', COQUE[c]));
   C.ajouterBoite(6.15, -7.75, 9.65, -7.05, { y1: 0.8 });
   C.ajouterBoite(5.85, -A(9.8), 7.95, -A(9.1), { y1: 0.8 });
-  // l'écran de 65 pouces (x 6,5-7,95, h 1,55-2,40) et l'affiche blanche aux graphismes vert pâle (x 8,4-9,4)
+  // l'écran de 65 pouces (x 6,5-7,95, h 1,55-2,40) et l'affiche blanche aux graphismes vert pâle (x 8,4-9,4 ; r02 :
+  // ce sont deux affiches côte à côte, le chevron vert et les logos « eph » — photo 02 agrandie)
   ch.boite(6.5, A(11.94), 7.95, A(12.0), 1.55, 2.4, M.noir);
   ch.panneau(new THREE.MeshBasicMaterial({ map: texEcran(), color: new THREE.Color(1.25, 1.25, 1.25) }), 1.39, 0.79, 7.225, A(11.935), 1.975, 'S');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#cfe8d2', '#fbfbf8', 3), roughness: 0.7 }), 1.0, 1.5, 8.9, A(11.994), 1.8, 'S');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheVerte(), roughness: 0.7 }), 1.0, 1.5, 8.9, A(11.994), 1.8, 'S');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#ffffff', '#f5f5f0', 4), roughness: 0.7 }), 0.15, 0.21, 7.0, A(11.994), 1.4, 'S');
   // LA BORNE numérique noire (retour de Haythem du 11/10, r02 : « sur la photo, elle est debout sur son socle noir plat, un
   // peu à l'écart à droite du pilier ; son écran montre une mosaïque de vraies photos en couleurs — dans le jeu, elle est
@@ -185,12 +186,14 @@ export function poserMobilier(ch) {
     C.ajouterBoiteOrientee(bx + Math.sin(th) * 0.1, -by + Math.cos(th) * 0.1, 0.31, 0.21, -th, { y1: 2 });
   }
   // LES PRÉSENTOIRS à brochures noirs, tournés vers l'ouest : CINQ tablettes inclinées, et non six (retour de Haythem du
-  // 11/10, r02 : « noir, à cinq étagères de brochures » — on les compte aussi sur la photo 01), 1,75 m de haut
+  // 11/10, r02 : « noir, à cinq étagères de brochures » — on les compte aussi sur la photo 01), 1,75 m de haut ;
+  // ses tablettes descendent jusqu'au sol, au pas de 33 cm — la dernière rangée de brochures à 0,15 m, la première sous le
+  // chapeau
   //  - LE SEUL qu'on voie de la salle (r02 : « le jeu en met DEUX côte à côte sur le mur du fond ; sur la photo, il y en a
   //    UN seul ») : adossé à la face ouest de la pile, à gauche du radiateur, à 0,3 m de lui (photo 21 en pleine
   //    définition : y 6,0-6,8 ; le jeu le mettait 0,25 plus au sud) ;
-  //  - celui de la photo 01, sur roulettes, contre le mur est du C01 : il y est, mais PLUS LOIN dans le couloir, y 8,85 —
-  //    son pied, sur la photo 01, à 3,8 m de l'appareil —, là où le bout du mur safran le cache à qui regarde depuis le
+  //  - celui de la photo 01, sur roulettes, contre le mur est du C01 : il y est, mais PLUS LOIN dans le couloir, y 8,1-8,9 —
+  //    sous la fin du plafond bas du C01, sur la photo 01 —, là où le bout du mur safran le cache à qui regarde depuis le
   //    bout ouest de la salle. En y 8,2, il dépassait du mur jaune, à côté de l'autre : les « deux présentoirs » de r02.
   const br = new THREE.MeshStandardMaterial({ map: texBrochures(), roughness: 0.6 });
   const presentoir = (x, y, roulettes) => {
@@ -201,10 +204,10 @@ export function poserMobilier(ch) {
     maille(boiteM(0.8, 0.03, 0.36), M.noir, 0, b0 + 1.715, 0, 0, pres);
     maille(boiteM(0.76, 0.05, 0.3), M.noir, 0, b0 + 0.025, 0, 0, pres);
     for (let i = 0; i < 5; i++) {
-      const t = maille(boiteM(0.76, 0.02, 0.3), M.noir, 0, b0 + 0.3 + i * 0.3, 0.02, 0, pres); t.rotation.x = -0.35;
+      const t = maille(boiteM(0.76, 0.02, 0.3), M.noir, 0, b0 + 0.12 + i * 0.33, 0.02, 0, pres); t.rotation.x = -0.35;
       const b = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.25), br);
-      b.position.set(0, b0 + 0.42 + i * 0.3, 0.05); b.rotation.x = -0.3; pres.add(b);
-      maille(boiteM(0.76, 0.05, 0.012), M.noir, 0, b0 + 0.3 + i * 0.3, 0.165, 0, pres);
+      b.position.set(0, b0 + 0.24 + i * 0.33, 0.05); b.rotation.x = -0.3; pres.add(b);
+      maille(boiteM(0.76, 0.05, 0.012), M.noir, 0, b0 + 0.12 + i * 0.33, 0.165, 0, pres);
     }
     if (roulettes) for (const [sx, sz] of [[-0.36, -0.14], [0.36, -0.14], [-0.36, 0.14], [0.36, 0.14]]) {
       const r = maille(new THREE.CylinderGeometry(0.03, 0.03, 0.022, 12), M.noirMat, sx, 0.03, sz, 0, pres, { ombre: false });
@@ -213,7 +216,7 @@ export function poserMobilier(ch) {
     C.ajouterBoite(x - 0.25, -(y - 0.42), x + 0.19, -(y + 0.42), { y1: 1.8 });
   };
   presentoir(13.11, 6.4, false);
-  presentoir(13.31, 8.85, true);
+  presentoir(13.31, 8.5, true);
   // LE KAKÉMONO « 1ère école pour le BTS SIO en France » (retour de Haythem du 11/10, r02 : « le panneau noir au bout du
   // mur » — sur la photo 21 en pleine définition, un panneau noir à lettres blanches et dorées, plus haut qu'un homme,
   // juste après la fin du jaune ; le même que la VO de 2021, q_0038-0047, au bout est du mur safran, devant lui). Vu du
@@ -444,6 +447,27 @@ function texMosaique() {
       for (let k = 0; k < cw * chh / 30; k++) { g.fillStyle = rnd() < 0.5 ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.09)'; g.fillRect(x + rnd() * cw, y + rnd() * chh, 1.5, 1.5); }
       g.restore();
     }
+  }, null, false, 4);
+}
+// L'AFFICHE BLANCHE AUX GRAPHISMES VERTS du mur safran (photos 02 et 21 ; retour de Haythem du 11/10, r02) : ce sont
+// DEUX affiches côte à côte — à gauche, une blanche barrée d'un grand chevron vert pâle, le logo « eph » et des titres
+// verts ; à droite, une blanc cassé, le logo « Eph » à point rouge et ses colonnes de texte gris
+function texAfficheVerte() {
+  return canvasTex(340, 512, (g, w, h) => {
+    const m = w / 2;
+    g.fillStyle = '#fbfbf8'; g.fillRect(0, 0, m - 3, h);
+    g.fillStyle = '#efeeea'; g.fillRect(m + 3, 0, m - 3, h);
+    g.fillStyle = '#d6e6c4';
+    g.beginPath(); g.moveTo(40, 20); g.lineTo(120, 20); g.lineTo(150, 150); g.lineTo(110, 330); g.lineTo(60, 330); g.lineTo(96, 150); g.closePath(); g.fill();
+    g.fillStyle = '#6b6f6a'; g.font = '600 26px "Segoe UI", Arial, sans-serif'; g.fillText('eph', 14, 70);
+    g.fillStyle = '#7da35a'; for (let l = 0; l < 3; l++) g.fillRect(14, 96 + l * 14, 120 - l * 20, 7);
+    g.fillStyle = '#4c5a45'; g.fillRect(14, 160, 130, 5); g.fillRect(14, 172, 100, 5);
+    g.fillStyle = '#9a9e98'; for (let l = 0; l < 16; l++) g.fillRect(14, 200 + l * 15 + (l > 7 ? 14 : 0), (l % 5 === 4 ? 70 : 125), 4);
+    g.fillStyle = '#3d3d3d'; g.fillRect(14, h - 70, 90, 6);
+    g.fillStyle = '#d0262d'; g.beginPath(); g.arc(m + 22, 36, 4, 0, 7); g.fill();
+    g.fillStyle = '#5c5f62'; g.font = '600 28px "Segoe UI", Arial, sans-serif'; g.fillText('Eph', m + 20, 64);
+    g.fillStyle = '#8a8d90'; for (let l = 0; l < 4; l++) g.fillRect(m + 16, 92 + l * 13, 130 - l * 12, 6);
+    g.fillStyle = '#a6a9ab'; for (let l = 0; l < 22; l++) g.fillRect(m + 16, 160 + l * 13 + (l > 10 ? 16 : 0), (l % 4 === 3 ? 60 : 128), 4);
   }, null, false, 4);
 }
 // LE KAKÉMONO (VO q_0038-0047 ; photo 21 en pleine définition, de chant) : noir ; en haut, le logo « iris » blanc dans son
