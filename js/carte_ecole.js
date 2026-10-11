@@ -52,7 +52,7 @@
 //                              S -1.14 (js/ecole_amphi.js) ; à l'est, le palier -1 et le sas (js/ecole_soussol_est.js)
 import * as THREE from 'three';
 import { Collisions } from './collisions.js';
-import { carteLocale, poserSondeLocale, planifierOcclusionSol, optimiserDecor, nePasFusionner, animerVent } from './kit_decor.js';
+import { carteLocale, poserSondeLocale, planifierOcclusionSol, optimiserDecor, nePasFusionner, animerVent, canvasTex } from './kit_decor.js';
 import { materiauxEcole, texDAE, jourDehors } from './ecole_matieres.js';
 import { Portes, boiteM, maille, fenetreFacade, fenetreDepolie, fusionnerLocal, vitrophanies } from './ecole_portes.js';
 import { LumieresEcole, cuireLumiereSol } from './ecole_lumieres.js';
@@ -751,16 +751,22 @@ function construireMurs(ch) {
   // (Relecture du 11/10 : de la pose de la photo 01, dans le C01 du lot D, ce jour est caché derrière le mur ouest du C01
   // et la pile masque la porte vitrée, quand la photo voit le jour juste à gauche de ce mur et la porte avec le hall
   // derrière elle : c'est l'écart entre le C01 et la pile du plan V2 qui est en cause, pas l'angle — gardé)
-  const YS = ATT.ys, X_B = 11.55, JOURS_S = [6.65, 8.35], JOUR_B = { c: 10.42, l: 0.6, bas: 1.05, h: 2.5 };
+  // (Relecture du 11/10, r02 : LES DEUX JOURS SONT PLUS PETITS ET PLUS HAUTS. Sur la photo 21 en pleine définition comme
+  // sur la photo 02 — rejouées à leurs poses, les deux à la fois —, le haut de leur cadre touche presque la bande de
+  // dalles lisses du plafond, l'appui est au-dessus des dossiers des chaises, à 0,2 m de la lisse grise, et le jour est
+  // finit à 1,26 m de l'arête droite du pilier, là où la borne le recouvre : verre de 1,0 x 1,28, de 1,12 à 2,40 (cadre
+  // compris, 1,035-2,485 ; ils faisaient 1,3 x 1,35, de 0,95 à 2,3) ; trumeau de 0,18 entre eux. Le jour ouest, 6,1-7,27
+  // hors tout, la photo 02 le mettait déjà là ; le jour est, 7,45-8,62, sort sur r02 à 10 px de son bord est)
+  const YS = ATT.ys, X_B = 11.55, JOURS_S = [5.825, 7.145, 8.465], J_L = 1.02, J_BAS = 1.12, J_H = 2.4, JOUR_B = { c: 10.42, l: 0.6, bas: 1.05, h: 2.5 };
   // LA PORTE DE LA Si 0.1 (IMAGINÉE) : c 9,5, entre le jour c 8,35 et le mur du bureau — le seul pan du mur sud que ni la
   // photo 02 (le trumeau ouest est nu) ni la photo 21 ne montrent : la borne est devant. Grise, gonds à l'est, elle s'ouvre
   // toujours dans la salle et s'y rabat contre son mur est ; 0,8 m (0,9 mordait sur le cadre du jour)
   const P_SI = { c: 9.5, l: 0.8 };
-  ch.mur({ de: [4.5, YS], a: [X_B + EP / 2, YS], mats: B, plinthes: ['N', 'S'], ouvertures: [...JOURS_S.map((c) => ({ c, l: 1.3, bas: 0.95, h: 2.3 })), { c: P_SI.c, l: P_SI.l, h: 2.04 }, { c: JOUR_B.c, l: JOUR_B.l, bas: JOUR_B.bas, h: JOUR_B.h }] });
+  ch.mur({ de: [4.5, YS], a: [X_B + EP / 2, YS], mats: B, plinthes: ['N', 'S'], ouvertures: [...JOURS_S.map((c) => ({ c, l: J_L, bas: J_BAS, h: J_H })), { c: P_SI.c, l: P_SI.l, h: 2.04 }, { c: JOUR_B.c, l: JOUR_B.l, bas: JOUR_B.bas, h: JOUR_B.h }] });
   const sud = new THREE.Group(); sud.position.set(0, 0, -YS); ch.decor.add(sud);
   // (retour de Haythem du 11/10, r02 : « deux fenêtres à cadre blanc ÉPAIS » — 8,5 cm sur la photo 21, et non 6 ; le verre
   // est un dépoli opaque vert pâle : js/ecole_portes.js fenetreDepolie)
-  for (const c of JOURS_S) { fenetreDepolie(sud, M, { x: c, l: 1.3, bas: 0.95, haut: 2.3, ep: EP, cadre: 0.085 }); ch.C.ajouterBoite(c - 0.65, -(YS - 0.05), c + 0.65, -(YS + 0.05), { y0: 0.95, y1: 2.3, vitre: true }); }
+  for (const c of JOURS_S) { fenetreDepolie(sud, M, { x: c, l: J_L, bas: J_BAS, haut: J_H, ep: EP, cadre: 0.085 }); ch.C.ajouterBoite(c - J_L / 2, -(YS - 0.05), c + J_L / 2, -(YS + 0.05), { y0: J_BAS, y1: J_H, vitre: true }); }
   fenetreDepolie(sud, M, { x: JOUR_B.c, l: JOUR_B.l, haut: JOUR_B.h, bas: JOUR_B.bas, ep: EP, bandeClaire: 0.5 });
   ch.C.ajouterBoite(JOUR_B.c - JOUR_B.l / 2, -(YS - 0.05), JOUR_B.c + JOUR_B.l / 2, -(YS + 0.05), { y0: JOUR_B.bas, y1: JOUR_B.h, vitre: true });
   ch.porte('x', YS, P_SI.c, { l: P_SI.l, h: 2.04, modele: 'grise', etat: 'auto', cote: 'S', charniere: 'd', libre: 1, nom: 'Si 0.1' });
@@ -858,7 +864,10 @@ function construireMurs(ch) {
   // donnent cette place ; vu du bout ouest, l'écart à r02 tombe de 7,5° à 2,5° (le jeu le veut d'un rien plus à l'est que
   // la photo 21 : seule la photo 02, dont la pose est sûre — 12 points, 8,6 px —, le place en absolu). La porte de la Si 0.1
   // reste atteignable par sa moitié ouest, entre la borne et lui.)
-  pilier(9.71, 5.23, 10.31, 5.83, M.pilier);
+  // (et il est plus SOMBRE que les murs : sur r02, sa face ouest est à 0,78 de la luminance du mur du fond, à la même
+  // lumière ; le jeu le rendait à 0,92 — sa peinture grise, rien qu'ici, d'un ton plus bas)
+  const grisPilier = M.pilier.clone(); grisPilier.color.multiplyScalar(0.84); grisPilier.name = 'pilier gris (salle d\'attente)';
+  pilier(8.8, 5.59, 9.66, 6.02, grisPilier);
   // ---- LE HALL D'ENTRÉE ----
   // (09/10, photo 24 : la porte du mur nord n'est pas en x 17 mais en face de la porte 6 — 1,5 vantail, x 14,70-16,10 ;
   // à l'est, la cloison vitrée cannelée, le photocopieur devant elle côté hall (10/10 : l'angle nord-est est ouvert, VO
@@ -1066,7 +1075,43 @@ export function construireCarte(scene, renderer = null) {
   // plus chaud que les murs — 0,6 de leur luminance, un beige où le rouge passe le bleu de moitié, quand le jeu le
   // rendait aussi blanc qu'eux : une copie des plateaux, rien qu'ici, d'un ton chaud un peu éteint)
   const chaudPlafond = (m) => { const c = m.material.clone(); c.color.multiply(new THREE.Color(0.97, 0.93, 0.84)); c.emissiveIntensity *= 0.8; m.material = c; return m; };
-  chaudPlafond(ch.plafond(5.9, ATT.ys + 0.675, 13.5, ATT.yn - 0.075, 2.6, 'plateaux'));
+  // (RELECTURE DU 11/10 — r02 et la photo 02 agrandies, leurs joints rétroprojetés au plafond : ce ne sont pas des plateaux
+  // de 60 x 120 en damier, mais des LAMES perforées de 30 cm, posées en travers de la salle, du sud au nord, d'un seul tenant
+  // de la bande lisse du mur sud jusqu'à un joint en long, à y 7,42 — à 0,38 m du mur safran, le même sur les deux photos —,
+  // au-delà duquel une rangée de lames courtes borde le mur jaune. Vu du bout ouest, on lit donc une suite de longues bandes
+  // claires et serrées, presque parallèles, et non la grille de grands carreaux que le jeu dessinait. Les mêmes trous, la
+  // même bordure lisse, le même joint creux que les plateaux : js/ecole_matieres.js.)
+  const Y_LONG = 7.425;
+  const lames = (L) => {
+    const W = 768, H = Math.round(768 * L / 1.2);
+    return canvasTex(W, H, (g, w, h) => {
+      // (les trous, sur r02 agrandie : des TIRETS dans le fil de la lame, 9 x 4 mm, en files serrées ; plus pâles que ceux
+      // des plateaux — la lame paraît beige, pas grise ; la bordure lisse, large de 3 cm, fait entre deux lames la bande
+      // claire de 6 cm qu'on suit d'un mur à l'autre)
+      const mm = w / 1200, pas = 300 * mm, joint = Math.max(2, 5 * mm), bl = 30 * mm, bb = 50 * mm;
+      g.fillStyle = '#ece9e2'; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 4; i++) {
+        const x0 = i * pas;
+        g.fillStyle = 'rgba(205,200,190,0.3)'; g.fillRect(x0 + bl, bb, pas - 2 * bl, h - 2 * bb);
+        g.fillStyle = 'rgba(78,72,64,0.5)';
+        const pu = 10 * mm, pv = 14 * mm, cu = Math.max(1, 4 * mm), cv = Math.max(2, 9 * mm);
+        for (let y = bb + pv / 2; y < h - bb - cv / 2; y += pv) for (let x = x0 + bl + pu / 2; x < x0 + pas - bl - cu / 2; x += pu) g.fillRect(x - cu / 2, y - cv / 2, cu, cv);
+        g.fillStyle = 'rgba(255,254,250,0.55)';
+        g.fillRect(x0 + joint, 0, bl * 0.7, h); g.fillRect(x0 + pas - bl * 0.7, 0, bl * 0.7 - joint / 2, h);
+        g.fillRect(x0, joint, pas, bb * 0.5); g.fillRect(x0, h - bb * 0.5, pas, bb * 0.5 - joint / 2);
+      }
+      g.fillStyle = '#7c776e';
+      for (let i = 0; i <= 4; i++) g.fillRect(i * pas - joint / 2, 0, joint, h);
+      g.fillRect(0, -joint / 2, w, joint); g.fillRect(0, h - joint / 2, w, joint);
+      g.fillStyle = 'rgba(255,255,255,0.6)';
+      for (let i = 0; i <= 4; i++) g.fillRect(i * pas - joint / 2 - Math.max(1, 2 * mm), 0, Math.max(1, 2 * mm), h);
+    }, [1 / 1.2, 1 / L], false, 8);
+  };
+  const enLames = (m, L) => {
+    const c = m.material; c.map = c.emissiveMap = lames(L); c.normalMap = null; c.name = 'plafond en lames perforées (salle d\'attente)'; c.needsUpdate = true; return m;
+  };
+  enLames(chaudPlafond(ch.plafond(5.9, ATT.ys + 0.675, 13.5, Y_LONG, 2.6, 'plateaux')), Y_LONG - ATT.ys - 0.675);
+  enLames(chaudPlafond(ch.plafond(5.9, Y_LONG, 13.5, ATT.yn - 0.075, 2.6, 'plateaux', { retombees: false })), ATT.yn - 0.075 - Y_LONG);
   chaudPlafond(ch.plafond(5.9, ATT.ys, 13.5, ATT.ys + 0.675, 2.58, 'dalles'));
   ch.plafond(5.3, ATT.ys, 5.9, ATT.yn - 0.075, 2.6, 'dalles', { retombees: false });
   ch.plafond(11.7, 7.8, 13.5, 14.4, 2.45, 'platre');                 // C01 (V2 : de l'entrée, y 7,8, au fond)
@@ -1130,7 +1175,15 @@ export function construireCarte(scene, renderer = null) {
   // (relecture du 11/10 : le bloc de sortie de la photo 21 n'est pas suspendu près du pilier gris — ni elle, ni la VO
   // q_0038-0046 n'en montrent là ; il est fixé en haut du mur du fond, la face ouest de la pile, au-dessus de l'écart entre
   // le présentoir et le radiateur, sous le plafond)
-  ch.sortie(13.27, 6.0, 2.45, 'W');
+  // (Relecture du 11/10, r02 agrandie : ce n'est pas un bloc vert à pictogramme mais un boîtier BLANC à deux voyants
+  // ronds, côte à côte, d'un blanc bleuté — le bloc d'ambiance de l'issue vers le hall)
+  {
+    const b = new THREE.Group(); b.position.set(13.27, 2.45, -6.0); b.rotation.y = -Math.PI / 2; ch.decor.add(b);
+    maille(boiteM(0.3, 0.11, 0.06), M.blanc, 0, 0, 0, 0, b, { ombre: false });
+    const voy = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.95, 1.3, 1.6) });
+    for (const sx of [-0.065, 0.065]) { const v = new THREE.Mesh(new THREE.CircleGeometry(0.03, 20), voy); v.position.set(sx, 0, 0.031); b.add(v); }
+    b.traverse((m) => { m.userData.horsAOSol = true; });
+  }
   // LE JOUR qui entre (pour les spots : une lampe froide dehors, qui vise l'intérieur ; pour la lumière cuite : la source
   // au pied de l'ouverture, `ox/oz` le point d'où l'on découpe sa visibilité, dehors)
   const jour = (x, y, cible, zone, o = {}) => ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.6, cx: cible[0], cz: -cible[1], sx: x, sz: -(y + 0.3), ox: x, oz: -(y - 0.5), zone, ...o });

@@ -153,10 +153,15 @@ export function poserMobilier(ch) {
   // (11/10, r02 : l'ordre et les couleurs se relisent tels quels — au nord, d'ouest en est, blanc, canard, grège, citron,
   // blanc ; au sud, noir, rose, canard sous le jour ouest — 10 cm plus à l'ouest, la borne est à côté. La rangée nord
   // recule de 2 cm : sur les photos, le haut des dossiers touche la lisse blanche du mur safran)
-  [[6.5, 'blanc'], [7.2, 'canard'], [7.9, 'grege'], [8.6, 'citron'], [9.3, 'blanc']].forEach(([x, c]) => chaise(ch, x, 7.42, 'S', COQUE[c]));
-  [[6.2, 'noir'], [6.9, 'rose'], [7.6, 'canard']].forEach(([x, c]) => chaise(ch, x, A(9.45), 'N', COQUE[c]));
-  C.ajouterBoite(6.15, -7.75, 9.65, -7.05, { y1: 0.8 });
-  C.ajouterBoite(5.85, -A(9.8), 7.95, -A(9.1), { y1: 0.8 });
+  // (Relecture du 11/10 — r02 et la photo 02 rejouées ENSEMBLE, la 02 posée sur la porte grise du hall ouest, taille
+  // comprise, et sur l'angle ouest du mur sud qu'elle voit en x 4,49 : au sud, la canard est en x 6,85, la rose en 6,05 et
+  // la noire en 5,25, sous le jour ouest et le jour aux affiches — la canard 0,75 m plus à l'ouest qu'on ne l'avait mise :
+  // vue du bout ouest, elle se levait sous la borne, là où r02 ne montre que le sol et le socle. Au nord, les cinq
+  // tombent à leur place)
+  [[6.8, 'blanc'], [7.5, 'canard'], [8.2, 'grege'], [8.9, 'citron'], [9.6, 'blanc']].forEach(([x, c]) => chaise(ch, x, 7.42, 'S', COQUE[c]));
+  [[5.4, 'noir'], [6.2, 'rose'], [7.0, 'canard']].forEach(([x, c]) => chaise(ch, x, A(9.45), 'N', COQUE[c]));
+  C.ajouterBoite(6.45, -7.75, 9.95, -7.05, { y1: 0.8 });
+  for (const x of [5.4, 6.2, 7.0]) C.ajouterBoite(x - 0.32, -A(9.8), x + 0.32, -A(9.1), { y1: 0.8 });
   // l'écran de 65 pouces (x 6,5-7,95, h 1,55-2,40) et l'affiche blanche aux graphismes vert pâle (x 8,4-9,4 ; r02 :
   // ce sont deux affiches côte à côte, le chevron vert et les logos « eph » — photo 02 agrandie)
   ch.boite(6.5, A(11.94), 7.95, A(12.0), 1.55, 2.4, M.noir);
@@ -173,15 +178,20 @@ export function poserMobilier(ch) {
   // Le socle est une plaque noire de 0,62 x 0,42, épaisse de 2,5 cm, qui avance devant l'écran ; le fût de 1,92 m, un rien
   // renversé ; l'écran de 0,54 x 1,28, de 0,6 à 1,88 m — dessous, le pied noir du fût et son petit logo.
   {
-    const bx = 8.4, by = 5.14, th = -2.53;
+    // (Relecture du 11/10 : r02 et la photo 02 rejouées ensemble. Sur r02, le pied du fût est à 4,1 m de l'appareil
+    // — 565 px sous l'horizon —, sous les relèvements de ses deux bords : la borne est CONTRE LE MUR SUD, en x 8,75, devant
+    // le bout est du jour nu (7,87-9,06), à côté du jambage de la porte de la Si 0.1 ; sur la photo 02, elle est bien hors
+    // du cadre. Son haut n'est qu'à 100 px au-dessus de l'horizon quand son pied est à 565 px dessous : 1,82 m hors tout)
+    const bx = 8.6, by = 5.08, th = -2.53;
     const borne = new THREE.Group(); borne.position.set(bx, 0, -by); borne.rotation.y = th; ch.decor.add(borne);
     maille(boiteM(0.62, 0.025, 0.42), M.noir, 0, 0.0125, 0.1, 0, borne);
     const fut = new THREE.Group(); fut.position.y = 0.025; fut.rotation.x = -0.025; borne.add(fut);
-    maille(boiteM(0.62, 1.92, 0.07), M.noir, 0, 0.96, 0, 0, fut);
-    const mos = new THREE.Mesh(new THREE.PlaneGeometry(0.54, 1.28), new THREE.MeshBasicMaterial({ map: texMosaique(), color: new THREE.Color(1.08, 1.08, 1.08) }));
-    mos.position.set(0, 1.215, 0.0355); fut.add(mos);
+    // (relecture : fût de 1,795, l'écran sur ses trois quarts hauts — r02 : 520 px d'écran sur 674 de fût —, de 0,44 à 1,76)
+    maille(boiteM(0.62, 1.795, 0.07), M.noir, 0, 0.8975, 0, 0, fut);
+    const mos = new THREE.Mesh(new THREE.PlaneGeometry(0.54, 1.32), new THREE.MeshBasicMaterial({ map: texMosaique(), color: new THREE.Color(1.08, 1.08, 1.08) }));
+    mos.position.set(0, 1.1, 0.0355); fut.add(mos);
     const logo = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.035), new THREE.MeshBasicMaterial({ color: 0x6d6f73 }));
-    logo.position.set(0, 0.45, 0.0356); fut.add(logo);
+    logo.position.set(0, 0.3, 0.0356); fut.add(logo);
     // (la boîte du socle, tournée avec lui : un objet tourné de rotation.y = θ a a = -θ ; le socle avance de 0,1 devant)
     C.ajouterBoiteOrientee(bx + Math.sin(th) * 0.1, -by + Math.cos(th) * 0.1, 0.31, 0.21, -th, { y1: 2 });
   }
@@ -264,22 +274,33 @@ export function poserMobilier(ch) {
   // (r02, photo 21 en pleine définition : sur sa face OUEST, l'affiche blanche aux dessins de couleur, de 1,48 à 2,12, et
   // l'orange dessous, de 1,0 à 1,45 ; sur sa face NORD, deux feuilles l'une sur l'autre — une crème en haut, une rouge
   // en bas —, près de l'angle nord-ouest ; la feuille verte unique du jeu n'y est pas)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheDessins(), roughness: 0.7 }), 0.44, 0.64, 9.704, 5.53, 1.8, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheOrange(), roughness: 0.7 }), 0.32, 0.45, 9.704, 5.53, 1.23, 'W');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e9dcc0', '#f8f3e6', 70), roughness: 0.7 }), 0.24, 0.44, 9.86, 5.836, 1.71, 'N');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c9443f', '#f4e4e0', 71), roughness: 0.7 }), 0.24, 0.42, 9.86, 5.836, 1.22, 'N');
+  // (Relecture du 11/10 : le pilier est en x 8,80-9,66 × y 5,59-6,02 — js/carte_ecole.js — ; sa face ouest n'a que 0,43 de
+  // large : l'affiche blanche, un A2 qui la remplit presque sur r02, fait 0,40 x 0,57)
+  const PO = { x: 8.8, xe: 9.66, yc: 5.805, yn: 6.02 };
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheDessins(), roughness: 0.7 }), 0.4, 0.57, PO.x - 0.006, PO.yc, 1.8, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheOrange(), roughness: 0.7 }), 0.3, 0.42, PO.x - 0.006, PO.yc, 1.23, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e9dcc0', '#f8f3e6', 70), roughness: 0.7 }), 0.24, 0.44, PO.x + 0.2, PO.yn + 0.006, 1.71, 'N');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c9443f', '#f4e4e0', 71), roughness: 0.7 }), 0.24, 0.42, PO.x + 0.2, PO.yn + 0.006, 1.22, 'N');
   // (10/10, VO q_0039-0050 : sa face EST, vers le hall — l'A3 bleu-gris au dessin d'écran d'ordinateur, de 1,5 à 1,9 m,
   // et l'A4 blanche à vignettes de photos dessous. La plaque « iris », l'annuaire et l'horloge qu'il portait sur sa face
   // sud sont sur la pile du hall : js/ecole_rdc_centre.js)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texEcranA3(), roughness: 0.7 }), 0.3, 0.42, 10.316, 5.53, 1.7, 'E');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texVignettes(), roughness: 0.7 }), 0.21, 0.297, 10.316, 5.53, 1.25, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texEcranA3(), roughness: 0.7 }), 0.3, 0.42, PO.xe + 0.006, PO.yc, 1.7, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texVignettes(), roughness: 0.7 }), 0.21, 0.297, PO.xe + 0.006, PO.yc, 1.25, 'E');
   // LES AFFICHES COLLÉES SUR LE VERRE (retour de Haythem du 11/10, r02 : « les affiches sont collées sur le verre » — elles
   // flottaient à 8 cm devant lui, au nu du mur). Sur la photo 21 en pleine définition, deux grandes affiches, l'une sur
   // l'autre, sur la moitié est du jour OUEST (c 6,65) : en haut, une blanche à titre rouge (0,42 x 0,48), en bas, une
   // blanche à vignettes de couleur (0,40 x 0,66), qui descend presque à l'appui ; le jour est (c 8,35) est nu. (Les A4 du
   // jeu, deux par jour, n'y sont pas.) Contre le verre, au milieu du mur : y 4,806 + 2 mm.
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheTitre(), roughness: 0.7 }), 0.42, 0.48, 6.95, ATT_YS + 0.008, 1.98, 'N');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheVignettesCouleur(), roughness: 0.7 }), 0.4, 0.66, 6.95, ATT_YS + 0.008, 1.36, 'N');
+  // (RELECTURE DU 11/10 : LES AFFICHES SONT SUR LE JOUR DU MILIEU. Le mur sud a TROIS jours — js/carte_ecole.js — : la
+  // photo 02, prise du bout est vers l'ouest, voit de près un jour à affiches et au loin un jour nu ; r02, prise du bout
+  // ouest vers l'est, voit AUSSI de près un jour à affiches et au loin un jour nu — et ce sont les mêmes affiches : la
+  // colonne est, une blanche à titre rouge sur une blanche aux six carrés noir, rouge, vert. Le jour à affiches est donc
+  // entre deux jours nus. Il en porte quatre, en deux colonnes (photo 02 agrandie) : à l'est, les deux de r02, de 1,79 à
+  // 2,25 et de 1,30 à 1,75 ; à l'ouest, deux A3, des carrés de couleur en haut, une bande de carrés sombres en bas)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheTitre(), roughness: 0.7 }), 0.42, 0.46, 7.41, ATT_YS + 0.008, 2.02, 'N');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheVignettesCouleur(), roughness: 0.7 }), 0.4, 0.45, 7.41, ATT_YS + 0.008, 1.525, 'N');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheVignettesCouleur(false), roughness: 0.7 }), 0.3, 0.42, 6.93, ATT_YS + 0.008, 1.92, 'N');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheVignettesCouleur(true), roughness: 0.7 }), 0.3, 0.42, 6.93, ATT_YS + 0.008, 1.43, 'N');
 
   // =====================================================================
   //  LE HALL OUEST (photo 06 ; plan V2, 11/10 — scratchpad iris_audit/plan_v2.md § 2.2 : la photo 06 rejouée au
@@ -541,19 +562,23 @@ function texAfficheTitre() {
     g.fillStyle = '#c8332c'; g.fillRect(16, h - 30, 70, 6);
   }, null, false, 4);
 }
-function texAfficheVignettesCouleur() {
-  return canvasTex(256, 422, (g, w, h) => {
+// (Relecture du 11/10, r02 et photo 02 agrandies : les six carrés de « PORTES OUVERTES » sont noir, rouge, vert pâle /
+// vert, noir, rouge — et non un arc-en-ciel ; l'affiche fait 0,40 x 0,45, d'où un canevas de 256 x 288. La variante
+// `sombre` est sa voisine de la colonne ouest, sur la photo 02 : une bande de carrés sombres sous un bloc de texte)
+function texAfficheVignettesCouleur(sombre = false) {
+  return canvasTex(256, 288, (g, w, h) => {
     g.fillStyle = '#fbfaf7'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#c8332c'; g.font = '800 20px "Segoe UI", Arial, sans-serif'; g.fillText('PORTES OUVERTES', 16, 40, w - 30);
-    g.fillStyle = '#4a4a4a'; g.fillRect(16, 54, 150, 6); g.fillRect(16, 66, 110, 6);
-    const c = [['#5aa35a', '#2e6b33'], ['#f08a24', '#b8561a'], ['#d6453a', '#8f241d'], ['#3d7ac9', '#1f4a86'], ['#e3c04a', '#a7841b'], ['#7fbf6a', '#3f7d33']];
+    g.fillStyle = sombre ? '#3c4a7a' : '#c8332c'; g.font = '800 19px "Segoe UI", Arial, sans-serif'; g.fillText(sombre ? 'PROGRAMME' : 'PORTES OUVERTES', 16, 30, w - 30);
+    g.fillStyle = '#4a4a4a'; g.fillRect(16, 40, 150, 5); g.fillRect(16, 50, 110, 5);
+    const c = sombre ? [['#2a2a2c', '#141416'], ['#3a3a3e', '#1c1c1f'], ['#2a2a2c', '#141416'], ['#77a35c', '#4e7a3a'], ['#2a2a2c', '#141416'], ['#d9473b', '#9c2a22']]
+      : [['#2a2a2c', '#141416'], ['#de4b3d', '#a5291f'], ['#9cc27a', '#6f9a52'], ['#6f9e52', '#466f33'], ['#2a2a2c', '#141416'], ['#e0503f', '#a8301f']];
     for (let i = 0; i < 6; i++) {
-      const x = 16 + (i % 3) * 77, y = 96 + Math.floor(i / 3) * 86, d = g.createLinearGradient(0, y, 0, y + 74);
-      d.addColorStop(0, c[i][0]); d.addColorStop(1, c[i][1]); g.fillStyle = d; g.fillRect(x, y, 70, 74);
-      g.fillStyle = 'rgba(255,240,225,0.75)'; g.beginPath(); g.arc(x + 35, y + 30, 11, 0, 7); g.fill();
+      const x = 16 + (i % 3) * 77, y = 68 + Math.floor(i / 3) * 62, d = g.createLinearGradient(0, y, 0, y + 54);
+      d.addColorStop(0, c[i][0]); d.addColorStop(1, c[i][1]); g.fillStyle = d; g.fillRect(x, y, 70, 54);
+      g.fillStyle = 'rgba(255,240,225,0.55)'; g.beginPath(); g.arc(x + 35, y + 24, 9, 0, 7); g.fill();
     }
-    g.fillStyle = '#5a5a5a'; for (let l = 0; l < 6; l++) g.fillRect(16, 290 + l * 13, (0.5 + (l % 3) * 0.15) * w, 5);
-    for (let i = 0; i < 4; i++) { g.fillStyle = ['#1f1f1f', '#c8332c', '#3d7ac9', '#5aa35a'][i]; g.fillRect(16 + i * 58, h - 34, 44, 18); }
+    g.fillStyle = '#5a5a5a'; for (let l = 0; l < 5; l++) g.fillRect(16, 204 + l * 12, (0.5 + (l % 3) * 0.15) * w, 4);
+    for (let i = 0; i < 4; i++) { g.fillStyle = ['#1f1f1f', '#c8332c', '#3d7ac9', '#5aa35a'][i]; g.fillRect(16 + i * 58, h - 22, 44, 12); }
   }, null, false, 4);
 }
 // LES BROCHURES du présentoir (photos 01, 21) : des couvertures de magazine — fond blanc ou clair, une grande photo aux
