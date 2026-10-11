@@ -686,7 +686,10 @@ function construireMurs(ch) {
   // Plus de porte du bureau sur ce mur : le pan de 0,9 m entre son jour et l'angle est nu sur la photo 01.
   // X_B, L'ANGLE NORD-EST DU BUREAU (la ligne de son mur est, au nord) : 11,55, et non 11,8 comme le plan V2 — à la pose
   // résolue de la photo 03, (11,47 ; 5,68 ; cap 134), l'angle en x 11,875 tombait à 153°, dans l'image, en grand mur blanc à
-  // 0,9 m ; la photo n'y montre que la porte vitrée et le hall : l'angle est hors du cadre (au-delà de 165,7°, x ≤ 11,675)
+  // 0,9 m ; la photo n'y montre que la porte vitrée et le hall : l'angle est hors du cadre (au-delà de 165,7°, x ≤ 11,675).
+  // (Relecture du 11/10 : de la pose de la photo 01, dans le C01 du lot D, ce jour est caché derrière le mur ouest du C01
+  // et la pile masque la porte vitrée, quand la photo voit le jour juste à gauche de ce mur et la porte avec le hall
+  // derrière elle : c'est l'écart entre le C01 et la pile du plan V2 qui est en cause, pas l'angle — gardé)
   const YS = ATT.ys, X_B = 11.55, JOURS_S = [6.65, 8.35], JOUR_B = { c: 10.42, l: 0.6, bas: 1.05, h: 2.5 };
   // LA PORTE DE LA Si 0.1 (IMAGINÉE) : c 9,5, entre le jour c 8,35 et le mur du bureau — le seul pan du mur sud que ni la
   // photo 02 (le trumeau ouest est nu) ni la photo 21 ne montrent : la borne est devant. Grise, gonds à l'est, elle s'ouvre
@@ -763,7 +766,10 @@ function construireMurs(ch) {
   // (09/10/2026 : le pilier gris est DÉTACHÉ du mur sud — photo 21 : planté dans la salle, le fond visible de part et
   // d'autre ; photo 02 : il frôle le bord gauche de l'image. 11/10 : DY_A, x 10,3-10,9 × y 5,55-6,15. DOUTE : sur la
   // photo 21, ses arêtes, le radiateur et les affichettes du fond ne se calent ensemble, appareil dans la salle, que si
-  // le pilier est 0,6-0,7 m plus au sud — ou si les affichettes de la photo 21 ne sont pas celles de la photo 03)
+  // le pilier est 0,6-0,7 m plus au sud — ou si les affichettes de la photo 21 ne sont pas celles de la photo 03. Relecture
+  // du 11/10 : à la pose de la photo 21 résolue sur ses deux jours dépolis et le bout du mur jaune, (4,94 ; 7,33), h 1,45,
+  // cap 110,7, les jours, le mur jaune et le présentoir tombent à leur place, mais le pilier et la borne 0,7 m trop au
+  // nord ; or la photo 02 ne laisse le pilier au bord gauche de son cadre que là où il est : gardé, le doute demeure)
   pilier(10.3, 9.75 + DY_A, 10.9, 10.35 + DY_A, M.pilier);
   // ---- LE HALL D'ENTRÉE ----
   // (09/10, photo 24 : la porte du mur nord n'est pas en x 17 mais en face de la porte 6 — 1,5 vantail, x 14,70-16,10 ;
