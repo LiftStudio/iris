@@ -70,6 +70,12 @@ const H_DALLE = 3.25;            // le dessous de la dalle du 1er étage (les cl
 const H_RDC = 3.5;               // d'un plancher à l'autre au rez-de-chaussée
 const H_CAGE = 6.4;              // le plafond de la cage d'escalier au-dessus du palier du 1er étage
 const EP = 0.15;                 // les cloisons
+// ---- LE PLAN V2 (11/10/2026 : scratchpad iris_audit/plan_v2.md § 1.1 et § 2.1) : le bloc ouest du rez-de-chaussée était
+// ≈ 4,2 m trop au nord (retour de Haythem du 10/10 : « la porte n'est pas aussi loin » — photo 06 rejouée : 0,97 m de la
+// paroi vitrée du passage à la porte grise, le jeu en mettait 4,1). Il revient vers la rue, de trois décalages :
+const DY_A = -4.20;              // la salle d'attente et son contenu (son mur sud devient la ligne y 4,8 du bureau B)
+const DY_S = -4.675;             // la cage et l'escalier principal (rez-de-chaussée et 1er), le C05 : portes en y 9,0
+const DY_SS = -4.09;             // l'ouest du -1, accroché à la porte grise (c 9,575 -> 5,485)
 // ---- l'escalier (photos 06, 20, 04) ----
 // (la volée 1 est la plus large : par le vantail ouvert, côté ouest, on voit ses premières marches et son garde-corps,
 // photo 20 — son bord intérieur passe donc à l'ouest du milieu de la porte)
@@ -84,8 +90,8 @@ const RECT = { x0: -0.6, x1: 20.4, y0: -0.6, y1: 25.0 };
 
 // LA SALLE D'ATTENTE RECULE VERS LA RUE (11/10, plan V2 — scratchpad iris_audit/plan_v2.md § 1.1, § 2.1 et § 2.2 ; retours
 // de Haythem du 10/10 : « trop compressé », « la porte n'est pas aussi loin ») : son mur sud est le mur nord du bureau de
-// direction (ligne y 4,8), son bout est la face ouest de la pile ; tout ce qui est dedans suit d'un bloc
-const DY_A = -4.2;
+// direction (ligne y 4,8), son bout est la face ouest de la pile ; tout ce qui est dedans suit d'un bloc (DY_A, plus haut :
+// la même déclaration, mot pour mot, que celle du lot B : la fusion n'en garde qu'une)
 const ATT = { ys: 9.0 + DY_A, yn: 12.075 + DY_A };        // les lignes du mur sud (4,8) et du mur safran (7,875)
 
 // =====================================================================
