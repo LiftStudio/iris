@@ -78,10 +78,9 @@ const RECUL_SEUIL = 1.1;
 //   - LE CAP ASSISTÉ (ASSIST_*) : au clavier seul, au joystick tactile ou à la manette, quand on ne tourne pas la caméra
 //     soi-même (depuis 0,8 s ; 2 s quand la souris est capturée) et qu'elle est à l'étroit (moins de 1,8 m de recul libre)
 //     pendant qu'il marche, elle se range derrière sa marche — dans l'axe de la volée, du couloir, du palier —, à 90°/s,
-//     180°/s collée, en accélérant et
-//     en freinant ; la direction tenue au clavier ou au pouce (sauf vers l'avant) garde son cap dans le monde tant qu'on
-//     la tient — on ne repart pas dans le mur parce que la caméra a tourné — et le rend quand on la lâche, ou d'autant
-//     qu'on la tourne vers la caméra ;
+//     180°/s collée, en accélérant et en freinant ; la direction tenue au clavier ou au pouce (sauf vers l'avant) garde
+//     son cap dans le monde tant qu'on la tient — on ne repart pas dans le mur parce que la caméra a tourné — et le rend
+//     quand on la lâche, ou d'autant qu'on la tourne vers la caméra ;
 //   - LE SEUIL SUIVI (SEUIL_FONTE) : au passage d'une porte, elle garde son recul et passe la porte derrière lui, au lieu
 //     de bondir de 2,6 à 1,1 m en 0,1 s ; ce surplus fond de 1,2 m/s (plus vite s'il court) jusqu'au RECUL_SEUIL ; la
 //     pièce la retient en douceur (PIECE_*), seuls les murs l'arrêtent net ; et elle se compte de proche en proche : la
@@ -91,9 +90,11 @@ const RECUL_SEUIL = 1.1;
 //     plus), sinon elle se rapproche sur sa ligne — et le regard saute avec elle au lieu de balayer l'image ;
 //   - (relecture) LA VUE SUR LUI (_voitTete) : de sa place, elle voit sa TÊTE — l'os de l'avatar, penché en courant —, pas
 //     seulement l'épaule d'où part son segment, sinon elle se rapproche sur sa ligne ; et cette tête reste à 78 % du
-//     demi-champ (_dansLImage). Compté sur l'os (les volées des 4 niveaux, montée et descente) : Haythem hors de l'image au
-//     joystick en courant de 24 à 1 % des images (26 % avant le lot), en marchant de 8 à 0,2 %, au clavier seul de 22 à
-//     0,7 %, clavier et souris de 2,6 à 0,3 % (1,5 % avant le lot : le seuil suivi le cachait derrière les jambages).
+//     demi-champ (_dansLImage). Compté sur l'os (les 22 parcours du banc, 1280 × 720) : Haythem hors de l'image ou caché
+//     au joystick en courant de 17 à 0,5 % des images (21 % avant le lot), en marchant de 5,6 à 0,3 %, au clavier seul de
+//     16 à 0,7 %, clavier et souris de 1,8 à 0,3 % (1,4 % avant le lot : le seuil suivi le cachait derrière les
+//     jambages) ; la caméra à moins de 1 m et la demi-transparence restent celles du lot (au joystick, 22 et 7 % ; 45 et
+//     30 % avant le lot).
 // Rejoué (banc du lot X1 : 22 parcours, volées et passages étroits des 4 niveaux, aller et retour, × 5 façons de jouer) :
 // au joystick en marchant, la caméra à moins de 1 m de lui passe de 31 à 12 % des images, Haythem translucide de 21 à 3 %
 // (dans les volées : 45 à 18 %, 33 à 4,5 %) ; au clavier seul, de 38 à 19 % et de 26 à 6 % ; clavier et souris, de 8 à 5 %
