@@ -347,7 +347,9 @@ export function poserRue(ch) {
   // (photos 08, 15 : l'immeuble du coin est en pierre claire, à balcons et toit mansardé ; les volets verts du premier jet
   // n'y sont pas)
   const cremeFond = std({ map: texFacade({ fond: '#e4dccb', cadre: '#f3efe6', verre: '#5a6672', travee: 2.1, etage: 2.9, balcon: true, joints: true, encadrement: '#ece5d6', rideaux: true, graine: 6 }), roughness: 0.85 });
-  facade(X0 - 6, -0.4, -0.3, 14, 19, creme);
+  // (intégration du 11/10, plan V2 : arrêté en y 12,45, au sud de l'aile A — il descendait jusqu'en y 14 et entrait de 1,25 m
+  // dans la courette ouest, js/ecole_pieces.js courette : par les fenêtres de la Si 0.2, son fond crème bouchait la cour)
+  facade(X0 - 6, -0.4, -0.3, 12.45, 19, creme);
   rdc(-7.5, -0.3, -0.4, 3.4, { fond: '#ddd5c6', socle: '#b9b1a3', joints: true, graine: 10, elements: [
     { t: 'porte', x0: -6.5, x1: -5.3, h: 2.9, bois: '#6b4226', arc: true, imposte: true, vantaux: 2, pierre: '#e6dfd1' },
     { t: 'fenetre', x0: -4.6, x1: -3.6, bas: 1.0, h: 2.6, barreaux: '#1c1c1c' },

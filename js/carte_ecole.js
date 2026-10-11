@@ -83,7 +83,11 @@ const Y_ESC = 13.675 + DY_S;     // 9,0
 // (la volée 1 est la plus large : par le vantail ouvert, côté ouest, on voit ses premières marches et son garde-corps,
 // photo 20 — son bord intérieur passe donc à l'ouest du milieu de la porte)
 // (plan V2 : toute la cage recule de DY_S — la première contremarche de 14,2 à 9,525 ; l'intérieur ne change pas)
-const ESC = { xE0: 3.02, xE1: 4.6, xO0: 1.75, xO1: 2.9, y0: 14.2 + DY_S, giron: 0.28, haut: 0.175, n: 10 };
+// (Intégration du 11/10 : le mur est de la cage passe de la ligne 4,675 à la ligne 4,525, et la volée 1 s'arrête à son
+// nu, x 4,45 — 1,43 m au lieu de 1,58. Sur la photo 23 rejouée à sa pose, l'arête du jambage est des portes de
+// l'escalier est le nu ouest du C05 (x ≈ 4,50) : il n'y a pas de trumeau entre les portes et le C05 ; le trumeau de
+// 0,30 m du jeu cachait la porte bleue — doute 1 de la relecture du lot D, variante pl_23_trumeau de son constructeur)
+const ESC = { xE0: 3.02, xE1: 4.45, xO0: 1.75, xO1: 2.9, y0: 14.2 + DY_S, giron: 0.28, haut: 0.175, n: 10 };
 ESC.yPalier = ESC.y0 + (ESC.n - 1) * ESC.giron;      // 12,045 : le bord du palier intermédiaire
 ESC.hPalier = ESC.n * ESC.haut;                     // 1,75
 ESC.yFond = 18.6 + DY_S;                            // 13,925 : le nu nord de la cage (le fond du palier intermédiaire)
@@ -853,8 +857,10 @@ function construireMurs(ch) {
   // ---- L'ESCALIER : la cage (jusqu'au plafond de l'étage), les portes coupe-feu ----
   // (plan V2 : tout recule de DY_S. Le mur des portes est sur la ligne y 9,0 ; plus de trumeau entre les portes et le C05
   // — l'ouverture, élargie, va jusqu'au jambage, x 4,45, et le C05 commence au mur est de la cage)
-  ch.mur({ de: [1.6, 13.675 + DY_S], a: [4.75, 13.675 + DY_S], mats: B, plinthes: ['S', 'N'], ouvertures: [{ c: 3.45, l: 2.0, h: 2.1 }] });
-  ch.mur({ de: [4.675, 13.6 + DY_S], a: [4.675, 18.75 + DY_S], h: H_CAGE, mats: B, plinthes: ['E'] });
+  // (intégration du 11/10 : le mur est de la cage sur la ligne 4,525, le mur des portes arrêté à son nu est, x 4,6 — le C05
+  // commence au jambage des portes, photo 23)
+  ch.mur({ de: [1.6, 13.675 + DY_S], a: [4.6, 13.675 + DY_S], mats: B, plinthes: ['S', 'N'], ouvertures: [{ c: 3.45, l: 2.0, h: 2.1 }] });
+  ch.mur({ de: [4.525, 13.6 + DY_S], a: [4.525, 18.75 + DY_S], h: H_CAGE, mats: B, plinthes: ['E'] });
   ch.mur({ de: [1.675, 13.6 + DY_S], a: [1.675, 18.75 + DY_S], h: H_CAGE, mats: B });
   // le mur nord de la cage (ligne y 14,0 ; derrière, la salle David Clark : sa face nord est dans la salle — 09/10)
   ch.mur({ de: [1.6, 18.675 + DY_S], a: [4.75, 18.675 + DY_S], h: H_CAGE, mats: B, plinthes: ['S', 'N'] });
@@ -865,7 +871,7 @@ function construireMurs(ch) {
   // au 1er étage : le mur sud du palier (ligne y 7,85, avec sa double porte coupe-feu) et ses retours
   ch.mur({ de: [1.6, 12.525 + DY_S], a: [4.75, 12.525 + DY_S], base: H_DALLE, h: H_CAGE, mats: B, ouvertures: [{ c: 3.5, l: 1.8, bas: 2 * ESC.hPalier, h: 2 * ESC.hPalier + 2.1 }] });
   ch.mur({ de: [1.675, 12.45 + DY_S], a: [1.675, 13.6 + DY_S], base: H_DALLE, h: H_CAGE, mats: B });
-  ch.mur({ de: [4.675, 12.45 + DY_S], a: [4.675, 13.6 + DY_S], base: H_DALLE, h: H_CAGE, mats: B });
+  ch.mur({ de: [4.525, 12.45 + DY_S], a: [4.525, 13.6 + DY_S], base: H_DALLE, h: H_CAGE, mats: B });
   // (ouverte à demeure, ses deux vantaux rabattus côté étage, comme celle du hall ouest : le 1er étage, js/ecole_etage1.js)
   ch.porte('x', 12.525 + DY_S, 3.5, { l: 1.8, h: 2.1, base: 2 * ESC.hPalier, modele: 'grise2', feu: true, etat: 'ouverte', ouverts: [true, true], angle: 1.6, cote: 'S', notices: 1, nom: '1er étage' });
   // LES PORTES COUPE-FEU DE L'ESCALIER (photos 04, 06, 20) : deux vantaux de 1,0 m, x 2,45-4,45 (plan V2 ; le jeu avait
@@ -993,7 +999,7 @@ export function construireCarte(scene, renderer = null) {
   // diffuseur d'alarme y retombe à 4 cm de sa place ; la photo 20, prise devant les portes, ne le voit pas)
   const dome = maille(new THREE.SphereGeometry(0.06, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.boitier, 4.75, 2.3, -7.75, 0, ch.decor, { ombre: false });
   dome.userData.horsAOSol = true;
-  ch.boite(4.53, 8.855, 4.67, 8.925, 2.14, 2.26, M.boitier, { ombre: false });
+  ch.boite(4.46, 8.855, 4.6, 8.925, 2.14, 2.26, M.boitier, { ombre: false });
   ch.boite(4.9, ATT.ys + 0.075, 5.0, ATT.ys + 0.11, 1.25, 1.35, M.rougeEtiquette, { ombre: false });   // (sur le mur sud : DY_A)
 
   // ---- les plafonds ----
@@ -1089,7 +1095,7 @@ export function construireCarte(scene, renderer = null) {
   // (pas dans la lumière cuite du rez-de-chaussée : au-dessus de la dalle du palier, il ne l'éclaire pas — décalé, il
   // peignait une flaque au pied des portes de l'escalier, dans le hall)
   ch.opale(3.2, 13.4 + DY_S, H_CAGE, 'palier1', { r: 0.18, base: 2 * ESC.hPalier, cuire: false });
-  ch.opale(4.6, 15.5 + DY_S, 2.95, 'escalier', { r: 0.15, mur: 'W', cuire: false });
+  ch.opale(4.45, 15.5 + DY_S, 2.95, 'escalier', { r: 0.15, mur: 'W', cuire: false });
   // (relecture du 11/10 : le bloc de sortie de la photo 21 n'est pas suspendu près du pilier gris — ni elle, ni la VO
   // q_0038-0046 n'en montrent là ; il est fixé en haut du mur du fond, la face ouest de la pile, au-dessus de l'écart entre
   // le présentoir et le radiateur, sous le plafond)

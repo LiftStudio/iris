@@ -147,13 +147,17 @@ export function poserMobilier(ch) {
   // pilier gris et le mur sud. (11/10 : DY_A, et x 9,7 -> 10,05 — le mur sud est maintenant d'un seul tenant et la porte
   // de la Si 0.1 s'ouvre derrière elle, x 9,1-9,9 : il fallait 0,6 m pour passer ; sur la photo 21, son bord gauche frôle
   // toujours le pilier)
-  const borne = new THREE.Group(); borne.position.set(10.05, 0, -A(9.42)); borne.rotation.y = -Math.PI * 0.62; ch.decor.add(borne);
+  // (Intégration du 11/10 : x 10,05 -> 10,2, et son socle en boîte TOURNÉE — en boîte droite, de x 9,72 à 10,38 contre le
+  // mur sud, il ne laissait que 2 cm de jeu pour viser la porte de la Si 0.1 : le remplissage au pas de 5 cm ne la
+  // trouvait pas, la salle était inaccessible. Maintenant 0,75 m entre le jambage ouest de la porte et le coin de la
+  // borne ; son coin nord-est passe au sud du pilier gris, sans le toucher)
+  const borne = new THREE.Group(); borne.position.set(10.2, 0, -A(9.42)); borne.rotation.y = -Math.PI * 0.62; ch.decor.add(borne);
   maille(boiteM(0.6, 0.02, 0.5), M.noir, 0, 0.01, 0, 0, borne);
   maille(boiteM(0.6, 1.95, 0.08), M.noir, 0, 0.995, 0, 0, borne);
   const mos = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 1.6), new THREE.MeshBasicMaterial({ map: texMosaique(), color: new THREE.Color(1.1, 1.1, 1.1) }));
   mos.position.set(0, 1.05, 0.041); borne.add(mos);
-  // (le socle de 0,6 x 0,5 tourné de 112° : ± 0,33 m en x, ± 0,36 en y)
-  C.ajouterBoite(9.72, -A(9.06), 10.38, -A(9.78), { y1: 2 });
+  // (le socle de 0,6 x 0,5 tourné de 112° : sa boîte tournée — un objet tourné de rotation.y = θ a a = -θ)
+  C.ajouterBoiteOrientee(10.2, -A(9.42), 0.3, 0.25, Math.PI * 0.62, { y1: 2 });
   // LES PRÉSENTOIRS à brochures noirs, tournés vers l'ouest :
   //  - l'un adossé au bout nord de la face ouest de la pile (11/10, plan V2 : photo 21, juste à gauche du radiateur — il
   //    était contre le mur x 13,5 du jeu d'avant, en y 11,3) ;

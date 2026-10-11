@@ -83,7 +83,7 @@ const Y_COUR = 8.925;               // la cloison nord du couloir
 const DY_S = -4.675;
 // (x : les nus ouest et est de la cage ; y0 : le bord du palier du 1er, 9,525 — au nord, les volées ; yFond : son nu
 // nord, 13,925)
-const E = { xO0: 1.75, xE1: 4.6, y0: 14.2 + DY_S, yFond: 18.6 + DY_S };
+const E = { xO0: 1.75, xE1: 4.45, y0: 14.2 + DY_S, yFond: 18.6 + DY_S };   // (intégration : xE1 au nu du mur est, ligne 4,525)
 // ---- la façade (js/carte_ecole.js construireFacade) : une fenêtre par travée de 1,65 m ----
 const TRAVEE = 1.65;
 const centreTravee = (k) => 0.825 + (k - 1) * TRAVEE;
@@ -968,8 +968,9 @@ export function poserEtage1(ch, renderer = null) {
     // (vérification du 10/10 : la cage est, elle aussi, à partir du rez-de-chaussée — sur le palier du -1 et la volée B,
     // sous la paillasse de la volée 1 et le palier intermédiaire, l'étage entier était dessiné pour rien : 352 objets)
     // (plan V2 : la cage de l'escalier principal, décalée de DY_S, de y 7,5 à 14,3 — la caméra devant ses portes et au-dessus
-    // des volées, jusqu'au palier du 1er)
-    const cage = (cam.x > 1.4 && cam.x < 5.0 && cam.z < -7.5 && cam.z > -14.3 && cam.y > -0.3) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7 && cam.y > -0.3);
+    // des volées, jusqu'au palier du 1er ; intégration du 11/10 : sous le plafond de la cage, 6,40 — au-dessus, c'est la
+    // salle 1 du 2e, et le 1er restait affiché sous elle)
+    const cage = (cam.x > 1.4 && cam.x < 5.0 && cam.z < -7.5 && cam.z > -14.3 && cam.y > -0.3 && cam.y < 6.4) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7 && cam.y > -0.3);
     const au2e = cam.y > 7.0 && u.y > 6.0 && cam.z < -0.05 && !cage && !(cam.x > 13.4 && cam.z < -6.45 && cam.z > -12.75);
     const vis = (cage || cam.y > 2.7 || cam.z > -0.05 || u.y > 2.0) && !au2e;
     if (vis !== groupe.visible) groupe.visible = vis;
