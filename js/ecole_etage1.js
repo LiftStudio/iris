@@ -23,8 +23,9 @@
 //   l'espace pause                       x 4,75-13,49 y 5,0-12,9 derrière la porte du palier est (VO q_0180-0219) ; au
 //                                        nord, la porte de la salle Robert Kahn, Si 1.4 (js/ecole_kahn.js) ; au sud-est,
 //                                        le recoin et la seconde porte de la salle ; en L autour du local fermé du coin
-//                                        nord-ouest (x 4,75-6,94 y 8,66-12,84), la niche des distributeurs sur sa face est
-//                                        (js/ecole_etage1_pause.js)
+//                                        nord-ouest (relecture V2 : x 4,75-5,21 y 7,41-12,84), la niche des distributeurs
+//                                        sur sa face est ; les poteaux en x 6,15 / 7,4 / 8,65, la porte de la Si 1.4 en
+//                                        x 10,05-11,0 (js/ecole_etage1_pause.js)
 //   le couloir sombre                    x 0-4,6     y 5,01-6,79 derrière la porte du fond de l'espace pause
 //   le palier d'étage ouest              x 1,75-4,6  y 6,79-7,775 devant la double porte de l'escalier principal (ligne
 //                                        7,85, js/carte_ecole.js), ouverte

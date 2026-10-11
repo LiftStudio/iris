@@ -74,8 +74,13 @@ const H_PLAT = 0.74;                 // le dessus des plateaux, au-dessus du pla
 // 0,5 m au nord. La porte (x 11,9-12,85) et le mur orange ne bougent pas : la salle glisse à l'ouest, x 6,9-13,3, la porte
 // à 0,45 m de son mur est, et s'arrête au fond du bâtiment, y 23,70 — 6,40 x 10,74, dans la marge de ± 1,2 m du relevé.
 // Le toit, les lanterneaux et ce qui tient au mur du fond suivent : DL, le raccourcissement)
+// (RELECTURE V2, 11/10 — l'option (a) mettait la porte à 0,45 m du mur est : par elle, on tombait sur la rangée est,
+// quand VO q_0221 montre l'allée est dans son axe et le mur est à 2 m à sa droite. Le côté nord de l'espace pause, recalé
+// sur le mur des jours descendu (js/ecole_etage1_pause.js, DXN), descend la porte à x 10,05-11,0 : c'est l'option (b) —
+// la porte reprend sa place de VO q_0221, à 4,40 m du mur ouest, et la salle tient dans le gabarit IGN, x 6,125-12,525 ×
+// y 12,96-23,70)
 const LARG = 6.4, LONG = 10.74;      // le nu intérieur
-const U_PORTE = 5.475, L_PORTE = 0.95;
+const U_PORTE = 4.4, L_PORTE = 0.95;
 const DL = LONG - 11.3;              // (−0,56 : le mur du fond avance ; ce qui y tient le suit)
 // le renfoncement nord du palier est (js/ecole_est.js poserPalierEst) : la face ouest de son mur x 13,2, la face nord du
 // mur nord de la cage (y 12,525) ; la façade arrière des étages, au-dessus (le 2e s'arrête là : son nu extérieur,

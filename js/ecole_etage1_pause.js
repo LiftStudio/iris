@@ -54,16 +54,17 @@
 //   3,2-3,4 m à gauche de l'appareil). L'espace pause gagne 2 m : le long des jours, ce n'est plus un couloir de 0,78 m
 //   mais la grande salle de la vidéo ; la S 1.3 perd 2 m (6,7 → 4,7 de profondeur, plafond à 2,50 — VO 2,48).
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; plancher du 1er à 3,50 m) :
-//   l'espace pause (en L)     x 4,75-13,49  y 5,01-8,54 (la bande sud, jusqu'au mur du fond) ; x 7,36-13,49  y 8,54-12,0
-//                             (+ l'alcôve jusqu'au mur orange, y 12,84, de x 7,06 à 13,28)
+//   l'espace pause (en L)     x 4,75-13,49  y 5,01-7,29 (la bande sud, jusqu'au mur du fond) ; x 5,51-13,49  y 7,29-12,0
+//                             (+ l'alcôve jusqu'au mur orange, y 12,84, de x 5,21 à 13,28)
 //     le mur du fond          x 4,675 (face est 4,75) : porte à 1,5 vantail y 5,16-6,61 vers le couloir sombre (VO q_0183,
-//                             q_0195 : contre l'angle des jours), notice A3 et déclencheur ; 1,94 m de mur jusqu'au local
-//     le local du coin N-O    x 4,75-7,06  y 8,66-12,96, fermé (IMAGINÉ dedans) ; sur sa face est (x 7,06), la niche des
-//                             distributeurs y 8,75-10,85 (habillage jusqu'aux dalles, saillie 0,30 : nu x 7,36)
-//     les poteaux             x 8,0 / 9,25 / 10,5 sur y 12,0 (42 x 42 cm), murets lilas du local au 3e (le 1er, court)
+//                             q_0195 : contre l'angle des jours), notice A3 et déclencheur ; 0,68 m de mur jusqu'au local
+//     le local du coin N-O    x 4,75-5,21  y 7,41-12,96, fermé ; sur sa face est (x 5,21), la niche des distributeurs
+//                             y 7,5-11,27 (habillage jusqu'aux dalles, saillie 0,30 : nu x 5,51), le meuble bas brun
+//     les poteaux             x 6,15 / 7,4 / 8,65 sur y 12,0 (42 x 42 cm), murets lilas du local au 3e (le 1er, court)
 //     le mur orange           y 12,9 (nu sud 12,84, nu NORD 12,96 : Y_MUR_ORANGE, lu par le lot 6) : crème du local à la
-//                             porte de service (x 7,14-7,86, fermée), orange au-delà ; la porte de la Si 1.4 x 11,9-12,85,
+//                             porte de service (x 5,29-6,01, fermée), orange au-delà ; la porte de la Si 1.4 x 10,05-11,0,
 //                             gonds à l'est, ouverte vers le sud
+//     (relecture V2 du 11/10 : le côté nord recalé sur le mur des jours descendu — DXN, plus bas)
 //     le mur est              x 13,55 (face ouest 13,49), sa retombée de 45 cm : un pan plein de y 5,01 à 7,0 (VO
 //                             q_0268-0272 : le déclencheur rouge, la notice A3), la porte du palier (js/ecole_est.js), puis
 //                             jusqu'au renfoncement nord du palier (y 10,75) ; au nord, le mur du fond de ce renfoncement,
@@ -74,7 +75,7 @@
 //
 //   poserPause1(ch, ctx) -> { zones, sols }        ctx : les outils et listes de l'étage (js/ecole_etage1.js)
 //   Y_MUR_ORANGE, SI14                              pour la salle Robert Kahn (lot 6) : son mur sud est le nôtre — nu nord
-//                                                   12,96, blanc —, sa porte x 11,9-12,85 ; quand elle est posée :
+//                                                   12,96, blanc —, sa porte x 10,05-11,0 ; quand elle est posée :
 //                                                   SI14.provisoires (une forme : `off = true` ; un fond : `visible = false`)
 // VÉRIFIÉ EN JOUANT (10/10) : on entre par le palier est, on longe les jours jusqu'à la porte du fond et le couloir sombre,
 // jusqu'au palier d'étage ouest et l'escalier ; on entre dans la salle par sa porte, on gagne l'allée centrale et le
@@ -122,12 +123,22 @@ const XR = 11.43, YR = 3.45;        // le recoin : l'axe de son mur ouest, de so
 const XK = 13.34, YK = 10.825;
 // (relecture 10/10 — LE PLAN EN L, voir l'en-tête : les trois poteaux serrés, au pas de 1,25, le 3e à 1,2 m de la porte
 // de la Si 1.4 ; le local fermé du coin nord-ouest et, sur sa face est, la niche des distributeurs, à 0,75 m du 1er)
-const POTEAUX = [8.0, 9.25, 10.5], DP = 0.21;   // (42 x 42 cm)
-// (V2 : la face sud du local à 8,6 — VO q_0195, entre la porte du fond et l'habillage des distributeurs, environ une
-// fois et demie la largeur de la porte de mur, 2,1 m ; il n'en restait que 0,77)
-const XB = 7.0, YB = 8.6;                       // le local du coin nord-ouest : l'axe de sa face est, de sa face sud (ep 0,12)
+// (relecture V2 du 11/10 — LE CÔTÉ NORD RECALÉ SUR LE MUR DES JOURS DESCENDU : il glisse tout entier de DXN = −1,85 vers
+// l'ouest. La pose de VO q_0183 tirée du mur du fond, de la porte du fond et des jours V2 seuls — 12 points, 4,4 px —
+// met la sketchnote du 3e poteau en x 8,37-8,9 (le plan V2 la mettait hors de l'image, à 763 px pour 587), l'orange vu
+// entre le 2e et le 3e là où le jeu le met avec DXN, et etage1.md § 2-A5 trouvait déjà (8,4-8,8 ; 11,1-11,35) ; les poses
+// de q_0183 et de q_0195, tirées chacune du seul côté sud, posent le pied des machines en x 5,36-5,71 (au lieu de 7,36) —
+// exactement le nu de la niche une fois le groupe glissé. La porte de la Si 1.4 suit : x 10,05-11,0, ce que lisait
+// etage1.md § 5 (b) — la salle Robert Kahn garde sa porte à 4,40 m de son mur ouest (VO q_0221 : l'allée est dans
+// l'axe de la porte) et tient dans le gabarit IGN, x 6,125-12,525)
+const DXN = -1.85;
+const POTEAUX = [8.0 + DXN, 9.25 + DXN, 10.5 + DXN], DP = 0.21;   // (42 x 42 cm)
+// (V2 : la face sud du local — relecture V2 : les poses de q_0183 et de q_0195, chacune tirée du seul côté sud, mettent
+// le bord gauche de la machine à café en y 7,60 et 7,62 : l'habillage commence 0,9 m après le semi-fixe, et non 2,1 m —
+// q_0195, le mur des affichettes ne fait que 1,8 fois la largeur du semi-fixe —, comme sur master)
+const XB = 7.0 + DXN, YB = 7.35;                // le local du coin nord-ouest : l'axe de sa face est, de sa face sud (ep 0,12)
 const XN = XB + 0.06 + 0.3;                     // le nu de l'habillage des distributeurs (saillie 0,30)
-const PA = { c: 7.5, l: 0.72 };                 // la porte de service du fond de l'alcôve, entre le local et le 1er poteau
+const PA = { c: 7.5 + DXN, l: 0.72 };           // la porte de service du fond de l'alcôve, entre le local et le 1er poteau
 const JOURS = [9.075, 7.425, 5.775];             // les trois jours dépolis (travées 6, 5, 4)
 const PORTE_S13 = { c: 10.905, l: 0.93 };        // la porte de la salle (travée 7)
 // les jours dépolis : appui et linteau ; le haut de l'imposte de la porte de la salle (relecture 10/10 : VO f_67,4 s, vus
@@ -140,7 +151,7 @@ const centreTravee = (k) => 0.825 + (k - 1) * TRAVEE;
 // sa porte, et ce qui la ferme en attendant la salle (une forme du monde solide et un fond sombre : `off = true` et
 // `visible = false` quand la salle est posée)
 export const Y_MUR_ORANGE = YO + 0.06;
-export const SI14 = { x0: 11.9, x1: 12.85, y: YO, provisoires: [] };
+export const SI14 = { x0: 11.9 + DXN, x1: 12.85 + DXN, y: YO, provisoires: [] };
 
 // =====================================================================
 //  LES TEXTURES (dessinées : aucun fichier de plus à charger)
@@ -581,9 +592,11 @@ export function poserPause1(ch, ctx) {
   ch.plafond(11.49, YR + 0.06, 13.49, yS1, HP, 'dalles');
   B(13.04, yS1, 13.49, yK0, HP - 0.3, HP, M.platre, { ombre: false });
   C.plafond(13.04, -yK0, 13.49, -yS1, HP - 0.3);
-  for (const [x, y] of [[5.9, 6.4], [7.7, 6.4], [9.5, 6.4], [11.3, 6.4], [8.6, 8.6], [10.4, 8.6], [12.2, 8.6], [8.3, 10.8], [10.1, 10.8], [11.9, 10.8],
-    [12.45, 4.25], [12.5, 12.35], [9.6, 12.4]]) spot(x, y, HP, 'e1pause');
-  maille(new THREE.CylinderGeometry(0.055, 0.06, 0.04, 20), M.boitier, 11.9, HP - 0.02, -12.4, 0, groupe, { ombre: false });
+  // (relecture V2 : le local n'a plus que 0,5 m de fond — les rangées du nord gagnent un spot à l'ouest ; l'alcôve en
+  // garde un devant la porte de service, un devant la porte de la Si 1.4 et un dans l'orange à l'est de celle-ci)
+  for (const [x, y] of [[5.9, 6.4], [7.7, 6.4], [9.5, 6.4], [11.3, 6.4], [6.8, 8.6], [8.6, 8.6], [10.4, 8.6], [12.2, 8.6], [6.5, 10.8], [8.3, 10.8],
+    [10.1, 10.8], [11.9, 10.8], [12.45, 4.25], [9.6 + DXN, 12.4], [12.5 + DXN, 12.35], [12.5, 12.4]]) spot(x, y, HP, 'e1pause');
+  maille(new THREE.CylinderGeometry(0.055, 0.06, 0.04, 20), M.boitier, 11.9 + DXN, HP - 0.02, -12.4, 0, groupe, { ombre: false });
 
   // LE MUR DU FOND : la porte à 1,5 vantail — le semi-fixe gris clair au nord et ses deux affichettes, le vantail de
   // 0,95 ouvert vers l'ouest sur le couloir sombre —, le bloc de sortie au-dessus, la notice A3 et le déclencheur ; la
@@ -598,19 +611,28 @@ export function poserPause1(ch, ctx) {
   // (relecture 10/10 : la niche est sur la face est du local du coin nord-ouest — VO f_48,9 s, la machine à café plus près
   // que la porte du fond ; f_53,45 s, le muret court et le 1er poteau juste à sa droite —, l'habillage monte jusqu'aux
   // dalles — VO f_45,5 s : son dessus touche le plafond —, les machines sont logées dans le local ; la machine à snacks a
-  // deux portes vitrées ; V2 : 0,15 m après l'angle sud du local, y 8,75-10,85 — VO q_0195, le mur du fond de 2,1 m)
+  // deux portes vitrées ; relecture V2 : 0,15 m après l'angle sud du local, y 7,5-11,27 — les poses de VO q_0183 et q_0195,
+  // tirées du seul côté sud, s'accordent à 0,1 m près sur le nu x 5,51 : la machine à café y 7,60-8,40, la vitrée
+  // y 8,58-10,35, le bout de l'habillage y 11,27 — la vitrée à deux portes fait 1,65 m, la machine à café 0,8 ; elles
+  // en faisaient 1,0 et 0,64)
   {
-    const y0 = YB + 0.15, y1 = y0 + 2.1, xa = XB + 0.06, xb = XN, hh = HP, hm = N1 + 1.9;
-    const yc0 = y0 + 0.1, yc1 = y0 + 0.74, ys0 = y0 + 0.82, ys1 = y0 + 1.82;          // la machine à café, la machine à snacks
+    const y0 = YB + 0.15, y1 = 11.27, xa = XB + 0.06, xb = XN, hh = HP, hm = N1 + 1.9;
+    const yc0 = y0 + 0.1, yc1 = y0 + 0.9, ys0 = y0 + 1.1, ys1 = y0 + 2.75;          // la machine à café, la vitrée
     B(xa, y0, xb, y1, hm, hh, P.habillage, { collision: true });
     for (const [a, b] of [[y0, yc0], [yc1, ys0], [ys1, y1]]) B(xa, a, xb, b, N1, hm, P.habillage, { collision: true });
     const grille = new THREE.MeshStandardMaterial({ map: texGrilleVent(), roughness: 0.6 });
-    for (const yc of [(yc0 + yc1) / 2, ys0 + 0.42]) panneau(grille, 0.5, 0.19, xb + 0.002, yc, N1 + 2.2, 'E');
-    // les deux machines (façades lumineuses), leur caisse dans la niche
-    B(XB - 0.5, yc0, xb - 0.03, yc1, N1, hm, M.noirMat, { collision: true });
-    B(XB - 0.5, ys0, xb - 0.03, ys1, N1, hm, M.noirMat, { collision: true });
+    for (const yc of [(yc0 + yc1) / 2, ys0 + 0.42, ys1 - 0.42]) panneau(grille, 0.5, 0.19, xb + 0.002, yc, N1 + 2.2, 'E');
+    // les deux machines (façades lumineuses), leur caisse dans la niche (le local n'a plus que 0,5 m de fond : elles
+    // s'adossent au mur du fond)
+    const xm = Math.max(XB - 0.5, XF + 0.08);
+    B(xm, yc0, xb - 0.03, yc1, N1, hm, M.noirMat, { collision: true });
+    B(xm, ys0, xb - 0.03, ys1, N1, hm, M.noirMat, { collision: true });
     panneau(lum(texCafe(), 0.32), yc1 - yc0 - 0.02, 1.83, xb - 0.028, (yc0 + yc1) / 2, N1 + 0.95, 'E');
     panneau(lum(texSnack(), 0.6), ys1 - ys0 - 0.02, 1.83, xb - 0.028, (ys0 + ys1) / 2, N1 + 0.95, 'E');
+    // (relecture V2 : entre le bout de l'habillage et le muret court, le meuble bas brun sombre — VO q_0187, q_0189,
+    // q_0215 : à hauteur d'appui, contre la face du local)
+    const brun = new THREE.MeshStandardMaterial({ color: 0x3b2f29, roughness: 0.55 });
+    B(xa, y1 + 0.05, xa + 0.45, YP - 0.155, N1, N1 + 0.88, brun, { collision: true });
   }
   // LE MUR EST : le bloc de sortie au-dessus de la porte du palier, la grande affiche encadrée « ESC… » ; dans le recoin,
   // le déclencheur et le cadre de consignes (VO 67 s)
@@ -736,12 +758,14 @@ export function poserPause1(ch, ctx) {
   // (V2, 11/10 : la pièce a 2 m de plus vers le sud — le mobilier de l'ouest et du milieu s'étire entre le mur des jours et
   // la ligne des poteaux : y' = 4,95 + (y − 6,975) × 1,403, plan_v2.md § 2.4 ; celui de l'est, autour de la porte du palier
   // et de son vantail rabattu, garde sa place : la porte n'a pas bougé)
+  // (relecture V2 : la jaune, la rouge, la table basse et la lime gardent leur place devant la niche et les murets, qui
+  // ont glissé de DXN avec tout le côté nord)
   const Yv = (y) => Math.round((Y_S + (y - 6.975) * (YP - Y_S) / (YP - 6.975)) * 100) / 100;
-  banquette([[9.15, 8.75], [8.6, 9.35], [8.75, 10.05], [8.3, 10.6]].map(([x, y]) => [x, Yv(y)]), P.jaune, 'banquette jaune');
-  banquette([[8.7, 11.1], [9.3, 11.45], [10.05, 11.45], [10.6, 11.15], [10.75, 10.65]].map(([x, y]) => [x, Yv(y)]), P.rouge, 'banquette rouge', [-1]);
+  banquette([[9.15, 8.75], [8.6, 9.35], [8.75, 10.05], [8.3, 10.6]].map(([x, y]) => [x + DXN, Yv(y)]), P.jaune, 'banquette jaune');
+  banquette([[8.7, 11.1], [9.3, 11.45], [10.05, 11.45], [10.6, 11.15], [10.75, 10.65]].map(([x, y]) => [x + DXN, Yv(y)]), P.rouge, 'banquette rouge', [-1]);
   {
     // (V2 : 0,3 m plus à l'est — étirée, la banquette jaune l'approchait : ses places de l'est se relevaient dans la table)
-    const xt = 10.3, yt = Yv(10.2);
+    const xt = 10.3 + DXN, yt = Yv(10.2);
     const g = new THREE.Group(); g.position.set(xt, N1, -yt); g.rotation.y = 3.0; groupe.add(g);
     const s = new THREE.Shape(), w = 0.7, d = 0.275;
     s.moveTo(-w + d, -d); s.lineTo(w - d, -d); s.absarc(w - d, 0, d, -Math.PI / 2, Math.PI / 2, false); s.lineTo(-w + d, d); s.absarc(-w + d, 0, d, Math.PI / 2, Math.PI * 1.5, false);
@@ -764,12 +788,19 @@ export function poserPause1(ch, ctx) {
   // vidéo) voit par la porte du palier, en biais, un sol nu jusqu'aux jours : le cône y = 9,75 − k (16,39 − x), k de 0,573
   // à 0,747, reste vide — le mange-debout en (11,3 ; 7,2), juste au nord, ses tabourets au nord-est ; la chaise menthe
   // recule de 10 cm, que sa sortie reste libre)
-  for (const [x, y] of [[11.3, 7.2], [12.8, Yv(10.9)], [9.6, Yv(8.15)], [11.1, Yv(9.5)]]) mangeDebout(x, y);
-  miura(11.85, 7.4, 'W', [12.4, 7.4]); miura(12.85, Yv(11.45), 'S', [12.4, Yv(11.75)]); miura(9.05, Yv(8.1), 'E', [8.9, Yv(7.55)]);
-  miura(11.4, 7.75, 'S', [11.75, 8.2]); miura(12.8, Yv(10.35), 'N', [12.4, Yv(10.4)]);
-  coque(10.2, Yv(8.5), 'W', P.coqueOrange, [10.2, Yv(7.8)]); coque(10.4, Yv(9.05) + 0.08, 'W', P.coqueMenthe, [10.85, 7.6]);
-  // (la lime contre le muret court, entre la niche et le 1er poteau)
-  coque(7.75, Yv(11.45), 'S', P.coqueLime, [7.75, Yv(10.85)]);
+  // (relecture V2 : les plateaux de 65 cm des mange-debout, mesurés sur les poses de VO q_0183, q_0195 et q_0270 tirées
+  // du seul côté sud : celui de l'entrée en (10,1 ; 7,7), (10,1 ; 7,1) et (11,1 ; 7,5) — on le met au milieu, (10,35 ;
+  // 7,35), ses deux « Miura » au nord (q_0270) ; celui du milieu, devant la vitrée, (9,9 ; 8,8) sur q_0183 ; un cinquième
+  // devant la rouge, (10,55 ; 10,05) sur q_0183 — la porte de la Si 1.4, à x 10,05-11,0, le laisse loger. Il n'y a pas de
+  // mange-debout contre les jours : q_0195 n'y voit que les deux chaises coque, orange et menthe, vers (8,5-9,1 ; 6,6). Tous
+  // hors du cône de la photo 28)
+  for (const [x, y] of [[10.35, 7.35], [12.8, Yv(10.9)], [10.1, 8.75], [10.55, 10.05]]) mangeDebout(x, y);
+  miura(10.7, 7.95, 'S', [11.25, 8.3]); miura(12.85, Yv(11.45), 'S', [12.4, Yv(11.75)]); miura(10.0, 7.95, 'S', [9.45, 8.25]);
+  miura(12.8, Yv(10.35), 'N', [12.4, Yv(10.4)]); miura(11.15, 10.1, 'W', [11.75, 10.1]);
+  coque(8.7, 6.7, 'E', P.coqueOrange, [8.7, 7.3]); coque(9.25, 6.45, 'N', P.coqueMenthe, [9.25, 7.05]);
+  // (la lime contre le muret court, entre la niche et le 1er poteau — relecture V2 : devant le 1er, le meuble bas occupe
+  // l'angle du local)
+  coque(6.0, 11.3, 'S', P.coqueLime, [6.0, 10.7]);
 
   // =====================================================================
   //  LA SALLE DE COURS S 1.3 (travées 2 à 8 ; VO q_0198-0213)
@@ -861,16 +892,19 @@ export function poserPause1(ch, ctx) {
     const wi = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.3), new THREE.MeshStandardMaterial({ map: texVitroWifi(), transparent: true, roughness: 0.4, side: THREE.DoubleSide, depthWrite: false }));
     wi.position.set(centreTravee(3) - 0.3, N1 + 1.62, 0.13); wi.rotation.y = Math.PI; wi.renderOrder = 2; groupe.add(wi);
   }
-  // LE TABLEAU TRIPTYQUE au mur ouest (V2 : 2,9 m en tout — VO q_0212, 130 px de large pour 54 px de haut, un central de
-  // 1,5 x 1,2 et deux volets ouverts de 0,7 ; il en faisait 3,96 —, bas à 0,90 m, au milieu du mur), le haut-parleur
-  // au-dessus, le vidéoprojecteur à 2 m du mur
+  // LE TABLEAU TRIPTYQUE au mur ouest (V2 : 2,98 m vus en tout — VO q_0212, 130 px de large pour 54 px de haut —, bas à
+  // 0,90 m, au milieu du mur), le haut-parleur au-dessus, le vidéoprojecteur à 2 m du mur
   {
-    const yc = 2.45, xw = 1.71, wc = 1.5, wv = 0.7;
+    // (relecture V2 : ce qu'on voit fait bien 2,9-3,0 m, mais en DEUX parts — VO q_0208, q_0210, q_0212 : un grand panneau
+    // au sud, 1,9-2,0 m, puis un de 1,0 m au nord, le joint aux deux tiers ; la cote du haut au bas, 1,24 m, donne les
+    // largeurs. C'est le triptyque de master, 2,0 + 2 x 0,98, son volet sud rabattu sur le panneau central : on n'en voit
+    // que le dos blanc, et non trois panneaux de 0,7 / 1,5 / 0,7. Le tout centré sur 2,45 — q_0212, 0,9 m de mur au nord)
+    const xw = 1.71, wc = 2.0, wv = 0.98, y0 = 2.45 - (wc + wv) / 2, yc = y0 + wc / 2;
     // (relecture 10/10 : l'émail blanc, un peu lumineux — il sortait beige, VO f_51,6 s il est le plus blanc de la salle)
     const triptyque = (n) => new THREE.MeshStandardMaterial({ map: texTriptyque(n), color: 0xeef2f8, roughness: 0.16, emissive: 0xe8eef6, emissiveIntensity: 0.16 });
-    for (const [y, w, n] of [[yc, wc, 0], [yc - (wc + wv) / 2, wv, 1], [yc + (wc + wv) / 2, wv, 2]]) {
-      B(xw, y - w / 2 - 0.02, xw + 0.025, y + w / 2 + 0.02, N1 + 0.88, N1 + 2.12, M.alu, { ombre: false });
-      panneau(triptyque(n), w, 1.2, xw + 0.026, y, N1 + 1.5, 'E');
+    for (const [y, w, n, x] of [[yc, wc, 0, xw], [y0 + wv / 2, wv, 1, xw + 0.035], [y0 + wc + wv / 2, wv, 2, xw]]) {
+      B(x, y - w / 2 - 0.02, x + 0.025, y + w / 2 + 0.02, N1 + 0.88, N1 + 2.12, M.alu, { ombre: false });
+      panneau(triptyque(n), w, 1.2, x + 0.026, y, N1 + 1.5, 'E');
     }
     B(xw, yc - 0.6, xw + 0.07, yc + 0.6, N1 + 0.86, N1 + 0.88, M.alu, { ombre: false });
     B(xw, yc - 0.13, xw + 0.12, yc + 0.13, N1 + 2.26, HS - 0.02, M.boitier);
