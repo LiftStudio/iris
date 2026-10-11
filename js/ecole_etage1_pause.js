@@ -92,6 +92,16 @@
 // couloir sombre et au palier d'étage ouest, sans blocage ni chute ; 23 places dans l'espace pause (les banquettes
 // étirées en gagnent), 38 dans la salle — on s'assoit et on se relève à sa place, chaque chaise de l'allée proposée de
 // son côté ; zones au pas de 5 cm ; ?tel=1 charge et tourne.
+// RELU EN JOUANT (relecture V2, 11/10) : les poses de VO q_0183 et q_0195 tirées du seul côté sud (mur du fond, porte du
+// fond, jours V2 : 3-4 px) — elles mettaient la niche et les poteaux du plan V2 à 1,85 m de leur place ; le côté nord
+// glissé (DXN), les machines, la notice, les banquettes et les poteaux retombent sur la vidéo (iris_vues/WR6_r2_q0183,
+// WR6_r2_q0195, WR6_r3_q0221, WR6_r3_q0270 ; planche wr6/WR6_planche_vo.jpg) ; la photo 28 rejouée, rien dans la porte
+// que le sol nu. Marché : palier est → pause → porte du fond → couloir sombre → palier d'étage ouest, devant la niche, la
+// table basse, la porte de la Si 1.4 → allée est jusqu'au fond, allée ouest, S 1.3 jusqu'au tableau, recoin, volées 2 et
+// 1 descendues et remontées, volées 3 et 4 jusqu'au 2e et retour, sans blocage ni chute ; 93 sièges essayés (assis,
+// relevé à sa place) ; zones au pas de 5 cm (rien sans zone hors de la cage du lot B) ; essai de fusion avec le lot B
+// relu (la double porte de la ligne 7,85, l'escalier principal descendu et remonté) ; ?tel=1 ; console sans erreur (hors
+// service worker).
 import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex } from './kit_decor.js';
@@ -897,15 +907,17 @@ export function poserPause1(ch, ctx) {
   {
     // (relecture V2 : ce qu'on voit fait bien 2,9-3,0 m, mais en DEUX parts — VO q_0208, q_0210, q_0212 : un grand panneau
     // au sud, 1,9-2,0 m, puis un de 1,0 m au nord, le joint aux deux tiers ; la cote du haut au bas, 1,24 m, donne les
-    // largeurs. C'est le triptyque de master, 2,0 + 2 x 0,98, son volet sud rabattu sur le panneau central : on n'en voit
-    // que le dos blanc, et non trois panneaux de 0,7 / 1,5 / 0,7. Le tout centré sur 2,45 — q_0212, 0,9 m de mur au nord)
+    // largeurs. C'est le panneau central de master, 2,0 m, et son volet nord ouvert, 0,98 ; du volet sud, aucune vue ne
+    // montre rien — et non trois panneaux de 0,7 / 1,5 / 0,7. Le tout centré sur 2,45 — q_0212, 0,9 m de mur au nord)
     const xw = 1.71, wc = 2.0, wv = 0.98, y0 = 2.45 - (wc + wv) / 2, yc = y0 + wc / 2;
     // (relecture 10/10 : l'émail blanc, un peu lumineux — il sortait beige, VO f_51,6 s il est le plus blanc de la salle)
     const triptyque = (n) => new THREE.MeshStandardMaterial({ map: texTriptyque(n), color: 0xeef2f8, roughness: 0.16, emissive: 0xe8eef6, emissiveIntensity: 0.16 });
-    for (const [y, w, n, x] of [[yc, wc, 0, xw], [y0 + wv / 2, wv, 1, xw + 0.035], [y0 + wc + wv / 2, wv, 2, xw]]) {
-      B(x, y - w / 2 - 0.02, x + 0.025, y + w / 2 + 0.02, N1 + 0.88, N1 + 2.12, M.alu, { ombre: false });
-      panneau(triptyque(n), w, 1.2, x + 0.026, y, N1 + 1.5, 'E');
+    for (const [y, w, n] of [[yc, wc, 0], [y0 + wc + wv / 2, wv, 2]]) {
+      B(xw, y - w / 2 - 0.02, xw + 0.025, y + w / 2 + 0.02, N1 + 0.88, N1 + 2.12, M.alu, { ombre: false });
+      panneau(triptyque(n), w, 1.2, xw + 0.026, y, N1 + 1.5, 'E');
     }
+    // (la charnière entre le panneau et son volet : le joint gris qu'on voit aux deux tiers, VO q_0208-0212)
+    B(xw, y0 + wc - 0.008, xw + 0.04, y0 + wc + 0.008, N1 + 0.88, N1 + 2.12, M.boitier, { ombre: false });
     B(xw, yc - 0.6, xw + 0.07, yc + 0.6, N1 + 0.86, N1 + 0.88, M.alu, { ombre: false });
     B(xw, yc - 0.13, xw + 0.12, yc + 0.13, N1 + 2.26, HS - 0.02, M.boitier);
     projecteur(3.75, yc, 'W');
