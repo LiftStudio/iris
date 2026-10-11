@@ -570,7 +570,7 @@ export class Game {
   // recul, la pièce de Haythem, le pivot (l'épaule d'où part le segment) et le recul libre obtenu `dl` (qui règle la
   // hauteur et le champ).
   _cibleCam(p, u, dt, poser = false) {
-    const C = this.collisions, S = this._cam || (this._cam = { cote: 1, tv: 0, epaule: null, recul: null, zone: null, dl: RECUL, px: 0, py: 0, pz: 0 });
+    const C = this.collisions, S = this._cam || (this._cam = { cote: 1, tv: 0, murs: 1, epaule: null, recul: null, zone: null, dl: RECUL, px: 0, py: 0, pz: 0 });
     const v3 = this.vue === 3, sol = p.solAff, tete = sol + p.h * 0.93;
     const cp = Math.cos(this.camPitch), sp = Math.sin(this.camPitch);
     const bx = Math.sin(this.camYaw), bz = Math.cos(this.camYaw), rx = bz, rz = -bx;   // vers l'arrière ; la droite de l'écran
@@ -605,27 +605,36 @@ export class Game {
       const R = 1.0, cD = C.rayonLibre(u.x, tete, u.z, u.x + rx * R, tete, u.z + rz * R, 0.02) * R;
       const cG = C.rayonLibre(u.x, tete, u.z, u.x - rx * R, tete, u.z - rz * R, 0.02) * R;
       const eD = clamp(cD - RAYON_CAM - 0.08, 0, EPAULE), eG = clamp(cG - RAYON_CAM - 0.08, 0, EPAULE);
-      // LE CÔTÉ VOULU, dans cet ordre :
-      //   - le RECUL : quand celui du côté actuel tombe sous 1,5 m et que l'autre en donne 0,4 m de plus, l'autre ; et l'on
-      //     ne quitte pas un côté pour un autre qui en donne 0,4 m de moins (quand c'est l'autre qui tombe sous 1,5 m) ;
-      //   - sinon les MURS : à droite, à gauche si un mur est à moins de 0,6 m à droite (retour à droite au-delà de 0,75 m).
-      // Et l'on ne change de côté que s'il est voulu sans interruption 0,6 s (0,15 s pour le recul) : la caméra ne fait plus
-      // gauche-droite à chaque recoin. (Relecture du 11/10 : les deux règles d'avant se contredisaient — dans le cou, le
-      // mur de la pile à 0,58 m envoyait à gauche, le recul plus long ramenait à droite — et le côté changeait à CHAQUE
-      // image : 63 fois sur la marche du hall au 1er par l'escalier principal, aller et retour.)
-      const ED = essai(eD), EG = essai(-eG), cote0 = S.cote;
-      const dC = cote0 > 0 ? ED.dl : EG.dl, dA = cote0 > 0 ? EG.dl : ED.dl;
-      const murs = cD < 0.6 && cG > cD + 0.05 ? -1 : cD >= 0.75 || cG <= cD + 0.05 ? 1 : cote0;
-      const recul = dC < 1.5 && dA > dC + 0.4;
-      const veut = recul ? -cote0 : dA < 1.5 && dC > dA + 0.4 ? cote0 : murs;
+      // LE CÔTÉ (1 = épaule droite, -1 = gauche, 0 = dans l'axe) : une NOTE pour chacun — le recul libre qu'il donne,
+      // compté jusqu'à 1,5 m (au-delà, il ne change plus rien) ; + 0,2 pour le côté des MURS (à droite, à gauche si un mur
+      // est à moins de 0,6 m à droite, retour à droite au-delà de 0,75 m) ; + 0,15 pour le côté actuel. Le mieux noté ne
+      // l'emporte qu'après 0,6 s sans interruption (0,15 s quand le recul actuel est tombé sous 1,5 m). Dans l'axe : quand
+      // aucune épaule ne passe (le seuil d'une porte franchie de biais, le palier tournant d'un escalier en U), la ligne
+      // droite derrière lui donne souvent le plus long recul. (Relecture du 11/10 : les deux règles d'avant se
+      // contredisaient — dans le cou, le mur de la pile à 0,58 m envoyait à gauche, le recul plus long ramenait à droite —
+      // et le côté changeait à CHAQUE image : 126 fois sur la marche du hall au 1er par l'escalier principal, aller et
+      // retour, 55 sur celle de l'escalier est jusqu'au 2e.)
+      const ED = essai(eD), EG = essai(-eG), EC = essai(0), cote0 = S.cote;
+      S.murs = cD < 0.6 && cG > cD + 0.05 ? -1 : cD >= 0.75 || cG <= cD + 0.05 ? 1 : S.murs || 1;
+      const note = (c, e) => Math.min(e.dl, 1.5) + (c === S.murs ? 0.2 : 0) + (c === cote0 && !poser ? 0.15 : 0);
+      const nD = note(1, ED), nC = note(0, EC), nG = note(-1, EG);
+      const veut = nD >= nC && nD >= nG ? 1 : nG >= nC ? -1 : 0;
+      const dlC = (cote0 > 0 ? ED : cote0 < 0 ? EG : EC).dl;
       S.tv = veut !== cote0 && dt > 0 ? (S.tv || 0) + dt : 0;
-      if (poser) S.cote = recul ? -cote0 : murs;
-      else if (S.tv >= (recul ? 0.15 : 0.6)) { S.cote = veut; S.tv = 0; }
+      S.tc = (S.tc || 0) + (dt > 0 ? dt : 0);
+      if (poser) S.cote = veut;
+      else if (veut !== cote0 && S.tc >= 0.3 && S.tv >= (dlC < 0.5 ? 0 : dlC < 1.5 ? 0.15 : 0.6)) {
+        // (collée à moins de 0,5 m, elle part tout de suite — mais pas moins de 0,3 s après le dernier changement ; et le
+        // recul du nouveau côté lui est rendu sans attendre la remontée lente de la part libre : la glissade de l'épaule
+        // et celle de la caméra, 12 /s, adoucissent le passage)
+        S.cote = veut; S.tv = 0; S.tc = 0;
+        this._camLibre = Math.max(this._camLibre ?? 1, (veut > 0 ? ED : veut < 0 ? EG : EC).f);
+      }
       const cote = S.cote;
       // l'épaule glisse vers son côté (d'une épaule à l'autre en ≈ 0,4 s), sans jamais entrer dans un mur
-      const eV = cote > 0 ? eD : -eG;
+      const eV = cote > 0 ? eD : cote < 0 ? -eG : 0;
       S.epaule = clamp(S.epaule === null ? eV : S.epaule + (eV - S.epaule) * lis(5), -eG, eD);
-      E = Math.abs(S.epaule - eD) < 1e-4 ? ED : Math.abs(S.epaule + eG) < 1e-4 ? EG : essai(S.epaule);
+      E = Math.abs(S.epaule - eD) < 1e-4 ? ED : Math.abs(S.epaule + eG) < 1e-4 ? EG : Math.abs(S.epaule) < 1e-4 ? EC : essai(S.epaule);
     }
     // le lissage de la part libre (vite quand un mur ou un seuil arrive, lentement quand il s'en va)
     const c = this._camLibre ?? 1;
