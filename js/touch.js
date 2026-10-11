@@ -230,7 +230,8 @@ export class TouchControls {
     v.emote = ['emote', '🕺']; v.tel = ['phone', '📱'];
     if (roue) return { v, stick: true };
     if (u.assis) { v.saut = ['jump', 'DEBOUT']; v.b = ['interact', 'DEBOUT']; return { v, stick: true }; }
-    v.saut = ['jump', 'SAUT'];
+    // (faufilé dans un rang serré, on ne saute pas — js/game.js update, js/player.js _glisserRang : le bouton s'efface)
+    if (!u.rang) v.saut = ['jump', 'SAUT'];
     // la touche d'action, quand elle sert (js/game.js updateSieges : une chaise à portée)
     if (g._presSiege && g._presSiege !== 'assis') v.b = ['interact', 'S’ASSEOIR'];
     return { v, stick: true };

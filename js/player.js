@@ -745,17 +745,20 @@ export class Player {
   //   { nom, sol, ax, az, bx, bz : les deux bouts de sa ligne (monde), fx, fz : l'avant de la salle, sieges }
   // Un bout est OUVERT quand Haythem y tient (libre : c'est là qu'il se trouve, poussé contre le bout du rang), sauf s'il
   // est déclaré fermé (`ouvA` / `ouvB` à false) ; un bout fermé (un mur, les fenêtres) arrête la ligne 5 cm après la
-  // dernière place. Le reste se calcule ici, une fois.
+  // dernière place. Le reste se calcule ici, une fois. (Relecture du 11/10 : libre à 5 cm près, OUVERT_RANG — le bout
+  // ouest du rang 7 de la grande salle, à 0,28 m du poteau, se prend du passage ouest : Haythem, arrêté contre le bout du
+  // rang, y est déjà ; à RAYON_JOUEUR, il ne s'y faufilait que par l'allée. Les autres bouts n'en changent pas : 0,31 m
+  // et plus, ou dans le mur.)
   static poserRangs(sieges) {
-    const C = Player.collisions, rangs = [];
+    const C = Player.collisions, rangs = [], OUVERT_RANG = RAYON_JOUEUR - 0.05;
     for (const s of sieges) if (s.rang && !rangs.includes(s.rang)) rangs.push(s.rang);
     for (const R of rangs) {
       const dx = R.bx - R.ax, dz = R.bz - R.az, L = Math.hypot(dx, dz);
       R.L = L; R.ux = dx / L; R.uz = dz / L;
       for (const s of R.sieges) s.t = (s.x - R.ax) * R.ux + (s.z - R.az) * R.uz;
       const ts = R.sieges.map((s) => s.t);
-      R.ouvA = R.ouvA !== false && (!C || C.libre(R.ax, R.az, RAYON_JOUEUR, R.sol));
-      R.ouvB = R.ouvB !== false && (!C || C.libre(R.bx, R.bz, RAYON_JOUEUR, R.sol));
+      R.ouvA = R.ouvA !== false && (!C || C.libre(R.ax, R.az, OUVERT_RANG, R.sol));
+      R.ouvB = R.ouvB !== false && (!C || C.libre(R.bx, R.bz, OUVERT_RANG, R.sol));
       R.t0 = R.ouvA ? 0 : Math.max(0, Math.min(...ts) - 0.05);
       R.t1 = R.ouvB ? L : Math.min(L, Math.max(...ts) + 0.05);
       if (!R.ouvA && !R.ouvB) console.warn('[rangs] %s : aucun bout ouvert', R.nom);

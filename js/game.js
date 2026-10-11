@@ -501,7 +501,7 @@ export class Game {
     if (u.assis) {
       const bouge = Math.hypot(a.x, a.y) > 0.45;
       if (this.input.pressed('interact') || this.input.pressed('jump') || bouge) u.seLever();
-      if (u.assisPose && this._presSiege !== 'assis') { this._presSiege = 'assis'; this.majAide(); }
+      if (u.assisPose && this._presSiege !== 'assis') { this._presSiege = 'assis'; window.__touch?.refresh(); this.majAide(); }
       return;
     }
     let best = null, bd = 1.1;
@@ -514,8 +514,10 @@ export class Game {
     if (best !== this._presSiege || !!u.rang !== !!this._presRang) {
       const avant = this._presSiege;
       this._presSiege = best; this._presRang = !!u.rang;
-      if (best || avant) this.majAide();
+      // (les boutons d'abord : au tactile, l'aide nomme le bouton du moment — « S'ASSEOIR : … », « DEBOUT : se lever » —
+      // et non « ACTION », ni le bouton d'avant ; relecture du 11/10)
       window.__touch?.refresh();
+      if (best || avant) this.majAide();
     }
     if (best && this.input.pressed('interact')) u.sasseoir(best);
   }
