@@ -399,8 +399,9 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     // nord (y 10,30), le BLOC DE SORTIE tourné vers l'espace pause — l'issue est par P et le sas, celui du sas montre
     // l'escalier — et sa lueur verte, faible ; à l'autre bout, en face de la porte sombre, une VEILLEUSE à 40 cm du sol
     // sur le mur est (un pavé de 9 cm, sa face ambre) qui pose une flaque chaude à son pied et sur le vantail rabattu de la
-    // porte sombre (js/ecole_soussol.js), sombre et tourné au nord : on voit où finit le passage. Leurs lampes ne s'allument qu'avec Haythem dans le passage ou le sas (js/ecole_lumieres.js) ; la veilleuse,
-    // basse, n'éclaire qu'à 90 cm autour d'elle (sa flaque déborde par la porte sombre, comme la lumière d'un couloir).
+    // porte sombre (js/ecole_soussol.js), sombre et tourné au nord : on voit où finit le passage. Leurs lampes ne
+    // s'allument qu'avec Haythem dans le passage ou le sas (js/ecole_lumieres.js) ; la veilleuse, basse, n'éclaire qu'à
+    // 90 cm autour d'elle (sa flaque déborde par la porte sombre, comme la lumière d'un couloir).
     ch.sortie(13.525, 10.272, Y_SS + 2.05, 'S', { simple: true });
     const baes = { x: 13.525, z: -10.15, h: Y_SS + 2.0, zone: 'passageSS', type: 'spot', base: Y_SS, cuire: false, force: 0.1, cuireForce: 0.12, couleur: new THREE.Color(0.72, 1.0, 0.8) };
     const veilleuse = { x: 13.82, z: -5.55, h: Y_SS + 0.45, zone: 'passageSS', type: 'spot', base: Y_SS, cuire: false, force: 0.3, cuireForce: 0.4, couleur: new THREE.Color(1.0, 0.78, 0.5) };

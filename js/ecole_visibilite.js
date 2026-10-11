@@ -341,6 +341,12 @@ export function zonesCachees(x, h, z) {
     if (dans(x, y, VERS_CAGE_E)) vu |= T('cageE0', 'cageE2', 'r0e', 'e2e') | (h > 5.8 ? T('e2') : 0);
   } else {
     // AU 2e : rien du -1 ni du rez-de-chaussée ; le 1er par la cage est
+    // (relecture du 11/10 : à l'ouest du dégagement — x < 3,20 — et devant le couloir rouge, à l'ouest de la salle 2 —
+    // y < 4,60, x < 9,90 —, le 2e n'a pas de pièce : la caméra n'y va que par un défaut de master — elle traverse la porte
+    // du bout ouest du dégagement, Haythem en (3,6 ; 5,4-5,6), caps 1,05 à 1,2 et 1,92 — et de là, dehors, elle voit le
+    // haut du 1er, ses salles sur rue et la rue, que le tri cachait : des trous de 2 000 à 12 000 pixels sur 640 × 360.
+    // Rien n'y est caché, comme sur master)
+    if (x < 3.2 || (y < 4.6 && x < 9.9)) return 0;
     vu = VU_E2;
     if (dans(x, y, VERS_CAGE_E2)) vu |= T('cageE1');
     if (dans(x, y, VERS_CAGE_E)) vu |= T('e1e', 'e1', 'r0e');
