@@ -51,7 +51,7 @@
 import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex, detailPhoto } from './kit_decor.js';
-import { texPeinture } from './ecole_matieres.js';
+import { texPeinture, texAffiche } from './ecole_matieres.js';
 import { ASC, poserAscenseur, poserBandeSud, majAscenseur } from './ecole_ascenseur.js';
 import { Y_SS } from './ecole_soussol.js';
 
@@ -765,16 +765,20 @@ export function poserEst(ch, { RECT }) {
   // (côté hall, le dégagement derrière est plus sombre que le hall : le verre y sort gris vert, à peine éclairé — VO 7,0 s)
   // (lot H, 11/10, VO q_0027-0031 : gris-vert sombre, ≈ 0,6 du mur « INFORMATIQUE » voisin — il sortait à 0,8-0,9 ;
   // le photocopieur est devant lui, côté hall : le verre sans sa silhouette)
-  const canHall = X.cannele2.clone(); canHall.emissiveIntensity = 0.02; canHall.color.setRGB(0.86, 0.9, 0.9);
+  // (relecture du lot H, 11/10 : VO q_0031 agrandie, il est gris-taupe, sans bleu — R/V/B au mur « INFORMATIQUE »
+  // 0,66/0,63/0,58 ; il sortait bleu ardoise : le fond plus bleu du côté couloir, ramené au neutre ici)
+  const canHall = X.cannele2.clone(); canHall.emissiveIntensity = 0.02; canHall.color.setRGB(1.0, 0.85, 0.72);
   for (const f of ['N', 'S']) ch.panneau(f === 'N' ? X.cannele1 : canHall, xC - 16.35, 2.35, (16.3 + xC - 0.05) / 2, yv + (f === 'N' ? 0.006 : -0.006), 1.225, f);
   B(ch, D, 16.25, yv - 0.075, xC, yv + 0.075, 2.46, H_DALLE, B0, { ombre: false });
   C.ajouterBoite(16.25, -(yv - 0.075), xC, -(yv + 0.075), { y1: H_DALLE });
-  // (la feuille A4 scotchée côté couloir, photo 24) (relecture du lot H, 11/10 : vue du couloir, c'est son dos, uni et
-  // gris clair contre le verre — photo 24 agrandie ; et elle était dans le plan même du verre, yv + 0,006 : les deux se
-  // disputaient la profondeur, en hachures noires. Posée 3 mm devant)
+  // (la feuille A4 scotchée sur le verre, photo 24) (relecture du lot H, 11/10 : elle est scotchée CÔTÉ HALL — la VO
+  // q_0031 la montre imprimée, nette sur le verre ; du couloir, la photo 24 n'en voit que le dos, uni et gris clair, et
+  // son milieu à 1,40 m, non 1,55 (30 px plus bas au même point de vue). Et elle était dans le plan même du verre,
+  // yv + 0,006 : les deux se disputaient la profondeur, en hachures noires. Posée 3 mm devant, de chaque côté)
   {
     const dos = new THREE.MeshStandardMaterial({ color: 0xd2d1cb, roughness: 0.85 }); dos.name = 'feuille A4 (dos)';
-    ch.panneau(dos, 0.21, 0.297, 16.62, yv + 0.009, 1.55, 'N');
+    ch.panneau(dos, 0.21, 0.297, 16.62, yv + 0.009, 1.4, 'N');
+    ch.panneau(matPanneau(texAffiche('#e8e6df', '#f4f3ee', 90), 0.8), 0.21, 0.297, 16.62, yv - 0.009, 1.4, 'S');
   }
   // le mur plein : plinthe de bois côté hall, gris foncé côté dégagement
   mur(ch, D, { de: [xC, yv], a: [E.xM, yv], mats: B0, plinthes: ['N', ['S', M.bois]] });
