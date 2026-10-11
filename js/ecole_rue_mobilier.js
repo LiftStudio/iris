@@ -1075,8 +1075,10 @@ export function poserMobilierRue(ch, R) {
   bacRoulant(ch, A, M, 1.0, -0.86, 0.04, M.bacGris, M.bacCouvercle, grandBac);
   bacRoulant(ch, A, M, 1.72, -0.86, -0.04, M.bacGris, M.bacCouvercle, grandBac);
   bacRoulant(ch, A, M, 1.45, -1.72, 0.08, M.bacGris, M.bacCouvercle, grandBac);
-  // (le recoin de 0,66 m entre la jardinière de devant et le bac de devant : bouché — Haythem s'y coincerait)
+  // (le recoin de 0,66 m entre la jardinière de devant et le bac de devant, et la fente de 0,52 m entre la jardinière de
+  // derrière et la façade : bouchés — Haythem s'y coincerait)
   ch.C.ajouterBoite(0.4, 1.22, 1.15, 1.84, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(-0.4, 0.4, 0.66, 0.94, { y1: 0.9, camera: false });
   h = jardiniereTerre(ch, A, M, -0.08, -1.62, 1.05, 0.4, 0.38); arbuste(F, A, M, -0.08, -1.62, h, 0.8, 1.85, PLANCHE.choisya, r, 80);
   h = jardiniereTerre(ch, A, M, 0.15, -1.12, 1.1, 0.4, 0.38); arbuste(F, A, M, 0.15, -1.12, h, 0.75, 1.75, PLANCHE.choisya, r, 72);
   h = potCarre(ch, A, M, -0.9, -1.62, 0.44, 0.62, M.anthracite); bambou(F, A, M, -0.9, -1.62, h, 1.6, r, 10);
