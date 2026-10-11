@@ -360,6 +360,12 @@ function geoSol(rects) {
 // (photo 04 : par la porte, on ne voit plus que l'échiffre, sans les barreaux). Tout le reste tombe à sa place.
 // (Pour la rendre juste, il faudrait la prolonger au sud, au-dessus du plafond du hall, jusqu'au 1er vers y 6,5-7 : c'est
 // déplacer l'arrivée — le palier du 1er et sa double porte, imaginés — décision laissée à Haythem.)
+// (relecture du 11/10, r01 et la photo 20 rejouées à leur pose : la vraie pente, 0,53, donne des girons de ≈ 0,33 pour
+// des contremarches de 0,175 et un pied vers y 11,3 ; seize contremarches arrivent alors au 1er vers y 6,3-7,0, entre
+// x 0,75 et 1,975 — dans le couloir sombre du 1er, imaginé, au-dessus du renfoncement de la porte grise. Aucune pente
+// praticable ne passe par les photos ET par l'arrivée en y 8,35 : il faudrait 1,4 de pente. En haut de la volée 2, la
+// plate-forme d'arrivée n'a que 0,43 m : la caméra s'y colle à Haythem ; avec la caméra du lot X1 (au-dessus de l'épaule,
+// js/game.js), essayée ensemble, elle reste à 0,8 m.)
 // (plan V2 § 1.3 : l'escalier S'ARRÊTE AU 1er ; plafond de la cage à 6,40, le dessous de la dalle du 2e : js/ecole_etage1.js)
 function construireEscalier(ch) {
   const { C, M } = ch, E = ESC, R = E.haut, G1 = E.G1, G2 = E.G2, HL = E.hL, HP = E.hP;
