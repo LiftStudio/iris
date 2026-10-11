@@ -1050,12 +1050,17 @@ export function poserEtage2(ch, renderer = null) {
     // (11/10, finitions V2 : les quatre places contre les fenêtres ne se prenaient pas en marchant — LE RANG où Haythem se
     // faufile, js/player.js _glisserRang : entre le chant est de la table d'à côté, xr - 0,9, et le dos des chaises, xr -
     // 0,755, de l'allée, y 2,02, à la place des fenêtres ; le 1er rang, x 11,6, se prend du passage du mur ouest)
+    // (vérification finale des finitions, 11/10 : les chaises RENTRÉES sous leur table de 0,15 m — VO q_0324 : l'assise
+    // sous le plateau, le dossier au ras de son chant ; à 0,145 m du chant de la table d'à côté, les jambes de Haythem
+    // entraient de 5 à 8 cm dans la chaise côté allée en passant. Le dos des chaises est en xr - 0,605 : 0,295 m jusqu'à la
+    // table d'à côté, et la ligne du rang au milieu, xr - 0,755)
+    const RENTREE = 0.15;
     for (const xr of [16.2, 15.05, 13.9, 12.75, 11.6]) {
-      const R = xr > 12 ? { nom: `rang x ${xr} (salle 2)`, sol: N2, ax: xr - 0.825, az: -2.02, bx: xr - 0.825, bz: -0.72, ouvB: false, fx: 1, fz: 0, sieges: [] } : null;
+      const R = xr > 12 ? { nom: `rang x ${xr} (salle 2)`, sol: N2, ax: xr - 0.755, az: -2.02, bx: xr - 0.755, bz: -0.72, ouvB: false, fx: 1, fz: 0, sieges: [] } : null;
       for (const [yc, allee] of [[3.58, 2.55], [1.05, 2.15]]) {
         table(xr, yc, 0.5, 1.3, { pied: X.chrome });
         for (const s of [-1, 1]) {
-          chaiseLuge(xr - 0.55, yc + s * 0.33, 'E', { trous: true, coque: X.coque2, pied: X.chrome, sortie: [xr - 0.62, allee] });
+          chaiseLuge(xr - 0.55 + RENTREE, yc + s * 0.33, 'E', { trous: true, coque: X.coque2, pied: X.chrome, sortie: [xr - 0.62, allee] });
           if (R && yc < 2) { const S = sieges[sieges.length - 1]; S.rang = R; R.sieges.push(S); }
         }
       }
