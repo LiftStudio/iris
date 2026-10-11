@@ -422,11 +422,17 @@ function construireEscalier(ch) {
   // (au-dessus, plus rien : l'escalier s'arrête au 1er, plan V2 § 1.3)
 
   // ---- LES GARDE-CORPS ----
-  const barre = (x, y, h0, h1) => ch.boite(x - 0.007, y - 0.007, x + 0.007, y + 0.007, h0, h1, M.garde);
-  const poteau = (x, y, h0, h1, mat = M.garde) => ch.boite(x - 0.025, y - 0.025, x + 0.025, y + 0.025, h0, h1, mat);
+  // (relecture du 11/10 : vus par la porte, de r01 et de la photo 20, les garde-corps posaient un MOUCHETÉ gris sale sur
+  // l'échiffre et le mur blanc derrière eux — l'occlusion ambiante de l'écran (js/fx.js, GTAO, en haute qualité) prend
+  // les barreaux de 14 mm et les poteaux de 5 cm, à 0,4 m du mur, pour un recoin. Ils vont dans un groupe à part, cousu
+  // sur lui-même et marqué `sansNormales` : la passe de normales de l'occlusion ne les dessine plus, comme les filets des
+  // paniers. Les barreaux ne portent pas non plus d'ombre : trop fins pour une carte d'ombre au centimètre.)
+  const GC = new THREE.Group(); GC.name = 'garde-corps (escalier principal)'; ch.decor.add(GC);
+  const barre = (x, y, h0, h1) => ch.boite(x - 0.007, y - 0.007, x + 0.007, y + 0.007, h0, h1, M.garde, { ombre: false, parent: GC });
+  const poteau = (x, y, h0, h1, mat = M.garde) => ch.boite(x - 0.025, y - 0.025, x + 0.025, y + 0.025, h0, h1, mat, { parent: GC });
   // une lisse plate le long de y (x fixe), du bas (ya, ha) au haut (yb, hb) — ou d'un bout à l'autre, de niveau
   const lisse = (x, ya, ha, yb, hb, mat = M.garde, l = 0.05, e = 0.014) => {
-    const L = Math.hypot(yb - ya, hb - ha), m = maille(boiteM(l, e, L), mat, x, (ha + hb) / 2, -(ya + yb) / 2, 0, ch.decor);
+    const L = Math.hypot(yb - ya, hb - ha), m = maille(boiteM(l, e, L), mat, x, (ha + hb) / 2, -(ya + yb) / 2, 0, GC);
     m.rotation.x = Math.atan2(hb - ha, yb - ya);
     return m;
   };
@@ -437,7 +443,7 @@ function construireEscalier(ch) {
   // lisse basse au ras des nez, main courante à 1,0 m ; puis, au palier, de niveau jusqu'au pied de la volée 2, et le
   // RETOUR VERS L'OUEST jusqu'à l'échiffre (photo 20)
   const xg1 = E.x1o + 0.02, yPied = E.y1 - 0.06, H1 = 1.0, yRet = E.yF2 + 0.025;
-  ch.boite(xg1 - 0.06, yPied - 0.06, xg1 + 0.06, yPied + 0.06, 0, 0.01, M.garde);
+  ch.boite(xg1 - 0.06, yPied - 0.06, xg1 + 0.06, yPied + 0.06, 0, 0.01, M.garde, { parent: GC });
   poteau(xg1, yPied, 0.01, nez1(yPied) + H1 + 0.02);
   lisse(xg1, yPied, nez1(yPied) + H1, E.yL1, HL + H1);
   lisse(xg1, E.y1, nez1(E.y1) + 0.06, E.yL1, HL + 0.06, M.garde, 0.04, 0.012);
@@ -446,8 +452,8 @@ function construireEscalier(ch) {
   for (let y = E.y1 + 0.05; y < yRet - 0.04; y += 0.11) barre(xg1, y, y < E.yL1 ? nez1(y) + 0.06 : HL + 0.06, y < E.yL1 ? nez1(y) + H1 : HL + H1);
   poteau(xg1, yRet, HL, HL + H1 + 0.02);
   // le retour (y 11,975, sur le bord du palier), de x 2,40 à l'échiffre
-  ch.boite(E.x2e, yRet - 0.02, xg1, yRet + 0.02, HL + H1 - 0.007, HL + H1 + 0.007, M.garde);
-  ch.boite(E.x2e, yRet - 0.015, xg1, yRet + 0.015, HL + 0.054, HL + 0.066, M.garde);
+  ch.boite(E.x2e, yRet - 0.02, xg1, yRet + 0.02, HL + H1 - 0.007, HL + H1 + 0.007, M.garde, { parent: GC });
+  ch.boite(E.x2e, yRet - 0.015, xg1, yRet + 0.015, HL + 0.054, HL + 0.066, M.garde, { parent: GC });
   for (let x = E.x2e + 0.08; x < xg1 - 0.04; x += 0.11) barre(x, yRet, HL, HL + H1);
   // LA VOLÉE 2, fixé de côté contre son limon (x 1,995) : lisse basse sombre 10 cm au-dessus des nez (r01 : la crémaillère
   // se lit dessous),
@@ -460,15 +466,18 @@ function construireEscalier(ch) {
   // ses poteaux, gris foncé, fixés de côté sur le limon par une platine carrée (r01, 06, 04 : le montant sombre qui
   // descend jusqu'à sa platine, au-dessus de l'échiffre)
   for (const y of [E.yF2 - 0.04, 10.95, 9.75]) {
-    ch.boite(xg2 - 0.02, y - 0.02, xg2 + 0.02, y + 0.02, sous2(y) + 0.1, nez2(y) + H2, SOMBRE);
-    ch.boite(E.x2e, y - 0.06, E.x2e + 0.012, y + 0.06, sous2(y) + 0.08, sous2(y) + 0.2, M.garde, { ombre: false });
+    ch.boite(xg2 - 0.02, y - 0.02, xg2 + 0.02, y + 0.02, sous2(y) + 0.1, nez2(y) + H2, SOMBRE, { parent: GC });
+    ch.boite(E.x2e, y - 0.06, E.x2e + 0.012, y + 0.06, sous2(y) + 0.08, sous2(y) + 0.2, M.garde, { ombre: false, parent: GC });
   }
   poteau(xg2, yH2, nez2(yH2) - 0.2, HP + 1.0);
   lisse(xg2, yH2, HP + 0.97, E.y0, HP + 0.97);
   // LE PALIER DU 1er, au-dessus du vide (bord nord, y 9,525, de l'échiffre au mur est) : barreaux, lisse, poteaux
   for (let x = E.x2e + 0.08; x < E.x1e - 0.05; x += 0.11) barre(x, E.y0 - 0.03, HP, HP + 0.95);
-  ch.boite(E.x2e - 0.05, E.y0 - 0.055, E.x1e, E.y0 - 0.005, HP + 0.95, HP + 0.99, M.garde);
+  ch.boite(E.x2e - 0.05, E.y0 - 0.055, E.x1e, E.y0 - 0.005, HP + 0.95, HP + 0.99, M.garde, { parent: GC });
   poteau(E.x1e - 0.03, E.y0 - 0.03, HP, HP + 0.99); poteau(xg2, E.y0 - 0.03, HP - 0.3, HP + 0.99);
+  // (le groupe des garde-corps cousu par matière, gardé hors de la couture du décor, hors de la passe de normales)
+  fusionnerLocal(GC); nePasFusionner(GC);
+  GC.traverse((o) => { if (o.isMesh) o.userData.sansNormales = true; });
   // LES MAINS COURANTES RONDES AU MUR (supports tous les 80 cm) : le long des volées, et la main courante HORIZONTALE du
   // palier, sur le mur à affiches (photo 20 : de bout en bout, à 1,0 au-dessus du palier — comme celles des murs du palier)
   const tubeY = (x, ya, ha, yb, hb, s) => {

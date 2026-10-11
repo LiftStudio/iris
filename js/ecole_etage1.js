@@ -979,7 +979,11 @@ export function poserEtage1(ch, renderer = null) {
     // des volées, jusqu'au palier du 1er ; intégration du 11/10 : sous le plafond de la cage, 6,40 — au-dessus, c'est la
     // salle 1 du 2e, et le 1er restait affiché sous elle)
     // (finitions du 11/10 : la cage va jusqu'en x 0,6 — au-dessus de 0,6 m ; dessous, à l'ouest, c'est la volée de tôle du -1)
-    const cage = (cam.x > (cam.y > 0.6 ? 0.4 : 1.4) && cam.x < 5.0 && cam.z < -7.5 && cam.z > -14.3 && cam.y > -0.3 && cam.y < 6.4) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7 && cam.y > -0.3);
+    // (relecture du 11/10 : à l'ouest de x 1,4, au-dessus de la trémie — y < 10,3 —, seulement au-dessus de 2,0 : sous son
+    // rampant, la caméra de la volée de tôle monte jusqu'à 1,6 et l'étage était dessiné pour rien ; celle de la volée 2,
+    // au-dessus de ses marches — 1,9 au droit de la trémie —, ne descend pas sous 2,1)
+    const ouest = cam.x > 0.4 && cam.x <= 1.4 && (cam.z < -10.3 ? cam.y > 0.6 : cam.y > 2.0);
+    const cage = ((cam.x > 1.4 || ouest) && cam.x < 5.0 && cam.z < -7.5 && cam.z > -14.3 && cam.y > -0.3 && cam.y < 6.4) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7 && cam.y > -0.3);
     const au2e = cam.y > 7.0 && u.y > 6.0 && cam.z < -0.05 && !cage && !(cam.x > 13.4 && cam.z < -6.45 && cam.z > -12.75);
     const vis = (cage || cam.y > 2.7 || cam.z > -0.05 || u.y > 2.0) && !au2e;
     if (vis !== groupe.visible) groupe.visible = vis;
