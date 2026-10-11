@@ -19,8 +19,8 @@
 // LE PASSAGE au sud-ouest de la pile (VO 7,0-9,0 s : de la porte 6, la vue passe à gauche de la pile en x 13,3 entre
 // y 3,6 et 4,7, et la caméra contourne l'angle sud-ouest ; photo 03) : il prolonge L'ANTICHAMBRE (retour de Haythem du
 // 11/10, r02 — js/carte_ecole.js : le mur sud de la salle d'attente s'arrête en x 9,24, le mur nord du bureau de
-// direction est la ligne y 3,1, de x 9,09 à 12,575 ; x 12,5 jusqu'au retour y 2,5 et sa porte vitrée) ; le passage
-// s'ouvre sur 2,1 m côté hall (y 2,575-4,7).
+// direction est la ligne y 2,925 — 3,1 au retour r02, reculé à la relecture —, de x 9,09 à 12,575 ; x 12,5 jusqu'au
+// retour y 2,5 et sa porte vitrée) ; le passage s'ouvre sur 2,1 m côté hall (y 2,575-4,7).
 // LE BUREAU DE DIRECTION B 0.3 (VO q_0040-0045, 10,0 s) : la plaque noire à deux lignes et son porte-nom blanc, le
 // drapeau noir à trois lignes — à l'angle du bout du mur sud de la salle d'attente et de l'antichambre : le drapeau sur
 // la face nord, contre le cadre du jour est (le drapeau de r02), la plaque sur le retour, face à l'est.
@@ -39,8 +39,11 @@ export const PILE = { x0: 13.30, x1: 14.675, y0: 4.7, y1: 7.575 };
 // Haythem du 11/10, r02 : le drapeau noir est sur la face nord, au-dessus de la borne, sa potence à 0,08 m du cadre du
 // jour est ; VO q_0040-0043 : le drapeau à l'angle, et la plaque, vue de face par la caméra qui vient du hall, sur le
 // retour, à gauche de l'angle. Ils étaient en x 11,0, sur un mur qui n'existe pas : c'est par là que r02 voit le hall.
+// (RELECTURE DU 11/10, VO q_0041 et q_0042 agrandies : la plaque est TOUT CONTRE L'ANGLE — son bord nord à 7 px de
+// l'arête quand elle en fait 38 de large, 4 cm — et non à 0,2 m : centrée en y 4,73, de 4,625 à 4,835 ; elle était en
+// 4,47-4,68)
 const Y_BUREAU = 4.875, X_RETOUR = 9.24;
-const Y_PLAQUE = 4.575, X_DRAPEAU = 9.14;
+const Y_PLAQUE = 4.73, X_DRAPEAU = 9.14;
 
 // =====================================================================
 //  LES TEXTURES
@@ -187,13 +190,15 @@ function texPorteNom() {
   }, null, false, 2);
 }
 // (retour r02 du 11/10 : 0,18 x 0,165 et non 0,28 x 0,16 — vu du bout ouest, sur r02, sa pointe est à 0,2 m du mur : un
-// drapeau presque carré, les trois lignes serrées)
+// drapeau presque carré, les trois lignes serrées) (relecture du 11/10 : 0,21 x 0,155 — la VO q_0040-0042 le voit de face,
+// aussi large que la plaque de 0,21 qu'il surmonte, un tiers plus large que haut ; r02, de biais et floue, le donne
+// à 0,2 m de pointe : 0,02 de potence et 0,21 de drapeau tiennent les deux)
 function texDrapeau() {
-  return canvasTex(192, 176, (g, w, h) => {
+  return canvasTex(256, 189, (g, w, h) => {
     g.fillStyle = '#1f1e1d'; g.fillRect(0, 0, w, h);
     g.fillStyle = '#f2f2f0'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-    g.font = '600 30px "Segoe UI", Arial, sans-serif'; g.fillText('Bureau', w / 2, 52); g.fillText('de direction', w / 2, 96, w - 16);
-    g.font = '700 32px "Segoe UI", Arial, sans-serif'; g.fillText('B 0.3', w / 2, 142);
+    g.font = '600 34px "Segoe UI", Arial, sans-serif'; g.fillText('Bureau', w / 2, 56); g.fillText('de direction', w / 2, 103, w - 20);
+    g.font = '700 36px "Segoe UI", Arial, sans-serif'; g.fillText('B 0.3', w / 2, 153);
   }, null, false, 4);
 }
 // =====================================================================
@@ -257,16 +262,18 @@ export function poserRdcCentre(ch) {
   // =====================================================================
   // (relecture du 10/10 : 21 cm de large et non 18 ; le porte-nom blanc fait les quatre cinquièmes de la hauteur du noir,
   // hall_work/c_103_plaque) (retour r02 du 11/10 : sur le retour, face à l'est, entre l'angle et l'huisserie de la porte
-  // de la Si 0.1, y 4,47-4,68 — js/carte_ecole.js ; r02 ne la voit pas, elle est de l'autre côté de l'angle)
+  // de la Si 0.1 — js/carte_ecole.js ; r02 ne la voit pas, elle est de l'autre côté de l'angle ; relecture : contre
+  // l'angle, y 4,625-4,835, VO q_0041-0042)
   plaqueMurale(ch, std({ map: texPlaqueBureau(), roughness: 0.4 }, 'plaque du bureau de direction'), X_RETOUR, Y_PLAQUE, 'E', 0.21, 1.555, 1.635, 0.006);
   plaqueMurale(ch, std({ map: texPorteNom(), roughness: 0.5 }, 'porte-nom'), X_RETOUR, Y_PLAQUE, 'E', 0.21, 1.48, 1.545, 0.006);
   // le drapeau, perpendiculaire à la face nord, à l'angle, sur sa potence (retour r02 du 11/10 : de 2,14 à 2,30 m —
   // 200 à 255 px au-dessus de l'horizon de r02, à 4,4 m —, sa pointe à 0,2 m du mur ; c'est le drapeau noir que r02 voit
   // au-dessus de l'ouverture : le jeu en avait deux, l'un ici, l'autre « de la Si 0.1 » au bout du jour est)
-  const dr = new THREE.Group(); dr.position.set(X_DRAPEAU, 2.22, -(Y_BUREAU + 0.02 + 0.09)); ch.decor.add(dr);
-  maille(boiteM(0.012, 0.165, 0.18), M.noir, 0, 0, 0, 0, dr, { ombre: false });
+  // (relecture : 0,21 x 0,155, de 2,14 à 2,29 m — texDrapeau)
+  const dr = new THREE.Group(); dr.position.set(X_DRAPEAU, 2.215, -(Y_BUREAU + 0.02 + 0.105)); ch.decor.add(dr);
+  maille(boiteM(0.012, 0.155, 0.21), M.noir, 0, 0, 0, 0, dr, { ombre: false });
   const td = std({ map: texDrapeau(), roughness: 0.45 }, 'drapeau du bureau de direction');
-  for (const s of [1, -1]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.165), td); p.position.x = s * 0.0065; p.rotation.y = s * Math.PI / 2; dr.add(p); }
-  maille(boiteM(0.016, 0.016, 0.03), M.aluGris, 0, 0.09, 0.1, 0, dr, { ombre: false });
+  for (const s of [1, -1]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(0.21, 0.155), td); p.position.x = s * 0.0065; p.rotation.y = s * Math.PI / 2; dr.add(p); }
+  maille(boiteM(0.016, 0.016, 0.03), M.aluGris, 0, 0.085, 0.115, 0, dr, { ombre: false });
   dr.traverse((m) => { m.userData.horsAOSol = true; });
 }

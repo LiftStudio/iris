@@ -7,12 +7,12 @@
 // arriveront, c'est ce module qu'on reprend (la coque, elle, reste celle de js/carte_ecole.js).
 //
 //   LA Si 0.1 « TIM BERNERS-LEE » (l'ex-salle A, informatique)  x 4,575-9,9  y 0-4,725 (11/10, plan V2 ; sans son angle
-//        nord-est, x 9,09-9,9 × y 3,175-4,725, à l'antichambre : retour r02)  deux rangs de cinq et quatre postes
+//        nord-est, x 9,09-9,9 × y 3,0-4,725, à l'antichambre : retour r02)  deux rangs de cinq et quatre postes
 //        tournés vers le nord (écrans, claviers, unités centrales, chaises de bureau où l'on s'assoit), le
 //        poste de l'enseignant, la toile de projection descendue devant les jours dépolis et son vidéoprojecteur, le
 //        tableau blanc du mur est, les stores enrouleurs des trois fenêtres sur rue, quatre dalles LED dans le plafond à
 //        plateaux, l'imprimante, l'horloge ; sa porte s'ouvre dans le retour x 9,165, sur l'antichambre
-//   LE BUREAU DE DIRECTION B 0.3  x 10,05-13,2 y 0-3,025, l'angle nord-est écorné (11/10 ; r02 : son mur nord en y 3,1)
+//   LE BUREAU DE DIRECTION B 0.3  x 10,05-13,2 y 0-2,85, l'angle nord-est écorné (11/10 ; r02 : son mur nord en y 2,925)
 //        bureau de chêne clair, fauteuil,
 //        deux chaises visiteurs (on s'y assoit), armoire, bibliothèque, tableau, grande plante, tapis, porte-manteau ; sa
 //        porte vitrée au bout du passage de la pile (photos 01, 03)
@@ -63,11 +63,12 @@ const H_DALLE = 3.25;                       // le dessous de la dalle du 1er ét
 // (11/10, plan V2 — scratchpad iris_audit/plan_v2.md § 2.2 : la salle d'attente recule de DY_A = -4,20, son mur sud est la
 // ligne y 4,8 ; la salle A, devenue la Si 0.1, perd 4,2 m de profondeur ; son mur ouest est le mur est du passage, x 4,5)
 const SA = { x0: 4.575, x1: 9.9, y0: 0, y1: 4.725 };       // la Si 0.1, l'ex-salle A
-// (retour de Haythem du 11/10, r02 : son angle nord-est, x 9,09-9,9 × y 3,175-4,725, est à l'antichambre — le mur sud de
+// (retour de Haythem du 11/10, r02 : son angle nord-est, x 9,09-9,9 × y 3,0-4,725, est à l'antichambre — le mur sud de
 // la salle d'attente s'arrête en x 9,24 ; le retour x 9,165 porte sa porte, js/carte_ecole.js)
-const BB = { x0: 10.05, x1: 13.2, y0: 0, y1: 3.025 };       // le bureau B (jusqu'à son mur nord, la ligne y 3,1)
+const BB = { x0: 10.05, x1: 13.2, y0: 0, y1: 2.85 };        // le bureau B (jusqu'à son mur nord, la ligne y 2,925)
 // (son angle nord-est est écorné : de 12,425 à 13,2 il s'arrête en y 2,425 — js/carte_ecole.js ; retour r02 du 11/10 : son
-// mur nord n'est plus la ligne y 4,8 mais la ligne y 3,1, d'un bout à l'autre — devant lui, l'antichambre)
+// mur nord n'est plus la ligne y 4,8 mais la ligne y 3,1, d'un bout à l'autre — devant lui, l'antichambre ; relecture :
+// la ligne 2,925, nu nord 3,0, photo 03 rejouée)
 // le couloir de service (plan V2, 11/10 : arrêté au mur sud du palier « 0 » du sous-sol, ligne 4,95, qui a suivi la
 // porte grise)
 const SV = { x0: 0, x1: 1.6, y0: 0, y1: 4.925 };
@@ -95,10 +96,11 @@ const ZONES = [
   // les autres pièces : sa porte n'est pas une ouverture, et les spots de la salle d'attente, qui n'ont pas d'ombre,
   // l'éclaireraient à travers le mur)
   // (retour r02 du 11/10 : sans son angle nord-est, à l'antichambre — jusqu'à l'axe du retour x 9,165 au nord de y 3,1)
-  { ...zone('si01', SA, { x: 7.7, y: 1.6, z: -2.55 }), rects: [[4.5, -4.8, 9.165, -SA.y0, -1], [9.165, -3.1, 9.975, -SA.y0, -1]] },
+  { ...zone('si01', SA, { x: 7.7, y: 1.6, z: -2.55 }), rects: [[4.5, -4.8, 9.165, -SA.y0, -1], [9.165, -2.925, 9.975, -SA.y0, -1]] },
   // (10/10 : le bureau B a perdu son angle nord-est, le passage au sud-ouest de la pile du hall ; 11/10 : jusqu'aux axes de
-  // ses murs — retour r02 : son mur nord est la ligne y 3,1 ; js/carte_ecole.js et js/ecole_rdc_centre.js)
-  { ...zone('bureauB', BB, { x: 11.0, y: 1.6, z: -1.6 }), rects: [[9.975, -3.1, 12.5, -BB.y0, -1], [12.5, -2.5, 13.275, -BB.y0, -1]] },
+  // ses murs — retour r02 : son mur nord est la ligne y 3,1, la ligne 2,925 à la relecture ; js/carte_ecole.js et
+  // js/ecole_rdc_centre.js)
+  { ...zone('bureauB', BB, { x: 11.0, y: 1.6, z: -1.6 }), rects: [[9.975, -2.925, 12.5, -BB.y0, -1], [12.5, -2.5, 13.275, -BB.y0, -1]] },
   { ...zone('service', SV, { x: 0.8, y: 1.5, z: -2.6 }), rects: [[0, -4.95, 1.675, 0, -1]] },
   zone('local', LT, { x: 10.3, y: 1.7, z: -9.9 }),
   // (relecture du 09/10 : les deux toilettes du C05 prennent leur vue HAUT, à 2,20 m, et loin des portes safran des
@@ -906,7 +908,7 @@ function texAfficheEtudiant() {
 // =====================================================================
 // (11/10, plan V2 : l'annuaire du hall et sa plaque donnent Si 0.1 et Si 0.2 au niveau 0, côté ouest — la salle A est la
 // Si 0.1. Elle perd 4,2 m de profondeur avec la salle d'attente, dont le mur sud est son mur nord : x 4,575-9,9 × y
-// 0-4,725. Retour r02 du 11/10 : son angle nord-est, x 9,09-9,9 × y 3,175-4,725, est à l'antichambre — le mur sud de la
+// 0-4,725. Retour r02 du 11/10 : son angle nord-est, x 9,09-9,9 × y 3,0-4,725, est à l'antichambre — le mur sud de la
 // salle d'attente s'arrête en x 9,24 — et sa porte est dans le retour x 9,165, y 3,58-4,38 (js/carte_ecole.js) : elle s'ouvre
 // dans la salle et se rabat le long du mur nord.)
 // Deux rangs de cinq postes face au NORD (la toile descend devant les jours dépolis), tables arrêtées à x 9,4 : 0,5 m le
@@ -1053,35 +1055,38 @@ function bureauB(ch, P) {
   radiateur(ch, 11.15, 0, 12.05, 0.09, 0.15, 0.65);
   // le tapis (sous le bureau, le fauteuil et les chaises des visiteurs)
   const tapis = new THREE.MeshStandardMaterial({ map: texTapis(), roughness: 1 });
-  ch.boite(10.25, 0.3, 12.25, 2.7, 0, 0.01, tapis, { ombre: false });
+  // (relecture du 11/10 : le mur nord sur la ligne 2,925, nu sud 2,85 — le tapis, le bureau de chêne et tout ce qu'il porte
+  // reculent encore de 0,1 m vers la façade, les chaises des visiteurs de 0,15, le fauteuil de 0,06)
+  ch.boite(10.25, 0.3, 12.25, 2.6, 0, 0.01, tapis, { ombre: false });
   // le bureau de chêne clair sur piètement noir, son caisson blanc
-  ch.boite(10.4, 1.0, 11.9, 1.8, 0.72, 0.75, P.chene);
-  for (const x of [10.44, 11.86]) for (const y of [1.04, 1.76]) ch.boite(x - 0.02, y - 0.02, x + 0.02, y + 0.02, 0.01, 0.72, P.noirMat);
-  ch.boite(10.44, 1.74, 11.86, 1.76, 0.62, 0.7, P.noirMat, { ombre: false });
-  ch.boite(11.38, 1.07, 11.82, 1.63, 0.02, 0.6, P.blancMat);
-  for (const h of [0.08, 0.27, 0.45]) ch.boite(11.43, 1.055, 11.77, 1.07, h, h + 0.12, P.grisClair, { ombre: false });
-  C.ajouterBoite(10.4, -1.0, 11.9, -1.8, { y1: 0.75 });
+  ch.boite(10.4, 0.9, 11.9, 1.7, 0.72, 0.75, P.chene);
+  for (const x of [10.44, 11.86]) for (const y of [0.94, 1.66]) ch.boite(x - 0.02, y - 0.02, x + 0.02, y + 0.02, 0.01, 0.72, P.noirMat);
+  ch.boite(10.44, 1.64, 11.86, 1.66, 0.62, 0.7, P.noirMat, { ombre: false });
+  ch.boite(11.38, 0.97, 11.82, 1.53, 0.02, 0.6, P.blancMat);
+  for (const h of [0.08, 0.27, 0.45]) ch.boite(11.43, 0.955, 11.77, 0.97, h, h + 0.12, P.grisClair, { ombre: false });
+  C.ajouterBoite(10.4, -0.9, 11.9, -1.7, { y1: 0.75 });
   // sur le bureau : l'écran, le portable ouvert, le téléphone, des papiers, la lampe, le pot à crayons
-  ecranPC(ch, P, 11.02, 1.6, 0.75, 'S', P.ecrans[2]);
-  clavier(ch, P, 10.98, 1.25, 0.75, 'S');
-  const lp = groupe(ch, 11.6, 1.37, 'S', 0.75); lp.rotation.y = -0.35;
+  ecranPC(ch, P, 11.02, 1.5, 0.75, 'S', P.ecrans[2]);
+  clavier(ch, P, 10.98, 1.15, 0.75, 'S');
+  const lp = groupe(ch, 11.6, 1.27, 'S', 0.75); lp.rotation.y = -0.35;
   R(lp, P.alu, 0.32, 0.016, 0.22, 0.006, 0, 0.008, 0, { ombre: false });
   const cou = new THREE.Group(); cou.position.set(0, 0.016, -0.11); cou.rotation.x = -0.25; lp.add(cou);
   B(cou, P.alu, 0.32, 0.21, 0.007, 0, 0.105, 0);
   plan(cou, P.ecrans[3], 0.3, 0.18, 0, 0.108, 0.0040);
-  const tel = groupe(ch, 10.53, 1.5, 'S', 0.75); R(tel, P.plastique, 0.18, 0.05, 0.2, 0.015, 0, 0.025, 0, { ombre: false }); R(tel, P.plastique, 0.05, 0.035, 0.19, 0.015, -0.055, 0.065, 0, { ombre: false });
-  const pap = groupe(ch, 10.56, 1.17, 'S', 0.75); pap.rotation.y = 0.2; B(pap, P.blancMat, 0.21, 0.012, 0.297, 0, 0.006, 0, { ombre: false });
-  const lampe = groupe(ch, 11.78, 1.65, 'S', 0.75);
+  const tel = groupe(ch, 10.53, 1.4, 'S', 0.75); R(tel, P.plastique, 0.18, 0.05, 0.2, 0.015, 0, 0.025, 0, { ombre: false }); R(tel, P.plastique, 0.05, 0.035, 0.19, 0.015, -0.055, 0.065, 0, { ombre: false });
+  const pap = groupe(ch, 10.56, 1.07, 'S', 0.75); pap.rotation.y = 0.2; B(pap, P.blancMat, 0.21, 0.012, 0.297, 0, 0.006, 0, { ombre: false });
+  const lampe = groupe(ch, 11.78, 1.55, 'S', 0.75);
   CY(lampe, P.noirMat, 0.07, 0.015, 0, 0.008, 0, 18); CY(lampe, P.noirMat, 0.008, 0.42, 0, 0.22, 0, 6);
   maille(new THREE.ConeGeometry(0.08, 0.12, 18, 1, true), P.noirMat, -0.05, 0.43, 0.04, 0, lampe).rotation.z = 0.5;
-  const pot = groupe(ch, 10.47, 1.7, 'S', 0.75); CY(pot, P.noirMat, 0.035, 0.1, 0, 0.05, 0, 14); for (let i = 0; i < 3; i++) CY(pot, [P.bleu, P.rouge, P.jaune][i], 0.005, 0.15, -0.012 + i * 0.012, 0.11, (i - 1) * 0.008, 6, { ombre: false });
+  const pot = groupe(ch, 10.47, 1.6, 'S', 0.75); CY(pot, P.noirMat, 0.035, 0.1, 0, 0.05, 0, 14); for (let i = 0; i < 3; i++) CY(pot, [P.bleu, P.rouge, P.jaune][i], 0.005, 0.15, -0.012 + i * 0.012, 0.11, (i - 1) * 0.008, 6, { ombre: false });
   // le fauteuil (haut dossier), dont on se relève vers l'est, et les deux chaises visiteurs, devant la moitié ouest du
   // bureau ; à l'est, le passage de la porte vers le fond du bureau
   // (retour r02 du 11/10 : le bureau n'a plus que 3 m de profondeur, son mur nord en y 3,1 — le bureau de chêne, son
   // fauteuil et les chaises reculent de 0,2 m vers la façade ; on se relève des chaises derrière elles, à 0,3 m du mur)
-  chaiseBureau(ch, P, 11.1, 0.58, 'N', { accoudoirs: true, haut: true, nom: 'le fauteuil du bureau', sortie: [0.75, 0] });
-  chaiseLuge(ch, P, 10.3, 2.13, 'S', 0.1, [0.08, 0.58]);
-  chaiseLuge(ch, P, 10.85, 2.13, 'S', -0.12, [0, 0.58]);
+  // (relecture : à 1,98, on se relève derrière elles à 0,52 — hors de leur propre cercle —, à 0,35 m du nu du mur)
+  chaiseBureau(ch, P, 11.1, 0.52, 'N', { accoudoirs: true, haut: true, nom: 'le fauteuil du bureau', sortie: [0.75, 0] });
+  chaiseLuge(ch, P, 10.3, 1.98, 'S', 0.1, [0.08, 0.52]);
+  chaiseLuge(ch, P, 10.85, 1.98, 'S', -0.12, [0, 0.52]);
   // l'armoire (deux portes) au mur est, au sud du débattement de la porte (y 1,7-2,45)
   ch.boite(12.76, 0.3, 13.2, 1.5, 0, 1.98, P.grisClair, { collision: true });
   ch.boite(12.75, 0.31, 12.76, 0.895, 0.03, 1.95, P.blancMat, { ombre: false });
@@ -1103,8 +1108,9 @@ function bureauB(ch, P) {
   // le tableau (impression encadrée) au-dessus des chaises des visiteurs, la grande plante, le porte-manteau
   // (retour r02 du 11/10 : le mur nord en y 3,1 — le tableau redescend au-dessus des chaises, la plante passe dans l'angle
   // nord-est, à côté de la porte, hors de son passage)
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texArt(), roughness: 0.7 }), BB.x0, 2.3, 'E', 0.82, 1.02, 1.62, { baguette: P.chene, ep: 0.03 });
-  plante(ch, P, 12.15, 2.72, { h: 1.65, graineN: 3 });
+  // (relecture : le mur nord en 2,925 — le tableau en 2,2, la plante en (12,1 ; 2,5), à 0,33 m des deux murs de l'angle)
+  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texArt(), roughness: 0.7 }), BB.x0, 2.2, 'E', 0.82, 1.02, 1.62, { baguette: P.chene, ep: 0.03 });
+  plante(ch, P, 12.1, 2.5, { h: 1.65, graineN: 3 });
   // (le porte-manteau : dans l'angle de la fenêtre, à côté de la bibliothèque — au nord, il fermait le passage ; 10/10)
   const pm = groupe(ch, 10.52, 0.24, 'S');
   CY(pm, P.noirMat, 0.17, 0.02, 0, 0.01, 0, 20); CY(pm, P.noirMat, 0.016, 1.75, 0, 0.88, 0, 8);
