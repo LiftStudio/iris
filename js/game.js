@@ -45,7 +45,8 @@ const RAYON_CAM = 0.2;                    // la caméra est une petite sphère :
 //   - ÉPAULE : 0,4 m à droite (à gauche si un mur est à moins de 0,6 m à droite), visée 0,24 m à droite à 1,45 m : Haythem
 //     ne bouche plus le point de fuite des couloirs (photo 01, VO q_0300) ;
 //   - jamais dans une AUTRE PIÈCE que lui : sa zone, ou une voisine déclarée où l'on passe sans porte, sinon le recul est
-//     raccourci jusqu'au seuil — plus de cadrage à travers un chambranle (photo 24) ;
+//     raccourci jusqu'au seuil — plus de cadrage à travers un chambranle (photo 24) ; sauf sur le premier mètre derrière
+//     lui (RECUL_SEUIL, plus bas) ;
 //   - recul libre sous 1,5 m : épaule vers le côté libre, à 1,6 m ; sous 1,2 m, champ porté à 69° (« le 0,5x du
 //     téléphone ») ; à moins de 0,6 m de lui, Haythem en demi-transparence (0,35) au lieu d'être masqué.
 const DEG = Math.PI / 180;
@@ -53,11 +54,12 @@ const CHAMP = 63, CHAMP_H_MAX = 108, CHAMP_SPRINT = 7, CHAMP_MAX = 70, CHAMP_SER
 const TANGAGE = 0.12;                     // le piqué de départ (7°)
 const RECUL = 2.6, RECUL_RUE = 4.3, HAUT_CAM = 1.6, EPAULE = 0.4, VISEE_EPAULE = 0.24, VISEE_H = 1.45;
 const BAIE = 2.0;                         // un passage d'au moins 2 m n'est pas une porte (la plus large, la porte 6 : 1,90)
-// LE SEUIL FRANCHI (vérification finale du 11/10) : la règle de la pièce collait la caméra au dos de Haythem sur les
-// 2,6 premiers mètres après chaque porte — sur le tour du -1 et de l'escalier est, 47 % des images à moins de 1 m de lui
-// et 27 % à moins de 0,6 m (Haythem translucide) : le hall du -1, le passage sombre, le sas, le couloir est, chaque seuil de
-// l'espace pause. Elle peut repasser le seuil d'où il vient jusqu'à 1,1 m derrière lui — par la baie, entre les jambages
-// (les murs et les portes fermées l'arrêtent toujours) ; au-delà, la pièce reste la règle.
+// LE SEUIL FRANCHI (vérification finale du 11/10) : au sortir d'une porte, la règle de la pièce collait la caméra au dos
+// de Haythem tant qu'il n'en était pas à 2,6 m — la vue de jeu de la photo 24 (couloir est, Haythem à 0,7 m de la porte du
+// vestibule) la mettait à 0,54 m derrière lui, Haythem translucide ; au seuil de l'espace pause du -1, à 0,13 m. Elle peut
+// repasser le seuil d'où il vient jusqu'à 1,1 m derrière lui — par la baie, entre les jambages (les murs et les portes
+// fermées l'arrêtent toujours) : 1,12 m sur la photo 24, le chambranle et le couloir cadrés comme sur la photo ; au-delà,
+// la pièce reste la règle.
 const RECUL_SEUIL = 1.1;
 const OEIL_PHOTO = 1.45;                  // la « vue photo » : l'œil à hauteur de téléphone tenu devant soi
 // le champ vertical pour un écran de rapport `aspect` : 63°, sauf si l'horizontal dépasse alors 108°
