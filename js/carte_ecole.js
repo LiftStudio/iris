@@ -1219,7 +1219,7 @@ export function construireCarte(scene, renderer = null) {
   // CE QUE LA CAMÉRA PEUT VOIR (lot 5, 11/10) : le décor cousu du rez-de-chaussée et de la rue coupé par zones à son
   // tour, chaque morceau rangé ; à chaque rendu par la caméra du jeu, ce qu'elle ne peut pas voir n'est pas dessiné
   poserCoupe(null);
-  const visibilite = poserVisibilite(scene);
+  const visibilite = poserVisibilite(scene, ch.portes.auto);
 
   // ---- LA CARTE VIVANTE (js/game.js, à chaque image) ----
   let cuit = -1;

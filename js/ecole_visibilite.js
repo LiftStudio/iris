@@ -50,6 +50,11 @@ export const ZONES = [
   // est et la bande sud ; au 2e le sas et le palier
   ['sse', [b(12.95, 4.9, XE, 13.0, SS)]], ['r0e', [b(13.4, 7.5, XE, 13.0, R0)]],
   ['e1e', [b(13.55, 6.95, XE, 13.0, E1)]], ['e2e', [b(13.72, 6.5, XE, 13.0, E2)]],
+  // les PIÈCES FERMÉES du rez-de-chaussée, derrière une porte automatique (on n'y voit que porte ouverte, donc près d'elle) :
+  // les toilettes femmes et hommes ; le local et les toilettes PMR ; la salle David Clark et son entrée ; le couloir de
+  // service. (Pas la Si 0.1 ni le bureau de direction : leurs fenêtres donnent sur la rue.)
+  ['r0wc', [b(6.05, 7.9, 8.95, 14.0, R0)]], ['r0lt', [b(8.95, 7.9, 11.6, 14.45, R0)]],
+  ['r0si', [b(4.75, 12.65, 6.05, 14.2, R0), b(XO, 14.2, 8.95, 21.3, R0)]], ['r0sv', [b(XO, 0, 1.62, 4.85, R0)]],
   // le -1 (ce qui n'est pas dans les deux groupes du sous-sol : la dalle-boîte, la cage est)
   ['ss', [b(XO, YF, XE, YT, SS)]],
   // le rez-de-chaussée, sa façade comprise
@@ -71,9 +76,9 @@ export const DEHORS = 1 << 30;                    // hors de toute zone : jamais
 // la cage est. Un triangle va dans la famille de la zone qu'il regarde (le point à 3 cm devant son centre) ; le morceau
 // garde toutes les zones de ses triangles.
 const FAMILLE = { rue: 0, r0: 1, tremie0: 2, cageO0: 2, cageE0: 2, ss: 3, tremieS: 3, cageES: 3, e1av: 4, e1: 5, cageO1: 5, cageE1: 5,
-  e2av: 6, e2: 7, cageE2: 7, sse: 9, r0e: 10, e1e: 11, e2e: 12 };
+  e2av: 6, e2: 7, cageE2: 7, sse: 9, r0e: 10, e1e: 11, e2e: 12, r0wc: 13, r0lt: 13, r0si: 13, r0sv: 13 };
 const FAM = new Map(ZONES.map(([n], i) => [1 << i, FAMILLE[n]]));
-const F_DEHORS = 8, N_FAM = 13;
+const F_DEHORS = 8, N_FAM = 14;
 const BOITES = [];
 ZONES.forEach(([, bs], i) => { for (const B of bs) BOITES.push([...B, 1 << i]); });
 
@@ -144,8 +149,9 @@ const ONBR = THREE.Object3D.prototype.onBeforeRender;
 // ensemble : le -1, le rez-de-chaussée et le bas des cages, le dehors, la rue, l'avant et le fond du 1er, ceux du 2e.
 // Ne coupe que du fixe : un maillage d'un seul matériau, sans morphes ni instances ni rendu à soi (onBeforeRender), et
 // rien sous une porte ou un vantail (ils tournent).
-// (-1, -1 est, bas des cages, rez-de-chaussée est, rez-de-chaussée, dehors, rue, 1er avant, 1er, 1er est, 2e avant, 2e, 2e est)
-const ORDRE = [3, 9, 2, 10, 1, 8, 0, 4, 5, 11, 6, 7, 12];
+// (-1, -1 est, bas des cages, rez-de-chaussée est, rez-de-chaussée, dehors, rue, 1er avant, 1er, 1er est, 2e avant, 2e, 2e est,
+// et pour finir les pièces fermées du rez-de-chaussée : cachées presque partout, elles ne font qu'écourter la suite)
+const ORDRE = [3, 9, 2, 10, 1, 8, 0, 4, 5, 11, 6, 7, 12, 13];
 const COUPE = { ms: 0, blocs: 0 };
 export function couperParZones(o) {
   const t0 = performance.now();
@@ -276,13 +282,26 @@ const VU_S = T('tremieS', 'cageES', 'sse', 'ss');
 const VU_R = T('tremie0', 'cageO0', 'cageE0', 'r0e', 'r0', 'e1av', 'rue');
 const VU_E1 = T('cageO1', 'cageE1', 'e1e', 'e1av', 'e1', 'rue');
 const VU_E2 = T('cageE2', 'e2e', 'e2av', 'e2', 'rue');
+// LES PIÈCES FERMÉES (posées par poserVisibilite, d'après les portes automatiques de chacune) : on les voit de dedans, ou à
+// moins de 8 m d'une de leurs portes — Haythem l'ouvre à 2,10 m (js/ecole_portes.js), la caméra le suit à 2,60 m au plus,
+// et la porte met 0,38 s à se refermer derrière lui ; plus loin, elle est fermée
+let FERMEES = [];
+const PRES_PORTE = 8.0;
+function fermeesVues(x, y) {
+  let vu = 0;
+  for (const F of FERMEES) {
+    if (F.toujours || F.boites.some((B) => x > B[0] - 0.3 && x < B[2] + 0.3 && y > B[1] - 0.3 && y < B[3] + 0.3) || F.portes.some(([px, py]) => Math.hypot(x - px, y - py) < PRES_PORTE)) vu |= F.bit;
+  }
+  return vu;
+}
+const T_FERMEES = T('r0wc', 'r0lt', 'r0si', 'r0sv');
 export function zonesCachees(x, h, z) {
   const y = -z;
   let vu;
   if (y < -0.3) {
     // DANS LA RUE : ni le -1, ni le fond du 1er tant que la caméra est sous 2,40 m (au-dessus, par les fenêtres de la
     // S 1.3 et sa porte ouverte, on voit l'espace pause et jusqu'à la Kahn), ni le fond du 2e sous 3,00 m
-    vu = VU_RUE;
+    vu = VU_RUE | fermeesVues(x, y);
     if (h >= 2.4) vu |= T('e1', 'e1e', 'cageE1');
     if (h >= 3.0) vu |= T('e2');
   } else if (h < -0.15) {
@@ -293,7 +312,7 @@ export function zonesCachees(x, h, z) {
     if (dans(x, y, PIED_TREMIE_S)) vu |= T('tremie0');
   } else if (h <= 3.3) {
     // AU REZ-DE-CHAUSSÉE : le 2e jamais ; le 1er par les cages ; le -1 par la trémie et la cage est
-    vu = VU_R;
+    vu = VU_R | fermeesVues(x, y);
     if (dans(x, y, VERS_CAGE_O)) vu |= T('cageO1', 'e1');
     if (dans(x, y, VERS_CAGE_E)) vu |= T('cageES', 'sse', 'cageE1', 'e1e', 'e1');
     if (dans(x, y, VERS_TREMIE_R)) vu |= T('tremieS', 'ss');
@@ -318,8 +337,16 @@ export function zonesCachees(x, h, z) {
 // =====================================================================
 // Range ce qui ne l'a pas été à la couture (le décor du rez-de-chaussée et la rue, cousus par js/kit_decor.js), puis
 // chaque maillage et chaque porte, et branche le tri sur les rendus de la scène. `maj(dt, jeu)` donne la caméra du jeu.
-export function poserVisibilite(scene) {
+export function poserVisibilite(scene, portesAuto = []) {
   const t0 = performance.now();
+  // 0. les pièces fermées et leurs portes automatiques (celles du rez-de-chaussée posées sur le bord d'une de leurs boîtes)
+  FERMEES = ['r0wc', 'r0lt', 'r0si', 'r0sv'].map((n) => {
+    const boites = ZONES.find((Zn) => Zn[0] === n)[1];
+    const portes = portesAuto.filter((P) => Math.abs(P.base || 0) < 0.5 && boites.some((B) => P.cx > B[0] - 0.25 && P.cx < B[2] + 0.25 && -P.cz > B[1] - 0.25 && -P.cz < B[3] + 0.25)).map((P) => [P.cx, -P.cz]);
+    return { bit: Z[n], boites, portes };
+  });
+  // (une pièce sans porte retrouvée — le plan a bougé — reste toujours dessinée)
+  for (const F of FERMEES) F.toujours = !F.portes.length;
   // 1. la coupe : tout le fixe hors des groupes protégés (les niveaux ont été coupés à leur couture)
   const aCouper = [];
   const protege = (o) => { for (let p = o; p; p = p.parent) if (p.userData && p.userData.nofuse) return true; return false; };
@@ -355,7 +382,8 @@ export function poserVisibilite(scene) {
   let camJeu = null, prof = 0, H = 0, cle = NaN, fond = null;
   const caches = [], montres = [];
   // (au -1, pas une fenêtre : le ciel ne s'y voit jamais, mais par les fentes du décor — au-dessus de la porte G de l'aile —
-  // on voyait le dessous de la rue, sombre, que le tri ne dessine plus ; le fond y est donc sombre lui aussi)
+  // on voyait le dessous de la rue, sombre, que le tri ne dessine plus ; le fond y est donc sombre lui aussi. Sauf au pied
+  // de l'escalier est : en levant les yeux dans la cage, on voit le fond tout en haut, au-dessus du palier du 2e)
   const FOND_SS = new THREE.Color(0x101010);
   const V = { actif: true, regles: null, cachees: 0, maillages: n, blocs: blocs.length, lots: lots.length, ms: 0, msCoupe: 0 };
   const avant = scene.onBeforeRender, apres = scene.onAfterRender;
@@ -367,7 +395,7 @@ export function poserVisibilite(scene) {
     const p = cam.getWorldPosition(_v);
     const k = Math.round(p.x * 50) * 1e8 + Math.round(p.y * 50) * 1e4 + Math.round(p.z * 50);
     if (k !== cle || V.regles) { cle = k; H = (V.regles || zonesCachees)(p.x, p.y, p.z); V.cachees = H; }
-    if (p.y < -0.15 && p.z < 0.3 && sc.background && sc.background.isColor) { fond = sc.background; sc.background = FOND_SS; }
+    if (p.y < -0.15 && p.z < 0.3 && !dans(p.x, -p.z, VERS_CAGE_E) && sc.background && sc.background.isColor) { fond = sc.background; sc.background = FOND_SS; }
     if (!H) return;
     for (const [m, L] of lots) if ((m & ~H) === 0) for (const o of L) cacher(o);
     // les blocs coupés : entiers si tout s'en voit, rien si rien, sinon une suite par série de familles visibles
