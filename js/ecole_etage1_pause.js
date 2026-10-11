@@ -796,16 +796,16 @@ export function poserPause1(ch, ctx) {
   // — le montre devant l'angle du recoin, vers (11,2 ; 7,1) à 0,3 m près, ses deux tabourets « Miura » côté nord-est ;
   // l'autre, vers (10,9 ; 8,5), est celui du milieu étiré, (11,1 ; 8,49). Mais la photo 28 (2026, qui passe avant la
   // vidéo) voit par la porte du palier, en biais, un sol nu jusqu'aux jours : le cône y = 9,75 − k (16,39 − x), k de 0,573
-  // à 0,747, reste vide — le mange-debout en (11,3 ; 7,2), juste au nord, ses tabourets au nord-est ; la chaise menthe
-  // recule de 10 cm, que sa sortie reste libre)
+  // à 0,747, reste vide)
   // (relecture V2 : les plateaux de 65 cm des mange-debout, mesurés sur les poses de VO q_0183, q_0195 et q_0270 tirées
   // du seul côté sud : celui de l'entrée en (10,1 ; 7,7), (10,1 ; 7,1) et (11,1 ; 7,5) — on le met au milieu, (10,35 ;
-  // 7,35), ses deux « Miura » au nord (q_0270) ; celui du milieu, devant la vitrée, (9,9 ; 8,8) sur q_0183 ; un cinquième
+  // 7,35), ses deux « Miura » au nord-est (q_0270) ; celui du milieu, devant la vitrée, (9,9 ; 8,8) sur q_0183 ; un 5e
   // devant la rouge, (10,55 ; 10,05) sur q_0183 — la porte de la Si 1.4, à x 10,05-11,0, le laisse loger. Il n'y a pas de
   // mange-debout contre les jours : q_0195 n'y voit que les deux chaises coque, orange et menthe, vers (8,5-9,1 ; 6,6). Tous
   // hors du cône de la photo 28)
-  for (const [x, y] of [[10.35, 7.35], [12.8, Yv(10.9)], [10.1, 8.75], [10.55, 10.05]]) mangeDebout(x, y);
-  miura(10.7, 7.95, 'S', [11.25, 8.3]); miura(12.85, Yv(11.45), 'S', [12.4, Yv(11.75)]); miura(10.0, 7.95, 'S', [9.45, 8.25]);
+  // (ses deux tabourets à l'est et au nord-est : entre lui et celui du milieu, on passe — 0,7 m)
+  for (const [x, y] of [[10.35, 7.35], [12.8, Yv(10.9)], [9.85, 8.9], [10.55, 10.05]]) mangeDebout(x, y);
+  miura(10.75, 8.0, 'S', [11.2, 8.45]); miura(12.85, Yv(11.45), 'S', [12.4, Yv(11.75)]); miura(11.0, 7.55, 'W', [11.6, 7.55]);
   miura(12.8, Yv(10.35), 'N', [12.3, 9.6]); miura(11.15, 10.1, 'W', [11.75, 10.1]);
   coque(8.7, 6.7, 'E', P.coqueOrange, [8.7, 7.3]); coque(9.25, 6.45, 'N', P.coqueMenthe, [9.25, 7.05]);
   // (la lime contre le muret court, entre la niche et le 1er poteau — relecture V2 : devant le 1er, le meuble bas occupe
