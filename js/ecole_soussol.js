@@ -828,9 +828,11 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     for (const [a0, a1] of [[7.51, PORTE_PAUSE - 0.52], [PORTE_PAUSE + 0.52, PORTE_HALL - 0.52], [PORTE_HALL + 0.52, 11.71]]) plinthe('y', X_MUR + EP_MUR / 2, a0, a1, 1, Y_SS, X.plintheSalle);
     // le fond du couloir (au sud) et son caisson
     mur({ de: [1.35, Y_COUL0 - 0.075], a: [2.55, Y_COUL0 - 0.075], mats: B0, plinthes: ['N'] });
-    // LE HALL : un petit ressaut au mur est, après la porte (v_037)
-    B(2.27, 11.46, 2.42, 11.86, Y_SS, DALLE, B0, { ombre: false, collision: true });
-    plinthe('x', 11.46, 2.27, 2.42, -1); plinthe('x', 11.86, 2.27, 2.42, 1); plinthe('y', 2.27, 11.46, 11.86, -1);
+    // LE HALL : un ressaut au mur est, après la porte (v_037). (Relecture du 11/10 : un DÉCROCHEMENT, pas un pilier — sur
+    // v_036 à v_038, du coin du fond, le pied du mur est vient droit jusqu'à l'arête, puis la plinthe tourne vers l'EST
+    // avant de filer à la porte : au nord de l'arête, le mur est 15 cm plus épais jusqu'au fond, le hall y a 1,87 m)
+    B(2.27, 11.46, 2.42, Y_FOND, Y_SS, DALLE, B0, { ombre: false, collision: true });
+    plinthe('x', 11.46, 2.27, 2.42, -1); plinthe('y', 2.27, 11.46, Y_FOND, -1);
     // ---- L'ESPACE PAUSE ----
     const P = X.plintheSalle;
     // le retour sud, à droite de l'entrée (l'affiche « 100 % »), l'aile des distributeurs (ouest et sud)
@@ -984,9 +986,10 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     B(0.495, Y_EXT - 0.012, 0.505, Y_EXT + 0.012, Y_SS + 0.79, Y_SS + 0.85, std({ color: 0x3f8f4a, roughness: 0.6 }), { ombre: false });
     C.ajouterCercle(0.51, -Y_EXT, 0.095, { y0: Y_SS + 0.7, y1: Y_SS + 1.36 });
     panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.15, 0.15, 0.4, Y_EXT, Y_SS + 1.65, 'E');
-    // LA CONSIGNE vert pâle sous son protège-document, l'interrupteur dessous (mur est, v_037 à v_039)
-    panneau(new THREE.MeshStandardMaterial({ map: texConsigneVerte(), roughness: 0.3 }), 0.15, 0.35, X_MUR - EP_MUR / 2, Y_FOND - 0.45, Y_SS + 1.85, 'W', 0.006);
-    B(X_MUR - EP_MUR / 2 - 0.01, Y_FOND - 0.49, X_MUR - EP_MUR / 2, Y_FOND - 0.41, Y_SS + 1.46, Y_SS + 1.54, X.blancMat, { ombre: false });
+    // LA CONSIGNE vert pâle sous son protège-document, l'interrupteur dessous (mur est, v_037 à v_039 ; sur le nu du
+    // décrochement, x 2,27)
+    panneau(new THREE.MeshStandardMaterial({ map: texConsigneVerte(), roughness: 0.3 }), 0.15, 0.35, 2.27, Y_FOND - 0.45, Y_SS + 1.85, 'W', 0.006);
+    B(2.26, Y_FOND - 0.49, 2.27, Y_FOND - 0.41, Y_SS + 1.46, Y_SS + 1.54, X.blancMat, { ombre: false });
     // (deux affichettes A4 au mur du couloir, près de la porte de l'espace pause)
     panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#fbfbf8', 41), roughness: 0.7 }), 0.21, 0.297, 1.5, PORTE_PAUSE + 0.75, Y_SS + 1.55, 'E');
   }
