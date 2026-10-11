@@ -1196,9 +1196,9 @@ export function construireCarte(scene, renderer = null) {
   // au-dessus des chaises entre 6 et 8 m : le jeu en avait un en (7,8 ; 6,9). La lumière : un blanc chaud de 2 900 K.)
   const chaudAtt = new THREE.Color(0xffd5a3);
   for (const [x, y, h] of [[5.5, 5.15, 2.6], [7.15, 5.15, 2.58], [8.8, 5.15, 2.58], [10.45, 5.15, 2.58], [5.35, 6.8, 2.6], [8.7, 6.8, 2.6], [12.05, 6.8, 2.6]]) ch.spot(x, y, h, 'attente', { couleur: chaudAtt });
-  // (retour r02 du 11/10 : l'ANTICHAMBRE, un spot rond comme celui du passage de la pile, au-dessus de la porte de la Si 0.1
-  // — de r02, il est derrière le bout du mur sud : par l'ouverture, la photo ne montre que ceux du hall, à 12-18 m)
-  ch.spot(10.3, 3.8, 2.6, 'attente');
+  // (retour r02 du 11/10 : l'ANTICHAMBRE n'a pas de spot à elle — par l'ouverture, r02 ne montre que ceux du hall, à 12-18 m,
+  // et l'ouverture est SOMBRE : elle prend la lumière de la rangée sud de la salle, x 10,45, et du spot du passage de la
+  // pile, js/ecole_rdc_centre.js)
   // (V2, 11/10 : la photo 01 recalée met le hublot qu'elle voit en (12,3 ; 10,7), au-dessus du local et de la gaine, un peu
   // à l'ouest de l'axe ; l'autre est derrière l'appareil, vers le fond)
   for (const [x, y] of [[12.3, 10.7], [12.3, 13.4]]) ch.opale(x, y, 2.45, 'c01');

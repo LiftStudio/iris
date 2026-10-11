@@ -1078,7 +1078,7 @@ function bureauB(ch, P) {
   // (retour r02 du 11/10 : le bureau n'a plus que 3 m de profondeur, son mur nord en y 3,1 — le bureau de chêne, son
   // fauteuil et les chaises reculent de 0,2 m vers la façade ; on se relève des chaises derrière elles, à 0,3 m du mur)
   chaiseBureau(ch, P, 11.1, 0.58, 'N', { accoudoirs: true, haut: true, nom: 'le fauteuil du bureau', sortie: [0.75, 0] });
-  chaiseLuge(ch, P, 10.3, 2.13, 'S', 0.1, [0, 0.58]);
+  chaiseLuge(ch, P, 10.3, 2.13, 'S', 0.1, [0.08, 0.58]);
   chaiseLuge(ch, P, 10.85, 2.13, 'S', -0.12, [0, 0.58]);
   // l'armoire (deux portes) au mur est, au sud du débattement de la porte (y 1,7-2,45)
   ch.boite(12.76, 0.3, 13.2, 1.5, 0, 1.98, P.grisClair, { collision: true });
