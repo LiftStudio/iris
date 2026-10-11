@@ -29,10 +29,11 @@
 //   le palier intermédiaire          x 18,29-19,8    y 9,15-12,45   à 1,75 m
 //   la volée 2 (vers l'ouest)        x 18,29-16,05   y 9,15-10,65   paillasse ; elle arrive au 1er en x 16,05
 //   le mur d'échiffre                y 10,725 (10,65-10,8)          de x 16,05 à 18,29, jusqu'au plafond de la cage
-//   au 1er : le palier est           x 13,55-16,05   y 7,0-12,45    le mur du panneau (face est x 14,225) de y 8,6 à
-//                                                                  11,1, la porte du couloir en x 13,55 (y 7,12-8,55),
-//                                                                  le renfoncement nord x 13,2-14,2 y 11,1-12,45, au
-//                                                                  fond la porte de la 106 (S 1.6, fermée) en x 15,2
+//   au 1er : le palier est           x 13,55-16,05   y 7,0-11,65    le mur du panneau (face est x 14,225) de y 8,6 à
+//                                                                  10,9 (plan V2), la porte du couloir en x 13,55 (y
+//                                                                  7,12-8,55), le renfoncement nord x 13,4-14,2 y
+//                                                                  10,9-11,65, au fond la porte d'un local (fermée) en
+//                                                                  x 15,2 ; derrière, une gaine fermée jusqu'à y 12,45
 //            et la bande sud         x 16,05-17,9    y 7,0-9,0      sans porte, jusqu'à l'ascenseur (VO q_0274-0281)
 //   au-dessus (la vidéo officielle, 68-71 s et 88,8-90 s ; 10/10) : la volée 3 au-dessus de la volée 1 (17,2 cm, palier
 //   à 5,05 m), la volée 4 au-dessus de la volée 2 (échiffre ROUGE de ce côté) jusqu'au palier du 2e (js/ecole_etage2.js),
