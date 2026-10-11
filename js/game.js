@@ -59,10 +59,11 @@ const champBase = (aspect) => Math.min(CHAMP, 2 * Math.atan(Math.tan(CHAMP_H_MAX
 // LA ZONE D'UN AUTRE NIVEAU (relecture du 11/10). Les zones du rez-de-chaussée et du 1er n'ont pas de hauteur maximale
 // (js/ecole_lumieres.js zoneEn) : sur le 2e, partout où ses propres zones s'arrêtent un peu avant le mur, c'est celle du
 // 1er qui répond (le fond de la salle 1, le bout ouest du couloir rouge) ; au 1er, celle du rez-de-chaussée (le bord
-// ouest de la Robert Kahn : la David Clark) ; au -1, celle du rez-de-chaussée (la pause : la salle A). Ce n'est pas une
-// autre pièce : la caméra y passe comme hors de toute zone (sinon elle se collait à Haythem au milieu de sa salle, dans
-// 3,6 % des cas rejoués). Une zone `Z` en (x, z) est d'un autre niveau quand elle y vaut aussi un étage plus bas (ou plus
-// haut) alors que la zone de Haythem `Zh` n'y vaut nulle part — la règle de zoneEn, sans liste de zones.
+// ouest de la Robert Kahn : la David Clark) ; au -1, celle du rez-de-chaussée (la pause : la salle A) ; et en haut d'une
+// volée, le palier de l'étage. Ce n'est pas une autre pièce : la caméra y passe comme hors de toute zone (sinon elle se
+// collait à Haythem contre un mur qui n'existe pas : 1 107 reculs de 2,6 m sur 91 312 rejoués coupés de plus de 0,5 m pour
+// rien, au 2e, au 1er et au -1). Une zone `Z` en (x, z) est d'un autre niveau quand elle y vaut aussi un étage plus bas
+// (ou plus haut) alors que la zone de Haythem `Zh` n'y vaut nulle part — la règle de zoneEn, sans liste de zones.
 const ETAGE = 3.0;
 const bandeAdmet = (r, y) => !(r[4] > 0 && y < r[4]) && !(r[5] !== undefined && y > r[5]);
 function autreNiveau(Z, Zh, x, z, sol) {
