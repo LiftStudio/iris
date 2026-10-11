@@ -819,7 +819,9 @@ function construireMurs(ch) {
   // huisserie, et le rail du ferme-porte sur toute la largeur, côté hall (photos 06, 20 : la barre grise sous le soffite).
   // (Leur fente vitrée est la longue, de 0,6 à 1,85 — photos 06 et 20 : elle descend aux deux tiers du vantail.)
   ch.porte('x', 13.675 + DY_S, 3.45, { l: 2.0, h: 2.1, modele: 'grise2', feu: true, oculus: 'long', etat: 'ouverte', ouverts: [true, false], angle: 1.53, cote: 'S', notices: 0, noticesD: 0, nom: 'escalier' });
-  ch.boite(2.45, 8.88, 4.45, 8.925, 2.16, 2.2, M.ferme, { ombre: false });
+  // (relecture du 11/10 : le rail est d'aluminium gris CLAIR, mat — photos 04 et 20 ; le métal du ferme-porte, sous la
+  // carte d'environnement du hall, le rendait noir)
+  ch.boite(2.45, 8.875, 4.45, 8.925, 2.15, 2.21, new THREE.MeshStandardMaterial({ color: 0xbfc3c5, roughness: 0.45, metalness: 0.15 }), { ombre: false });
 }
 
 // LA PORTE DU FOND DE C05 (photos 05, 23) : ce n'est PAS une issue de secours (09/10) — c'est celle d'une salle
