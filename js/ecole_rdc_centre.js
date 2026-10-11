@@ -260,7 +260,7 @@ export function poserRdcCentre(ch) {
   // de la Si 0.1, y 4,47-4,68 — js/carte_ecole.js ; r02 ne la voit pas, elle est de l'autre côté de l'angle)
   plaqueMurale(ch, std({ map: texPlaqueBureau(), roughness: 0.4 }, 'plaque du bureau de direction'), X_RETOUR, Y_PLAQUE, 'E', 0.21, 1.555, 1.635, 0.006);
   plaqueMurale(ch, std({ map: texPorteNom(), roughness: 0.5 }, 'porte-nom'), X_RETOUR, Y_PLAQUE, 'E', 0.21, 1.48, 1.545, 0.006);
-  // le drapeau, perpendiculaire au mur, au-dessus de la plaque, sur sa potence (retour r02 du 11/10 : de 2,14 à 2,30 m —
+  // le drapeau, perpendiculaire à la face nord, à l'angle, sur sa potence (retour r02 du 11/10 : de 2,14 à 2,30 m —
   // 200 à 255 px au-dessus de l'horizon de r02, à 4,4 m —, sa pointe à 0,2 m du mur ; c'est le drapeau noir que r02 voit
   // au-dessus de l'ouverture : le jeu en avait deux, l'un ici, l'autre « de la Si 0.1 » au bout du jour est)
   const dr = new THREE.Group(); dr.position.set(X_DRAPEAU, 2.22, -(Y_BUREAU + 0.02 + 0.09)); ch.decor.add(dr);

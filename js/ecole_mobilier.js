@@ -177,14 +177,14 @@ export function poserMobilier(ch) {
   // collée au pilier et montre des pictogrammes de personnages bleus »). Sur la photo 21 en pleine définition, vue du bout
   // ouest : à droite du pilier, à 50 px de lui, devant le bout est du jour c 8,35 — le haut de son cadre dépasse au-dessus
   // d'elle —, le pied de son socle à 4 m de l'appareil : (8,4 ; 5,14), le dos contre le mur sud, tournée vers le
-  // nord-ouest (on voit son écran et, à droite, son flanc) ; entre elle et le pilier, 1 m : le passage vers la porte de
-  // la Si 0.1.
+  // nord-ouest (on voit son écran et, à droite, son flanc) ; entre elle et le pilier, 1 m. (Retour r02 du 11/10 : c'est
+  // derrière elle, au bout du mur sud, que s'ouvre l'antichambre vers le hall.)
   // Le socle est une plaque noire de 0,62 x 0,42, épaisse de 2,5 cm, qui avance devant l'écran ; le fût de 1,92 m, un rien
   // renversé ; l'écran de 0,54 x 1,28, de 0,6 à 1,88 m — dessous, le pied noir du fût et son petit logo.
   {
     // (Relecture du 11/10 : r02 et la photo 02 rejouées ensemble. Sur r02, le pied du fût est à 4,1 m de l'appareil
     // — 565 px sous l'horizon —, sous les relèvements de ses deux bords : la borne est CONTRE LE MUR SUD, en x 8,6, devant
-    // le jour est, le nu (7,87-9,06), à 0,45 m du bout du mur (retour r02) ; sur la photo 02, elle est bien hors du
+    // le jour est, le nu (7,87-9,06), à 0,33 m du bout du mur (retour r02) ; sur la photo 02, elle est bien hors du
     // cadre. Son haut n'est qu'à 100 px au-dessus de l'horizon quand son pied est à 565 px dessous : 1,82 m hors tout)
     // Et elle regarde le NORD, droit dans la salle, le dos au mur : vu du bout ouest, son écran n'a que 95 px de large pour
     // 160 de borne, son flanc noir à droite — un écran de 0,54 vu sous 60°. Tournée vers le nord-ouest, elle faisait face
@@ -252,7 +252,7 @@ export function poserMobilier(ch) {
     C.ajouterBoiteOrientee(kx, -ky, 0.43, 0.13, -th, { y1: 2.1 });
   }
   // (le DRAPEAU NOIR au bout est du jour est — r02 : « l'ouverture vers le hall, sombre, avec un pictogramme noir
-  // au-dessus » — n'est pas celui de la Si 0.1 : c'est celui du bureau de direction, sur le même bout de mur que sa plaque,
+  // au-dessus » — n'est pas celui de la Si 0.1 : c'est celui du bureau de direction, à l'angle où est aussi sa plaque,
   // VO q_0040-0043 ; retour r02 du 11/10 : js/ecole_rdc_centre.js. La porte de la Si 0.1 est dans l'antichambre.)
   // LES AFFICHETTES DU FOND (photo orange, carte WIFI) : au bout du mur, près de l'angle du hall, sous le haut-parleur
   // (photo 03) — sur la face ouest de la pile du hall, x 13,30, js/ecole_rdc_centre.js ; son angle sud-ouest, y 4,7.

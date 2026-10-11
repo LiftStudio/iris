@@ -761,12 +761,11 @@ function construireMurs(ch) {
   // une ouverture sombre et profonde : au fond, le hall — une fenêtre à barreaux de la façade, des spots à 12-18 m de
   // l'appareil, le comptoir —, et au-dessus le drapeau noir ; le jeu y montrait le mur sud, la porte grise de la Si 0.1 et,
   // plus loin, le mur nord du bureau, en y 4,8 jusqu'à x 11,55 : le hall ne se voyait de nulle part. r02 agrandie (pose du
-  // relecteur, (5,28 ; 7,20) h 1,55 cap 110,7, f 1 502) : LE MUR SUD S'ARRÊTE NET 47 px à gauche du cadre du jour est —
-  // 0,18 m après lui, x 9,24, rejoué au même point de vue (les écarts de pose du coin, du cadre et du drapeau rapportés au
-  // jeu : 48 px du cadre au coin sur la photo, 75 px pour 0,29 m dans le jeu) — et le drapeau est sur ce bout de mur ; le
-  // hall se voit au-delà, entre le pilier et lui. VO q_0040-0043 : à l'angle, le drapeau ; sur le retour, face à l'est,
-  // la plaque « Bureau de direction B 0.3 » ; les jours dépolis juste à droite de l'angle — la caméra passe à côté. Derrière, une ANTICHAMBRE jusqu'au mur nord du bureau, la ligne y 3,1 :
-  // plus bas.)
+  // relecteur, (5,28 ; 7,20) h 1,55 cap 110,7, f 1 502) : LE MUR SUD S'ARRÊTE NET, 48 px à gauche du cadre du jour est —
+  // le jeu rejoué au même point de vue met 75 px pour 0,29 m à cet endroit : 0,18 m après le cadre, x 9,24 —, et le drapeau
+  // est sur ce bout de mur ; au-delà, le hall, entre le pilier et lui. VO q_0040-0043 : à l'angle, le drapeau ; sur le
+  // retour, face à l'est, la plaque « Bureau de direction B 0.3 » ; les jours dépolis juste à droite de l'angle — la
+  // caméra de la visite passe à côté. Derrière, une ANTICHAMBRE, jusqu'au mur nord du bureau : plus bas.)
   const YS = ATT.ys, XE = 9.24, JOURS_S = [5.825, 7.145, 8.465], J_L = 1.02, J_BAS = 1.12, J_H = 2.4;
   ch.mur({ de: [4.5, YS], a: [XE, YS], mats: B, plinthes: ['N', 'S'], ouvertures: JOURS_S.map((c) => ({ c, l: J_L, bas: J_BAS, h: J_H })) });
   // (la plinthe du chant, au bout du mur : elle rejoint celle de l'antichambre)
@@ -834,8 +833,9 @@ function construireMurs(ch) {
   // passage de la pile et le hall — par là, du bout ouest de la salle, on voit le hall à droite du pilier (r02). Trois
   // photos le bornent :
   //  - la photo 03, de l'angle sud-est de la salle vers le hall : à droite, le sol libre jusqu'au mur blanc dont la plinthe
-  //    file vers l'ouest, la face nord de la ligne y 3,1, qui finit en (12,575 ; 3,175) ; dans le bas du cadre, le sol en
-  //    (11,7 ; 4,65), là où le jeu dressait le mur nord du bureau ;
+  //    file vers l'ouest, la face nord de la ligne y 3,1, qui finit en (12,575 ; 3,175) (sa plinthe rétroprojetée à la pose
+  //    du lot C met cette face entre 3,0 et 3,1 : gardée) ; dans le bas du cadre, le sol en (11,7 ; 4,65), là où le jeu
+  //    dressait le mur nord du bureau ;
   //  - la photo 01, du C01 vers le sud : au fond, ce même mur de face, son jour dépoli à 0,9 m de l'angle, et 0,7 m plus
   //    loin la porte vitrée du bureau (hauteurs comparées : 79 px/m pour le mur, 71 pour la porte) — la porte est en y 2,5
   //    (photos 03, 22), le mur en y 3,1, et non en 4,8 ;

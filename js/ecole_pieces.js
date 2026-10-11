@@ -7,11 +7,13 @@
 // arriveront, c'est ce module qu'on reprend (la coque, elle, reste celle de js/carte_ecole.js).
 //
 //   LA Si 0.1 « TIM BERNERS-LEE » (l'ex-salle A, informatique)  x 4,575-9,9  y 0-4,725 (11/10, plan V2 ; sans son angle
-//        nord-est, x 9,09-9,9 × y 3,175-4,725, à l'antichambre : retour r02)  deux rangs de cinq et quatre postes tournés vers le nord (écrans, claviers, unités centrales, chaises de bureau où l'on s'assoit), le
+//        nord-est, x 9,09-9,9 × y 3,175-4,725, à l'antichambre : retour r02)  deux rangs de cinq et quatre postes
+//        tournés vers le nord (écrans, claviers, unités centrales, chaises de bureau où l'on s'assoit), le
 //        poste de l'enseignant, la toile de projection descendue devant les jours dépolis et son vidéoprojecteur, le
 //        tableau blanc du mur est, les stores enrouleurs des trois fenêtres sur rue, quatre dalles LED dans le plafond à
 //        plateaux, l'imprimante, l'horloge ; sa porte s'ouvre dans le retour x 9,165, sur l'antichambre
-//   LE BUREAU DE DIRECTION B 0.3  x 10,05-13,2 y 0-3,025, l'angle nord-est écorné (11/10 ; r02 : son mur nord en y 3,1)  bureau de chêne clair, fauteuil,
+//   LE BUREAU DE DIRECTION B 0.3  x 10,05-13,2 y 0-3,025, l'angle nord-est écorné (11/10 ; r02 : son mur nord en y 3,1)
+//        bureau de chêne clair, fauteuil,
 //        deux chaises visiteurs (on s'y assoit), armoire, bibliothèque, tableau, grande plante, tapis, porte-manteau ; sa
 //        porte vitrée au bout du passage de la pile (photos 01, 03)
 //   LE COULOIR DE SERVICE      x 0-1,6      y 0-8,95   derrière la porte blanche « Sortie » du passage : il mène à la
