@@ -101,6 +101,7 @@ const RECUL_SEUIL = 1.1;
 const PENTE = 0.6, PENTE_MIN = 0.3, PENTE_MAX = 1.9;
 const LEVE = 0.38, LEVE_COLLE = 0.27;
 const ASSIST_GENE = 1.8, ASSIST_PLEIN = 0.9, ASSIST_MAX = 1.6, ASSIST_K = 2.8, ASSIST_MANU = 0.8, ASSIST_MANU_SOURIS = 2.0;
+const ASSIST_CAPS = [0, 0.4, -0.4, 0.8, -0.8];   // les caps essayés, autour de celui de sa marche
 const SEUIL_FONTE = 1.2, SEUIL_FONTE_V = 0.3;
 const PIECE_IN = 7, PIECE_OUT = 3;
 const OEIL_PHOTO = 1.45;                  // la « vue photo » : l'œil à hauteur de téléphone tenu devant soi
@@ -882,15 +883,23 @@ export class Game {
       this._assistOn = false;
       if (manu) this._omCap = 0;                         // (on reprend la caméra à la main : elle lâche tout de suite)
     } else {
-      if (!this._assistOn && S.dl < ASSIST_GENE && v > 0.8) this._assistOn = true;
+      if (!this._assistOn && S.dl < ASSIST_GENE && v > 0.8) { this._assistOn = true; this._assistT = 0; }
       if (this._assistOn) {
         const yH = Math.atan2(-u.vel.x, -u.vel.z);          // le cap qui met la caméra derrière sa marche
         const ecart = (y) => Math.abs(angle(y - this.camYaw));
-        let best = yH, nb = -Infinity;
-        for (const o of [0, 0.4, -0.4, 0.8, -0.8]) {
-          const y = yH + o, n = Math.min(this._reculEn(y), 2.0) - 0.5 * Math.abs(o) - 0.25 * ecart(y);
-          if (n > nb) { nb = n; best = y; }
+        // (relecture : les cinq reculs ne sont mesurés que dix fois par seconde, ou dès que sa marche tourne de plus de
+        // 11° — chacun est un essai complet de la caméra, pièce comprise : 0,3 à 0,5 ms par image, autant que tout le
+        // reste de la caméra ; entre deux mesures, la note suit le cap actuel)
+        this._assistT = (this._assistT || 0) - dt;
+        if (!this._assistR || this._assistT <= 0 || Math.abs(angle(yH - this._assistY)) > 0.2) {
+          this._assistR = ASSIST_CAPS.map((o) => Math.min(this._reculEn(yH + o), 2.0));
+          this._assistY = yH; this._assistT = 0.1;
         }
+        let best = yH, nb = -Infinity;
+        ASSIST_CAPS.forEach((o, i) => {
+          const y = yH + o, n = this._assistR[i] - 0.5 * Math.abs(o) - 0.25 * ecart(y);
+          if (n > nb) { nb = n; best = y; }
+        });
         const D = angle(best - this.camYaw);
         // (arrivée : moins de 4° d'écart, ou plus rien à gagner — le recul actuel vaut celui du cap visé)
         if (Math.abs(D) < 0.07 || Math.min(S.dl, 2.0) - 0.5 * Math.abs(angle(this.camYaw - yH)) >= nb - 0.05) this._assistOn = false;
