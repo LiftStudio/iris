@@ -178,7 +178,10 @@ export function poserMobilier(ch) {
     }
     C.ajouterBoite(x - 0.38, -(y - 0.42), x + 0.22, -(y + 0.42), { y1: 1.85 });
   };
-  presentoir(13.08, 6.8);
+  // (vérification finale du 11/10, photo 21 relue au pixel : sur le mur du fond, le bord droit du présentoir n'est qu'à
+  // 14 px du radiateur — 0,18 m —, quand les affichettes, à 0,44 m du radiateur, en sont à 40 px ; il était à 0,79 m :
+  // y 6,8 -> 6,15, contre le radiateur)
+  presentoir(13.08, 6.15);
   presentoir(13.32, 8.2);
   // LES AFFICHETTES DU FOND (photo orange, carte WIFI) : au bout du mur, près de l'angle du hall, sous le haut-parleur
   // (photo 03) — sur la face ouest de la pile du hall, x 13,30, js/ecole_rdc_centre.js ; son angle sud-ouest, y 4,7.

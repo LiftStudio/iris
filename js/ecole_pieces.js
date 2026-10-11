@@ -906,8 +906,13 @@ function texAfficheEtudiant() {
 // 1,2 m d'une table à l'autre, 0,9 m devant le premier rang. L'allée ouest (1,4 m) mène à l'imprimante, dans
 // l'angle sud-ouest, et au poste de l'enseignant, dans l'angle nord-ouest, contre le mur nord. Plus de sac, de patère ni
 // de veste : « ne pas meubler l'imaginé ».
+// (Vérification finale du 11/10, en marchant : on n'y entrait pas. Le long du mur est, les tables à x 9,4 ne laissaient
+// que 0,5 m, et le coin du poste de l'enseignant passait à 0,64 m de celui du premier rang — 4 cm de jeu pour le joueur :
+// de la porte, on ne quittait pas la bande devant la toile, et les dix chaises n'étaient proposées depuis aucun point
+// atteint au pas de 5 cm. Les postes passent à 0,64 m, les tables s'arrêtent à x 9,12 — 0,78 m le long du mur est, de la
+// porte au fond — et le poste de l'enseignant à x 5,25 — 0,81 m entre les deux coins.)
 const RANGEES = [[1.3, 1.95], [3.15, 3.8]];          // (côté chaises, côté écrans)
-const POSTES = [6.34, 7.02, 7.7, 8.38, 9.06];
+const POSTES = [6.32, 6.96, 7.6, 8.24, 8.88];
 function salleA(ch, P) {
   const { C } = ch;
   // la plinthe qui manque (le mur du passage, côté salle) et les radiateurs sous les fenêtres
@@ -916,7 +921,7 @@ function salleA(ch, P) {
   // ---- les postes (0,68 m chacun : deux tables accolées, deux postes + trois postes) ----
   let k = 0;
   for (const [ya, yb] of RANGEES) {
-    table(ch, P, 6.0, 7.358, ya, yb); table(ch, P, 7.362, 9.4, ya, yb);
+    table(ch, P, 6.0, 7.278, ya, yb); table(ch, P, 7.282, 9.12, ya, yb);
     POSTES.forEach((x, i) => {
       ecranPC(ch, P, x, yb - 0.22, 0.745, 'S', P.ecrans[(k + i * 2) % P.ecrans.length]);
       clavier(ch, P, x - 0.04, ya + 0.2, 0.745, 'S');
@@ -932,11 +937,11 @@ function salleA(ch, P) {
   const cahier = groupe(ch, 8.72, 1.62, 'S', 0.745); B(cahier, P.jaune, 0.21, 0.012, 0.29, 0, 0.006, 0, { ombre: false }); cahier.rotation.y = 0.3;
   // ---- le poste de l'enseignant (devant à gauche pour les élèves), contre le mur nord ; il s'y assoit face au mur, son
   // écran tourné vers lui ; derrière le fauteuil, l'allée ouest reste libre (0,75 m jusqu'au premier rang) ----
-  table(ch, P, 4.63, 5.43, 4.1, 4.7, { voile: false });
-  ecranPC(ch, P, 5.03, 4.5, 0.745, 'S', P.ecrans[4]);
-  clavier(ch, P, 4.99, 4.24, 0.745, 'S');
-  const doc = groupe(ch, 5.3, 4.32, 'S', 0.745); B(doc, P.blancMat, 0.21, 0.02, 0.3, 0, 0.01, 0, { ombre: false }); doc.rotation.y += 0.25;
-  chaiseBureau(ch, P, 5.03, 3.72, 'N', { accoudoirs: true, nom: 'le fauteuil de l’enseignant', sortie: [0.55, -0.45] });
+  table(ch, P, 4.63, 5.25, 4.1, 4.7, { voile: false });
+  ecranPC(ch, P, 4.94, 4.5, 0.745, 'S', P.ecrans[4]);
+  clavier(ch, P, 4.9, 4.24, 0.745, 'S');
+  const doc = groupe(ch, 5.14, 4.32, 'S', 0.745); B(doc, P.blancMat, 0.21, 0.02, 0.3, 0, 0.01, 0, { ombre: false }); doc.rotation.y += 0.25;
+  chaiseBureau(ch, P, 4.94, 3.72, 'N', { accoudoirs: true, nom: 'le fauteuil de l’enseignant', sortie: [0.55, -0.45] });
   corbeille(ch, P, 4.76, 3.3);
   C.ajouterCercle(4.76, -3.3, 0.16, { y1: 0.4 });
   // ---- la toile de projection, descendue devant les jours dépolis, au droit des rangs ----
