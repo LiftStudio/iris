@@ -355,8 +355,11 @@ function geoSol(rects) {
 // COMPROMIS (doute) : sur r01 et la photo 20, la volée 2 est douce (pente ≈ 0,5 : lisse à ≈ 1,07 en y 11,1, ≈ 1,86 en
 // y 9,6) et arriverait au 1er vers y 6,5-7 ; on garde l'ARRIVÉE du jeu — le palier du 1er au nord du hall et sa double
 // porte en y 7,85 (consigne du lot) : 16 contremarches sur des girons de 0,24 (2h + g = 0,59), son pied en y 11,95, sa
-// dernière contremarche en y 8,35. Vue du hall, sa lisse passe de 0,3 (y 11,5) à 0,6 m (y 9,6, caché par le linteau)
-// plus haut que sur les photos ; tout le reste tombe à sa place.
+// dernière contremarche en y 8,35. Vue du hall, sa main courante tombe juste en y 11,6 (photo 20) mais passe 0,45 m
+// plus haut en y 10,4 ; sa lisse basse, 0,5 m plus haut en y 11,1 (r01) et 0,8 m en y 9,6, où le linteau la cache déjà
+// (photo 04 : par la porte, on ne voit plus que l'échiffre, sans les barreaux). Tout le reste tombe à sa place.
+// (Pour la rendre juste, il faudrait la prolonger au sud, au-dessus du plafond du hall, jusqu'au 1er vers y 6,5-7 : c'est
+// déplacer l'arrivée — le palier du 1er et sa double porte, imaginés — décision laissée à Haythem.)
 // (plan V2 § 1.3 : l'escalier S'ARRÊTE AU 1er ; plafond de la cage à 6,40, le dessous de la dalle du 2e : js/ecole_etage1.js)
 function construireEscalier(ch) {
   const { C, M } = ch, E = ESC, R = E.haut, G1 = E.G1, G2 = E.G2, HL = E.hL, HP = E.hP;
