@@ -313,7 +313,11 @@ VO q_0027, q_0036, q_0040-0043).
 branche du retour, pixel pour pixel hors du hall vu par l'ouverture (la façade des finitions et l'heure du jour) ; la
 salle d'attente, l'antichambre, la Si 0.1 et le bureau sont dans la zone du rez-de-chaussée du tri par zones
 (`js/ecole_visibilite.js` : jamais cachés au rez-de-chaussée), tri actif et coupé identiques sur le trajet porte 6 →
-antichambre → Si 0.1 → salle → hall ouest.
+antichambre → Si 0.1 → salle → hall ouest. Le bureau de direction, réduit à 2,85 m de profondeur par la jonction, ne
+laissait que 0,62 m derrière les chaises des visiteurs (0,02 de jeu pour Haythem) et 0,25 entre l'angle du bureau de
+chêne et la plante : son mobilier est passé 0,08 m plus près de la façade et la plante 5 cm plus avant dans l'angle.
+Les sièges rejoués : **330** (la Si 0.1 a un poste de moins), dont 129 dans les rangs (les trois sorties) et 184 autres
+qu'on prend en marchant ; les 17 derniers sont dans des pièces fermées.
 
 ### Ce qui reste imaginé
 
