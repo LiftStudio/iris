@@ -33,7 +33,7 @@ import { avecProfondeur, sceneOmbre } from './ombre_cache.js';
 
 // Pas de simulation fixe : 120 Hz. Le rendu reste libre, seule la logique de jeu est cadencée.
 const FIXED_DT = 1 / 120;
-const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _dir = new THREE.Vector3(), _vCam = new THREE.Vector3();
+const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _dir = new THREE.Vector3(), _vCam = new THREE.Vector3(), _vTete = new THREE.Vector3();
 const PRECHAUFFE = [1.5, 4, 8, 14, 22];   // moments (s) où l'on précompile le décor qui vient d'arriver (prechaufferScene)
 const RAYON_CAM = 0.2;                    // la caméra est une petite sphère : elle garde 20 cm des murs et du plafond
 // LA CAMÉRA V2 (11/10 ; plan V2 § 3, audit gabarit_camera § 5 ; retours de Haythem du 10/10 : « les salles sont trop
@@ -802,31 +802,54 @@ export class Game {
     const c = this._camLibre ?? 1, cP = this._camPiece ?? 1;
     this._camLibre = poser ? E.fM : c + (E.fM - c) * (dt > 0 ? damp(E.fM < c ? 25 : 4, dt) : 0);
     this._camPiece = poser ? E.f : cP + (E.f - cP) * (dt > 0 ? damp(E.f < cP ? PIECE_IN : PIECE_OUT, dt) : 0);
-    const k = Math.min(this._camLibre, this._camPiece, E.fM);
-    S.dl = k * d * cp;
+    let k = Math.min(this._camLibre, this._camPiece, E.fM);
     S.px = E.px; S.py = tete; S.pz = E.pz;
-    const cx = E.px + (E.tx - E.px) * k, cz = E.pz + (E.tz - E.pz) * k;
-    // recul libre sous 1,5 m : la caméra ne surplombe plus Haythem de toute sa hauteur voulue — elle passe AU-DESSUS DE
-    // L'ÉPAULE (LEVE, en tête du fichier), plus haut quand l'épaule ne l'écarte pas de sa tête (un couloir de 0,9 m, une
-    // volée), jamais à moins de 28 cm du plafond ni dans un linteau (le segment depuis l'épaule doit rester libre)
-    const s9 = v3 ? clamp((S.dl - 1.5) / 0.3, 0, 1) : 1;
-    let cy = tete + (E.ty - tete) * k * s9;
-    if (v3 && s9 < 1) {
-      // (collée — moins de 1 m —, plus haut encore, jusqu'à 65 cm, et l'épaule ne compte plus : à 40 cm derrière lui, une
-      // épaule de 40 cm la mettait contre son oreille, sa tête translucide en travers de l'image — le vestibule de la photo
-      // 25, le palier de v_010, le palier de l'escalier principal ; d'en haut, on le voit, et la volée devant lui)
-      const lat = Math.min(1, Math.abs(S.epaule || 0) / EPAULE) * clamp((S.dl - 0.5) / 0.5, 0, 1);
-      let leve = (1 - s9) * (LEVE + LEVE_COLLE * clamp((1 - S.dl) / 0.5, 0, 1)) * (1 - 0.6 * lat);
-      const plaf = Math.min(plafU, this._plafondCam(cx, cz, sol, yMin));
-      if (Number.isFinite(plaf)) leve = Math.min(leve, Math.max(0, plaf - 0.28 - cy));
-      let ok = 0;
-      for (const fr of [1, 0.5, 0.25]) {
-        if (leve * fr < 0.02) break;
-        if (C.rayonLibre(E.px, tete, E.pz, cx, cy + leve * fr, cz, RAYON_CAM) >= 0.999) { ok = leve * fr; break; }
+    // la place pour la part `kk` du segment (et le recul libre `dl` qui en découle)
+    const place = (kk) => {
+      S.dl = kk * d * cp;
+      const cx = E.px + (E.tx - E.px) * kk, cz = E.pz + (E.tz - E.pz) * kk;
+      // recul libre sous 1,5 m : la caméra ne surplombe plus Haythem de toute sa hauteur voulue — elle passe AU-DESSUS DE
+      // L'ÉPAULE (LEVE, en tête du fichier), plus haut quand l'épaule ne l'écarte pas de sa tête (un couloir de 0,9 m, une
+      // volée), jamais à moins de 28 cm du plafond ni dans un linteau (le segment depuis l'épaule doit rester libre)
+      const s9 = v3 ? clamp((S.dl - 1.5) / 0.3, 0, 1) : 1;
+      let cy = tete + (E.ty - tete) * kk * s9;
+      if (v3 && s9 < 1) {
+        // (collée — moins de 1 m —, plus haut encore, jusqu'à 65 cm, et l'épaule ne compte plus : à 40 cm derrière lui, une
+        // épaule de 40 cm la mettait contre son oreille, sa tête translucide en travers de l'image — le vestibule de la
+        // photo 25, le palier de v_010, le palier de l'escalier principal ; d'en haut, on le voit, et la volée devant lui)
+        const lat = Math.min(1, Math.abs(S.epaule || 0) / EPAULE) * clamp((S.dl - 0.5) / 0.5, 0, 1);
+        let leve = (1 - s9) * (LEVE + LEVE_COLLE * clamp((1 - S.dl) / 0.5, 0, 1)) * (1 - 0.6 * lat);
+        const plaf = Math.min(plafU, this._plafondCam(cx, cz, sol, yMin));
+        if (Number.isFinite(plaf)) leve = Math.min(leve, Math.max(0, plaf - 0.28 - cy));
+        let ok = 0;
+        for (const fr of [1, 0.5, 0.25]) {
+          if (leve * fr < 0.02) break;
+          if (C.rayonLibre(E.px, tete, E.pz, cx, cy + leve * fr, cz, RAYON_CAM) >= 0.999) { ok = leve * fr; break; }
+        }
+        cy += ok;
       }
-      cy += ok;
+      this.camTarget.set(cx, cy, cz);
+    };
+    place(k);
+    // (relecture du lot X1 : LA VUE SUR LUI — de sa place, la caméra voit sa TÊTE, pas seulement l'épaule d'où part son
+    // segment. Le seuil suivi la laissait 2,3 à 2,5 m derrière lui dans la pièce d'où il sort : quand il tournait juste
+    // après la porte, le jambage passait entre elle et lui — la tête cachée 0,1 à 0,2 s à chaque porte prise de biais,
+    // l'escalier est, l'escalier principal, la porte grise de la volée de tôle ; elle se rapproche alors sur sa ligne
+    // jusqu'à le voir, et s'y tient comme devant un mur)
+    // (sa tête, celle de l'avatar : penché en montant ou en dévalant une volée, elle passe 0,2 à 0,5 m devant ses pieds)
+    const os = p.avatar && p.avatar.bone ? p.avatar.bone('Head') : null;
+    if (os) os.getWorldPosition(_vTete); else _vTete.set(u.x, tete - 0.12, u.z);
+    // (sauf si l'épaule même ne la voit pas : rien à gagner en s'approchant)
+    if (!this._voitTete(this.camTarget) && this._voitTete(_v2.set(E.px, tete, E.pz))) {
+      let lo = 0, hi = 1;
+      for (let i = 0; i < 5; i++) { const m = (lo + hi) / 2; place(k * m); if (this._voitTete(this.camTarget)) lo = m; else hi = m; }
+      k *= lo; place(k);
+      this._camLibre = Math.min(this._camLibre, k);
     }
-    this.camTarget.set(cx, cy, cz);
+  }
+  // la tête de Haythem (_vTete, posée par _cibleCam) vue du point `P`, sans rien entre les deux
+  _voitTete(P) {
+    return this.collisions.rayonLibre(_vTete.x, _vTete.y, _vTete.z, P.x, P.y, P.z, 0.05) >= 0.999;
   }
 
   // LE CAP ASSISTÉ (en tête du fichier), après _cibleCam, pour l'image suivante : quand la caméra est à l'étroit (recul
@@ -928,15 +951,19 @@ export class Game {
   }
 
   // LE POINT REGARDÉ `L` ramené à 22° (+ `marge`) au plus de la visée (vx, vy, vz) de Haythem, vu de la caméra (moins au
-  // téléphone tenu droit : 85 % du demi-champ le plus étroit, 95 % avec la marge), à la même distance
-  _dansLImage(L, vx, vy, vz, marge = 0) {
+  // téléphone tenu droit : 85 % du demi-champ le plus étroit, 95 % avec la marge — ou la part `fr` donnée), à la même
+  // distance. (Relecture : un écran de taille nulle — volet caché, fenêtre réduite à rien — donne un rapport `aspect` NaN ;
+  // le point regardé devenait NaN, et le regard lissé le restait pour toujours : l'image ne revenait plus ; on compte
+  // alors un écran carré, et un regard NaN est reposé sur la visée.)
+  _dansLImage(L, vx, vy, vz, marge = 0, fr = Math.min(0.95, 0.85 + marge / 60)) {
     const cP = this.camPos;
     let hx = vx - cP.x, hy = vy - cP.y, hz = vz - cP.z;
     const lx = L.x - cP.x, ly = L.y - cP.y, lz = L.z - cP.z, nh = Math.hypot(hx, hy, hz), nl = Math.hypot(lx, ly, lz);
     if (nh < 0.05 || nl < 0.05) return;
     hx /= nh; hy /= nh; hz /= nh;
-    const demi = Math.min(this.camera.fov / 2 * DEG, Math.atan(Math.tan(this.camera.fov / 2 * DEG) * this.camera.aspect));
-    const co = (hx * lx + hy * ly + hz * lz) / nl, M = Math.min((22 + marge) * DEG, Math.min(0.95, 0.85 + marge / 60) * demi);
+    const asp = this.camera.aspect > 0 ? this.camera.aspect : 1;
+    const demi = Math.min(this.camera.fov / 2 * DEG, Math.atan(Math.tan(this.camera.fov / 2 * DEG) * asp));
+    const co = (hx * lx + hy * ly + hz * lz) / nl, M = Math.min((22 + marge) * DEG, fr * demi);
     if (co >= Math.cos(M)) return;
     let qx = lx / nl - hx * co, qy = ly / nl - hy * co, qz = lz / nl - hz * co;
     const nq = Math.hypot(qx, qy, qz);
@@ -1001,6 +1028,20 @@ export class Game {
       // images à 800°/s pour rattraper sa nouvelle place)
       if (rC - Math.hypot(cP.x - S.px, cP.y - S.py, cP.z - S.pz) > 0.5) coupe = true;
     }
+    // (relecture du lot X1 : et elle VOIT SA TÊTE — sa place voulue la voit déjà ; pendant qu'elle y glisse, elle ne reste
+    // pas derrière le jambage d'où il vient de tourner : elle se rapproche sur sa ligne jusqu'à le voir)
+    if (v3 && !this._voitTete(this.camPos) && this._voitTete(_v2.set(S.px, S.py, S.pz))) {
+      const cP = this.camPos, rC = Math.hypot(cP.x - S.px, cP.y - S.py, cP.z - S.pz);
+      const ax = cP.x, ay = cP.y, az = cP.z;
+      let lo = 0, hi = 1;
+      for (let i = 0; i < 5; i++) {
+        const m = (lo + hi) / 2;
+        cP.set(S.px + (ax - S.px) * m, S.py + (ay - S.py) * m, S.pz + (az - S.pz) * m);
+        if (this._voitTete(cP)) lo = m; else hi = m;
+      }
+      cP.set(S.px + (ax - S.px) * lo, S.py + (ay - S.py) * lo, S.pz + (az - S.pz) * lo);
+      if (rC * (1 - lo) > 0.5) coupe = true;
+    }
     // LE POINT VISÉ : Haythem, 0,24 m à droite (du côté de l'épaule), à 1,45 m ; vue épaule : dans l'axe, à 1,5 m. De près,
     // le regard porte devant lui (sinon, à 40 cm, il plongerait de 20° vers le sol).
     const ve = v3 ? (S.epaule || 0) * (VISEE_EPAULE / EPAULE) : 0;
@@ -1015,8 +1056,18 @@ export class Game {
     const proche = v3 && dh < 1.5, vx = _v.x, vz = _v.z, dessus = this.camPos.y > tete + 0.1;
     const vy = dessus ? tete : _v.y, plus = dessus && dh < 0.8 ? 5 : 0;
     if (proche) { const a = 1.5 - dh; _v.x -= bx * cp * a; _v.y -= sp * a; _v.z -= bz * cp * a; this._dansLImage(_v, vx, vy, vz, plus); }
-    if (poser || coupe) this.lookCur.copy(_v); else this.lookCur.lerp(_v, damp(v3 ? 14 : 18, dt));
+    if (poser || coupe || !Number.isFinite(this.lookCur.x + this.lookCur.y + this.lookCur.z)) this.lookCur.copy(_v);
+    else this.lookCur.lerp(_v, damp(v3 ? 14 : 18, dt));
     if (proche) this._dansLImage(this.lookCur, vx, vy, vz, plus + 6);
+    // (relecture du lot X1 : et SA TÊTE MÊME — l'os de l'avatar, pas le point nominal : en courant dans une volée, il se
+    // penche et sa tête passe 0,2 à 0,5 m devant ses pieds ; vue d'au-dessus, à 1 m, elle sortait par le bas de l'image —
+    // escalier est en dévalant au joystick, Haythem hors de l'image une image sur trois. Elle reste à 78 % du demi-champ,
+    // de près comme de loin : le regard lissé en retard ne la laisse plus au bord.)
+    const os = v3 && p.avatar && p.avatar.bone ? p.avatar.bone('Head') : null;
+    if (os) {
+      os.getWorldPosition(_vTete);
+      if (_vTete.distanceTo(this.camPos) > 0.35) this._dansLImage(this.lookCur, _vTete.x, _vTete.y, _vTete.z, 6, 0.78);
+    }
     this.camera.position.copy(this.camPos); this.camera.lookAt(this.lookCur); this._applyShake(dt);
     this._champ(p, dt, poser);
     // TOUT PRÈS DE LUI : en demi-transparence sous 0,6 m de sa tête (fondu depuis 0,8 m) ; masqué seulement quand la
