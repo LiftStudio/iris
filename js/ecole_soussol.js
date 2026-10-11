@@ -698,8 +698,11 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     B(-0.3, ESC.y0, 0.2, 10.25, -0.35, 3.25, M.blanc, { ombre: false, collision: true });
     // le mur est de la trémie (entre la volée et le hall ouest : au rez-de-chaussée, le dos du mur du hall ; il descend
     // jusqu'à la dalle, la cloison du sous-sol prend le relais en dessous) ; au nord, le dos de la réserve ouest (fermée)
-    B(1.35, ESC.y0, 1.6, 10.25, DALLE, 3.25, M.blanc, { ombre: false, collision: true });
-    B(0.2, 10.175, 1.35, 10.25, DALLE, 3.25, M.blanc, { ombre: false, collision: true });
+    // (finitions du 11/10 : au nord de y 8,3, l'un et l'autre s'arrêtent à 1,55 — au-dessus du rampant, sous la volée 2 de
+    // l'escalier principal, qui passe au-dessus de la trémie : js/carte_ecole.js construireEscalier)
+    B(1.35, ESC.y0, 1.6, 8.3, DALLE, 3.25, M.blanc, { ombre: false, collision: true });
+    B(1.35, 8.3, 1.6, 10.25, DALLE, 1.55, M.blanc, { ombre: false, collision: true });
+    B(0.2, 10.175, 1.35, 10.25, DALLE, 1.55, M.blanc, { ombre: false, collision: true });
     // le SOL du palier : béton peint taupe (lumière et ombre cuites du rez-de-chaussée : uv1 sur RECT)
     const sol = new THREE.Mesh(geoSolNiveau([[0.0, Y_PAL, 1.6, ESC.y0]], 0, RECT), matPalier);
     sol.receiveShadow = true; sol.name = 'sol du palier'; nePasFusionner(sol); decor0.add(sol);
@@ -776,7 +779,10 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     plinthe('x', ESC.yPied, 1.35, 1.5, 1);
     // le monde solide : le garde-corps et la cloison à l'est, le ressaut et le mur à l'ouest (du sol du -1 au plafond
     // du rez-de-chaussée : au palier, le joueur d'en haut ne passe pas)
-    C.ajouterBoite(x1, -ESC.y0, 1.5, -ESC.yPied, { y0: Y_SS, y1: 3.25 });
+    // (finitions du 11/10 : au nord de y 8,3, jusqu'à 1,55 seulement — au-dessus passe la volée 2 de l'escalier principal,
+    // js/carte_ecole.js construireEscalier)
+    C.ajouterBoite(x1, -ESC.y0, 1.5, -8.3, { y0: Y_SS, y1: 3.25 });
+    C.ajouterBoite(x1, -8.3, 1.5, -ESC.yPied, { y0: Y_SS, y1: 1.55 });
     C.ajouterBoite(0.0, -ESC.y0, X_REB, -(14.3 + DY_SS), { y0: Y_SS, y1: 3.25 });
     // (la volée n'a que 85 cm : deux guides en biais, invisibles, au bord du palier — qui arrive de travers glisse
     // dans la volée au lieu de buter contre le ressaut ou le mur est)
@@ -809,7 +815,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     for (let k = 0; k < 16; k++) {
       const ya = Math.max(nez(k), Y_RAMP0), yb = Math.min(nez(k + 1), Y_RAMP1);
       if (yb <= ya) continue;
-      C.plafond(0.2, -yb, 1.35, -ya, rampant(yb), 3.25 - rampant(yb));
+      C.plafond(0.2, -yb, 1.35, -ya, rampant(yb), (ya < 8.3 ? 3.25 : 1.55) - rampant(yb));
     }
     C.ajouterBoite(0.0, -Y_PAL, 1.6, -ESC.y0, { y0: Y_SS, y1: -0.02, joueur: false });
     // le panneau « -1 » au mur ouest du pied de l'escalier, le bloc de sortie au-dessus, son fourreau, deux étiquettes
@@ -1349,7 +1355,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // (relecture du 11/10 : et le hall du -1 — du palier, v_010 à v_020, l'ouverture du pied de la volée est d'un blanc
     // éclatant ; sans ses spots, on y voyait un hall gris)
     { id: 'palierSS', rects: [[0.0, -ESC.y0, 1.6, -Y_PAL, -10]], voisines: ['escalierSS', 'hallO', 'hallSS'], env: { x: 0.9, y: 1.5, z: -(Y_PAL + 0.5) } },
-    { id: 'escalierSS', rects: [[0.2, -ESC.yPied, 1.5, -ESC.y0, -10]], voisines: ['palierSS', 'hallSS'], env: { x: 0.85, y: -1.1, z: -7.91 } },
+    // (finitions du 11/10 : pieds sous 0,6 m — au-dessus, c'est la volée 2 de l'escalier principal et son arrivée au 1er)
+    { id: 'escalierSS', rects: [[0.2, -ESC.yPied, 1.5, -ESC.y0, -10, 0.6]], voisines: ['palierSS', 'hallSS'], env: { x: 0.85, y: -1.1, z: -7.91 } },
     { id: 'hallSS', rects: [zr(0.4, ESC.yPied, 2.48, Y_FOND)], voisines: ['escalierSS', 'couloirSS'], env: env(1.45, 11.61) },
     { id: 'couloirSS', rects: [zr(1.45, Y_COUL0, 2.48, ESC.yPied)], voisines: ['hallSS'], env: env(1.96, 6.21, 1.5) },
     // (intégration du 10/10 : jusqu'à y 11,81, le bord de la zone de la grande salle — entre les deux, sur le seuil de sa

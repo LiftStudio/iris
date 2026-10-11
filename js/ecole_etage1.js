@@ -31,7 +31,8 @@
 //                                        7,85, js/carte_ecole.js), ouverte
 //   le palier est et l'escalier est      x 13,61-19,8 y 7,0-12,45 (photos 27 à 29 : js/ecole_est.js poserPalierEst) ; le
 //                                        103 et la 104 n'ont pas de porte sur lui (VO q_0274-0281)
-//   fermés : le local au fond du renfoncement nord du palier est, le local ménage et les toilettes (x 0-1,6 y 6,91-13,9),
+//   fermés : le local au fond du renfoncement nord du palier est, le local ménage et les toilettes (x 0-1,6 y 6,91-7,85,
+//   et x 0-0,6 au nord : la cage de l'escalier principal passe à côté — finitions du 11/10),
 //   l'issue de secours, le 103 et la 104
 // LES VRAIS NOMS (10/10) : le panneau d'étage du palier est (VO 43 s, photo 28) — « Salle de cours S 1.3, Salle Robert
 // Kahn Si 1.4, Salle Gordon Earle Moore Si 1.5, Espace pause, Salle de cours S 1.6 » (S : salle de cours, Si : salle
@@ -82,8 +83,11 @@ const Y_COUR = 8.925;               // la cloison nord du couloir
 // § 2.1 : elle recule de DY_S avec le bloc ouest du rez-de-chaussée) ----
 const DY_S = -4.675;
 // (x : les nus ouest et est de la cage ; y0 : le bord du palier du 1er, 9,525 — au nord, les volées ; yFond : son nu
-// nord, 13,925)
-const E = { xO0: 1.75, xE1: 4.45, y0: 14.2 + DY_S, yFond: 18.6 + DY_S };   // (intégration : xE1 au nu du mur est, ligne 4,525)
+// nord, le mur à affiches)
+// (finitions du 11/10, l'escalier refait sur les photos 20, 06 et r01 : la cage va du nu 0,75 — la volée 2 passe à l'ouest
+// de l'ancien mur, ligne 1,675 — au nu 4,45, jusqu'au mur à affiches, nu 13,2 ; la volée 2 arrive au palier du 1er en
+// y 8,35, entre x 0,75 et 1,975 : là, ni plancher ni dessous de plancher)
+const E = { xO0: 0.75, xE1: 4.45, y0: 14.2 + DY_S, yFond: 13.2, x2e: 1.975, yT: 8.35 };   // (intégration : xE1 au nu du mur est, ligne 4,525)
 // ---- la façade (js/carte_ecole.js construireFacade) : une fenêtre par travée de 1,65 m ----
 const TRAVEE = 1.65;
 const centreTravee = (k) => 0.825 + (k - 1) * TRAVEE;
@@ -587,11 +591,15 @@ export function poserEtage1(ch, renderer = null) {
     // (plan V2, 11/10 : ni plancher ni dessous de plancher au-dessus des volées de l'escalier principal, x 1,6-4,75 au
     // nord du bord de son palier du 1er, E.y0 = 9,525 — la cage monte d'un jet jusqu'à la dalle du 2e ; le palier a sa
     // dalle, js/carte_ecole.js construireEscalier)
-    C.sol(-0.3, 0, 19.95, -9.075, N1);
-    C.sol(-0.3, -9.075, 1.6, -12.6, N1); C.sol(4.75, -9.075, 16.05, -12.6, N1);
-    C.ajouterBoite(-0.3, 0, 19.95, -Y_COUR - 0.1, { y0: N1 - 0.32, y1: N1 - 0.02, joueur: false });
+    // (finitions du 11/10 : ni l'un ni l'autre au-dessus du haut de la volée 2, x 0,6-1,975 au nord de son arrivée, y 8,35 ;
+    // à l'ouest de la cage, x -0,3-0,6, le local fermé garde le sien)
+    C.sol(-0.3, 0, 19.95, -E.yT, N1); C.sol(-0.3, -E.yT, 0.6, -9.075, N1); C.sol(E.x2e, -E.yT, 19.95, -9.075, N1);
+    C.sol(-0.3, -9.075, 0.6, -12.6, N1); C.sol(4.75, -9.075, 16.05, -12.6, N1);
+    C.ajouterBoite(-0.3, 0, 19.95, -E.yT, { y0: N1 - 0.32, y1: N1 - 0.02, joueur: false });
+    C.ajouterBoite(-0.3, -E.yT, 0.6, -Y_COUR - 0.1, { y0: N1 - 0.32, y1: N1 - 0.02, joueur: false });
+    C.ajouterBoite(E.x2e, -E.yT, 19.95, -Y_COUR - 0.1, { y0: N1 - 0.32, y1: N1 - 0.02, joueur: false });
     C.ajouterBoite(4.75, -Y_COUR, 13.55, -12.45, { y0: N1 - 0.32, y1: N1 - 0.02, joueur: false });
-    C.ajouterBoite(1.6, -Y_COUR, 4.75, -E.y0, { y0: N1 - 0.32, y1: N1 - 0.02, joueur: false });
+    C.ajouterBoite(E.x2e, -Y_COUR, 4.75, -E.y0, { y0: N1 - 0.32, y1: N1 - 0.02, joueur: false });
   }
 
   // =====================================================================
@@ -970,7 +978,12 @@ export function poserEtage1(ch, renderer = null) {
     // (plan V2 : la cage de l'escalier principal, décalée de DY_S, de y 7,5 à 14,3 — la caméra devant ses portes et au-dessus
     // des volées, jusqu'au palier du 1er ; intégration du 11/10 : sous le plafond de la cage, 6,40 — au-dessus, c'est la
     // salle 1 du 2e, et le 1er restait affiché sous elle)
-    const cage = (cam.x > 1.4 && cam.x < 5.0 && cam.z < -7.5 && cam.z > -14.3 && cam.y > -0.3 && cam.y < 6.4) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7 && cam.y > -0.3);
+    // (finitions du 11/10 : la cage va jusqu'en x 0,6 — au-dessus de 0,6 m ; dessous, à l'ouest, c'est la volée de tôle du -1)
+    // (relecture du 11/10 : à l'ouest de x 1,4, au-dessus de la trémie — y < 10,3 —, seulement au-dessus de 2,0 : sous son
+    // rampant, la caméra de la volée de tôle monte jusqu'à 1,6 et l'étage était dessiné pour rien ; celle de la volée 2,
+    // au-dessus de ses marches — 1,9 au droit de la trémie —, ne descend pas sous 2,1)
+    const ouest = cam.x > 0.4 && cam.x <= 1.4 && (cam.z < -10.3 ? cam.y > 0.6 : cam.y > 2.0);
+    const cage = ((cam.x > 1.4 || ouest) && cam.x < 5.0 && cam.z < -7.5 && cam.z > -14.3 && cam.y > -0.3 && cam.y < 6.4) || (cam.x > 14.4 && cam.x < 20.0 && cam.z < -10.6 && cam.z > -12.7 && cam.y > -0.3);
     const au2e = cam.y > 7.0 && u.y > 6.0 && cam.z < -0.05 && !cage && !(cam.x > 13.4 && cam.z < -6.45 && cam.z > -12.75);
     const vis = (cage || cam.y > 2.7 || cam.z > -0.05 || u.y > 2.0) && !au2e;
     if (vis !== groupe.visible) groupe.visible = vis;
