@@ -53,6 +53,11 @@
 // nord-ouest, le second poteau en x 9,0 ; les chaises du couloir contre D1 ; les trumeaux de la salle 2 saillants de
 // 0,28 ; le recoin de l'extincteur en x 13,78 ; la porte coupe-feu rabattue, son bois côté gonds seulement ; la fenêtre
 // 11 sans cadre rouge (il est au 3e) ; plus de cage de l'escalier principal au 2e.
+// LA RELECTURE DU PLAN V2 (11/10 ; la VO projetée sur le plan aux poses du faisceau, la caméra de q_0304 dans la porte en
+// x 12,22 — celle qui met les fenêtres du plan sur la VO —, et q_0308 calée sur les fenêtres) : dans la salle 1, neuf
+// luminaires en 3 x 3 et pas de diffuseur à fentes, le vidéoprojecteur au sud du milieu du tableau, le caisson gris et
+// le meuble noir à 1,25 m, les stores de toute la hauteur, les embrasures brun-noir, la 6e fenêtre plus large et d'un
+// seul vantail, pas de convecteur ; dans la salle 2, des fenêtres d'un seul vantail et l'allège à 0,85.
 //
 // LES PIÈGES D'UN NIVEAU DE PLUS (ceux du 1er, js/ecole_etage1.js, et du sous-sol, js/ecole_soussol.js) :
 //   1. des SOLS (C.sol à 6,60) sous tout ce qu'on foule, la cage exceptée : sinon solEn rendrait le plancher du 1er ;
@@ -1091,8 +1096,8 @@ export function poserEtage2(ch, renderer = null) {
       }
     }
     for (const x of [11.5, 14.85, 17.2]) ch.lampes.push({ type: 'jour', x, z: 1.2, h: N2 + 2.6, cx: x, cz: -3.0, zone: 'e2s2', base: N2, cuire: false, poids: 1.6 });
-    // ---- ARRIÈRE : derrière la salle 1, la façade en y 11,70 (nu 11,55), percée de ses six fenêtres (0,88 x 1,10 m,
-    // allège 1,10, haut 2,20 : le linteau à 0,2 m du plafond ; faisceau q_0304-0313, e2x/bundle2.py) ; ailleurs en
+    // ---- ARRIÈRE : derrière la salle 1, la façade en y 11,70 (nu 11,55), percée de ses six fenêtres (0,88 x 1,10 m, la
+    // 6e de 1,06 ; allège 1,10, haut 2,20 : le linteau à 0,2 m du plafond ; faisceau q_0304-0313, e2x/bundle2.py) ; ailleurs en
     // y 12,45 — le dégagement fermé à l'ouest, la courette et le palier à l'est —, un ressaut de 0,75 m à chaque bout de
     // la salle (plan V2 § 2.5). L'escalier principal ne monte plus au 2e : la façade est pleine au-dessus de son ancienne
     // cage (plan V2 § 1.3). Dehors, le jour (surexposé sur la vidéo) ----
