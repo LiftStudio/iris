@@ -511,8 +511,8 @@ export function poserEtage2(ch, renderer = null) {
   // le jour des fenêtres côté cour (non éclairé : il éclaire) et la vitre vue de dehors
   const ciel = new THREE.MeshBasicMaterial({ map: texCielCour(), color: new THREE.Color(1.12, 1.14, 1.17) }); ciel.name = 'le jour côté cour';
   // (lot façade du 11/10 : comme au 1er — photos 11, 12, 17, 18 : la rue et le ciel dans les vitres, pas de store —,
-  // plus couvrante et plus claire : 0,55 -> 0,78, #4D5862 -> #76828C)
-  const vitreDehors = new THREE.MeshStandardMaterial({ color: 0x76828c, roughness: 0.05, metalness: 0.6, transparent: true, opacity: 0.78, depthWrite: false, envMapIntensity: 1.5 });
+  // plus couvrante, moins miroir : 0,55 -> 0,80, métal 0,6 -> 0,4)
+  const vitreDehors = new THREE.MeshStandardMaterial({ color: 0x5f6a74, roughness: 0.06, metalness: 0.4, transparent: true, opacity: 0.8, depthWrite: false, envMapIntensity: 1.2 });
   vitreDehors.name = 'vitre du 2e vue de dehors';
   // (l'allège vitrée de la fenêtre encadrée de rouge, travée 7 : un verre sombre qui renvoie la rue, comme le carreau)
   const allegeVitree = new THREE.MeshStandardMaterial({ color: 0x66717b, roughness: 0.06, metalness: 0.6, envMapIntensity: 1.5 });

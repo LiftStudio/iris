@@ -1003,7 +1003,8 @@ export function poserPause1(ch, ctx) {
   ordinateur(0.35, 1.6, 'E', 1);
   fauteuil(1.1, 1.6, 'W', { sortie: [1.1, 2.7], nom: 'le fauteuil du bureau' });
   B(0.0, 3.2, 0.45, 4.8, N1, N1 + 1.95, M.creme2 || M.blanc, { collision: true });
-  radiateur(0.825, 0.0, 'N', 1.4, 0.1, 0.6);
+  // (lot façade du 11/10 : plus de radiateur sous la fenêtre — elle descend à 8 cm du plancher, photo 10 : par sa vitre
+  // basse, on voit une chaise et le sol du bureau)
 
   // =====================================================================
   //  LE MONDE SOLIDE : le plancher devant la porte de la Si 1.4 et sous l'alcôve, le dessous pour la caméra

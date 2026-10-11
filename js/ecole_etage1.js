@@ -460,13 +460,13 @@ export function poserEtage1(ch, renderer = null) {
   // plus hauts que larges et descendent sous le plancher (js/ecole_matieres.js CADRE) : leur fenêtre est haute, de 6 cm
   // au-dessus du plancher à 2,17 — par la vitre basse de la travée 1, la photo 10 montre une chaise du bureau —, un
   // grand carreau et, côté mitoyen, un ouvrant étroit et sombre ; les pastilles des pompiers à un mètre, sur le bord du
-  // grand carreau opposé (photo 16 : x 18,51, 4,52 ; photos 10 et 12 : x 1,2). Le jeu y posait une baie de 1,9 x 1,55 et
+  // grand carreau opposé (photo 16 : x 18,51, 4,52 ; photo 10 recalée : x 1,18, 4,39). Le jeu y posait une baie de 1,9 x 1,55 et
   // une fenêtre étroite de 1,1 x 1,49, à 0,8 du plancher.)
   function construireFacade1() {
     const F = [], J = CADRE.jour;
     for (let k = 1; k <= 12; k++) {
       const cd = cadreEn(k, 1);
-      if (cd) F.push({ c: centreTravee(k), l: J.l, bas: N1 + J.bas, haut: N1 + J.haut, cadre: cd, pompiers: k === 1 ? [1.22, 1.15] : [18.52, 1.0] });
+      if (cd) F.push({ c: centreTravee(k), l: J.l, bas: N1 + J.bas, haut: N1 + J.haut, cadre: cd, pompiers: k === 1 ? [1.18, 0.89] : [18.51, 1.02] });
       else F.push({ c: centreTravee(k), l: FENETRE_ETAGE.l, bas: N1 + FENETRE_ETAGE.bas, haut: N1 + FENETRE_ETAGE.haut });
     }
     mur({ de: [-0.3, -0.2], a: [20.1, -0.2], ep: 0.4, h: N2, mats: { N: M.blanc, S: X.pierre },
@@ -478,8 +478,8 @@ export function poserEtage1(ch, renderer = null) {
     // immeubles d'en face, le ciel) ; une seconde face, sombre et brillante, tournée vers la rue seulement — vue de la
     // salle, elle n'existe pas (face arrière), la vitre reste claire
     // (lot façade du 11/10 : sur les photos 11, 12, 16 à 18, les vitres du 1er renvoient la rue et le ciel et ne laissent
-    // presque rien voir des bureaux — plus couvrante et plus claire : 0,55 -> 0,78, #4D5862 -> #76828C)
-    const vitreRue = new THREE.MeshStandardMaterial({ color: 0x76828c, roughness: 0.05, metalness: 0.6, transparent: true, opacity: 0.78, depthWrite: false, envMapIntensity: 1.5 });
+    // presque rien voir des bureaux — plus couvrante, moins miroir : 0,55 -> 0,80, métal 0,6 -> 0,4)
+    const vitreRue = new THREE.MeshStandardMaterial({ color: 0x5f6a74, roughness: 0.06, metalness: 0.4, transparent: true, opacity: 0.8, depthWrite: false, envMapIntensity: 1.2 });
     vitreRue.name = 'vitre de l\'étage vue de la rue';
     for (const f of F) {
       // (les bureaux ont des stores à lames verticales, comme l'accueil du rez-de-chaussée, photo 03)

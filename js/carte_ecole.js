@@ -440,13 +440,15 @@ function construireEscalier(ch) {
 // passage des étudiants (grille noire ouverte), trois grandes fenêtres à barreaux (salle A), deux fenêtres hautes
 // (bureau B), le portail noir de l'entrée n° 6 en retrait (drapeaux, numéro), deux grandes fenêtres (accueil). Au-dessus,
 // quatre étages de pierre claire à une fenêtre par travée, quelques encadrements rouges en saillie, l'attique en retrait.
-const BAIES_HAUTES = [5.78, 7.43, 9.08, 17.33, 18.98];      // fenêtres de 1,2 m, allège 0,95, linteau 2,75
+const BAIES_HAUTES = [5.78, 7.43, 9.08, 17.33, 18.98];      // fenêtres de 1,2 m, allège 1,10, linteau 2,75
 const BAIES_BUREAU = [10.73, 12.38];                       // allège 1,75
 // (lot façade du 11/10 : les photos 12 et 17 redressées sur les fenêtres du 1er — 1,3 px d'écart sur la 17 — mettent le
 // haut des baies du rez-de-chaussée à 2,73-2,76, au niveau du haut du linteau du passage et de la ventilation de la
 // porte de secours, photo 10 : 2,75 et non 2,50. Dedans, le faux plafond à 2,60 en cache le haut — photo 03 : les baies
 // de l'accueil montent jusqu'à lui)
 const H_BAIE = 2.75;
+// (et leur appui à 1,07-1,15 au-dessus du trottoir, photo 17 redressée : 1,10 et non 0,95)
+const BAS_BAIE = 1.1;
 const PORTAIL = { c: 14.86, l: 2.88, h: 2.78 };            // le portail n° 6 : x 13,42-16,30 (lot façade, photos 16, 17)
 function construireFacade(ch) {
   const { M } = ch;
@@ -459,7 +461,7 @@ function construireFacade(ch) {
       // l'échelle des travées de 1,65 m — le jeu avait deux travées, 3,3 m) ; à l'est, le mur du passage fait le tableau,
       // à l'ouest, un trumeau de 0,43 m (le passage, derrière, part de x 1,75 : construireMurs)
       { c: 3.3, l: 2.25, h: 2.45 },
-      ...BAIES_HAUTES.map((c) => ({ c, l: 1.2, bas: 0.95, h: H_BAIE })),
+      ...BAIES_HAUTES.map((c) => ({ c, l: 1.2, bas: BAS_BAIE, h: H_BAIE })),
       ...BAIES_BUREAU.map((c) => ({ c, l: 1.2, bas: 1.75, h: H_BAIE })),
       // le portail de l'entrée n° 6 (tableaux noirs, sous-face noire). (Lot façade du 11/10, photos 16 et 17 redressées sur
       // les fenêtres du 1er — iris_vues/X4_* — : ses tableaux tombent à l'aplomb des bords extérieurs des fenêtres des
@@ -473,15 +475,30 @@ function construireFacade(ch) {
   // (dans ce groupe tourné, x local = -x du plan : on passe -x)
   // (10/10 : plus de stores à lames aux deux baies de l'accueil — VO q_0373-0383 et photo 03 recadrée : le jour et les
   // barreaux s'y voient, aucune lame ; les bandes claires de la photo 03 sont les barreaux sur le ciel)
-  for (const c of BAIES_HAUTES) fenetreFacade(fac, M, { x: -c, l: 1.2, bas: 0.95, haut: H_BAIE });
+  for (const c of BAIES_HAUTES) fenetreFacade(fac, M, { x: -c, l: 1.2, bas: BAS_BAIE, haut: H_BAIE });
   for (const c of BAIES_BUREAU) fenetreFacade(fac, M, { x: -c, l: 1.2, bas: 1.75, haut: H_BAIE, imposte: false });
+  // LE REFLET DE LA RUE dans les baies (lot façade du 11/10 : sur les photos 10, 16 à 18, derrière les barreaux, les vitres
+  // sont sombres — la rue s'y reflète, on devine à peine la pièce ; le jeu les montrait claires, la salle éclairée derrière) :
+  // une face sombre et brillante, tournée vers la rue seulement (de la salle, elle n'existe pas)
+  const vitreRdc = new THREE.MeshStandardMaterial({ color: 0x2e353c, roughness: 0.12, metalness: 0.25, transparent: true, opacity: 0.82, depthWrite: false, envMapIntensity: 0.8 });
+  vitreRdc.name = 'vitre du rez-de-chaussée vue de la rue';
+  for (const [c, bas] of [...BAIES_HAUTES.map((c) => [c, BAS_BAIE]), ...BAIES_BUREAU.map((c) => [c, 1.75])]) {
+    const r = new THREE.Mesh(new THREE.PlaneGeometry(1.1, H_BAIE - bas - 0.1), vitreRdc);
+    r.position.set(c, (bas + H_BAIE) / 2, 0.158); r.castShadow = false; ch.decor.add(r);
+  }
   // (les vitres arrêtent la caméra ; la lumière du jour, elle, passe : `vitre`)
-  for (const c of BAIES_HAUTES) ch.C.ajouterBoite(c - 0.6, 0.4, c + 0.6, 0, { y0: 0.95, y1: H_BAIE, vitre: true });
+  for (const c of BAIES_HAUTES) ch.C.ajouterBoite(c - 0.6, 0.4, c + 0.6, 0, { y0: BAS_BAIE, y1: H_BAIE, vitre: true });
   for (const c of BAIES_BUREAU) ch.C.ajouterBoite(c - 0.6, 0.4, c + 0.6, 0, { y0: 1.75, y1: H_BAIE, vitre: true });
   // la porte de secours (vantail d'acier noir, fermée, côté rue), son panneau rouge et la ventilation au-dessus
   ch.porte('x', -0.2, 0.8, { l: 1.0, h: 2.2, ep: 0.4, modele: 'noire', etat: 'fermee', cote: 'S', huisserie: false });
   ch.boite(0.1, -0.44, 1.6, -0.4, 2.25, 2.75, M.noirMat);
-  for (let h = 2.29; h < 2.74; h += 0.045) ch.boite(0.12, -0.47, 1.58, -0.44, h, h + 0.012, M.acierNoir, { ombre: false });
+  // (lot façade du 11/10, photo 10 recalée : les lames de la ventilation sont d'un gris d'acier, plus claires que leur
+  // cadre ; la porte est dans un bâti noir — ses tableaux et l'entre-deux jusqu'au trumeau noir, x 1,30-1,46 — : de la
+  // rue, du pilier de pierre (x 0-0,3) au passage, tout est sombre)
+  for (let h = 2.29; h < 2.74; h += 0.045) ch.boite(0.12, -0.47, 1.58, -0.44, h, h + 0.012, M.aluGris, { ombre: false });
+  for (const [a, b] of [[0.3, 0.32], [1.28, 1.3]]) ch.boite(a, -0.4, b, 0, 0, 2.2, M.noirMat, { ombre: false });
+  ch.boite(0.3, -0.4, 1.3, 0, 2.18, 2.2, M.noirMat, { ombre: false });
+  ch.boite(1.3, -0.42, 1.46, -0.4, 0, 2.25, M.noirMat, { ombre: false });
   ch.panneau(new THREE.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.6 }), 0.3, 0.2, 0.8, -0.45, 1.75, 'S');
   // le linteau d'acier noir du passage (35 cm) et, dessous, au milieu, le boîtier noir aux deux étiquettes blanches
   // (relecture du 11/10, photo 10 rejouée : un seul boîtier de 0,59 m, x 3,01-3,6, de 2,32 à 2,45 — pas deux petits
@@ -575,17 +592,17 @@ function construireFacade(ch) {
   etages.userData.horsAOSol = true;
   // LE 5e ÉTAGE ET LA TOITURE (lot façade du 11/10 : la photo 12 redressée — iris_vues/X4_p12_redressee.jpg — montre une
   // CINQUIÈME rangée, dans le plan de la façade : une allège de pierre jusqu'à 0,95 m au-dessus du plancher (16,85), un
-  // appui, puis un bandeau vitré sombre coupé à chaque travée d'un poteau clair de 30 cm, à 10 cm en retrait, jusqu'au
-  // nez de la toiture plate, 18,70-19,50 ; l'encadrement rouge de la travée 12 y monte jusque sous le nez. Le jeu
+  // appui, puis un bandeau vitré noir, coupé à chaque travée d'un poteau clair de 30 cm jusqu'à 17,95, puis plein jusqu'au
+  // nez de la toiture plate, 18,95-19,55 ; l'encadrement rouge de la travée 12 y monte jusque sous le nez. Le jeu
   // posait à 15,90 une corniche saillante, un garde-corps à barreaux et un attique en retrait de 1,2 m, que la photo
   // n'a pas : en retrait, l'attique y tomberait trois mètres plus bas, sur la rangée du 4e)
-  const N5 = H_RDC + 4 * 3.1, hA = N5 + 0.95, hN = 18.7, hT = 19.5;
+  const N5 = H_RDC + 4 * 3.1, hA = N5 + 0.95, hP = 17.95, hN = 18.95, hT = 19.55;
   ch.boite(-0.3, -0.4, 20.1, 0, N5, hA, M.pierre, { ombre: false });
   ch.boite(-0.3, -0.45, 20.1, 0.05, hA, hA + 0.07, M.pierre, { ombre: false });
-  ch.boite(0, 0.1, 19.8, 6, hA + 0.07, hN, M.menuiserie, { ombre: false });
-  for (let k = 0; k < 12; k++) ch.boite(k * 1.65 + 0.15, 0.08, (k + 1) * 1.65 - 0.15, 0.1, hA + 0.12, hN - 0.06, M.vitreFente, { ombre: false });
-  for (let k = 0; k <= 12; k++) ch.boite(Math.max(-0.3, k * 1.65 - 0.15), -0.3, Math.min(20.1, k * 1.65 + 0.15), 0.1, hA + 0.07, hN, M.pierre, { ombre: false });
-  ch.boite(-0.3, -0.45, 20.1, 6.2, hN, hT, M.pierre, { ombre: false });
+  ch.boite(0, -0.28, 19.8, 6, hA + 0.07, hN, M.noir, { ombre: false });
+  for (let k = 0; k <= 12; k++) ch.boite(Math.max(-0.3, k * 1.65 - 0.15), -0.4, Math.min(20.1, k * 1.65 + 0.15), -0.28, hA + 0.07, hP, M.pierre, { ombre: false });
+  ch.boite(-0.3, -0.33, 20.1, -0.28, hP, hP + 0.06, M.menuiserie, { ombre: false });
+  ch.boite(-0.3, -0.5, 20.1, 6.2, hN, hT, M.pierre, { ombre: false });
   ch.boite(-0.3, -0.47, 20.1, 6.2, hT, hT + 0.05, M.aluGris, { ombre: false });
   // LES BANDES NOIRES DES DEUX BOUTS (photos 10, 12 redressée, 16 : 30 cm d'un noir mat, de toute la hauteur, à la jonction
   // des mitoyens — le jeu n'y posait que deux descentes d'eau de 12 cm)
@@ -603,7 +620,7 @@ function construireFacade(ch) {
     // l'appui blanc de la fenêtre, sur la traverse basse, du nu du cadre à la menuiserie
     ch.boite(a + K.montant, y0, c - K.montant, -0.25, b0 + K.traverse, b0 + K.traverse + 0.05, M.blanc, { ombre: false });
     if (e < 3) continue;
-    if (e === 5) { ch.boite(a + K.montant, -0.42, c - K.montant, -0.4, b0 + K.traverse + 0.05, b1 - K.linteau, M.vitreFente, { ombre: false }); continue; }
+    if (e === 5) { ch.boite(a + K.montant, -0.42, c - K.montant, -0.4, b0 + K.traverse + 0.05, b1 - K.linteau, M.noir, { ombre: false }); continue; }
     const p = new THREE.Mesh(new THREE.PlaneGeometry(K.jour.l, K.jour.haut - K.jour.bas), jourDehors(new THREE.MeshStandardMaterial({ map: texFenetreCadre(o), roughness: 0.35 }), 0.15));
     p.position.set(x, N + (K.jour.bas + K.jour.haut) / 2, 0.412); p.userData.horsAOSol = true; ch.decor.add(p);
   }

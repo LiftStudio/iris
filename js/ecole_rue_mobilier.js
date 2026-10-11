@@ -1065,12 +1065,21 @@ export function poserMobilierRue(ch, R) {
   // ---------------------------------------------------------------- à l'ouest du passage : les bacs, le n° 8
   // (photo 10) trois bacs roulants gris devant la porte de secours ; (photos 09, 10) les jardinières de terre cuite du
   // n° 8 et leurs choisyas, un grand pot carré gris
+  // (lot façade du 11/10 : la photo 10 recalée — 5 px — met au sol, d'un même coup, les deux jardinières de terre cuite
+  // juste à l'ouest de la bande noire de l'école, en quinconce sur le trottoir (x -0,57 à 0,40 à 1,4-1,8 m de la façade,
+  // et derrière, x -0,4 à 0,7, à 0,9-1,3), le pot carré noir au laurier-rose à leur ouest (x -0,9), et les bacs
+  // roulants devant la porte de secours et le trumeau noir, x 1,0-2,0 ; le jeu posait les jardinières devant la porte du
+  // n° 8, en x -2,15 et -3,45 : de la rue, elles faisaient une haie)
   const grandBac = { l: 0.68, p: 0.8, h: 1.08 };
-  bacRoulant(ch, A, M, 0.52, -0.86, 0.04, M.bacGris, M.bacCouvercle, grandBac);
-  bacRoulant(ch, A, M, 1.24, -0.9, -0.06, M.bacGris, M.bacCouvercle, grandBac);
-  bacRoulant(ch, A, M, 0.86, -1.78, 0.1, M.bacGris, M.bacCouvercle, grandBac);
-  h = jardiniereTerre(ch, A, M, -2.15, -0.75, 1.05, 0.4, 0.38); arbuste(F, A, M, -2.15, -0.75, h, 0.9, 1.6, PLANCHE.choisya, r, 85);
-  h = jardiniereTerre(ch, A, M, -3.45, -1.0, 1.1, 0.4, 0.38); arbuste(F, A, M, -3.45, -1.0, h, 0.85, 1.5, PLANCHE.choisya, r, 80);
+  // (deux contre la façade, un devant, au droit du trumeau noir — photo 10 : trois couvercles, celui de devant plus bas)
+  bacRoulant(ch, A, M, 1.0, -0.86, 0.04, M.bacGris, M.bacCouvercle, grandBac);
+  bacRoulant(ch, A, M, 1.72, -0.86, -0.04, M.bacGris, M.bacCouvercle, grandBac);
+  bacRoulant(ch, A, M, 1.45, -1.72, 0.08, M.bacGris, M.bacCouvercle, grandBac);
+  // (le recoin de 0,66 m entre la jardinière de devant et le bac de devant : bouché — Haythem s'y coincerait)
+  ch.C.ajouterBoite(0.4, 1.22, 1.15, 1.84, { y1: 0.9, camera: false });
+  h = jardiniereTerre(ch, A, M, -0.08, -1.62, 1.05, 0.4, 0.38); arbuste(F, A, M, -0.08, -1.62, h, 0.8, 1.85, PLANCHE.choisya, r, 80);
+  h = jardiniereTerre(ch, A, M, 0.15, -1.12, 1.1, 0.4, 0.38); arbuste(F, A, M, 0.15, -1.12, h, 0.75, 1.75, PLANCHE.choisya, r, 72);
+  h = potCarre(ch, A, M, -0.9, -1.62, 0.44, 0.62, M.anthracite); bambou(F, A, M, -0.9, -1.62, h, 1.6, r, 10);
   h = potCarre(ch, A, M, -4.6, -0.72, 0.46, 0.6, M.anthracite); arbuste(F, A, M, -4.6, -0.72, h, 0.42, 1.05, PLANCHE.arbuste, r, 30);
   h = potRond(ch, A, M, -7.1, -0.72, 0.24, 0.17, 0.62, M.potGris); cypres(F, A, M, -7.1, -0.72, h, 1.35, 0.24, r);
 
