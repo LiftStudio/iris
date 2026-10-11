@@ -504,9 +504,11 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
     if (ya < Y_ARR_N - 1e-3) mur({ ...o, de: [x, ya], a: [x, Math.min(yb, Y_ARR_N)], h: DALLE2, ouvertures: dans(ya, Y_ARR_N) });
     if (yb > Y_ARR_N + 1e-3) mur({ ...o, de: [x, Math.max(ya, Y_ARR_N)], a: [x, yb], ouvertures: dans(Y_ARR_N, yb) });
   };
-  murNS(x0 - 0.075, y0 - 0.15, y1 + 0.15, { mats: { E: K.blanc, W: K.facade }, plinthes: ['E'], ouvertures: [{ c: yGrise, l: 0.93, h: N1 + 2.04 }] });
+  // (relecture V2 : les deux grands murs partent du milieu du mur orange, y0 − 0,10 — à y0 − 0,15, leur bout sortait de
+  // 3 cm dans l'espace pause, un trait d'enduit sur l'orange, de part et d'autre de la porte descendue)
+  murNS(x0 - 0.075, y0 - 0.1, y1 + 0.15, { mats: { E: K.blanc, W: K.facade }, plinthes: ['E'], ouvertures: [{ c: yGrise, l: 0.93, h: N1 + 2.04 }] });
   mur({ de: [x0 - 0.15, y1 + 0.075], a: [x1 + 0.15, y1 + 0.075], mats: { S: K.blanc, N: K.facade }, plinthes: ['S'] });
-  murNS(x1 + 0.075, encoche ? Y_RENF : y0 - 0.15, y1 + 0.15, { mats: { W: K.blanc, E: K.facade }, plinthes: ['W'] });
+  murNS(x1 + 0.075, encoche ? Y_RENF : y0 - 0.1, y1 + 0.15, { mats: { W: K.blanc, E: K.facade }, plinthes: ['W'] });
   // LE MUR SUD : le mur orange de l'espace pause (lot 5) ; de ce côté, un doublage blanc de 12 mm, percé au droit de sa
   // porte et de son imposte (VO, de l'intérieur : la porte à cadre blanc, l'imposte claire au-dessus — jusqu'à 2,50 m)
   mur({ de: [x0, y0 + 0.006], a: [xS, y0 + 0.006], ep: 0.012, h: H_PL, mats: K.blanc, plinthes: ['N'], ouvertures: [{ c: xPorte, l: L_PORTE + 0.1, h: N1 + 2.5 }] });

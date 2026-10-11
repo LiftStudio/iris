@@ -796,7 +796,7 @@ export function poserPause1(ch, ctx) {
   // hors du cône de la photo 28)
   for (const [x, y] of [[10.35, 7.35], [12.8, Yv(10.9)], [10.1, 8.75], [10.55, 10.05]]) mangeDebout(x, y);
   miura(10.7, 7.95, 'S', [11.25, 8.3]); miura(12.85, Yv(11.45), 'S', [12.4, Yv(11.75)]); miura(10.0, 7.95, 'S', [9.45, 8.25]);
-  miura(12.8, Yv(10.35), 'N', [12.4, Yv(10.4)]); miura(11.15, 10.1, 'W', [11.75, 10.1]);
+  miura(12.8, Yv(10.35), 'N', [12.3, 9.6]); miura(11.15, 10.1, 'W', [11.75, 10.1]);
   coque(8.7, 6.7, 'E', P.coqueOrange, [8.7, 7.3]); coque(9.25, 6.45, 'N', P.coqueMenthe, [9.25, 7.05]);
   // (la lime contre le muret court, entre la niche et le 1er poteau — relecture V2 : devant le 1er, le meuble bas occupe
   // l'angle du local)
