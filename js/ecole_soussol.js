@@ -195,8 +195,8 @@ function texBetonTaupe() {
     const r2 = graine(2023);
     // (relecture du 11/10 : v_003, v_004 — le sol fait 0,47 du mur, d'un taupe olive (89, 82, 60) ; sous les plafonniers
     // chauds du rez-de-chaussée, l'ancien #5e5a50 sortait brun-rouge et trop sombre, (73, 60, 42))
-    g.fillStyle = '#6a6c5e'; g.fillRect(0, 0, w, h);
-    nuees(g, w, h, r2, 60, [106, 108, 94], 12, 0.4, 10, 60);
+    g.fillStyle = '#76786f'; g.fillRect(0, 0, w, h);
+    nuees(g, w, h, r2, 60, [118, 120, 111], 12, 0.4, 10, 60);
     for (let k = 0; k < 40; k++) { g.strokeStyle = rgb(120, 116, 104, 0.25); g.lineWidth = 0.6; g.beginPath(); const x = r2() * w, y = r2() * h; g.moveTo(x, y); g.lineTo(x + (r2() - 0.5) * 40, y + (r2() - 0.5) * 12); g.stroke(); }
     for (let k = 0; k < 8; k++) { g.fillStyle = rgb(40, 38, 34, 0.5); g.beginPath(); g.arc(r2() * w, r2() * h, 1 + r2() * 2, 0, 7); g.fill(); }
   }, [1, 1], false, 8);
@@ -1141,15 +1141,12 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     mangeDebout(9.1, 9.01, 'trepied'); autour(9.1, 9.01, 0.5, [120, 220]);
     // ---- le baby-foot (nord-sud), la grande table en X devant lui, l'autre devant les distributeurs ----
     babyFoot(9.9, 7.9);
-    // (relecture du 11/10 : le tabouret sud-est de la grande table passe au sud-ouest — entre elle et la table grise, on
-    // rejoint le baby-foot depuis l'aile ; sinon le coin du baby-foot était clos, et trois tabourets y relevaient Haythem)
-    grandeTable(7.2, 8.01); autour(7.2, 8.01, 0.62, [60, 180, 240]);
+    grandeTable(7.2, 8.01); autour(7.2, 8.01, 0.62, [60, 180, 300]);
     grandeTable(11.0, 4.21); autour(11.0, 4.21, 0.62, [90, 200, 320]);
-    // ---- la table grise, au bord de l'aile (v_060 : à droite de la table en X, un peu plus loin) ----
-    B(8.0, 6.46, 9.2, 7.04, Y_SS + 0.92, Y_SS + 0.95, X.tablette, { collision: true });
-    B(8.0, 6.46, 9.2, 7.04, Y_SS + 0.915, Y_SS + 0.92, X.acierGris, { ombre: false });
-    for (const x of [8.05, 9.15]) for (const y of [6.51, 6.99]) B(x - 0.02, y - 0.02, x + 0.02, y + 0.02, Y_SS, Y_SS + 0.915, X.noir);
-    tabouret(8.3, 6.03, 0, -1); tabouret(8.9, 6.03, 0, -1);
+    // (relecture du 11/10 : plus de TABLE GRISE au milieu, x 8,0-9,2 y 6,46-7,04, ni ses deux tabourets. Le plateau gris
+    // au bord droit de v_059 et v_060 est plus bas dans l'image que la table en X, donc plus PRÈS : à ≈ 2,9 m de la porte,
+    // à 23° sur la droite — le bout nord de la tablette aux micro-ondes de l'aile, x 5,0-5,35 ; et sur v_066 et v_067,
+    // qui balaient ce coin-là, il n'y a que du carrelage. Il reste 21 tabourets, ceux qu'on compte sur la vidéo)
     // ---- LA TABLETTE HAUTE murale (mur est, y 6,01-8,81) : stratifié gris clair, pieds d'acier, trois tabourets dessous ----
     B(12.48, 6.01, 12.9, 8.81, Y_SS + 1.02, Y_SS + 1.05, X.tablette, { collision: true });
     for (const y of [6.11, 7.41, 8.71]) B(12.5, y - 0.02, 12.54, y + 0.02, Y_SS, Y_SS + 1.02, X.acierGris);
