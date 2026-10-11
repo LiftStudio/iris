@@ -184,7 +184,7 @@ export function poserMobilier(ch) {
   {
     // (Relecture du 11/10 : r02 et la photo 02 rejouées ensemble. Sur r02, le pied du fût est à 4,1 m de l'appareil
     // — 565 px sous l'horizon —, sous les relèvements de ses deux bords : la borne est CONTRE LE MUR SUD, en x 8,6, devant
-    // le jour est, le nu (7,87-9,06), à 0,2 m du jambage de la porte de la Si 0.1 ; sur la photo 02, elle est bien hors du
+    // le jour est, le nu (7,87-9,06), à 0,45 m du bout du mur (retour r02) ; sur la photo 02, elle est bien hors du
     // cadre. Son haut n'est qu'à 100 px au-dessus de l'horizon quand son pied est à 565 px dessous : 1,82 m hors tout)
     // Et elle regarde le NORD, droit dans la salle, le dos au mur : vu du bout ouest, son écran n'a que 95 px de large pour
     // 160 de borne, son flanc noir à droite — un écran de 0,54 vu sous 60°. Tournée vers le nord-ouest, elle faisait face
@@ -251,17 +251,9 @@ export function poserMobilier(ch) {
     const toile = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 2.0), tk); toile.position.set(0, 1.08, -0.008); toile.castShadow = true; k.add(toile);
     C.ajouterBoiteOrientee(kx, -ky, 0.43, 0.13, -th, { y1: 2.1 });
   }
-  // LE DRAPEAU NOIR au bout est du jour c 8,35 (r02 : « l'ouverture vers le hall, sombre, avec un pictogramme noir
-  // au-dessus » — sur la photo 21 en pleine définition, une enseigne noire à pictogramme blanc, perpendiculaire au mur sud,
-  // vers 2,2 m, juste à gauche du cadre du jour : x 9,14). La porte de la Si 0.1 s'ouvre juste là : c'est le sien.
-  {
-    const d = new THREE.Group(); d.position.set(9.14, 2.22, -(ATT_YS + 0.075 + 0.17)); ch.decor.add(d);
-    maille(boiteM(0.012, 0.16, 0.3), M.noir, 0, 0, 0, 0, d, { ombre: false });
-    const td = new THREE.MeshStandardMaterial({ map: texDrapeauSalle(), roughness: 0.45 });
-    for (const s of [1, -1]) { const p = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.144), td); p.position.x = s * 0.0065; p.rotation.y = s * Math.PI / 2; d.add(p); }
-    maille(boiteM(0.016, 0.016, 0.05), M.aluGris, 0, 0.09, 0.17, 0, d, { ombre: false });
-    d.traverse((m) => { m.userData.horsAOSol = true; });
-  }
+  // (le DRAPEAU NOIR au bout est du jour est — r02 : « l'ouverture vers le hall, sombre, avec un pictogramme noir
+  // au-dessus » — n'est pas celui de la Si 0.1 : c'est celui du bureau de direction, sur le même bout de mur que sa plaque,
+  // VO q_0040-0043 ; retour r02 du 11/10 : js/ecole_rdc_centre.js. La porte de la Si 0.1 est dans l'antichambre.)
   // LES AFFICHETTES DU FOND (photo orange, carte WIFI) : au bout du mur, près de l'angle du hall, sous le haut-parleur
   // (photo 03) — sur la face ouest de la pile du hall, x 13,30, js/ecole_rdc_centre.js ; son angle sud-ouest, y 4,7.
   // (Relecture du 10/10 : sur la photo 03 recalée — caméra (12,2 ; 5,4), cap 136,5 —, les affichettes sont à 0,1-0,25 m
@@ -519,17 +511,6 @@ function texKakemono() {
     g.fillStyle = '#f1efe9'; g.fillRect(w - 64, 566, 44, 44); g.fillStyle = '#121214';
     for (let i = 0; i < 6; i++) for (let j = 0; j < 6; j++) if ((i * 5 + j * 3 + i * j) % 3 === 0) g.fillRect(w - 61 + i * 6.5, 569 + j * 6.5, 6, 6);
   }, null, false, 8);
-}
-// LE DRAPEAU de la Si 0.1 (photo 21 en pleine définition) : noir, pictogramme blanc — un poste et son utilisateur — et le
-// numéro de la salle
-function texDrapeauSalle() {
-  return canvasTex(128, 66, (g, w, h) => {
-    g.fillStyle = '#141416'; g.fillRect(0, 0, w, h);
-    g.strokeStyle = '#f2f2f2'; g.lineWidth = 3; g.strokeRect(14, 12, 30, 21); g.fillStyle = '#f2f2f2'; g.fillRect(25, 34, 8, 5); g.fillRect(18, 39, 22, 3);
-    g.beginPath(); g.arc(56, 24, 6, 0, 7); g.fill(); g.beginPath(); g.ellipse(56, 46, 10, 12, 0, Math.PI, 0); g.fill();
-    g.font = '700 17px "Segoe UI", Arial, sans-serif'; g.textAlign = 'left'; g.fillText('Si 0.1', 74, 30);
-    g.font = '500 9px "Segoe UI", Arial, sans-serif'; g.fillText('T. Berners-Lee', 74, 46);
-  }, null, false, 4);
 }
 // L'AFFICHE BLANCHE AUX DESSINS DE COULEUR du pilier (photo 21 en pleine définition) : des coups de pinceau et des
 // pictogrammes bleus, orange et violets en haut, des colonnes de texte orangé au milieu, les logos en bas
