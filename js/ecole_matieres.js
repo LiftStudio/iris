@@ -367,9 +367,11 @@ export const TEINTE_PIERRE = 0xebf6ff;                     // (la teinte froide 
 // (photos 10, 16, 17), un ouvrant étroit et sombre de 0,28. Leur place, relevée sur la photo 12 redressée (les quatre
 // rangées et le haut de la cinquième) : travées 1 et 12 au 1er et au 3e, 7 au 2e, 6 au 4e, 12 au 5e (sous la toiture) ;
 // `o` : le côté de l'ouvrant étroit (-1 ouest, 1 est, 0 aucun)
+// (relecture du lot façade, 11/10 — photos 11 et 12 de près, iris_vues/XR4_z_t7.jpg : celui de la travée 7 du 2e a aussi
+// son grand carreau à la pastille et, à l'est, l'ouvrant sombre : o = 1)
 export const CADRE = { l: 1.47, bas: -0.18, haut: 2.35, montant: 0.16, linteau: 0.18, traverse: 0.21, saillie: 0.15, etroit: 0.28 };
 CADRE.jour = { l: CADRE.l - 2 * CADRE.montant, bas: CADRE.bas + CADRE.traverse + 0.05, haut: CADRE.haut - CADRE.linteau };
-export const CADRES = [{ t: 1, e: 1, o: -1 }, { t: 12, e: 1, o: 1 }, { t: 7, e: 2, o: 0 }, { t: 1, e: 3, o: -1 }, { t: 12, e: 3, o: 1 },
+export const CADRES = [{ t: 1, e: 1, o: -1 }, { t: 12, e: 1, o: 1 }, { t: 7, e: 2, o: 1 }, { t: 1, e: 3, o: -1 }, { t: 12, e: 3, o: 1 },
   { t: 6, e: 4, o: 1 }, { t: 12, e: 5, o: 1 }];
 export const cadreEn = (travee, etage) => CADRES.find((c) => c.t === travee && c.e === etage) || null;
 function texEtage() {
@@ -381,10 +383,11 @@ function texEtage() {
     g.fillStyle = '#bdbdb8'; g.fillRect(0, h * 0.5, w, 2); g.fillRect(w - 1, 0, 1, h);
     // la fenêtre : 1,20 x 1,35 m, appui à 0,85 m au-dessus du plancher (le haut de la tuile est le plafond de l'étage)
     const fw = F.l * mx, fh = (F.haut - F.bas) * my, fx = (w - fw) / 2, fy = h - F.haut * my;
-    // le tableau : vu d'en bas, le dessous du linteau dans l'ombre et un tableau gris d'un côté (photo 12)
+    // le tableau : vu d'en bas, le dessous du linteau dans l'ombre et un tableau d'un côté (photo 12)
+    // (relecture du lot façade, 11/10 : habillé de brun-noir comme au 1er et au 2e — photos 11, 12 de près — et non gris)
     g.fillStyle = '#2b282a'; g.fillRect(fx, fy, fw, fh);
     g.fillStyle = '#16161a'; g.fillRect(fx, fy, fw, 0.1 * my);
-    g.fillStyle = '#8b8a86'; g.fillRect(fx + fw - 0.07 * mx, fy + 0.1 * my, 0.07 * mx, fh - 0.1 * my);
+    g.fillStyle = '#211f21'; g.fillRect(fx + fw - 0.07 * mx, fy + 0.1 * my, 0.07 * mx, fh - 0.1 * my);
     // le vitrage : le ciel couvert en haut, les immeubles d'en face qui s'y reflètent en bas
     const cad = Math.max(4, 0.075 * mx), ouv = Math.max(3, 0.045 * mx);
     const verre = g.createLinearGradient(0, fy, 0, fy + fh);
@@ -397,8 +400,8 @@ function texEtage() {
     g.fillStyle = '#9a9c9e'; g.fillRect(fx + fw - cad - 0.07 * mx - ouv - 4, fy + fh * 0.5, 3, 0.1 * my);
     g.fillStyle = 'rgba(255,255,255,0.12)';
     g.beginPath(); g.moveTo(fx + fw * 0.25, fy + 0.1 * my); g.lineTo(fx + fw * 0.5, fy + 0.1 * my); g.lineTo(fx + fw * 0.25, fy + fh); g.lineTo(fx + fw * 0.02, fy + fh); g.fill();
-    // l'appui de pierre, et sa coulure
-    g.fillStyle = '#c9c9c3'; g.fillRect(fx - 6, fy + fh, fw + 12, 0.05 * my);
+    // la bavette sombre (relecture du lot façade : comme aux fenêtres du 1er et du 2e, photos 11, 17), et sa coulure
+    g.fillStyle = '#2e2b2c'; g.fillRect(fx - 3, fy + fh, fw + 6, 0.04 * my);
     const cg = g.createLinearGradient(0, fy + fh, 0, fy + fh + 0.6 * my);
     cg.addColorStop(0, 'rgba(160,158,150,0.35)'); cg.addColorStop(1, 'rgba(160,158,150,0)');
     g.fillStyle = cg; g.fillRect(fx, fy + fh + 0.05 * my, fw, 0.6 * my);
@@ -422,6 +425,39 @@ export function texFenetreCadre(o = 1) {
     // la pastille des pompiers, à un mètre du plancher, près du bord du grand carreau opposé à l'ouvrant (photos 10, 16)
     g.fillStyle = '#d8262c'; g.beginPath(); g.arc(o > 0 ? xg + (w - e) * 0.15 : o < 0 ? xg + (w - e) * 0.85 : w * 0.55, h - (1.0 - J.bas) * m, 0.075 * m, 0, 7); g.fill();
   }, null, false, 4);
+}
+// LE REFLET DE LA RUE dans les vitres des étages, vu de dehors (relecture du lot façade, 11/10 — photos 11, 12, 17, 18 de
+// près : les carreaux renvoient le ciel couvert et l'immeuble d'en face, un mur clair, des menuiseries de bois brun et des
+// garde-corps blancs ; des bureaux, on ne voit presque rien — le jeu y montrait les plafonniers et les affichettes
+// allumés). Une tuile répétée en largeur (chaque vitre la décale) ; `ciel` : la part du haut où se reflète le ciel (vu
+// d'en bas, plus la vitre est haute, plus il y en a)
+export function texRefletRue(ciel = 0.25, s = 7) {
+  return canvasTex(256, 128, (g, w, h) => {
+    const r = graine(s), hc = h * ciel;
+    const gc = g.createLinearGradient(0, 0, 0, hc + 2); gc.addColorStop(0, '#dfe5eb'); gc.addColorStop(1, '#b9c2ca');
+    g.fillStyle = gc; g.fillRect(0, 0, w, hc + 2);
+    // l'immeuble d'en face : le mur, puis ses fenêtres (bois brun, verre sombre) et leurs garde-corps blancs, par étages
+    g.fillStyle = '#9c9890'; g.fillRect(0, hc, w, h - hc);
+    g.fillStyle = '#86837c'; g.fillRect(0, hc, w, 3);
+    for (let y = hc + 8; y < h; y += 46) {
+      for (let x = (r() * 30) | 0; x < w; x += 58 + ((r() * 14) | 0)) {
+        g.fillStyle = '#5f4c3d'; g.fillRect(x, y, 40, 34);
+        g.fillStyle = '#4a5157'; g.fillRect(x + 4, y + 4, 15, 26); g.fillRect(x + 21, y + 4, 15, 26);
+        g.fillStyle = 'rgba(214,216,212,0.85)'; g.fillRect(x - 3, y + 20, 46, 2); g.fillRect(x - 3, y + 27, 46, 2);
+      }
+    }
+    // le voile du verre : un dégradé de bas en haut, une bande de lumière en biais
+    const gv = g.createLinearGradient(0, 0, 0, h); gv.addColorStop(0, 'rgba(255,255,255,0.05)'); gv.addColorStop(1, 'rgba(40,46,52,0.25)');
+    g.fillStyle = gv; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(255,255,255,0.08)';
+    g.beginPath(); g.moveTo(w * 0.3, 0); g.lineTo(w * 0.45, 0); g.lineTo(w * 0.3, h); g.lineTo(w * 0.15, h); g.fill();
+  }, [1, 1], false, 4);
+}
+// (une vitre du reflet : sa géométrie prend un morceau décalé de la tuile, d'une largeur à peu près à l'échelle)
+export function geoReflet(l, h, decalage) {
+  const geo = new THREE.PlaneGeometry(l, h), uv = geo.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setX(i, decalage + uv.getX(i) * l * 0.4);
+  return geo;
 }
 
 // =====================================================================

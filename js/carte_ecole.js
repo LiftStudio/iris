@@ -475,8 +475,10 @@ function construireFacade(ch) {
   // (dans ce groupe tourné, x local = -x du plan : on passe -x)
   // (10/10 : plus de stores à lames aux deux baies de l'accueil — VO q_0373-0383 et photo 03 recadrée : le jour et les
   // barreaux s'y voient, aucune lame ; les bandes claires de la photo 03 sont les barreaux sur le ciel)
-  for (const c of BAIES_HAUTES) fenetreFacade(fac, M, { x: -c, l: 1.2, bas: BAS_BAIE, haut: H_BAIE });
-  for (const c of BAIES_BUREAU) fenetreFacade(fac, M, { x: -c, l: 1.2, bas: 1.75, haut: H_BAIE, imposte: false });
+  // (relecture du lot façade, 11/10 — photos 10, 17 de près : les baies sont dans un épais cadre sombre au nu de la pierre,
+  // la bavette noire ; pas de tableau clair : `habillage`)
+  for (const c of BAIES_HAUTES) fenetreFacade(fac, M, { x: -c, l: 1.2, bas: BAS_BAIE, haut: H_BAIE, habillage: true });
+  for (const c of BAIES_BUREAU) fenetreFacade(fac, M, { x: -c, l: 1.2, bas: 1.75, haut: H_BAIE, imposte: false, habillage: true });
   // LE REFLET DE LA RUE dans les baies (lot façade du 11/10 : sur les photos 10, 16 à 18, derrière les barreaux, les vitres
   // sont sombres — la rue s'y reflète, on devine à peine la pièce ; le jeu les montrait claires, la salle éclairée derrière) :
   // une face sombre et brillante, tournée vers la rue seulement (de la salle, elle n'existe pas)

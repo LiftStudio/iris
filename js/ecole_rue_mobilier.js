@@ -1031,28 +1031,45 @@ export function poserMobilierRue(ch, R) {
 
   // ---------------------------------------------------------------- devant l'école, du passage à la porte 6
   // (photos 08, 10, 13, 14, 17, 18) — la trottinette contre le bout du vantail de la grille, le totem du passage
-  trottinette(A, M, 5.05, -1.62, Math.PI / 2 + 0.12, { penche: 0.14 });
-  ch.C.ajouterBoiteOrientee(5.05, 1.62, 0.36, 0.12, -(Math.PI / 2 + 0.12), { y1: 1.1, camera: false });
-  totem(ch, A, M, 6.0, -1.25, 'est', 20 * Math.PI / 180);
+  // (relecture du lot façade, 11/10 : la trottinette 0,5 m plus près de la façade — photo 10 recalée, ses roues en y -0,8
+  // et -1,2 ; photos 11 et 14 : entre le vantail ouvert et le totem)
+  trottinette(A, M, 5.0, -1.12, Math.PI / 2 + 0.12, { penche: 0.14 });
+  ch.C.ajouterBoiteOrientee(5.0, 1.12, 0.36, 0.12, -(Math.PI / 2 + 0.12), { y1: 1.1, camera: false });
+  // (relecture du lot façade, 11/10 : le totem du passage 0,55 m plus à l'ouest — photo 10 recalée, son pied en x 5,1-5,6 ;
+  // photos 11 et 18 : à côté de la trottinette, juste avant le premier bac de zinc)
+  totem(ch, A, M, 5.45, -1.25, 'est', 20 * Math.PI / 180);
   // les jardinières de zinc sous les fenêtres de la salle A, et ce qu'elles portent (photos 08, 13, 14)
-  let h = jardiniere(ch, A, M, 6.55, -0.72, 0.5, 0.5, 0.88); olivier(F, A, M, 6.55, -0.72, h, 1.9, r);
-  h = jardiniere(ch, A, M, 7.25, -0.74, 0.72, 0.56, 0.76); arbuste(F, A, M, 7.25, -0.74, h, 0.36, 0.5, PLANCHE.fleurs, r, 34);
-  h = jardiniere(ch, A, M, 8.12, -0.72, 0.56, 0.56, 0.9); cypres(F, A, M, 8.12, -0.72, h, 1.5, 0.27, r);
-  h = jardiniere(ch, A, M, 8.82, -0.72, 0.62, 0.6, 0.86); arbuste(F, A, M, 8.82, -0.72, h, 0.38, 0.75, PLANCHE.arbuste, r, 38);
-  h = jardiniere(ch, A, M, 9.54, -0.72, 0.6, 0.6, 0.86); olivier(F, A, M, 9.54, -0.72, h, 1.1, r); arbuste(F, A, M, 9.54, -0.72, h, 0.3, 0.45, PLANCHE.arbuste, r, 18);
-  banc(ch, A, M, 7.4, -1.62, 1.25, 0);
-  corbeille(ch, A, M, 9.25, -1.62);
-  cendrier(ch, A, M, 9.95, -1.98);
+  // (relecture du lot façade, 11/10 : les photos 17 et 18 recalées — leur sol tombe sur le seuil de la porte 6 à 5 px
+  // près —, le pied de chaque objet relevé au sol : les bacs de zinc sont GRANDS, 0,9 à 1,1 m de large et 0,95 de haut —
+  // leur haut à l'appui des baies —, l'un contre l'autre : x 5,6-6,45 (l'olivier), 6,7-7,75 (les fleurs), le cyprès dans
+  // un pot noir en retrait, 8,7-9,7, 9,9-11,0 et, derrière le second banc, 11,55-12,45 ; le jeu en posait cinq petits, de
+  // 0,5 à 0,7, de 6,3 à 9,85. La corbeille (8,87 ; -1,36), la poubelle haute (9,72 ; -1,65), le premier banc (x 6,2-7,5 :
+  // entre les photos 11 et 18, qui ne s'accordent qu'à 0,4 m près), le second (son pied avant ouest en 11,07 ; -1,37), le
+  // totem de la porte 6 (x 12,75, le haut de son panneau relevé sur les photos 11, 17 et 18), le bambou (son pied avant
+  // en 12,95 ; -2,06 sur les photos 17 et 18, 12,6 sur la 11) : tous de 0,3 à 0,7 m plus à l'est. Les plantes gardent
+  // leur tirage : le bac de derrière le second banc a le sien)
+  const rE = alea(1105);
+  let h = jardiniere(ch, A, M, 6.02, -0.67, 0.85, 0.5, 0.95); olivier(F, A, M, 6.02, -0.67, h, 1.9, r);
+  h = jardiniere(ch, A, M, 7.22, -0.67, 1.05, 0.5, 0.95); arbuste(F, A, M, 7.22, -0.67, h, 0.46, 0.5, PLANCHE.fleurs, r, 34);
+  h = potRond(ch, A, M, 8.21, -0.72, 0.3, 0.24, 0.72, M.anthracite); cypres(F, A, M, 8.21, -0.72, h, 1.5, 0.27, r);
+  h = jardiniere(ch, A, M, 9.2, -0.67, 1.0, 0.5, 0.95); arbuste(F, A, M, 9.2, -0.67, h, 0.42, 0.75, PLANCHE.arbuste, r, 38);
+  h = jardiniere(ch, A, M, 10.45, -0.67, 1.05, 0.5, 0.95); olivier(F, A, M, 10.45, -0.67, h, 1.1, r); arbuste(F, A, M, 10.45, -0.67, h, 0.3, 0.45, PLANCHE.arbuste, r, 18);
+  h = jardiniere(ch, A, M, 12.0, -0.67, 0.9, 0.5, 0.95); arbuste(F, A, M, 12.0, -0.67, h, 0.34, 0.55, PLANCHE.arbuste, rE, 26);
+  banc(ch, A, M, 6.85, -1.4, 1.25, 0);
+  corbeille(ch, A, M, 8.87, -1.36);
+  cendrier(ch, A, M, 9.72, -1.65);
   // le second banc, plus court, au droit du bureau B ; le totem de l'entrée n° 6 ; le bambou ; la jardinière en treillis
-  banc(ch, A, M, 10.95, -1.25, 1.05, 0, { lattesDos: 6 });
+  banc(ch, A, M, 11.55, -1.17, 1.05, 0, { lattesDos: 6 });
   // (les recoins trop étroits pour Haythem — 30 à 55 cm entre le totem, les jardinières, les bancs, la corbeille et le
-  // cendrier — sont bouchés : il s'y coinçait en tremblant entre deux obstacles. Relecture du 09/10/2026.)
-  ch.C.ajouterBoite(6.0, 0.95, 10.38, 1.4, { y1: 0.9, camera: false });
-  ch.C.ajouterBoite(6.0, 1.4, 6.78, 1.85, { y1: 0.9, camera: false });
-  ch.C.ajouterBoite(9.0, 1.4, 10.38, 1.95, { y1: 0.9, camera: false });
-  totem(ch, A, M, 12.05, -0.8, 'ouest');
+  // cendrier — sont bouchés : il s'y coinçait en tremblant entre deux obstacles. Relecture du 09/10/2026 ; refaits pour
+  // la nouvelle place des objets à la relecture du lot façade, 11/10)
+  ch.C.ajouterBoite(5.6, 0.92, 10.96, 1.4, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(5.6, 1.4, 6.25, 1.7, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(8.6, 1.4, 9.84, 1.77, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(12.04, 0.92, 12.7, 1.47, { y1: 0.9, camera: false });
+  totem(ch, A, M, 12.75, -1.15, 'ouest');
   // (le bambou monte jusqu'aux appuis des fenêtres du 1er étage, photos 16 et 17 : 2,6 m au-dessus du pot)
-  h = potRond(ch, A, M, 12.62, -1.55, 0.31, 0.23, 0.78, M.anthracite); bambou(F, A, M, 12.62, -1.55, h, 2.6, r, 28);
+  h = potRond(ch, A, M, 12.85, -1.83, 0.31, 0.23, 0.78, M.anthracite); bambou(F, A, M, 12.85, -1.83, h, 2.6, r, 28);
   const tb = pose(13.08, -1.3);
   A.ajouter(new THREE.BoxGeometry(0.44, 0.58, 0.44), M.treillis, dans(tb, 0, 0.29, 0));
   A.ajouter(new THREE.BoxGeometry(0.4, 0.01, 0.4), M.terre, dans(tb, 0, 0.55, 0), false);
@@ -1060,7 +1077,11 @@ export function poserMobilierRue(ch, R) {
   arbuste(F, A, M, 13.08, -1.3, 0.55, 0.28, 0.45, PLANCHE.choisya, r, 16);
   h = potRond(ch, A, M, 13.18, -0.7, 0.2, 0.15, 0.48, M.anthracite); arbuste(F, A, M, 13.18, -0.7, h, 0.22, 0.35, PLANCHE.arbuste, r, 12);
   // le palmier à droite de la porte 6, devant la fenêtre de l'accueil
-  h = potRond(ch, A, M, 17.3, -1.45, 0.31, 0.22, 0.58, M.anthracite); palmier(F, A, M, 17.3, -1.45, h, r);
+  // (relecture du lot façade, 11/10 : son pied relevé au sol sur les photos 16, 17 et 18 recalées — avant en 16,65 ;
+  // 16,51 ; 16,36 — est au droit du trumeau entre le portail et la baie, contre le tableau du portail : x 16,45 et non
+  // 17,3 ; derrière lui, contre la façade, la fente de 0,57 m est bouchée)
+  h = potRond(ch, A, M, 16.45, -1.3, 0.31, 0.22, 0.58, M.anthracite); palmier(F, A, M, 16.45, -1.3, h, r);
+  ch.C.ajouterBoite(16.12, 0.4, 16.78, 1.0, { y1: 0.6, camera: false });
 
   // ---------------------------------------------------------------- à l'ouest du passage : les bacs, le n° 8
   // (photo 10) trois bacs roulants gris devant la porte de secours ; (photos 09, 10) les jardinières de terre cuite du

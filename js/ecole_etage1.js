@@ -60,7 +60,7 @@
 import * as THREE from 'three';
 import { maille, boiteM, fenetreFacade, fusionnerLocal } from './ecole_portes.js';
 import { canvasTex, nePasFusionner } from './kit_decor.js';
-import { jourDehors, texAffiche, texConsignes, texPictoExtincteur, CADRE, cadreEn, FENETRE_ETAGE, TEINTE_PIERRE } from './ecole_matieres.js';
+import { jourDehors, texAffiche, texConsignes, texPictoExtincteur, CADRE, cadreEn, FENETRE_ETAGE, TEINTE_PIERRE, texRefletRue, geoReflet } from './ecole_matieres.js';
 import { cuireLumiereSol } from './ecole_lumieres.js';
 import { TELEPHONE } from './appareil.js';
 import { poserPalierEst } from './ecole_est.js';
@@ -479,13 +479,18 @@ export function poserEtage1(ch, renderer = null) {
     // salle, elle n'existe pas (face arrière), la vitre reste claire
     // (lot façade du 11/10 : sur les photos 11, 12, 16 à 18, les vitres du 1er renvoient la rue et le ciel et ne laissent
     // presque rien voir des bureaux — plus couvrante, moins miroir : 0,55 -> 0,80, métal 0,6 -> 0,4)
-    const vitreRue = new THREE.MeshStandardMaterial({ color: 0x5f6a74, roughness: 0.06, metalness: 0.4, transparent: true, opacity: 0.8, depthWrite: false, envMapIntensity: 1.2 });
+    // (relecture du lot façade, 11/10 — photos 11, 12, 17, 18 de près : on y voit l'immeuble d'en face, ses fenêtres de bois et
+    // ses garde-corps, et le ciel en haut, rien des bureaux — le jeu laissait voir à travers les plafonniers et l'affichette
+    // du wifi allumés : le reflet est dessiné, js/ecole_matieres.js texRefletRue, à 0,95)
+    const vitreRue = new THREE.MeshStandardMaterial({ map: texRefletRue(0.2, 7), roughness: 0.12, metalness: 0.15, transparent: true, opacity: 0.95, depthWrite: false, envMapIntensity: 0.7 });
     vitreRue.name = 'vitre de l\'étage vue de la rue';
+    let kr = 0;
     for (const f of F) {
       // (les bureaux ont des stores à lames verticales, comme l'accueil du rez-de-chaussée, photo 03)
       if (f.cadre) fenetreSimple(f);
-      else fenetreFacade(fac, M, { x: -f.c, l: f.l, bas: f.bas, haut: f.haut, ep: 0.4, barreaux: false, imposte: false, vantail: true, stores: f.c > 13.2 });
-      const r = new THREE.Mesh(new THREE.PlaneGeometry(f.l - 0.1, f.haut - f.bas - 0.1), vitreRue);
+      // (relecture du lot façade, 11/10 — photos 11, 12, 17, 18 de près : le tableau habillé de brun-noir, `habillage`)
+      else fenetreFacade(fac, M, { x: -f.c, l: f.l, bas: f.bas, haut: f.haut, ep: 0.4, barreaux: false, imposte: false, vantail: true, stores: f.c > 13.2, habillage: true });
+      const r = new THREE.Mesh(geoReflet(f.l - 0.1, f.haut - f.bas - 0.1, (kr++ * 0.37) % 1), vitreRue);
       r.position.set(f.c, (f.bas + f.haut) / 2, 0.158); r.castShadow = false; groupe.add(r);
       // (les vitres arrêtent la caméra ; le jour, lui, passe : `vitre`)
       C.ajouterBoite(f.c - f.l / 2, 0.4, f.c + f.l / 2, 0, { y0: f.bas, y1: f.haut, vitre: true });
@@ -495,7 +500,8 @@ export function poserEtage1(ch, renderer = null) {
         const [px, ph] = f.pompiers;
         for (const s of [1, -1]) {
           const d = new THREE.Mesh(new THREE.CircleGeometry(0.075, 24), pastille);
-          d.position.set(px, N1 + ph, s > 0 ? 0.156 : 0.144); d.rotation.y = s > 0 ? 0 : Math.PI; groupe.add(d);
+          // (relecture : la face de dehors devant le reflet de la rue, à 0,158 — sous lui, elle s'éteignait)
+          d.position.set(px, N1 + ph, s > 0 ? 0.161 : 0.144); d.rotation.y = s > 0 ? 0 : Math.PI; groupe.add(d);
         }
       }
     }
@@ -526,6 +532,9 @@ export function poserEtage1(ch, renderer = null) {
     const v = new THREE.Mesh(new THREE.PlaneGeometry(g1 - g0 - 2 * c, f.haut - f.bas - 2 * c), M.vitreJour);
     v.position.set((g0 + g1) / 2, (f.bas + f.haut) / 2, 0.15); groupe.add(v);
     B(x0, -0.4, x1, ya, f.bas - 0.02, f.bas, M.blanc, { ombre: false });
+    // (relecture du lot façade, 11/10 — photos 10, 11, 12 : entre le rouge et la menuiserie, le tableau est brun-noir)
+    for (const [a, b] of [[x0, x0 + 0.012], [x1 - 0.012, x1]]) B(a, -0.4, b, ya, f.bas, f.haut, M.menuiserie, { ombre: false });
+    B(x0, -0.4, x1, ya, f.haut - 0.012, f.haut, M.menuiserie, { ombre: false });
   }
 
   // =====================================================================

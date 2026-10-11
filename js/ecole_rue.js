@@ -377,15 +377,18 @@ export function poserRue(ch) {
   // (intégration du 11/10, plan V2 : arrêté en y 12,45, au sud de l'aile A — il descendait jusqu'en y 14 et entrait de 1,25 m
   // dans la courette ouest, js/ecole_pieces.js courette : par les fenêtres de la Si 0.2, son fond crème bouchait la cour)
   facade(X0 - 6, -0.4, -7.5, 12.45, 19, creme);
-  facade(-7.5, -0.4, -0.3, 12.45, 19, brique8);
+  // (relecture du lot façade, 11/10 : la brique s'arrête à 1,4 m de l'école — photo 10 recalée, x -1,7 ; photos 09 et
+  // 12 : contre la bande noire, de toute la hauteur, un trumeau de pierre lisse, sans fenêtre ni brique)
+  facade(-7.5, -0.4, -1.7, 12.45, 19, brique8);
+  facade(-1.7, -0.4, -0.3, 12.45, 19, std({ color: 0xe6e0d4, roughness: 0.88 }));
   // (lot façade du 11/10 : la photo 10, recalée — 5 px —, met la porte cochère du n° 8, bois verni à carreaux et imposte,
   // dans son encadrement de pierre claire, à 1,9 m de la bande noire de l'école : x -3,7 à -2,2 ; entre les deux, un mur
-  // crème et un pilastre plus clair (x -1,25 à -0,3), sans fenêtre — le jeu y posait deux fenêtres à barreaux. La porte
+  // crème et un pilastre plus clair (x -1,7 à -0,3 à la relecture), sans fenêtre — le jeu y posait deux fenêtres à barreaux. La porte
   // cintrée suit à l'ouest, après un trumeau (photo 09).)
   rdc(-7.5, -0.3, -0.4, 3.4, { fond: '#ddd5c6', socle: '#b9b1a3', joints: true, graine: 10, elements: [
     { t: 'porte', x0: -5.5, x1: -4.4, h: 2.9, bois: '#6b4226', arc: true, imposte: true, vantaux: 2, pierre: '#e6dfd1' },
     { t: 'porte', x0: -3.7, x1: -2.2, h: 2.95, bois: '#7a4a28', imposte: true, vantaux: 2, chaud: true, plein: true, encadrement: '#ece6da' },
-    { t: 'bande', x0: -1.25, x1: -0.3, couleur: '#e9e4d9', h: 3.4 },
+    { t: 'bande', x0: -1.7, x1: -0.3, couleur: '#e9e4d9', h: 3.4 },
   ] });
   rdc(X0, -7.5, -0.4, 3.4, { fond: '#d9d0bf', socle: '#b6ad9e', joints: true, graine: 11, elements: [
     { t: 'porte', x0: -9.9, x1: -8.9, h: 2.8, bois: '#5d3a22', vantaux: 2 },

@@ -538,7 +538,10 @@ export class Portes {
 // pierre dehors, tablette blanche dedans. `stores` : des lames verticales blanches côté intérieur (l'accueil, photo 03).
 // `vantail` : un seul ouvrant, ni meneau ni imposte (les étages, lot façade du 11/10 : photos 12, 17, 18 ; VO q_0319-0326) —
 // son cadre de 4,5 cm dans le dormant, la poignée côté intérieur, à mi-hauteur, à l'est (à gauche vu de la salle)
-export function fenetreFacade(parent, M, { x, l = 1.2, bas = 0.95, haut = 2.5, ep = 0.4, barreaux = true, stores = false, imposte = true, vantail = false }) {
+// `habillage` : le tableau extérieur (du nu de la pierre à la menuiserie) habillé de brun-noir et la bavette sombre au
+// lieu de l'appui de pierre (relecture du lot façade, 11/10 — photos 11, 12, 16 à 18 de près : aucune pierre claire
+// autour des fenêtres, un épais cadre sombre au nu de la façade ; le jeu les montrait cernées d'un tableau clair de 25 cm)
+export function fenetreFacade(parent, M, { x, l = 1.2, bas = 0.95, haut = 2.5, ep = 0.4, barreaux = true, stores = false, imposte = true, vantail = false, habillage = false }) {
   const g = new THREE.Group(); g.position.x = x; parent.add(g);
   const h = haut - bas, ym = (bas + haut) / 2, zc = -ep / 2 + 0.25, c = vantail ? 0.07 : 0.06;
   maille(boiteM(l, c, 0.07), M.menuiserie, 0, bas + c / 2, zc, 0, g);
@@ -559,7 +562,14 @@ export function fenetreFacade(parent, M, { x, l = 1.2, bas = 0.95, haut = 2.5, e
   const v = new THREE.Mesh(new THREE.PlaneGeometry(l - 2 * c, h - 2 * c), M.vitreJour);
   v.position.set(0, ym, zc); g.add(v);
   // l'appui (pierre) dehors, la tablette (blanche) dedans
-  maille(boiteM(l + 0.06, 0.05, 0.22), M.pierreAppui || M.pierre, 0, bas - 0.025, -ep / 2 + 0.09, 0, g);
+  if (habillage) {
+    // (le tableau : 1,2 cm de brun-noir sur ses deux côtés et sous le linteau, du nu à la menuiserie ; la bavette, en
+    // saillie de 3,5 cm, couvre le fond du tableau)
+    const zo = -ep / 2, zf = zc - 0.035, d = zf - zo, zm = (zo + zf) / 2, t = 0.012;
+    for (const s of [-1, 1]) maille(boiteM(t, h, d), M.menuiserie, s * (l / 2 - t / 2), ym, zm, 0, g, { ombre: false });
+    maille(boiteM(l, t, d), M.menuiserie, 0, haut - t / 2, zm, 0, g, { ombre: false });
+    maille(boiteM(l + 0.04, 0.04, d + 0.035), M.menuiserie, 0, bas - 0.028, zm - 0.0175, 0, g, { ombre: false });
+  } else maille(boiteM(l + 0.06, 0.05, 0.22), M.pierreAppui || M.pierre, 0, bas - 0.025, -ep / 2 + 0.09, 0, g);
   maille(boiteM(l, 0.025, ep / 2 - 0.02), M.blanc, 0, bas - 0.012, ep / 4 + 0.03, 0, g, { ombre: false });
   if (barreaux) {
     const zb = -ep / 2 - 0.035;
