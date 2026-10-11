@@ -948,10 +948,10 @@ export function construireCarte(scene, renderer = null) {
 
   // ---- LES CROCHETS : le mobilier, la rue ----
   poserMobilier(ch);
-  // la pile du hall (plaque « iris », horloge, annuaires), le bureau de direction B 0.3, le totem : js/ecole_rdc_centre.js
+  // la pile du hall (plaque « iris », horloge, annuaires), le bureau de direction B 0.3 : js/ecole_rdc_centre.js
   poserRdcCentre(ch);
   poserRue(ch);
-  // les pièces qu'on peut maintenant visiter (salle A, bureau B, couloir de service, local, toilettes, salle David
+  // les pièces qu'on peut maintenant visiter (Si 0.1, bureau B, couloir de service, local, toilettes, salle David
   // Clark) et leurs zones
   const pieces = poserPieces(ch);
   // le couloir est et l'escalier est (photos 24 à 29) : la porte nord du hall, la cloison vitrée, le couloir, le

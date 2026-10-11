@@ -42,7 +42,7 @@ const X_PLAQUE = 11.0;
 // =====================================================================
 //  LES TEXTURES
 // =====================================================================
-// LE LOGO « ıris » (plaque, totem ; VO q_0028 et le logo officiel de l'écran de chargement) : des i SANS POINT, le premier
+// LE LOGO « ıris » (la plaque ; VO q_0028 et le logo officiel de l'écran de chargement) : des i SANS POINT, le premier
 // une barre JAUNE de la hauteur des minuscules, « rıs » en blanc ; `carre` : le carré jaune qui chevauche le coin haut
 // gauche du pavé noir (x, y, côté du pavé). `largeur` (relecture du 10/10) : la largeur voulue du mot — la taille est
 // recalculée sur la police réellement chargée (la plaque de la VO q_0028-0034 : le mot remplit 80 % du pavé)
