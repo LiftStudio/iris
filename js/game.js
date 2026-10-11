@@ -51,7 +51,7 @@ const RAYON_CAM = 0.2;                    // la caméra est une petite sphère :
 //     téléphone ») ; à moins de 0,6 m de lui, Haythem en demi-transparence (0,35) au lieu d'être masqué.
 const DEG = Math.PI / 180;
 const angle = (a) => Math.atan2(Math.sin(a), Math.cos(a));   // un angle ramené dans ]-π ; π]
-const CHAMP =63, CHAMP_H_MAX = 108, CHAMP_SPRINT = 7, CHAMP_MAX = 70, CHAMP_SERRE = 69;
+const CHAMP = 63, CHAMP_H_MAX = 108, CHAMP_SPRINT = 7, CHAMP_MAX = 70, CHAMP_SERRE = 69;
 const TANGAGE = 0.12;                     // le piqué de départ (7°)
 const RECUL = 2.6, RECUL_RUE = 4.3, HAUT_CAM = 1.6, EPAULE = 0.4, VISEE_EPAULE = 0.24, VISEE_H = 1.45;
 const BAIE = 2.0;                         // un passage d'au moins 2 m n'est pas une porte (la plus large, la porte 6 : 1,90)
@@ -64,33 +64,40 @@ const BAIE = 2.0;                         // un passage d'au moins 2 m n'est pas
 const RECUL_SEUIL = 1.1;
 // LA CAMÉRA DOUCE (lot X1 « caméra », 11/10 ; rapport final V2, défauts de jeu § 6 et doute 13 : dans les volées et sur
 // les paliers étroits — escalier principal, escalier est, volée de tôle et palier du -1, v_010 —, elle se collait encore
-// à Haythem, translucide ; en marche avec des virages, elle heurtait les murs des passages étroits, à moins de 1 m dans
-// 44 % des images sur le tour du -1 ; e1hall et e1pause, pauseSS et salleSS : elle s'arrêtait à leur seuil). Cinq règles,
-// sans toucher à une cote :
-//   - LA PENTE (PENTE) : dans une volée, la caméra suit le sol qu'elle survole — plus HAUT quand les marches montent
-//     derrière Haythem (il descend : elle reste au-dessus des marches au lieu de s'y cogner, et regarde la volée par-dessus
-//     son épaule), dans l'AXE de la volée quand elles descendent derrière lui (il monte : sous le rampant de la volée de
-//     tôle, à hauteur de tête, elle n'avait que 0,6 à 1 m ; en suivant la pente, elle reprend du recul) ;
-//   - AU-DESSUS DE L'ÉPAULE (LEVE) : quand le recul libre tombe sous 1,5 m, elle monte au-dessus de sa tête (jusqu'à 38 cm,
-//     moins quand l'épaule l'écarte déjà de l'axe, toujours 28 cm sous le plafond et jamais dans un linteau) au lieu de
-//     redescendre derrière sa nuque — c'est sa tête qui bouchait l'image, d'où la demi-transparence ;
+// à Haythem, translucide ; en marche avec des virages, elle heurtait les murs des passages étroits ; e1hall et e1pause,
+// pauseSS et salleSS : elle s'arrêtait à leur seuil). Sans toucher à une cote :
+//   - LA PENTE (PENTE) : dans une volée, la caméra suit le sol qu'elle survole (_solSous) — plus HAUT quand les marches
+//     montent derrière Haythem (il descend : elle passe au-dessus des marches et regarde la volée par-dessus lui), dans
+//     l'AXE de la volée quand elles descendent derrière lui (il monte : sous le rampant de la volée de tôle, elle n'avait
+//     que 0,6 à 1 m ; elle suit la pente et reprend du recul) ; et sous les plafonds de son chemin (le vestibule de
+//     l'escalier est, plus bas que la tête de Haythem sur la volée 1 : elle descend pour passer dessous) ;
+//   - AU-DESSUS DE L'ÉPAULE (LEVE) : quand le recul libre tombe sous 1,5 m, elle monte au-dessus de sa tête (38 cm, 65 cm
+//     collée, moins quand l'épaule l'écarte déjà de l'axe ; 28 cm sous le plafond, jamais dans un linteau) au lieu de
+//     redescendre derrière sa nuque — c'était sa tête qui bouchait l'image, d'où la demi-transparence ; et elle le garde
+//     DANS L'IMAGE (sa visée à 22° au plus du centre) ;
 //   - LE CAP ASSISTÉ (ASSIST_*) : au clavier seul, au joystick tactile ou à la manette, quand on ne tourne pas la caméra
-//     soi-même et qu'elle est à l'étroit (moins de 1,8 m de recul libre), elle se range doucement derrière sa marche —
-//     dans l'axe de la volée, du couloir, du palier — à 100°/s, 200°/s collée au mur, en accélérant et freinant ; la direction tenue au
-//     clavier ou au pouce garde son cap dans le monde tant qu'on la tient (on ne repart pas dans le mur parce que la
-//     caméra a tourné), et le rend dès qu'on la change dans le sens où l'on rattrape la caméra ;
-//   - LE SEUIL SUIVI (SEUIL_FONTE) : au passage d'une porte, la caméra garde son recul et passe la porte derrière lui, au
-//     lieu de bondir de 2,6 à 1,1 m ; ce surplus fond à mesure qu'il avance (et au repos, en 1 à 2 s) jusqu'au RECUL_SEUIL ;
-//     la pièce de la caméra se relâche en douceur (PIECE_*) — seuls les murs l'arrêtent net ; et la pièce se compte de
-//     proche en proche : une voisine d'une voisine ouverte l'est aussi (e1hall - e1couloir - e1pause) ;
-//   - LE COIN (dans updateCamera) : si la caméra, en glissant, perd Haythem de vue derrière un angle, elle passe du côté de
-//     sa place voulue en gardant sa distance, au lieu de se jeter dans sa nuque (de 1,5 m à 0,12 m d'un coup).
+//     soi-même (depuis 0,8 s) et qu'elle est à l'étroit (moins de 1,8 m de recul libre) pendant qu'il marche, elle se
+//     range derrière sa marche — dans l'axe de la volée, du couloir, du palier —, à 90°/s, 180°/s collée, en accélérant et
+//     en freinant ; la direction tenue au clavier ou au pouce (sauf vers l'avant) garde son cap dans le monde tant qu'on
+//     la tient — on ne repart pas dans le mur parce que la caméra a tourné — et le rend quand on la lâche, ou d'autant
+//     qu'on la tourne vers la caméra ;
+//   - LE SEUIL SUIVI (SEUIL_FONTE) : au passage d'une porte, elle garde son recul et passe la porte derrière lui, au lieu
+//     de bondir de 2,6 à 1,1 m en 0,1 s ; ce surplus fond de 1,2 m/s (plus vite s'il court) jusqu'au RECUL_SEUIL ; la
+//     pièce la retient en douceur (PIECE_*), seuls les murs l'arrêtent net ; et elle se compte de proche en proche : la
+//     voisine d'une voisine ouverte l'est aussi (e1hall, e1couloir, e1pause) ;
+//   - LES COUPES : l'épaule elle-même reste à 20 cm de tout (plus de chute dans sa nuque au ras d'un jambage) ; si la
+//     caméra perd Haythem de vue derrière un angle, elle passe sur la ligne de sa place voulue à la même distance (15° au
+//     plus), sinon elle se rapproche sur sa ligne — et le regard saute avec elle au lieu de balayer l'image.
+// Rejoué (banc du lot X1 : 22 parcours, volées et passages étroits des 4 niveaux, aller et retour, × 5 façons de jouer) :
+// au joystick en marchant, la caméra à moins de 1 m de lui passe de 31 à 12 % des images, Haythem translucide de 21 à 3 %
+// (dans les volées : 45 à 18 %, 33 à 4,5 %) ; au clavier seul, de 38 à 19 % et de 26 à 6 % ; clavier et souris, de 8 à 5 %
+// et de 4,7 à 1,7 % ; le tour du -1 en virages instantanés (la mesure de la vérification finale), de 32 à 18 % et de 13 à 4 %.
 const PENTE = 0.6, PENTE_MIN = 0.3, PENTE_MAX = 1.9;
 const LEVE = 0.38, LEVE_COLLE = 0.27;
 const ASSIST_GENE = 1.8, ASSIST_PLEIN = 0.9, ASSIST_MAX = 1.6, ASSIST_K = 2.8, ASSIST_MANU = 0.8;
 const SEUIL_FONTE = 1.2, SEUIL_FONTE_V = 0.3;
 const PIECE_IN = 7, PIECE_OUT = 3;
-const OEIL_PHOTO = 1.45;                 // la « vue photo » : l'œil à hauteur de téléphone tenu devant soi
+const OEIL_PHOTO = 1.45;                  // la « vue photo » : l'œil à hauteur de téléphone tenu devant soi
 // le champ vertical pour un écran de rapport `aspect` : 63°, sauf si l'horizontal dépasse alors 108°
 const champBase = (aspect) => Math.min(CHAMP, 2 * Math.atan(Math.tan(CHAMP_H_MAX / 2 * DEG) / Math.max(0.2, aspect || 1)) / DEG);
 // LA ZONE D'UN AUTRE NIVEAU (relecture du 11/10). Les zones du rez-de-chaussée et du 1er n'ont pas de hauteur maximale
@@ -825,7 +832,7 @@ export class Game {
   // LE CAP ASSISTÉ (en tête du fichier), après _cibleCam, pour l'image suivante : quand la caméra est à l'étroit (recul
   // libre sous 1,8 m) pendant que Haythem marche et qu'on ne la tourne pas soi-même (souris, doigt, stick droit : depuis
   // 0,8 s), elle vise le cap qui la met derrière sa marche — ou à 23° ou 46° de là, s'il lui rend nettement plus de recul
-  // (le palier d'une volée, l'angle d'un couloir) — et s'y range, à 100°/s au plus, jusqu'à 200°/s quand elle est collée
+  // (le palier d'une volée, l'angle d'un couloir) — et s'y range, à 90°/s au plus, jusqu'à 180°/s quand elle est collée
   // (Haythem qui dévale la volée de tôle, 0,85 m de large, la caméra contre le mur), la vitesse lissée (pas d'à-coup).
   // Commencée, la manœuvre va au bout (le recul qui revient en chemin ne l'arrête pas à mi-course). La direction tenue au
   // clavier ou au pouce garde son cap dans le monde (this._decalCmd, lu par update).
@@ -836,8 +843,10 @@ export class Game {
       && !u.assis && !u.emote && !this.input.blocked && !this.freeCam;
     const v = Math.hypot(u.vel.x, u.vel.z);
     const manu = (performance.now() - (this.camManuT ?? -1e9)) / 1000 < ASSIST_MANU;
-    if (!libre || manu || v < 0.6) this._assistOn = false;
-    else {
+    if (!libre || manu || v < 0.6) {
+      this._assistOn = false;
+      if (manu) this._omCap = 0;                         // (on reprend la caméra à la main : elle lâche tout de suite)
+    } else {
       if (!this._assistOn && S.dl < ASSIST_GENE && v > 0.8) this._assistOn = true;
       if (this._assistOn) {
         const yH = Math.atan2(-u.vel.x, -u.vel.z);          // le cap qui met la caméra derrière sa marche
@@ -918,6 +927,25 @@ export class Game {
     }
   }
 
+  // LE POINT REGARDÉ `L` ramené à 22° (+ `marge`) au plus de la visée (vx, vy, vz) de Haythem, vu de la caméra (moins au
+  // téléphone tenu droit : 85 % du demi-champ le plus étroit, 95 % avec la marge), à la même distance
+  _dansLImage(L, vx, vy, vz, marge = 0) {
+    const cP = this.camPos;
+    let hx = vx - cP.x, hy = vy - cP.y, hz = vz - cP.z;
+    const lx = L.x - cP.x, ly = L.y - cP.y, lz = L.z - cP.z, nh = Math.hypot(hx, hy, hz), nl = Math.hypot(lx, ly, lz);
+    if (nh < 0.05 || nl < 0.05) return;
+    hx /= nh; hy /= nh; hz /= nh;
+    const demi = Math.min(this.camera.fov / 2 * DEG, Math.atan(Math.tan(this.camera.fov / 2 * DEG) * this.camera.aspect));
+    const co = (hx * lx + hy * ly + hz * lz) / nl, M = Math.min((22 + marge) * DEG, Math.min(0.95, 0.85 + marge / 60) * demi);
+    if (co >= Math.cos(M)) return;
+    let qx = lx / nl - hx * co, qy = ly / nl - hy * co, qz = lz / nl - hz * co;
+    const nq = Math.hypot(qx, qy, qz);
+    if (nq < 1e-4) return;
+    qx /= nq; qy /= nq; qz /= nq;
+    const c = Math.cos(M), s = Math.sin(M);
+    L.set(cP.x + (hx * c + qx * s) * nl, cP.y + (hy * c + qy * s) * nl, cP.z + (hz * c + qz * s) * nl);
+  }
+
   // `poser` : la caméra posée d'emblée à sa place, sans lissage (le départ)
   updateCamera(dt, poser = false) {
     if (this.freeCam) return;   // débogage : caméra pilotée à la main (__game.freeCam = true)
@@ -978,30 +1006,17 @@ export class Game {
     const ve = v3 ? (S.epaule || 0) * (VISEE_EPAULE / EPAULE) : 0;
     _v.set(u.x + bz * ve, (v3 ? VISEE_H : 1.5) + p.jumpY * 0.5 + p.solAff, u.z - bx * ve);
     const dh = Math.hypot(this.camPos.x - _v.x, this.camPos.z - _v.z);
-    if (v3 && dh < 1.5) {
-      const a = 1.5 - dh, cP = this.camPos, vx = _v.x, vy = _v.y, vz = _v.z;
-      _v.x -= bx * cp * a; _v.y -= sp * a; _v.z -= bz * cp * a;
-      // (lot X1 : mais Haythem reste DANS L'IMAGE — sa visée à 27° au plus du centre, l'image en couvre 31° de part et
-      // d'autre. Vue d'au-dessus de son épaule, le regard porté droit devant passait au-dessus de lui : sur le palier de la
-      // volée de tôle, on ne voyait qu'un mur blanc)
-      let hx = vx - cP.x, hy = vy - cP.y, hz = vz - cP.z, lx = _v.x - cP.x, ly = _v.y - cP.y, lz = _v.z - cP.z;
-      const nh = Math.hypot(hx, hy, hz), nl = Math.hypot(lx, ly, lz);
-      if (nh > 0.05 && nl > 0.05) {
-        hx /= nh; hy /= nh; hz /= nh;
-        const demi = Math.min(this.camera.fov / 2 * DEG, Math.atan(Math.tan(this.camera.fov / 2 * DEG) * this.camera.aspect));
-        const co = (hx * lx + hy * ly + hz * lz) / nl, M = Math.min(27 * DEG, 0.85 * demi);   // (au téléphone tenu droit, moins)
-        if (co < Math.cos(M)) {
-          let qx = lx / nl - hx * co, qy = ly / nl - hy * co, qz = lz / nl - hz * co;
-          const nq = Math.hypot(qx, qy, qz);
-          if (nq > 1e-4) {
-            qx /= nq; qy /= nq; qz /= nq;
-            const c = Math.cos(M), s = Math.sin(M);
-            _v.set(cP.x + (hx * c + qx * s) * nl, cP.y + (hy * c + qy * s) * nl, cP.z + (hz * c + qz * s) * nl);
-          }
-        }
-      }
-    }
+    // (lot X1 : mais Haythem reste DANS L'IMAGE — sa visée à 22° au plus du centre, l'image en couvre 31° de part et
+    // d'autre ; et le regard lissé aussi (à 28°), pas seulement le regard voulu : d'au-dessus de son épaule, le regard porté droit
+    // devant passait au-dessus de lui — sur le palier de la volée de tôle, on ne voyait qu'un mur blanc —, et en dévalant
+    // l'escalier est, le regard en retard le laissait au bord de l'image)
+    // (la caméra AU-DESSUS de sa tête, presque à l'aplomb : c'est sa tête qu'on garde, au bas de l'image, et le regard porte
+    // devant lui — la volée vue du vestibule de la photo 25 ou du palier de v_010 —, au lieu de plonger sur ses épaules)
+    const proche = v3 && dh < 1.5, vx = _v.x, vz = _v.z, dessus = this.camPos.y > tete + 0.1;
+    const vy = dessus ? tete : _v.y, plus = dessus && dh < 0.8 ? 5 : 0;
+    if (proche) { const a = 1.5 - dh; _v.x -= bx * cp * a; _v.y -= sp * a; _v.z -= bz * cp * a; this._dansLImage(_v, vx, vy, vz, plus); }
     if (poser || coupe) this.lookCur.copy(_v); else this.lookCur.lerp(_v, damp(v3 ? 14 : 18, dt));
+    if (proche) this._dansLImage(this.lookCur, vx, vy, vz, plus + 6);
     this.camera.position.copy(this.camPos); this.camera.lookAt(this.lookCur); this._applyShake(dt);
     this._champ(p, dt, poser);
     // TOUT PRÈS DE LUI : en demi-transparence sous 0,6 m de sa tête (fondu depuis 0,8 m) ; masqué seulement quand la
