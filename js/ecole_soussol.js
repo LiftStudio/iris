@@ -97,11 +97,17 @@ const Y_PAL = 5.0;                                           // le nu du mur sud
 // plonge qu'ensuite vers la retombée — soussol.md § 2.1) : sa face est en x 0,45, son dessus à -0,03 jusqu'en y 7,91,
 // puis il descend jusqu'à -0,30 en y 9,51
 const X_REB = 0.45, Y_REB1 = 7.91, Y_REB2 = 9.51;
-// le RAMPANT au-dessus de la volée : parallèle, 2,20 m au-dessus des nez ; il bute sous la dalle du rez-de-chaussée
-// (-0,30) en y 9,55, un plafond plat la suit jusqu'à la RETOMBÉE du pied (y 9,99-10,26, dessous à -0,78) — vue du
-// palier, sa face blanche fait un bandeau d'un demi-mètre au-dessus de l'ouverture du hall (v_010, v_020)
-const Y_RAMP1 = 13.64 + DY_SS, Y_RET = 14.08 + DY_SS;
-const rampant = (y) => 2.2 - (y - ESC.y0) * ESC.R / ESC.G;
+// le RAMPANT au-dessus de la volée : parallèle, 2,95 m au-dessus des nez (relecture du 11/10 : v_010 rejouée à la pose
+// recalée — celle de l'audit, f 1 200, et celle qu'on refait sur les 12 nez, les 4 montants et l'ouverture du hall,
+// f ≈ 1 025, à 4 px près —, les arêtes du plafond avec les deux murs et son bout tombent sur une droite à 2,90-3,0 m
+// des nez, et non à 2,20 : à 2,20, le plafond venait boucher le haut de l'ouverture et la volée paraissait un boyau). Il
+// part du plafond du palier (2,50) en y 6,65 et descend droit jusqu'à la RETOMBÉE du pied (y 9,99-10,26, dessous à
+// -0,78), qu'il rejoint vers +0,14 : vue du palier, la face blanche au-dessus de l'ouverture du hall fait un grand
+// bandeau de 0,9 m (v_010 : rangs 760-965 ; v_015 à v_034, il grandit à mesure qu'on descend)
+const Y_RET = 14.08 + DY_SS, ECH = 2.95;
+const rampant = (y) => ECH - (y - ESC.y0) * ESC.R / ESC.G;
+const Y_RAMP0 = ESC.y0 + (ECH - H_PALIER) * ESC.G / ESC.R;   // 6,65 : le rampant quitte le plafond du palier
+const Y_RAMP1 = Y_RET;                                        // 9,99 : ... et bute sur la face de la retombée
 // ---- le plan ----
 const X_MUR = 2.485, EP_MUR = 0.13;       // le mur entre couloir (et hall) et espace pause
 const PORTE_PAUSE = 12.15 + DY_SS, PORTE_HALL = 14.85 + DY_SS, L_PORTE = 1.0;      // 8,06 et 10,76
@@ -504,7 +510,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // (le garde-corps est d'un gris d'acier satiné, terni — v_009 à v_036 ; plus clair, il sortait crème)
     inox: nommer(std({ color: 0xa19f98, roughness: 0.34, metalness: 0.55 }), 'garde-corps inox terni'),
     limon: std({ color: 0x77766f, roughness: 0.5, metalness: 0.5 }),
-    plintheGrise: nommer(std({ color: 0x3d3c38, roughness: 0.6 }), 'plinthe peinte gris foncé'),
+    // (relecture du 11/10 : à peine plus sombre que la résine — v_038 : plinthe ≈ 0,9 du sol, ≈ 0,55 du mur ; à 0x3d3c38,
+    // elle dessinait un trait noir au pied de chaque mur, soussol.md § 2.3)
+    plintheGrise: nommer(std({ color: 0x5a5853, roughness: 0.6 }), 'plinthe peinte gris foncé'),
     plintheSalle: std({ color: 0x6e6f6a, roughness: 0.55 }),
     vert: nommer(std({ color: 0xa8c34a, roughness: 0.82 }), 'peinture vert anis'),
     noir: nommer(std({ color: 0x1c1c1a, roughness: 0.62 }), 'mobilier noir mat'),
@@ -692,9 +700,10 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     B(X_REB, ESC.y0 - 0.045, ESC.x1, ESC.y0, -0.045, 0.004, M.inox, { ombre: false });
     // les plinthes peintes (gris foncé, 10 cm : v_003, v_004)
     plinthe('x', Y_PAL, 0.0, 1.6, 1, 0); plinthe('y', 0.0, Y_PAL, ESC.y0, 1, 0); plinthe('x', ESC.y0, 0.0, 0.2, -1, 0);
-    // le plafond (plâtre, 2,50 m), et la petite retombée au-dessus du bord : le rampant part de 2,20 m
+    // le plafond (plâtre, 2,50 m) ; il continue au-dessus des premières marches jusqu'au départ du rampant (y 6,65 :
+    // relecture du 11/10, le rampant est à 2,95 m des nez)
     ch.plafond(0.0, Y_PAL, 1.6, ESC.y0, H_PALIER, 'platre', { retombees: false });
-    B(0.2, ESC.y0, 1.35, ESC.y0 + 0.04, rampant(ESC.y0), H_PALIER, M.platre, { ombre: false }).userData.horsAOSol = true;
+    ch.plafond(0.2, ESC.y0, 1.35, Y_RAMP0, H_PALIER, 'platre', { retombees: false });
     // LE PANNEAU « 0 » au mur du fond ; LE HUBLOT et, dessous, L'INTERRUPTEUR À VOYANT vert (minuterie) sur le mur qui
     // avance, juste après l'arête (v_014 : le hublot en haut à gauche de l'interrupteur, l'arête à gauche ; v_012 : le
     // « 0 » à gauche du hublot)
@@ -719,7 +728,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   // 25 cm, de niveau avec le palier sur ses deux premiers mètres, qui plonge ensuite jusqu'à -0,30 et passe sous le
   // rampant (le mur du sous-sol, plus épais que celui du rez-de-chaussée). À droite, le GARDE-CORPS inox : main courante de 42 mm à 0,95 m des nez, quatre lisses de
   // 18 mm, des montants plats tous les quatre girons (nez 3, 7, 11, 15) plus le départ et l'arrivée ; derrière, la
-  // cloison blanche du couloir. Au-dessus, le RAMPANT blanc parallèle à la volée (2,20 m d'échappée), arrêté au pied par
+  // cloison blanche du couloir. Au-dessus, le RAMPANT blanc parallèle à la volée (2,95 m au-dessus des nez), arrêté au pied par
   // une retombée.
   function construireEscalier() {
     const { x0, x1, G, R } = ESC;
@@ -750,8 +759,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     void ressaut;
     // (le petit objet jaune posé sur le rebord : v_008 à v_017 — sur son dessus, et non plus 2,5 cm dessous ; v_010, la
     // pose recalée, le met au bout de la partie de niveau, en y ≈ 7,8 — rang 1 140, colonne 125 —, et non vers la 3e
-    // marche, y 6,81 : posé là, il sortait au pied de l'image)
-    B(0.24, 7.75, 0.31, 7.81, -0.03, -0.005, std({ color: 0xe0b32a, roughness: 0.6 }), { ombre: false });
+    // marche, y 6,81 : posé là, il sortait au pied de l'image ; relecture du 11/10, à la pose refaite sur les nez et les
+    // montants — rang 1 148, colonne 128 —, en y 7,6, au milieu du rebord)
+    B(0.30, 7.57, 0.37, 7.63, -0.03, -0.005, std({ color: 0xe0b32a, roughness: 0.6 }), { ombre: false });
     // LA CLOISON entre la volée et le couloir (x 1,35-1,50), du sol du -1 à la dalle, jusqu'au pilier du pied
     // (elle borde aussi le couloir au sud du palier) ; LE MUR OUEST du hall
     mur({ de: [1.425, Y_COUL0 - 0.15], a: [1.425, ESC.yPied], mats: M.blanc, plinthes: ['E'] });
@@ -776,23 +786,23 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     }
     // les pattes du garde-corps sur le limon
     for (const k of [0, 3, 7, 11, 15, 16]) B(x1 - 0.03, nez(k) - 0.03, xg, nez(k) + 0.01, -R * k - 0.2, -R * k - 0.12, X.limon, { ombre: false });
-    // LE RAMPANT (plâtre blanc, tourné vers le bas) de y 6,01 à 9,55, de x 0,2 à 1,35 ; le plafond plat sous la dalle
-    // jusqu'à la retombée du pied
-    const Lr = Math.hypot(Y_RAMP1 - ESC.y0, rampant(ESC.y0) - rampant(Y_RAMP1));
-    const rp = maille(new THREE.PlaneGeometry(1.15, Lr), M.platre, 0.775, (rampant(ESC.y0) + rampant(Y_RAMP1)) / 2, -(ESC.y0 + Y_RAMP1) / 2, 0, ch.decor, { ombre: false });
+    // LE RAMPANT (plâtre blanc, tourné vers le bas) de y 6,65 à 9,99, de x 0,2 à 1,35, du plafond du palier (2,50) à la
+    // face de la retombée du pied (+0,14)
+    const Lr = Math.hypot(Y_RAMP1 - Y_RAMP0, rampant(Y_RAMP0) - rampant(Y_RAMP1));
+    const rp = maille(new THREE.PlaneGeometry(1.15, Lr), M.platre, 0.775, (rampant(Y_RAMP0) + rampant(Y_RAMP1)) / 2, -(Y_RAMP0 + Y_RAMP1) / 2, 0, ch.decor, { ombre: false });
     rp.rotation.order = 'YXZ'; rp.rotation.x = Math.PI / 2 - pente; rp.userData.horsAOSol = true;
-    B(0.2, Y_RAMP1 - 0.02, 1.35, Y_RET, DALLE, DALLE + 0.02, M.platre, { ombre: false });
     // (la retombée du pied : sous-face à -0,78, sur toute la largeur du hall, la poutre de v_035 ; sa face sud monte
-    // jusqu'à la dalle : le bandeau blanc au-dessus de l'ouverture, vu de la volée)
+    // jusqu'à la dalle, et au-dessus de la volée jusqu'au rampant : le grand bandeau blanc au-dessus de l'ouverture, vu de
+    // la volée — v_010, v_015 à v_034)
     B(0.4, Y_RET, 2.42, Y_RET + 0.27, H_HALL - 0.08, DALLE, M.platre, { ombre: false });
-    // LA CAMÉRA : le rampant en marches (son point le plus bas de chaque giron, jusqu'au plafond du rez-de-chaussée), le
-    // plafond plat, et sous le palier, le plein
+    B(0.2, Y_RET, 1.35, 10.175, DALLE - 0.01, rampant(Y_RET) + 0.02, M.platre, { ombre: false }).userData.horsAOSol = true;
+    // LA CAMÉRA : le rampant en marches (son point le plus bas de chaque giron, jusqu'au plafond du rez-de-chaussée), et
+    // sous le palier, le plein
     for (let k = 0; k < 16; k++) {
-      const ya = nez(k), yb = Math.min(nez(k + 1), Y_RAMP1);
-      if (yb <= ya) break;
+      const ya = Math.max(nez(k), Y_RAMP0), yb = Math.min(nez(k + 1), Y_RAMP1);
+      if (yb <= ya) continue;
       C.plafond(0.2, -yb, 1.35, -ya, rampant(yb), 3.25 - rampant(yb));
     }
-    C.plafond(0.2, -Y_RET, 1.35, -Y_RAMP1, DALLE, 3.25 - DALLE);
     C.ajouterBoite(0.0, -Y_PAL, 1.6, -ESC.y0, { y0: Y_SS, y1: -0.02, joueur: false });
     // le panneau « -1 » au mur ouest du pied de l'escalier, le bloc de sortie au-dessus, son fourreau, deux étiquettes
     panneau(new THREE.MeshStandardMaterial({ map: texPanneauNiveau('-1'), roughness: 0.45 }), 0.2, 0.2, 0.4, 10.53, Y_SS + 1.6, 'E');
@@ -957,14 +967,20 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // ras de la volée, il emplissait le premier plan. Et TRAPU : sur v_010 et v_035, rejoués au jeu, un corps de 0,46 m
     // sortait deux fois trop grand à la place où l'image le met ; sur v_035, net, son diamètre fait la moitié de sa
     // hauteur — celui du hall ouest, sur la photo r01, a la même allure : un corps de 0,36 sur une porte de 2,04, Ø 0,16)
+    // (Relecture du 11/10 : plus petit encore — sur v_033 à v_035, le corps rouge ne fait que 1,7 à 1,8 fois son
+    // diamètre, et sur v_010, à la pose refaite, l'extincteur entier, flexible compris, tient de 0,82 à 1,26 m : un corps
+    // de 0,30 (0,85-1,15), Ø 0,17. Le flexible noir fait une BOUCLE au-dessus de la tête — v_033, v_034 —, et une
+    // étiquette verte pend dessous)
     const ex = new THREE.Group(); ex.position.set(0.5, Y_SS, -Y_EXT); ch.decor.add(ex);
-    maille(new THREE.CylinderGeometry(0.08, 0.08, 0.36, 18), X.rouge, 0, 1.08, 0, 0, ex);
-    maille(new THREE.SphereGeometry(0.08, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), X.rouge, 0, 1.26, 0, 0, ex);
-    maille(new THREE.CylinderGeometry(0.028, 0.028, 0.08, 10), X.noir, 0, 1.37, 0, 0, ex);
-    B(0.55, Y_EXT - 0.028, 0.6, Y_EXT + 0.028, Y_SS + 1.34, Y_SS + 1.41, X.noir);
-    tube(ch.decor, X.noir, P3(0.6, Y_SS + 1.37, Y_EXT), P3(0.6, Y_SS + 0.95, Y_EXT + 0.05), 0.011, 8);
-    panneau(new THREE.MeshStandardMaterial({ color: 0xf6f6f2, roughness: 0.6 }), 0.09, 0.14, 0.5 + 0.081, Y_EXT, Y_SS + 1.06, 'E', 0.001);
-    C.ajouterCercle(0.51, -Y_EXT, 0.09, { y0: Y_SS + 0.8, y1: Y_SS + 1.45 });
+    maille(new THREE.CylinderGeometry(0.085, 0.085, 0.30, 18), X.rouge, 0, 1.00, 0, 0, ex);
+    maille(new THREE.SphereGeometry(0.085, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), X.rouge, 0, 1.15, 0, 0, ex);
+    maille(new THREE.CylinderGeometry(0.026, 0.026, 0.05, 10), X.noir, 0, 1.25, 0, 0, ex);
+    B(0.55, Y_EXT - 0.026, 0.6, Y_EXT + 0.026, Y_SS + 1.23, Y_SS + 1.28, X.noir);
+    tube(ch.decor, X.noir, P3(0.5, Y_SS + 1.27, Y_EXT + 0.02), P3(0.52, Y_SS + 1.32, Y_EXT + 0.06), 0.01, 8);
+    tube(ch.decor, X.noir, P3(0.52, Y_SS + 1.32, Y_EXT + 0.06), P3(0.58, Y_SS + 1.12, Y_EXT + 0.07), 0.01, 8);
+    panneau(new THREE.MeshStandardMaterial({ color: 0xf6f6f2, roughness: 0.6 }), 0.09, 0.12, 0.5 + 0.086, Y_EXT, Y_SS + 0.98, 'E', 0.001);
+    B(0.495, Y_EXT - 0.012, 0.505, Y_EXT + 0.012, Y_SS + 0.79, Y_SS + 0.85, std({ color: 0x3f8f4a, roughness: 0.6 }), { ombre: false });
+    C.ajouterCercle(0.51, -Y_EXT, 0.095, { y0: Y_SS + 0.7, y1: Y_SS + 1.36 });
     panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.15, 0.15, 0.4, Y_EXT, Y_SS + 1.65, 'E');
     // LA CONSIGNE vert pâle sous son protège-document, l'interrupteur dessous (mur est, v_037 à v_039)
     panneau(new THREE.MeshStandardMaterial({ map: texConsigneVerte(), roughness: 0.3 }), 0.15, 0.35, X_MUR - EP_MUR / 2, Y_FOND - 0.45, Y_SS + 1.85, 'W', 0.006);
@@ -1313,7 +1329,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   const zones = [
     // (le palier s'ouvre sur le hall ouest : ses plafonniers restent allumés quand Haythem passe la porte — sans eux, le
     // hall s'éteignait derrière lui d'un coup, relecture du 09/10)
-    { id: 'palierSS', rects: [[0.0, -ESC.y0, 1.6, -Y_PAL, -10]], voisines: ['escalierSS', 'hallO'], env: { x: 0.9, y: 1.5, z: -(Y_PAL + 0.5) } },
+    // (relecture du 11/10 : et le hall du -1 — du palier, v_010 à v_020, l'ouverture du pied de la volée est d'un blanc
+    // éclatant ; sans ses spots, on y voyait un hall gris)
+    { id: 'palierSS', rects: [[0.0, -ESC.y0, 1.6, -Y_PAL, -10]], voisines: ['escalierSS', 'hallO', 'hallSS'], env: { x: 0.9, y: 1.5, z: -(Y_PAL + 0.5) } },
     { id: 'escalierSS', rects: [[0.2, -ESC.yPied, 1.5, -ESC.y0, -10]], voisines: ['palierSS', 'hallSS'], env: { x: 0.85, y: -1.1, z: -7.91 } },
     { id: 'hallSS', rects: [zr(0.4, ESC.yPied, 2.48, Y_FOND)], voisines: ['escalierSS', 'couloirSS'], env: env(1.45, 11.61) },
     { id: 'couloirSS', rects: [zr(1.45, Y_COUL0, 2.48, ESC.yPied)], voisines: ['hallSS'], env: env(1.96, 6.21, 1.5) },
