@@ -359,7 +359,9 @@ function texPierre() {
 // 1,30 x 1,25 à 0,95, deux vantaux et une imposte, un store une fois sur deux.)
 export const TRAVEE = { u: 1.65, v: 3.1 };
 export const FENETRE_ETAGE = { l: 1.2, bas: 0.85, haut: 2.2 };
-export const TEINTE_PIERRE = 0xebf6ff;                     // (la teinte froide de la pierre de la façade : materiauxEcole)
+export const TEINTE_PIERRE = 0xddeeff;                     // (la teinte froide de la pierre de la façade : materiauxEcole)
+// (relecture du lot façade, 11/10 : mesurée au même point de vue sur les photos 12, 16 et 17 — R/B 1,00-1,03, V/B 1,01 —,
+// la pierre du jeu restait chaude avec 0xebf6ff — R/B 1,06-1,08, V/B 1,05 — : un cran plus froide)
 // LES ENCADREMENTS ROUGES (photos 10, 11, 12, 16, 17, 18 ; lot façade du 11/10) : plus HAUTS que larges, 1,47 x 2,53 m —
 // de 0,18 sous le plancher à 2,35 au-dessus, le haut un peu au-dessus des linteaux voisins, le bas un mètre sous leurs
 // appuis —, en saillie de 15 cm ; montants de 16 cm, traverse haute de 18, basse de 21 et, sur elle, l'appui blanc de la
@@ -367,11 +369,13 @@ export const TEINTE_PIERRE = 0xebf6ff;                     // (la teinte froide 
 // (photos 10, 16, 17), un ouvrant étroit et sombre de 0,28. Leur place, relevée sur la photo 12 redressée (les quatre
 // rangées et le haut de la cinquième) : travées 1 et 12 au 1er et au 3e, 7 au 2e, 6 au 4e, 12 au 5e (sous la toiture) ;
 // `o` : le côté de l'ouvrant étroit (-1 ouest, 1 est, 0 aucun)
-// (relecture du lot façade, 11/10 — photos 11 et 12 de près, iris_vues/XR4_z_t7.jpg : celui de la travée 7 du 2e a aussi
-// son grand carreau à la pastille et, à l'est, l'ouvrant sombre : o = 1)
+// (relecture du lot façade, 11/10 — photos 11 et 12 de près, iris_vues/XR4_z_t7_c.jpg : celui de la travée 7 du 2e a aussi
+// son grand carreau, la pastille sur son bord est ; vu de l'ouest, la part sombre à droite n'est que le tableau habillé —
+// rejoués à la pose, l'ouvrant à l'est en faisait 65 %, la photo 40 à 45 % : l'ouvrant est à l'ouest, caché par le
+// tableau, o = -1, comme à la travée 1)
 export const CADRE = { l: 1.47, bas: -0.18, haut: 2.35, montant: 0.16, linteau: 0.18, traverse: 0.21, saillie: 0.15, etroit: 0.28 };
 CADRE.jour = { l: CADRE.l - 2 * CADRE.montant, bas: CADRE.bas + CADRE.traverse + 0.05, haut: CADRE.haut - CADRE.linteau };
-export const CADRES = [{ t: 1, e: 1, o: -1 }, { t: 12, e: 1, o: 1 }, { t: 7, e: 2, o: 1 }, { t: 1, e: 3, o: -1 }, { t: 12, e: 3, o: 1 },
+export const CADRES = [{ t: 1, e: 1, o: -1 }, { t: 12, e: 1, o: 1 }, { t: 7, e: 2, o: -1 }, { t: 1, e: 3, o: -1 }, { t: 12, e: 3, o: 1 },
   { t: 6, e: 4, o: 1 }, { t: 12, e: 5, o: 1 }];
 export const cadreEn = (travee, etage) => CADRES.find((c) => c.t === travee && c.e === etage) || null;
 function texEtage() {

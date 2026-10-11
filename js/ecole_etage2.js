@@ -1190,10 +1190,10 @@ export function poserEtage2(ch, renderer = null) {
     B(x0, ym + e, x1, 0.02, bas - 0.025, bas, M.blanc, { ombre: false });
   }
   // LA FENÊTRE HAUTE DE L'ENCADREMENT ROUGE (travée 7) : comme celles du 1er (js/ecole_etage1.js fenetreSimple) — la
-  // menuiserie brun-noir à 15 cm du nu intérieur, le grand carreau à la pastille rouge des pompiers, à l'est l'ouvrant
-  // étroit, plein et sombre ; l'appui blanc au fond du tableau habillé de brun-noir
-  // (relecture du lot façade, 11/10 — photos 11 et 12 de près, iris_vues/XR4_z_t7.jpg : dans le cadre rouge du 2e, un
-  // seul grand carreau du bas au haut du jour, la pastille à mi-hauteur sur son bord est, puis l'ouvrant sombre ; le jeu y
+  // menuiserie brun-noir à 15 cm du nu intérieur, le grand carreau à la pastille rouge des pompiers, du côté `o` (l'ouest,
+  // js/ecole_matieres.js CADRES) l'ouvrant étroit, plein et sombre ; l'appui blanc au fond du tableau habillé de brun-noir
+  // (relecture du lot façade, 11/10 — photos 11 et 12 de près, iris_vues/XR4_z_t7_c.jpg : dans le cadre rouge du 2e, un
+  // seul grand carreau du bas au haut du jour, la pastille au tiers bas sur son bord est, puis le tableau sombre ; le jeu y
   // mettait une fenêtre à 0,85 au-dessus d'une allège vitrée. Les photos de 2026 priment sur la VO de 2021, q_0319-0322,
   // où la fenêtre de la travée 7 avait une allège comme les autres)
   function fenetreCadre(f) {
@@ -1209,12 +1209,12 @@ export function poserEtage2(ch, renderer = null) {
     }
     const v = new THREE.Mesh(new THREE.PlaneGeometry(g1 - g0 - 2 * c, f.haut - f.bas - 2 * c), M.vitreJour);
     v.position.set((g0 + g1) / 2, (f.bas + f.haut) / 2, 0.15); v.rotation.y = Math.PI; fixe.add(v);
-    // la pastille rouge, des deux côtés de la vitre, contre le montant de l'ouvrant, à 0,8 m du plancher (photos 11, 12 à
-    // leur pose : au tiers bas du jour, sur le bord est du grand carreau)
-    const px = o > 0 ? g1 - 0.12 : o < 0 ? g0 + 0.12 : f.c;
+    // la pastille rouge, des deux côtés de la vitre, au bord du grand carreau opposé à l'ouvrant, à 0,95 m du plancher
+    // (photos 11, 12 rejouées à leur pose : au tiers bas du jour, sur le bord est du carreau)
+    const px = o > 0 ? g0 + c + 0.1 : o < 0 ? g1 - c - 0.1 : f.c;
     for (const s of [1, -1]) {
       const d = new THREE.Mesh(new THREE.CircleGeometry(0.075, 24), pastille);
-      d.position.set(px, N2 + 0.8, s > 0 ? 0.161 : 0.144); d.rotation.y = s > 0 ? 0 : Math.PI; fixe.add(d);
+      d.position.set(px, N2 + 0.95, s > 0 ? 0.161 : 0.144); d.rotation.y = s > 0 ? 0 : Math.PI; fixe.add(d);
     }
     B(x0, -0.4, x1, ya, f.bas - 0.02, f.bas, M.blanc, { ombre: false });
     B(x0, yb, x1, 0.02, f.bas - 0.025, f.bas, M.blanc, { ombre: false });
