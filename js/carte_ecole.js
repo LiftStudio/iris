@@ -890,7 +890,10 @@ export function construireCarte(scene, renderer = null) {
   // plafond (photos 05 et 23 : le premier hublot avant le ressaut, le second après ; 09/10). (V2, 11/10 : de la porte de
   // l'escalier à la porte bleue ; la photo 23 recalée — pose de rdc_ouest, f 1 500 — met le bas de la retombée à 0,8 m
   // du mur des portes de l'escalier, là où elle rejoint le mur est, et non au tiers. Côté ouest, le plafond part du nu de
-  // la cage, x 4,6 : la photo montre le mur ouest du C05 juste derrière l'huisserie de la porte de l'escalier)
+  // la cage, x 4,6 : la photo montre le mur ouest du C05 juste derrière l'huisserie de la porte de l'escalier.
+  // Relecture du 11/10 : rejouée à la pose de la photo 23, la retombée tombe sur la sienne et le hublot de ce premier
+  // plafond aussi, à 2,40 ; mais le hall ouest passe à 2,30 — au seuil du C05, un ressaut de 10 cm que ni la photo 23 ni
+  // la 05 ne montrent : l'un des deux plafonds est à reprendre quand le hall et le C05 seront réunis)
   ch.plafond(4.6, Y_ESC - 0.075, 5.975, Y_ESC + 0.8, 2.4, 'platre');
   ch.plafond(4.6, Y_ESC + 0.8, 5.975, Y_ESC + 3.6, 2.3, 'platre');
   // la salle d'attente : les plateaux perforés, sauf au bout ouest, devant le couloir C05, où ce sont des dalles lisses
@@ -911,7 +914,9 @@ export function construireCarte(scene, renderer = null) {
   for (const [x, y] of [[3.2, 7.1], [3.3, 11.0]]) ch.opale(x, y, 2.4, 'hallO');
   // (les deux hublots du C05, photos 23 et 05 : le premier avant la retombée, le second passé la retombée, sous le
   // plafond bas — Ø 38 cm ; 09/10. V2, 11/10 : relevés sur la photo 23 recalée, à 0,4 et 2,0 m du mur des portes de
-  // l'escalier — le premier un peu à l'est de l'axe, le second dans l'axe de la porte bleue)
+  // l'escalier — le premier un peu à l'est de l'axe, le second dans l'axe de la porte bleue. Relecture du 11/10 : rejoué
+  // à la pose de la photo 23, le jeu les met au même x qu'elle ; la photo 05, floue et à une pose moins sûre — 15 px
+  // d'écart —, les verrait plutôt dans l'axe du couloir, x 5,36 : c'est la photo 23 qui est gardée)
   ch.opale(5.5, Y_ESC + 0.4, 2.4, 'c05', { r: 0.18 }); ch.opale(5.15, Y_ESC + 2.0, 2.3, 'c05', { r: 0.18 });
   for (const [x, y] of [[6.6, 9.9], [9.0, 9.9], [11.4, 9.9], [7.8, 11.1], [10.2, 11.1], [12.6, 11.1]]) ch.spot(x, y, 2.6, 'attente');
   for (const [x, y] of [[12.3, 7.8], [11.9, 5.7]]) ch.spot(x, y, 2.6, 'cou');
