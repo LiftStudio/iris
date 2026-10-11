@@ -225,7 +225,7 @@ en secondes ; * = imaginé.
 | La porte coupe-feu et le sas | bâton inox, oculus, huisserie de bois côté palier, rabattue contre le mur ; côté sas, la plaque noire, le plan d'évacuation, la caméra | VO 72-73 s, 88 s |
 | Le couloir | le mur nord ROUGE VERMILLON, lino taupe, plafond lisse à 2,45, six spots, trois chaises noires, la photo turquoise, deux affiches, les plaques ; au fond, une porte grise fermée | VO 73,1-75,7 s, 84,2-88,7 s |
 | La salle 1 (S 2.7, côté cour) | 9,35 × 4,9 m, plafond à 2,40 (V2 : elle prend la place du haut de l'escalier principal, que rien ne montre) : six fenêtres à stores de toute la hauteur, embrasures brun-noir, la sixième plus large et sans store ; neuf luminaires, vidéoprojecteur, moquette marine en damier, cinq rangées, chaises de hêtre à dossier plein (31 places), tableau blanc, coin du professeur (caisson gris, meuble noir), poteaux | VO 75,8-78,4 s |
-| La salle 2 (S 2.8, côté rue) | plafond à 2,40, cinq fenêtres d'un seul vantail et, dans le cadre rouge de la travée 7, la fenêtre haute qui descend au sol (photos 11, 12), moquette anthracite, deux colonnes de tables pour deux, chaises à six trous (rang des fenêtres : on s'y faufile), triptyque, range-documents | VO 78,4-84,2 s ; P 11, 12 |
+| La salle 2 (S 2.8, côté rue) | plafond à 2,40, cinq fenêtres d'un seul vantail et, dans le cadre rouge de la travée 7, la fenêtre haute qui descend au sol (photos 11, 12), moquette anthracite, deux colonnes de tables pour deux, chaises à six trous rentrées sous les tables (rang des fenêtres : on s'y faufile), triptyque, range-documents | VO 78,4-84,2 s ; P 11, 12 |
 | Fermés * | la Si 2.6, le B 2.3, le dégagement ouest | — |
 
 Le départ est dans le hall d'entrée, juste passé la porte 6, face à la pile et à sa plaque « iris » — là où entre la
@@ -273,7 +273,7 @@ et rejoués ensemble :
 | Ce qui a changé | Avant | Finitions | D'où |
 |---|---|---|---|
 | La caméra dans les volées, les paliers, les passages étroits (`js/game.js`) | collée dans sa nuque, translucide, ou Haythem hors de l'image (21 % des images au joystick en courant) | la pente, au-dessus de l'épaule, le seuil suivi, la tête toujours vue, le cap assisté : **0,4 %** | P 25 ; V v_010 ; banc de 22 parcours × 5 façons de jouer |
-| Les places au milieu des rangées serrées (`js/player.js` `poserRangs`) | 80 places qu'on ne prenait qu'au bout du rang | on s'y faufile en pas chassés : **129 places dans 24 rangs**, 314 places sur 331 se prennent en marchant (les 17 autres sont dans des pièces fermées) | VO q_0108-0130, q_0204, q_0324 |
+| Les places au milieu des rangées serrées (`js/player.js` `poserRangs`) | 80 places qu'on ne prenait qu'au bout du rang | on s'y faufile en pas chassés : **129 places dans 24 rangs**, 314 places sur 331 se prennent en marchant (les 17 autres sont dans des pièces fermées) ; dans la salle 2, les chaises rentrées de 0,15 m sous les tables, le rang au milieu du passage | VO q_0108-0130, q_0204, q_0324 |
 | Le bas de l'escalier principal (`js/carte_ecole.js` `construireEscalier`) | un U de 2 × 10, palier à 1,75 : par la porte, le flanc de la volée 1 | quatre contremarches dans la porte, palier à 0,70 devant le mur à affiches, volée 2 à l'ouest au-dessus d'un échiffre ; garde-corps hors de l'occlusion de l'écran (plus de moucheté gris) | P 20, 06 et r01, 04 |
 | La façade sur l'impasse (`js/carte_ecole.js`, `js/ecole_etage1.js`, `js/ecole_etage2.js`, `js/ecole_matieres.js`, `js/ecole_rue*.js`) | cadres rouges carrés, fenêtres à meneau et imposte, tableaux de pierre claire, attique en retrait, plafonniers vus par les vitres | cadres 1,47 × 2,53 aux vraies travées, une fenêtre d'un vantail dans un cadre brun-noir, 5e étage et toiture plate, reflets de la rue, mobilier du trottoir à sa place | P 10 à 18 (recalées à 2-9 px) |
 | Le rendu (`js/ecole_visibilite.js`) | le rez-de-chaussée et la rue dessinés partout, le 1er et le 2e en entier depuis la rue | ce que la caméra ne peut pas voir n'est pas dessiné : rue 2 150 → 1 380 appels, palier est du 1er 1 482 → 807, pause du -1 1 166 → 597 ; le passage sombre du -1 lisible | V v_066, v_067 |
@@ -322,9 +322,6 @@ Restent aussi imaginés ou incertains (avec la photo qui trancherait) :
   de la travée 7 du 2e (les deux photos sont prises de l'ouest) ; le reflet des vitres est une seule tuile, qui se répète
   de près ; le premier banc (± 0,4 m), le totem du passage et la trottinette (± 0,3 m) ; le n° 4 haussmannien reste plat,
   le passage reste blanc (jaune sur les photos 10 et 11).
-- **Les places des rangées serrées** : dans la salle 2 du 2e, il n'y a que 0,145 m entre la table d'à côté et le dos des
-  chaises : en passant vers la place des fenêtres, les jambes de Haythem entrent de 5 à 8 cm dans la chaise côté allée
-  (sur la VO q_0324, les chaises sont rentrées sous les tables : les rentrer de 0,10-0,15 m réglerait cela).
 - **La caméra** : garder sa tête dans l'image fait tourner la vue plus vite aux demi-tours des paliers (le réglage :
   le 0.78 de `_dansLImage` dans `js/game.js`) ; à la pose de la photo 25 (vestibule est, Haythem dos au mur jaune), la
   vue reste plongeante, 65 cm au-dessus de sa tête, faute de recul derrière lui ; au pied de la volée de tôle (palier tournant de 0,85 m), Haythem reste translucide
