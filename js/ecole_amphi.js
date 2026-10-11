@@ -27,7 +27,10 @@
 // le mur vert de l'espace pause, recule de DY_SS, sans rien changer à son dedans. Elle RENTRE ainsi DANS LA PARCELLE (le
 // gabarit IGN, mesure/gabarit_reel.md : le fond du bâtiment est en y 23,7, et à l'est, x 13,3 pour y < 16,4) : son mur du
 // tableau passe de y 25,5 à 21,41 ; son mur est, ramené de x 15,2 à x 13,3, coupe le bloc est, dont les rangs s'arrêtent
-// en x 13,1 — cinq places au lieu de sept. 97 fauteuils et la chaise seule : 98 places.
+// en x 13,1 — cinq places au lieu de sept. 97 fauteuils et la chaise seule : 98 places. (Doute, relecture du 11/10 : la
+// VO, f_0082-f_0101, mène le rang 1 du bloc est jusque vers x 14,5, et le gabarit IGN a un REDENT x 13,33-15,07 ×
+// y 16,44-20,72 qui recevrait les rangs 1 à 3 entiers ; mais le mur du tableau, en y 21,41, reste borné à x 13,4 — la
+// salle serait en L. Sans photo de 2026 de la salle, on garde le mur droit du plan V2.)
 //   RELECTURE DU 10/10 (captures du jeu aux points de vue de f_0060, f_0082, f_0143, f_0160, f_0185, f_0200, f_0228,
 // f_0250, côte à côte) : les fauteuils vus de face (écu, assise relevée à fente noire, lisse murale du dernier rang), leur
 // ocre ramené à la vidéo, les blancs du -1 au lieu d'un blanc teinté, le 2e portrait en gris doux, le poteau lisible, la
