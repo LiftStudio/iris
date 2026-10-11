@@ -76,8 +76,9 @@ const RECUL_SEUIL = 1.1;
 //     redescendre derrière sa nuque — c'était sa tête qui bouchait l'image, d'où la demi-transparence ; et elle le garde
 //     DANS L'IMAGE (sa visée à 22° au plus du centre) ;
 //   - LE CAP ASSISTÉ (ASSIST_*) : au clavier seul, au joystick tactile ou à la manette, quand on ne tourne pas la caméra
-//     soi-même (depuis 0,8 s) et qu'elle est à l'étroit (moins de 1,8 m de recul libre) pendant qu'il marche, elle se
-//     range derrière sa marche — dans l'axe de la volée, du couloir, du palier —, à 90°/s, 180°/s collée, en accélérant et
+//     soi-même (depuis 0,8 s ; 2 s quand la souris est capturée) et qu'elle est à l'étroit (moins de 1,8 m de recul libre)
+//     pendant qu'il marche, elle se range derrière sa marche — dans l'axe de la volée, du couloir, du palier —, à 90°/s,
+//     180°/s collée, en accélérant et
 //     en freinant ; la direction tenue au clavier ou au pouce (sauf vers l'avant) garde son cap dans le monde tant qu'on
 //     la tient — on ne repart pas dans le mur parce que la caméra a tourné — et le rend quand on la lâche, ou d'autant
 //     qu'on la tourne vers la caméra ;
@@ -87,14 +88,19 @@ const RECUL_SEUIL = 1.1;
 //     voisine d'une voisine ouverte l'est aussi (e1hall, e1couloir, e1pause) ;
 //   - LES COUPES : l'épaule elle-même reste à 20 cm de tout (plus de chute dans sa nuque au ras d'un jambage) ; si la
 //     caméra perd Haythem de vue derrière un angle, elle passe sur la ligne de sa place voulue à la même distance (15° au
-//     plus), sinon elle se rapproche sur sa ligne — et le regard saute avec elle au lieu de balayer l'image.
+//     plus), sinon elle se rapproche sur sa ligne — et le regard saute avec elle au lieu de balayer l'image ;
+//   - (relecture) LA VUE SUR LUI (_voitTete) : de sa place, elle voit sa TÊTE — l'os de l'avatar, penché en courant —, pas
+//     seulement l'épaule d'où part son segment, sinon elle se rapproche sur sa ligne ; et cette tête reste à 78 % du
+//     demi-champ (_dansLImage). Compté sur l'os (les volées des 4 niveaux, montée et descente) : Haythem hors de l'image au
+//     joystick en courant de 24 à 1 % des images (26 % avant le lot), en marchant de 8 à 0,2 %, au clavier seul de 22 à
+//     0,7 %, clavier et souris de 2,6 à 0,3 % (1,5 % avant le lot : le seuil suivi le cachait derrière les jambages).
 // Rejoué (banc du lot X1 : 22 parcours, volées et passages étroits des 4 niveaux, aller et retour, × 5 façons de jouer) :
 // au joystick en marchant, la caméra à moins de 1 m de lui passe de 31 à 12 % des images, Haythem translucide de 21 à 3 %
 // (dans les volées : 45 à 18 %, 33 à 4,5 %) ; au clavier seul, de 38 à 19 % et de 26 à 6 % ; clavier et souris, de 8 à 5 %
 // et de 4,7 à 1,7 % ; le tour du -1 en virages instantanés (la mesure de la vérification finale), de 32 à 18 % et de 13 à 4 %.
 const PENTE = 0.6, PENTE_MIN = 0.3, PENTE_MAX = 1.9;
 const LEVE = 0.38, LEVE_COLLE = 0.27;
-const ASSIST_GENE = 1.8, ASSIST_PLEIN = 0.9, ASSIST_MAX = 1.6, ASSIST_K = 2.8, ASSIST_MANU = 0.8;
+const ASSIST_GENE = 1.8, ASSIST_PLEIN = 0.9, ASSIST_MAX = 1.6, ASSIST_K = 2.8, ASSIST_MANU = 0.8, ASSIST_MANU_SOURIS = 2.0;
 const SEUIL_FONTE = 1.2, SEUIL_FONTE_V = 0.3;
 const PIECE_IN = 7, PIECE_OUT = 3;
 const OEIL_PHOTO = 1.45;                  // la « vue photo » : l'œil à hauteur de téléphone tenu devant soi
@@ -847,9 +853,11 @@ export class Game {
       this._camLibre = Math.min(this._camLibre, k);
     }
   }
-  // la tête de Haythem (_vTete, posée par _cibleCam) vue du point `P`, sans rien entre les deux
+  // la tête de Haythem (_vTete, posée par _cibleCam) vue du point `P`, sans rien entre les deux — sinon contre elle (à
+  // moins de 10 cm de son centre : un mur qu'elle frôle en tournant au pied d'une volée n'en cache que le bord)
   _voitTete(P) {
-    return this.collisions.rayonLibre(_vTete.x, _vTete.y, _vTete.z, P.x, P.y, P.z, 0.05) >= 0.999;
+    const t = this.collisions.rayonLibre(_vTete.x, _vTete.y, _vTete.z, P.x, P.y, P.z, 0.03);
+    return t >= 0.999 || t * Math.hypot(P.x - _vTete.x, P.y - _vTete.y, P.z - _vTete.z) < 0.1;
   }
 
   // LE CAP ASSISTÉ (en tête du fichier), après _cibleCam, pour l'image suivante : quand la caméra est à l'étroit (recul
@@ -865,7 +873,11 @@ export class Game {
     const libre = S && this._K && dt > 0 && !this.paused && this.mode === 'lobby' && (this.vue === 2 || this.vue === 3)
       && !u.assis && !u.emote && !this.input.blocked && !this.freeCam;
     const v = Math.hypot(u.vel.x, u.vel.z);
-    const manu = (performance.now() - (this.camManuT ?? -1e9)) / 1000 < ASSIST_MANU;
+    // (relecture : la souris CAPTURÉE — on joue à la souris, c'est elle qui tient la caméra — ne lui laisse la main
+    // qu'après 2 s sans geste, pas 0,8 : marcher sans bouger la souris une seconde ne fait pas tourner l'image sous la
+    // main, ni dévier la touche « avancer »)
+    const souris = typeof document !== 'undefined' && document.pointerLockElement === this.renderer.domElement;
+    const manu = (performance.now() - (this.camManuT ?? -1e9)) / 1000 < (souris ? ASSIST_MANU_SOURIS : ASSIST_MANU);
     if (!libre || manu || v < 0.6) {
       this._assistOn = false;
       if (manu) this._omCap = 0;                         // (on reprend la caméra à la main : elle lâche tout de suite)
