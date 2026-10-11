@@ -192,9 +192,11 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
   };
   // (plan V2 : le passage sombre est ÉTEINT — v_065 à v_067, la porte ouvre sur du noir. Le « soleil » qui figure les
   // plafonniers éclaire tout le -1 sans ombre de plafond : ses murs et son plafond, d'un blanc éteint, rendent la
-  // pénombre ; sa seule galette est faible)
-  P.blancEteint = froid(M.blanc); P.blancEteint.color.multiplyScalar(0.45); P.blancEteint.name = 'peinture blanche (passage sombre, éteint)';
-  P.platreEteint = froid(M.platre, 0.08); P.platreEteint.color.multiplyScalar(0.45); P.platreEteint.name = 'plâtre (passage sombre, éteint)';
+  // pénombre ; sa seule galette est faible. Relecture du 11/10 : à 0,45 (linéaire), la baie sortait gris clair vue de la
+  // pause ; sur v_066 et v_067, le dedans fait 0,26 du mur blanc d'à côté — 47 contre 178 —, d'où 0,1, et un reflet
+  // d'environnement réduit)
+  P.blancEteint = froid(M.blanc); P.blancEteint.color.multiplyScalar(0.1); P.blancEteint.envMapIntensity = 0.4; P.blancEteint.name = 'peinture blanche (passage sombre, éteint)';
+  P.platreEteint = froid(M.platre, 0.02); P.platreEteint.color.multiplyScalar(0.1); P.platreEteint.envMapIntensity = 0.4; P.platreEteint.name = 'plâtre (passage sombre, éteint)';
   const L_ = {
     plafonnier: new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff4e4).multiplyScalar(4.2) }),
     voyant: new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 0.25, 0.15) }),
@@ -250,18 +252,22 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     mur(ch, F, { de: [XA, 12.525], a: [19.95, 12.525], base, h: 0, mats: B0 });
     // LE PASSAGE P : ses deux retours de plâtre blanc. (Plan V2 : le retour sud, raccourci à x 14,0-14,525, ferme aussi
     // le placard ⚡ au nord ; le retour nord, gardé de x 13,05 à 14,525, ferme le passage sombre)
-    mur(ch, F, { de: [14.0, 9.125], a: [14.525, 9.125], base, h: -0.01, mats: W, plinthes: ['N'] });
-    mur(ch, F, { de: [13.05, 10.375], a: [14.525, 10.375], base, h: -0.01, mats: { N: B0, S: P.blancEteint }, plinthes: ['S'] });
+    mur(ch, F, { de: [14.075, 9.125], a: [14.525, 9.125], base, h: -0.01, mats: W, plinthes: ['N'] });
+    mur(ch, F, { de: [13.05, 10.375], a: [14.525, 10.375], base, h: -0.01, mats: { N: B0, S: P.blancEteint } });
     // LE PASSAGE SOMBRE (IMAGINÉ ; plan V2 § 1.2) : de la porte sombre de l'espace pause (y 5,11-6,01) à P, en
     // baïonnette, sous la pile et la bande morte du couloir est (au-dessus, des dalles à 0 : js/ecole_soussol.js
     // DALLES_RDC) — son mur est (le dos du placard), son mur sud ; à l'ouest, le mur est de l'espace pause, doublé ici
-    // de sa face éteinte (la porte sombre exceptée)
-    mur(ch, F, { de: [14.0375, 4.85], a: [14.0375, 9.2], ep: 0.075, base, h: -0.01, mats: { W: P.blancEteint, E: W }, plinthes: ['W'] });
-    mur(ch, F, { de: [12.975, 4.925], a: [14.075, 4.925], base, h: -0.01, mats: { N: P.blancEteint, S: B0 }, plinthes: ['N'] });
-    for (const [a, b] of [[5.0, 5.085], [6.035, 10.3]]) B(13.05, a, 13.054, b, Y_SS + 0.1, H_PASS, P.blancEteint, { ombre: false });
+    // de sa face éteinte (la porte sombre exceptée). (Relecture du 11/10 : sans plinthes claires — dans la pénombre, elles
+    // dessinaient trois traits blancs au pied des murs ; et la face éteinte descend jusqu'au sol, où le blanc du mur de la
+    // pause dépassait de 10 cm)
+    mur(ch, F, { de: [14.0375, 4.85], a: [14.0375, 9.2], ep: 0.075, base, h: -0.01, mats: { W: P.blancEteint, E: W } });
+    mur(ch, F, { de: [12.975, 4.925], a: [14.075, 4.925], base, h: -0.01, mats: { N: P.blancEteint, S: B0 } });
+    for (const [a, b] of [[5.0, 5.085], [6.035, 10.3]]) B(13.05, a, 13.054, b, Y_SS, H_PASS, P.blancEteint, { ombre: false });
     // LE PLACARD ⚡ derrière la porte crème du sas (x 14,075-14,525, y 7,8-9,05 : fermé, son dedans n'est pas modélisé) :
     // le mur sud du sas le ferme au sud
-    mur(ch, F, { de: [14.0, 7.725], a: [14.525, 7.725], base, h: -0.01, mats: W });
+    // (relecture du 11/10 : il part du dos du mur du passage, x 14,075 — depuis x 14,0, son bout blanc perçait la face
+    // éteinte en mouchetures)
+    mur(ch, F, { de: [14.075, 7.725], a: [14.525, 7.725], base, h: -0.01, mats: W });
   }
 
   // =====================================================================
