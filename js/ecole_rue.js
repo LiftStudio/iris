@@ -122,11 +122,23 @@ function texMuret() {
 // UNE FAÇADE D'IMMEUBLE dessinée (une travée x un étage par tuile) : fond, joints de pierre, fenêtre et son encadrement,
 // appui, garde-corps, persiennes, bandeaux de bois (le 5/7)
 function texFacade({ fond, cadre = '#2b282a', verre = '#4d5a66', travee = 1.8, etage = 3.0, fl = 1.2, fh = 1.6, balcon = false, bandeau = null,
-  persiennes = null, joints = false, encadrement = null, bois = null, rideaux = false, fleurs = false, balconBlanc = false, graine = 3 }) {
+  persiennes = null, joints = false, encadrement = null, bois = null, rideaux = false, fleurs = false, balconBlanc = false, brique = null, graine = 3 }) {
   const W = 256, H = Math.round(W * etage / travee), r = alea(graine);
   return canvasTex(W, H, (g, w, h) => {
     const mx = w / travee, my = h / etage;
     g.fillStyle = fond; g.fillRect(0, 0, w, h);
+    // (lot façade : la brique chamois du n° 8 et ses rangs de brique rouge — photos 09, 10 : assises de 7,5 cm, joints clairs)
+    if (brique) {
+      const [rb, vb, bb] = brique, ha = 0.075 * my, la = 0.22 * mx;
+      for (let y = 0, l = 0; y < h; y += ha, l++) {
+        const rouge = l % 14 === 3 || l % 14 === 4;
+        for (let x = (l % 2) * la / 2 - la; x < w; x += la) {
+          const t = (r() - 0.5) * 22;
+          g.fillStyle = rouge ? `rgb(${150 + t},${78 + t * 0.6},${58 + t * 0.5})` : `rgb(${rb + t},${vb + t},${bb + t * 0.8})`;
+          g.fillRect(x + 1, y + 1, la - 1.5, ha - 1.2);
+        }
+      }
+    }
     for (let k = 0; k < 600; k++) { g.fillStyle = `rgba(${r() < 0.5 ? '0,0,0' : '255,255,255'},0.04)`; g.fillRect(r() * w, r() * h, 2, 2); }
     if (joints) {
       g.fillStyle = 'rgba(0,0,0,0.07)';
@@ -179,8 +191,20 @@ function texRezDeChaussee(L, H, { fond, socle = null, joints = false, elements =
     if (socle) { g.fillStyle = socle; g.fillRect(0, Y(0.45), w, 0.45 * k); g.fillStyle = 'rgba(0,0,0,0.15)'; g.fillRect(0, Y(0.45), w, 2); }
     for (const e of elements) {
       const x0 = X(e.x0), x1 = X(e.x1), ww = x1 - x0, ht = e.h ?? 2.3, top = Y(ht), bas = Y(e.bas ?? 0);
+      if (e.t === 'bande') {
+        // (lot façade : un pilastre ou un panneau d'une autre teinte, de toute la hauteur — le n° 8, photo 10)
+        g.fillStyle = e.couleur; g.fillRect(x0, top, ww, bas - top);
+        g.fillStyle = 'rgba(0,0,0,0.12)'; g.fillRect(x0, top, 2, bas - top); g.fillRect(x1 - 2, top, 2, bas - top);
+        continue;
+      }
       if (e.t === 'porte' || e.t === 'vitrine') {
         const bois = e.bois || '#8a5a32';
+        // (lot façade : l'encadrement de pierre et la corniche d'une porte cochère — le n° 8, photos 09 et 10)
+        if (e.encadrement) {
+          g.fillStyle = e.encadrement; g.fillRect(x0 - 0.22 * k, top - 0.3 * k, ww + 0.44 * k, bas - top + 0.3 * k);
+          g.fillRect(x0 - 0.4 * k, top - 0.42 * k, ww + 0.8 * k, 0.14 * k);
+          g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(x0 - 0.4 * k, top - 0.28 * k, ww + 0.8 * k, 3);
+        }
         g.fillStyle = e.cadre || bois; g.fillRect(x0, top, ww, bas - top);
         const vit = (a, b, c, d) => { const gr = g.createLinearGradient(0, b, 0, d); gr.addColorStop(0, '#9fb0bd'); gr.addColorStop(0.6, '#4a5560'); gr.addColorStop(1, '#2a3036'); g.fillStyle = gr; g.fillRect(a, b, c - a, d - b); };
         const m = 0.07 * k, n = e.vantaux || (e.t === 'porte' ? 2 : 3);
@@ -342,6 +366,9 @@ export function poserRue(ch) {
 
   // CÔTÉ ÉCOLE, À L'OUEST : le n° 8 (pierre crème, haussmannien) puis le n° 10 à l'angle de l'impasse (photos 09, 10)
   const creme = std({ map: texFacade({ fond: '#e3dccf', cadre: '#f2efe8', verre: '#56626e', travee: 1.9, etage: 3.0, balcon: true, joints: true, encadrement: '#ece6da', rideaux: true }), roughness: 0.85 });
+  // (lot façade du 11/10 : au-dessus de son rez-de-chaussée de pierre, le n° 8 est de brique chamois à rangs de brique
+  // rouge, fenêtres à encadrement de pierre blanche et balcons de fer noir — photos 09 et 10 ; le jeu le faisait de pierre crème)
+  const brique8 = std({ map: texFacade({ fond: '#d8cdb8', cadre: '#f2efe8', verre: '#56626e', travee: 1.9, etage: 3.0, balcon: true, encadrement: '#efebe2', rideaux: true, brique: [196, 172, 128], graine: 8 }), roughness: 0.9 });
   const pierre4 = std({ map: texFacade({ fond: '#cdc3b6', cadre: '#efece6', verre: '#505c68', travee: 2.0, etage: 3.1, balcon: true, joints: true, encadrement: '#ddd4c6', rideaux: true, graine: 4 }), roughness: 0.85 });
   const blanc = std({ map: texFacade({ fond: '#efefe8', cadre: '#ffffff', verre: '#56626e', travee: 1.9, etage: 2.9, persiennes: '#dfe3d8', fleurs: true, graine: 5 }), roughness: 0.85 });
   // (photos 08, 15 : l'immeuble du coin est en pierre claire, à balcons et toit mansardé ; les volets verts du premier jet
@@ -349,12 +376,19 @@ export function poserRue(ch) {
   const cremeFond = std({ map: texFacade({ fond: '#e4dccb', cadre: '#f3efe6', verre: '#5a6672', travee: 2.1, etage: 2.9, balcon: true, joints: true, encadrement: '#ece5d6', rideaux: true, graine: 6 }), roughness: 0.85 });
   // (intégration du 11/10, plan V2 : arrêté en y 12,45, au sud de l'aile A — il descendait jusqu'en y 14 et entrait de 1,25 m
   // dans la courette ouest, js/ecole_pieces.js courette : par les fenêtres de la Si 0.2, son fond crème bouchait la cour)
-  facade(X0 - 6, -0.4, -0.3, 12.45, 19, creme);
+  facade(X0 - 6, -0.4, -7.5, 12.45, 19, creme);
+  // (relecture du lot façade, 11/10 : la brique s'arrête à 1,4 m de l'école — photo 10 recalée, x -1,7 ; photos 09 et
+  // 12 : contre la bande noire, de toute la hauteur, un trumeau de pierre lisse, sans fenêtre ni brique)
+  facade(-7.5, -0.4, -1.7, 12.45, 19, brique8);
+  facade(-1.7, -0.4, -0.3, 12.45, 19, std({ color: 0xe6e0d4, roughness: 0.88 }));
+  // (lot façade du 11/10 : la photo 10, recalée — 5 px —, met la porte cochère du n° 8, bois verni à carreaux et imposte,
+  // dans son encadrement de pierre claire, à 1,9 m de la bande noire de l'école : x -3,7 à -2,2 ; entre les deux, un mur
+  // crème et un pilastre plus clair (x -1,7 à -0,3 à la relecture), sans fenêtre — le jeu y posait deux fenêtres à barreaux. La porte
+  // cintrée suit à l'ouest, après un trumeau (photo 09).)
   rdc(-7.5, -0.3, -0.4, 3.4, { fond: '#ddd5c6', socle: '#b9b1a3', joints: true, graine: 10, elements: [
-    { t: 'porte', x0: -6.5, x1: -5.3, h: 2.9, bois: '#6b4226', arc: true, imposte: true, vantaux: 2, pierre: '#e6dfd1' },
-    { t: 'fenetre', x0: -4.6, x1: -3.6, bas: 1.0, h: 2.6, barreaux: '#1c1c1c' },
-    { t: 'fenetre', x0: -2.9, x1: -1.9, bas: 1.0, h: 2.6, barreaux: '#1c1c1c' },
-    { t: 'fenetre', x0: -1.5, x1: -0.7, bas: 1.2, h: 2.6, barreaux: '#1c1c1c' },
+    { t: 'porte', x0: -5.5, x1: -4.4, h: 2.9, bois: '#6b4226', arc: true, imposte: true, vantaux: 2, pierre: '#e6dfd1' },
+    { t: 'porte', x0: -3.7, x1: -2.2, h: 2.95, bois: '#7a4a28', imposte: true, vantaux: 2, chaud: true, plein: true, encadrement: '#ece6da' },
+    { t: 'bande', x0: -1.7, x1: -0.3, couleur: '#e9e4d9', h: 3.4 },
   ] });
   rdc(X0, -7.5, -0.4, 3.4, { fond: '#d9d0bf', socle: '#b6ad9e', joints: true, graine: 11, elements: [
     { t: 'porte', x0: -9.9, x1: -8.9, h: 2.8, bois: '#5d3a22', vantaux: 2 },

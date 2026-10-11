@@ -74,7 +74,7 @@
 import * as THREE from 'three';
 import { maille, boiteM, fusionnerLocal } from './ecole_portes.js';
 import { canvasTex, nePasFusionner, detailPhoto } from './kit_decor.js';
-import { jourDehors, texPeinture, texPictoExtincteur, texConsignes } from './ecole_matieres.js';
+import { jourDehors, texPeinture, texPictoExtincteur, texConsignes, CADRE, cadreEn, FENETRE_ETAGE, TEINTE_PIERRE, texRefletRue, geoReflet } from './ecole_matieres.js';
 import { cuireLumiereSol } from './ecole_lumieres.js';
 import { TELEPHONE } from './appareil.js';
 import { EST, ROUGE_2E, poserCageHaute } from './ecole_est.js';
@@ -483,7 +483,7 @@ export function poserEtage2(ch, renderer = null) {
     // (10/10, q_0305 et q_0331 : la marine est éteinte, presque grise ; le damier de la salle 2 à peine marqué)
     moquette1: std({ map: texMoquette([40, 43, 60], [54, 55, 61], 5), roughness: 0.971 }, 'moquette marine (salle 1 du 2e)'),
     moquette2: std({ map: texMoquette([50, 49, 51], [63, 60, 60], 6), roughness: 0.962 }, 'moquette anthracite (salle 2 du 2e)'),
-    pierre: jourDehors(std({ map: texPierreEtage(), roughness: 0.75 }, 'pierre de la façade (2e)'), 0.1),
+    pierre: jourDehors(std({ map: texPierreEtage(), roughness: 0.75, color: TEINTE_PIERRE }, 'pierre de la façade (2e)'), 0.1),
     enduit: jourDehors(std({ color: 0xd8d6cf, roughness: 0.92 }, 'enduit de la façade arrière'), 0.12),
     plinthe: std({ color: 0x6e6358, roughness: 0.5 }, 'plinthe taupe foncé (couloir du 2e)'),
     plinthePal: std({ color: 0x5b544d, roughness: 0.5 }, 'plinthe gris foncé (palier du 2e)'),
@@ -510,8 +510,16 @@ export function poserEtage2(ch, renderer = null) {
   detailPhoto(X.rouge, 'beton', 1, 1, { relief: 0.035, grain: 0, rugo: false });
   // le jour des fenêtres côté cour (non éclairé : il éclaire) et la vitre vue de dehors
   const ciel = new THREE.MeshBasicMaterial({ map: texCielCour(), color: new THREE.Color(1.12, 1.14, 1.17) }); ciel.name = 'le jour côté cour';
-  const vitreDehors = new THREE.MeshStandardMaterial({ color: 0x4d5862, roughness: 0.05, metalness: 0.6, transparent: true, opacity: 0.55, depthWrite: false, envMapIntensity: 1.5 });
+  // (lot façade du 11/10 : comme au 1er — photos 11, 12, 17, 18 : la rue et le ciel dans les vitres, pas de store —,
+  // plus couvrante, moins miroir : 0,55 -> 0,80, métal 0,6 -> 0,4)
+  const vitreDehors = new THREE.MeshStandardMaterial({ color: 0x5f6a74, roughness: 0.06, metalness: 0.4, transparent: true, opacity: 0.8, depthWrite: false, envMapIntensity: 1.2 });
   vitreDehors.name = 'vitre du 2e vue de dehors';
+  // (relecture du lot façade, 11/10 — photos 11 et 12 : sur rue, d'en bas, les vitres du 2e renvoient surtout le ciel
+  // couvert, puis le haut de l'immeuble d'en face ; les stores baissés des pièces fermées ne s'y voient pas)
+  const vitreRue = new THREE.MeshStandardMaterial({ map: texRefletRue(0.5, 11), roughness: 0.12, metalness: 0.15, transparent: true, opacity: 0.95, depthWrite: false, envMapIntensity: 0.7 });
+  vitreRue.name = 'vitre du 2e vue de la rue';
+  // (la pastille des accès pompiers, collée sur la fenêtre haute de l'encadrement rouge, travée 7 — photos 11, 12)
+  const pastille = new THREE.MeshStandardMaterial({ color: 0xd8262c, roughness: 0.4 }); pastille.name = 'pastille des pompiers (2e)';
   const storeFerme = new THREE.MeshStandardMaterial({ map: texStoreFerme(), roughness: 0.7 }); storeFerme.name = 'store baissé';
   const storesOuverts = new THREE.MeshStandardMaterial({ map: texStoresOuverts(), roughness: 0.7, alphaTest: 0.5, side: THREE.DoubleSide }); storesOuverts.name = 'stores à lamelles ouverts';
   const matDalle = new THREE.MeshBasicMaterial({ map: texGrille(), color: new THREE.Color(0xfff1dc).multiplyScalar(1.75) }); matDalle.name = 'luminaire à grille allumé (2e)';
@@ -1019,15 +1027,16 @@ export function poserEtage2(ch, renderer = null) {
     B(17.45, Y_RUE - EP / 2 - 0.12, 17.7, Y_RUE - EP / 2, N2 + 1.0, N2 + 1.9, M.noirMat, { ombre: false });
     panneau(matPan(texRangeDocs(), 0.5), 0.25, 0.9, 17.575, Y_RUE - EP / 2 - 0.122, N2 + 1.45, 'S');
     // LES TRUMEAUX blancs saillants entre les fenêtres, les colonnes de prises à leur pied, sur l'allège
-    // (la fenêtre 7, dans son encadrement rouge, a 1,20 m : construireFacades)
+    // (la fenêtre 7, dans son encadrement rouge, a 1,15 m, les autres 1,20 : construireFacades)
     // (plan V2, etage2.md § 3 : sur la VO, de gros piliers blancs très lisibles à contre-jour — faces de ≈ 0,4 m, 0,25 à
     // 0,30 de saillie, q_0320-0326 — ; à 0,20, on ne les voyait presque pas : 0,28)
-    const demi = (k) => (k === 7 ? 0.6 : 0.65);
+    const demi = (k) => (cadreEn(k, 2) ? CADRE.jour.l : FENETRE_ETAGE.l) / 2;     // (lot façade : 1,15 et 1,20)
     for (let k = 7; k < 11; k++) {
       const xa = centreTravee(k) + demi(k), xb = centreTravee(k + 1) - demi(k + 1);
       B(xa, 0, xb, 0.28, N2, H_SALLE, B0, { ombre: false, collision: true });
       plinthe(xa - 0.01, 0.28, xb + 0.01, 0.295, PS);
-      B(xa - 0.1, 0, xa - 0.02, 0.025, N2 + 0.35, N2 + 0.75, X.blancMeuble, { ombre: false });
+      // (relecture du lot façade : sous la fenêtre haute de la travée 7, pas d'allège où poser la colonne de prises)
+      if (!cadreEn(k, 2)) B(xa - 0.1, 0, xa - 0.02, 0.025, N2 + 0.35, N2 + 0.75, X.blancMeuble, { ombre: false });
     }
     // LE BUREAU DU PROFESSEUR, dans l'angle sud-est devant la dernière fenêtre : la table, le poste, la gourde blanche
     table(17.35, 0.85, 1.2, 0.6, { pied: X.chrome });
@@ -1070,8 +1079,8 @@ export function poserEtage2(ch, renderer = null) {
   //  LES FAÇADES : sur rue au 2e (vraies fenêtres, travées 1 à 12), arrière (y 12,45 : la salle 1, le palier)
   // =====================================================================
   function construireFacades() {
-    // ---- SUR RUE : le mur (40 cm, pierre dehors, blanc dedans) percé de ses douze fenêtres (1,30 x 1,25 m, allège 0,95 :
-    // la tuile texEtage) ; la salle 2 derrière les travées 7 à 11 (VO q_0318-0327 : sans store) ; derrière les autres, des
+    // ---- SUR RUE : le mur (40 cm, pierre dehors, blanc dedans) percé de ses douze fenêtres (1,20 x 1,35 m, allège 0,85 :
+    // la tuile texEtage, FENETRE_ETAGE) ; la salle 2 derrière les travées 7 à 11 (VO q_0318-0327 : sans store) ; derrière les autres, des
     // pièces fermées : leurs stores sont baissés ----
     // (relecture du 10/10, VO q_0319-0331 : la travée 7 a un ENCADREMENT ROUGE en saillie, js/carte_ecole.js
     // construireFacade, dont le jour ne fait que 1,20 x 1,15 m — par une fenêtre de 1,30 x 1,25, on voyait de la salle 2 le
@@ -1083,15 +1092,22 @@ export function poserEtage2(ch, renderer = null) {
     // brun-noir de 7 cm, la poignée à gauche vue de la salle (à l'est), à mi-hauteur —, sans meneau ni imposte ; dehors,
     // sur les photos 11 et 12, la rangée du 2e aussi. L'allège est à 0,84 sur q_0322 calée sur les travées (0,75-0,84 sur
     // q_0326) : 0,85 au lieu de 0,95, le haut reste à 2,20 ; la fenêtre 7 garde le jour de son encadrement rouge)
-    const F = [];
+    // (lot façade du 11/10 : la photo 12 redressée donne au 2e la fenêtre de tous les étages, 1,22 x 1,35 — la VO 1,18 x
+    // 1,33 — : 1,20 et non 1,30. L'encadrement rouge de la travée 7 est plus haut que large et descend sous le plancher
+    // (js/ecole_matieres.js CADRE) : dehors, son jour est vitré de 6 cm au-dessus du plancher jusqu'à 2,17 ; dedans, la
+    // VO q_0319-0322 y montre une fenêtre comme les autres, appui à 0,85 — sous elle, une allège pleine, vitrée de sombre
+    // côté rue)
+    // (relecture du lot façade, 11/10 : la fenêtre de la travée 7 est la fenêtre haute de son encadrement, de 8 cm au-dessus
+    // du plancher à 2,17 — photos 11 et 12, fenetreCadre —, sans allège)
+    const F = [], J = CADRE.jour;
     for (let k = 1; k <= 12; k++) {
-      const cadre = k === 7;
-      F.push({ c: centreTravee(k), l: cadre ? 1.2 : 1.3, bas: N2 + (cadre ? 1.0 : 0.85), haut: N2 + (cadre ? 2.15 : 2.2), ferme: k < 7 || k > 11 });
+      const cadre = cadreEn(k, 2);
+      F.push({ c: centreTravee(k), l: cadre ? J.l : FENETRE_ETAGE.l, bas: N2 + (cadre ? J.bas : FENETRE_ETAGE.bas), haut: N2 + (cadre ? J.haut : FENETRE_ETAGE.haut), ferme: k < 7 || k > 11, cadre });
     }
     mur({ de: [-0.3, -0.2], a: [20.1, -0.2], ep: 0.4, h: N3, mats: { N: M.blanc, S: X.pierre }, ouvertures: F.map((f) => ({ c: f.c, l: f.l, bas: f.bas, h: f.haut })) });
     for (const f of F) {
-      fenetreRue(f);
-      const r = new THREE.Mesh(new THREE.PlaneGeometry(f.l - 0.1, f.haut - f.bas - 0.1), vitreDehors);
+      if (f.cadre) fenetreCadre(f); else fenetreRue(f);
+      const r = new THREE.Mesh(geoReflet(f.l - 0.1, f.haut - f.bas - 0.1, (F.indexOf(f) * 0.41) % 1), vitreRue);
       r.position.set(f.c, (f.bas + f.haut) / 2, 0.158); r.castShadow = false; fixe.add(r);
       C.ajouterBoite(f.c - f.l / 2, 0.4, f.c + f.l / 2, 0, { y0: f.bas, y1: f.haut, vitre: true });
       if (f.ferme) {
@@ -1173,8 +1189,44 @@ export function poserEtage2(ch, renderer = null) {
     v.position.set(c, mi, -ym); v.rotation.y = Math.PI; fixe.add(v);
     B(x1 - c0 - 0.035, ym + e, x1 - c0 - 0.015, ym + e + 0.035, mi - 0.1, mi + 0.03, M.alu, { ombre: false });
     B(x1 - c0 - 0.035, ym + e + 0.035, x1 - c0 + 0.005, ym + e + 0.05, mi, mi + 0.025, M.alu, { ombre: false });
-    B(x0 - 0.03, -0.42, x1 + 0.03, -0.2, bas - 0.05, bas, M.pierreAppui || X.pierre, { ombre: false });
+    // (relecture du lot façade, 11/10 — photos 11, 12, 17, 18 de près : pas de tableau de pierre claire autour des fenêtres,
+    // un épais cadre sombre au nu de la façade : le tableau extérieur habillé de brun-noir, la bavette sombre en saillie)
+    for (const [a, b] of [[x0, x0 + 0.012], [x1 - 0.012, x1]]) B(a, -0.4, b, ym - e, bas, haut, mat, { ombre: false });
+    B(x0, -0.4, x1, ym - e, haut - 0.012, haut, mat, { ombre: false });
+    B(x0 - 0.02, -0.435, x1 + 0.02, ym - e, bas - 0.048, bas + 0.012, mat, { ombre: false });
     B(x0, ym + e, x1, 0.02, bas - 0.025, bas, M.blanc, { ombre: false });
+  }
+  // LA FENÊTRE HAUTE DE L'ENCADREMENT ROUGE (travée 7) : comme celles du 1er (js/ecole_etage1.js fenetreSimple) — la
+  // menuiserie brun-noir à 15 cm du nu intérieur, le grand carreau à la pastille rouge des pompiers, du côté `o` (l'ouest,
+  // js/ecole_matieres.js CADRES) l'ouvrant étroit, plein et sombre ; l'appui blanc au fond du tableau habillé de brun-noir
+  // (relecture du lot façade, 11/10 — photos 11 et 12 de près, iris_vues/XR4_z_t7_c.jpg : dans le cadre rouge du 2e, un
+  // seul grand carreau du bas au haut du jour, la pastille au tiers bas sur son bord est, puis le tableau sombre ; le jeu y
+  // mettait une fenêtre à 0,85 au-dessus d'une allège vitrée. Les photos de 2026 priment sur la VO de 2021, q_0319-0322,
+  // où la fenêtre de la travée 7 avait une allège comme les autres)
+  function fenetreCadre(f) {
+    const x0 = f.c - f.l / 2, x1 = f.c + f.l / 2, c = 0.06, ya = -0.185, yb = -0.115, o = f.cadre.o, mat = M.menuiserie;
+    B(x0, ya, x1, yb, f.bas, f.bas + c, mat, { ombre: false }); B(x0, ya, x1, yb, f.haut - c, f.haut, mat, { ombre: false });
+    B(x0, ya, x0 + c, yb, f.bas, f.haut, mat, { ombre: false }); B(x1 - c, ya, x1, yb, f.bas, f.haut, mat, { ombre: false });
+    let g0 = x0, g1 = x1;
+    if (o) {
+      const xm = o < 0 ? x0 + CADRE.etroit : x1 - CADRE.etroit, n0 = o < 0 ? x0 + c : xm + 0.03, n1 = o < 0 ? xm - 0.03 : x1 - c;
+      B(xm - 0.03, ya, xm + 0.03, yb, f.bas, f.haut, mat, { ombre: false });
+      B(n0, ya + 0.02, n1, yb - 0.02, f.bas + c, f.haut - c, mat, { ombre: false });
+      if (o < 0) g0 = xm; else g1 = xm;
+    }
+    const v = new THREE.Mesh(new THREE.PlaneGeometry(g1 - g0 - 2 * c, f.haut - f.bas - 2 * c), M.vitreJour);
+    v.position.set((g0 + g1) / 2, (f.bas + f.haut) / 2, 0.15); v.rotation.y = Math.PI; fixe.add(v);
+    // la pastille rouge, des deux côtés de la vitre, au bord du grand carreau opposé à l'ouvrant, à 0,95 m du plancher
+    // (photos 11, 12 rejouées à leur pose : au tiers bas du jour, sur le bord est du carreau)
+    const px = o > 0 ? g0 + c + 0.1 : o < 0 ? g1 - c - 0.1 : f.c;
+    for (const s of [1, -1]) {
+      const d = new THREE.Mesh(new THREE.CircleGeometry(0.075, 24), pastille);
+      d.position.set(px, N2 + 0.95, s > 0 ? 0.161 : 0.144); d.rotation.y = s > 0 ? 0 : Math.PI; fixe.add(d);
+    }
+    B(x0, -0.4, x1, ya, f.bas - 0.02, f.bas, M.blanc, { ombre: false });
+    B(x0, yb, x1, 0.02, f.bas - 0.025, f.bas, M.blanc, { ombre: false });
+    for (const [a, b] of [[x0, x0 + 0.012], [x1 - 0.012, x1]]) B(a, -0.4, b, ya, f.bas, f.haut, mat, { ombre: false });
+    B(x0, -0.4, x1, ya, f.haut - 0.012, f.haut, mat, { ombre: false });
   }
   // UNE FENÊTRE CÔTÉ COUR de la salle 1, dans la façade arrière (VO crops/fenetres_c1) : la menuiserie brun-noir au
   // milieu de l'épaisseur et sa traverse aux deux cinquièmes, les stores à lamelles verticales au-dessus, la tablette
