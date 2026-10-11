@@ -154,25 +154,25 @@ export function poserMobilier(ch) {
   mos.position.set(0, 1.05, 0.041); borne.add(mos);
   // (le socle de 0,6 x 0,5 tourné de 112° : ± 0,33 m en x, ± 0,36 en y)
   C.ajouterBoite(9.72, -A(9.06), 10.38, -A(9.78), { y1: 2 });
-  // LE PRÉSENTOIR à brochures noir, tourné vers l'ouest, adossé au bout nord de la face ouest de la pile (11/10, plan V2 :
-  // photo 21, juste à gauche du radiateur ; photo 01, de profil à gauche, vers l'entrée du C01 — il était contre le mur
-  // x 13,5 du jeu d'avant, en y 11,3)
-  const pres = new THREE.Group(); pres.position.set(13.08, 0, -6.8); pres.rotation.y = -Math.PI / 2; ch.decor.add(pres);
-  for (const sx of [-0.39, 0.39]) maille(boiteM(0.02, 1.55, 0.35), M.noir, sx, 0.8, 0, 0, pres);
+  // LES PRÉSENTOIRS à brochures noirs, tournés vers l'ouest, cinq tablettes inclinées :
+  //  - l'un adossé au bout nord de la face ouest de la pile (11/10, plan V2 : photo 21, juste à gauche du radiateur — il
+  //    était contre le mur x 13,5 du jeu d'avant, en y 11,3) ;
+  //  - l'autre à l'entrée du C01, contre son mur est (relecture du 11/10 : la photo 01, prise dans le C01 vers le sud, le
+  //    montre de profil au bout de ce mur, juste avant l'ouverture sur la salle ; c'est là que le jeu posait le kakémono
+  //    des formations, qu'elle ne montre pas — il venait de la photo 22, d'avant 2021 : retiré)
   const br = texBrochures();
-  for (let i = 0; i < 5; i++) {
-    const t = maille(boiteM(0.76, 0.02, 0.28), M.noir, 0, 0.32 + i * 0.27, 0.02, 0, pres); t.rotation.x = -0.35;
-    const b = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.24), new THREE.MeshStandardMaterial({ map: br, roughness: 0.6 }));
-    b.position.set(0, 0.42 + i * 0.27, 0.05); b.rotation.x = -0.3; pres.add(b);
-  }
-  C.ajouterBoite(12.7, -6.38, 13.3, -7.22, { y1: 1.6 });
-  // le kakémono noir des formations, à l'entrée du couloir C01, contre son mur est, tourné vers l'ouest (photo 21 ; 11/10 :
-  // y 12,15-12,95 -> 7,95-8,75, DY_A)
-  ch.boite(13.38, A(12.15), 13.42, A(12.95), 0, 2.0, M.noir);
-  ch.boite(13.3, A(12.2), 13.48, A(12.9), 0, 0.06, M.aluGris);
-  // (photo 22 : c'est le panneau des formations — « Initial ou alternance », les bandeaux orange Bac pro, BTS, Bac+3, Bac+5)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texFormations(), roughness: 0.6 }), 0.78, 1.9, 13.377, A(12.55), 1.02, 'W');
-  C.ajouterBoite(13.28, -A(12.95), 13.5, -A(12.15), { y1: 2 });
+  const presentoir = (x, y) => {
+    const pres = new THREE.Group(); pres.position.set(x, 0, -y); pres.rotation.y = -Math.PI / 2; ch.decor.add(pres);
+    for (const sx of [-0.39, 0.39]) maille(boiteM(0.02, 1.55, 0.35), M.noir, sx, 0.8, 0, 0, pres);
+    for (let i = 0; i < 5; i++) {
+      const t = maille(boiteM(0.76, 0.02, 0.28), M.noir, 0, 0.32 + i * 0.27, 0.02, 0, pres); t.rotation.x = -0.35;
+      const b = new THREE.Mesh(new THREE.PlaneGeometry(0.74, 0.24), new THREE.MeshStandardMaterial({ map: br, roughness: 0.6 }));
+      b.position.set(0, 0.42 + i * 0.27, 0.05); b.rotation.x = -0.3; pres.add(b);
+    }
+    C.ajouterBoite(x - 0.38, -(y - 0.42), x + 0.22, -(y + 0.42), { y1: 1.6 });
+  };
+  presentoir(13.08, 6.8);
+  presentoir(13.32, 8.2);
   // LES AFFICHETTES DU FOND (photo orange, carte WIFI) : au bout du mur, près de l'angle du hall, sous le haut-parleur
   // (photo 03) — sur la face ouest de la pile du hall, x 13,30, js/ecole_rdc_centre.js ; son angle sud-ouest, y 4,7.
   // (Relecture du 10/10 : sur la photo 03 recalée — caméra (12,2 ; 5,4), cap 136,5 —, les affichettes sont à 0,1-0,25 m
@@ -181,6 +181,9 @@ export function poserMobilier(ch) {
   const wifi = new THREE.MeshStandardMaterial({ map: texWifi(), roughness: 0.45 });
   ch.panneau(wifi, 0.2, 0.17, 13.294, 4.88, 1.45, 'W');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#c7783a', '#f4ead9', 12), roughness: 0.6 }), 0.26, 0.19, 13.294, 4.88, 1.72, 'W');
+  // (relecture du 11/10 : le radiateur de la pile — js/carte_ecole.js, y 5,02-5,62 — n'est pas tout blanc : un cadre
+  // blanc autour d'une façade gris clair, des photos 03 et 21 ; 0,63 de la luminance du mur, mesurée sur la photo 03)
+  ch.panneau(new THREE.MeshStandardMaterial({ color: 0xa0a19c, roughness: 0.55 }), 0.52, 0.83, 13.219, 5.32, 0.585, 'W');
   const hp = new THREE.Group(); hp.position.set(13.24, 2.32, -4.93); ch.decor.add(hp);
   maille(boiteM(0.1, 0.17, 0.13), M.boitier, 0, 0, 0, 0, hp, { ombre: false });
   maille(new THREE.CylinderGeometry(0.035, 0.035, 0.01, 16), M.grille, -0.051, 0.01, 0, 0, hp, { ombre: false }).rotation.z = Math.PI / 2;
@@ -328,26 +331,6 @@ function texWifi() {
   }, null, false, 4);
 }
 
-// ---- LA SIGNALÉTIQUE DE L'ÉCOLE (photo 22) ----
-// le logo « iris » : le mot en blanc, la coche orange sur le point du premier i ; (x, y) = le milieu de sa ligne de base
-function logoIris(g, x, y, taille, couleur = '#ffffff') {
-  g.font = `600 ${taille}px "Century Gothic", "Avenir", "Futura", "Segoe UI", sans-serif`;
-  g.textBaseline = 'alphabetic'; g.textAlign = 'left';
-  const w = g.measureText('iris').width, wi = g.measureText('i').width, x0 = x - w / 2;
-  g.fillStyle = couleur; g.fillText('iris', x0, y);
-  g.fillStyle = '#f08a24'; g.fillRect(x0 + wi * 0.12, y - taille * 0.8, wi * 0.76, taille * 0.15);
-}
-// un QR code figuré (blanc, modules noirs, les trois repères)
-function qrFigure(g, x, y, c) {
-  g.fillStyle = '#f4f4f4'; g.fillRect(x, y, c, c);
-  const m = c / 25; g.fillStyle = '#111';
-  for (let i = 1; i < 24; i++) for (let j = 1; j < 24; j++) if (((i * 13 + j * 7 + i * j * 3) % 5) < 2) g.fillRect(x + i * m, y + j * m, m, m);
-  for (const [a, b] of [[1, 1], [17, 1], [1, 17]]) {
-    g.fillStyle = '#111'; g.fillRect(x + a * m, y + b * m, 7 * m, 7 * m);
-    g.fillStyle = '#f4f4f4'; g.fillRect(x + (a + 1) * m, y + (b + 1) * m, 5 * m, 5 * m);
-    g.fillStyle = '#111'; g.fillRect(x + (a + 2) * m, y + (b + 2) * m, 3 * m, 3 * m);
-  }
-}
 // LES DEUX AFFICHES DE LA FACE EST DU PILIER GRIS (VO q_0039-0050, 10/10) : l'A3 bleu-gris au dessin d'écran
 // d'ordinateur (un écran, son clavier, des bulles), l'A4 blanche à vignettes de photos
 function texEcranA3() {
@@ -373,29 +356,4 @@ function texVignettes() {
       g.fillStyle = 'rgba(240,222,204,0.85)'; g.beginPath(); g.arc(x + 54, y + 34, 12, 0, 7); g.fill();
     }
   }, null, false, 4);
-}
-// LE PANNEAU DES FORMATIONS (kakémono noir, photo 22) : le logo, « Initial ou alternance », puis les quatre bandeaux
-// orange (du plus clair au plus soutenu) et leurs formations, l'adresse du site et le QR code au pied
-function texFormations() {
-  return canvasTex(320, 780, (g, w, h) => {
-    g.fillStyle = '#151515'; g.fillRect(0, 0, w, h);
-    logoIris(g, w / 2, 92, 72);
-    g.fillStyle = '#f2f2f2'; g.font = '600 17px "Segoe UI", Arial, sans-serif'; g.textAlign = 'center';
-    g.fillText('INITIAL OU ALTERNANCE', w / 2, 140);
-    const blocs = [['BAC PRO', '#f7a541', ['BAC pro SEN']], ['BTS', '#f39325', ['BTS SIO', 'BTS SN']],
-      ['BAC+3', '#ee7d11', ['DEESIRS', 'DEESINF', 'DEESWEB', 'Traffic Manager', 'Développeur', "  d'applications mobiles"]],
-      ['BAC+5', '#e46510', ['Master européen', '  en informatique', 'Master européen', '  en e-communication']]];
-    let y = 160;
-    g.textAlign = 'left';
-    for (const [titre, teinte, lignes] of blocs) {
-      g.fillStyle = teinte; g.fillRect(16, y, w - 32, 34);
-      g.fillStyle = '#ffffff'; g.font = '800 23px "Segoe UI", Arial, sans-serif'; g.fillText(titre, 28, y + 26);
-      y += 56;
-      g.font = '500 16px "Segoe UI", Arial, sans-serif'; g.fillStyle = '#e8e8e8';
-      for (const l of lignes) { const suite = l.startsWith('  '); g.fillText(suite ? l.trim() : '• ' + l, suite ? 44 : 28, y); y += 21; }
-      y += 6;
-    }
-    g.fillStyle = '#d8d8d8'; g.font = '600 16px "Segoe UI", Arial, sans-serif'; g.fillText('www.ecoleiris.fr', 24, h - 34);
-    qrFigure(g, w - 92, h - 96, 72);
-  }, null, false, 8);
 }
