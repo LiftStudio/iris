@@ -1115,15 +1115,15 @@ function construireMurs(ch) {
   // (et il est plus SOMBRE que les murs : sur r02, sa face ouest est à 0,78 de la luminance du mur du fond, à la même
   // lumière ; le jeu le rendait à 0,92 — sa peinture grise, rien qu'ici, d'un ton plus bas)
   const grisPilier = M.pilier.clone(); grisPilier.color.multiplyScalar(0.84); grisPilier.name = 'pilier gris (salle d\'attente)';
-  // (RETOUR r03 DU 12/10 — la salle élargie, DY_R03 : le pilier GLISSE SUR LE RAYON DE r02, de 0,55 m vers l'est et
-  // 0,20 vers le sud, x 9,35-10,21 × y 5,39-5,82. Son arête nord-ouest reste là où r02 la voit — le rayon de la pose
-  // de la relecture, (5,28 ; 7,20) vers (8,80 ; 6,02) —, il garde ses 0,72 m au mur sud, qui recule d'autant, et son
-  // pied, à 4,30 m de l'appareil au lieu de 3,71, remonte vers les 2 580 px de la photo (le jeu en mettait 2 599). La
-  // photo 02 refaite, (11,0-11,2 ; 6,85-7,0), cap −94,5, ne le voit qu'au bord gauche de son cadre — la bande grise des
-  // 13 premiers pixels, son pied à 1 310 px : 1,71 m devant l'appareil, 1,13 à sa gauche, (9,3 ; 5,81) — : en
-  // (8,80 ; 6,02), il se dressait au tiers gauche de l'image, devant les jours. Entre lui et les chaises du nord, il
-  // reste 1,32 m de passage, et non 1,12 : c'est là que la capture de Haythem se resserrait.)
-  pilier(9.35, 5.39, 10.21, 5.82, grisPilier);
+  // (RETOUR r03 DU 12/10 — la salle élargie, DY_R03 : le pilier GLISSE SUR LE RAYON DE r02, de 0,38 m vers l'est et
+  // 0,13 vers le sud, x 9,18-10,04 × y 5,46-5,89. Son arête nord-ouest reste là où r02 la voit — le rayon de la pose
+  // de la relecture, (5,28 ; 7,20) vers (8,80 ; 6,02) — et là où la photo 02 refaite la voit : au bord gauche de son
+  // cadre, la bande grise des 13 premiers pixels, sous 34° à gauche de l'axe de la salle depuis (10,80 ; 6,99) ; les deux
+  // rayons se croisent en (9,18 ; 5,89). En (8,80 ; 6,02), à la pose refaite, il se dressait sur le premier tiers gauche de
+  // l'image, devant les jours. Son pied, à 4,11 m de l'appareil de r02 au lieu de 3,71, remonte vers les 2 580 px de la
+  // photo (le jeu en mettait 2 599) ; il garde 0,79 m au mur sud, et entre lui et les chaises du nord il reste 1,25 m de
+  // passage, et non 1,12 : c'est là que la capture de Haythem se resserrait.)
+  pilier(9.18, 5.46, 10.04, 5.89, grisPilier);
   // ---- LE HALL D'ENTRÉE ----
   // (09/10, photo 24 : la porte du mur nord n'est pas en x 17 mais en face de la porte 6 — 1,5 vantail, x 14,70-16,10 ;
   // à l'est, la cloison vitrée cannelée, le photocopieur devant elle côté hall (10/10 : l'angle nord-est est ouvert, VO

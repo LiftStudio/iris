@@ -282,9 +282,9 @@ export function poserMobilier(ch) {
   // en bas —, près de l'angle nord-ouest ; la feuille verte unique du jeu n'y est pas)
   // (Relecture du 11/10 : le pilier est en x 8,80-9,66 × y 5,59-6,02 — js/carte_ecole.js — ; sa face ouest n'a que 0,43 de
   // large : l'affiche blanche, un A2 qui la remplit presque sur r02, fait 0,40 x 0,57)
-  // (retour r03 du 12/10 : le pilier a glissé sur le rayon de r02 avec la salle élargie, x 9,35-10,21 × y 5,39-5,82 —
+  // (retour r03 du 12/10 : le pilier a glissé sur le rayon de r02 avec la salle élargie, x 9,18-10,04 × y 5,46-5,89 —
   // js/carte_ecole.js ; ses affiches le suivent)
-  const PO = { x: 9.35, xe: 10.21, yc: 5.605, yn: 5.82 };
+  const PO = { x: 9.18, xe: 10.04, yc: 5.675, yn: 5.89 };
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheDessins(), roughness: 0.7 }), 0.4, 0.57, PO.x - 0.006, PO.yc, 1.8, 'W');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheOrange(), roughness: 0.7 }), 0.3, 0.42, PO.x - 0.006, PO.yc, 1.23, 'W');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e9dcc0', '#f8f3e6', 70), roughness: 0.7 }), 0.24, 0.44, PO.x + 0.2, PO.yn + 0.006, 1.71, 'N');
