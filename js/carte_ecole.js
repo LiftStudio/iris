@@ -1435,10 +1435,14 @@ export function construireCarte(scene, renderer = null) {
   // l'arête du pilier, 280 px au-dessus de l'horizon — rétroprojeté au plafond, (9,8-10,2 ; 4,65-4,9), aux deux poses de
   // r02 : c'est le quatrième de la rangée sud, au-dessus de l'entrée de l'antichambre. En (10,45 ; 5,15), le jeu le cachait
   // derrière le pilier et laissait le haut de l'ouverture sans lumière : il passe en (9,95 ; 4,8))
-  // (r03, 12/10 : la rangée sud, dans la bande de dalles lisses, suit le mur des jours — à 0,3 m de son nu, y 4,95 ; celle
-  // du nord, rétroprojetée vers y 6,8, ne bouge pas ; le spot de l'antichambre non plus, contre l'arête du pilier sur r02)
+  // (r03, 12/10 : la rangée sud, dans la bande de dalles lisses, suit le mur des jours — à 0,275 m de son nu, y 4,95 ;
+  // celle du nord, rétroprojetée vers y 6,8, ne bouge pas ; le spot de l'antichambre non plus, contre l'arête du pilier
+  // sur r02) (Relecture r03 du 12/10 : la bande de dalles lisses, à 2,58, a suivi le mur jusqu'à y 4,6-5,275 — le spot de
+  // l'antichambre, en y 4,8 à 2,60, était caché tout entier au-dessus d'elle : une lumière sans luminaire, en haut de
+  // l'ouverture où r02 le montre. En v1.7, la bande partait de 4,8 et en cachait déjà la moitié. Il passe à 2,58, sous
+  // la bande, comme ses voisins de la rangée sud)
   const yS = ATT.ys + 0.35;
-  for (const [x, y, h] of [[5.5, yS, 2.6], [7.15, yS, 2.58], [8.8, yS, 2.58], [9.95, 4.8, 2.6], [5.35, 6.8, 2.6], [8.7, 6.8, 2.6], [12.05, 6.8, 2.6]]) ch.spot(x, y, h, 'attente', { couleur: chaudAtt });
+  for (const [x, y, h] of [[5.5, yS, 2.6], [7.15, yS, 2.58], [8.8, yS, 2.58], [9.95, 4.8, 2.58], [5.35, 6.8, 2.6], [8.7, 6.8, 2.6], [12.05, 6.8, 2.6]]) ch.spot(x, y, h, 'attente', { couleur: chaudAtt });
   // (V2, 11/10 : la photo 01 recalée met le hublot qu'elle voit en (12,3 ; 10,7), au-dessus du local et de la gaine, un peu
   // à l'ouest de l'axe ; l'autre est derrière l'appareil, vers le fond)
   for (const [x, y] of [[12.3, 10.7], [12.3, 13.4]]) ch.opale(x, y, 2.45, 'c01');
