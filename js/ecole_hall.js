@@ -8,30 +8,33 @@
 //
 // LA POSE DE r04 (résolue le 12/10 sur ses points de fuite et ses hauteurs : le comptoir et le mur ardoise fuient au même
 // point, x -2 040 ; la retombée du plafond et le retour blanc, perpendiculaires, vers x 590 — d'où f ≈ 640 px, 62° de champ ;
-// la tablette du comptoir, 1,10 m, est sur l'horizon) : l'appareil en (13,6 ; 2,35), à 1,15 m, cap 75°, contre le mur du
+// la tablette du comptoir, 1,10 m, est sur l'horizon) : l'appareil en (13,6 ; 2,35), à 1,12 m, cap 75°, contre le mur du
 // bureau B. De là, le mur ardoise tombe sur le mitoyen (x 19,9) et les spots sur ceux que la VO avait relevés, (17,25 ;
 // 3,2), (18,75 ; 3,2), (18,75 ; 1,5), à 0,1 m près : la pose est sûre. Elle redonne au comptoir sa longueur de la première
 // lecture de la VO (y 1,0-4,2, puis un pupitre jusqu'à 5,0) que la relecture du 10/10 avait raccourcie à 3,55.
 //
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; dans le jeu X = x, Z = -y) :
-//   le comptoir haut        x 16,83-17,53 y 1,1-3,6    NORD-SUD, face à l'ouest : stratifié gris clair, rainure à 0,70,
+//   le comptoir haut        x 16,83-17,53 y 1,1-3,6    NORD-SUD, face à l'ouest : stratifié gris clair, rainure à 0,71,
 //                                                     socle de chêne clair en retrait, tablette grise en saillie à 1,10
 //   le décroché PMR         x 16,88-17,6  y 3,6-4,58   son caisson bas en retrait (x 17,08), sa tablette à 0,76 et son
 //                                                     pied gris ; la bouilloire, les bacs à courrier noirs, les papiers
-//   le retour nord          x 17,3-17,95  y 4,58-4,9   caisson clair à tablette haute (1,10), qui déborde vers le nord
-//   le mitoyen est          x 19,8        y 1,88-4,55  peint GRIS ARDOISE, ses deux affiches (y 2,2-2,9 et 3,4-4,0)
-//   le bureau d'angle       x - y = 17,92              la cloison BIAISE vitrée du coin sud-est (r04 et VO q_0383)
-//   le local technique      x 19,075-19,8 y 4,55-7,5   portes de stratifié clair, étiquette rouge et triangle jaune ;
+//   le caisson haut         x 17,0-17,85  y 4,39-4,58  posé sur le bout du décroché, sa tablette haute (1,10) qui déborde
+//                                                     de 0,3 m vers le nord
+//   le mitoyen est          x 19,8        y 1,82-4,43  peint GRIS ARDOISE, ses deux affiches (y 2,2-2,9 et 3,4-4,0)
+//   le bureau d'angle       x - y = 17,98              la cloison BIAISE vitrée du coin sud-est (r04 et VO q_0383)
+//   le local technique      x 18,8-19,8   y 4,43-7,5   portes de stratifié clair, étiquette rouge et triangle jaune ;
 //                                                     sa face sud blanche, le bouton rouge et le boîtier blanc
-//   le pilier de bois clair x 18,3-19,075 y 5,8-6,35   sous l'écran suspendu ; le panneau des formations à sa droite
+//   le pilier de bois clair x 18,14-18,8  y 5,71-6,24  devant le local, sous l'écran suspendu ; le panneau des formations
+//                                                     sur le local, à sa droite
 //   le portant des goodies  (17,3 ; 5,55)              noir, sur roulettes : sweats « iris », affichette, brochures
-//   l'open-space            x 17,53-19,8  y 0,3-4,55   le plan de travail derrière le comptoir, le bureau du mitoyen, le
+//   l'open-space            x 17,53-19,8  y 0,3-4,43   le plan de travail derrière le comptoir, le bureau du mitoyen, le
 //                                                     copieur contre la cloison biaise, trois fauteuils
-//   l'angle nord-est        x 16,3-19,075 y 6,8-7,5    le photocopieur contre le cannelé, le caisson et ses corbeilles
+//   l'angle nord-est        x 16,3-18,8   y 6,8-7,5    le photocopieur contre le cannelé, le caisson et ses corbeilles
 //                                                     (photo 24 : toujours là en 2026), le meuble noir (r04), les
 //                                                     étiquettes ocre « INFORMATIQUE »
-//   le plafond              plateaux perforés de 0,6 x 1,2 (r04, photo 03) ; la retombée est-ouest y 5,0-5,25 ; les huit
-//                                                     lignes lumineuses dans l'axe de la porte 6 (VO, photo 24)
+//   le plafond              plateaux perforés de 0,6 x 1,2 (r04, photo 03) ; la retombée est-ouest y 5,28-5,53, de la pile
+//                                                     au local ; les huit lignes lumineuses dans l'axe de la porte 6
+//                                                     (VO, photo 24)
 // (Le cannelé et le mur nord : js/ecole_est.js ; la pile, sa plaque et son annuaire : js/ecole_rdc_centre.js.)
 //
 //   poserHall(ch)       (appelé par construireAccueil, js/carte_ecole.js)
@@ -42,16 +45,16 @@ import { texPeinture } from './ecole_matieres.js';
 
 // ---- les cotes (plan) ----
 const H_PLAF = 2.6;                                 // le plafond du hall
-const CPT = { x0: 16.83, x1: 17.53, y0: 1.1, y1: 3.6, h: 1.10, rainure: 0.70 };   // le comptoir haut (r04)
+const CPT = { x0: 16.83, x1: 17.53, y0: 1.1, y1: 3.6, h: 1.10, rainure: 0.71, socle: 0.11 };   // le comptoir haut (r04)
 const PMR = { xF: 17.08, x0: 16.88, y0: 3.6, y1: 4.58, h: 0.76 };                 // le décroché PMR
-const RET = { x0: 17.3, x1: 17.95, y0: 4.58, y1: 4.9, h: 1.10 };                  // le retour nord
+const RET = { x0: 17.0, x1: 17.85, y0: 4.39, y1: 4.58, h: 1.10 };                 // le caisson haut du décroché
 const X_PERS = 18.05;                               // le dos du plan de travail du personnel
-const LOC = { x0: 19.075, y0: 4.55 };               // le local technique (sa face ouest, sa face sud)
-const PIL = { x0: 18.3, x1: 19.075, y0: 5.8, y1: 6.35 };                          // le pilier de bois clair
+const LOC = { x0: 18.8, y0: 4.43 };                 // le local technique (sa face ouest, sa face sud)
+const PIL = { x0: 18.14, x1: 18.8, y0: 5.71, y1: 6.24 };                          // le pilier de bois clair
 const Y_MUR = 7.5;                                  // la face hall du mur nord (y 7,5-7,65)
 const X_MIT = 19.8;                                 // la face du mitoyen est
-const Y_ARD = 1.88;                                 // le bout sud du mur ardoise : la cloison biaise y part
-const BIAIS = 17.92;                                // la cloison biaise : la ligne x - y = 17,92, de (19,8 ; 1,88) à la façade
+const Y_ARD = 1.82;                                 // le bout sud du mur ardoise : la cloison biaise y part
+const BIAIS = X_MIT - Y_ARD;                        // la cloison biaise : la ligne x - y = 17,98, de (19,8 ; 1,82) à la façade
 
 // =====================================================================
 //  LES TEXTURES (dessinées : aucun fichier de plus à charger)
@@ -73,10 +76,10 @@ function paveIris(g, x, y, w, fond = '#151517', texte = '#ffffff') {
 // marqué ; à l'ombre, il tire sur le brun clair — face ouest du pilier #A28058 à l'appareil, face sud au jour #A2958F)
 function texBoisClair() {
   return canvasTex(256, 256, (g, w, h) => {
-    g.fillStyle = '#cbb08c'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#cdb497'; g.fillRect(0, 0, w, h);
     const r2 = graine(311);
-    for (let k = 0; k < 260; k++) {
-      const x = r2() * w, l = 0.6 + r2() * 2.2, a = 0.03 + r2() * 0.07;
+    for (let k = 0; k < 220; k++) {
+      const x = r2() * w, l = 0.6 + r2() * 2.2, a = 0.015 + r2() * 0.035;
       g.fillStyle = r2() < 0.5 ? `rgba(150,118,80,${a})` : `rgba(232,216,190,${a})`; g.fillRect(x, 0, l, h);
     }
   }, [1, 1], false, 4);
@@ -244,12 +247,12 @@ function texBrochures() {
   }, null, false, 4);
 }
 // LA VITRE DE LA CLOISON BIAISE (r04 agrandie : verre clair, très lumineux — le jour de la fenêtre de façade derrière —,
-// trois bandes sombres de vitrophanie entre 1,50 et 1,82 m). La texture couvre le verre de 0,10 à 2,15 m.
+// trois bandes sombres de vitrophanie entre 1,50 et 1,82 m). La texture couvre le verre de 0,10 à 2,10 m.
 function texVitreBandes() {
   return canvasTex(64, 256, (g, w, h) => {
     const f = g.createLinearGradient(0, 0, 0, h); f.addColorStop(0, '#f4f8fb'); f.addColorStop(1, '#dfe7ec');
     g.fillStyle = f; g.fillRect(0, 0, w, h);
-    const y = (m) => (2.15 - m) / 2.05 * h;
+    const y = (m) => (2.1 - m) / 2.0 * h;
     g.fillStyle = 'rgba(52,58,66,0.82)';
     for (const [a, b] of [[1.74, 1.82], [1.63, 1.70], [1.50, 1.57]]) g.fillRect(0, y(b), w, y(a) - y(b));
   }, null, false, 2);
@@ -288,7 +291,9 @@ function matieresHall() {
   const H = {
     // le mitoyen GRIS ARDOISE (r04 : un gris foncé presque neutre, à peine chaud — #494340 en haut, à l'appareil, sous le
     // plafond #ADAEB0 ; la VO de 2021, étalonnée froid, le rendait bleuté)
-    ardoise: std({ map: texPeinture(0x5a595c, 4), roughness: 0.82 }, 'peinture gris ardoise (mitoyen de l\'accueil)'),
+    // (relecture du 12/10, r04 rejouée : à 0,5 de la luminance du comptoir sur la photo, le jeu la rendait à 0,29 — presque
+    // noire : un ton plus clair)
+    ardoise: std({ map: texPeinture(0x6e6d70, 4), roughness: 0.82 }, 'peinture gris ardoise (mitoyen de l\'accueil)'),
     // le comptoir : un stratifié GRIS CLAIR (r04 : nettement plus sombre que le plafond et les murs blancs), la tablette
     // grise, la rainure
     comptoir: std({ color: 0xcdcac6, roughness: 0.45 }, 'stratifié gris clair (comptoir)'),
@@ -324,6 +329,9 @@ function matieresHall() {
   const tv = texVitreBandes();
   H.vitre = std({ map: tv, emissive: 0xffffff, emissiveMap: tv, emissiveIntensity: 0.55, roughness: 0.15, side: THREE.DoubleSide }, 'vitre de la cloison biaise');
   H.vitreClaire = std({ color: 0xe8eff3, emissive: 0xf2f6f8, emissiveIntensity: 0.6, roughness: 0.15, side: THREE.DoubleSide }, 'vitre du bureau d\'angle');
+  // le blanc de la cloison biaise et de sa retombée, dans le jour des fenêtres de façade (r04 : le coin sud-est est le plus
+  // clair de la photo, 248 sur 255 ; les spots seuls le rendaient gris beige, 141)
+  H.blancJour = std({ map: texPeinture(0xefede8), roughness: 0.86, emissive: 0xf4f6f8, emissiveIntensity: 0.32 }, 'peinture blanche au jour (bureau d\'angle)');
   return H;
 }
 
@@ -410,8 +418,8 @@ export function poserHall(ch) {
   // =====================================================================
   //  LE MITOYEN EST : GRIS ARDOISE de la cloison biaise au local technique (r04)
   // =====================================================================
-  // (r04 : le gris s'arrête net au sud, en y 1,88, contre le montant blanc de la cloison biaise ; au nord, contre la face
-  // sud du local. Plinthe de bois, comme tout le hall.)
+  // (r04 : le gris s'arrête net au sud, en y 1,82, contre le montant de la cloison biaise ; au nord, contre la face sud
+  // du local, y 4,43. Plinthe de bois, comme tout le hall.)
   ch.mur({ de: [19.95, -0.4], a: [19.95, Y_ARD], ep: 0.3, mats: M.blanc, plinthes: ['W'] });
   ch.mur({ de: [19.95, Y_ARD], a: [19.95, 7.65], ep: 0.3, mats: { W: H.ardoise, E: M.blanc }, plinthes: ['W'] });
   // LES DEUX AFFICHES (r04, rétroprojetées sur le mitoyen : 0,67 x 0,94 chacune, de 1,44 à 2,38 m ; celle au cadre
@@ -437,17 +445,20 @@ export function poserHall(ch) {
   // plein blanc, puis une étroite baie à menuiserie gris bleu ; au-dessus, une retombée blanche dont l'arête MONTE vers la
   // droite — rétroprojetée, de (19,86 ; 1,77) à (18,98 ; 1,0) : une cloison à 45°, qui ferme le coin sud-est. La VO de
   // 2021 voit, du nord, la même suite au même endroit : la « troisième fenêtre » au-delà du mitoyen de hall.md. Elle part
-  // du mitoyen en y 1,88 et finit sur la façade en x 17,92, au bord du trumeau : la fenêtre c 18,98 est dans le bureau.
-  // La porte vitrée et le reste, hors du cadre de r04 : IMAGINÉS.)
+  // du mitoyen en y 1,82 et finit sur la façade en x 17,98, au bord du trumeau : la fenêtre c 18,98 est dans le bureau.
+  // Rejouée à la pose de r04 : la vitre de 0,07 à 0,54 m du mitoyen le long de la cloison, le montant gris jusqu'à 0,64,
+  // le plein blanc jusqu'à 1,04, la baie étroite jusqu'à 1,16 ; le haut des vitres à 2,10. La porte vitrée et le reste,
+  // hors du cadre de r04 : IMAGINÉS. Le blanc y est celui du jour — H.blancJour.)
   {
-    const L = Y_ARD * Math.SQRT2, ep = 0.1, hv = 2.15;
+    const L = Y_ARD * Math.SQRT2, ep = 0.1, hv = 2.1;
     const g = new THREE.Group(); g.position.set(X_MIT, 0, -(X_MIT - BIAIS)); g.rotation.y = -3 * Math.PI / 4; ch.decor.add(g);
     // le long de la cloison (x local de 0 à L, vers la façade) : [début, fin, sorte]
-    const morceaux = [[0, 0.06, 'montant'], [0.06, 0.58, 'vitre'], [0.58, 0.64, 'montant'], [0.64, 1.12, 'plein'], [1.12, 1.16, 'cadre'], [1.16, 1.26, 'baie'], [1.26, 1.3, 'cadre'], [1.3, 1.42, 'plein'], [1.42, 2.32, 'porte'], [2.32, L, 'plein']];
+    const morceaux = [[0, 0.07, 'montant'], [0.07, 0.54, 'vitre'], [0.54, 0.64, 'poteau'], [0.64, 1.04, 'plein'], [1.04, 1.07, 'cadre'], [1.07, 1.13, 'baie'], [1.13, 1.16, 'cadre'], [1.16, 1.42, 'plein'], [1.42, 2.32, 'porte'], [2.32, L, 'plein']];
     for (const [a, b, s] of morceaux) {
       const w = b - a, cx = (a + b) / 2;
-      if (s === 'plein') BL(g, M.blanc, w, hv, ep, cx, hv / 2, 0);
+      if (s === 'plein') BL(g, H.blancJour, w, hv, ep, cx, hv / 2, 0);
       else if (s === 'montant') BL(g, H.alu, w, hv, ep, cx, hv / 2, 0);
+      else if (s === 'poteau') BL(g, H.copieur2, w, hv, ep * 1.2, cx, hv / 2, 0);
       else if (s === 'cadre') BL(g, H.cadreSombre, w, hv - 0.1, ep * 0.8, cx, (hv - 0.1) / 2 + 0.1, 0);
       else {
         // une vitre (la grande, la porte : les bandes de vitrophanie ; la baie étroite : claire), son rail bas, son profil haut
@@ -462,7 +473,7 @@ export function poserHall(ch) {
       }
     }
     // la retombée blanche au-dessus, jusqu'au plafond (r04)
-    BL(g, M.blanc, L, H_PLAF - hv, ep, L / 2, (hv + H_PLAF) / 2, 0);
+    BL(g, H.blancJour, L, H_PLAF - hv, ep, L / 2, (hv + H_PLAF) / 2, 0);
     g.traverse((m) => { if (m.isMesh) m.receiveShadow = true; });
     // le monde solide : la cloison entière (la lumière cuite passe par la vitre)
     C.ajouterBoiteOrientee(X_MIT - Y_ARD / 2, -Y_ARD / 2, L / 2, ep / 2, 3 * Math.PI / 4, { y1: H_PLAF });
@@ -482,12 +493,12 @@ export function poserHall(ch) {
   // (r04 : la face du comptoir est à 3,25 m de l'appareil, le mur ardoise à 6,5 m ; les deux fuient au même point : le
   // comptoir est NORD-SUD et parallèle au mitoyen, à 3,0 m de lui. Son bout nord en y 3,6 ; il passe le bord droit de la
   // photo en y 1,4 — son bout sud reste celui de la VO, à 0,5 m du poteau est de la porte 6. Les hauteurs, prises entre
-  // le pied du socle et le chant de la tablette sur une même verticale : la rainure à 0,70 m — la VO la mettait à 0,55 —,
-  // le socle de 10 cm.)
+  // le pied du socle et le chant de la tablette sur une même verticale : la rainure à 0,71 m — la VO la mettait à 0,55 —,
+  // le socle de 11 cm.)
   // le comptoir haut : le socle de chêne clair en retrait de 4 cm, le caisson de stratifié gris clair, la rainure sur la
   // face avant (ouest) et sur le bout sud, la tablette grise qui déborde de 7 cm côté visiteurs
-  B(CPT.x0 + 0.04, CPT.y0 + 0.04, CPT.x1, CPT.y1, 0, 0.1, H.chene);
-  B(CPT.x0, CPT.y0, CPT.x1, CPT.y1, 0.1, CPT.h - 0.035, H.comptoir);
+  B(CPT.x0 + 0.04, CPT.y0 + 0.04, CPT.x1, CPT.y1, 0, CPT.socle, H.chene);
+  B(CPT.x0, CPT.y0, CPT.x1, CPT.y1, CPT.socle, CPT.h - 0.035, H.comptoir);
   B(CPT.x0 - 0.004, CPT.y0, CPT.x0, CPT.y1, CPT.rainure - 0.008, CPT.rainure + 0.008, H.rainure, { ombre: false });
   B(CPT.x0, CPT.y0 - 0.004, CPT.x1, CPT.y0, CPT.rainure - 0.008, CPT.rainure + 0.008, H.rainure, { ombre: false });
   B(CPT.x0 - 0.07, CPT.y0 - 0.03, CPT.x1, CPT.y1, CPT.h - 0.035, CPT.h, H.tablette);
@@ -499,26 +510,26 @@ export function poserHall(ch) {
   B(PMR.x0, PMR.y0, X_PERS, PMR.y1, PMR.h - 0.03, PMR.h, H.tablette);
   B(16.915, 4.355, 17.055, 4.495, 0, 0.08, H.chene);
   B(16.93, 4.37, 17.04, 4.48, 0.08, PMR.h - 0.03, H.comptoir);
-  // LE RETOUR NORD : un caisson du même stratifié, debout sur son socle, sa tablette haute qui déborde au nord et au
-  // sud (r04 : vue au-dessus du décroché, jusque devant le pilier)
-  B(RET.x0 + 0.03, RET.y0 + 0.03, RET.x1 - 0.03, RET.y1 - 0.03, 0, 0.1, H.chene);
-  B(RET.x0, RET.y0, RET.x1, RET.y1, 0.1, RET.h - 0.035, H.comptoir);
-  B(RET.x0 - 0.1, RET.y0 - 0.08, RET.x1 + 0.05, RET.y1 + 0.1, RET.h - 0.035, RET.h, H.tablette);
+  // LE CAISSON HAUT DU DÉCROCHÉ : posé sur le bout nord de la tablette basse, au-dessus du pied, du même stratifié, et sa
+  // tablette haute qui déborde de 0,3 m au nord (r04 : sa face ouest de x 178 à 200, sa face sud de 200 à 262, de 0,76 à
+  // 1,10 m, les bacs noirs devant ; la tablette de x 128 à 265 — sous son débord, on voit le pilier : rien ne la porte)
+  B(RET.x0, RET.y0, RET.x1, RET.y1, PMR.h, RET.h - 0.03, H.comptoir);
+  B(RET.x0 - 0.05, RET.y0 - 0.07, RET.x1 + 0.05, RET.y1 + 0.3, RET.h - 0.03, RET.h, H.tablette);
   // derrière (est) : le plan de travail du personnel à 0,75 m, le long du comptoir haut, sur trois pieds
   B(CPT.x1, CPT.y0 + 0.05, X_PERS, CPT.y1, 0.72, 0.75, H.plan);
   for (const y of [CPT.y0 + 0.1, 2.35, CPT.y1 - 0.08]) B(X_PERS - 0.06, y - 0.025, X_PERS - 0.02, y + 0.025, 0, 0.72, H.pied, { ombre: false });
-  // le monde solide : le comptoir et son plan de travail, le décroché, le retour
+  // le monde solide : le comptoir et son plan de travail, le décroché, le débord de la tablette haute
   C.ajouterBoite(CPT.x0 - 0.07, -CPT.y1, X_PERS, -(CPT.y0 - 0.03), { y1: CPT.h });
   C.ajouterBoite(PMR.x0, -PMR.y1, X_PERS, -PMR.y0, { y1: PMR.h });
-  C.ajouterBoite(RET.x0 - 0.1, -(RET.y1 + 0.1), RET.x1 + 0.05, -(RET.y0 - 0.08), { y1: RET.h });
-  // SUR LE DÉCROCHÉ (r04) : les bacs à courrier noirs empilés et leurs papiers rouges et blancs, contre le retour ; la
-  // bouilloire inox ; une chemise rouge et des feuilles à plat au bord
+  C.ajouterBoite(RET.x0 - 0.05, -(RET.y1 + 0.3), RET.x1 + 0.05, -PMR.y1, { y0: RET.h - 0.03, y1: RET.h });
+  // SUR LE DÉCROCHÉ (r04) : les bacs à courrier noirs empilés et leurs papiers rouges et blancs, contre le caisson haut ;
+  // la bouilloire inox ; une chemise rouge et des feuilles à plat au bord
   for (let k = 0; k < 3; k++) {
     const h = PMR.h + k * 0.055;
-    B(17.25, 4.2, 17.57, 4.52, h, h + 0.008, M.noir, { ombre: false });
-    B(17.25, 4.2, 17.57, 4.215, h, h + 0.045, M.noir, { ombre: false });
-    for (const x of [17.25, 17.56]) B(x, 4.2, x + 0.01, 4.52, h, h + 0.045, M.noir, { ombre: false });
-    B(17.27, 4.23, 17.55, 4.5, h + 0.008, h + 0.016 + k * 0.004, k === 1 ? H.rouge : M.store, { ombre: false });
+    B(17.2, 4.06, 17.52, 4.38, h, h + 0.008, M.noir, { ombre: false });
+    B(17.2, 4.06, 17.52, 4.075, h, h + 0.045, M.noir, { ombre: false });
+    for (const x of [17.2, 17.51]) B(x, 4.06, x + 0.01, 4.38, h, h + 0.045, M.noir, { ombre: false });
+    B(17.22, 4.09, 17.5, 4.36, h + 0.008, h + 0.016 + k * 0.004, k === 1 ? H.rouge : M.store, { ombre: false });
   }
   {
     const g = groupe(ch, 17.42, 3.92, 'W'); g.position.y = PMR.h;
@@ -530,10 +541,10 @@ export function poserHall(ch) {
   B(16.93, 3.66, 17.2, 3.98, PMR.h, PMR.h + 0.01, H.rouge, { ombre: false });
   B(16.94, 4.02, 17.18, 4.32, PMR.h, PMR.h + 0.006, M.store, { ombre: false });
   // SUR LES TABLETTES HAUTES (r04) : des feuilles et des dépliants à plat le long du bord, une petite pile blanche vers le
-  // bout nord ; sur le retour, des papiers
+  // bout nord ; sur le caisson haut, des papiers
   B(16.86, 3.08, 17.1, 3.36, CPT.h, CPT.h + 0.03, M.store, { ombre: false });
   for (const [y, l] of [[1.45, 0.3], [1.8, 0.26], [2.12, 0.3]]) B(16.82, y, 17.03, y + l, CPT.h, CPT.h + 0.006, M.store, { ombre: false });
-  B(17.45, 4.6, 17.85, 4.82, RET.h, RET.h + 0.012, M.store, { ombre: false });
+  B(17.3, 4.42, 17.7, 4.66, RET.h, RET.h + 0.012, M.store, { ombre: false });
   // L'ÉCRAN DE L'HÔTESSE (r04 : son dos noir dépasse à peine du comptoir, une bande noire marquée « DELL », vers y 2,9)
   // et, sur le bureau du mitoyen, un portable ouvert (un second écran dépasserait du comptoir : r04 n'en montre pas)
   {
@@ -552,58 +563,59 @@ export function poserHall(ch) {
   // =====================================================================
   // (r04 : derrière le comptoir, rien ne dépasse entre le local et la cloison biaise que l'écran « DELL » et, au fond à
   // droite, contre la cloison, le grand copieur blanc. Le reste est sous la ligne du comptoir : le bureau bleu-gris du
-  // mitoyen (VO), le plan de travail, les fauteuils. Le passage du personnel : par le nord, entre le retour et le local
-  // (1,1 m), puis le long du plan de travail.)
-  B(19.2, 1.98, 19.78, 4.5, 0.72, 0.75, H.bureau);
-  B(19.74, 1.98, 19.77, 4.5, 0.3, 0.72, H.bureau, { ombre: false });
-  B(19.21, 4.44, 19.27, 4.5, 0, 0.72, H.pied, { ombre: false });
+  // mitoyen (VO), le plan de travail, les fauteuils. Le passage du personnel : par le nord, entre le décroché et le local
+  // (0,75 m), puis le long du plan de travail.)
+  B(19.2, 1.98, 19.78, LOC.y0, 0.72, 0.75, H.bureau);
+  B(19.74, 1.98, 19.77, LOC.y0, 0.3, 0.72, H.bureau, { ombre: false });
+  B(19.21, LOC.y0 - 0.06, 19.27, LOC.y0, 0, 0.72, H.pied, { ombre: false });
   B(19.2, 2.62, 19.74, 3.04, 0, 0.6, H.bureau);
   for (const h of [0.2, 0.4]) B(19.2, 2.62, 19.204, 3.04, h - 0.006, h + 0.006, H.pied, { ombre: false });
-  C.ajouterBoite(19.2, -4.5, 19.8, -1.98, { y1: 0.75 });
+  C.ajouterBoite(19.2, -LOC.y0, 19.8, -1.98, { y1: 0.75 });
   // sur le bureau : le pot blanc « iris », la corbeille à courrier noire, des classeurs couchés
   maille(new THREE.CylinderGeometry(0.09, 0.085, 0.26, 20), new THREE.MeshStandardMaterial({ map: texPotIris(), roughness: 0.4 }), 19.6, 0.88, -2.3, 0, ch.decor);
   B(19.42, 2.62, 19.74, 2.92, 0.75, 0.81, M.noir);
   ['#1d1d20', '#2f5f9a', '#f0efea'].forEach((c, i) => B(19.4, 3.9, 19.72, 4.2, 0.75 + i * 0.05, 0.8 + i * 0.05, new THREE.MeshStandardMaterial({ color: c, roughness: 0.5 }), { ombre: false }));
   // LE GRAND COPIEUR contre la cloison biaise, tourné vers le nord-ouest (r04 : son chargeur blanc et ses bacs
-  // dépassent du comptoir au bord droit, à 1,3-1,4 m)
-  copieur(ch, 19.0, 1.55, 315, 1.32);
-  C.ajouterBoiteOrientee(19.0, -1.55, 0.33, 0.34, 3 * Math.PI / 4, { y1: 1.32 });
+  // dépassent du comptoir au bord droit, de x 620 à 730, jusqu'à 1,4 m)
+  copieur(ch, 18.93, 1.46, 315, 1.42);
+  C.ajouterBoiteOrientee(18.93, -1.46, 0.33, 0.34, 3 * Math.PI / 4, { y1: 1.42 });
   // LES FAUTEUILS NOIRS face au comptoir, le long du plan de travail : celui du bout sud porte le manteau moutarde (photo
   // 03 : il dépasse du comptoir vers (18,0 ; 1,7)), celui de l'hôtesse est devant l'écran « DELL », le troisième au
   // décroché, au coussin rayé (VO). Chacun laisse 0,66 m de passage à l'est ; on se relève au nord de sa place.
   const f1 = fauteuil(ch, 18.3, 1.95, 'W', { sx: 18.68, sy: 2.45, nom: 'le fauteuil' });
   fauteuil(ch, 18.3, 2.95, 'W', { sx: 18.68, sy: 3.45, nom: 'le fauteuil de l\'accueil' });
-  fauteuil(ch, 18.3, 4.0, 'W', { zebre: true, sx: 18.68, sy: 4.5, nom: 'le fauteuil' });
+  fauteuil(ch, 18.3, 3.95, 'W', { zebre: true, sx: 18.75, sy: 3.5, nom: 'le fauteuil' });
   BL(f1, new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.9 }), 0.48, 0.46, 0.07, 0, 0.8, -0.27);
 
   // =====================================================================
   //  LE LOCAL TECHNIQUE, LE PILIER DE BOIS CLAIR, L'ÉCRAN, LE PANNEAU DES FORMATIONS (r04)
   // =====================================================================
-  // (r04 : au fond du comptoir, à gauche du mur ardoise, un bloc de 0,7 m qui avance du mitoyen — sa face sud blanche (le
-  // « retour » au bouton rouge), sa face ouest de stratifié clair : la double porte à étiquette rouge et triangle jaune,
-  // jusqu'à 2,10, un panneau fixe au-dessus jusqu'au plafond ; puis le panneau des formations ; puis le pilier, plus
-  // avancé, sous l'écran ; au-delà, d'autres portes de stratifié jusqu'au mur nord, un second triangle. Rétroprojetés :
-  // la face ouest en x 19,075, l'angle sud-ouest en y 4,55, le pilier x 18,3-19,075 × y 5,8-6,35.)
+  // (r04 : au fond du comptoir, à gauche du mur ardoise, un bloc de 1 m qui avance du mitoyen — sa face sud blanche (le
+  // « retour » au bouton rouge, x 305-345 sur la photo), sa face ouest de stratifié clair : la double porte à étiquette
+  // rouge et triangle jaune, jusqu'à 2,10, un panneau fixe au-dessus jusqu'au plafond ; puis le panneau des formations ;
+  // puis le pilier, plus avancé, sous l'écran ; au-delà, d'autres portes de stratifié jusqu'au mur nord, un second
+  // triangle. Rétroprojetés à la pose de r04 : l'angle du mur ardoise en y 4,43, l'angle sud-ouest du local en x 18,8 ; la
+  // porte y 4,5-5,21 ; le panneau y 5,24-5,70 ; le pilier x 18,14-18,8 × y 5,71-6,24.)
   B(LOC.x0 + 0.02, LOC.y0, X_MIT, Y_MUR, 0, H_PLAF, M.blanc);
   B(LOC.x0, LOC.y0, LOC.x0 + 0.02, Y_MUR, 0, H_PLAF, H.boisClair);
   B(LOC.x0 - 0.004, LOC.y0 - 0.004, LOC.x0 + 0.024, LOC.y0, 0, H_PLAF, H.boisClair, { ombre: false });
   B(LOC.x0 + 0.02, LOC.y0 - 0.015, X_MIT, LOC.y0, 0, 0.08, M.bois, { ombre: false });
   C.ajouterBoite(LOC.x0, -Y_MUR, X_MIT, -LOC.y0, { y1: H_PLAF });
-  // les portes du local : deux doubles portes (y 4,6-5,38 et 6,5-7,3), leurs joints sombres, la traverse à 2,10
-  const xj = LOC.x0 - 0.003;
-  for (const [y0, y1] of [[4.6, 5.38], [6.5, 7.3]]) {
+  // les portes du local : deux doubles portes (y 4,5-5,21 et 6,45-7,35), leurs joints sombres, la traverse à 2,10
+  const xj = LOC.x0 - 0.003, PORTES = [[4.5, 5.21], [6.45, 7.35]];
+  for (const [y0, y1] of PORTES) {
     for (const y of [y0, (y0 + y1) / 2, y1]) B(xj, y - 0.004, LOC.x0, y + 0.004, 0.01, 2.1, H.joint, { ombre: false });
     B(xj, y0, LOC.x0, y1, 2.096, 2.104, H.joint, { ombre: false });
     // les poignées (deux barrettes inox, de part et d'autre du joint central)
     for (const s of [-1, 1]) B(xj - 0.025, (y0 + y1) / 2 + s * 0.05 - 0.008, xj, (y0 + y1) / 2 + s * 0.05 + 0.008, 1.0, 1.18, M.inox, { ombre: false });
   }
-  B(xj, 4.6, LOC.x0, 7.3, 0.0, 0.01, H.joint, { ombre: false });
+  for (const [y0, y1] of PORTES) B(xj, y0, LOC.x0, y1, 0.0, 0.01, H.joint, { ombre: false });
   // l'ÉTIQUETTE ROUGE en travers du haut du vantail nord, et le TRIANGLE JAUNE au coin du vantail sud (r04 : de 2,0 à
   // 2,08 m) ; le second triangle sur la porte du fond (r04, au bord gauche : vers y 7,1, à 2,0 m)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texEtiquetteRouge(), roughness: 0.5 }), 0.34, 0.07, xj - 0.002, 5.19, 2.04, 'W');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texEtiquetteRouge(), roughness: 0.5 }), 0.3, 0.07, xj - 0.002, 5.03, 2.04, 'W');
   const tri = new THREE.MeshStandardMaterial({ map: texTriangle(), transparent: true, alphaTest: 0.4, roughness: 0.5 });
-  ch.panneau(tri, 0.08, 0.08, xj - 0.002, 4.95, 2.04, 'W');
-  ch.panneau(tri, 0.1, 0.1, xj - 0.002, 7.1, 2.0, 'W');
+  ch.panneau(tri, 0.08, 0.08, xj - 0.002, 4.83, 2.04, 'W');
+  ch.panneau(tri, 0.1, 0.1, xj - 0.002, 7.12, 2.0, 'W');
   // SUR LA FACE SUD, BLANCHE (r04) : le déclencheur rouge, un petit boîtier gris, le boîtier blanc et son cordon noir
   {
     const ys = LOC.y0 - 0.002;
@@ -617,18 +629,21 @@ export function poserHall(ch) {
   B(PIL.x0, PIL.y0, PIL.x1, PIL.y1, 0, H_PLAF, H.boisClair);
   B(PIL.x0 - 0.012, PIL.y0 - 0.012, PIL.x1, PIL.y1 + 0.012, 0, 0.08, H.chene, { ombre: false });
   C.ajouterBoite(PIL.x0, -PIL.y1, PIL.x1, -PIL.y0, { y1: H_PLAF });
-  // LE PANNEAU DES FORMATIONS, entre la porte du local et le pilier (r04 : 0,38 m, de ≈ 1,0 à 2,12)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texFormations(), roughness: 0.55 }), 0.38, 1.16, xj - 0.012, 5.59, 1.56, 'W');
-  B(xj - 0.01, 5.39, xj, 5.79, 0.97, 2.15, H.joint, { ombre: false });
-  // L'ÉCRAN SUSPENDU devant le pilier (r04 : sous le plafond, juste derrière la retombée, penché vers le hall, son plan
-  // fuit vers le cap 112 — il regarde au sud-sud-ouest ; « Commander votre sweat à l'accueil pour 25€ »)
+  // LE PANNEAU DES FORMATIONS, entre la porte du local et le pilier (r04 : 0,42 m, de ≈ 0,95 à 2,08), son cadre sombre
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texFormations(), roughness: 0.55 }), 0.42, 1.13, xj - 0.012, 5.47, 1.515, 'W');
+  B(xj - 0.01, 5.245, xj, 5.695, 0.94, 2.09, H.joint, { ombre: false });
+  // L'ÉCRAN SUSPENDU sous la retombée, devant le pilier (r04 : son bord haut suit l'arête de la retombée, son tube de
+  // fixation y monte ; son plan fuit vers le cap 112 — il regarde au sud-sud-ouest, penché vers le hall ; de 1,95 à 2,48 ;
+  // un cadre noir épais autour d'une dalle claire ; son bout est touche presque le local ; « Commander votre sweat à
+  // l'accueil pour 25€ »)
   {
-    const g = groupe(ch, 18.45, 5.55, 202); g.position.y = 2.3;
-    const t = new THREE.Group(); t.rotation.x = 0.2; g.add(t);
-    BL(t, M.noir, 0.96, 0.57, 0.06, 0, 0, 0);
-    const e = PL(t, new THREE.MeshStandardMaterial({ map: texEcranTV(), emissive: 0xffffff, emissiveMap: texEcranTV(), emissiveIntensity: 0.55, roughness: 0.3 }), 0.88, 0.5, 0, 0, 0.031);
+    const g = groupe(ch, 18.37, 5.46, 202); g.position.y = 2.215;
+    const t = new THREE.Group(); t.rotation.x = 0.15; g.add(t);
+    BL(t, M.noir, 0.88, 0.53, 0.06, 0, 0, 0);
+    const tex = texEcranTV();
+    const e = PL(t, new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.5, roughness: 0.3 }), 0.72, 0.41, 0.02, 0.01, 0.031);
     e.castShadow = false;
-    CL(g, M.noir, 0.02, H_PLAF - 2.3 - 0.2, 0, (H_PLAF - 2.3 + 0.2) / 2, -0.06, 8, { ombre: false });
+    BL(g, M.noir, 0.04, 2.5 - 2.215 - 0.22, 0.04, -0.28, (2.5 - 2.215 + 0.22) / 2, -0.05, { ombre: false });
     g.traverse((m) => { m.userData.horsAOSol = true; });
   }
 
@@ -647,18 +662,18 @@ export function poserHall(ch) {
       for (const z of [-0.12, 0.1]) maille(new THREE.SphereGeometry(0.03, 8, 6), N, s * 0.25, 0.035, z, 0, g, { ombre: false });
     }
     const br = new THREE.MeshStandardMaterial({ map: texBrochures(), roughness: 0.6 });
-    for (const h of [0.24, 0.6]) {
+    for (const h of [0.14, 0.5]) {
       const t = BL(g, N, 0.5, 0.012, 0.24, 0, h, 0.0); t.rotation.x = 0.35;
       BL(g, N, 0.5, 0.04, 0.012, 0, h - 0.03, 0.11, { ombre: false });
-      const b = PL(g, br, 0.46, 0.2, 0, h + 0.09, 0.01); b.rotation.x = -0.35;
+      const b = PL(g, br, 0.46, 0.22, 0, h + 0.11, 0.01); b.rotation.x = -0.35;
     }
-    for (const h of [0.86, 1.15, 1.42]) BL(g, N, 0.5, 0.012, 0.3, 0, h, -0.02);
+    for (const h of [0.84, 1.14, 1.43]) BL(g, N, 0.5, 0.012, 0.3, 0, h, -0.02);
     const sw = (imprime, h) => {
       const m = [new THREE.MeshStandardMaterial({ color: 0xecebe8, roughness: 0.9 }), new THREE.MeshStandardMaterial({ map: texSweat(imprime), roughness: 0.9 })];
-      const b = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.24, 0.26), [m[0], m[0], m[0], m[0], m[1], m[0]]); b.position.set(0, h + 0.12, -0.02); b.castShadow = true; g.add(b);
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.28, 0.3), [m[0], m[0], m[0], m[0], m[1], m[0]]); b.position.set(0, h + 0.14, -0.01); b.castShadow = true; g.add(b);
     };
-    sw(false, 1.426); sw(true, 1.156);
-    const a = PL(g, new THREE.MeshStandardMaterial({ map: texAffichette(), roughness: 0.6 }), 0.52, 0.28, 0, 1.0, 0.13);
+    sw(false, 1.436); sw(true, 1.146);
+    const a = PL(g, new THREE.MeshStandardMaterial({ map: texAffichette(), roughness: 0.6 }), 0.56, 0.3, 0, 0.99, 0.15);
     a.rotation.x = -0.05;
     C.ajouterCercle(17.3, -5.55, 0.32, { y1: 1.7 });
   }
@@ -680,10 +695,10 @@ export function poserHall(ch) {
   }
   C.ajouterBoite(17.04, -7.46, 17.46, -6.9, { y1: 1.35 });
   // LE MEUBLE BAS NOIR contre le mur nord, jusqu'au local (r04, au bord gauche : 1,0 m de haut, une petite étiquette
-  // blanche) — il remplace la table blanche et la chaise de hêtre de 2021
-  B(18.15, 6.98, LOC.x0, 7.48, 0, 1.0, H.meubleNoir);
-  B(18.2, 6.976, 18.32, 6.98, 0.82, 0.86, M.store, { ombre: false });
-  C.ajouterBoite(18.15, -7.48, LOC.x0, -6.98, { y1: 1.0 });
+  // blanche) — à la place de la table blanche et de la chaise de hêtre de 2021, sous les étiquettes ocre
+  B(17.55, 6.98, LOC.x0, 7.48, 0, 1.0, H.meubleNoir);
+  B(18.42, 6.976, 18.54, 6.98, 0.82, 0.86, M.store, { ombre: false });
+  C.ajouterBoite(17.55, -7.48, LOC.x0, -6.98, { y1: 1.0 });
   // LES ÉTIQUETTES OCRE sur le mur blanc (VO q_0027-0028, mesurées contre le semi-fixe de la porte nord : la grande de x
   // 17,54 à 18,38, de 1,98 à 2,36 m ; la petite de 17,76 à 18,16, de 1,50 à 1,88 m)
   ch.panneau(new THREE.MeshStandardMaterial({ map: texEtiquette('INFORMATIQUE', 0.84, 0.38), roughness: 0.6 }), 0.84, 0.38, 17.96, Y_MUR - 0.004, 2.17, 'S');
@@ -693,10 +708,11 @@ export function poserHall(ch) {
   // =====================================================================
   //  LE PLAFOND : LA RETOMBÉE EST-OUEST ET LES HUIT LIGNES LUMINEUSES (r04 ; VO 92,6-93,6 s ; photo 24)
   // =====================================================================
-  // LA RETOMBÉE (r04 : de l'angle haut gauche de la photo vers le pilier, au-dessus de l'écran ; son arête rétroprojetée à
-  // 2,45 m tombe en y 5,2-5,3) : de la face est de la pile au local, 15 cm sous les plateaux
+  // LA RETOMBÉE (r04 : de l'angle haut gauche de la photo jusqu'au local, l'écran pendu dessous ; sa face sud ne fait
+  // qu'une dizaine de centimètres — l'arête, rétroprojetée à 2,50 m, tombe en y 5,28) : de la face est de la pile au
+  // local, 10 cm sous les plateaux
   {
-    const r = B(14.675, 5.0, LOC.x0, 5.25, 2.45, H_PLAF, M.platre, { ombre: false, collision: true });
+    const r = B(14.675, 5.28, LOC.x0, 5.53, 2.5, H_PLAF, M.platre, { ombre: false, collision: true });
     r.userData.horsAOSol = true;
   }
   // dans l'axe de la porte 6, au pas de 0,30 m, de la porte jusqu'à y ≈ 4,1 (les spots ronds autour : js/carte_ecole.js) ;

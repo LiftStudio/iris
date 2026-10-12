@@ -1366,8 +1366,13 @@ export function construireCarte(scene, renderer = null) {
   ch.plafond(5.3, ATT.ys, 5.9, ATT.yn - 0.075, 2.6, 'dalles', { retombees: false });
   ch.plafond(11.7, 7.8, 13.5, 14.4, 2.45, 'platre');                 // C01 (V2 : de l'entrée, y 7,8, au fond)
   // le hall d'entrée (retour r04 du 12/10 : des plateaux perforés de 0,6 x 1,2, leurs joints nord-sud serrés — r04 au-dessus
-  // de l'accueil ; photo 03 au-dessus de l'entrée —, et non du plâtre lisse ; la retombée est-ouest : js/ecole_hall.js)
-  ch.plafond(13.35, 0.3, 19.8, 7.5, 2.6, 'plateaux');
+  // de l'accueil ; photo 03 au-dessus de l'entrée —, et non du plâtre lisse ; la retombée est-ouest : js/ecole_hall.js).
+  // Plus clairs que ceux des salles : sur r04, près des fenêtres, le plafond est la surface la plus blanche (174 sur 255,
+  // le comptoir 138) ; au jeu, le perforé sous les seuls spots tombait à 121, le comptoir à 160.
+  {
+    const p = ch.plafond(13.35, 0.3, 19.8, 7.5, 2.6, 'plateaux');
+    p.material = M.plateaux.clone(); p.material.emissiveIntensity = 0.34; p.material.name = 'plafond en plateaux perforés (hall)';
+  }
   // le bureau B (visitable : js/ecole_pieces.js) et le passage au sud-ouest de la pile, d'un seul tenant (plateaux à 2,60)
   ch.plafond(9.9, 0, 13.35, ATT.ys, 2.6, 'plateaux');
   ch.plafond(4.5, 0, 9.9, ATT.ys, 2.6, 'plateaux');                   // la Si 0.1, l'ex-salle A (visitable : js/ecole_pieces.js)
@@ -1420,9 +1425,9 @@ export function construireCarte(scene, renderer = null) {
   // lignes lumineuses, une vers y 3,2 au-dessus du comptoir ; au-dessus de l'open-space et dans l'angle nord-est, rouvert,
   // posés au même pas. Les huit lignes : js/ecole_hall.js)
   // (Retour r04 du 12/10, la photo de l'accueil rejouée à sa pose : (17,25 ; 3,2), (18,75 ; 3,2) et (18,75 ; 1,5) y sont, à
-  // 0,1 m près ; pas de spot en (17,7 ; 4,3) — il en a un en (17,1 ; 4,85), devant la retombée ; au fond à gauche, le spot
-  // est en (18,75 ; 7,1), près du mur nord — en (18,3 ; 6,3), il tombait sur le pilier de bois clair)
-  for (const [x, y] of [[15.4, 4.3], [16.55, 4.3], [17.1, 4.85], [17.25, 3.2], [18.75, 3.2], [17.25, 1.5], [18.75, 1.5], [15.9, 6.2], [18.75, 7.1]]) ch.spot(x, y, 2.6, 'hall');
+  // 0,1 m près ; pas de spot en (17,7 ; 4,3) — il en a un en (17,1 ; 4,95), devant la retombée ; au fond à gauche, le spot
+  // est en (18,55 ; 7,1), près du mur nord, devant le local — en (18,3 ; 6,3), il tombait sur le pilier de bois clair)
+  for (const [x, y] of [[15.4, 4.3], [16.55, 4.3], [17.1, 4.95], [17.25, 3.2], [18.75, 3.2], [17.25, 1.5], [18.75, 1.5], [15.9, 6.2], [18.55, 7.1]]) ch.spot(x, y, 2.6, 'hall');
   // (10/10 : le bureau B a perdu son angle nord-est, le passage de la pile — le second spot recule)
   for (const [x, y] of [[11.0, 2.4], [12.55, 1.55]]) ch.spot(x, y, 2.6, 'bureauB');
   // (la Si 0.1 : ses dalles LED sont posées avec son mobilier, js/ecole_pieces.js)
