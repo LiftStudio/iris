@@ -105,62 +105,81 @@ function texEtiquette(mot, w, h) {
     g.fillText(mot, W / 2, H * 0.53);
   }, null, false, 4);
 }
-// L'AFFICHE AU CADRE MAGENTA (r04 agrandie, la gauche des deux) : une marge gris clair, un filet magenta tout autour ; en
-// haut, un aplat brun noir et quatre lignes d'un texte orange ; au milieu, la façade BLANCHE d'un immeuble vue DE FACE —
-// une rangée de baies magenta sous la corniche, quatre rangées de dix fenêtres sombres aux reflets roses, les vitrines du
-// rez-de-chaussée — ; en bas, du gris clair et le pavé « iris » à droite
+// L'AFFICHE AU CADRE MAGENTA (r04 agrandie, la gauche des deux) : un filet magenta tout autour ; en haut, un aplat brun
+// noir et quatre lignes d'un texte orange ; au milieu, la façade BLANCHE d'un immeuble — une rangée de baies magenta sous
+// la corniche, quatre rangées de fenêtres sombres aux reflets roses, les vitrines du rez-de-chaussée — ; en bas, du gris
+// clair et le pavé « iris » à droite
+// (relecture du 12/10, r04 agrandie cinq fois : l'immeuble ne prend pas toute la largeur — le brun continue à sa gauche,
+// sur un huitième —, et son socle blanc file en biais jusqu'au bord gauche ; onze fenêtres par rangée ; pas de marge)
 function texAfficheMagenta() {
   return canvasTex(256, 356, (g, w, h) => {
-    g.fillStyle = '#e4e2de'; g.fillRect(0, 0, w, h);
-    g.strokeStyle = '#c4307e'; g.lineWidth = 4; g.strokeRect(10, 10, w - 20, h - 20);
-    const x0 = 14, x1 = w - 14;
-    g.fillStyle = '#2a2420'; g.fillRect(x0, 14, x1 - x0, 104);
-    g.fillStyle = '#e59a3a'; g.font = `600 11px ${POLICE}`; g.textBaseline = 'alphabetic'; g.textAlign = 'left';
-    ['Créer', 'l\'informatique', 'pour les métiers', 'de demain'].forEach((t, i) => g.fillText(t, 28, 38 + i * 13));
+    const X = (u) => u * w, Y = (v) => v * h;
+    g.fillStyle = '#2d2622'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e59a3a'; g.font = `600 10px ${POLICE}`; g.textBaseline = 'alphabetic'; g.textAlign = 'left';
+    ['Créer', 'l\'informatique', 'pour les métiers', 'de demain'].forEach((t, i) => g.fillText(t, X(0.15), Y(0.085) + i * 11));
+    // le bas, gris clair, et le socle blanc de l'immeuble qui file en biais vers la gauche
+    g.fillStyle = '#e2e0dc'; g.fillRect(0, Y(0.8), w, h - Y(0.8));
+    g.fillStyle = '#efeeea'; g.beginPath(); g.moveTo(X(0.13), Y(0.755)); g.lineTo(w, Y(0.755)); g.lineTo(w, Y(0.83)); g.lineTo(0, Y(0.83)); g.lineTo(0, Y(0.86)); g.closePath(); g.fill();
     // la façade
-    g.fillStyle = '#f4f3f0'; g.fillRect(x0, 118, x1 - x0, 176);
-    g.fillStyle = '#d8d6d2'; g.fillRect(x0, 118, x1 - x0, 6);
-    for (let i = 0; i < 10; i++) {
-      const x = x0 + 8 + i * 22.6;
-      g.fillStyle = '#c23a83'; g.fillRect(x, 130, 15, 9);
+    g.fillStyle = '#f4f3f0'; g.fillRect(X(0.13), Y(0.33), w - X(0.13), Y(0.43));
+    g.fillStyle = '#d4d2ce'; g.fillRect(X(0.13), Y(0.33), w - X(0.13), Y(0.03));
+    const n = 11, pas = (0.98 - 0.16) / n;
+    for (let i = 0; i < n; i++) {
+      const x = X(0.16 + i * pas);
+      g.fillStyle = '#c4307e'; g.fillRect(x, Y(0.38), X(pas * 0.62), Y(0.03));
       for (let j = 0; j < 4; j++) {
-        g.fillStyle = (i * 3 + j) % 5 === 0 ? '#7a3a62' : '#2a2630'; g.fillRect(x, 148 + j * 24, 15, 13);
-        g.fillStyle = 'rgba(214,90,150,0.35)'; g.fillRect(x, 148 + j * 24, 15, 4);
+        g.fillStyle = (i * 3 + j) % 5 === 0 ? '#7a3a62' : '#2a2630'; g.fillRect(x, Y(0.445 + j * 0.07), X(pas * 0.62), Y(0.035));
+        g.fillStyle = 'rgba(214,90,150,0.35)'; g.fillRect(x, Y(0.445 + j * 0.07), X(pas * 0.62), Y(0.01));
       }
     }
-    for (const [a, b] of [[8, 46], [62, 78], [84, 100], [108, 124], [150, 168], [186, 228]]) { g.fillStyle = '#26232a'; g.fillRect(x0 + a, 252, b - a, 22); }
-    g.fillStyle = '#d6d4d0'; g.fillRect(x0, 294, x1 - x0, h - 14 - 294);
-    paveIris(g, w - 74, h - 50, 46);
+    for (const [a, b] of [[0.18, 0.33], [0.39, 0.42], [0.44, 0.47], [0.5, 0.53], [0.82, 0.97]]) { g.fillStyle = '#26232a'; g.fillRect(X(a), Y(0.765), X(b - a), Y(0.045)); }
+    g.fillStyle = '#6b6870'; g.font = `600 6px ${POLICE}`; g.fillText('2026  2027', X(0.6), Y(0.795));
+    paveIris(g, X(0.76), Y(0.885), X(0.18));
+    g.strokeStyle = '#c4307e'; g.lineWidth = 5; g.strokeRect(2.5, 2.5, w - 5, h - 5);
   }, null, false, 4);
 }
 // L'AFFICHE AUX LIGNES DE COULEUR (r04 agrandie, la droite des deux ; c'est la « photo encadrée de la tour » de la VO) :
 // fond gris moyen ; quatre câbles de couleur — bleu ciel, jaune, rouge, vert pâle — partent du bord gauche, descendent
-// en coudes et entrent dans les fenêtres d'une façade BLANCHE vue d'en bas, de biais, sur la moitié droite ; en bas à
-// gauche, trois lignes de texte blanc et le pavé « iris »
+// en coudes arrondis et entrent, d'une flèche, dans les fenêtres d'une façade BLANCHE vue d'EN BAS : son arête gauche
+// penche (des 0,55 de la largeur en haut aux 0,40 en bas), ses étages grandissent vers le bas ; en bas à gauche, trois
+// lignes de texte blanc et le pavé « iris »
+// (relecture du 12/10, r04 agrandie sept fois : le jeu montrait une façade de face, une grille régulière, des câbles à
+// angles vifs qui s'arrêtaient au bord de l'immeuble, un pavé deux fois trop petit)
 function texAfficheLignes() {
   return canvasTex(256, 356, (g, w, h) => {
-    g.fillStyle = '#8f908f'; g.fillRect(0, 0, w, h);
-    // la façade : un quadrilatère dont le haut monte vers la droite, ses rangées de fenêtres suivent
-    const TL = [138, 34], TR = [w, 4], BR = [w, h], BL = [126, h];
-    const P = (u, v) => [0, 1].map((k) => (1 - v) * (TL[k] + (TR[k] - TL[k]) * u) + v * (BL[k] + (BR[k] - BL[k]) * u));
-    const quad = (u0, v0, u1, v1, c) => {
-      g.fillStyle = c; g.beginPath(); g.moveTo(...P(u0, v0)); g.lineTo(...P(u1, v0)); g.lineTo(...P(u1, v1)); g.lineTo(...P(u0, v1)); g.closePath(); g.fill();
+    const X = (u) => u * w, Y = (v) => v * h;
+    g.fillStyle = '#8c8d8f'; g.fillRect(0, 0, w, h);
+    // la façade vue d'en bas : l'arête gauche penche, les étages grandissent vers le bas
+    const gauche = (v) => 0.55 - 0.15 * v;
+    g.fillStyle = '#efefed'; g.beginPath(); g.moveTo(X(gauche(0)), 0); g.lineTo(w, 0); g.lineTo(w, h); g.lineTo(X(gauche(1)), h); g.closePath(); g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.7)'; g.beginPath(); g.moveTo(X(gauche(0) + 0.03), 0); g.lineTo(X(gauche(0) + 0.06), 0); g.lineTo(X(gauche(1) + 0.03), h); g.lineTo(X(gauche(1)), h); g.closePath(); g.fill();
+    let v = 0.02;
+    for (let k = 0; k < 9; k++) {
+      const hv = 0.035 + k * 0.011, x0 = gauche(v + hv / 2) + 0.06, cols = 4, lw = (1 - x0) / cols;
+      for (let i = 0; i < cols; i++) {
+        const u0 = x0 + i * lw + lw * 0.12, u1 = u0 + lw * 0.62, pente = 0.02 * (1 - v);
+        g.fillStyle = k > 6 ? '#b4b7bb' : '#a0a4a9';
+        g.beginPath(); g.moveTo(X(u0), Y(v + pente)); g.lineTo(X(u1), Y(v)); g.lineTo(X(u1), Y(v + hv)); g.lineTo(X(u0), Y(v + hv + pente)); g.closePath(); g.fill();
+      }
+      v += hv + 0.035 + k * 0.006;
+    }
+    // les câbles : coudes arrondis, une flèche au bout, dans une fenêtre
+    const cable = (c, pts, bout) => {
+      g.strokeStyle = c; g.fillStyle = c; g.lineWidth = 6; g.lineJoin = 'round'; g.lineCap = 'round'; g.beginPath();
+      g.moveTo(X(pts[0][0]), Y(pts[0][1]));
+      for (let i = 1; i < pts.length - 1; i++) g.arcTo(X(pts[i][0]), Y(pts[i][1]), X(pts[i + 1][0]), Y(pts[i + 1][1]), 9);
+      g.lineTo(X(pts[pts.length - 1][0]), Y(pts[pts.length - 1][1])); g.stroke();
+      const [bx, by] = pts[pts.length - 1];
+      g.beginPath(); g.moveTo(X(bx) + 7, Y(by)); g.lineTo(X(bx) - 3, Y(by) - 6); g.lineTo(X(bx) - 3, Y(by) + 6); g.closePath(); g.fill();
     };
-    quad(0, 0, 1, 1, '#f3f3f1');
-    for (let j = 0; j < 11; j++) for (let i = 0; i < 4; i++) quad(0.08 + i * 0.23, 0.05 + j * 0.087, 0.2 + i * 0.23, 0.1 + j * 0.087, j > 8 ? '#b9bcc0' : '#a2a6ab');
-    quad(0, 0, 0.05, 1, '#dcdcda');
-    // les câbles : du bord gauche, des coudes à angle droit, vers les fenêtres
-    const cable = (c, pts) => {
-      g.strokeStyle = c; g.lineWidth = 7; g.lineJoin = 'round'; g.lineCap = 'butt'; g.beginPath();
-      g.moveTo(...pts[0]); for (const p of pts.slice(1)) g.lineTo(...p); g.stroke();
-    };
-    cable('#9fd2ec', [[0, 36], [62, 36], [62, 196], [150, 196]]);
-    cable('#b8d0c2', [[0, 50], [44, 50], [44, 170], [150, 170]]);
-    cable('#e1503c', [[0, 64], [28, 64], [28, 150], [146, 150]]);
-    cable('#f0c548', [[18, 0], [18, 22], [108, 22], [108, 108], [148, 108]]);
-    g.fillStyle = '#ffffff'; g.font = `600 10px ${POLICE}`; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-    ['Connectez-vous', 'aux métiers', 'de demain'].forEach((t, i) => g.fillText(t, 16, 262 + i * 12));
-    paveIris(g, 16, 300, 42);
+    cable('#f0c54a', [[0, 0.114], [0.38, 0.114], [0.4, 0.27], [0.5, 0.275]]);
+    cable('#a9d6ec', [[0.02, 0.064], [0.175, 0.064], [0.175, 0.565], [0.5, 0.565]]);
+    cable('#bcd8b4', [[0, 0.236], [0.265, 0.236], [0.275, 0.428], [0.43, 0.428]]);
+    cable('#e2553e', [[0.097, 0.1], [0.097, 0.486], [0.46, 0.486]]);
+    g.fillStyle = '#ffffff'; g.font = `600 8px ${POLICE}`; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    ['Connectez-vous', 'aux métiers', 'de demain'].forEach((t, i) => g.fillText(t, X(0.07), Y(0.765) + i * 10));
+    paveIris(g, X(0.08), Y(0.875), X(0.19));
+    g.strokeStyle = '#c9cacc'; g.lineWidth = 2; g.strokeRect(1, 1, w - 2, h - 2);
   }, null, false, 4);
 }
 // LE PANNEAU DES FORMATIONS (r04 : à droite du pilier, sur le local) : un cadre sombre, trois bandeaux orange du plus
@@ -463,7 +482,8 @@ export function poserHall(ch) {
   const xa = X_MIT - 0.012, A0 = 1.475, A1 = 2.415;
   for (const [y, tex] of [[3.705, texAfficheMagenta()], [2.555, texAfficheLignes()]]) {
     ch.panneau(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.5 }), 0.66, 0.93, xa - 0.004, y, (A0 + A1) / 2, 'W');
-    for (const [y0, y1, h0, h1] of [[-0.335, 0.335, A1 - 0.015, A1], [-0.335, 0.335, A0, A0 + 0.015], [-0.335, -0.32, A0, A1], [0.32, 0.335, A0, A1]]) B(xa - 0.016, y + y0, X_MIT, y + y1, h0, h1, H.argent, { ombre: false });
+    // (relecture du 12/10 : le cadre ne se voit presque pas sur r04 — 6 mm, et non 15)
+    for (const [y0, y1, h0, h1] of [[-0.335, 0.335, A1 - 0.006, A1], [-0.335, 0.335, A0, A0 + 0.006], [-0.335, -0.329, A0, A1], [0.329, 0.335, A0, A1]]) B(xa - 0.016, y + y0, X_MIT, y + y1, h0, h1, H.argent, { ombre: false });
   }
   // LES DEUX CAMÉRAS DÔMES au plafond (r04 : l'une près du mitoyen, au-dessus de l'affiche aux lignes ; l'autre au fond à
   // gauche, au nord-ouest du pilier)
@@ -588,7 +608,10 @@ export function poserHall(ch) {
   B(16.92, 3.93, 17.12, 4.2, PMR.h, PMR.h + 0.006, M.store, { ombre: false });
   // SUR LES TABLETTES HAUTES (r04) : des feuilles et des dépliants à plat le long du bord, une petite pile blanche vers le
   // bout nord ; sur le caisson haut, des papiers
-  B(16.86, 3.08, 17.1, 3.36, CPT.h, CPT.h + 0.03, M.store, { ombre: false });
+  // (relecture du 12/10 : la pile de feuilles de r04 est petite et haute — 26 px sur 9, 0,15 m sur 6 cm — avec une
+  // seconde, plus basse, à sa droite ; le jeu en faisait une plaque de 0,28 m)
+  B(16.9, 3.13, 17.14, 3.28, CPT.h, CPT.h + 0.06, M.store, { ombre: false });
+  B(16.92, 2.95, 17.12, 3.1, CPT.h, CPT.h + 0.025, M.store, { ombre: false });
   for (const [y, l] of [[1.45, 0.3], [1.8, 0.26], [2.12, 0.3]]) B(16.82, y, 17.03, y + l, CPT.h, CPT.h + 0.006, M.store, { ombre: false });
   B(17.3, 4.42, 17.7, 4.66, RET.h, RET.h + 0.012, M.store, { ombre: false });
   // L'ÉCRAN DE L'HÔTESSE (r04 : son dos noir dépasse à peine du comptoir, une bande noire marquée « DELL », vers y 2,9)
@@ -668,14 +691,17 @@ export function poserHall(ch) {
   const tri = new THREE.MeshStandardMaterial({ map: texTriangle(), transparent: true, alphaTest: 0.4, roughness: 0.5 });
   ch.panneau(tri, 0.08, 0.08, xj - 0.002, 4.83, 2.04, 'W');
   ch.panneau(tri, 0.1, 0.1, xj - 0.002, 7.12, 2.0, 'W');
-  // SUR LA FACE SUD, BLANCHE (r04) : le déclencheur rouge, un petit boîtier gris, le boîtier blanc et son cordon noir
+  // SUR LA FACE SUD (r04) : le déclencheur rouge, un petit boîtier bleu, le boîtier blanc à fenêtre verte et son cordon
+  // noir (relecture du 12/10, r04 agrandie cinq fois : ils sont au milieu de la face — de x 316 à 345 sur la photo, à 0,25
+  // m plus à l'ouest qu'au jeu — et le boîtier blanc avance plus : vu de biais, son flanc fait la moitié de sa largeur)
   {
     const ys = LOC.y0 - 0.002;
-    B(19.33, ys - 0.045, 19.45, ys, 1.38, 1.5, H.rouge, { ombre: false });
-    B(19.36, ys - 0.05, 19.42, ys - 0.045, 1.41, 1.47, M.store, { ombre: false });
-    B(19.5, ys - 0.03, 19.56, ys, 1.4, 1.5, M.boitier, { ombre: false });
-    B(19.6, ys - 0.06, 19.73, ys, 1.36, 1.6, M.store);
-    B(19.71, ys - 0.075, 19.725, ys - 0.06, 1.12, 1.4, M.noir, { ombre: false });
+    B(19.04, ys - 0.06, 19.17, ys, 1.37, 1.5, H.rouge, { ombre: false });
+    B(19.07, ys - 0.065, 19.14, ys - 0.06, 1.41, 1.46, M.store, { ombre: false });
+    B(19.22, ys - 0.05, 19.29, ys, 1.38, 1.52, new THREE.MeshStandardMaterial({ color: 0x3466a8, roughness: 0.5 }), { ombre: false });
+    B(19.34, ys - 0.1, 19.47, ys, 1.36, 1.62, M.store);
+    B(19.37, ys - 0.102, 19.44, ys - 0.1, 1.45, 1.55, new THREE.MeshStandardMaterial({ color: 0x2f9a6a, roughness: 0.4 }), { ombre: false });
+    B(19.47, ys - 0.09, 19.485, ys - 0.075, 1.12, 1.42, M.noir, { ombre: false });
   }
   // LE PILIER habillé de stratifié bois clair, sa plinthe de chêne ; son monde solide
   B(PIL.x0, PIL.y0, PIL.x1, PIL.y1, 0, H_PLAF, H.boisClair);
