@@ -55,6 +55,7 @@ const Y_MUR = 7.5;                                  // la face hall du mur nord 
 const X_MIT = 19.8;                                 // la face du mitoyen est
 const Y_ARD = 1.82;                                 // le bout sud du mur ardoise : la cloison biaise y part
 const BIAIS = X_MIT - Y_ARD;                        // la cloison biaise : la ligne x - y = 17,98, de (19,8 ; 1,82) à la façade
+const H_VITRE = 2.07;                               // le haut de ses vitres (r04 : le bord haut à x 622, rétroprojeté)
 
 // =====================================================================
 //  LES TEXTURES (dessinées : aucun fichier de plus à charger)
@@ -76,7 +77,7 @@ function paveIris(g, x, y, w, fond = '#151517', texte = '#ffffff') {
 // marqué ; à l'ombre, il tire sur le brun clair — face ouest du pilier #A28058 à l'appareil, face sud au jour #A2958F)
 function texBoisClair() {
   return canvasTex(256, 256, (g, w, h) => {
-    g.fillStyle = '#cdb497'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#cbb8a1'; g.fillRect(0, 0, w, h);
     const r2 = graine(311);
     for (let k = 0; k < 220; k++) {
       const x = r2() * w, l = 0.6 + r2() * 2.2, a = 0.015 + r2() * 0.035;
@@ -247,12 +248,12 @@ function texBrochures() {
   }, null, false, 4);
 }
 // LA VITRE DE LA CLOISON BIAISE (r04 agrandie : verre clair, très lumineux — le jour de la fenêtre de façade derrière —,
-// trois bandes sombres de vitrophanie entre 1,50 et 1,82 m). La texture couvre le verre de 0,10 à 2,10 m.
-function texVitreBandes() {
+// trois bandes sombres de vitrophanie entre 1,50 et 1,82 m). La texture couvre le verre de 0,10 m à `hv`.
+function texVitreBandes(hv) {
   return canvasTex(64, 256, (g, w, h) => {
     const f = g.createLinearGradient(0, 0, 0, h); f.addColorStop(0, '#f4f8fb'); f.addColorStop(1, '#dfe7ec');
     g.fillStyle = f; g.fillRect(0, 0, w, h);
-    const y = (m) => (2.1 - m) / 2.0 * h;
+    const y = (m) => (hv - m) / (hv - 0.1) * h;
     g.fillStyle = 'rgba(52,58,66,0.82)';
     for (const [a, b] of [[1.74, 1.82], [1.63, 1.70], [1.50, 1.57]]) g.fillRect(0, y(b), w, y(a) - y(b));
   }, null, false, 2);
@@ -326,7 +327,7 @@ function matieresHall() {
   H.ligne = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff3e2).multiplyScalar(3.6) }); H.ligne.name = 'ligne lumineuse du plafond';
   H.profil = std({ color: 0xd9d9d6, roughness: 0.4, metalness: 0.5 }, 'profil des lignes lumineuses');
   // les vitres éclairées par-derrière (le jour de la fenêtre de façade, dans le bureau d'angle)
-  const tv = texVitreBandes();
+  const tv = texVitreBandes(H_VITRE);
   H.vitre = std({ map: tv, emissive: 0xffffff, emissiveMap: tv, emissiveIntensity: 0.55, roughness: 0.15, side: THREE.DoubleSide }, 'vitre de la cloison biaise');
   H.vitreClaire = std({ color: 0xe8eff3, emissive: 0xf2f6f8, emissiveIntensity: 0.6, roughness: 0.15, side: THREE.DoubleSide }, 'vitre du bureau d\'angle');
   // le blanc de la cloison biaise et de sa retombée, dans le jour des fenêtres de façade (r04 : le coin sud-est est le plus
@@ -447,10 +448,10 @@ export function poserHall(ch) {
   // 2021 voit, du nord, la même suite au même endroit : la « troisième fenêtre » au-delà du mitoyen de hall.md. Elle part
   // du mitoyen en y 1,82 et finit sur la façade en x 17,98, au bord du trumeau : la fenêtre c 18,98 est dans le bureau.
   // Rejouée à la pose de r04 : la vitre de 0,07 à 0,54 m du mitoyen le long de la cloison, le montant gris jusqu'à 0,64,
-  // le plein blanc jusqu'à 1,04, la baie étroite jusqu'à 1,16 ; le haut des vitres à 2,10. La porte vitrée et le reste,
+  // le plein blanc jusqu'à 1,04, la baie étroite jusqu'à 1,16 ; le haut des vitres à 2,07. La porte vitrée et le reste,
   // hors du cadre de r04 : IMAGINÉS. Le blanc y est celui du jour — H.blancJour.)
   {
-    const L = Y_ARD * Math.SQRT2, ep = 0.1, hv = 2.1;
+    const L = Y_ARD * Math.SQRT2, ep = 0.1, hv = H_VITRE;
     const g = new THREE.Group(); g.position.set(X_MIT, 0, -(X_MIT - BIAIS)); g.rotation.y = -3 * Math.PI / 4; ch.decor.add(g);
     // le long de la cloison (x local de 0 à L, vers la façade) : [début, fin, sorte]
     const morceaux = [[0, 0.07, 'montant'], [0.07, 0.54, 'vitre'], [0.54, 0.64, 'poteau'], [0.64, 1.04, 'plein'], [1.04, 1.07, 'cadre'], [1.07, 1.13, 'baie'], [1.13, 1.16, 'cadre'], [1.16, 1.42, 'plein'], [1.42, 2.32, 'porte'], [2.32, L, 'plein']];
@@ -526,20 +527,20 @@ export function poserHall(ch) {
   // la bouilloire inox ; une chemise rouge et des feuilles à plat au bord
   for (let k = 0; k < 3; k++) {
     const h = PMR.h + k * 0.055;
-    B(17.2, 4.06, 17.52, 4.38, h, h + 0.008, M.noir, { ombre: false });
-    B(17.2, 4.06, 17.52, 4.075, h, h + 0.045, M.noir, { ombre: false });
-    for (const x of [17.2, 17.51]) B(x, 4.06, x + 0.01, 4.38, h, h + 0.045, M.noir, { ombre: false });
-    B(17.22, 4.09, 17.5, 4.36, h + 0.008, h + 0.016 + k * 0.004, k === 1 ? H.rouge : M.store, { ombre: false });
+    B(17.03, 4.05, 17.4, 4.38, h, h + 0.008, M.noir, { ombre: false });
+    B(17.03, 4.05, 17.4, 4.065, h, h + 0.045, M.noir, { ombre: false });
+    for (const x of [17.03, 17.39]) B(x, 4.05, x + 0.01, 4.38, h, h + 0.045, M.noir, { ombre: false });
+    B(17.05, 4.08, 17.38, 4.36, h + 0.008, h + 0.016 + k * 0.004, k === 1 ? H.rouge : M.store, { ombre: false });
   }
   {
-    const g = groupe(ch, 17.42, 3.92, 'W'); g.position.y = PMR.h;
+    const g = groupe(ch, 17.3, 3.99, 'W'); g.position.y = PMR.h;
     CL(g, M.inox, 0.075, 0.2, 0, 0.1, 0, 20);
     CL(g, M.noir, 0.06, 0.02, 0, 0.21, 0, 16, { ombre: false });
     BL(g, M.noir, 0.03, 0.15, 0.03, 0, 0.11, -0.095, { ombre: false });
     CL(g, M.noir, 0.085, 0.015, 0, 0.0075, 0, 20, { ombre: false });
   }
-  B(16.93, 3.66, 17.2, 3.98, PMR.h, PMR.h + 0.01, H.rouge, { ombre: false });
-  B(16.94, 4.02, 17.18, 4.32, PMR.h, PMR.h + 0.006, M.store, { ombre: false });
+  B(16.98, 3.64, 17.24, 3.9, PMR.h, PMR.h + 0.01, H.rouge, { ombre: false });
+  B(16.92, 3.93, 17.12, 4.2, PMR.h, PMR.h + 0.006, M.store, { ombre: false });
   // SUR LES TABLETTES HAUTES (r04) : des feuilles et des dépliants à plat le long du bord, une petite pile blanche vers le
   // bout nord ; sur le caisson haut, des papiers
   B(16.86, 3.08, 17.1, 3.36, CPT.h, CPT.h + 0.03, M.store, { ombre: false });
@@ -637,13 +638,13 @@ export function poserHall(ch) {
   // un cadre noir épais autour d'une dalle claire ; son bout est touche presque le local ; « Commander votre sweat à
   // l'accueil pour 25€ »)
   {
-    const g = groupe(ch, 18.37, 5.46, 202); g.position.y = 2.215;
+    const g = groupe(ch, 18.37, 5.46, 202); g.position.y = 2.235;
     const t = new THREE.Group(); t.rotation.x = 0.15; g.add(t);
-    BL(t, M.noir, 0.88, 0.53, 0.06, 0, 0, 0);
+    BL(t, M.noir, 0.88, 0.5, 0.06, 0, 0, 0);
     const tex = texEcranTV();
-    const e = PL(t, new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.5, roughness: 0.3 }), 0.72, 0.41, 0.02, 0.01, 0.031);
+    const e = PL(t, new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.5, roughness: 0.3 }), 0.72, 0.39, 0.02, 0.01, 0.031);
     e.castShadow = false;
-    BL(g, M.noir, 0.04, 2.5 - 2.215 - 0.22, 0.04, -0.28, (2.5 - 2.215 + 0.22) / 2, -0.05, { ombre: false });
+    BL(g, M.noir, 0.04, 2.5 - 2.235 - 0.21, 0.04, -0.28, (2.5 - 2.235 + 0.21) / 2, -0.05, { ombre: false });
     g.traverse((m) => { m.userData.horsAOSol = true; });
   }
 
