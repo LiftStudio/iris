@@ -1373,6 +1373,10 @@ export function construireCarte(scene, renderer = null) {
   {
     const p = ch.plafond(13.35, 0.3, 19.8, 7.5, 2.6, 'plateaux');
     p.material = M.plateaux.clone(); p.material.emissiveIntensity = 0.5; p.material.name = 'plafond en plateaux perforés (hall)';
+    // (relecture du 12/10, r04 rejouée : au-dessus du mur ardoise, 174, 176, 177 sur la photo — un blanc neutre — contre
+    // 170, 161, 149 au jeu, et un quadrillage marqué là où la photo ne montre que des filets pâles : une lueur UNIE, d'un
+    // blanc froid, qui relève d'autant les joints et le champ perforé — le contraste baisse, le dessin reste)
+    p.material.emissive = new THREE.Color(0xe6e8ea); p.material.emissiveMap = null; p.material.emissiveIntensity = 0.3;
   }
   // le bureau B (visitable : js/ecole_pieces.js) et le passage au sud-ouest de la pile, d'un seul tenant (plateaux à 2,60)
   ch.plafond(9.9, 0, 13.35, ATT.ys, 2.6, 'plateaux');
