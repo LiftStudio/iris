@@ -576,10 +576,11 @@ export function poserHall(ch) {
   C.ajouterBoiteOrientee(18.93, -1.46, 0.33, 0.34, 3 * Math.PI / 4, { y1: 1.42 });
   // LES FAUTEUILS NOIRS face au comptoir, le long du plan de travail : celui du bout sud porte le manteau moutarde (photo
   // 03 : il dépasse du comptoir vers (18,0 ; 1,7)), celui de l'hôtesse est devant l'écran « DELL », le troisième au
-  // décroché, au coussin rayé (VO). Chacun laisse 0,66 m de passage à l'est ; on se relève au nord de sa place.
+  // décroché, au coussin rayé (VO). Chacun laisse 0,66 m de passage à l'est ; on se relève au nord-est de sa place. (Le
+  // troisième en y 3,7 : plus au nord, avec l'angle du local, il fermait le passage — vérifié en marchant, 12/10.)
   const f1 = fauteuil(ch, 18.3, 1.95, 'W', { sx: 18.68, sy: 2.45, nom: 'le fauteuil' });
-  fauteuil(ch, 18.3, 2.95, 'W', { sx: 18.68, sy: 3.45, nom: 'le fauteuil de l\'accueil' });
-  fauteuil(ch, 18.3, 3.95, 'W', { zebre: true, sx: 18.75, sy: 3.5, nom: 'le fauteuil' });
+  fauteuil(ch, 18.3, 2.95, 'W', { sx: 18.75, sy: 3.25, nom: 'le fauteuil de l\'accueil' });
+  fauteuil(ch, 18.3, 3.7, 'W', { zebre: true, sx: 18.72, sy: 4.08, nom: 'le fauteuil' });
   BL(f1, new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.9 }), 0.48, 0.46, 0.07, 0, 0.8, -0.27);
 
   // =====================================================================
