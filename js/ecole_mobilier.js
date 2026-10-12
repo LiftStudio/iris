@@ -44,11 +44,17 @@ let _coque = null, _ourlet = null;
 // quarts, une selle plate. Refaite d'après les photos 02, 21 et r02 — et les cotes de la DAR : 0,63 x 0,56, assise à
 // 0,45, accoudoirs à 0,65, dossier à 0,82.) La coque est un BAQUET : une assise un peu creusée, plus haute devant, sur les
 // deux tiers du rayon ; puis une paroi qui se redresse en 11 cm jusqu'à 83° ; le bord fait l'ACCOUDOIR dès les coins avant
-// (13 cm au-dessus de l'assise), court à 20 cm le long des flancs, puis monte en DOSSIER (37,5 cm), renversé de 15° ; à
+// (12 cm au-dessus de l'assise), court à 18,5 cm le long des flancs, puis monte en DOSSIER (34 cm), renversé de 15° ; à
 // l'avant, entre les coins, il retombe de 3,5 cm sous les genoux (la « cascade »). Le plan se resserre vers le dos.
+// (Intégration v1.9, 12/10 — doute 3 de la relecture r03 : la coque faisait 0,63 x 0,67 hors tout, 0,83 de haut, et
+// paraissait trop grosse sur la photo 02 rejouée — la citron y couvrait 137 px de large pour 120 sur la photo, 92 de haut
+// pour 83. Ramenée aux cotes d'une vraie DAR : 0,63 de large, 0,60 de profondeur, l'assise à 0,45 devant, les
+// accoudoirs à 0,635, le haut du dossier à 0,80, ourlet compris. Le plan raccourcit (demi-profondeur 0,278 -> 0,25), le
+// dossier monte un peu moins (+0,157 au lieu de +0,175, les flancs +0,22 au lieu de +0,235) et se renverse un peu moins
+// (0,24 au lieu de 0,26) ; la largeur, le baquet et le piètement ne changent pas.)
 function geoCoque() {
   if (_coque) return _coque;
-  const NA = 72, NS = 7, NC = 16, A = 0.312, P = 0.278, Y = 0.45, n = 3.6, T0 = 0.66, K = 0.92;
+  const NA = 72, NS = 7, NC = 16, A = 0.312, P = 0.25, Y = 0.45, n = 3.6, T0 = 0.66, K = 0.92;
   const pos = [], idx = [], ourlet = [];
   const lisse = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
   const NR = NS + NC;
@@ -66,10 +72,10 @@ function geoCoque() {
       const r = 1 / Math.pow(Math.pow(Math.abs(s), n) + Math.pow(Math.abs(c), n), 1 / n);
       const dos = (1 - c) / 2;                                       // 0 devant, 1 derrière
       const larg = 1 - 0.1 * dos * dos;                              // le plan se resserre vers le dos (0,63 -> 0,57)
-      const bord = -0.035 + 0.235 * lisse(0.015, 0.22, dos) + 0.175 * lisse(0.48, 1, dos);
+      const bord = -0.035 + 0.22 * lisse(0.015, 0.22, dos) + 0.157 * lisse(0.48, 1, dos);
       const assise = (-0.02 * (1 - rho * rho) + 0.018 * c * rho) * (1 - eta);
       const h = bord * eta;
-      const p = [s * A * r * rho * larg, Y + assise + h, c * P * r * rho - 0.26 * Math.max(0, h) * dos * dos];
+      const p = [s * A * r * rho * larg, Y + assise + h, c * P * r * rho - 0.24 * Math.max(0, h) * dos * dos];
       pos.push(...p);
       if (j === NR) ourlet.push(new THREE.Vector3(...p));
     }
@@ -110,8 +116,9 @@ function chaise(ch, x, y, face, couleur) {
   const coque = maille(geoCoque(), _matsCoque.get(couleur), 0, 0, 0, 0, g, { ombre: false });
   const ourlet = maille(_ourlet, _matsCoque.get(couleur), 0, 0, 0, 0, g, { ombre: false });
   coque.userData.horsAOSol = ourlet.userData.horsAOSol = true;
-  const voile = new THREE.Mesh(_geoVoile || (_geoVoile = new THREE.PlaneGeometry(0.86, 0.8).rotateX(-Math.PI / 2)), matVoile());
-  voile.position.set(0, 0.003, -0.02); voile.renderOrder = 1; voile.userData.horsAOSol = true; g.add(voile);
+  // (v1.9 : le voile suit la coque ramenée à 0,60 de profondeur, centrée 4 cm en arrière de l'axe du piètement)
+  const voile = new THREE.Mesh(_geoVoile || (_geoVoile = new THREE.PlaneGeometry(0.84, 0.76).rotateX(-Math.PI / 2)), matVoile());
+  voile.position.set(0, 0.003, -0.03); voile.renderOrder = 1; voile.userData.horsAOSol = true; g.add(voile);
   // le piètement chromé (sans ombre portée : sous une lumière presque d'aplomb, la platine et les croisillons
   // découpaient un rectangle noir crénelé ; le voile suffit) et ses patins gris foncé de 15 mm
   // (11/10, r02 : le vrai piètement « tour Eiffel » — quatre pieds écartés, la ceinture de fil à 19 cm qui les relie, et
@@ -166,11 +173,16 @@ export function poserMobilier(ch) {
   // montre que le sol et le socle. On garde 7,0 / 6,2 / 5,4. AU NORD, la blanche du bout ouest a sa coque à 1,2 m de
   // l'appareil de r02 (son assise à 3 400 px, son dossier à 2 800) et la 02 met celle du bout est vers 9,4 : la rangée
   // glisse de 0,3 m vers l'est, au même pas de 0,7)
-  [[6.8, 'blanc'], [7.5, 'canard'], [8.2, 'grege'], [8.9, 'citron'], [9.6, 'blanc']].forEach(([x, c]) => chaise(ch, x, 7.42, 'S', COQUE[c]));
+  // (v1.9, 12/10 : la coque ramenée à 0,60 de profondeur — geoCoque —, son dossier finit 4,3 cm plus en avant : la rangée
+  // nord recule d'autant, en 7,455, le haut des dossiers toujours au nu du mur safran (7,80), sous la lisse blanche ; la
+  // rangée sud reste en 5,05 : le dos de ses coques, qui mordait de 3 cm dans la double lisse grise, s'y adosse à 1 cm.
+  // Le passage entre les bords avant des deux rangées passe de 1,80 à 1,89 m)
+  [[6.8, 'blanc'], [7.5, 'canard'], [8.2, 'grege'], [8.9, 'citron'], [9.6, 'blanc']].forEach(([x, c]) => chaise(ch, x, 7.455, 'S', COQUE[c]));
   // (r03, 12/10 : la rangée sud reste adossée au mur des jours, qui recule de 0,20 — S)
   [[5.4, 'noir'], [6.2, 'rose'], [7.0, 'canard']].forEach(([x, c]) => chaise(ch, x, S(9.45), 'N', COQUE[c]));
-  C.ajouterBoite(6.45, -7.75, 9.95, -7.05, { y1: 0.8 });
-  for (const x of [5.4, 6.2, 7.0]) C.ajouterBoite(x - 0.32, -S(9.8), x + 0.32, -S(9.1), { y1: 0.8 });
+  // (les boîtes suivent : 6 à 8 cm devant le bord avant des coques, comme avant)
+  C.ajouterBoite(6.45, -7.79, 9.95, -7.12, { y1: 0.8 });
+  for (const x of [5.4, 6.2, 7.0]) C.ajouterBoite(x - 0.32, -S(9.77), x + 0.32, -S(9.1), { y1: 0.8 });
   // l'écran de 65 pouces (x 6,5-7,95, h 1,55-2,40) et l'affiche blanche aux graphismes vert pâle (x 8,4-9,4 ; r02 :
   // ce sont deux affiches côte à côte, le chevron vert et les logos « eph » — photo 02 agrandie)
   ch.boite(6.5, A(11.94), 7.95, A(12.0), 1.55, 2.4, M.noir);
