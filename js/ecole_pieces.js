@@ -914,7 +914,8 @@ function texAfficheEtudiant() {
 // Si 0.1. Elle perd 4,2 m de profondeur avec la salle d'attente, dont le mur sud est son mur nord : x 4,575-9,9 × y
 // 0-4,725. Retour r02 du 11/10 : son angle nord-est, x 9,09-9,9 × y 3,0-4,725, est à l'antichambre — le mur sud de la
 // salle d'attente s'arrête en x 9,24 — et sa porte est dans le retour x 9,165, y 3,58-4,38 (js/carte_ecole.js) : elle s'ouvre
-// dans la salle et se rabat le long du mur nord.)
+// dans la salle et se rabat le long du mur nord.) (Retour r03 du 12/10 : la salle d'attente s'élargit de 0,20 vers la rue,
+// la Si 0.1 n'a plus que 4,525 m de profondeur, y 0-4,525 : plus bas, RANGEES.)
 // Deux rangs de cinq postes face au NORD (la toile descend devant les jours dépolis), tables arrêtées à x 9,4 : 0,5 m le
 // long du mur est, là où la porte se rabat ; 0,6 m de passage derrière chaque rangée de chaises (le joueur en fait 0,6),
 // 1,2 m d'une table à l'autre, 0,9 m devant le premier rang. L'allée ouest (1,4 m) mène à l'imprimante, dans
