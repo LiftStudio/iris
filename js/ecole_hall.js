@@ -366,7 +366,7 @@ function matieresHall() {
   detailPhoto(H.ardoise, 'beton', 1, 1, { relief: 0.035, grain: 0, rugo: false });
   // LES LIGNES LUMINEUSES du plafond : des rubans de LED qui éblouissent (MeshBasic au-dessus de 1 : le bloom les fait
   // briller, comme les spots — js/ecole_matieres.js M.spot)
-  H.ligne = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff3e2).multiplyScalar(3.6) }); H.ligne.name = 'ligne lumineuse du plafond';
+  H.ligne = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff3e2).multiplyScalar(2.6) }); H.ligne.name = 'ligne lumineuse du plafond';
   H.profil = std({ color: 0xd9d9d6, roughness: 0.4, metalness: 0.5 }, 'profil des lignes lumineuses');
   // LE VERRE CLAIR de la cloison biaise (r04 : on voit au travers le bureau d'angle, blanc, dans le jour de la fenêtre de
   // façade ; photo 03 : par la porte vitrée, les barreaux de cette fenêtre) et ses BANDES de vitrophanie sombres
@@ -484,6 +484,20 @@ export function poserHall(ch) {
     ch.panneau(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.5 }), 0.66, 0.93, xa - 0.004, y, (A0 + A1) / 2, 'W');
     // (relecture du 12/10 : le cadre ne se voit presque pas sur r04 — 6 mm, et non 15)
     for (const [y0, y1, h0, h1] of [[-0.335, 0.335, A1 - 0.006, A1], [-0.335, 0.335, A0, A0 + 0.006], [-0.335, -0.329, A0, A1], [0.329, 0.335, A0, A1]]) B(xa - 0.016, y + y0, X_MIT, y + y1, h0, h1, H.argent, { ombre: false });
+  }
+  // LE JOUR DU BUREAU D'ANGLE sur le bout sud du mur ardoise (relecture du 12/10, r04 : le gris s'éclaircit et bleuit vers
+  // la cloison vitrée — 92 entre les affiches, 118 et bleuté au bout sud —, la fenêtre c 18,98 l'éclaire au travers ; le
+  // nombre de lumières est figé dans les programmes : un voile additif, du bleu pâle au rien, sur 1,6 m)
+  {
+    const tex = canvasTex(128, 8, (g, w, h) => {
+      const d = g.createLinearGradient(0, 0, w, 0); d.addColorStop(0, 'rgba(255,255,255,0)'); d.addColorStop(0.65, 'rgba(255,255,255,0.45)'); d.addColorStop(1, 'rgba(255,255,255,1)');
+      g.clearRect(0, 0, w, h); g.fillStyle = d; g.fillRect(0, 0, w, h);
+    }, null, true, 1);
+    // (le plan regarde l'ouest : son u court du nord au sud — le jour est au bout de u)
+    const m = new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color(0x2b3040), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: true });
+    m.name = 'jour du bureau d’angle sur le mur ardoise';
+    const v = ch.panneau(m, 1.6, 2.4, X_MIT - 0.03, Y_ARD + 0.8, 1.3, 'W');
+    v.castShadow = false; v.receiveShadow = false; v.userData.nofuse = true; v.userData.horsAOSol = true; v.renderOrder = 2;
   }
   // LES DEUX CAMÉRAS DÔMES au plafond (r04 : l'une près du mitoyen, au-dessus de l'affiche aux lignes ; l'autre au fond à
   // gauche, au nord-ouest du pilier)
@@ -811,11 +825,13 @@ export function poserHall(ch) {
     r.userData.horsAOSol = true;
   }
   // dans l'axe de la porte 6, au pas de 0,30 m, de la porte jusqu'à y ≈ 4,1 (les spots ronds autour : js/carte_ecole.js) ;
-  // un ruban de 2 cm dans un profil d'aluminium de 4 cm, à fleur des plateaux
+  // un ruban de 2 cm dans un profil d'aluminium de 4 cm, à fleur des plateaux (relecture du 12/10, la photo 03 rejouée : de
+  // loin, le ruban de 2 cm se défaisait en pointillés — un chapelet de diodes que ni la photo 03 ni la photo 24 ne montrent,
+  // des traits continus : un ruban de 3,5 cm dans un profil de 6, un peu moins éblouissant)
   for (let k = 0; k < 8; k++) {
     const x = 14.35 + k * 0.3;
-    const p = B(x - 0.02, 0.5, x + 0.02, 4.1, H_PLAF - 0.006, H_PLAF - 0.001, H.profil, { ombre: false });
-    const l = B(x - 0.01, 0.52, x + 0.01, 4.08, H_PLAF - 0.008, H_PLAF - 0.006, H.ligne, { ombre: false });
+    const p = B(x - 0.03, 0.5, x + 0.03, 4.1, H_PLAF - 0.006, H_PLAF - 0.001, H.profil, { ombre: false });
+    const l = B(x - 0.0175, 0.52, x + 0.0175, 4.08, H_PLAF - 0.008, H_PLAF - 0.006, H.ligne, { ombre: false });
     p.userData.horsAOSol = l.userData.horsAOSol = true; l.receiveShadow = false;
   }
 }
