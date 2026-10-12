@@ -588,7 +588,7 @@ export function poserHall(ch) {
   // =====================================================================
   // (r04 : au fond du comptoir, à gauche du mur ardoise, un bloc de 1 m qui avance du mitoyen — sa face sud blanche (le
   // « retour » au bouton rouge, x 305-345 sur la photo), sa face ouest de stratifié clair : la double porte à étiquette
-  // rouge et triangle jaune, jusqu'à 2,10, un panneau fixe au-dessus jusqu'au plafond ; puis le panneau des formations ;
+  // rouge et triangle jaune, toute hauteur, comme un placard ; puis le panneau des formations ;
   // puis le pilier, plus avancé, sous l'écran ; au-delà, d'autres portes de stratifié jusqu'au mur nord, un second
   // triangle. Rétroprojetés à la pose de r04 : l'angle du mur ardoise en y 4,43, l'angle sud-ouest du local en x 18,8 ; la
   // porte y 4,5-5,21 ; le panneau y 5,24-5,70 ; le pilier x 18,14-18,8 × y 5,71-6,24.)
@@ -597,11 +597,11 @@ export function poserHall(ch) {
   B(LOC.x0 - 0.004, LOC.y0 - 0.004, LOC.x0 + 0.024, LOC.y0, 0, H_PLAF, H.boisClair, { ombre: false });
   B(LOC.x0 + 0.02, LOC.y0 - 0.015, X_MIT, LOC.y0, 0, 0.08, M.bois, { ombre: false });
   C.ajouterBoite(LOC.x0, -Y_MUR, X_MIT, -LOC.y0, { y1: H_PLAF });
-  // les portes du local : deux doubles portes (y 4,5-5,21 et 6,45-7,35), leurs joints sombres, la traverse à 2,10
+  // les portes du local : deux doubles portes de placard toute hauteur (y 4,5-5,21 et 6,45-7,35 ; r04 : le joint entre
+  // les vantaux monte jusqu'au plafond), leurs joints sombres
   const xj = LOC.x0 - 0.003, PORTES = [[4.5, 5.21], [6.45, 7.35]];
   for (const [y0, y1] of PORTES) {
-    for (const y of [y0, (y0 + y1) / 2, y1]) B(xj, y - 0.004, LOC.x0, y + 0.004, 0.01, 2.1, H.joint, { ombre: false });
-    B(xj, y0, LOC.x0, y1, 2.096, 2.104, H.joint, { ombre: false });
+    for (const y of [y0, (y0 + y1) / 2, y1]) B(xj, y - 0.004, LOC.x0, y + 0.004, 0.01, H_PLAF - 0.03, H.joint, { ombre: false });
     // les poignées (deux barrettes inox, de part et d'autre du joint central)
     for (const s of [-1, 1]) B(xj - 0.025, (y0 + y1) / 2 + s * 0.05 - 0.008, xj, (y0 + y1) / 2 + s * 0.05 + 0.008, 1.0, 1.18, M.inox, { ombre: false });
   }
@@ -633,13 +633,13 @@ export function poserHall(ch) {
   // un cadre noir épais autour d'une dalle claire ; son bout est touche presque le local ; « Commander votre sweat à
   // l'accueil pour 25€ »)
   {
-    const g = groupe(ch, 18.37, 5.46, 202); g.position.y = 2.235;
+    const g = groupe(ch, 18.38, 5.45, 202); g.position.y = 2.25;
     const t = new THREE.Group(); t.rotation.x = 0.15; g.add(t);
-    BL(t, M.noir, 0.88, 0.5, 0.06, 0, 0, 0);
+    BL(t, M.noir, 0.84, 0.46, 0.06, 0, 0, 0);
     const tex = texEcranTV();
-    const e = PL(t, new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.5, roughness: 0.3 }), 0.72, 0.39, 0.02, 0.01, 0.031);
+    const e = PL(t, new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.5, roughness: 0.3 }), 0.69, 0.36, 0.02, 0.01, 0.031);
     e.castShadow = false;
-    BL(g, M.noir, 0.04, 2.5 - 2.235 - 0.21, 0.04, -0.28, (2.5 - 2.235 + 0.21) / 2, -0.05, { ombre: false });
+    BL(g, M.noir, 0.04, 2.5 - 2.25 - 0.19, 0.04, -0.27, (2.5 - 2.25 + 0.19) / 2, -0.05, { ombre: false });
     g.traverse((m) => { m.userData.horsAOSol = true; });
   }
 
