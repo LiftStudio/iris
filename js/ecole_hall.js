@@ -26,7 +26,7 @@
 //                                                     sa face sud blanche, le bouton rouge et le boîtier blanc
 //   le pilier de bois clair x 18,14-18,8  y 5,71-6,24  devant le local, sous l'écran suspendu ; le panneau des formations
 //                                                     sur le local, à sa droite
-//   le portant des goodies  (17,3 ; 5,55)              noir, sur roulettes : sweats « iris », affichette, brochures
+//   le portant des goodies  (17,55 ; 5,75)             noir, sur roulettes : sweats « iris », affichette, brochures
 //   l'open-space            x 17,53-19,8  y 0,3-4,43   le plan de travail derrière le comptoir, le bureau du mitoyen, le
 //                                                     copieur contre la cloison biaise, trois fauteuils
 //   l'angle nord-est        x 16,3-18,8   y 6,8-7,5    le photocopieur contre le cannelé, le caisson et ses corbeilles
@@ -79,8 +79,8 @@ function texBoisClair() {
   return canvasTex(256, 256, (g, w, h) => {
     g.fillStyle = '#cbb8a1'; g.fillRect(0, 0, w, h);
     const r2 = graine(311);
-    for (let k = 0; k < 220; k++) {
-      const x = r2() * w, l = 0.6 + r2() * 2.2, a = 0.015 + r2() * 0.035;
+    for (let k = 0; k < 160; k++) {
+      const x = r2() * w, l = 0.6 + r2() * 1.6, a = 0.008 + r2() * 0.018;
       g.fillStyle = r2() < 0.5 ? `rgba(150,118,80,${a})` : `rgba(232,216,190,${a})`; g.fillRect(x, 0, l, h);
     }
   }, [1, 1], false, 4);
@@ -450,7 +450,7 @@ export function poserHall(ch) {
       const w = b - a, cx = (a + b) / 2;
       if (s === 'plein') BL(g, H.blancJour, w, hv, ep, cx, hv / 2, 0);
       else if (s === 'montant') BL(g, H.alu, w, hv, ep, cx, hv / 2, 0);
-      else if (s === 'poteau') BL(g, H.copieur2, w, hv, ep * 1.2, cx, hv / 2, 0);
+      else if (s === 'poteau') BL(g, H.alu, w, hv, ep * 1.2, cx, hv / 2, 0);
       else if (s === 'cadre') BL(g, H.cadreSombre, w, hv - 0.1, ep * 0.8, cx, (hv - 0.1) / 2 + 0.1, 0);
       else {
         // une vitre (la grande, la porte : du verre clair et trois bandes de vitrophanie, de 1,50 à 1,82 m ; la baie étroite :
@@ -506,16 +506,17 @@ export function poserHall(ch) {
   B(16.93, 4.37, 17.04, 4.48, 0.08, PMR.h - 0.03, H.comptoir);
   // LE CAISSON HAUT DU DÉCROCHÉ : posé sur le bout nord de la tablette basse, au-dessus du pied, du même stratifié, et sa
   // tablette haute qui déborde de 0,3 m au nord (r04 : sa face ouest de x 178 à 200, sa face sud de 200 à 262, de 0,76 à
-  // 1,10 m, les bacs noirs devant ; la tablette de x 128 à 265 — sous son débord, on voit le pilier : rien ne la porte)
+  // 1,10 m, les bacs noirs devant ; la tablette de x 128 à 265 — sous son débord, on voit le pilier : rien ne la porte ;
+  // 0,22 m de débord : entre elle et le portant, le personnel passe)
   B(RET.x0, RET.y0, RET.x1, RET.y1, PMR.h, RET.h - 0.03, H.comptoir);
-  B(RET.x0 - 0.05, RET.y0 - 0.07, RET.x1 + 0.05, RET.y1 + 0.3, RET.h - 0.03, RET.h, H.tablette);
+  B(RET.x0 - 0.05, RET.y0 - 0.07, RET.x1 + 0.05, RET.y1 + 0.22, RET.h - 0.03, RET.h, H.tablette);
   // derrière (est) : le plan de travail du personnel à 0,75 m, le long du comptoir haut, sur trois pieds
   B(CPT.x1, CPT.y0 + 0.05, X_PERS, CPT.y1, 0.72, 0.75, H.plan);
   for (const y of [CPT.y0 + 0.1, 2.35, CPT.y1 - 0.08]) B(X_PERS - 0.06, y - 0.025, X_PERS - 0.02, y + 0.025, 0, 0.72, H.pied, { ombre: false });
   // le monde solide : le comptoir et son plan de travail, le décroché, le débord de la tablette haute
   C.ajouterBoite(CPT.x0 - 0.07, -CPT.y1, X_PERS, -(CPT.y0 - 0.03), { y1: CPT.h });
   C.ajouterBoite(PMR.x0, -PMR.y1, X_PERS, -PMR.y0, { y1: PMR.h });
-  C.ajouterBoite(RET.x0 - 0.05, -(RET.y1 + 0.3), RET.x1 + 0.05, -PMR.y1, { y0: RET.h - 0.03, y1: RET.h });
+  C.ajouterBoite(RET.x0 - 0.05, -(RET.y1 + 0.22), RET.x1 + 0.05, -PMR.y1, { y0: RET.h - 0.03, y1: RET.h });
   // SUR LE DÉCROCHÉ (r04) : les bacs à courrier noirs empilés et leurs papiers rouges et blancs, contre le caisson haut ;
   // la bouilloire inox ; une chemise rouge et des feuilles à plat au bord
   for (let k = 0; k < 3; k++) {
@@ -646,9 +647,11 @@ export function poserHall(ch) {
   // =====================================================================
   // (r04, de haut en bas : le sweat plié « iris », 1,45-1,67 ; le sweat à l'impression colorée, 1,15-1,45 ; l'affichette
   // aux deux photos de sweats, 0,9-1,15 ; deux tablettes inclinées de brochures, 0,6-0,78 et 0,2-0,4 ; deux montants noirs
-  // et quatre roulettes. Tourné vers le hall, au sud-ouest.)
+  // et quatre roulettes. Tourné vers le hall, au sud-ouest. Rétroprojeté sur ses roulettes : (17,35 ; 5,57), à ± 0,2 le
+  // long du rayon de l'appareil ; posé 0,25 m plus loin sur ce rayon, (17,55 ; 5,75), il laisse 0,7 m entre lui et la
+  // tablette haute : le passage du personnel vers l'arrière du comptoir.)
   {
-    const g = groupe(ch, 17.3, 5.55, 225), N = M.noir, l = 0.44;
+    const g = groupe(ch, 17.55, 5.75, 225), N = M.noir, l = 0.44;
     for (const s of [-1, 1]) {
       BL(g, N, 0.025, 1.66, 0.025, s * l / 2, 0.86, -0.12);
       BL(g, N, 0.025, 0.9, 0.025, s * l / 2, 0.48, 0.1);
@@ -669,7 +672,7 @@ export function poserHall(ch) {
     sw(false, 1.436); sw(true, 1.146);
     const a = PL(g, new THREE.MeshStandardMaterial({ map: texAffichette(), roughness: 0.6 }), l + 0.04, 0.27, 0, 0.99, 0.13);
     a.rotation.x = -0.05;
-    C.ajouterCercle(17.3, -5.55, 0.32, { y1: 1.7 });
+    C.ajouterBoiteOrientee(17.55, -5.75, l / 2 + 0.03, 0.15, 3 * Math.PI / 4, { y1: 1.7 });
   }
 
   // =====================================================================

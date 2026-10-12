@@ -1107,7 +1107,8 @@ function construireMurs(ch) {
   // q_0026-0031). Les vantaux, la cloison, le couloir et l'escalier qui suivent : js/ecole_est.js)
   // (10/10 : à l'ouest de la porte, la pile — js/ecole_rdc_centre.js : le mur part de sa face est)
   ch.mur({ de: [14.6, 7.575], a: [16.25, 7.575], mats: B, plinthes: ['S'], ouvertures: [{ c: 15.4, l: 1.4, h: 2.1 }] });
-  // (le mitoyen est du hall, x 19,95 de y -0,4 à 7,65 : peint gris ardoise côté accueil — js/ecole_hall.js, 10/10)
+  // (le mitoyen est du hall, x 19,95 de y -0,4 à 7,65 : peint gris ardoise derrière le comptoir, de la cloison biaise du
+  // bureau d'angle au local technique — js/ecole_hall.js, 10/10 ; retour r04 du 12/10)
   // ---- L'ESCALIER : la cage (jusqu'au plafond de l'étage), les portes coupe-feu ----
   // (plan V2 : tout recule de DY_S. Le mur des portes est sur la ligne y 9,0 ; plus de trumeau entre les portes et le C05
   // — l'ouverture, élargie, va jusqu'au jambage, x 4,45, et le C05 commence au mur est de la cage)
