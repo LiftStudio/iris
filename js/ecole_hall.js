@@ -247,17 +247,6 @@ function texBrochures() {
     }
   }, null, false, 4);
 }
-// LA VITRE DE LA CLOISON BIAISE (r04 agrandie : verre clair, très lumineux — le jour de la fenêtre de façade derrière —,
-// trois bandes sombres de vitrophanie entre 1,50 et 1,82 m). La texture couvre le verre de 0,10 m à `hv`.
-function texVitreBandes(hv) {
-  return canvasTex(64, 256, (g, w, h) => {
-    const f = g.createLinearGradient(0, 0, 0, h); f.addColorStop(0, '#f4f8fb'); f.addColorStop(1, '#dfe7ec');
-    g.fillStyle = f; g.fillRect(0, 0, w, h);
-    const y = (m) => (hv - m) / (hv - 0.1) * h;
-    g.fillStyle = 'rgba(52,58,66,0.82)';
-    for (const [a, b] of [[1.74, 1.82], [1.63, 1.70], [1.50, 1.57]]) g.fillRect(0, y(b), w, y(a) - y(b));
-  }, null, false, 2);
-}
 // LE COUSSIN RAYÉ noir et blanc d'un fauteuil du personnel (VO q_0373)
 function texZebre() {
   return canvasTex(64, 64, (g, w, h) => {
@@ -326,10 +315,11 @@ function matieresHall() {
   // briller, comme les spots — js/ecole_matieres.js M.spot)
   H.ligne = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff3e2).multiplyScalar(3.6) }); H.ligne.name = 'ligne lumineuse du plafond';
   H.profil = std({ color: 0xd9d9d6, roughness: 0.4, metalness: 0.5 }, 'profil des lignes lumineuses');
-  // les vitres éclairées par-derrière (le jour de la fenêtre de façade, dans le bureau d'angle)
-  const tv = texVitreBandes(H_VITRE);
-  H.vitre = std({ map: tv, emissive: 0xffffff, emissiveMap: tv, emissiveIntensity: 0.55, roughness: 0.15, side: THREE.DoubleSide }, 'vitre de la cloison biaise');
-  H.vitreClaire = std({ color: 0xe8eff3, emissive: 0xf2f6f8, emissiveIntensity: 0.6, roughness: 0.15, side: THREE.DoubleSide }, 'vitre du bureau d\'angle');
+  // LE VERRE CLAIR de la cloison biaise (r04 : on voit au travers le bureau d'angle, blanc, dans le jour de la fenêtre de
+  // façade ; photo 03 : par la porte vitrée, les barreaux de cette fenêtre) et ses BANDES de vitrophanie sombres
+  H.verre = std({ color: 0xe4eef2, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.26, depthWrite: false, envMapIntensity: 1.4, emissive: 0xf4f8fa, emissiveIntensity: 0.12, side: THREE.DoubleSide }, 'verre clair (cloison biaise)');
+  H.bande = std({ color: 0x3a4048, roughness: 0.4, transparent: true, opacity: 0.85, side: THREE.DoubleSide }, 'vitrophanie sombre (cloison biaise)');
+  H.vitreClaire = std({ color: 0xe8eff3, emissive: 0xf2f6f8, emissiveIntensity: 0.6, roughness: 0.15, side: THREE.DoubleSide }, 'vitre de la baie étroite (cloison biaise)');
   // le blanc de la cloison biaise et de sa retombée, dans le jour des fenêtres de façade (r04 : le coin sud-est est le plus
   // clair de la photo, 248 sur 255 ; les spots seuls le rendaient gris beige, 141)
   H.blancJour = std({ map: texPeinture(0xefede8), roughness: 0.86, emissive: 0xf4f6f8, emissiveIntensity: 0.32 }, 'peinture blanche au jour (bureau d\'angle)');
@@ -421,7 +411,8 @@ export function poserHall(ch) {
   // =====================================================================
   // (r04 : le gris s'arrête net au sud, en y 1,82, contre le montant de la cloison biaise ; au nord, contre la face sud
   // du local, y 4,43. Plinthe de bois, comme tout le hall.)
-  ch.mur({ de: [19.95, -0.4], a: [19.95, Y_ARD], ep: 0.3, mats: M.blanc, plinthes: ['W'] });
+  // (au sud, dans le bureau d'angle, il est blanc et dans le jour de la fenêtre de façade : ce qu'on voit par la vitre)
+  ch.mur({ de: [19.95, -0.4], a: [19.95, Y_ARD], ep: 0.3, mats: { W: H.blancJour, E: M.blanc }, plinthes: ['W'] });
   ch.mur({ de: [19.95, Y_ARD], a: [19.95, 7.65], ep: 0.3, mats: { W: H.ardoise, E: M.blanc }, plinthes: ['W'] });
   // LES DEUX AFFICHES (r04, rétroprojetées sur le mitoyen : 0,67 x 0,94 chacune, de 1,44 à 2,38 m ; celle au cadre
   // magenta au nord, y 3,37-4,04, celle aux lignes de couleur au sud, y 2,22-2,89 — l'ordre de la VO q_0377-0383, où
@@ -462,8 +453,10 @@ export function poserHall(ch) {
       else if (s === 'poteau') BL(g, H.copieur2, w, hv, ep * 1.2, cx, hv / 2, 0);
       else if (s === 'cadre') BL(g, H.cadreSombre, w, hv - 0.1, ep * 0.8, cx, (hv - 0.1) / 2 + 0.1, 0);
       else {
-        // une vitre (la grande, la porte : les bandes de vitrophanie ; la baie étroite : claire), son rail bas, son profil haut
-        const v = new THREE.Mesh(new THREE.PlaneGeometry(w, hv - 0.1), s === 'baie' ? H.vitreClaire : H.vitre); v.position.set(cx, 0.1 + (hv - 0.1) / 2, 0); v.userData.vitre = true; v.castShadow = false; g.add(v);
+        // une vitre (la grande, la porte : du verre clair et trois bandes de vitrophanie, de 1,50 à 1,82 m ; la baie étroite :
+        // une vitre claire, lumineuse), son rail bas, son profil haut
+        const v = new THREE.Mesh(new THREE.PlaneGeometry(w, hv - 0.1), s === 'baie' ? H.vitreClaire : H.verre); v.position.set(cx, 0.1 + (hv - 0.1) / 2, 0); v.userData.vitre = true; v.castShadow = false; g.add(v);
+        if (s !== 'baie') for (const [b0, b1] of [[1.5, 1.57], [1.63, 1.7], [1.74, 1.82]]) { const q = PL(g, H.bande, w, b1 - b0, cx, (b0 + b1) / 2, 0.003); q.castShadow = false; q.userData.vitre = true; }
         BL(g, s === 'baie' ? H.cadreSombre : H.alu, w, 0.1, ep, cx, 0.05, 0);
         BL(g, s === 'baie' ? H.cadreSombre : H.alu, w, 0.04, ep, cx, hv - 0.02, 0);
         if (s === 'porte') {
@@ -655,26 +648,26 @@ export function poserHall(ch) {
   // aux deux photos de sweats, 0,9-1,15 ; deux tablettes inclinées de brochures, 0,6-0,78 et 0,2-0,4 ; deux montants noirs
   // et quatre roulettes. Tourné vers le hall, au sud-ouest.)
   {
-    const g = groupe(ch, 17.3, 5.55, 225), N = M.noir;
+    const g = groupe(ch, 17.3, 5.55, 225), N = M.noir, l = 0.44;
     for (const s of [-1, 1]) {
-      BL(g, N, 0.025, 1.66, 0.025, s * 0.25, 0.86, -0.12);
-      BL(g, N, 0.025, 0.9, 0.025, s * 0.25, 0.48, 0.1);
-      BL(g, N, 0.025, 0.025, 0.25, s * 0.25, 0.08, -0.01, { ombre: false });
-      for (const z of [-0.12, 0.1]) maille(new THREE.SphereGeometry(0.03, 8, 6), N, s * 0.25, 0.035, z, 0, g, { ombre: false });
+      BL(g, N, 0.025, 1.66, 0.025, s * l / 2, 0.86, -0.12);
+      BL(g, N, 0.025, 0.9, 0.025, s * l / 2, 0.48, 0.1);
+      BL(g, N, 0.025, 0.025, 0.25, s * l / 2, 0.08, -0.01, { ombre: false });
+      for (const z of [-0.12, 0.1]) maille(new THREE.SphereGeometry(0.03, 8, 6), N, s * l / 2, 0.035, z, 0, g, { ombre: false });
     }
     const br = new THREE.MeshStandardMaterial({ map: texBrochures(), roughness: 0.6 });
     for (const h of [0.14, 0.5]) {
-      const t = BL(g, N, 0.5, 0.012, 0.24, 0, h, 0.0); t.rotation.x = 0.35;
-      BL(g, N, 0.5, 0.04, 0.012, 0, h - 0.03, 0.11, { ombre: false });
-      const b = PL(g, br, 0.46, 0.22, 0, h + 0.11, 0.01); b.rotation.x = -0.35;
+      const t = BL(g, N, l, 0.012, 0.24, 0, h, 0.0); t.rotation.x = 0.35;
+      BL(g, N, l, 0.04, 0.012, 0, h - 0.03, 0.11, { ombre: false });
+      const b = PL(g, br, l - 0.04, 0.22, 0, h + 0.11, 0.01); b.rotation.x = -0.35;
     }
-    for (const h of [0.84, 1.14, 1.43]) BL(g, N, 0.5, 0.012, 0.3, 0, h, -0.02);
+    for (const h of [0.84, 1.14, 1.43]) BL(g, N, l, 0.012, 0.28, 0, h, -0.02);
     const sw = (imprime, h) => {
       const m = [new THREE.MeshStandardMaterial({ color: 0xecebe8, roughness: 0.9 }), new THREE.MeshStandardMaterial({ map: texSweat(imprime), roughness: 0.9 })];
-      const b = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.28, 0.3), [m[0], m[0], m[0], m[0], m[1], m[0]]); b.position.set(0, h + 0.14, -0.01); b.castShadow = true; g.add(b);
+      const b = new THREE.Mesh(new THREE.BoxGeometry(l - 0.02, 0.28, 0.26), [m[0], m[0], m[0], m[0], m[1], m[0]]); b.position.set(0, h + 0.14, -0.02); b.castShadow = true; g.add(b);
     };
     sw(false, 1.436); sw(true, 1.146);
-    const a = PL(g, new THREE.MeshStandardMaterial({ map: texAffichette(), roughness: 0.6 }), 0.56, 0.3, 0, 0.99, 0.15);
+    const a = PL(g, new THREE.MeshStandardMaterial({ map: texAffichette(), roughness: 0.6 }), l + 0.04, 0.27, 0, 0.99, 0.13);
     a.rotation.x = -0.05;
     C.ajouterCercle(17.3, -5.55, 0.32, { y1: 1.7 });
   }
