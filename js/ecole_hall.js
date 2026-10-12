@@ -25,12 +25,13 @@
 //   le caisson haut         x 17,0-17,85  y 4,39-4,58  posé sur le bout du décroché, sa tablette haute (1,15) qui déborde
 //                                                     de 0,22 m vers le nord
 //   le mitoyen est          x 19,8        y 1,82-4,43  peint GRIS ARDOISE, ses deux affiches (y 2,2-2,9 et 3,4-4,0)
-//   le bureau d'angle       x - y = 17,98              la cloison BIAISE vitrée du coin sud-est (r04 et VO q_0383)
+//   le bureau d'angle       x - y = 17,98              la cloison BIAISE vitrée du coin sud-est (r04 et VO q_0380-0383),
+//                                                     du verre presque partout sous sa retombée blanche
 //   le local technique      x 18,8-19,8   y 4,43-7,5   portes de stratifié clair, étiquette rouge et triangle jaune ;
-//                                                     sa face sud blanche, le bouton rouge et le boîtier blanc
+//                                                     sa face sud gris clair, le bouton rouge et le boîtier blanc
 //   le pilier de bois clair x 18,14-18,8  y 5,71-6,24  devant le local, sous l'écran suspendu ; le panneau des formations
 //                                                     sur le local, à sa droite
-//   le portant des goodies  (17,55 ; 5,75)             noir, sur roulettes : sweats « iris », affichette, brochures
+//   le portant des goodies  (17,48 ; 5,685)            noir, sur roulettes : sweats « iris », affichette, brochures
 //   l'open-space            x 17,53-19,8  y 0,3-4,43   le plan de travail derrière le comptoir, le bureau du mitoyen, le
 //                                                     copieur contre la cloison biaise, trois fauteuils
 //   l'angle nord-est        x 16,3-18,8   y 6,8-7,5    le photocopieur contre le cannelé, le caisson et ses corbeilles
