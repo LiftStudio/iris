@@ -124,9 +124,10 @@ const ATT = { ys: 9.0 + DY_A, yn: 12.075 + DY_A };        // les lignes du mur s
 // carrelage — des carreaux de 60, comptés en travers : l'appareil à 1,40-1,48 —, la porte grise du hall ouest (2,04),
 // l'angle de la pile du plan d'évacuation, le bout ouest du mur sud et celui du mur jaune, les cadres des jours, la plinthe
 // du mur sud, l'arête haute du mur jaune ; le plafond se cale de lui-même à 2,60 — la retombée du hall, à 4,85, vue sous
-// 37 px, le confirme : 2,64-2,68. Nu à nu : 3,11 à 3,16 m (± 0,05) ; 2,95 si les chaises coque du nord touchent le mur
-// — leur bord avant est à 0,17 m à droite de l'appareil —, 3,13 sans elles. Le jeu en avait 2,925, l'appareil de la
-// relecture r02 à 0,46 m du mur jaune quand la photo l'y met à 0,76-0,95.) Le mur jaune ne bouge pas — le C05, les
+// 37 px, le confirme : 2,64-2,68. Nu à nu : 3,11 à 3,18 m (± 0,05) selon les observations gardées, l'appareil en
+// (10,80 ; 6,99), h 1,50, cap −95,4 ; on ne retombe sur 2,83-2,95 qu'en forçant les chaises coque du nord contre le mur
+// ou le pilier gris à sa place de la v1.7 — et les écarts doublent (5 à 7,5 px). Le jeu en avait 2,925, l'appareil de la
+// relecture r02 à 0,46 m du mur jaune quand la photo l'y met à 0,8.) Le mur jaune ne bouge pas — le C05, les
 // toilettes et la cage, calés sur les photos 04, 05 et 23, sont derrière lui — : c'est LE MUR DES JOURS qui recule de
 // 0,20 m vers la rue, avec tout ce qu'il porte ; la Si 0.1, imaginée, perd 0,20 m de profondeur. Nu à nu : 3,125.
 const DY_R03 = -0.20;
