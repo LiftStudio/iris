@@ -77,7 +77,7 @@ function paveIris(g, x, y, w, fond = '#151517', texte = '#ffffff') {
 // marqué ; à l'ombre, il tire sur le brun clair — face ouest du pilier #A28058 à l'appareil, face sud au jour #A2958F)
 function texBoisClair() {
   return canvasTex(256, 256, (g, w, h) => {
-    g.fillStyle = '#cbb8a1'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#c2ae96'; g.fillRect(0, 0, w, h);
     const r2 = graine(311);
     for (let k = 0; k < 160; k++) {
       const x = r2() * w, l = 0.6 + r2() * 1.6, a = 0.008 + r2() * 0.018;
@@ -282,15 +282,15 @@ function matieresHall() {
     // le mitoyen GRIS ARDOISE (r04 : un gris foncé presque neutre, à peine chaud — #494340 en haut, à l'appareil, sous le
     // plafond #ADAEB0 ; la VO de 2021, étalonnée froid, le rendait bleuté)
     // (relecture du 12/10, r04 rejouée : à 0,5 de la luminance du comptoir sur la photo, le jeu la rendait à 0,29 — presque
-    // noire : un ton plus clair)
-    ardoise: std({ map: texPeinture(0x6e6d70, 4), roughness: 0.82 }, 'peinture gris ardoise (mitoyen de l\'accueil)'),
+    // noire : deux tons plus clair)
+    ardoise: std({ map: texPeinture(0x807f84, 4), roughness: 0.82 }, 'peinture gris ardoise (mitoyen de l\'accueil)'),
     // le comptoir : un stratifié GRIS CLAIR (r04 : nettement plus sombre que le plafond et les murs blancs), la tablette
     // grise, la rainure
     comptoir: std({ color: 0xcdcac6, roughness: 0.45 }, 'stratifié gris clair (comptoir)'),
     tablette: std({ color: 0xb3b0ac, roughness: 0.35 }, 'tablette grise (comptoir)'),
     rainure: std({ color: 0x6f6b67, roughness: 0.5 }, 'rainure du comptoir'),
     // le socle de CHÊNE CLAIR des meubles de l'accueil (r04 : #8B6E59 à l'appareil, plus clair que les plinthes vernies)
-    chene: std({ color: 0xb98d62, roughness: 0.5 }, 'socle de chêne clair (accueil)'),
+    chene: std({ color: 0xd2a57a, roughness: 0.5 }, 'socle de chêne clair (accueil)'),
     boisClair: std({ map: texBoisClair(), roughness: 0.55 }, 'stratifié bois clair (local, pilier)'),
     joint: std({ color: 0x4a3f36, roughness: 0.6 }, 'joint des portes du local'),
     bureau: std({ color: 0x3d4150, roughness: 0.48 }, 'bureau bleu-gris foncé'),

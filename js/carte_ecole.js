@@ -1372,7 +1372,7 @@ export function construireCarte(scene, renderer = null) {
   // le comptoir 138) ; au jeu, le perforé sous les seuls spots tombait à 121, le comptoir à 160.
   {
     const p = ch.plafond(13.35, 0.3, 19.8, 7.5, 2.6, 'plateaux');
-    p.material = M.plateaux.clone(); p.material.emissiveIntensity = 0.34; p.material.name = 'plafond en plateaux perforés (hall)';
+    p.material = M.plateaux.clone(); p.material.emissiveIntensity = 0.5; p.material.name = 'plafond en plateaux perforés (hall)';
   }
   // le bureau B (visitable : js/ecole_pieces.js) et le passage au sud-ouest de la pile, d'un seul tenant (plateaux à 2,60)
   ch.plafond(9.9, 0, 13.35, ATT.ys, 2.6, 'plateaux');
