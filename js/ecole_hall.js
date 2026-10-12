@@ -469,8 +469,9 @@ export function poserHall(ch) {
     // la retombée blanche au-dessus, jusqu'au plafond (r04)
     BL(g, H.blancJour, L, H_PLAF - hv, ep, L / 2, (hv + H_PLAF) / 2, 0);
     g.traverse((m) => { if (m.isMesh) m.receiveShadow = true; });
-    // le monde solide : la cloison entière (la lumière cuite passe par la vitre)
-    C.ajouterBoiteOrientee(X_MIT - Y_ARD / 2, -Y_ARD / 2, L / 2, ep / 2, 3 * Math.PI / 4, { y1: H_PLAF });
+    // le monde solide : la cloison entière ; vitrée aux trois cinquièmes, elle laisse passer la lumière cuite de la fenêtre
+    // de façade (le jour c 18,98, dans le bureau)
+    C.ajouterBoiteOrientee(X_MIT - Y_ARD / 2, -Y_ARD / 2, L / 2, ep / 2, 3 * Math.PI / 4, { y1: H_PLAF, vitre: true });
   }
   // DANS LE BUREAU D'ANGLE (IMAGINÉ : r04 n'y voit que la lumière de la fenêtre) : un bureau blanc sous la fenêtre de
   // façade, son écran, son fauteuil
