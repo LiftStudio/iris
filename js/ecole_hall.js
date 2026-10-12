@@ -483,7 +483,7 @@ export function poserHall(ch) {
   C.ajouterBoite(18.85, -0.7, 19.8, 0, { y1: 0.75 });
 
   // =====================================================================
-  //  LE COMPTOIR D'ACCUEIL, LE DÉCROCHÉ PMR, LE RETOUR NORD (r04 ; photo 03 ; VO q_0373-0384)
+  //  LE COMPTOIR D'ACCUEIL, LE DÉCROCHÉ PMR ET SON CAISSON HAUT (r04 ; photo 03 ; VO q_0373-0384)
   // =====================================================================
   // (r04 : la face du comptoir est à 3,25 m de l'appareil, le mur ardoise à 6,5 m ; les deux fuient au même point : le
   // comptoir est NORD-SUD et parallèle au mitoyen, à 3,0 m de lui. Son bout nord en y 3,6 ; il passe le bord droit de la
@@ -500,15 +500,15 @@ export function poserHall(ch) {
   // LE DÉCROCHÉ PMR (r04, à gauche) : le caisson bas EN RETRAIT de 25 cm (sa plinthe de chêne passe derrière le pied), la
   // tablette grise à 0,76 qui avance jusqu'à 16,88 et file, côté personnel, jusqu'au plan de travail ; à son angle
   // nord-ouest, le pied gris carré sur son socle de chêne
-  B(PMR.xF + 0.03, PMR.y0, X_PERS, PMR.y1 - 0.03, 0, 0.1, H.chene);
-  B(PMR.xF, PMR.y0, X_PERS, PMR.y1, 0.1, PMR.h - 0.03, H.comptoir);
+  B(PMR.xF + 0.03, PMR.y0, X_PERS, PMR.y1 - 0.03, 0, CPT.socle, H.chene);
+  B(PMR.xF, PMR.y0, X_PERS, PMR.y1, CPT.socle, PMR.h - 0.03, H.comptoir);
   B(PMR.x0, PMR.y0, X_PERS, PMR.y1, PMR.h - 0.03, PMR.h, H.tablette);
   B(16.915, 4.355, 17.055, 4.495, 0, 0.08, H.chene);
   B(16.93, 4.37, 17.04, 4.48, 0.08, PMR.h - 0.03, H.comptoir);
   // LE CAISSON HAUT DU DÉCROCHÉ : posé sur le bout nord de la tablette basse, au-dessus du pied, du même stratifié, et sa
-  // tablette haute qui déborde de 0,3 m au nord (r04 : sa face ouest de x 178 à 200, sa face sud de 200 à 262, de 0,76 à
-  // 1,10 m, les bacs noirs devant ; la tablette de x 128 à 265 — sous son débord, on voit le pilier : rien ne la porte ;
-  // 0,22 m de débord : entre elle et le portant, le personnel passe)
+  // tablette haute qui déborde au nord (r04 : sa face ouest de x 178 à 200, sa face sud de 200 à 262, de 0,76 à 1,10 m,
+  // les bacs noirs devant ; la tablette de x 128 à 265 — sous son débord, on voit le pilier : rien ne la porte ; 0,22 m
+  // de débord : entre elle et le portant, le personnel passe)
   B(RET.x0, RET.y0, RET.x1, RET.y1, PMR.h, RET.h - 0.03, H.comptoir);
   B(RET.x0 - 0.05, RET.y0 - 0.07, RET.x1 + 0.05, RET.y1 + 0.22, RET.h - 0.03, RET.h, H.tablette);
   // derrière (est) : le plan de travail du personnel à 0,75 m, le long du comptoir haut, sur trois pieds
@@ -642,6 +642,8 @@ export function poserHall(ch) {
     e.castShadow = false;
     BL(g, M.noir, 0.04, 2.5 - 2.25 - 0.19, 0.04, -0.27, (2.5 - 2.25 + 0.19) / 2, -0.05, { ombre: false });
     g.traverse((m) => { m.userData.horsAOSol = true; });
+    // (la caméra seule : derrière Haythem, au personnel, elle venait se loger dans l'écran — vu en jouant, 12/10)
+    C.ajouterBoiteOrientee(18.38, -5.45, 0.44, 0.08, Math.atan2(0.375, 0.927), { y0: 1.98, y1: 2.5, joueur: false });
   }
 
   // =====================================================================
