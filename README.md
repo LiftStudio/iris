@@ -5,7 +5,14 @@ y promène **Haythem**, et rien que lui, dans l'école **IRIS** (MediaSchool) : 
 s'asseoir, danser, sortir son téléphone, prendre l'ascenseur. Pas de match, pas de score, pas de boutique : une balade
 libre.
 
-> État actuel (v1.8, 12/10, **le retour r03 de Haythem**) : « c'est beaucoup mieux, mais cette partie est trop étroite :
+> État actuel (v1.9, 12/10, **les retours r03 et r04 de Haythem ensemble**) : la salle d'attente élargie (r03), l'**accueil
+> refait sur sa nouvelle photo** (r04 : le comptoir gris clair et son décroché PMR, le mur gris ardoise et ses deux
+> affiches, le local aux portes de bois clair, le pilier de bois et son écran suspendu, le panneau des formations, le
+> portant des goodies, la cloison vitrée du bureau d'angle, le plafond en plateaux perforés) et les **chaises coque à
+> la taille d'une vraie Eames DAR** (0,63 × 0,60, 0,80 de haut : la coque du jeu faisait 0,67 de profondeur et
+> paraissait trop grosse sur la photo 02) — voir « La version 1.9 » plus bas.
+>
+> Le retour r03 (v1.8, 12/10) : « c'est beaucoup mieux, mais cette partie est trop étroite :
 > sur la photo, c'est plus grand et plus espacé ». La **salle d'attente s'élargit de 2,925 à 3,125 m** nu à nu, mesurée
 > sur la photo 02 (et non reprise du jeu) : le mur jaune ne bouge pas, c'est le mur des jours dépolis qui recule de
 > 0,20 m vers la rue avec tout ce qu'il porte ; le pilier gris glisse sur le rayon de r02 jusqu'à sortir du cadre de la
@@ -107,7 +114,7 @@ secondes, il part vers le niveau suivant (va-et-vient du rez-de-chaussée au 2e)
   des photos de Haythem, pour comparer pièce par pièce), le **clavier/souris**, la **manette** (avec la navigation dans
   les menus), le **tactile** (boutons déplaçables), la **roue des emotes**, le **téléphone** (le groupe s'appelle
   maintenant IRIS), les **options**, l'**écran de chargement** (le logo officiel de l'école sur fond blanc, barre et
-  astuces au jaune du logo), la **PWA** (`manifest.webmanifest`, `sw.js`, cache `iris-v1.8`).
+  astuces au jaune du logo), la **PWA** (`manifest.webmanifest`, `sw.js`, cache `iris-v1.9`).
 - **La caméra V2** (`js/game.js`, 11/10) : champ vertical de 63° (celui des photos, l'horizontal plafonné à 108°),
   recul de 2,6 m à l'intérieur (4,3 m dans la rue), à ≈ 1,9 m de haut avec 7° de piqué, 0,4 m sur l'épaule droite (à
   gauche, ou dans l'axe, quand un mur la gêne : le côté est choisi par une note, sans battement) ; elle ne filme
@@ -143,8 +150,10 @@ js/ecole_matieres.js  les matières dessinées (carrelage 60x120, plafonds perfo
 js/ecole_portes.js    les portes (fermées, ouvertes, AUTOMATIQUES) et les fenêtres, les vitrophanies de la porte 6
 js/ecole_lumieres.js  les spots qui suivent Haythem, la lumière cuite au sol, la carte d'environnement par pièce
 js/ecole_mobilier.js  le mobilier (chaises coque où l'on s'assoit, écran, borne, présentoir, affiches)
-js/ecole_hall.js      le HALL D'ENTRÉE (la vidéo officielle) : l'accueil nord-sud, l'open-space et son mitoyen gris,
-                      l'angle nord-est ouvert (photocopieur, « INFORMATIQUE », table, présentoir), les lignes du plafond
+js/ecole_hall.js      le HALL D'ENTRÉE (la photo r04, la vidéo officielle) : l'accueil nord-sud et son décroché PMR,
+                      l'open-space et son mitoyen gris ardoise, le bureau d'angle, le local technique, le pilier et son
+                      écran, le portant des goodies, l'angle nord-est (photocopieur, « INFORMATIQUE », meuble noir), le
+                      plafond en plateaux, sa retombée et ses lignes lumineuses
 js/ecole_rdc_centre.js la PILE du hall (plaque « iris », horloge, annuaires), le bureau de direction B 0.3 (plaque, drapeau)
 js/ecole_rue.js       la rue (trottoirs, chaussée et ses détails, façades voisines et d'en face, jardin, impasse, carrefour)
 js/ecole_rue_mobilier.js  le mobilier de la rue, ses plantes (un atlas de feuillage) et ses deux-roues
@@ -206,9 +215,9 @@ en secondes ; * = imaginé.
 | La descente est | la volée A sous la volée 2 du rez-de-chaussée, le palier bas à -1,53 (réglette, voyant, bloc de sortie, affiche iris), la volée B, le palier du -1 (le panneau cuivré « -1 » : « Salle de cours S -1.14 / Espace pause », l'interrupteur), la porte à deux vantaux (ouverte à demeure vers le palier, comme sur la vidéo) | VO 12,4-18,2 s, 35,5-41 s ; P 24 (la tête) |
 | Le sas technique, le passage P, le passage sombre * | la porte grise « RÉSERVÉ AU PERSONNEL », la plaque du trumeau, la porte double ⚡ du local électrique, la porte crème ⚡ (un placard), un boîtier noir ; le PASSAGE P, puis un passage sombre en baïonnette (éteint, mais lisible : le bloc de sortie vert au bout et sa lueur, une veilleuse ambre au ras du sol sur le mur est — imaginés) jusqu'à la porte sombre de l'espace pause | VO 18,2-21,8 s ; V (la porte sombre) |
 | **Rez-de-chaussée** | | |
-| Le hall d'entrée | porte n° 6 (automatique) et ses vitrophanies (quart de cible, nuage et sa constellation, équerre jaune, pavé « iris », phrase, visage ; les trois bandes du vantail est), tapis ; l'ACCUEIL nord-sud (comptoir sur socle de bois, tablette PMR, pupitre de chêne grisé), l'open-space du personnel et son mitoyen gris ardoise (affiche à l'immeuble, photo de la façade, premiers secours, caméras, imprimante) ; les huit lignes lumineuses du plafond ; l'angle nord-est ouvert (pan cannelé, photocopieur, étiquettes « INFORMATIQUE », table et chaise de hêtre — on s'y assoit —, présentoir) ; deux fenêtres à barreaux | P 03, 16, 24 ; VO 3-7 s, 92,5-97,8 s |
+| Le hall d'entrée | porte n° 6 (automatique) et ses vitrophanies (quart de cible, nuage et sa constellation, équerre jaune, pavé « iris », phrase, visage ; les trois bandes du vantail est), tapis ; l'ACCUEIL nord-sud refait sur r04 (le comptoir de stratifié gris clair à rainure, sur son socle de chêne clair, la tablette grise en saillie à 1,15 ; le décroché PMR, son caisson bas et son caisson à tablette haute : bouilloire, bacs à courrier noirs, papiers, l'écran « DELL »), l'open-space du personnel (trois fauteuils : on s'y assoit) et son mitoyen gris ardoise (deux affiches encadrées : l'immeuble au cadre magenta, les câbles de couleur ; la caméra dôme), la cloison vitrée biaise du bureau d'angle et son copieur ; au fond, le local technique aux portes de bois clair (étiquette rouge, triangles jaunes, déclencheur rouge, boîtier blanc), le pilier de bois clair et l'écran suspendu « Commander votre sweat à l'accueil », le panneau des formations aux bandeaux orange, le portant noir des goodies (sweats « iris », affichette, brochures) ; plafond en plateaux perforés, la retombée est-ouest, les huit lignes lumineuses et les spots ; l'angle nord-est (pan cannelé, photocopieur, étiquettes « INFORMATIQUE », meuble bas noir) ; deux fenêtres à barreaux | P r04, 03, 16, 24 ; VO 3-7 s, 92,5-97,8 s, q_0373-0392 |
 | La pile du hall | face sud : l'horloge ambre (à l'heure de l'ordinateur), la plaque « iris » et l'annuaire du niveau 0 (Si 0.1, Si 0.2) ; face est, jaune : le grand annuaire à seize lames ; face ouest, le fond de la salle d'attente : le présentoir noir à cinq tablettes, le radiateur vertical à panneau gris (0,5 × 1,25), affichettes « WIFI », haut-parleur, le boîtier blanc à deux voyants | VO 6,4-12,4 s, 92,6 s ; P 03, 21, 22, r02 |
-| La salle d'attente | 3,1 × 7,5 m (3,125 nu à nu, retour r03 : 2,925 avant) entre le mur safran et le mur des jours dépolis, qui est aussi le mur nord de la Si 0.1 (V2 : 4,2 m plus près de la rue — il n'y a plus de « cou ») ; mur safran et sa lisse blanche, panneau DAE, écran, kakémono « 1ère école pour le BTS SIO » au bout du mur ; chaises coque Eames sur piètement tour Eiffel (on s'y assoit : trois au sud, cinq au nord) ; trois jours de verre dépoli OPAQUE vert pâle à cadre blanc épais, quatre affiches sur celui du milieu, la double lisse grise dessous ; la borne contre le mur sud, tournée vers le nord, son écran en mosaïque de photos ; le pilier gris (0,86 × 0,43, x 9,18-10,04 × y 5,46-5,89 : 0,79 m du mur des jours, 1,25 m de passage jusqu'aux chaises du nord) et ses affiches ; plafond en lames perforées de 30 cm et sa bande de dalles lisses au sud, spots d'un blanc chaud (2 900 K) ; à droite du pilier, l'ouverture vers le hall (retour r02) ; le présentoir du C01 plus loin dans le couloir | P r02, 21, 02, 01, 03 ; VO 7-11,6 s, q_0034-0056 |
+| La salle d'attente | 3,1 × 7,5 m (3,125 nu à nu, retour r03 : 2,925 avant) entre le mur safran et le mur des jours dépolis, qui est aussi le mur nord de la Si 0.1 (V2 : 4,2 m plus près de la rue — il n'y a plus de « cou ») ; mur safran et sa lisse blanche, panneau DAE, écran, kakémono « 1ère école pour le BTS SIO » au bout du mur ; chaises coque Eames DAR à leur taille (0,63 × 0,60, assise à 0,45, 0,80 de haut — v1.9) sur piètement tour Eiffel, adossées aux deux murs (on s'y assoit : trois au sud, cinq au nord ; 1,89 m entre les bords avant des deux rangées) ; trois jours de verre dépoli OPAQUE vert pâle à cadre blanc épais, quatre affiches sur celui du milieu, la double lisse grise dessous ; la borne contre le mur sud, tournée vers le nord, son écran en mosaïque de photos ; le pilier gris (0,86 × 0,43, x 9,18-10,04 × y 5,46-5,89 : 0,79 m du mur des jours, 1,31 m de passage jusqu'aux chaises du nord — 1,25 en v1.8) et ses affiches ; plafond en lames perforées de 30 cm et sa bande de dalles lisses au sud, spots d'un blanc chaud (2 900 K) ; à droite du pilier, l'ouverture vers le hall (retour r02) ; le présentoir du C01 plus loin dans le couloir | P r02, 21, 02, 01, 03 ; VO 7-11,6 s, q_0034-0056 |
 | L'antichambre et le passage de la pile | derrière le bout du mur sud de la salle d'attente (x 9,24, le drapeau noir du bureau de direction sur sa face nord), 1,5 m de large, du mur nord du bureau (ligne y 2,925) à la ligne du mur des jours (4,6 depuis le retour r03) : sur le retour ouest, la porte grise de la Si 0.1 et la plaque « Bureau de direction B 0.3 » ; sur le mur du bureau, son jour dépoli ; elle rejoint le passage de la pile, qui s'ouvre sur le hall sur 2,1 m ; au bout, la porte vitrée du bureau à cadre blanc et à affiche ; sombre (pas de spot à elle) | P r02, 01, 03, 22 ; VO q_0040-0043 |
 | Le bureau de direction B 0.3 * | 3 m de profondeur derrière la porte vitrée : bureau de chêne, fauteuil et chaises visiteurs (on s'assoit), armoire, bibliothèque, tableau, plante dans l'angle | — |
 | La Si 0.1 Tim Berners-Lee * | l'ex-salle A, derrière la porte grise du retour de l'antichambre (sans son angle nord-est), 4,525 m de profondeur (r03 : −0,20, passages de 0,61-0,64 m) : deux rangs de postes face au nord (cinq, et quatre au fond), la toile devant les jours dépolis, le poste de l'enseignant, le tableau blanc, l'imprimante ; trois fenêtres sur la rue | nom : annuaire de la pile (VO) |
@@ -357,6 +366,50 @@ la carte des places atteignables ; hall → antichambre → salle → hall ouest
 salle → C01 → hall, l'escalier principal monté (3,50) et redescendu (0) ; `?tel=1` ; console sans erreur hors service
 worker.
 
+### La version 1.9 : la salle élargie, l'accueil de r04, les chaises à leur taille (12/10/2026)
+
+Trois travaux réunis : la salle d'attente élargie du retour r03 (plus haut), l'accueil refait sur la nouvelle photo de
+Haythem (r04) et les chaises coque ramenées à leur vraie taille. Les deux retours, partis tous deux de la v1.7, se sont
+fusionnés sans conflit (`js/carte_ecole.js` : le mur des jours d'un côté, le plafond et les spots du hall de l'autre).
+
+**Le retour r04 : l'accueil.** Haythem a envoyé une photo de l'accueil prise du hall, face au comptoir
+(`retours_haythem/r04_photo_accueil.jpg`, objectif normal) : « corrige après ». Sa pose a été résolue sur les points de
+fuite (le comptoir et le mur ardoise fuient au même point, la retombée et le retour blanc à angle droit : f ≈ 640 px,
+62° de champ), puis superposée au jeu arête sur arête : l'appareil en (13,6 ; 2,35), à 1,155 m, cap 75 — de là, le
+mur ardoise tombe sur le mitoyen et trois spots sur ceux de la VO à 0,1 m près.
+
+| Ce qui a changé | v1.7-v1.8 | v1.9 | D'où |
+|---|---|---|---|
+| Le comptoir | x 16,45-17,15, y 1,1-3,55, sur socle de bois, terminé par un pupitre de chêne grisé | x 16,83-17,53, y 1,1-3,6 : stratifié gris clair et sa rainure à 0,745, socle de chêne clair en retrait, tablette grise en saillie à 1,15 ; le pupitre et le range-documents de 2021 retirés | r04 |
+| Le décroché PMR | une tablette | y 3,6-4,58 : caisson bas en retrait, tablette à 0,76 sur un pied gris carré, caisson haut et sa tablette en débord ; bouilloire, bacs à courrier noirs, chemise rouge, papiers, l'écran « DELL » | r04 |
+| Le mitoyen gris ardoise | l'affiche à l'immeuble, la photo de la façade, les premiers secours | un gris neutre plus clair de y 1,82 à 4,43 ; DEUX affiches encadrées, redessinées sur r04 agrandie (l'immeuble au cadre magenta ; les câbles de couleur et l'immeuble vu d'en bas, le pavé « iris ») ; la caméra dôme | r04 |
+| Le bureau d'angle | — | la cloison vitrée à 45° du coin sud-est (verre clair, trois bandes de vitrophanie, baie à menuiserie gris bleu, porte vitrée) et le grand copieur blanc | r04, P 03, VO q_0380-0383 |
+| Le fond de l'accueil | — | le local technique (x 18,8-19,8, y 4,43-7,5) aux portes de bois clair, étiquette rouge, triangles jaunes, déclencheur rouge et boîtier blanc ; le pilier de bois clair et l'écran suspendu « Commander votre sweat à l'accueil » ; le panneau des formations aux trois bandeaux orange ; le portant noir des goodies sur roulettes (sweats « iris », affichette, brochures) | r04 |
+| L'angle nord-est | table blanche, chaise de hêtre (un siège), présentoir de bois | le meuble bas noir de r04 ; le photocopieur et les étiquettes « INFORMATIQUE » restent | r04, P 24 |
+| Le plafond du hall | plâtre lisse, spots en (17,7 ; 4,3) et (18,3 ; 6,3) | plateaux perforés 0,6 × 1,2, plus clairs (la surface la plus blanche de r04) ; la retombée est-ouest y 5,28-5,53 de la pile au local ; spots en (17,1 ; 4,95) et (18,55 ; 7,1) ; les lignes lumineuses en ruban de 3,5 cm | r04, P 03 |
+| L'open-space | quatre fauteuils | trois fauteuils (on s'y assoit), le passage du personnel par le nord, entre le caisson haut et le portant | r04 |
+
+**Les chaises coque à leur taille** (doute 3 de la relecture r03 : la coque faisait 0,63 × 0,67 hors tout et 0,83 de
+haut, et paraissait trop grosse sur la photo 02 — la citron y couvrait 137 px de large pour 120 sur la photo). Elle a
+maintenant les cotes d'une vraie Eames DAR : **0,63 de large, 0,60 de profondeur, l'assise à 0,45 devant, les
+accoudoirs à 0,635, le dossier à 0,80**, ourlet compris (`js/ecole_mobilier.js` `geoCoque` : le plan raccourci, le
+dossier un peu moins haut et un peu moins renversé ; la largeur, le baquet et le piètement inchangés). Les chaises
+restent contre leurs murs : la rangée nord recule de 3,5 cm (y 7,455), le haut des dossiers au nu du mur safran ; la
+rangée sud reste en 5,05, le dos de ses coques à 1 cm de la double lisse grise (il y mordait de 3 cm). Entre les bords
+avant des deux rangées, 1,89 m (1,80 en v1.8) ; du pilier gris aux chaises du nord, 1,31 m.
+
+Joué (intégration, port 8290) : la photo 02 et r02 rejouées à leur pose en v1.8 et en v1.9 (la citron passe à 127 px
+de large) ; la capture r03 de Haythem rejouée en vue 1 et en vue de jeu ; la chaise de face, de profil et de dessus ;
+r04 à sa pose (photo, jeu, fondu), la photo 03 et la photo 16 (de la rue), l'accueil en vue de jeu ; les **328 sièges**
+des quatre niveaux (42 au rez-de-chaussée, 112 au 1er, 55 au 2e, 119 au -1 ; 129 dans les rangs) : on s'assoit sur
+chacun et on se relève sur un point libre, à son niveau, sans NaN ; les huit chaises de la salle proposées, les trois
+fauteuils de l'open-space pris en marchant ; **26 parcours** à pied (la volée de tôle, l'escalier principal et
+l'escalier est en montée et en descente, les couloirs du -1, le C05, le C01, le passage, le 1er, le 2e, et deux
+nouveaux : porte 6 → antichambre → salle d'attente → hall ouest, et l'accueil par le passage du personnel), chacun dans
+les deux sens : aucun blocage, aucune chute, aucun NaN ; le tour des quatre niveaux en vue de jeu ; `?tel=1` (740 × 360 :
+la salle, l'accueil, l'escalier principal monté et redescendu, la volée de tôle) ; console sans erreur hors service
+worker.
+
 ### Ce qui reste imaginé
 
 Les pièces étoilées n'ont été vues ni sur les photos ni sur la vidéo (ou seulement leur porte) : leur intérieur est
@@ -380,8 +433,9 @@ Restent aussi imaginés ou incertains (avec la photo qui trancherait) :
     calent pas tout à fait ensemble) ; le pilier, compromis entre r02 et la 02 : à la pose refaite de la 02 il n'en est
     plus que la bande du bord gauche, mais sur r02 son affiche A2 paraît ≈ 15 % plus petite que sur la photo et il
     tombe 2 à 5° trop à gauche selon la pose — un pilier un peu plus près de r02, ou un peu plus gros (≈ 0,95 × 0,47), le serrerait
-    mieux (une photo de la salle prise du milieu, vers le pilier, trancherait) ; la coque des chaises fait 0,65 m de
-    profondeur, une vraie 0,60 ; aucune pose ne cale à la fois le dedans de la salle et les points fixes du hall
+    mieux (une photo de la salle prise du milieu, vers le pilier, trancherait) ; les chaises sont aux cotes d'une
+    vraie DAR (v1.9), mais leur coque reste un baquet un peu plus haut de flanc que sur les photos 02 et r02, où
+    l'accoudoir paraît plus bas devant le dossier (une photo d'une chaise de profil trancherait) ; aucune pose ne cale à la fois le dedans de la salle et les points fixes du hall
     ouest et de la pile (20 à 50 px d'écart restent sur r02 ; le présentoir et le radiateur sortent ≈ 15 px trop à
     droite) ; les chaises du sud sont 0,6 m plus à
     l'ouest sur r02 que sur la 02 (déplacées entre les deux prises ? r02 suivie) ; la borne est placée pour un appareil à
@@ -395,9 +449,12 @@ Restent aussi imaginés ou incertains (avec la photo qui trancherait) :
     entre le C01 et la pile vu de la photo 01 (≈ 1 m) ;
   - tout l'intérieur de la Si 0.1, la Si 0.2 et ses fenêtres, la courette ouest, les toilettes, le local, la PMR, le
     couloir de service, la réserve ouest et le local du fond (fermés) ;
-  - le texte des lames de l'annuaire et des affiches ; le pupitre de l'accueil (± 0,4 m) ; la cabine de l'ascenseur ;
-  - le plafond du hall d'entrée (la photo 03 n'y voit que des spots ronds) ; le ressaut de 10 cm entre le plafond du
-    hall ouest (2,30) et celui du C05 (2,40).
+  - le texte des lames de l'annuaire et des affiches ; la cabine de l'ascenseur ;
+  - l'accueil (retour r04) : le dedans du bureau d'angle et du local technique ; le dessin des deux affiches du mur
+    ardoise, redessinées sur r04 agrandie ; vue du bout est de la salle d'attente (photo 03), l'ouverture vers le hall
+    paraît plus étroite que sur la photo et le comptoir y est moins vu — c'est la jonction r02 (le mur nord du bureau de
+    direction, la pile) qui le décide, pas l'accueil (une photo du passage de la pile vers le hall trancherait) ;
+  - le ressaut de 10 cm entre le plafond du hall ouest (2,30) et celui du C05 (2,40).
 - **Sous-sol** : la focale de la vidéo (≈ 1 000 px mesurés, l'audit supposait 1 200) ; la profondeur du hall du -1 ; le
   mobilier de la pause (confiance moyenne) ; le passage sombre (si la porte sombre ouvre sur un local, le passage P est
   muré côté pause) ; le bloc est de la grande salle (la VO la mènerait en L) ; le nombre de marches de la descente est
@@ -417,8 +474,8 @@ Restent aussi imaginés ou incertains (avec la photo qui trancherait) :
   le 0.78 de `_dansLImage` dans `js/game.js`) ; à la pose de la photo 25 (vestibule est, Haythem dos au mur jaune), la
   vue reste plongeante, 65 cm au-dessus de sa tête, faute de recul derrière lui ; au pied de la volée de tôle (palier tournant de 0,85 m), Haythem reste translucide
   quelques dixièmes de seconde.
-- Les couleurs de 2026 des murs vus seulement en 2021 : le vestibule (jaune), le mitoyen de l'accueil (gris), le
-  couloir du 2e (rouge), l'espace pause du 1er (orange).
+- Les couleurs de 2026 des murs vus seulement en 2021 : le vestibule (jaune), le couloir du 2e (rouge), l'espace pause
+  du 1er (orange). (Le mitoyen de l'accueil, gris ardoise, est confirmé par r04.)
 
 ## Construire la suite de l'école
 
@@ -508,7 +565,7 @@ entre portes, murs et meubles, largeurs, profondeurs — sont celles des photos 
 
 **L'écran de chargement** : après avoir ajouté des fichiers chargés au démarrage, relever les profils
 (`?chargement=trace`, puis `?chargement=trace&tel=1`) et relancer `python tools/liste_chargement.py` (voir son en-tête).
-Changer aussi la version de `sw.js` (aujourd'hui `iris-v1.8`) quand index.html, le style, un module ou un fichier lourd
+Changer aussi la version de `sw.js` (aujourd'hui `iris-v1.9`) quand index.html, le style, un module ou un fichier lourd
 changent.
 
 **Ce que la caméra peut voir** (`js/ecole_visibilite.js`) : les ZONES sont écrites en dur, en coordonnées du plan V2 (les
