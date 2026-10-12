@@ -19,7 +19,11 @@ import { canvasTex } from './kit_decor.js';
 // carte, js/carte_ecole.js) : son contenu, relevé sur les photos 02 et 21, la suit d'un bloc
 const DY_A = -4.2;
 const A = (y) => y + DY_A;
-const ATT_YS = 9.0 + DY_A;          // la ligne du mur sud de la salle d'attente (4,8) : le verre des jours est sur elle
+// (retour de Haythem du 12/10, r03 : « trop étroite » — le mur sud recule de 0,20 vers la rue, la salle passe de 2,925 à
+// 3,125 nu à nu, mesurée sur la photo 02 : js/carte_ecole.js DY_R03 ; ce qu'il porte, ou ce qui s'y adosse, le suit — S)
+const DY_R03 = -0.20;
+const S = (y) => A(y) + DY_R03;
+const ATT_YS = 9.0 + DY_A + DY_R03; // la ligne du mur sud de la salle d'attente (4,6) : le verre des jours est sur elle
 
 // ---- LES CHAISES COQUE (type Eames DAR) : coque moulée, piètement « tour Eiffel » chromé ----
 // Couleurs relevées (photos 02, 21, rééquilibrées sur le blanc des murs) : blanc cassé, bleu canard (un bleu-vert
@@ -163,9 +167,10 @@ export function poserMobilier(ch) {
   // l'appareil de r02 (son assise à 3 400 px, son dossier à 2 800) et la 02 met celle du bout est vers 9,4 : la rangée
   // glisse de 0,3 m vers l'est, au même pas de 0,7)
   [[6.8, 'blanc'], [7.5, 'canard'], [8.2, 'grege'], [8.9, 'citron'], [9.6, 'blanc']].forEach(([x, c]) => chaise(ch, x, 7.42, 'S', COQUE[c]));
-  [[5.4, 'noir'], [6.2, 'rose'], [7.0, 'canard']].forEach(([x, c]) => chaise(ch, x, A(9.45), 'N', COQUE[c]));
+  // (r03, 12/10 : la rangée sud reste adossée au mur des jours, qui recule de 0,20 — S)
+  [[5.4, 'noir'], [6.2, 'rose'], [7.0, 'canard']].forEach(([x, c]) => chaise(ch, x, S(9.45), 'N', COQUE[c]));
   C.ajouterBoite(6.45, -7.75, 9.95, -7.05, { y1: 0.8 });
-  for (const x of [5.4, 6.2, 7.0]) C.ajouterBoite(x - 0.32, -A(9.8), x + 0.32, -A(9.1), { y1: 0.8 });
+  for (const x of [5.4, 6.2, 7.0]) C.ajouterBoite(x - 0.32, -S(9.8), x + 0.32, -S(9.1), { y1: 0.8 });
   // l'écran de 65 pouces (x 6,5-7,95, h 1,55-2,40) et l'affiche blanche aux graphismes vert pâle (x 8,4-9,4 ; r02 :
   // ce sont deux affiches côte à côte, le chevron vert et les logos « eph » — photo 02 agrandie)
   ch.boite(6.5, A(11.94), 7.95, A(12.0), 1.55, 2.4, M.noir);
@@ -189,7 +194,8 @@ export function poserMobilier(ch) {
     // Et elle regarde le NORD, droit dans la salle, le dos au mur : vu du bout ouest, son écran n'a que 95 px de large pour
     // 160 de borne, son flanc noir à droite — un écran de 0,54 vu sous 60°. Tournée vers le nord-ouest, elle faisait face
     // à l'appareil.
-    const bx = 8.6, by = 5.08, th = Math.PI;
+    // (r03, 12/10 : toujours contre le mur sud, qui recule de 0,20 — y 4,88)
+    const bx = 8.6, by = 5.08 + DY_R03, th = Math.PI;
     const borne = new THREE.Group(); borne.position.set(bx, 0, -by); borne.rotation.y = th; ch.decor.add(borne);
     maille(boiteM(0.62, 0.025, 0.42), M.noir, 0, 0.0125, 0.1, 0, borne);
     const fut = new THREE.Group(); fut.position.y = 0.025; fut.rotation.x = -0.025; borne.add(fut);
@@ -276,7 +282,9 @@ export function poserMobilier(ch) {
   // en bas —, près de l'angle nord-ouest ; la feuille verte unique du jeu n'y est pas)
   // (Relecture du 11/10 : le pilier est en x 8,80-9,66 × y 5,59-6,02 — js/carte_ecole.js — ; sa face ouest n'a que 0,43 de
   // large : l'affiche blanche, un A2 qui la remplit presque sur r02, fait 0,40 x 0,57)
-  const PO = { x: 8.8, xe: 9.66, yc: 5.805, yn: 6.02 };
+  // (retour r03 du 12/10 : le pilier a glissé sur le rayon de r02 avec la salle élargie, x 9,35-10,21 × y 5,39-5,82 —
+  // js/carte_ecole.js ; ses affiches le suivent)
+  const PO = { x: 9.35, xe: 10.21, yc: 5.605, yn: 5.82 };
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheDessins(), roughness: 0.7 }), 0.4, 0.57, PO.x - 0.006, PO.yc, 1.8, 'W');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAfficheOrange(), roughness: 0.7 }), 0.3, 0.42, PO.x - 0.006, PO.yc, 1.23, 'W');
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e9dcc0', '#f8f3e6', 70), roughness: 0.7 }), 0.24, 0.44, PO.x + 0.2, PO.yn + 0.006, 1.71, 'N');

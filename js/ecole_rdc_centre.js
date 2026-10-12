@@ -44,8 +44,10 @@ export const PILE = { x0: 13.30, x1: 14.675, y0: 4.7, y1: 7.575 };
 // 4,47-4,68) (Et le drapeau sur le cadre du jour : r02 rejouée à la même pose, sa base tombait 24 px à gauche de celle de
 // la photo, où elle touche le cadre du jour est — x 9,06 — et non le milieu du bout de mur ; la VO de 2021 le voit plutôt
 // à l'angle, mais les photos de 2026 priment : x 9,09)
-const Y_BUREAU = 4.875, X_RETOUR = 9.24;
-const Y_PLAQUE = 4.73, X_DRAPEAU = 9.09;
+// (retour de Haythem du 12/10, r03 : la salle d'attente élargie, son mur sud recule de 0,20 vers la rue — ligne 4,6, nu
+// nord 4,675, js/carte_ecole.js DY_R03 — ; le drapeau et la plaque restent à l'angle de son bout, contre lui)
+const Y_BUREAU = 4.875 - 0.20, X_RETOUR = 9.24;
+const Y_PLAQUE = Y_BUREAU - 0.145, X_DRAPEAU = 9.09;
 
 // =====================================================================
 //  LES TEXTURES

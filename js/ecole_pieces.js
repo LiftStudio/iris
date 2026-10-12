@@ -62,7 +62,10 @@ const H_DALLE = 3.25;                       // le dessous de la dalle du 1er ét
 // ---- les pièces, en plan (le nu intérieur des murs) ----
 // (11/10, plan V2 — scratchpad iris_audit/plan_v2.md § 2.2 : la salle d'attente recule de DY_A = -4,20, son mur sud est la
 // ligne y 4,8 ; la salle A, devenue la Si 0.1, perd 4,2 m de profondeur ; son mur ouest est le mur est du passage, x 4,5)
-const SA = { x0: 4.575, x1: 9.9, y0: 0, y1: 4.725 };       // la Si 0.1, l'ex-salle A
+// (retour de Haythem du 12/10, r03 : la salle d'attente s'élargit — son mur sud, le mur nord de la Si 0.1, recule de
+// 0,20 vers la rue, ligne 4,6, js/carte_ecole.js DY_R03 — : la Si 0.1, imaginée, perd 0,20 m de profondeur)
+const DY_R03 = -0.20;
+const SA = { x0: 4.575, x1: 9.9, y0: 0, y1: 4.725 + DY_R03 };   // la Si 0.1, l'ex-salle A
 // (retour de Haythem du 11/10, r02 : son angle nord-est, x 9,09-9,9 × y 3,0-4,725, est à l'antichambre — le mur sud de
 // la salle d'attente s'arrête en x 9,24 ; le retour x 9,165 porte sa porte, js/carte_ecole.js)
 const BB = { x0: 10.05, x1: 13.2, y0: 0, y1: 2.85 };        // le bureau B (jusqu'à son mur nord, la ligne y 2,925)
@@ -96,7 +99,8 @@ const ZONES = [
   // les autres pièces : sa porte n'est pas une ouverture, et les spots de la salle d'attente, qui n'ont pas d'ombre,
   // l'éclaireraient à travers le mur)
   // (retour r02 du 11/10 : sans son angle nord-est, à l'antichambre — jusqu'à l'axe du retour x 9,165 au nord de y 3,1)
-  { ...zone('si01', SA, { x: 7.7, y: 1.6, z: -2.55 }), rects: [[4.5, -4.8, 9.165, -SA.y0, -1], [9.165, -2.925, 9.975, -SA.y0, -1]] },
+  // (r03, 12/10 : jusqu'à l'axe du mur sud de la salle d'attente, la ligne 4,6)
+  { ...zone('si01', SA, { x: 7.7, y: 1.6, z: -2.45 }), rects: [[4.5, -(4.8 + DY_R03), 9.165, -SA.y0, -1], [9.165, -2.925, 9.975, -SA.y0, -1]] },
   // (10/10 : le bureau B a perdu son angle nord-est, le passage au sud-ouest de la pile du hall ; 11/10 : jusqu'aux axes de
   // ses murs — retour r02 : son mur nord est la ligne y 3,1, la ligne 2,925 à la relecture ; js/carte_ecole.js et
   // js/ecole_rdc_centre.js)
@@ -921,7 +925,11 @@ function texAfficheEtudiant() {
 // de la porte, on ne quittait pas la bande devant la toile, et les dix chaises n'étaient proposées depuis aucun point
 // atteint au pas de 5 cm. Les postes passent à 0,64 m, les tables s'arrêtent à x 9,12 — 0,78 m le long du mur est, de la
 // porte au fond — et le poste de l'enseignant à x 5,25 — 0,81 m entre les deux coins.)
-const RANGEES = [[1.3, 1.95], [3.15, 3.8]];          // (côté chaises, côté écrans)
+// (Retour r03 du 12/10 : la salle perd 0,20 m au nord — DY_R03. Le rang du fond recule de 0,10, le premier de 0,05, la
+// toile se plaque contre les jours ; le poste de l'enseignant suit le mur nord. Entre le rang du fond et la toile, il
+// reste 0,66 m — le passage depuis la porte, où se rabat le vantail — ; les chaises se relèvent à 0,5 m et non 0,55 :
+// derrière le rang du fond, le joueur ne mord pas plus qu'avant sur les tables du premier rang.)
+const RANGEES = [[1.25, 1.9], [3.05, 3.7]];          // (côté chaises, côté écrans)
 const POSTES = [6.32, 6.96, 7.6, 8.24, 8.88];
 function salleA(ch, P) {
   const { C } = ch;
@@ -943,30 +951,33 @@ function salleA(ch, P) {
       unite(ch, P, x + 0.2, yb - 0.26, 'S');
       // les chaises ne sont pas toutes rangées pile sous la table
       const r = graine(k * 11 + i * 3 + 1);
-      chaiseBureau(ch, P, x + (r() - 0.5) * 0.08, ya - 0.38 - r() * 0.04, 'N', { rot: (r() - 0.5) * 0.35, rayon: 0.17, sortie: [0, -0.55] });
+      chaiseBureau(ch, P, x + (r() - 0.5) * 0.08, ya - 0.38 - r() * 0.04, 'N', { rot: (r() - 0.5) * 0.35, rayon: 0.17, sortie: [0, -0.5] });
     });
     k++;
   }
   // un peu de vie : une gourde, un cahier
-  const gourde = groupe(ch, 7.36, 3.45, 'S', 0.745); CY(gourde, P.bleu, 0.035, 0.22, 0, 0.11, 0, 14); CY(gourde, P.chrome, 0.025, 0.03, 0, 0.235, 0, 10);
-  const cahier = groupe(ch, 8.72, 1.62, 'S', 0.745); B(cahier, P.jaune, 0.21, 0.012, 0.29, 0, 0.006, 0, { ombre: false }); cahier.rotation.y = 0.3;
+  const gourde = groupe(ch, 7.36, 3.35, 'S', 0.745); CY(gourde, P.bleu, 0.035, 0.22, 0, 0.11, 0, 14); CY(gourde, P.chrome, 0.025, 0.03, 0, 0.235, 0, 10);
+  const cahier = groupe(ch, 8.72, 1.57, 'S', 0.745); B(cahier, P.jaune, 0.21, 0.012, 0.29, 0, 0.006, 0, { ombre: false }); cahier.rotation.y = 0.3;
   // ---- le poste de l'enseignant (devant à gauche pour les élèves), contre le mur nord ; il s'y assoit face au mur, son
   // écran tourné vers lui ; derrière le fauteuil, l'allée ouest reste libre (0,75 m jusqu'au premier rang) ----
-  table(ch, P, 4.63, 5.25, 4.1, 4.7, { voile: false });
-  ecranPC(ch, P, 4.94, 4.5, 0.745, 'S', P.ecrans[4]);
-  clavier(ch, P, 4.9, 4.24, 0.745, 'S');
-  const doc = groupe(ch, 5.14, 4.32, 'S', 0.745); B(doc, P.blancMat, 0.21, 0.02, 0.3, 0, 0.01, 0, { ombre: false }); doc.rotation.y += 0.25;
-  chaiseBureau(ch, P, 4.94, 3.72, 'N', { accoudoirs: true, nom: 'le fauteuil de l’enseignant', sortie: [0.55, -0.45] });
-  corbeille(ch, P, 4.76, 3.3);
-  C.ajouterCercle(4.76, -3.3, 0.16, { y1: 0.4 });
+  // (r03 : contre le mur nord, qui recule de 0,20 — DY_R03)
+  const yN = DY_R03;
+  table(ch, P, 4.63, 5.25, 4.1 + yN, 4.7 + yN, { voile: false });
+  ecranPC(ch, P, 4.94, 4.5 + yN, 0.745, 'S', P.ecrans[4]);
+  clavier(ch, P, 4.9, 4.24 + yN, 0.745, 'S');
+  const doc = groupe(ch, 5.14, 4.32 + yN, 'S', 0.745); B(doc, P.blancMat, 0.21, 0.02, 0.3, 0, 0.01, 0, { ombre: false }); doc.rotation.y += 0.25;
+  chaiseBureau(ch, P, 4.94, 3.72 + yN, 'N', { accoudoirs: true, nom: 'le fauteuil de l’enseignant', sortie: [0.55, -0.45] });
+  corbeille(ch, P, 4.76, 3.3 + yN);
+  C.ajouterCercle(4.76, -(3.3 + yN), 0.16, { y1: 0.4 });
   // ---- la toile de projection, descendue devant les jours dépolis, au droit des rangs ----
-  const tl = groupe(ch, 7.7, 4.6, 'S');
+  // (r03 : plaquée contre le mur, son carter à 5 cm du nu, y 4,525 — y 4,42 et non 4,6 - 0,20)
+  const tl = groupe(ch, 7.7, 4.42, 'S');
   CY(tl, P.blancMat, 0.055, 2.5, 0, 2.52, 0.0, 16).rotation.z = Math.PI / 2;                 // le carter
   for (const s of [-1, 1]) B(tl, P.plastiqueGris, 0.03, 0.06, 0.08, s * 1.27, 2.55, 0);      // les embouts
   plan(tl, P.diapo, 2.24, 1.37, 0, 1.76, 0.0);
   B(tl, P.plastique, 2.28, 0.03, 0.025, 0, 1.065, 0);                                        // la barre de charge
   CY(tl, P.plastiqueGris, 0.004, 0.25, 0.4, 0.93, 0.0, 4, { ombre: false });                  // la cordelette
-  C.ajouterBoite(6.55, -4.54, 8.85, -4.66, { y0: 1.05, y1: 2.6 });
+  C.ajouterBoite(6.55, -4.36, 8.85, -4.48, { y0: 1.05, y1: 2.6 });
   // ---- le vidéoprojecteur au plafond, tourné vers la toile, à 3 m d'elle ----
   const vp = groupe(ch, 7.7, 1.6, 'N', 2.6);
   CY(vp, P.alu, 0.02, 0.22, 0, -0.11, 0, 8);

@@ -30,10 +30,11 @@
 //                                                         de 16 au-dessus de l'échiffre, le 1er au bout (photos 20, 06)
 //   le couloir C05             x 4,6-5,8     y 12,0-18,6  deux portes de toilettes, au fond la porte bleue de la salle
 //                                                         David Clark (photos 05, 23)
-//   la salle d'attente         x 5,8-13,3    y 4,8-7,875  le mur safran, les chaises coque, l'écran (photos 02, 03, 21) ;
-//                                                         au fond, la face ouest de la pile (11/10, plan V2 : DY_A)
+//   la salle d'attente         x 5,8-13,3    y 4,6-7,875  le mur safran, les chaises coque, l'écran (photos 02, 03, 21) ;
+//                                                         au fond, la face ouest de la pile (11/10, plan V2 : DY_A ;
+//                                                         12/10, r03 : 3,125 m nu à nu, le mur des jours a reculé)
 //   le couloir C01             x 11,7-13,5   y 12,0-20,6  toilettes, gaine technique (photo 01)
-//   l'antichambre, le passage  x 9,24-13,3   y 3,0-4,875   derrière le bout du mur sud de la salle d'attente, devant le mur
+//   l'antichambre, le passage  x 9,24-13,3   y 3,0-4,675   derrière le bout du mur sud de la salle d'attente, devant le mur
 //   de la pile                                            nord du bureau de direction (porte de la Si 0.1, jour du
 //                                                         bureau) ; il rejoint le hall au sud-ouest de la pile ; au
 //                                                         bout, la porte vitrée du bureau (photos 01, 03, r02 ; 11/10)
@@ -117,6 +118,19 @@ const RECT = { x0: -0.6, x1: 20.4, y0: -0.6, y1: 25.0 };
 // direction (ligne y 4,8), son bout est la face ouest de la pile ; tout ce qui est dedans suit d'un bloc (DY_A, plus haut :
 // la même déclaration, mot pour mot, que celle du lot B : la fusion n'en garde qu'une)
 const ATT = { ys: 9.0 + DY_A, yn: 12.075 + DY_A };        // les lignes du mur sud (4,8) et du mur safran (7,875)
+// LA SALLE D'ATTENTE S'ÉLARGIT (retour de Haythem du 12/10, r03 — sa capture du jeu, vue vers l'ouest depuis le bout est :
+// « c'est beaucoup mieux, mais cette partie est trop étroite : sur la photo, c'est plus grand et plus espacé ». Mesurée sur
+// la photo 02, pose refaite SANS la largeur du jeu : focale 615, le point de fuite de la salle pris sur trois joints du
+// carrelage — des carreaux de 60, comptés en travers : l'appareil à 1,40-1,48 —, la porte grise du hall ouest (2,04),
+// l'angle de la pile du plan d'évacuation, le bout ouest du mur sud et celui du mur jaune, les cadres des jours, la plinthe
+// du mur sud, l'arête haute du mur jaune ; le plafond se cale de lui-même à 2,60 — la retombée du hall, à 4,85, vue sous
+// 37 px, le confirme : 2,64-2,68. Nu à nu : 3,11 à 3,16 m (± 0,05) ; 2,95 si les chaises coque du nord touchent le mur
+// — leur bord avant est à 0,17 m à droite de l'appareil —, 3,13 sans elles. Le jeu en avait 2,925, l'appareil de la
+// relecture r02 à 0,46 m du mur jaune quand la photo l'y met à 0,76-0,95.) Le mur jaune ne bouge pas — le C05, les
+// toilettes et la cage, calés sur les photos 04, 05 et 23, sont derrière lui — : c'est LE MUR DES JOURS qui recule de
+// 0,20 m vers la rue, avec tout ce qu'il porte ; la Si 0.1, imaginée, perd 0,20 m de profondeur. Nu à nu : 3,125.
+const DY_R03 = -0.20;
+ATT.ys += DY_R03;                                          // le mur sud sur la ligne 4,6, son nu nord en 4,675
 
 // =====================================================================
 //  LE CHANTIER : des outils qui parlent en coordonnées du plan
@@ -919,7 +933,8 @@ function construireMurs(ch) {
   // sud de la salle d'attente (ligne y 4,8) ; au nord, le hall s'ouvre sur la salle. (La porte de l'ex-salle A n'est plus
   // ici : sur le mur sud de la salle d'attente.) (Côté passage, sa plinthe grise : plus haut.)
   ch.mur({ de: [4.5, -0.4], a: [4.5, 4.05], mats: { W: CR, E: B } });
-  ch.mur({ de: [4.5, 4.05], a: [4.5, 4.875], mats: B, plinthes: ['W'] });
+  // (r03, 12/10 : le mur sud de la salle recule de 0,20 — DY_R03 — ; ce mur s'arrête à son nu, 4,675)
+  ch.mur({ de: [4.5, 4.05], a: [4.5, ATT.ys + EP / 2], mats: B, plinthes: ['W'] });
   // ---- LA SALLE D'ATTENTE (photos 02, 03, 21, 22 ; VO q_0027-0046) ----
   // (11/10, plan V2 : elle n'est pas derrière un « cou » de 4,2 m — elle BORDE le bureau de direction et la Si 0.1, dont
   // les murs nord font son mur sud, et finit sur la face ouest de la pile : le même radiateur, les mêmes affichettes et le
@@ -1100,7 +1115,15 @@ function construireMurs(ch) {
   // (et il est plus SOMBRE que les murs : sur r02, sa face ouest est à 0,78 de la luminance du mur du fond, à la même
   // lumière ; le jeu le rendait à 0,92 — sa peinture grise, rien qu'ici, d'un ton plus bas)
   const grisPilier = M.pilier.clone(); grisPilier.color.multiplyScalar(0.84); grisPilier.name = 'pilier gris (salle d\'attente)';
-  pilier(8.8, 5.59, 9.66, 6.02, grisPilier);
+  // (RETOUR r03 DU 12/10 — la salle élargie, DY_R03 : le pilier GLISSE SUR LE RAYON DE r02, de 0,55 m vers l'est et
+  // 0,20 vers le sud, x 9,35-10,21 × y 5,39-5,82. Son arête nord-ouest reste là où r02 la voit — le rayon de la pose
+  // de la relecture, (5,28 ; 7,20) vers (8,80 ; 6,02) —, il garde ses 0,72 m au mur sud, qui recule d'autant, et son
+  // pied, à 4,30 m de l'appareil au lieu de 3,71, remonte vers les 2 580 px de la photo (le jeu en mettait 2 599). La
+  // photo 02 refaite, (11,0-11,2 ; 6,85-7,0), cap −94,5, ne le voit qu'au bord gauche de son cadre — la bande grise des
+  // 13 premiers pixels, son pied à 1 310 px : 1,71 m devant l'appareil, 1,13 à sa gauche, (9,3 ; 5,81) — : en
+  // (8,80 ; 6,02), il se dressait au tiers gauche de l'image, devant les jours. Entre lui et les chaises du nord, il
+  // reste 1,32 m de passage, et non 1,12 : c'est là que la capture de Haythem se resserrait.)
+  pilier(9.35, 5.39, 10.21, 5.82, grisPilier);
   // ---- LE HALL D'ENTRÉE ----
   // (09/10, photo 24 : la porte du mur nord n'est pas en x 17 mais en face de la porte 6 — 1,5 vantail, x 14,70-16,10 ;
   // à l'est, la cloison vitrée cannelée, le photocopieur devant elle côté hall (10/10 : l'angle nord-est est ouvert, VO
@@ -1301,7 +1324,10 @@ export function construireCarte(scene, renderer = null) {
   ch.plafond(1.75, 4.875, 4.85, 8.3, 2.3, 'platre');
   ch.plafond(1.75, 8.3, 4.85, 8.925, 2.3, 'platre', { retombees: false });
   ch.plafond(4.85, 8.05, 5.975, 8.925, 2.3, 'platre');
-  ch.plafond(4.7, 4.8, 5.3, 8.4, 2.6, 'dalles', { retombees: false });
+  // (r03, 12/10 : le mur sud de la salle recule de 0,20 — DY_R03 — ; la bande qu'il libère, x 4,5-4,85 × y 4,675-4,875,
+  // prend le plafond bas du hall et sa retombée en x 4,85 continue jusqu'au mur ; les dalles de la salle partent du mur)
+  ch.plafond(4.5, ATT.ys + EP / 2, 4.85, 4.875, 2.3, 'platre');
+  ch.plafond(4.7, ATT.ys, 5.3, 8.4, 2.6, 'dalles', { retombees: false });
   // C05 : une RETOMBÉE — le fond du couloir est plus bas (2,30), l'imposte de la porte bleue vient juste sous son
   // plafond (photos 05 et 23 : le premier hublot avant le ressaut, le second après ; 09/10). (V2, 11/10 : de la porte de
   // l'escalier à la porte bleue ; la photo 23 recalée — pose de rdc_ouest, f 1 500 — met le bas de la retombée à 0,8 m
@@ -1408,7 +1434,10 @@ export function construireCarte(scene, renderer = null) {
   // l'arête du pilier, 280 px au-dessus de l'horizon — rétroprojeté au plafond, (9,8-10,2 ; 4,65-4,9), aux deux poses de
   // r02 : c'est le quatrième de la rangée sud, au-dessus de l'entrée de l'antichambre. En (10,45 ; 5,15), le jeu le cachait
   // derrière le pilier et laissait le haut de l'ouverture sans lumière : il passe en (9,95 ; 4,8))
-  for (const [x, y, h] of [[5.5, 5.15, 2.6], [7.15, 5.15, 2.58], [8.8, 5.15, 2.58], [9.95, 4.8, 2.6], [5.35, 6.8, 2.6], [8.7, 6.8, 2.6], [12.05, 6.8, 2.6]]) ch.spot(x, y, h, 'attente', { couleur: chaudAtt });
+  // (r03, 12/10 : la rangée sud, dans la bande de dalles lisses, suit le mur des jours — à 0,3 m de son nu, y 4,95 ; celle
+  // du nord, rétroprojetée vers y 6,8, ne bouge pas ; le spot de l'antichambre non plus, contre l'arête du pilier sur r02)
+  const yS = ATT.ys + 0.35;
+  for (const [x, y, h] of [[5.5, yS, 2.6], [7.15, yS, 2.58], [8.8, yS, 2.58], [9.95, 4.8, 2.6], [5.35, 6.8, 2.6], [8.7, 6.8, 2.6], [12.05, 6.8, 2.6]]) ch.spot(x, y, h, 'attente', { couleur: chaudAtt });
   // (V2, 11/10 : la photo 01 recalée met le hublot qu'elle voit en (12,3 ; 10,7), au-dessus du local et de la gaine, un peu
   // à l'ouest de l'axe ; l'autre est derrière l'appareil, vers le fond)
   for (const [x, y] of [[12.3, 10.7], [12.3, 13.4]]) ch.opale(x, y, 2.45, 'c01');
@@ -1516,7 +1545,8 @@ export function construireCarte(scene, renderer = null) {
     // (plan V2 : le hall ouest en trois rectangles — la gorge derrière la paroi vitrée, entre la pile et la ligne x 4,5 ;
     // le hall ouvert sur la salle d'attente jusqu'à x 5,8 ; devant les portes de l'escalier et le C05, au nord du mur
     // safran, jusqu'à x 6,05)
-    { id: 'hallO', rects: [zr(1.6, 4.05, 4.5, 4.875), zr(1.6, 4.875, 5.8, 7.8), zr(1.6, 7.8, 6.05, 9.0)], voisines: ['passage', 'attente', 'c05', 'escalier'], env: { x: 3.6, y: 1.6, z: -6.4 } },
+    // (r03, 12/10 : jusqu'au mur sud de la salle, qui recule de 0,20 — DY_R03)
+    { id: 'hallO', rects: [zr(1.6, 4.05, 4.5, 4.875), zr(1.6, ATT.ys + EP / 2, 5.8, 7.8), zr(1.6, 7.8, 6.05, 9.0)], voisines: ['passage', 'attente', 'c05', 'escalier'], env: { x: 3.6, y: 1.6, z: -6.4 } },
     { id: 'c01', rects: [zr(11.6, 7.875, 13.6, 14.475)], voisines: ['attente'], env: { x: 12.6, y: 1.5, z: -11.1 } },
     // (11/10, plan V2 : la salle d'attente (DY_A) et le passage au sud-ouest de la pile, au droit des deux redents du
     // bureau B, jusqu'à la face ouest de la pile — plus de « cou » ; le hall perd la pile, js/ecole_rdc_centre.js)
