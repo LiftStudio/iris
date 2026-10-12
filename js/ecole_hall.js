@@ -318,7 +318,7 @@ function matieresHall() {
     boisClair: std({ map: texBoisClair(), roughness: 0.55 }, 'stratifié bois clair (pilier)'),
     // les portes du local, plus loin dans l'ombre de la retombée et d'un chêne plus grisé que le pilier (relecture du
     // 12/10, r04 : 124, 97, 76 à mi-hauteur, 98, 84, 75 sous le plafond, quand le jeu les rendait à 175 et 147)
-    boisLocal: std({ map: texBoisClair(), color: 0xb8aca2, roughness: 0.6 }, 'stratifié chêne grisé (portes du local)'),
+    boisLocal: std({ map: texBoisClair(), color: 0xd0cbca, roughness: 0.6 }, 'stratifié chêne grisé (portes du local)'),
     retour: std({ map: texPeinture(0xaca59f), roughness: 0.85 }, 'peinture gris clair (face sud du local)'),
     joint: std({ color: 0x4a3f36, roughness: 0.6 }, 'joint des portes du local'),
     bureau: std({ color: 0x3d4150, roughness: 0.48 }, 'bureau bleu-gris foncé'),
@@ -483,12 +483,16 @@ export function poserHall(ch) {
   // du mitoyen en y 1,82 et finit sur la façade en x 17,98, au bord du trumeau : la fenêtre c 18,98 est dans le bureau.
   // Rejouée à la pose de r04 : la vitre de 0,07 à 0,54 m du mitoyen le long de la cloison, le montant gris jusqu'à 0,64,
   // le plein blanc jusqu'à 1,04, la baie étroite jusqu'à 1,16 ; le haut des vitres à 2,07. La porte vitrée et le reste,
-  // hors du cadre de r04 : IMAGINÉS. Le blanc y est celui du jour — H.blancJour.)
+  // hors du cadre de r04 : IMAGINÉS. Le blanc y est celui du jour — H.blancJour.) (Relecture du 12/10 : les pleins, sauf
+  // le dernier contre le trumeau, sont vitrés — voir plus bas.)
   {
     const L = Y_ARD * Math.SQRT2, ep = 0.1, hv = H_VITRE;
     const g = new THREE.Group(); g.position.set(X_MIT, 0, -(X_MIT - BIAIS)); g.rotation.y = -3 * Math.PI / 4; ch.decor.add(g);
     // le long de la cloison (x local de 0 à L, vers la façade) : [début, fin, sorte]
-    const morceaux = [[0, 0.07, 'montant'], [0.07, 0.54, 'vitre'], [0.54, 0.64, 'poteau'], [0.64, 1.04, 'plein'], [1.04, 1.07, 'cadre'], [1.07, 1.13, 'baie'], [1.13, 1.16, 'cadre'], [1.16, 1.42, 'plein'], [1.42, 2.32, 'porte'], [2.32, L, 'plein']];
+    // (relecture du 12/10, la VO q_0380-0383 rejouée du nord : entre le mur ardoise et le trumeau, la cloison est du VERRE
+    // sous sa retombée — on y voit la fenêtre c 18,98 du bureau —, pas un mur blanc ; les deux « pleins » de r04, de 0,64 à
+    // 1,04 et de 1,16 à 1,42, sont le mitoyen blanc du bureau, au jour, vu au travers : des vitres claires, sans bandes)
+    const morceaux = [[0, 0.07, 'montant'], [0.07, 0.54, 'vitre'], [0.54, 0.64, 'poteau'], [0.64, 1.04, 'claire'], [1.04, 1.07, 'cadre'], [1.07, 1.13, 'baie'], [1.13, 1.16, 'cadre'], [1.16, 1.42, 'claire'], [1.42, 2.32, 'porte'], [2.32, L, 'plein']];
     for (const [a, b, s] of morceaux) {
       const w = b - a, cx = (a + b) / 2;
       if (s === 'plein') BL(g, H.blancJour, w, hv, ep, cx, hv / 2, 0);
@@ -499,7 +503,7 @@ export function poserHall(ch) {
         // une vitre (la grande, la porte : du verre clair et trois bandes de vitrophanie, de 1,50 à 1,82 m ; la baie étroite :
         // une vitre claire, lumineuse), son rail bas, son profil haut
         const v = new THREE.Mesh(new THREE.PlaneGeometry(w, hv - 0.1), s === 'baie' ? H.vitreClaire : H.verre); v.position.set(cx, 0.1 + (hv - 0.1) / 2, 0); v.userData.vitre = true; v.castShadow = false; g.add(v);
-        if (s !== 'baie') for (const [b0, b1] of [[1.5, 1.57], [1.63, 1.7], [1.74, 1.82]]) { const q = PL(g, H.bande, w, b1 - b0, cx, (b0 + b1) / 2, 0.003); q.castShadow = false; q.userData.vitre = true; }
+        if (s === 'vitre' || s === 'porte') for (const [b0, b1] of [[1.5, 1.57], [1.63, 1.7], [1.74, 1.82]]) { const q = PL(g, H.bande, w, b1 - b0, cx, (b0 + b1) / 2, 0.003); q.castShadow = false; q.userData.vitre = true; }
         BL(g, s === 'baie' ? H.cadreSombre : H.alu, w, 0.1, ep, cx, 0.05, 0);
         BL(g, s === 'baie' ? H.cadreSombre : H.alu, w, 0.04, ep, cx, hv - 0.02, 0);
         if (s === 'porte') {
@@ -514,7 +518,7 @@ export function poserHall(ch) {
     // (relecture du 12/10 : une cloison ne porte pas d'ombre, comme les murs — la sienne, sous le « soleil » des plafonniers,
     // couvrait à moitié le copieur et le rendait beige, quand r04 le montre blanc dans le jour de la fenêtre)
     g.traverse((m) => { if (m.isMesh) { m.receiveShadow = true; m.castShadow = false; } });
-    // le monde solide : la cloison entière ; vitrée aux trois cinquièmes, elle laisse passer la lumière cuite de la fenêtre
+    // le monde solide : la cloison entière ; vitrée presque partout, elle laisse passer la lumière cuite de la fenêtre
     // de façade (le jour c 18,98, dans le bureau)
     C.ajouterBoiteOrientee(X_MIT - Y_ARD / 2, -Y_ARD / 2, L / 2, ep / 2, 3 * Math.PI / 4, { y1: H_PLAF, vitre: true });
   }
@@ -728,11 +732,14 @@ export function poserHall(ch) {
       const b = PL(g, br, l - 0.03, 0.22, 0, h + 0.115, 0.01); b.rotation.x = -0.35;
     }
     for (const h of [0.81, 1.15, 1.4]) BL(g, N, l, 0.012, 0.26, 0, h, -0.02);
-    // les sweats pliés : un pavé arrondi, mou (RoundedBox), le devant imprimé
+    // les sweats pliés : un pavé arrondi, mou (RoundedBox), le devant imprimé, et le pli du dessus, plus étroit, qui
+    // retombe un peu de travers — sans lui, deux valises blanches
     const sw = (imprime, h0, h1) => {
       const m = [new THREE.MeshStandardMaterial({ color: imprime ? 0xe4e4e6 : 0xeeedea, roughness: 0.95 }), new THREE.MeshStandardMaterial({ map: texSweat(imprime), roughness: 0.95 })];
-      const b = new THREE.Mesh(new RoundedBoxGeometry(0.39, h1 - h0, 0.27, 3, 0.05), [m[0], m[0], m[0], m[0], m[1], m[0]]);
-      b.position.set(0, (h0 + h1) / 2, -0.015); b.rotation.z = imprime ? 0.012 : -0.02; b.castShadow = true; g.add(b);
+      const hb = (h1 - h0) * 0.78, b = new THREE.Mesh(new RoundedBoxGeometry(0.39, hb, 0.27, 3, 0.06), [m[0], m[0], m[0], m[0], m[1], m[0]]);
+      b.position.set(0, h0 + hb / 2, -0.015); b.rotation.z = imprime ? 0.012 : -0.02; b.castShadow = true; g.add(b);
+      const p = new THREE.Mesh(new RoundedBoxGeometry(0.33, (h1 - h0) * 0.3, 0.24, 3, 0.03), m[0]);
+      p.position.set(imprime ? -0.015 : 0.02, h1 - (h1 - h0) * 0.15, -0.025); p.rotation.set(0.04, imprime ? -0.06 : 0.08, imprime ? -0.03 : 0.04); p.castShadow = true; g.add(p);
     };
     sw(false, 1.405, 1.63); sw(true, 1.155, 1.4);
     const a = PL(g, new THREE.MeshStandardMaterial({ map: texAffichette(), roughness: 0.6 }), 0.47, 0.31, 0, 0.975, 0.115);
