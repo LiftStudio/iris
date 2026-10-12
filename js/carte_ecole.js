@@ -1172,7 +1172,7 @@ function construirePorteFond(ch) {
 
 // L'ACCUEIL ET LE HALL D'ENTRÉE (VO 6,4-7,4 s et 92,5-95,8 s, photos 03, 16, 24 ; 10/10 ; retour r04 de Haythem du 12/10,
 // sa photo de l'accueil) : le comptoir n'est pas le long de la façade mais NORD-SUD, face à l'ouest (x 16,83-17,53, y
-// 1,1-3,6), terminé au nord par le décroché PMR et un retour à tablette haute ; derrière lui l'open-space du personnel,
+// 1,1-3,6), terminé au nord par le décroché PMR et son caisson à tablette haute ; derrière lui l'open-space du personnel,
 // le mitoyen gris ardoise et ses deux affiches, la cloison biaise du bureau d'angle ; au fond, le local technique aux
 // portes de bois clair, le pilier et son écran, le panneau des formations, le portant des goodies ; l'angle nord-est
 // (photocopieur, étiquettes « INFORMATIQUE », meuble noir) ; la retombée et les lignes lumineuses du plafond :
