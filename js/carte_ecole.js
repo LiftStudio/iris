@@ -1169,11 +1169,13 @@ function construirePorteFond(ch) {
   ch.porte('x', yL, (x0 + x1) / 2, { l: x1 - x0 - 2 * c, h: hv, modele: 'bleue', etat: 'auto', cote: 'S', huisserie: false, libre: 1, nom: 'salle David Clark' });
 }
 
-// L'ACCUEIL ET LE HALL D'ENTRÉE (VO 6,4-7,4 s et 92,5-95,8 s, photos 03, 16, 24 ; 10/10) : le comptoir n'est pas le long
-// de la façade mais NORD-SUD, face à l'ouest (x 16,45-17,15, y 1,1-3,55), terminé au nord par la tablette PMR et le
-// pupitre de chêne grisé ; derrière lui l'open-space du personnel, le mitoyen gris ardoise et ses affiches ; l'angle
-// nord-est ouvert (photocopieur, étiquettes « INFORMATIQUE », table, présentoir de bois) ; les lignes lumineuses du
-// plafond : js/ecole_hall.js.
+// L'ACCUEIL ET LE HALL D'ENTRÉE (VO 6,4-7,4 s et 92,5-95,8 s, photos 03, 16, 24 ; 10/10 ; retour r04 de Haythem du 12/10,
+// sa photo de l'accueil) : le comptoir n'est pas le long de la façade mais NORD-SUD, face à l'ouest (x 16,83-17,53, y
+// 1,1-3,6), terminé au nord par le décroché PMR et un retour à tablette haute ; derrière lui l'open-space du personnel,
+// le mitoyen gris ardoise et ses deux affiches, la cloison biaise du bureau d'angle ; au fond, le local technique aux
+// portes de bois clair, le pilier et son écran, le panneau des formations, le portant des goodies ; l'angle nord-est
+// (photocopieur, étiquettes « INFORMATIQUE », meuble noir) ; la retombée et les lignes lumineuses du plafond :
+// js/ecole_hall.js.
 function construireAccueil(ch) {
   const { M } = ch;
   poserHall(ch);
@@ -1363,7 +1365,9 @@ export function construireCarte(scene, renderer = null) {
   chaudPlafond(ch.plafond(5.9, ATT.ys, 13.5, ATT.ys + 0.675, 2.58, 'dalles'));
   ch.plafond(5.3, ATT.ys, 5.9, ATT.yn - 0.075, 2.6, 'dalles', { retombees: false });
   ch.plafond(11.7, 7.8, 13.5, 14.4, 2.45, 'platre');                 // C01 (V2 : de l'entrée, y 7,8, au fond)
-  ch.plafond(13.35, 0.3, 19.8, 7.5, 2.6, 'platre');                  // le hall d'entrée
+  // le hall d'entrée (retour r04 du 12/10 : des plateaux perforés de 0,6 x 1,2, leurs joints nord-sud serrés — r04 au-dessus
+  // de l'accueil ; photo 03 au-dessus de l'entrée —, et non du plâtre lisse ; la retombée est-ouest : js/ecole_hall.js)
+  ch.plafond(13.35, 0.3, 19.8, 7.5, 2.6, 'plateaux');
   // le bureau B (visitable : js/ecole_pieces.js) et le passage au sud-ouest de la pile, d'un seul tenant (plateaux à 2,60)
   ch.plafond(9.9, 0, 13.35, ATT.ys, 2.6, 'plateaux');
   ch.plafond(4.5, 0, 9.9, ATT.ys, 2.6, 'plateaux');                   // la Si 0.1, l'ex-salle A (visitable : js/ecole_pieces.js)
@@ -1415,7 +1419,10 @@ export function construireCarte(scene, renderer = null) {
   // (10/10, VO 92,6-94,8 s : les spots ronds du hall relevés depuis la porte nord — une rangée vers y 4,3 au bout des
   // lignes lumineuses, une vers y 3,2 au-dessus du comptoir ; au-dessus de l'open-space et dans l'angle nord-est, rouvert,
   // posés au même pas. Les huit lignes : js/ecole_hall.js)
-  for (const [x, y] of [[15.4, 4.3], [16.55, 4.3], [17.7, 4.3], [17.25, 3.2], [18.75, 3.2], [17.25, 1.5], [18.75, 1.5], [15.9, 6.2], [18.3, 6.3]]) ch.spot(x, y, 2.6, 'hall');
+  // (Retour r04 du 12/10, la photo de l'accueil rejouée à sa pose : (17,25 ; 3,2), (18,75 ; 3,2) et (18,75 ; 1,5) y sont, à
+  // 0,1 m près ; pas de spot en (17,7 ; 4,3) — il en a un en (17,1 ; 4,85), devant la retombée ; au fond à gauche, le spot
+  // est en (18,75 ; 7,1), près du mur nord — en (18,3 ; 6,3), il tombait sur le pilier de bois clair)
+  for (const [x, y] of [[15.4, 4.3], [16.55, 4.3], [17.1, 4.85], [17.25, 3.2], [18.75, 3.2], [17.25, 1.5], [18.75, 1.5], [15.9, 6.2], [18.75, 7.1]]) ch.spot(x, y, 2.6, 'hall');
   // (10/10 : le bureau B a perdu son angle nord-est, le passage de la pile — le second spot recule)
   for (const [x, y] of [[11.0, 2.4], [12.55, 1.55]]) ch.spot(x, y, 2.6, 'bureauB');
   // (la Si 0.1 : ses dalles LED sont posées avec son mobilier, js/ecole_pieces.js)
