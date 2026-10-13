@@ -426,7 +426,9 @@ export class Portes {
       for (const sx of [-1, 1]) maille(boiteM(0.05, h + 0.05, ep + 0.02), mh, sx * (l / 2 + 0.02), (h + 0.05) / 2, 0, 0, g);
       maille(boiteM(l + 0.09, 0.05, ep + 0.02), mh, 0, h + 0.025, 0, 0, g);
     }
-    const zf = cote * (ep / 2 - 0.03);                     // le plan du vantail fermé, dans l'épaisseur du mur
+    // (13/10, lot C2 — `retrait` : le vantail posé plus profond dans son huisserie ; les toilettes du C05, photo 23 :
+    // 6 cm d'ébrasement devant le vantail)
+    const zf = cote * (ep / 2 - 0.03 - (o.retrait || 0));  // le plan du vantail fermé, dans l'épaisseur du mur
     const vantaux = [];
     const faire = (w, s) => {
       // (`matVantail` : un autre stratifié — le gris taupe des portes de l'escalier est ; `poignee: null` : un semi-fixe)

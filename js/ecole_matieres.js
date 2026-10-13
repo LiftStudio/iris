@@ -7,9 +7,10 @@
 // éclairage à 3000 K). Les UV des surfaces sont en MÈTRES : une texture dit combien de mètres elle couvre (`m`), et
 // `repeat` vaut 1 / m.
 //
-// LE CARRELAGE (photos 01 à 05, 21) : grès cérame anthracite en GRANDES DALLES de 60 x 120 posées à joints décalés d'une
-// demi-dalle, le grand côté dans l'axe de chaque pièce. La dalle imite un béton strié : un fond gris anthracite, de
-// longues stries plus claires dans le sens de la longueur, quelques nuages plus sombres, un grain fin. Fini satiné : les
+// LE CARRELAGE (photos 01 à 05, 21, 23) : grès cérame anthracite en CARREAUX de 60 x 60 en pose droite (13/10 : les
+// photos 23 et 01 redressées — ce n'étaient pas des dalles de 60 x 120 à joints décalés), le veinage tourné d'un quart de
+// tour d'un carreau à l'autre. Le carreau imite un béton strié : un fond gris anthracite, de
+// longues stries plus claires dans le sens du veinage, quelques nuages plus sombres, un grain fin. Fini satiné : les
 // plafonniers s'y reflètent en traînées molles (photo 02). Trois cartes : la couleur, le relief (le joint de 2 mm en
 // creux, le léger bombé de la dalle), la rugosité (dalle satinée, stries un peu plus mates, joint mat).
 // LE PASSAGE DES ÉTUDIANTS (photos 07, 19) : grès gris clair 30 x 60 en pose droite.
@@ -46,18 +47,22 @@ function texRugosite(w, h, draw) {
 }
 
 // =====================================================================
-//  LE CARRELAGE ANTHRACITE : 60 x 120, joints décalés d'une demi-dalle
+//  LE CARRELAGE ANTHRACITE : 60 x 60, en pose droite
 // =====================================================================
-// Une tuile de dessin = 2,4 m x 2,4 m : quatre rangées de 60 cm, deux dalles de 120 cm par rangée, décalées de 60 cm
-// d'une rangée à l'autre — huit dalles toutes différentes. u = le grand côté des dalles.
-export const CARRELAGE = { m: 2.4, dalleL: 1.2, dalleH: 0.6 };
+// (13/10, lot C2 — le sol redressé de la photo 23, pose refaite sur les portes, les joints et une affiche A4, f 1 600 :
+// dans le C05 et devant lui, des CARREAUX DE 60 x 60 en pose DROITE, joints filants dans les deux sens — x 4,56 / 5,16 /
+// 5,76, y 8,37 / 8,97 / 9,57 / 10,17 —, et non des dalles de 60 x 120 à joints décalés ; la photo 01 redressée montre la
+// même grille dans le C01, trois rangs de 60 dans la largeur, les joints en travers filants ; les photos 03 et 04, les
+// mêmes carrés dans les deux halls. Le veinage n'a pas de sens de pose : d'un carreau à l'autre il tourne d'un quart de
+// tour — le damier de tons de la photo 04.)
+// Une tuile de dessin = 2,4 m x 2,4 m : quatre rangées de quatre carreaux de 60 cm, seize carreaux tous différents ; un
+// sur deux, à peu près, est posé le veinage en travers. u = le sens du veinage des carreaux non tournés.
+export const CARRELAGE = { m: 2.4, dalleL: 0.6, dalleH: 0.6 };
+const VEINAGE_TOURNE = [[0, 1, 0, 0], [1, 0, 1, 0], [0, 0, 1, 1], [1, 0, 0, 1]];
 function dallesCarrelage(f) {
-  // f(x0, y0, w, h, i) pour chaque dalle (en fractions de la tuile), y compris les morceaux qui débordent (répétition)
-  const nR = 4, L = 0.5, H = 0.25;
-  for (let r = 0; r < nR; r++) {
-    const dec = (r % 2) * 0.25;
-    for (let k = -1; k < 2; k++) f(dec + k * L, r * H, L, H, r * 3 + k + 1);
-  }
+  // f(x0, y0, w, h, i, tourne) pour chaque carreau (en fractions de la tuile)
+  const n = 4, c = 1 / n;
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) f(k * c, r * c, c, c, r * n + k, !!VEINAGE_TOURNE[r][k]);
 }
 // Poser un calque FLOUTÉ (rayon `r` px) sur un canevas. Le filtre de canevas (`filter = 'blur()'`) manque aux Safari
 // d'avant la version 18 : là, un flou approché — le calque réduit puis réagrandi avec lissage —, sinon les mèches du
@@ -93,7 +98,7 @@ function texCarrelageCouleur() {
   return canvasTex(px, px, (g, w, h) => {
     g.fillStyle = rgb(br, bg, bb); g.fillRect(0, 0, w, h);
     const flou = w / 2048;                                   // (le flou suit la résolution : même aspect au téléphone)
-    const dalle = (fx, fy, fw, fh) => {
+    const dalle = (fx, fy, fw, fh, i, tourne) => {
       const x0 = fx * w, y0 = fy * h, dw = fw * w, dh = fh * h;
       // (la graine suit la place de la dalle dans la tuile, RAMENÉE dans [0, 1[ : la dalle à cheval sur le bord de la
       // répétition est dessinée deux fois, à gauche et à droite, et doit l'être à l'identique — avec deux graines, elle
@@ -101,8 +106,11 @@ function texCarrelageCouleur() {
       const r2 = graine(911 + (Math.round((((fx % 1) + 1) % 1) * 8) + Math.round(fy * 4) * 8) * 37);
       g.save(); g.beginPath(); g.rect(x0, y0, dw, dh); g.clip();
       // le ton de la dalle (lot de fabrication) et sa « charge » de mèches (0,25 : presque nue ; 1 : très veinée)
-      const t = (r2() - 0.5) * 12, charge = 0.25 + 0.75 * Math.pow(r2(), 0.8);
+      // (13/10 : le carreau posé le veinage en travers prend la lumière autrement — un rien plus clair, photo 04)
+      const t = (r2() - 0.5) * 12 + (tourne ? 3 : -1), charge = 0.25 + 0.75 * Math.pow(r2(), 0.8);
       g.fillStyle = rgb(br + t, bg + t, bb + t * 0.95); g.fillRect(x0, y0, dw, dh);
+      // (le veinage tourné d'un quart de tour : le carreau est carré, il retombe sur lui-même)
+      if (tourne) { g.translate(x0 + dw / 2, y0 + dh / 2); g.rotate(Math.PI / 2); g.translate(-(x0 + dw / 2), -(y0 + dh / 2)); }
       // 1. LES VOILES : de grandes nappes floues, étirées dans la longueur, un peu plus claires (et quelques-unes sombres)
       for (let k = 0; k < 16; k++) {
         const cx = x0 + r2() * dw, cy = y0 + r2() * dh, rx = dw * (0.18 + r2() * 0.45), ry = dh * (0.06 + r2() * 0.22);
@@ -613,7 +621,7 @@ export function materiauxEcole() {
   M.sol.roughnessMap.repeat.copy(carr.repeat);
   // (relief des joints 0,55 -> 0,3 : à 0,55, l'arête des dalles accrochait les plafonniers ; relecture du 09/10)
   avecRelief(M.sol, normalesCarrelage(), 0.3);
-  M.sol.name = 'carrelage anthracite 60x120';
+  M.sol.name = 'carrelage anthracite 60x60';
   const pas = texPassage();
   M.solPassage = std({ map: pas, roughness: 0.5 });
   avecRelief(M.solPassage, normalesPassage(), 0.5);

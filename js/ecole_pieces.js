@@ -84,11 +84,16 @@ const SV = { x0: 0, x1: 1.6, y0: 0, y1: 4.925 };
 const DY_S = -4.675;
 const Y_ESC = 13.675 + DY_S;                                 // 9,0 : le mur des portes de l'escalier
 const LT = { x0: 9.0, x1: 11.55, y0: 7.95, y1: 11.95 };      // le local technique (porte du C01, y 10,6)
-const WF = { x0: 6.125, x1: 8.85, y0: 7.95, y1: 10.45 };     // les toilettes femmes (porte du C05, y 8,575)
-const WH = { x0: 6.125, x1: 8.85, y0: 10.6, y1: 13.925 };    // les toilettes hommes (porte du C05, y 11,05)
+// (13/10, lot C2 — le C05 refait sur la photo 23, js/carte_ecole.js `C05` : son mur est sur la ligne 5,995 (nu du couloir
+// 5,92, nu des toilettes 6,07), son mur du fond en 12,71-12,86 ; les deux portes des toilettes ont des vantaux de 0,93,
+// celui des femmes centré en 8,48, celui des hommes en 10,983 — la cloison entre les deux pièces recule de 17,5 cm, ligne
+// 10,35, pour laisser son huisserie à la porte des hommes)
+const C05 = { xO: 4.53, xE: 5.92, xM: 5.995, yFond: 12.71, lWC: 0.93, yF: 8.48, yH: 10.983 };
+const WF = { x0: 6.07, x1: 8.85, y0: 7.95, y1: 10.275 };     // les toilettes femmes (porte du C05, y 8,48)
+const WH = { x0: 6.07, x1: 8.85, y0: 10.425, y1: 13.925 };   // les toilettes hommes (porte du C05, y 10,983)
 const PM = { x0: 9.0, x1: 11.55, y0: 12.1, y1: 14.4 };       // les toilettes PMR (porte du C01, y 12,9)
 const DC = { x0: 0.475, x1: 8.85, y0: 14.15, y1: 20.925 };   // la salle David Clark, Si 0.2 (59 m² avec son entrée)
-const DCE = { x0: 4.75, x1: 5.975, y0: Y_ESC + 3.75, y1: 14.15 };   // son entrée, derrière la porte bleue du C05
+const DCE = { x0: 4.75, x1: C05.xE, y0: C05.yFond + 0.15, y1: 14.15 };   // son entrée, derrière la porte bleue du C05
 const CO = { x0: -4.1, x1: 0.175, y0: 12.75, y1: 16.8 };     // la courette ouest, entre les deux ailes (dehors)
 
 // LES ZONES DE LUMIÈRE (js/ecole_lumieres.js) : rectangles en MONDE [x0, z0, x1, z1, hauteur mini], le point de prise de
@@ -111,11 +116,11 @@ const ZONES = [
   // cabines — à 50 cm d'elles, à hauteur d'homme, la carte n'était qu'un mur safran : faïence, peinture, embrasure et
   // jusqu'au mur du C05 vu par la porte sortaient orangés. Femmes : côté porte ; hommes : devant les urinoirs)
   // (V2, 11/10 : la zone prend aussi l'embrasure de la porte, x 6,05-6,125 — elle n'était à personne)
-  { ...zone('wcF', WF, { x: 6.5, y: 2.2, z: -8.6 }), rects: [[6.05, -WF.y1, WF.x1, -WF.y0, -1]] },
-  { ...zone('wcH', WH, { x: 7.0, y: 2.2, z: -13.1 }), rects: [[6.05, -WH.y1, WH.x1, -WH.y0, -1]] },
+  { ...zone('wcF', WF, { x: 6.5, y: 2.2, z: -8.6 }), rects: [[C05.xM, -WF.y1, WF.x1, -WF.y0, -1]] },
+  { ...zone('wcH', WH, { x: 7.0, y: 2.2, z: -13.1 }), rects: [[C05.xM, -WH.y1, WH.x1, -WH.y0, -1]] },
   zone('pmr', PM, { x: 10.3, y: 1.5, z: -13.2 }),
   // (V2, 11/10 : la salle David Clark et son entrée, ouvertes sur le C05 par la porte bleue — `dc`, plan_v2.md § 2.2)
-  { id: 'dc', rects: [[DC.x0 - 0.075, -21.0, 8.925, -14.075, -1], [4.6, -14.075, 6.05, -(Y_ESC + 3.675), -1]], voisines: ['c05'], env: { x: 4.7, y: 1.7, z: -17.6 } },
+  { id: 'dc', rects: [[DC.x0 - 0.075, -21.0, 8.925, -14.075, -1], [C05.xO, -14.075, C05.xM, -(C05.yFond + 0.075), -1]], voisines: ['c05'], env: { x: 4.7, y: 1.7, z: -17.6 } },
 ];
 
 // =====================================================================
@@ -600,9 +605,12 @@ function texSolGlissant() {
 }
 // LA PLAQUE DES TOILETTES (photos 23 et 01, 09/10) : noire, une petite mention en haut, le pictogramme blanc dans un cadre
 // carré au trait, « Toilettes » dessous ; `picto` : 'femme' | 'homme' | 'pmr' (la personne debout et le fauteuil)
+// (13/10, lot C2 — photo 23 à sa pose refaite : la plaque est presque CARRÉE, 18 x 19 cm — le même dessin sur un fond
+// plus large)
 function texPlaqueWC(picto) {
-  return canvasTex(96, 128, (g, w) => {
-    g.fillStyle = '#2a2826'; g.fillRect(0, 0, w, 128);
+  return canvasTex(120, 128, (g, w0) => {
+    g.fillStyle = '#2a2826'; g.fillRect(0, 0, w0, 128);
+    const w = 96; g.translate((w0 - w) / 2, 0);
     g.fillStyle = '#d8d6d2'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
     g.font = '600 7px "Segoe UI", Arial, sans-serif'; g.fillText('RDC', w / 2, 13);
     g.strokeStyle = '#f2f2f2'; g.lineWidth = 2.5; g.strokeRect(24, 22, 48, 60);
@@ -1248,7 +1256,7 @@ function cloisonsBande(ch) {
   ch.mur({ de: [8.925, 7.875], a: [8.925, 12.025], mats: B0, plinthes: ['E'] });
   ch.mur({ de: [8.925, 12.025], a: [8.925, 14.075], mats: B0 });
   ch.mur({ de: [8.925, 14.075], a: [8.925, 21.075], mats: B0, plinthes: ['W'] });
-  ch.mur({ de: [6.05, 10.525], a: [8.925, 10.525], mats: B0 });                         // femmes / hommes
+  ch.mur({ de: [C05.xM, (WF.y1 + WH.y0) / 2], a: [8.925, (WF.y1 + WH.y0) / 2], mats: B0 });   // femmes / hommes (13/10 : ligne 10,35)
   ch.mur({ de: [8.925, 12.025], a: [11.625, 12.025], mats: B0, plinthes: ['S'] });      // local / PMR
   ch.mur({ de: [8.925, 14.475], a: [11.55, 14.475], mats: B0 });                        // le fond des toilettes PMR
 }
@@ -1460,18 +1468,23 @@ function poubelleWC(ch, P, x, y) {
 // jeu, elles tombaient 0,1 m sous celles de la photo)
 let _affichesWC = null;
 function signaletiqueC05(ch, P, yPorte, picto) {
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaqueWC(picto), roughness: 0.4 }), 5.975, yPorte + 0.58, 'W', 0.12, 0.16, 1.62, { ep: 0.005 });
+  // (13/10, lot C2 — photo 23 à sa pose refaite, f 1 600 : les deux plaques font 18 x 19 cm, de 1,51 à 1,70 m, leur
+  // bord à 5 cm de l'huisserie — centre à 0,66 du milieu d'une porte de 0,93 ; elles faisaient 12 x 16)
+  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaqueWC(picto), roughness: 0.4 }), C05.xE, yPorte + 0.66, 'W', 0.18, 0.19, 1.605, { ep: 0.005 });
   if (!_affichesWC) _affichesWC = [texAfficheProtections(), texAffichePersonnages()].map((t) => new THREE.MeshStandardMaterial({ map: t, roughness: 0.75 }));
-  const porte = ch.portes.auto.find((q) => Math.abs(q.cx - 6.05) < 0.01 && Math.abs(q.cz + yPorte) < 0.01);
+  const porte = ch.portes.auto.find((q) => Math.abs(q.cx - C05.xM) < 0.01 && Math.abs(q.cz + yPorte) < 0.01);
   const v = porte && porte.vantaux[0];
   if (!v) return;
   // (dans le repère du vantail : le gond en x = 0, le vantail vers +x — le nord —, la face du C05 en -z ; la fente
   // vitrée a son axe à 0,20 du bord libre, son noyer s'arrête à 0,305 : la première affiche juste à côté, à un doigt, la
   // seconde vers les gonds ; de 1,32 à 1,62 m, au-dessus de la béquille, photo 23 — relecture du 11/10, à sa pose :
   // 1,31-1,62, le jeu les mettait 5 cm plus bas)
-  [[0.43, 0], [0.215, 1]].forEach(([x, k]) => {
+  // (13/10, lot C2 — la pose refaite, f 1 600 : l'affiche orange est bien une A4, 0,205 de large ; son bord nord à
+  // 0,40 du chant libre, contre le noyer de la fente, de 1,275 à 1,575 m — 4,5 cm plus bas qu'au jeu ; sur un vantail de
+  // 0,93 : centres à 0,4275 et 0,2125 des gonds)
+  [[0.4275, 0], [0.2125, 1]].forEach(([x, k]) => {
     const a = new THREE.Mesh(new THREE.PlaneGeometry(0.205, 0.29), _affichesWC[k]);
-    a.position.set(x, 1.47 + k * 0.012, -0.0235); a.rotation.y = Math.PI; a.rotation.z = (k ? -0.012 : 0.008); a.castShadow = false;
+    a.position.set(x, 1.425 + k * 0.012, -0.0235); a.rotation.y = Math.PI; a.rotation.z = (k ? -0.012 : 0.008); a.castShadow = false;
     v.g.add(a);
   });
 }
@@ -1479,33 +1492,38 @@ function signaletiqueC05(ch, P, yPorte, picto) {
 // LES TOILETTES FEMMES (x 6,125-8,85, y 7,95-10,45 ; porte du C05 en y 8,575) : V2, 11/10 — 2,5 m de profondeur au lieu
 // de 3,15 : deux cabines le long du mur est, les vasques au mur ouest au nord de la porte, le sèche-mains et la poubelle
 // au mur sud (le dos du mur safran), à l'écart du chemin des cabines
+// (13/10, lot C2 — le C05 refait sur la photo 23 : la porte en y 8,48, un vantail de 0,93 qui s'ouvre vers la pièce, ses
+// gonds à 6,5 cm du mur sud ; la pièce va de x 6,07 à 8,85 et de y 7,95 à 10,275 — 2,33 m de profondeur.)
 function toilettesFemmes(ch, P) {
-  const yP = Y_ESC - 0.425;
+  const yP = C05.yF, dl = C05.lWC / 2;
   ch.plafond(WF.x0, WF.y0, WF.x1, WF.y1, 2.5, 'platre');
-  faience(ch, P, WF, [['W', yP - 0.47, yP + 0.47]]);
+  faience(ch, P, WF, [['W', yP - dl - 0.05, yP + dl + 0.05]]);
   solGres(ch, WF);
-  ch.boite(5.975, yP - 0.42, 6.175, yP + 0.42, 0, 0.005, P.inox, { ombre: false });       // la barre de seuil
-  const bords = [WF.y0 + 0.012, 9.2, WF.y1 - 0.012];
+  ch.boite(C05.xE, yP - dl, WF.x0 + 0.05, yP + dl, 0, 0.005, P.inox, { ombre: false });       // la barre de seuil
+  const yM = (WF.y0 + WF.y1) / 2, bords = [WF.y0 + 0.012, yM, WF.y1 - 0.012];
   cabines(ch, P, 7.4, WF.x1 - 0.012, bords);
-  lavabos(ch, P, WF, yP + 0.545, WF.y1 - 0.012, 'wcF', [[9.355, 10.283]]);
-  // (relecture du 11/10 : le vantail, gonds au sud à 0,2 m du mur sud, balaie 0,85 m dans la pièce — ouvert à 83°, son
-  // bout passait dans la poubelle en (7,0 ; 8,16) ; elle et le sèche-mains glissent contre la première cabine)
-  secheMains(ch, P, 7.2, WF.y0 + 0.012, 'N');
-  poubelleWC(ch, P, 7.2, 8.12);
-  for (const [x, y] of [[6.65, 8.55], [6.65, 9.85], [8.1, 9.2]]) ch.spot(x, y, 2.5, 'wcF');
+  lavabos(ch, P, WF, yP + dl + 0.12, WF.y1 - 0.012, 'wcF', [[yM + 0.155, WF.y1 - 0.167]]);
+  // (relecture du 11/10 : le vantail, gonds au sud, balaie sa largeur dans la pièce — ouvert à 83°, son bout passait
+  // dans la poubelle en (7,0 ; 8,16) ; elle et le sèche-mains glissent contre la première cabine. 13/10 : un vantail de
+  // 0,93 — son bout passe en x 7,0 ; ils reculent de 5 cm vers les cabines)
+  secheMains(ch, P, 7.22, WF.y0 + 0.012, 'N');
+  poubelleWC(ch, P, 7.22, 8.12);
+  for (const [x, y] of [[6.65, 8.5], [6.65, 9.72], [8.1, yM]]) ch.spot(x, y, 2.5, 'wcF');
   signaletiqueC05(ch, P, yP, 'femme');
 }
 // LES TOILETTES HOMMES (x 6,125-8,85, y 10,6-13,925 ; porte du C05 en y 11,05) : deux cabines le long du mur est, trois
 // urinoirs et leurs écrans au mur nord, les vasques au mur ouest au nord de la porte, le sèche-mains et la poubelle dans
 // l'angle nord-ouest (V2, 11/10 : la porte est maintenant au bout sud de la pièce — plus de cul-de-sac au sud d'elle)
 function toilettesHommes(ch, P) {
-  const { C } = ch, yP = Y_ESC + 2.05;
+  // (13/10, lot C2 — le C05 refait sur la photo 23 : la porte en y 10,983, un vantail de 0,93 ; la pièce commence en
+  // y 10,425 et en x 6,07 ; les cabines et les vasques suivent)
+  const { C } = ch, yP = C05.yH, dl = C05.lWC / 2;
   ch.plafond(WH.x0, WH.y0, WH.x1, WH.y1, 2.5, 'platre');
-  faience(ch, P, WH, [['W', yP - 0.47, yP + 0.47]]);
+  faience(ch, P, WH, [['W', yP - dl - 0.05, yP + dl + 0.05]]);
   solGres(ch, WH);
-  ch.boite(5.975, yP - 0.42, 6.175, yP + 0.42, 0, 0.005, P.inox, { ombre: false });
-  cabines(ch, P, 7.4, WH.x1 - 0.012, [WH.y0 + 0.012, 11.65, 12.69], { fermer: [12.69] });
-  lavabos(ch, P, WH, yP + 0.57, 12.92, 'wcH', [[11.805, 12.535]]);
+  ch.boite(C05.xE, yP - dl, WH.x0 + 0.05, yP + dl, 0, 0.005, P.inox, { ombre: false });
+  cabines(ch, P, 7.4, WH.x1 - 0.012, [WH.y0 + 0.012, 11.56, 12.69], { fermer: [12.69] });
+  lavabos(ch, P, WH, yP + dl + 0.12, 12.92, 'wcH', [[11.715, 12.535]]);
   // les urinoirs (céramique suspendue, chasse chromée) et les écrans de séparation gris
   const yN = WH.y1 - 0.012;
   for (const x of [7.1, 7.72, 8.34]) urinoir(ch, P, x, yN);
@@ -1515,7 +1533,7 @@ function toilettesHommes(ch, P) {
   }
   C.ajouterBoite(6.77, -(yN - 0.45), 8.6, -yN, { y0: 0.3, y1: 1.4 });
   secheMains(ch, P, WH.x0 + 0.012, 13.38, 'E');
-  poubelleWC(ch, P, 6.4, 13.62);
+  poubelleWC(ch, P, WH.x0 + 0.275, 13.62);
   // le panneau jaune « sol glissant » des anciennes toilettes (relecture du 09/10 : il s'était perdu en route), dans
   // l'angle entre la seconde cabine et le dernier urinoir, tourné vers la porte — il ne gêne pas le chemin des urinoirs
   const pn = groupe(ch, 8.58, 12.93, 'W'); pn.rotation.y -= 0.45;
@@ -1809,13 +1827,13 @@ function salleDavidClark(ch, P) {
   // sur l'entrée. Devant la cage, un simple doublage (la cage a son mur à elle, ligne 14,0).
   ch.mur({ de: [0.475, 14.0375], a: [1.6, 14.0375], ep: 0.225, mats: M.blanc, plinthes: ['N'] });
   ch.mur({ de: [1.6, 14.1125], a: [DCE.x0, 14.1125], ep: 0.075, mats: M.blanc, plinthes: ['N'] });
-  ch.mur({ de: [6.125, 14.0375], a: [8.85, 14.0375], ep: 0.225, mats: M.blanc, plinthes: ['N'] });
+  ch.mur({ de: [WH.x0, 14.0375], a: [8.85, 14.0375], ep: 0.225, mats: M.blanc, plinthes: ['N'] });
   // le mur nord, et la porte de la réserve du fond (fermée : personne n'y est entré)
   ch.mur({ de: [0.475, 21.0], a: [8.85, 21.0], mats: M.blanc, plinthes: ['S'], ouvertures: [{ c: 2.0, l: 0.93, h: 2.04 }] });
   ch.porte('x', 21.0, 2.0, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'fermee', cote: 'S', notices: 1, nom: 'réserve (salle David Clark)' });
   // les plafonds de dalles, la salle et son entrée
   ch.plafond(DC.x0, DC.y0, DC.x1, DC.y1, 2.6, 'dalles');
-  ch.plafond(4.6, DCE.y0, DCE.x1, DCE.y1, 2.6, 'dalles');                      // (du nu de la cage, comme le C05)
+  ch.plafond(C05.xO, DCE.y0, DCE.x1, DCE.y1, 2.6, 'dalles');                   // (du nu de la cage, comme le C05)
   // ---- la lumière : neuf dalles LED sur la trame ; le jour des fenêtres (un spot réel, et la lumière cuite des deux) ----
   for (const x of [1.975, 4.375, 6.775]) for (const y of [15.65, 17.45, 19.25]) dalleLED60(ch, P, x, y, 2.6, 'dc');
   ch.lampes.push({ type: 'jour', x: -0.6, z: -15.5, h: 2.5, cx: 3.5, cz: -16.2, sx: 0.8, sz: -15.5, ox: -0.1, oz: -15.5, zone: 'dc', poids: 1.3, cuire: false });
@@ -1886,7 +1904,8 @@ function salleDavidClark(ch, P) {
   const df = groupe(ch, 3.175, 17.45, 'S', 2.6); CY(df, P.blancMat, 0.055, 0.045, 0, -0.023, 0, 18, { ombre: false });
   for (const o of [ap, df]) o.traverse((m) => { m.userData.horsAOSol = true; });
   // ---- côté C05, à droite de la porte bleue : la plaque de la salle (photo 23) ----
-  plaque(ch, new THREE.MeshStandardMaterial({ map: texPlaqueSalle(), roughness: 0.4 }), 5.75, Y_ESC + 3.6, 'S', 0.15, 0.088, 1.62);
+  // (13/10, lot C2 — photo 23 à sa pose refaite : x 5,68-5,84, de 1,59 à 1,68 m, sur le mur du fond en y 12,71)
+  plaque(ch, new THREE.MeshStandardMaterial({ map: texPlaqueSalle(), roughness: 0.4 }), 5.76, C05.yFond, 'S', 0.16, 0.09, 1.635);
 }
 // UNE PLAQUE DE PORTE (signalétique noire de l'école) : une plaquette de 5 mm, l'image sur toute sa face
 function plaque(ch, mat, x, y, face, w, h, hc) {
