@@ -443,9 +443,15 @@ function construireEscalier(ch) {
   // ---- LE MUR D'ÉCHIFFRE sous le bord est de la volée 2 (r01, 06, 20 : blanc, plinthe de bois) : du mur des portes au
   // palier, x 1,85-1,975, son dessus sous la paillasse — au-dessus, le flanc de la volée et ses marches de profil ----
   extru([[0, 0], [0, sous2(E.yF2)], [E.yF2 - yPorte, sous2(yPorte)], [E.yF2 - yPorte, 0]], 0.125, M.blanc, E.x2e, -E.yF2, -Math.PI / 2);
-  ch.boite(E.x2e, yPorte, E.x2e + 0.015, E.yF2, 0, 0.08, M.bois, { ombre: false });
-  // (et le JOUR entre l'échiffre et la volée 1, x 1,975-2,38 : son fond, le front du palier, a sa plinthe)
-  ch.boite(E.x2e, E.yF2 - 0.015, E.x1o, E.yF2, 0, 0.08, M.bois, { ombre: false });
+  // (13/10 : dans la cage, les plinthes sont de CARRELAGE gris, 10 cm — photo 06, le pied de l'échiffre ; photo 20, celui
+  // du mur à affiches, de la teinte du palier —, et non de bois verni comme dans le hall)
+  const PC = new THREE.MeshStandardMaterial({ color: 0x8f8b84, roughness: 0.55 }); PC.name = 'plinthe de carrelage gris (cage)';
+  ch.boite(E.x2e, yPorte, E.x2e + 0.012, E.yF2, 0, 0.1, PC, { ombre: false });
+  // (et le JOUR entre l'échiffre et la volée 1, x 1,975-2,42 : son fond, le front du palier, a sa plinthe)
+  ch.boite(E.x2e, E.yF2 - 0.012, E.x1o, E.yF2, 0, 0.1, PC, { ombre: false });
+  // (le mur des portes côté cage, de l'échiffre au jambage ouest et du jambage est au mur est)
+  ch.boite(E.x2e, yPorte, 2.45, yPorte + 0.012, 0, 0.1, PC, { ombre: false });
+  ch.boite(4.45, yPorte, E.x1e, yPorte + 0.012, 0, 0.1, PC, { ombre: false });
   // ---- AU SUD DU MUR DES PORTES, LA VOLÉE 2 CONTINUE (13/10) entre deux murs, derrière l'avancée nord du hall puis
   // au-dessus du plafond de son renfoncement, jusqu'au 1er en y 6,0 : le bout ouest du couloir sombre est son palier
   // (le carrelage, la double porte, le plafond : js/ecole_etage1.js). Le mur OUEST, ligne 0,675, pend au-dessus de la
@@ -524,7 +530,8 @@ function construireEscalier(ch) {
     const n = Math.max(1, Math.round(L / 0.8));
     for (let k = 0; k < n; k++) { const f = (k + 0.5) / n; ch.boite(Math.min(x, x + s * 0.06), ya + (yb - ya) * f - 0.01, Math.max(x, x + s * 0.06), ya + (yb - ya) * f + 0.01, ha + (hb - ha) * f - 0.08, ha + (hb - ha) * f - 0.02, M.garde, { ombre: false }); }
   };
-  const hMC = HL + 1.0, xa = E.x2o + 0.06, xb = E.x1e - 0.06;
+  // (13/10 : à 1,08 du palier — photo 20 refaite à sa pose, rang 752 : 1,85-1,9 sur le mur du fond ; photo 06 : 1,65-1,75)
+  const hMC = HL + 1.08, xa = E.x2o + 0.06, xb = E.x1e - 0.06;
   tubeY(E.x1e - 0.06, E.y1, R + 1.0, E.yL1, hMC, 1);
   tubeY(E.x1e - 0.06, E.yL1, hMC, E.yFond - 0.06, hMC, 1);
   tubeY(E.x2o + 0.06, E.yT, HP + 0.9, E.yF2, nez2(E.yF2) + 0.9, -1);
@@ -542,10 +549,10 @@ function construireEscalier(ch) {
     [2.21, 0.5, 0.7, 2.555, texAffiche('#7466b0', '#f2f1ee', 7)],
     [3.095, 1.25, 0.5, 2.46, texAffiche('#8a3a62', '#f4f3ef', 11)],
   ]) ch.panneau(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6 }), l, h, x, E.yFond - 0.003, hc, 'S');
-  // les plinthes de bois au ras du palier (le long des murs du fond, ouest et est)
-  ch.boite(E.x2o, E.yFond - 0.015, E.x1e, E.yFond, HL, HL + 0.08, M.bois, { ombre: false });
-  ch.boite(E.x2o, E.yF2, E.x2o + 0.015, E.yFond, HL, HL + 0.08, M.bois, { ombre: false });
-  ch.boite(E.x1e - 0.015, E.yL1, E.x1e, E.yFond, HL, HL + 0.08, M.bois, { ombre: false });
+  // les plinthes au ras du palier (le long des murs du fond, ouest et est)
+  ch.boite(E.x2o, E.yFond - 0.012, E.x1e, E.yFond, HL, HL + 0.1, PC, { ombre: false });
+  ch.boite(E.x2o, E.yF2, E.x2o + 0.012, E.yFond, HL, HL + 0.1, PC, { ombre: false });
+  ch.boite(E.x1e - 0.012, E.yL1, E.x1e, E.yFond, HL, HL + 0.1, PC, { ombre: false });
 
   // ---- LE MONDE SOLIDE ----
   // la volée 1 et le palier intermédiaire ; la volée 2 jusqu'au 1er (son palier : la dalle de l'étage, js/ecole_etage1.js)
@@ -920,7 +927,9 @@ function construireMurs(ch) {
   // hall — vantail côté hall, gonds au sud, barre inox verticale, ferme-porte à glissière côté hall, photo 06 et v_001)
   // (plan V2 : y 5,02-5,95, à 0,97 m de la paroi vitrée — la chaîne du -1 suit, DY_SS ; sa fente vitrée est la longue,
   // de 0,6 à 1,85 : photo 06 et r01, elle descend aux deux tiers de la porte, le jeu la mettait de 1,0 à 1,85)
-  ch.porte('y', 1.675, 9.575 + DY_SS, { l: 0.93, h: 2.04, modele: 'grise', oculus: 'long', poignee: 'tirant', fermePorte: false, etat: 'auto', cote: 'E', libre: 1, nom: 'service (hall)' });
+  // (13/10 : sa fente est un vrai jour de verre clair — photo 06, on y voit le palier éclairé et son panneau jaune ;
+  // elle était un vitrage posé sur un vantail plein, gris à contre-jour)
+  ch.porte('y', 1.675, 9.575 + DY_SS, { l: 0.93, h: 2.04, modele: 'grise', oculus: { bas: 0.6, l: 0.1, clair: true }, poignee: 'tirant', fermePorte: false, etat: 'auto', cote: 'E', libre: 1, nom: 'service (hall)' });
   ch.boite(1.765, 9.06 + DY_SS, 1.8, 9.6 + DY_SS, 2.06, 2.1, M.ferme, { ombre: false });
   ch.boite(1.765, 9.12 + DY_SS, 1.82, 9.4 + DY_SS, 2.1, 2.16, M.ferme, { ombre: false });
   // LES DEUX AVANCÉES DU MUR OUEST (photo 06) : la porte grise, l'extincteur et le radiateur sont dans un RENFONCEMENT
@@ -1160,7 +1169,7 @@ function construireMurs(ch) {
   // l'échiffre, le mur s'arrête à 1,55 ; au-dessus des portes, il monte d'un jet jusqu'au plafond de la cage : plus de
   // palier du 1er en balcon ni de double porte ici, la volée arrive 3 m plus au sud — js/ecole_etage1.js)
   ch.mur({ de: [1.6, Y_ESC], a: [ESC.x2e, Y_ESC], h: 1.55, mats: B });
-  ch.mur({ de: [ESC.x2e, Y_ESC], a: [4.6, Y_ESC], mats: B, plinthes: ['S', 'N'], ouvertures: [{ c: 3.45, l: 2.0, h: 2.1 }] });
+  ch.mur({ de: [ESC.x2e, Y_ESC], a: [4.6, Y_ESC], mats: B, plinthes: ['S'], ouvertures: [{ c: 3.45, l: 2.0, h: 2.1 }] });
   ch.mur({ de: [ESC.x2e, Y_ESC], a: [4.6, Y_ESC], base: H_DALLE, h: H_CAGE, mats: B });
   ch.mur({ de: [4.525, 13.6 + DY_S], a: [4.525, 18.75 + DY_S], h: H_CAGE, mats: B, plinthes: ['E'] });
   // le mur ouest de la cage (ligne 0,675), de la trémie du -1 au mur du fond (au sud de y 10,25, au-dessus de la trémie,
@@ -1183,10 +1192,41 @@ function construireMurs(ch) {
   // l'affiche sans la traverser) ; l'est fermé, ses deux A4 l'un au-dessus de l'autre (js/ecole_mobilier.js) ; une
   // huisserie, et le rail du ferme-porte sur toute la largeur, côté hall (photos 06, 20 : la barre grise sous le soffite).
   // (Leur fente vitrée est la longue, de 0,6 à 1,85 — photos 06 et 20 : elle descend aux deux tiers du vantail.)
-  ch.porte('x', 13.675 + DY_S, 3.45, { l: 2.0, h: 2.1, modele: 'grise2', feu: true, oculus: 'long', etat: 'ouverte', ouverts: [true, false], angle: 1.53, cote: 'S', notices: 0, noticesD: 0, nom: 'escalier' });
-  // (relecture du 11/10 : le rail est d'aluminium gris CLAIR, mat — photos 04 et 20 ; le métal du ferme-porte, sous la
-  // carte d'environnement du hall, le rendait noir)
-  ch.boite(2.45, 8.875, 4.45, 8.925, 2.15, 2.21, new THREE.MeshStandardMaterial({ color: 0xbfc3c5, roughness: 0.45, metalness: 0.15 }), { ombre: false });
+  // (13/10, les photos 20, 06 et 04 rejouées à leur pose refaite — 20 : (3,57 ; 6,51) h 1,27 cap −9,5, les quatre coins du
+  // vantail fermé à 5-9 px ; 06 : (5,04 ; 5,88) h 1,37 cap −82,5, tangage −5,3, roulis −1,8, quinze points du hall à 9 px,
+  // les verticales de droite enfin droites ; 04 : (6,63 ; 6,89) h 1,41 cap −50,5 :
+  //  - le vantail ouest est ENTROUVERT sur la 20, pas à plat : son chant libre y est à 11-16 cm de l'avancée, (2,56-2,64 ;
+  //    7,98-8,11) ; sur la 06 et la 04, il est rabattu, à 4-6 cm. Entre les deux : 85°, le chant à 9 cm — à 4 px de la 06 ;
+  //  - les fentes sont des jours de verre clair : la cage éclairée s'y voit (`clair`) ;
+  //  - l'étiquette rouge « porte coupe-feu » est sur la face de la CAGE du vantail ouest, en haut côté chant libre — celle
+  //    qu'on voit quand il est ouvert ; la face du hall du vantail est n'en porte pas ;
+  //  - le chant libre du vantail ouvert est une alaise de bois sombre ;
+  //  - pas de boîtier brun sur les vantaux : le ferme-porte est un boîtier gris clair en haut du vantail est, côté hall,
+  //    près des gonds, sous une glissière ;
+  //  - au-dessus des portes, du linteau au plafond, un BANDEAU gris bleuté de 18 cm (photo 20 : rangs 560-600, de
+  //    jambage à jambage ; photo 04 de même) : le jeu n'avait qu'un rail de 6 cm sous un bandeau crème ;
+  //  - les vantaux ont DEUX TEINTES : la face du hall est d'un gris BLEUTÉ, celle du bandeau — photos 20 et 04, le vantail
+  //    fermé à (150, 155, 168) sous des murs à (235, 228, 210) —, la face de la cage d'un gris beige clair — le vantail
+  //    ouvert, sous la même lumière sur la 04. Le jeu les faisait tous deux du gris taupe de la porte de service.)
+  const bleute = new THREE.MeshStandardMaterial({ color: 0x969eb0, roughness: 0.45 }); bleute.name = 'vantail gris bleuté, face du hall (escalier)';
+  const beige = new THREE.MeshStandardMaterial({ color: 0xbdbab4, roughness: 0.45 }); beige.name = 'vantail gris beige, face de la cage (escalier)';
+  const PE = ch.porte('x', 13.675 + DY_S, 3.45, { l: 2.0, h: 2.1, modele: 'grise2', feu: false, oculus: { bas: 0.6, l: 0.1, clair: true }, fermePorte: false, matVantail: bleute, etat: 'ouverte', ouverts: [true, false], angle: 1.484, cote: 'S', notices: 0, noticesD: 0, nom: 'escalier' });
+  {
+    const [vo, ve] = PE.vantaux, w = 1.0, h = 2.1, e = 0.04;
+    // (la face de la cage, −z : quatre pans beiges de 3 mm autour du cadre de noyer de la fente)
+    for (const v of PE.vantaux) {
+      const xa = w - 0.24 - 0.08, xb = w - 0.24 + 0.08, z = -(e / 2 + 0.0015);
+      const pan = (x0, x1, y0, y1) => maille(boiteM(x1 - x0, y1 - y0, 0.003), beige, v.s * (x0 + x1) / 2, (y0 + y1) / 2, z, 0, v.g, { ombre: false });
+      pan(0.006, xa, 0.006, h - 0.006); pan(xb, w - 0.012, 0.006, h - 0.006); pan(xa, xb, 0.006, 0.57); pan(xa, xb, 1.88, h - 0.006);
+    }
+    maille(boiteM(0.12, 0.04, 0.004), M.rougeEtiquette, w - 0.2, h - 0.12, -(e / 2 + 0.003), 0, vo.g, { ombre: false });
+    maille(boiteM(0.012, h - 0.012, e + 0.004), M.noyer, w - 0.006, h / 2, 0, 0, vo.g, { ombre: false });
+    const gris = new THREE.MeshStandardMaterial({ color: 0xb4b9bf, roughness: 0.5, metalness: 0.2 }); gris.name = 'ferme-porte gris clair (escalier)';
+    maille(boiteM(0.2, 0.06, 0.045), gris, -0.3, h - 0.04, e / 2 + 0.024, 0, ve.g, { ombre: false });
+    const bandeau = new THREE.MeshStandardMaterial({ color: 0xa3aab4, roughness: 0.55, metalness: 0.15 }); bandeau.name = 'bandeau gris bleuté (escalier principal)';
+    ch.boite(2.4, 8.895, 4.5, 8.925, 2.11, 2.3, bandeau, { ombre: false });
+    ch.boite(2.45, 8.88, 4.45, 8.895, 2.11, 2.135, new THREE.MeshStandardMaterial({ color: 0x858a91, roughness: 0.45, metalness: 0.3 }), { ombre: false });
+  }
 }
 
 // LA PORTE DU FOND DE C05 (photos 05, 23) : ce n'est PAS une issue de secours (09/10) — c'est celle d'une salle
@@ -1290,10 +1330,15 @@ export function construireCarte(scene, renderer = null) {
   // porte grise, extincteur, radiateur, affiche, portes de l'escalier. Relecture du 09/10 : il est fixé sur la face SUD
   // de l'avancée nord, perpendiculaire au mur — la photo 02 le montre de chant, la photo 06 de trois quarts)
   // (plan V2 : contre l'angle de l'avancée nord, y 7,22 ; photo 06 rejouée : de 0,12 à 1,38)
-  radiateur(ch, 2.17, 7.22, 'S', 0.45, 0.12, 1.38);
+  // (13/10, photo 06 refaite à sa pose — (5,04 ; 5,88) h 1,37, tangage −5,3, roulis −1,8 —, agrandie : il est CONTRE LE
+  // FOND du renfoncement, x 1,775-2,225 — entre lui et l'angle de l'avancée, 23 px de mur blanc, 22 cm ; le jeu le
+  // centrait en 2,17, à 5 cm de l'angle — et son dessus est à 1,31, rang 317 et non 305 ; en haut de sa face, la
+  // grille de lames)
+  radiateur(ch, 2.0, 7.22, 'S', 0.45, 0.12, 1.31);
   // (relecture du 11/10, photo 06 : sa face avant est un panneau en retrait, gris clair, dans un cadre blanc de 3 cm — tout
   // blanc, sous le hublot du hall, il disparaissait dans le mur)
-  ch.boite(1.975, 7.135, 2.365, 7.139, 0.15, 1.35, new THREE.MeshStandardMaterial({ color: 0xd3d6d8, roughness: 0.5 }), { ombre: false });
+  ch.boite(1.805, 7.135, 2.195, 7.139, 0.15, 1.16, new THREE.MeshStandardMaterial({ color: 0xd3d6d8, roughness: 0.5 }), { ombre: false });
+  for (let h = 1.18; h < 1.285; h += 0.022) ch.boite(1.805, 7.135, 2.195, 7.139, h, h + 0.009, M.grille, { ombre: false });
   // le mur du fond de la salle d'attente, la face ouest de la pile : son radiateur, à côté du présentoir (photo 21) et
   // sous le haut-parleur et l'affichette WIFI (photo 03), son bout à 0,3 m de l'angle sud-ouest — l'angle au-delà duquel
   // la photo 03 voit le hall (10/10). (11/10, plan V2 : c'est LE MÊME radiateur sur les deux photos ; celui du mur x 13,5,
@@ -1323,15 +1368,21 @@ export function construireCarte(scene, renderer = null) {
   // 2,45 en 4,42, 2,35 en 4,64 et 2,24 en 4,91 — une droite, pas un ressaut, et le bas de la même photo tombe juste,
   // ce n'est pas la déformation de l'objectif ; photo 07 rejouée : le bloc de sortie est au-dessus de la traverse
   // haute, de 2,33 à 2,45. Le rampant va de y 4,075 (2,60) à y 4,77 (2,30), sur toute la largeur de la gorge.)
+  // (13/10, LE PLAFOND DU HALL OUEST EST GRIS — photo 06 : (102, 96, 88) sous des murs à (180, 167, 154), 0,57 de leur
+  // luminance ; photo 04, vu de la salle d'attente : un gris moyen sous la retombée blanche ; le jeu le rendait presque
+  // aussi clair que les murs, 0,90. Une copie du plâtre, rien qu'ici, plus sombre et sans lueur propre.)
+  const platreHallO = M.platre.clone(); platreHallO.name = 'plafond en plâtre (hall ouest)';
+  platreHallO.color.multiplyScalar(0.6); platreHallO.emissiveIntensity *= 0.35;
+  const grisHallO = (m) => { m.material = platreHallO; return m; };
   {
     const ya = 4.075, yb = 4.77, ha = 2.6, hb = 2.3, xa = 2.45, xb = 4.5;
     const g = new THREE.BufferGeometry(), L = Math.hypot(yb - ya, ha - hb);
     g.setAttribute('position', new THREE.Float32BufferAttribute([xa, ha, -ya, xb, ha, -ya, xb, hb, -yb, xa, hb, -yb], 3));
     g.setAttribute('uv', new THREE.Float32BufferAttribute([xa, 0, xb, 0, xb, L, xa, L], 2));
     g.setIndex([0, 2, 1, 0, 3, 2]); g.computeVertexNormals();
-    const m = maille(g, M.platre, 0, 0, 0, 0, ch.decor, { ombre: false }); m.userData.horsAOSol = true;
+    const m = maille(g, platreHallO, 0, 0, 0, 0, ch.decor, { ombre: false }); m.userData.horsAOSol = true;
     ch.C.plafond(1.75, -yb, 4.5, -4.05, hb);
-    ch.plafond(1.75, yb, 4.5, 4.875, 2.3, 'platre', { retombees: false });
+    grisHallO(ch.plafond(1.75, yb, 4.5, 4.875, 2.3, 'platre', { retombees: false }));
   }
   // (Relecture du 11/10, photo 04 rejouée : le plafond bas du hall s'arrête à la retombée, en x 4,85, et ne passe à l'est
   // qu'au nord de y 8,05, devant le C05 ; entre les deux, le plafond de dalles de 60 de la salle d'attente, à 2,60 —
@@ -1342,16 +1393,16 @@ export function construireCarte(scene, renderer = null) {
   // (13/10, la volée 2 à sa vraie pente : elle passe au-dessus du renfoncement, x 0,75-1,975, sa sous-face à 2,48 en
   // y 7,22, et dans l'avancée nord — le plafond s'arrête à l'avancée, x 2,45, et ses retombées de l'ouest, qui montaient
   // à la dalle au travers des marches, s'effacent ; reste celle de l'est, la retombée de la photo 04)
-  ch.plafond(1.75, 4.875, 4.85, 7.22, 2.3, 'platre', { retombees: false });
-  ch.plafond(2.45, 7.22, 4.85, 8.925, 2.3, 'platre', { retombees: false });
+  grisHallO(ch.plafond(1.75, 4.875, 4.85, 7.22, 2.3, 'platre', { retombees: false }));
+  grisHallO(ch.plafond(2.45, 7.22, 4.85, 8.925, 2.3, 'platre', { retombees: false }));
   {
     const q = ch.panneau(M.platre, 8.3 - 4.875, H_DALLE - 2.3, 4.85, (4.875 + 8.3) / 2, (2.3 + H_DALLE) / 2, 'E');
     q.userData.horsAOSol = true; q.castShadow = false;
   }
-  ch.plafond(4.85, 8.05, 5.975, 8.925, 2.3, 'platre');
+  grisHallO(ch.plafond(4.85, 8.05, 5.975, 8.925, 2.3, 'platre'));
   // (r03, 12/10 : le mur sud de la salle recule de 0,20 — DY_R03 — ; la bande qu'il libère, x 4,5-4,85 × y 4,675-4,875,
   // prend le plafond bas du hall et sa retombée en x 4,85 continue jusqu'au mur ; les dalles de la salle partent du mur)
-  ch.plafond(4.5, ATT.ys + EP / 2, 4.85, 4.875, 2.3, 'platre');
+  grisHallO(ch.plafond(4.5, ATT.ys + EP / 2, 4.85, 4.875, 2.3, 'platre'));
   ch.plafond(4.7, ATT.ys, 5.3, 8.4, 2.6, 'dalles', { retombees: false });
   // C05 : une RETOMBÉE — le fond du couloir est plus bas (2,30), l'imposte de la porte bleue vient juste sous son
   // plafond (photos 05 et 23 : le premier hublot avant le ressaut, le second après ; 09/10). (V2, 11/10 : de la porte de

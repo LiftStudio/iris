@@ -314,11 +314,20 @@ export class Portes {
   _vantailGris(w, h, s, { feu = false, oculus = true, poignee = 'bequille', notices = 0, mat = null } = {}) {
     const M = this.M, g = new THREE.Group(), e = 0.04;
     const cx = s * w / 2;
-    maille(boiteM(w - 0.012, h - 0.012, e), mat || M.porte, cx, h / 2, 0, 0, g);
+    // la fente : 0,12 x 0,85 à partir de 1 m, côté poignée ; cadre de noyer de 3 cm ('long' : 0,10 x 1,25 dès 0,6 m)
+    const D = { bas: 1.0, haut: 1.85, l: 0.12, bord: 0.24, cadre: 0.03 };
+    const O = !oculus ? null : oculus === true ? D : oculus === 'long' ? { ...D, bas: 0.6, l: 0.1 } : { ...D, ...oculus };
+    // (13/10, `clair` : la fente est un VRAI JOUR de verre clair — photos 06, 20, 04 : par celles des portes de l'escalier
+    // et de la porte grise du hall ouest, on voit la cage éclairée et le palier ; le vantail est alors fait de quatre pans
+    // autour d'elle. Sinon, un vitrage sombre posé sur un vantail plein.)
+    if (O && O.clair) {
+      const mv = mat || M.porte, xa = w - O.bord - O.l / 2, xb = w - O.bord + O.l / 2;
+      maille(boiteM(xa - 0.006, h - 0.012, e), mv, s * (0.006 + xa) / 2, h / 2, 0, 0, g);
+      maille(boiteM(w - 0.006 - xb, h - 0.012, e), mv, s * (xb + w - 0.006) / 2, h / 2, 0, 0, g);
+      maille(boiteM(O.l, O.bas - 0.006, e), mv, s * (w - O.bord), (O.bas + 0.006) / 2, 0, 0, g);
+      maille(boiteM(O.l, h - 0.006 - O.haut, e), mv, s * (w - O.bord), (O.haut + h - 0.006) / 2, 0, 0, g);
+    } else maille(boiteM(w - 0.012, h - 0.012, e), mat || M.porte, cx, h / 2, 0, 0, g);
     if (oculus) {
-      // la fente : 0,12 x 0,85 à partir de 1 m, côté poignée ; cadre de noyer de 3 cm ('long' : 0,10 x 1,25 dès 0,6 m)
-      const D = { bas: 1.0, haut: 1.85, l: 0.12, bord: 0.24, cadre: 0.03 };
-      const O = oculus === true ? D : oculus === 'long' ? { ...D, bas: 0.6, l: 0.1 } : { ...D, ...oculus };
       const ox = s * (w - O.bord), oy = (O.bas + O.haut) / 2, oh = O.haut - O.bas, ol = O.l, c = O.cadre;
       for (const z of [e / 2 + 0.004, -e / 2 - 0.004]) {
         maille(boiteM(ol + 2 * c, c, 0.01), M.noyer, ox, oy + oh / 2 + c / 2, z, 0, g, { ombre: false });
@@ -326,7 +335,8 @@ export class Portes {
         maille(boiteM(c, oh + 2 * c, 0.01), M.noyer, ox - ol / 2 - c / 2, oy, z, 0, g, { ombre: false });
         maille(boiteM(c, oh + 2 * c, 0.01), M.noyer, ox + ol / 2 + c / 2, oy, z, 0, g, { ombre: false });
       }
-      maille(boiteM(ol, oh, e + 0.004), M.vitreFente, ox, oy, 0, 0, g, { ombre: false });
+      if (O.clair) maille(boiteM(ol, oh, 0.006), M.verre, ox, oy, 0, 0, g, { ombre: false });
+      else maille(boiteM(ol, oh, e + 0.004), M.vitreFente, ox, oy, 0, 0, g, { ombre: false });
     }
     if (poignee === 'bequille') {
       for (const z of [1, -1]) {

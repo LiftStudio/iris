@@ -584,8 +584,8 @@ export function poserEtage1(ch, renderer = null) {
     mur({ de: [-0.3, E.yT + EP / 2], a: [E.xO0, E.yT + EP / 2], mats: B0, plinthes: ['S'], ouvertures: [{ c: 0.3, l: 0.56 }] });
     porte('x', E.yT + EP / 2, 0.3, { l: 0.56, modele: 'gaine', etat: 'fermee', cote: 'S', ep: 0.12, nom: 'local ménage' });
     mur({ de: [E.x2e + 0.15, Y_C1], a: [4.6, Y_C1], mats: { S: M.orange, N: B0 }, plinthes: ['S'] });
-    mur({ de: [X_PO, Y_C0 + EP / 2], a: [X_PO, Y_C1 - EP / 2], mats: B0, plinthes: ['E', 'W'], ouvertures: [{ c: Y_PORTE, l: 1.6, h: N1 + 2.1 }] });
-    porte('y', X_PO, Y_PORTE, { l: 1.6, h: 2.1, ep: 0.12, modele: 'grise2', feu: true, etat: 'ouverte', ouverts: [true, true], angle: 1.6, cote: 'W', notices: 1, nom: '1er étage' });
+    mur({ de: [X_PO, Y_C0 + EP / 2], a: [X_PO, Y_C1 - EP / 2], mats: B0, plinthes: ['E', 'W'], ouvertures: [{ c: Y_PORTE, l: 1.7, h: N1 + 2.1 }] });
+    porte('y', X_PO, Y_PORTE, { l: 1.7, h: 2.1, ep: 0.12, modele: 'grise2', feu: true, etat: 'ouverte', ouverts: [true, true], angle: 1.571, cote: 'W', notices: 1, nom: '1er étage' });
   }
 
   // =====================================================================
