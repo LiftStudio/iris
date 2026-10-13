@@ -1101,7 +1101,11 @@ export function poserMobilierRue(ch, R) {
   corbeille(ch, A, M, 8.98, -1.85);
   cendrier(ch, A, M, 9.82, -2.14);
   // le second banc, plus court, au droit du bureau B ; le totem de l'entrée n° 6 ; le bambou ; la jardinière en treillis
-  banc(ch, A, M, 11.85, -1.48, 1.15, 0, { lattesDos: 6 });
+  // (relecture rue du 14/10, photos 11 et 13 de près, prises du même endroit : le banc est à GAUCHE du totem de la porte 6,
+  // qui se voit jusqu'au sol — dans le jeu, le banc passait devant et en cachait le pied. De 35 à 40 px entre eux, 0,55 m
+  // en travers du trottoir : le banc recule contre son bac — y -1,25 —, le totem avance de 0,3 m — y -1,45 ; la photo 17,
+  // de face, garde le banc à sa place à 5 px près)
+  banc(ch, A, M, 11.85, -1.25, 1.15, 0, { lattesDos: 6 });
   // (les recoins trop étroits pour Haythem — 30 à 55 cm entre le totem, les jardinières, les bancs, la corbeille et le
   // cendrier — sont bouchés : il s'y coinçait en tremblant entre deux obstacles. Relecture du 09/10/2026 ; refaits pour
   // la nouvelle place des objets le 13/10 : entre le totem et le premier bac, le long des bacs, derrière le premier banc,
@@ -1115,7 +1119,7 @@ export function poserMobilierRue(ch, R) {
   ch.C.ajouterBoite(11.2, 1.0, 12.45, 1.24, { y1: 0.9, camera: false });
   ch.C.ajouterBoite(12.4, 1.0, 12.75, 1.72, { y1: 0.9, camera: false });
   ch.C.ajouterBoite(12.75, 1.5, 13.3, 2.0, { y1: 0.6, camera: false });
-  totem(ch, A, M, 12.75, -1.15, 'ouest');
+  totem(ch, A, M, 12.8, -1.45, 'ouest');
   // (lot rue du 13/10, photos 16, 17 et 18 rejouées à leur pose : le pot du bambou est un tronc de cône GRIS ARDOISE de
   // 0,47 m de large en haut et de 0,67 de haut — le jeu le faisait noir, de 0,62 x 0,78 — ; le bambou s'arrête sous les
   // appuis du 1er étage, 2,15 m au-dessus du pot et non 2,6 ; la jardinière en treillis est ÉTROITE, 0,30 m, haute de

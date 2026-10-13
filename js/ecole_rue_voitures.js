@@ -50,7 +50,7 @@ export const VOITURES = [
   // garait 1,3 m plus à l'est, elle entrait dans le champ de la photo 15, qui ne la voit pas. Toutes deux dans la BAIE,
   // au sud de la ligne de tirets. Photo 15 : la grise, un petit coupé, contre la bordure nord de x 22,6 à 26,2 ; le SUV
   // blanc au bout, côté jardin, de x 27 à 31, le nez vers l'école ; la Fiat recule de 1,2 m pour laisser sa place à la rouge.)
-  { nom: 'Fiat 500 vert d\'eau', kit: 'citadine', x: 1.15, file: 'sud', sens: 1, teinte: 0xbfe8dc, e: 1.12, haut: 1.08 },
+  { nom: 'Fiat 500 vert d\'eau', kit: 'citadine', x: 1.15, file: 'sud', sens: 1, teinte: 0xbfe8dc, e: 1.1, haut: 1.02 },
   // (relecture rue du 14/10, photo 08 de près : la rouge est une BERLINE à coffre, bordeaux ; la Kia Niro est une compacte
   // haute aux formes rondes, 4,36 x 1,55 m, gris-bleu sombre — 45-47-54 —, et non le gros 4x4 carré à calandre chromée)
   // (la roue avant de la rouge : 90 px de diamètre au pixel 1493 de la photo 08 — à 4,5 m de l'appareil, en (6,7 ; -9,1) :

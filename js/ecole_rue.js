@@ -367,7 +367,7 @@ export function poserRue(ch) {
   // (relecture rue du 14/10, photos 13 à 17 : de la chaussée, on ne voit de la bordure qu'un filet clair, son dessus — son
   // chant, noirci par le ruisseau, se confond avec l'enrobé ; le jeu le montrait aussi clair, une bande blanche deux fois
   // trop large)
-  const chant = std({ color: 0x77797c, roughness: 0.9 }, 0.04);
+  const chant = std({ color: 0x55565a, roughness: 0.94 }, 0.04);
   ch.boite(X0, Y_TROTTOIR - 0.156, X1, Y_TROTTOIR - 0.15, H_CHAUSSEE, -0.014, chant, { ombre: false });
   ch.boite(X0, Y_BAIE, X_BAIE, Y_BAIE + 0.006, H_CHAUSSEE, -0.014, chant, { ombre: false });
   ch.boite(X_BAIE, Y_CHAUSSEE, X1, Y_CHAUSSEE + 0.006, H_CHAUSSEE, -0.014, chant, { ombre: false });
@@ -406,8 +406,10 @@ export function poserRue(ch) {
   for (const [xl, yb] of [[-0.5, yFile + 0.3], [12.75, yFile + 0.3]]) for (let y = Y_TROTTOIR - 0.35; y > yb; y -= 2.3) trait(xl - 0.07, y - 1.1, xl + 0.07, y);
   {
     const plaques = [];
-    for (const [x0, y0, x1, y1] of [[-1.75, -5.15, -0.55, -4.05], [-1.3, -5.6, -0.6, -4.9], [-1.7, -7.2, -0.9, -6.5], [-0.45, -7.3, 0.3, -6.7], [-0.4, -4.9, 0.3, -4.3], [-1.9, -10.9, -1.1, -10.35], [-1.6, -8.6, -0.9, -8.0]]) {
-      const g = new THREE.PlaneGeometry(x1 - x0, y1 - y0).rotateX(-Math.PI / 2); g.translate((x0 + x1) / 2, H_CHAUSSEE + 0.005, -(y0 + y1) / 2); plaques.push(g);
+    // (et sur le trottoir, photos 10 et 13 au sol : deux marques blanches, devant le premier banc et devant la corbeille)
+    for (const [x0, y0, x1, y1, h = H_CHAUSSEE] of [[-1.75, -5.15, -0.55, -4.05], [-1.3, -5.6, -0.6, -4.9], [-1.7, -7.2, -0.9, -6.5], [-0.45, -7.3, 0.3, -6.7], [-0.4, -4.9, 0.3, -4.3], [-1.9, -10.9, -1.1, -10.35], [-1.6, -8.6, -0.9, -8.0],
+      [5.92, -2.4, 6.2, -1.5, 0], [8.48, -2.36, 8.9, -1.96, 0]]) {
+      const g = new THREE.PlaneGeometry(x1 - x0, y1 - y0).rotateX(-Math.PI / 2); g.translate((x0 + x1) / 2, h + 0.005, -(y0 + y1) / 2); plaques.push(g);
     }
     const usee = new THREE.Mesh(mergeGeometries(plaques, false), std({ map: texPeintureUsee(), color: 0xc9c9c4, transparent: true, opacity: 0.72, depthWrite: false, roughness: 0.8 }, 0.1));
     usee.userData.horsAOSol = true; usee.renderOrder = 1; ch.decor.add(usee);
@@ -770,8 +772,8 @@ export function poserRue(ch) {
   // les taches d'ombre douces sous ce qui est posé dehors (la carte d'ombre du soleil ne couvre que le trottoir de l'école,
   // et l'ombre cuite ne couvre que l'intérieur)
   // (lot rue du 13/10 : elles suivent les bancs, le bambou, le palmier, la moto et les vélos à leur nouvelle place)
-  for (const [x, y, sx, sy, f] of [[6.88, -1.82, 0.72, 0.32, 0.5], [11.85, -1.48, 0.64, 0.3, 0.5], [8.55, -0.8, 2.75, 0.5, 0.45], [12.98, -2.29, 0.4, 0.4, 0.5],
-    [16.87, -1.26, 0.4, 0.4, 0.5], [0.85, -1.2, 0.85, 0.7, 0.5], [5.5, -1.22, 0.16, 0.45, 0.45], [12.05, -0.8, 0.16, 0.45, 0.45]])
+  for (const [x, y, sx, sy, f] of [[6.88, -1.82, 0.72, 0.32, 0.5], [11.85, -1.25, 0.64, 0.3, 0.5], [8.55, -0.8, 2.75, 0.5, 0.45], [12.98, -2.29, 0.4, 0.4, 0.5],
+    [16.87, -1.26, 0.4, 0.4, 0.5], [0.85, -1.2, 0.85, 0.7, 0.5], [5.5, -1.22, 0.16, 0.45, 0.45], [12.8, -1.45, 0.16, 0.38, 0.45]])
     taches.ajouter(x, y, sx, sy, 0, f, 0);
   taches.ajouter(19.55, -1.4, 1.0, 0.42, 1.91, 0.45, 0);
   for (const [x, y, sx, sy, f] of [[17.8, -4.55, 1.8, 0.5, 0.45], [21.7, Y_CHAUSSEE + 1.0, 2.4, 1.1, 0.5], [19.7, Y_CHAUSSEE + 0.38, 0.8, 0.36, 0.5]])
