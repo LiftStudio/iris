@@ -130,7 +130,8 @@ export function matieresRue() {
   if (_M) return _M;
   const std = (o, k = 0.08) => jourDehors(new THREE.MeshStandardMaterial(o), k);
   const M = {};
-  M.zinc = std({ map: texZinc(), roughness: 0.5, metalness: 0.35 }, 0.1); M.zinc.name = 'zinc patiné (jardinières)';
+  // (lot rue du 13/10, photos 13 et 17 : un gris bleuté CLAIR, 150 à 170 sous le ciel couvert — le jeu le rendait à 100)
+  M.zinc = std({ map: texZinc(), roughness: 0.55, metalness: 0.12 }, 0.16); M.zinc.name = 'zinc patiné (jardinières)';
   M.terre = teinte(0x2e241c, 'mat');
   M.anthracite = teinte(0x34373a, 'satin');
   M.treillis = std({ map: texTreillis(), roughness: 0.6, metalness: 0.3 }, 0.04);
@@ -191,7 +192,7 @@ function texZinc() {
   // le zinc des jardinières : gris bleuté, marbré de patine, des coulures verticales plus sombres et des arêtes claires
   return canvasTex(256, 256, (g, w, h) => {
     const r = alea(31);
-    g.fillStyle = '#939ca0'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#a7b1b7'; g.fillRect(0, 0, w, h);
     for (let k = 0; k < 90; k++) {
       const c = 120 + r() * 60;
       g.fillStyle = `rgba(${c - 6},${c + 2},${c + 8},0.22)`;
@@ -1050,34 +1051,41 @@ export function poserMobilierRue(ch, R) {
   // en 12,95 ; -2,06 sur les photos 17 et 18, 12,6 sur la 11) : de 0,2 à 0,7 m de leur ancienne place — la corbeille, la
   // poubelle et le premier banc vers l'ouest, le second banc, le totem et le bambou vers l'est. Les plantes gardent leur
   // tirage : le bac de derrière le second banc a le sien)
-  const rE = alea(1105);
-  let h = jardiniere(ch, A, M, 6.02, -0.67, 0.85, 0.5, 0.95); olivier(F, A, M, 6.02, -0.67, h, 1.9, r);
-  h = jardiniere(ch, A, M, 7.22, -0.67, 1.05, 0.5, 0.95); arbuste(F, A, M, 7.22, -0.67, h, 0.46, 0.5, PLANCHE.fleurs, r, 34);
-  h = potRond(ch, A, M, 8.21, -0.72, 0.3, 0.24, 0.72, M.anthracite); cypres(F, A, M, 8.21, -0.72, h, 1.5, 0.27, r);
-  h = jardiniere(ch, A, M, 9.2, -0.67, 1.0, 0.5, 0.95); arbuste(F, A, M, 9.2, -0.67, h, 0.42, 0.75, PLANCHE.arbuste, r, 38);
-  h = jardiniere(ch, A, M, 10.45, -0.67, 1.05, 0.5, 0.95); olivier(F, A, M, 10.45, -0.67, h, 1.1, r); arbuste(F, A, M, 10.45, -0.67, h, 0.3, 0.45, PLANCHE.arbuste, r, 18);
-  h = jardiniere(ch, A, M, 12.0, -0.67, 0.9, 0.5, 0.95); arbuste(F, A, M, 12.0, -0.67, h, 0.34, 0.55, PLANCHE.arbuste, rE, 26);
+  // (lot rue du 13/10 — la photo 17 à sa pose ajustée, le pied de chaque bac rétroprojeté au sol, recoupé par les photos 13
+  // et 14 pour le premier : les bacs sont 0,3 à 0,4 m plus à l'est et plus PROFONDS, leur face avant à 0,65 m de la pierre
+  // (y -1,05) et non 0,5 — x 5,90-6,75 (l'olivier), 7,10-8,16 (les fleurs), le cyprès en 8,6, 9,05-10,05, 10,20-11,20,
+  // et celui de derrière le second banc)
+  const rE = alea(1105), YB = -0.725, PB = 0.65;
+  let h = jardiniere(ch, A, M, 6.32, YB, 0.85, PB, 0.95); olivier(F, A, M, 6.32, YB, h, 1.9, r);
+  h = jardiniere(ch, A, M, 7.63, YB, 1.06, PB, 0.95); arbuste(F, A, M, 7.63, YB, h, 0.46, 0.5, PLANCHE.fleurs, r, 34);
+  h = potRond(ch, A, M, 8.6, -0.78, 0.3, 0.24, 0.72, M.anthracite); cypres(F, A, M, 8.6, -0.78, h, 1.5, 0.27, r);
+  h = jardiniere(ch, A, M, 9.55, YB, 1.0, PB, 0.95); arbuste(F, A, M, 9.55, YB, h, 0.42, 0.75, PLANCHE.arbuste, r, 38);
+  h = jardiniere(ch, A, M, 10.7, YB, 1.0, PB, 0.95); olivier(F, A, M, 10.7, YB, h, 1.1, r); arbuste(F, A, M, 10.7, YB, h, 0.3, 0.45, PLANCHE.arbuste, r, 18);
+  h = jardiniere(ch, A, M, 12.0, YB, 0.9, PB, 0.95); arbuste(F, A, M, 12.0, YB, h, 0.34, 0.55, PLANCHE.arbuste, rE, 26);
   // (LOT RUE DU 13/10 — les photos 08, 10, 11, 13 à 18 ajustées ENSEMBLE, poses et objets à la fois : 218 mesures, 5,5 px
   // d'écart moyen ; chaque objet vu de 3 à 7 photos, de l'ouest comme de l'est. Le joint du trottoir et de sa bordure est à
   // 2,55 m de la pierre (y -2,95) ; ce qui est posé AU MILIEU du trottoir était 0,45 m trop près de la façade — les
   // relevés du 11/10 partaient de poses dont l'appareil était trop bas : le premier banc (pieds avant en y -2,03, arrière
   // en -1,6 : un passage de 0,7 m entre lui et les bacs), la corbeille (8,98 ; -1,85), la poubelle haute (9,82 ; -2,14),
-  // le bambou (12,98 ; -2,29, à 0,35 m de la bordure) ; le second banc 0,4 m plus à l'ouest et 0,3 m plus loin du mur, long
-  // de 1,2 m (son pied avant ouest en 10,57 ; -1,67 sur les photos 17 et 18).)
+  // le bambou (12,98 ; -2,29, à 0,35 m de la bordure) ; le second banc 0,3 m plus à l'est et 0,3 m plus loin du mur, long
+  // de 1,15 m (son pied avant ouest en 11,31 ; -1,72 sur la photo 17, 11,25 ; -1,69 sur la photo 18).)
   banc(ch, A, M, 6.88, -1.82, 1.3, 0);
   corbeille(ch, A, M, 8.98, -1.85);
   cendrier(ch, A, M, 9.82, -2.14);
   // le second banc, plus court, au droit du bureau B ; le totem de l'entrée n° 6 ; le bambou ; la jardinière en treillis
-  banc(ch, A, M, 11.15, -1.47, 1.2, 0, { lattesDos: 6 });
+  banc(ch, A, M, 11.85, -1.48, 1.15, 0, { lattesDos: 6 });
   // (les recoins trop étroits pour Haythem — 30 à 55 cm entre le totem, les jardinières, les bancs, la corbeille et le
   // cendrier — sont bouchés : il s'y coinçait en tremblant entre deux obstacles. Relecture du 09/10/2026 ; refaits pour
-  // la nouvelle place des objets le 13/10 : le long des bacs, derrière le premier banc, entre la corbeille et les bacs,
-  // entre la corbeille et la poubelle haute, derrière le second banc, entre le bambou et la jardinière en treillis)
-  ch.C.ajouterBoite(5.6, 0.92, 10.96, 1.05, { y1: 0.9, camera: false });
-  ch.C.ajouterBoite(5.6, 1.05, 7.56, 1.6, { y1: 0.9, camera: false });
-  ch.C.ajouterBoite(8.6, 1.05, 9.3, 1.68, { y1: 0.6, camera: false });
+  // la nouvelle place des objets le 13/10 : entre le totem et le premier bac, le long des bacs, derrière le premier banc,
+  // entre la corbeille et les bacs, entre la corbeille et la poubelle haute, derrière le second banc et à son bout est,
+  // entre le bambou et la jardinière en treillis)
+  ch.C.ajouterBoite(5.5, 0.6, 5.9, 1.35, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(5.9, 1.0, 11.2, 1.12, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(5.9, 1.12, 7.56, 1.6, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(8.6, 1.12, 9.35, 1.68, { y1: 0.6, camera: false });
   ch.C.ajouterBoite(9.12, 1.8, 9.74, 2.18, { y1: 0.6, camera: false });
-  ch.C.ajouterBoite(10.55, 0.92, 11.78, 1.24, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(11.2, 1.0, 12.45, 1.24, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(12.4, 1.0, 12.75, 1.72, { y1: 0.9, camera: false });
   ch.C.ajouterBoite(12.75, 1.5, 13.3, 2.0, { y1: 0.6, camera: false });
   totem(ch, A, M, 12.75, -1.15, 'ouest');
   // (le bambou monte jusqu'aux appuis des fenêtres du 1er étage, photos 16 et 17 : 2,6 m au-dessus du pot)

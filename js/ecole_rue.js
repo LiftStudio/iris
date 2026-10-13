@@ -550,7 +550,7 @@ export function poserRue(ch) {
   // les taches d'ombre douces sous ce qui est posé dehors (la carte d'ombre du soleil ne couvre que le trottoir de l'école,
   // et l'ombre cuite ne couvre que l'intérieur)
   // (lot rue du 13/10 : elles suivent les bancs, le bambou, le palmier, la moto et les vélos à leur nouvelle place)
-  for (const [x, y, sx, sy, f] of [[6.88, -1.82, 0.72, 0.32, 0.5], [11.15, -1.47, 0.66, 0.3, 0.5], [7.6, -0.72, 1.8, 0.42, 0.45], [12.98, -2.29, 0.4, 0.4, 0.5],
+  for (const [x, y, sx, sy, f] of [[6.88, -1.82, 0.72, 0.32, 0.5], [11.85, -1.48, 0.64, 0.3, 0.5], [8.55, -0.8, 2.75, 0.5, 0.45], [12.98, -2.29, 0.4, 0.4, 0.5],
     [16.87, -1.26, 0.4, 0.4, 0.5], [0.85, -1.2, 0.85, 0.7, 0.5], [5.5, -1.22, 0.16, 0.45, 0.45], [12.05, -0.8, 0.16, 0.45, 0.45]])
     taches.ajouter(x, y, sx, sy, 0, f, 0);
   taches.ajouter(19.55, -1.4, 1.0, 0.42, 1.91, 0.45, 0);
