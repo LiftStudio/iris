@@ -1337,7 +1337,8 @@ export function construireCarte(scene, renderer = null) {
     // (V2, 11/10 — le fond, au nord du mur des portes de l'escalier (Y_ESC) et du mur safran (y 7,875) : la cage, le C05 et
     // l'entrée de la salle David Clark, les toilettes, le local, la PMR, le C01, puis la salle David Clark. Rien au-delà
     // de y 21,075 : le bâtiment s'arrête à 23,7 (IGN) et les locaux fermés du fond n'ont pas de sol ; la réserve ouest non
-    // plus. Les rectangles des autres lots s'arrêtent à ces lignes.)
+    // plus. Les rectangles des autres lots s'arrêtent à ces lignes. — r06, 13/10 : la salle David Clark va jusqu'au fond,
+    // sur sa moquette ; il n'y a plus de carrelage au nord de 14,15 à l'ouest de x 8,925.)
     // (13/10, lot C2 — le carrelage est en carreaux de 60 x 60, js/ecole_matieres.js ; le C05 et le C01 ont leur
     // calepinage, relevé sur les photos 23 et 01 redressées. C05 : les joints en long en x 4,56 / 5,16 / 5,76 — un filet
     // de 3 cm contre la cage, une coupe de 16 cm contre le mur est —, il se prolonge dans l'entrée de la salle David
