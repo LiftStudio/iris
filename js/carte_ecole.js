@@ -594,7 +594,8 @@ function construireFacade(ch) {
       // le passage des étudiants : 2,25 m, x 2,175-4,425, centré sur la limite des travées 2 et 3 (plan V2 ; photo 10, sur
       // l'échelle des travées de 1,65 m — le jeu avait deux travées, 3,3 m) ; à l'est, le mur du passage fait le tableau,
       // à l'ouest, un trumeau de 0,43 m (le passage, derrière, part de x 1,75 : construireMurs)
-      { c: 3.3, l: 2.25, h: 2.45 },
+      // (lot rue du 13/10, photo 10 à sa pose : le dessous du linteau noir est à 2,57 et non 2,45)
+      { c: 3.3, l: 2.25, h: 2.57 },
       ...BAIES_HAUTES.map((c) => ({ c, l: 1.2, bas: BAS_BAIE, h: H_BAIE })),
       ...BAIES_BUREAU.map((c) => ({ c, l: 1.2, bas: 1.75, h: H_BAIE })),
       // le portail de l'entrée n° 6 (tableaux noirs, sous-face noire). (Lot façade du 11/10, photos 16 et 17 redressées sur
@@ -627,11 +628,13 @@ function construireFacade(ch) {
   for (const c of BAIES_BUREAU) ch.C.ajouterBoite(c - 0.6, 0.4, c + 0.6, 0, { y0: 1.75, y1: H_BAIE, vitre: true });
   // la porte de secours (vantail d'acier noir, fermée, côté rue), son panneau rouge et la ventilation au-dessus
   ch.porte('x', -0.2, 0.8, { l: 1.0, h: 2.2, ep: 0.4, modele: 'noire', etat: 'fermee', cote: 'S', huisserie: false });
-  ch.boite(0.1, -0.44, 1.6, -0.4, 2.25, 2.75, M.noirMat);
+  // (lot rue du 13/10, photo 10 à sa pose : le bâti noir va de x 0,3 au passage et monte à 2,80 comme le linteau ; ses
+  // lames grises occupent x 0,4-1,85 de 2,15 à 2,56 — elles étaient 15 cm plus haut et s'arrêtaient à 1,6)
+  ch.boite(0.3, -0.44, 2.175, -0.4, 2.15, 2.8, M.noirMat);
   // (lot façade du 11/10, photo 10 recalée : les lames de la ventilation sont d'un gris d'acier, plus claires que leur
   // cadre ; la porte est dans un bâti noir — ses tableaux et l'entre-deux jusqu'au trumeau noir, x 1,30-1,46 — : de la
   // rue, du pilier de pierre (x 0-0,3) au passage, tout est sombre)
-  for (let h = 2.29; h < 2.74; h += 0.045) ch.boite(0.12, -0.47, 1.58, -0.44, h, h + 0.012, M.aluGris, { ombre: false });
+  for (let h = 2.18; h < 2.55; h += 0.045) ch.boite(0.4, -0.47, 1.85, -0.44, h, h + 0.012, M.aluGris, { ombre: false });
   for (const [a, b] of [[0.3, 0.32], [1.28, 1.3]]) ch.boite(a, -0.4, b, 0, 0, 2.2, M.noirMat, { ombre: false });
   ch.boite(0.3, -0.4, 1.3, 0, 2.18, 2.2, M.noirMat, { ombre: false });
   ch.boite(1.3, -0.42, 1.46, -0.4, 0, 2.25, M.noirMat, { ombre: false });
@@ -639,10 +642,36 @@ function construireFacade(ch) {
   // le linteau d'acier noir du passage (35 cm) et, dessous, au milieu, le boîtier noir aux deux étiquettes blanches
   // (relecture du 11/10, photo 10 rejouée : un seul boîtier de 0,59 m, x 3,01-3,6, de 2,32 à 2,45 — pas deux petits
   // boîtiers aux jambages ; c'est lui qu'on voit de la rue, et non un bloc de sortie vert)
-  ch.boite(2.175, -0.44, 4.425, -0.4, 2.45, 2.8, M.acierNoir);
-  ch.boite(3.01, -0.45, 3.6, -0.35, 2.32, 2.45, M.noirMat, { ombre: false });
+  // (lot rue du 13/10, photo 10 à sa pose : le linteau va de 2,57 à 2,80 — 23 cm et non 35 — et dépasse le jambage est
+  // jusqu'en x 4,75 ; le boîtier pend dessous, de 2,44 à 2,57)
+  ch.boite(2.175, -0.44, 4.75, -0.4, 2.57, 2.8, M.acierNoir);
+  ch.boite(3.01, -0.45, 3.6, -0.35, 2.44, 2.57, M.noirMat, { ombre: false });
   const etiq = new THREE.MeshStandardMaterial({ color: 0xeeeeea, roughness: 0.5 });
-  for (const x of [3.12, 3.49]) ch.panneau(etiq, 0.15, 0.035, x, -0.452, 2.385, 'S');
+  for (const x of [3.12, 3.49]) ch.panneau(etiq, 0.15, 0.035, x, -0.452, 2.505, 'S');
+  // LE PASSAGE VU DE LA RUE (photos 10, 11, 13, 14 : sous le ciel couvert, c'est un trou sombre et CHAUD — ses murs à
+  // 108-79-44, son sol presque noir, les deux réglettes seules claires ; le jeu le montrait aussi clair que la rue, blanc).
+  // Un voile qui multiplie ce qu'on voit au travers, tendu dans l'ouverture et tourné vers la rue seulement : du passage,
+  // il n'existe pas. Il s'efface à mesure que l'œil s'en approche (de 4,5 à 1,2 m) : en y entrant, rien ne saute.
+  {
+    const voile = new THREE.MeshBasicMaterial({ color: new THREE.Color().setRGB(0.5, 0.345, 0.16), vertexColors: true, transparent: true, depthWrite: false, blending: THREE.MultiplyBlending, premultipliedAlpha: true, toneMapped: false, fog: false });
+    voile.onBeforeCompile = (sh) => {
+      sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>',
+        '#include <opaque_fragment>\n  { float k = smoothstep(0.5, 2.2, 1.0 / gl_FragCoord.w); gl_FragColor = vec4(mix(vec3(1.0), outgoingLight, k), 1.0); }');
+    };
+    voile.customProgramCacheKey = () => 'iris-voile-passage-2';
+    voile.name = 'voile du passage vu de la rue';
+    // (rejoué à la pose des photos 10 et 13 : les murs sortaient justes, mais le sol et le fond deux fois trop clairs — le
+    // sol du passage est presque noir, 50-35-18 — ; le voile est plus dense vers le bas, où l'on voit le sol ; il ne
+    // s'efface plus qu'à 2,2 m — la photo 13, prise à 4,9 m de la façade, le montre aussi sombre que la 10)
+    const gv = new THREE.PlaneGeometry(2.25, 2.57, 1, 4), cv = new Float32Array(gv.attributes.position.count * 3);
+    for (let i = 0; i < gv.attributes.position.count; i++) {
+      const t = gv.attributes.position.getY(i) / 2.57 + 0.5, c = t < 0.2 ? 0.5 : t < 0.45 ? 0.62 : t < 0.7 ? 0.85 : 1;
+      cv[i * 3] = c; cv[i * 3 + 1] = c; cv[i * 3 + 2] = c;
+    }
+    gv.setAttribute('color', new THREE.BufferAttribute(cv, 3));
+    const v = new THREE.Mesh(gv, voile);
+    v.position.set(3.3, 2.57 / 2, 0.36); v.renderOrder = 3; v.castShadow = false; v.userData.nofuse = true; v.userData.horsAOSol = true; ch.decor.add(v);
+  }
   // (plan V2, photo 10 : entre la porte de secours et le passage, le cadre noir commun — un panneau d'acier noir jusqu'au
   // linteau, sur les 0,7 m de façade que l'ouverture rétrécie découvre)
   ch.boite(1.46, -0.44, 2.175, -0.4, 0, 2.8, M.noirMat);
@@ -726,7 +755,9 @@ function construireFacade(ch) {
   // — photos 10, 12 redressée, 17 : x 4,95 et 16,45-16,49 —, et non en x 6,9 et 16,8 à 3,67)
   const six = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.165), new THREE.MeshStandardMaterial({ map: texNumero('6'), transparent: true, roughness: 0.5 }));
   six.position.set(P6.x1 + 0.22, PORTAIL.h - 0.6, 0.405); ch.decor.add(six);
-  M.projecteur = jourDehors(new THREE.MeshStandardMaterial({ color: 0xd9dbdc, roughness: 0.5 }), 0.25); M.projecteur.name = 'boîtier des projecteurs';
+  // (lot rue du 13/10, photos 10, 16, 17 et 18 : les boîtiers sont d'un gris ANTHRACITE, 70 sur la pierre claire — le jeu
+  // les faisait gris perle, 215)
+  M.projecteur = jourDehors(new THREE.MeshStandardMaterial({ color: 0x4a4c50, roughness: 0.5 }), 0.25); M.projecteur.name = 'boîtier des projecteurs';
   for (const x of [4.95, 16.47]) {
     // le projecteur : une console courte, le boîtier penché vers le trottoir
     // (lot rue du 13/10, photos 16 et 18 : le boîtier est gris clair — 225 sur la photo —, sa vitre sombre dessous)

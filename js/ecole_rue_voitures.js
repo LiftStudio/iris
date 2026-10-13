@@ -39,13 +39,17 @@ const KITS = {
 // (relecture du 09/10/2026 : la Fiat est le vert d'eau pâle mesuré sur la photo 09, presque aussi bleu que vert)
 export const VOITURES = [
   { nom: 'Peugeot 207 blanche', kit: 'compacte', x: -2.15, file: 'sud', sens: -1, teinte: 0xe6e7e4, e: 1.02 },
-  { nom: 'Fiat 500 vert d\'eau', kit: 'citadine', x: 3.4, file: 'sud', sens: 1, teinte: 0xb4dbd5, e: 1.06 },
-  { nom: 'la rouge', kit: 'compacte', x: 7.75, file: 'sud', sens: -1, teinte: 0x7a1420, e: 1.0 },
-  { nom: 'Kia Niro gris anthracite', kit: 'berline', x: 12.6, file: 'sud', sens: -1, teinte: 0x3b4049, e: 1.0 },
-  { nom: 'la grise', kit: 'berline', x: 26.4, file: 'nord', sens: 1, teinte: 0x9fa4a9, e: 1.0 },
-  { nom: 'la blanche du bout', kit: 'compacte', x: 28.4, file: 'sud', sens: -1, teinte: 0xeeeeec, e: 1.08 },
-  { nom: 'le SUV noir', kit: 'suv', x: 33.5, file: 'sud', sens: -1, teinte: 0x16171a, e: 0.92 },
-  { nom: 'la bleu nuit', kit: 'compacte', x: 38.6, file: 'sud', sens: 1, teinte: 0x26385a, e: 1.0 },
+  // (lot rue du 13/10, photo 08 à sa pose, les roues rétroprojetées au sol : la ROUGE a le nez vers l'est, sa roue avant
+  // en x 7,7 ; la Kia Niro, un crossover gris-bleu sombre, le nez vers l'ouest, ses roues en 9,9 et 12,7 — le jeu la
+  // garait 1,3 m plus à l'est, elle entrait dans le champ de la photo 15, qui ne la voit pas. Toutes deux dans la BAIE,
+  // au sud de la ligne de tirets. Photo 15 : la grise, un petit coupé, contre la bordure nord de x 22,6 à 26,2 ; le SUV
+  // blanc au bout, côté jardin, de x 27 à 31, le nez vers l'école ; la Fiat recule de 1,2 m pour laisser sa place à la rouge.)
+  { nom: 'Fiat 500 vert d\'eau', kit: 'citadine', x: 2.2, file: 'sud', sens: 1, teinte: 0xb4dbd5, e: 1.06 },
+  { nom: 'la rouge', kit: 'compacte', x: 6.55, file: 'sud', sens: 1, teinte: 0x7a1420, e: 1.04 },
+  { nom: 'Kia Niro gris anthracite', kit: 'suv', x: 11.3, file: 'sud', sens: -1, teinte: 0x333842, e: 0.94 },
+  { nom: 'la grise', kit: 'citadine', x: 24.4, file: 'nord', sens: 1, teinte: 0xb4b7ba, e: 1.1 },
+  { nom: 'la blanche du bout', kit: 'suv', x: 29.1, file: 'sud', sens: -1, teinte: 0xeeeeec, e: 0.96 },
+  { nom: 'le SUV noir', kit: 'suv', x: 34.6, file: 'sud', sens: -1, teinte: 0x16171a, e: 0.92 },
 ];
 
 // LA TACHE D'OMBRE sous une caisse : un rectangle aux bords très doux, plus sombre au milieu (le ciel y est caché)
@@ -154,9 +158,10 @@ function repeindre(image, kit, teinte) {
 // =====================================================================
 // R : les cotes de la rue (js/ecole_rue.js). Le monde solide et les taches tout de suite ; les carrosseries au chargement.
 export function poserVoitures(ch, R, taches) {
-  const yFile = (f) => (f === 'nord' ? R.Y_TROTTOIR - 0.15 - 1.02 : R.Y_CHAUSSEE + 1.05);
+  // (lot rue du 13/10 : devant le 5/7, à l'ouest de x R.X_BAIE, la file du sud est une baie au-delà de la chaussée)
+  const yFile = (v) => (v.file === 'nord' ? R.Y_TROTTOIR - 0.15 - 1.02 : v.x < R.X_BAIE ? R.Y_BAIE + 1.02 : R.Y_CHAUSSEE + 1.05);
   for (const v of VOITURES) {
-    const K = KITS[v.kit], L = K.L * v.e, l = K.l * v.e, y = yFile(v.file);
+    const K = KITS[v.kit], L = K.L * v.e, l = K.l * v.e, y = yFile(v);
     ch.C.ajouterBoite(v.x - L / 2 + 0.08, -(y + l / 2 - 0.08), v.x + L / 2 - 0.08, -(y - l / 2 + 0.08), { y0: R.H_CHAUSSEE, y1: R.H_CHAUSSEE + K.h * v.e * 0.92 });
     taches.ajouter(v.x, y, L / 2 + 0.25, l / 2 + 0.22, 0, 0.88, R.H_CHAUSSEE);
     taches.ajouter(v.x, y, L / 2 - 0.2, l / 2 - 0.15, 0, 0.55, R.H_CHAUSSEE + 0.001);
@@ -210,7 +215,7 @@ function monter(gltf, groupe, R, yFile) {
   for (const v of VOITURES) {
     const P = G[v.kit];
     if (!P) continue;
-    const m = new THREE.Matrix4().compose(new THREE.Vector3(v.x, R.H_CHAUSSEE, -yFile(v.file)),
+    const m = new THREE.Matrix4().compose(new THREE.Vector3(v.x, R.H_CHAUSSEE, -yFile(v)),
       new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), v.sens > 0 ? 0 : Math.PI), new THREE.Vector3(v.e, v.e, v.e));
     // LA CAISSE : sa texture repeinte (une par voiture), la rugosité et le métal d'origine ; ses morceaux (les enjoliveurs
     // du SUV sont dans la matière de la caisse) cousus en un seul maillage

@@ -25,16 +25,28 @@ import { poserVoitures, Taches } from './ecole_rue_voitures.js';
 
 // LES COTES DE LA RUE (en plan)
 export const RUE = {
-  X0: -10.5, X1: 45,                        // de l'impasse (nu du muret) au carrefour
+  // (lot rue du 13/10, LE GABARIT : le cadastre et le bâti de l'IGN ramenés au plan — iris_audit, 5 cm d'écart sur l'école —
+  // recoupés par les photos 08, 15 et 16 à leur pose. 1. Le coin de la rue est en x 40 et les façades d'en face du
+  // carrefour en 47,8 : le jeu les mettait en 45 et 58,5, la rue filait 11 m trop loin. 2. Les voisins sont EN SAILLIE
+  // de 1,25 m sur l'école (leur nu en y -1,65) : sur la photo 16, le retour d'enduit du n° 4 entre la bande noire et son
+  // portail ; sur la photo 10, le retour de pierre lisse du n° 8. 3. Devant le 5/7, le stationnement est une BAIE au sud
+  // de la chaussée (photo 08 : les tirets sur la ligne y -9,3, les roues de la Kia en -9,3, la bordure en -11,3, la
+  // façade en -12,7) : le jeu garait SUR la chaussée et collait le 5/7 à 10,7 m de l'école, pour 12,3 m. Devant le
+  // jardin, à l'est de x 14,8, la bordure reste en -9,35 et la grille en -11,7 (photo 15).)
+  X0: -10.5, X1: 40,                        // de l'impasse (nu du muret) au carrefour
   // (lot rue du 13/10 : le joint du trottoir et de sa bordure mesuré sur neuf photos ajustées ensemble, 36 points : y -2,95,
   // un trottoir de 2,55 m ; il en faisait 2,4)
   Y_TROTTOIR: -2.95,                        // le nu de la bordure côté école (trottoir de 2,55 m)
   Y_CHAUSSEE: -9.35,                        // le nu de la bordure d'en face (chaussée de 6,4 m)
-  Y_FACE: -11.1,                            // les façades d'en face (trottoir de 1,6 m)
+  Y_FACE: -11.1,                            // le trottoir d'en face devant le jardin (1,6 m, puis la banquette de la grille)
+  X_BAIE: 14.8, Y_BAIE: -11.3,              // la baie de stationnement devant le 5/7 : son bout est, le nu de sa bordure
+  Y_FACE57: -12.7,                          // la façade du 5/7 (trottoir de 1,25 m)
+  Y_VOISINS: -1.65,                         // le nu des voisins (n° 8, n° 10, n° 4...), en saillie de 1,25 m sur l'école
   H_CHAUSSEE: -0.12,
-  X_JARDIN: [15, 42],                       // le jardin d'en face, derrière sa grille
+  X_JARDIN: [15, 40],                       // le jardin d'en face, derrière sa grille, jusqu'au coin
+  CARREFOUR: [1.3, 6.3, 7.8],               // la rue transversale depuis x1 : son trottoir, sa chaussée de 5 m, les façades d'en face
 };
-const { X0, X1, Y_TROTTOIR, Y_CHAUSSEE, Y_FACE, H_CHAUSSEE } = RUE;
+const { X0, X1, Y_TROTTOIR, Y_CHAUSSEE, Y_FACE, H_CHAUSSEE, X_BAIE, Y_BAIE, Y_FACE57, Y_VOISINS: YV } = RUE;
 
 // =====================================================================
 //  LES TEXTURES DE LA RUE
@@ -124,7 +136,7 @@ function texMuret() {
 // UNE FAÇADE D'IMMEUBLE dessinée (une travée x un étage par tuile) : fond, joints de pierre, fenêtre et son encadrement,
 // appui, garde-corps, persiennes, bandeaux de bois (le 5/7)
 function texFacade({ fond, cadre = '#2b282a', verre = '#4d5a66', travee = 1.8, etage = 3.0, fl = 1.2, fh = 1.6, balcon = false, bandeau = null,
-  persiennes = null, joints = false, encadrement = null, bois = null, rideaux = false, fleurs = false, balconBlanc = false, brique = null, graine = 3 }) {
+  persiennes = null, joints = false, encadrement = null, bois = null, rideaux = false, fleurs = false, balconBlanc = false, brique = null, appui = 0.9, graine = 3 }) {
   const W = 256, H = Math.round(W * etage / travee), r = alea(graine);
   return canvasTex(W, H, (g, w, h) => {
     const mx = w / travee, my = h / etage;
@@ -148,7 +160,7 @@ function texFacade({ fond, cadre = '#2b282a', verre = '#4d5a66', travee = 1.8, e
       for (let y = 0, l = 0; y < h; y += 0.45 * my, l++) for (let x = (l % 2) * 0.5 * mx; x < w; x += 1.0 * mx) g.fillRect(x, y, 1.2, 0.45 * my);
     }
     if (bandeau) { g.fillStyle = bandeau; g.fillRect(0, h - 0.35 * my, w, 0.35 * my); g.fillRect(0, 0, w, 0.12 * my); }
-    const x = (w - fl * mx) / 2, y = h - (0.9 + fh) * my;
+    const x = (w - fl * mx) / 2, y = h - (appui + fh) * my;
     if (encadrement) { g.fillStyle = encadrement; g.fillRect(x - 0.14 * mx, y - 0.16 * my, fl * mx + 0.28 * mx, fh * my + 0.26 * my); }
     if (bois) {
       // le 5/7 : un caisson de mélèze autour de la baie, plus haut sous l'appui
@@ -213,6 +225,14 @@ function texRezDeChaussee(L, H, { fond, socle = null, joints = false, elements =
         for (let i = 0; i < n; i++) {
           const a = x0 + m + i * (ww - m) / n, b = x0 + (i + 1) * (ww - m) / n;
           vit(a, top + m, b, e.t === 'porte' && e.plein ? top + (bas - top) * 0.6 : bas - (e.t === 'porte' ? m * 1.4 : m));
+          // (lot rue du 13/10 : une porte à ferronnerie — le n° 8, photo 10 — : le vitrage sombre derrière ses volutes de fer)
+          if (e.grille) {
+            const d = top + (bas - top) * 0.6;
+            g.fillStyle = '#2b211a'; g.fillRect(a, top + m, b - a, d - top - m);
+            g.strokeStyle = '#0e0c0b'; g.lineWidth = 2;
+            for (let k = 1; k < 4; k++) { const x = a + (b - a) * k / 4; g.beginPath(); g.moveTo(x, top + m); g.lineTo(x, d); g.stroke(); }
+            for (let k = 0; k < 5; k++) { g.beginPath(); g.arc((a + b) / 2, top + m + (d - top - m) * (k + 0.5) / 5, (b - a) * 0.3, 0, 7); g.stroke(); }
+          }
           if (e.chaud) { g.fillStyle = 'rgba(255,214,150,0.25)'; g.fillRect(a, top + m, b - a, bas - top - 2 * m); }
         }
         if (e.imposte) { g.fillStyle = e.cadre || bois; g.fillRect(x0, top + (bas - top) * 0.18, ww, 4); }
@@ -261,11 +281,13 @@ export function poserRue(ch) {
   const trottoir = std({ map: texEnrobe(0x747377, 7), roughness: 0.9 }, 0.05);
   // (relecture du 09/10/2026 : mesurés sur les photos 08, 09, 13 et 15, l'enrobé de la chaussée est presque aussi clair
   // que le trottoir — un gris moyen, ~0,66 de la façade de l'école ; il en faisait 0,45 et paraissait mouillé)
-  const chaussee = std({ map: texEnrobe(0x959bb0, 11), roughness: 0.92 }, 0.04);
+  // (lot rue du 13/10 : mesurée sur les photos 08, 13 et 15 à côté du jeu rejoué à leur pose, la chaussée est un gris
+  // NEUTRE aussi sombre que le trottoir — 120 à 142 —, le jeu la rendait à 163-176, lilas, plus claire que le trottoir)
+  const chaussee = std({ map: texEnrobe(0x757679, 11), roughness: 0.94 }, 0.04);
   for (const m of [trottoir, chaussee]) detailPhoto(m, 'beton', 4, 4, { relief: 0.5, grain: 0.15, rugo: true });
   const paves = std({ map: texPaves(5), roughness: 0.85 }, 0.05);
   const granit = std({ color: 0xb2b6ba, roughness: 0.72 }, 0.06);
-  const caniveau = std({ color: 0x8a8fa2, roughness: 0.9 }, 0.04);
+  const caniveau = std({ color: 0x6f7074, roughness: 0.94 }, 0.04);
   // (les sols : des rectangles aux UV en mètres du plan, rangés par matière puis cousus en un maillage par matière — à la
   // fin de poserRue ; leurs matières ont le grain photographique, la couture du décor ne les toucherait pas)
   const sols = new Map();
@@ -280,17 +302,30 @@ export function poserRue(ch) {
   plan(-0.3, Y_TROTTOIR, X1, -0.4, 0, trottoir);
   plan(X0, Y_TROTTOIR, -0.3, -0.4, 0, paves);                                  // le trottoir pavé du n° 8 et du n° 10
   plan(X0, Y_CHAUSSEE, X1, Y_TROTTOIR - 0.15, H_CHAUSSEE, chaussee);
-  plan(X0, Y_FACE, X1, Y_CHAUSSEE - 0.15, 0, trottoir);
-  for (const y of [Y_TROTTOIR, Y_CHAUSSEE]) ch.boite(X0, y - 0.15, X1, y, H_CHAUSSEE, 0, granit, { ombre: false });
+  // (lot rue du 13/10 : la baie de stationnement devant le 5/7, de la ligne de tirets à sa bordure ; son trottoir ; à
+  // l'est de la baie, le trottoir du jardin revient au bord de la chaussée, la bordure fait un retour)
+  plan(X0, Y_BAIE, X_BAIE, Y_CHAUSSEE, H_CHAUSSEE, chaussee);
+  plan(X0, Y_FACE57, 15, Y_BAIE - 0.15, 0, trottoir);
+  plan(X_BAIE + 0.15, Y_FACE, X1, Y_CHAUSSEE - 0.15, 0, trottoir);
+  plan(X_BAIE + 0.15, Y_BAIE - 0.15, 15, Y_FACE, 0, trottoir);
+  ch.boite(X0, Y_TROTTOIR - 0.15, X1, Y_TROTTOIR, H_CHAUSSEE, 0, granit, { ombre: false });
+  ch.boite(X0, Y_BAIE - 0.15, X_BAIE + 0.15, Y_BAIE, H_CHAUSSEE, 0, granit, { ombre: false });
+  ch.boite(X_BAIE, Y_BAIE, X_BAIE + 0.15, Y_CHAUSSEE - 0.15, H_CHAUSSEE, 0, granit, { ombre: false });
+  ch.boite(X_BAIE, Y_CHAUSSEE - 0.15, X1, Y_CHAUSSEE, H_CHAUSSEE, 0, granit, { ombre: false });
   // les caniveaux : une bande de béton plus clair, 30 cm, au pied de chaque bordure
   ch.boite(X0, Y_TROTTOIR - 0.45, X1, Y_TROTTOIR - 0.15, H_CHAUSSEE, H_CHAUSSEE + 0.003, caniveau, { ombre: false });
-  ch.boite(X0, Y_CHAUSSEE, X1, Y_CHAUSSEE + 0.28, H_CHAUSSEE, H_CHAUSSEE + 0.003, caniveau, { ombre: false });
+  ch.boite(X0, Y_BAIE, X_BAIE, Y_BAIE + 0.28, H_CHAUSSEE, H_CHAUSSEE + 0.003, caniveau, { ombre: false });
+  ch.boite(X_BAIE, Y_CHAUSSEE, X1, Y_CHAUSSEE + 0.28, H_CHAUSSEE, H_CHAUSSEE + 0.003, caniveau, { ombre: false });
   // la chaussée, 12 cm sous le trottoir : une dalle pour le joueur ; les bordures se franchissent (une marche)
   C.sol(X0, -(Y_TROTTOIR - 0.15), X1, -(Y_CHAUSSEE), H_CHAUSSEE);
+  C.sol(X0, -(Y_CHAUSSEE), X_BAIE, -(Y_BAIE), H_CHAUSSEE);
+  // (photo 15 : devant le portail vert du jardin, le trottoir d'en face est une dalle de béton CLAIR, 189-182-168, de la
+  // bordure à la grille, x 15,1 à 17,5)
+  plan(15.1, Y_FACE, 17.5, Y_CHAUSSEE - 0.15, 0.004, std({ color: 0xa59f92, roughness: 0.9 }, 0.06));
 
   // ---- LES DÉTAILS DE LA CHAUSSÉE (photos 08, 09, 13, 15) ----
   // les REPRISES d'enrobé : des rectangles plus sombres et plus lisses, surtout côté école
-  const reprise = std({ map: texEnrobe(0x7d8396, 29), roughness: 0.82 }, 0.04);
+  const reprise = std({ map: texEnrobe(0x66676b, 29), roughness: 0.88 }, 0.04);
   const r = alea(77);
   for (const [x0, y0, x1, y1] of [[5.6, -3.4, 8.4, -4.4], [7.2, -5.0, 10.6, -6.6], [11.2, -4.0, 13.4, -5.1], [9.8, -3.25, 11.4, -3.75], [14.6, -3.5, 16.0, -4.6],
     [-2.5, -4.2, 0.6, -5.6], [18.2, -6.0, 20.4, -7.2], [25.5, -4.6, 28.0, -6.0], [2.0, -5.8, 3.4, -6.7], [-8.5, -5.0, -6.2, -6.6]])
@@ -300,16 +335,19 @@ export function poserRue(ch) {
   // (une peinture transparente n'est pas cousue avec le décor : tous les traits en UN maillage)
   const traits = [];
   const trait = (x0, y0, x1, y1) => { const g = new THREE.PlaneGeometry(x1 - x0, y1 - y0).rotateX(-Math.PI / 2); g.translate((x0 + x1) / 2, H_CHAUSSEE + 0.0045, -(y0 + y1) / 2); traits.push(g); };
-  const yFile = Y_CHAUSSEE + 2.15;
-  for (let x = -10; x < 17; x += 3.2) trait(x, yFile - 0.06, x + 2.2, yFile + 0.06);
-  for (const x of [-5.6, 0.9, 5.5, 10.15, 15.1]) trait(x - 0.06, yFile - 0.05, x + 0.06, yFile + 0.75);
-  // (en travers : au droit du passage, jusqu'à la file de stationnement — photo 09 — et avant les vélos, d'un bord à l'autre — photo 08)
-  for (const [xl, yb] of [[1.15, yFile + 0.3], [17.6, Y_CHAUSSEE + 0.4]]) for (let y = Y_TROTTOIR - 0.6; y > yb; y -= 1.4) trait(xl - 0.08, y - 0.8, xl + 0.08, y);
+  // (lot rue du 13/10, photo 08 à sa pose : la limite de la baie est une ligne de TIRETS de 1,3 m tous les 2,6 m, sur
+  // y -9,3 — relevés en x 6,3-7,2, 8,3-9,4 et 11,0-12,5 — ; en travers de la chaussée, les tirets sont en x 13,25, juste à
+  // l'est du rond — de y -3,3 à -4,4 et de -5,6 à -6,6 — et non en 17,6, où la photo 15 ne montre aucune ligne)
+  const yFile = Y_CHAUSSEE;
+  for (let x = -9.6; x < X_BAIE - 1.5; x += 2.6) trait(x, yFile - 0.06, x + 1.3, yFile + 0.06);
+  // (en travers : au droit du passage — photo 09 — et devant le rond — photo 08)
+  for (const [xl, yb] of [[1.15, yFile + 0.3], [13.25, yFile + 0.3]]) for (let y = Y_TROTTOIR - 0.35; y > yb; y -= 2.3) trait(xl - 0.07, y - 1.1, xl + 0.07, y);
   const lignes = new THREE.Mesh(mergeGeometries(traits, false), peinture); lignes.userData.horsAOSol = true; ch.decor.add(lignes);
   // LE ROND D'INTERDICTION peint (bleu cerclé de rouge, barré) en face du passage (photos 08, 13, 14)
   const rond = new THREE.Mesh(new THREE.CircleGeometry(0.52, 40), std({ map: texRondInterdit(), transparent: true, depthWrite: false, roughness: 0.7 }, 0.2));
-  // (lot rue du 13/10, photo 08 à sa pose : son centre en (12,4 ; -5,0) — 1,2 m plus à l'ouest, au milieu de la chaussée)
-  rond.rotation.x = -Math.PI / 2; rond.position.set(12.6, H_CHAUSSEE + 0.006, 4.9); ch.decor.add(rond);
+  // (lot rue du 13/10, photo 08 à sa pose — il y est au milieu de l'image, la photo 13 ne le voit qu'au bord — : son
+  // centre en (12,4 ; -5,0), entre deux tirets de la ligne en travers)
+  rond.rotation.x = -Math.PI / 2; rond.position.set(12.4, H_CHAUSSEE + 0.006, 5.0); ch.decor.add(rond);
   // LES PLAQUES : regards ronds en fonte, un regard carré au milieu de la rue près des vélos (photo 15)
   const fonte = std({ map: texFonte(), roughness: 0.55, metalness: 0.6 }, 0.05);
   for (const [x, y] of [[4.2, -6.2], [14.2, -3.6], [-6.5, -5.5], [30.0, -6.0], [38.0, -4.2]]) {
@@ -317,10 +355,15 @@ export function poserRue(ch) {
   }
   const carre = ch.boite(22.4, -5.9, 23.1, -5.4, H_CHAUSSEE, H_CHAUSSEE + 0.006, fonte, { ombre: false }); void carre;
   ch.boite(1.2, -2.95, 1.75, -3.25, H_CHAUSSEE, H_CHAUSSEE + 0.005, fonte, { ombre: false });               // la grille d'avaloir
+  // (lot rue du 13/10, photos 10 et 13 : au seuil du passage, d'un jambage à l'autre et au-delà vers l'ouest, un caniveau
+  // à GRILLE de fonte de 25 cm barre le trottoir au pied de la façade)
+  ch.boite(1.7, -0.72, 4.5, -0.46, 0, 0.004, std({ color: 0x2c2b29, roughness: 0.6, metalness: 0.4 }, 0.04), { ombre: false });
   // LA PIÈCE DE PAVÉS au milieu de la chaussée (photos 08, 15) : un rapiéçage de vieux pavés, un rien bombé
-  const piece = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.03, 0.72), std({ map: texPaves(41), roughness: 0.8 }, 0.1));
-  piece.geometry.attributes.uv.array.forEach((v, i, a) => { a[i] = v * (i % 2 ? 0.72 : 0.95); });
-  piece.position.set(16.7, H_CHAUSSEE + 0.004, 5.9); ch.decor.add(piece);
+  // (lot rue du 13/10 : au sol des photos 08 et 15 à leur pose, elle est en x 14,8-15,9 × y -5,5 à -6,2 — 1,35 m plus à
+  // l'ouest : sur la photo 15, elle est aux pieds de l'appareil)
+  const piece = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.03, 0.75), std({ map: texPaves(41), roughness: 0.8 }, 0.1));
+  piece.geometry.attributes.uv.array.forEach((v, i, a) => { a[i] = v * (i % 2 ? 0.75 : 1.1); });
+  piece.position.set(15.35, H_CHAUSSEE + 0.004, 5.85); ch.decor.add(piece);
   // L'ARCEAU DE PARKING rabattu (photo 09), rayé orange et blanc, couché sur la chaussée EN TRAVERS de la rue : la barre
   // du côté du passage (est), les deux bras vers l'impasse, jusqu'à la charnière (relecture du 09/10/2026 : il était
   // couché dans le sens de la rue)
@@ -377,37 +420,37 @@ export function poserRue(ch) {
   // (lot façade du 11/10 : au-dessus de son rez-de-chaussée de pierre, le n° 8 est de brique chamois à rangs de brique
   // rouge, fenêtres à encadrement de pierre blanche et balcons de fer noir — photos 09 et 10 ; le jeu le faisait de pierre crème)
   const brique8 = std({ map: texFacade({ fond: '#d8cdb8', cadre: '#f2efe8', verre: '#56626e', travee: 1.9, etage: 3.0, balcon: true, encadrement: '#efebe2', rideaux: true, brique: [196, 172, 128], graine: 8 }), roughness: 0.9 });
-  const pierre4 = std({ map: texFacade({ fond: '#dfd9cd', cadre: '#efece6', verre: '#505c68', travee: 2.0, etage: 3.1, balcon: true, joints: true, encadrement: '#ddd4c6', rideaux: true, graine: 4 }), roughness: 0.85 });
+  const pierre4 = std({ map: texFacade({ fond: '#cfc3ad', cadre: '#efece6', verre: '#505c68', travee: 2.0, etage: 3.1, balcon: true, joints: true, encadrement: '#c9bba3', rideaux: true, graine: 4 }), roughness: 0.85 }, 0.07);
   const blanc = std({ map: texFacade({ fond: '#efefe8', cadre: '#ffffff', verre: '#56626e', travee: 1.9, etage: 2.9, persiennes: '#dfe3d8', fleurs: true, graine: 5 }), roughness: 0.85 });
-  // (photos 08, 15 : l'immeuble du coin est en pierre claire, à balcons et toit mansardé ; les volets verts du premier jet
-  // n'y sont pas)
-  const cremeFond = std({ map: texFacade({ fond: '#e4dccb', cadre: '#f3efe6', verre: '#5a6672', travee: 2.1, etage: 2.9, balcon: true, joints: true, encadrement: '#ece5d6', rideaux: true, graine: 6 }), roughness: 0.85 });
   // (intégration du 11/10, plan V2 : arrêté en y 12,45, au sud de l'aile A — il descendait jusqu'en y 14 et entrait de 1,25 m
   // dans la courette ouest, js/ecole_pieces.js courette : par les fenêtres de la Si 0.2, son fond crème bouchait la cour)
-  facade(X0 - 6, -0.4, -7.5, 12.45, 19, creme);
+  facade(X0 - 6, YV, -7.5, 12.45, 19, creme);
   // (relecture du lot façade, 11/10 : la brique s'arrête à 1,4 m de l'école — photo 10 recalée, x -1,7 ; photos 09 et
   // 12 : contre la bande noire, de toute la hauteur, un trumeau de pierre lisse, sans fenêtre ni brique)
-  facade(-7.5, -0.4, -1.7, 12.45, 19, brique8);
-  facade(-1.7, -0.4, -0.3, 12.45, 19, std({ color: 0xe6e0d4, roughness: 0.88 }));
+  // (lot rue du 13/10 : ce « trumeau de pierre lisse » est le RETOUR du n° 8, en saillie de 1,25 m sur l'école — vu de la
+  // photo 10, il va du pixel 250 au 404, là où tombe un mur de x -0,3 allant de y -1,65 à -0,4 ; la brique file jusqu'au coin)
+  facade(-7.5, YV, -0.3, 12.45, 19, brique8);
+  facade(-0.33, YV + 0.005, -0.295, -0.4, 19, std({ color: 0xe6e0d4, roughness: 0.88 }), { collision: false });
   // (lot façade du 11/10 : la photo 10, recalée — 5 px —, met la porte cochère du n° 8, bois verni à carreaux et imposte,
   // dans son encadrement de pierre claire, à 1,9 m de la bande noire de l'école : x -3,7 à -2,2 ; entre les deux, un mur
   // crème et un pilastre plus clair (x -1,7 à -0,3 à la relecture), sans fenêtre — le jeu y posait deux fenêtres à barreaux. La porte
   // cintrée suit à l'ouest, après un trumeau (photo 09).)
-  rdc(-7.5, -0.3, -0.4, 3.4, { fond: '#ddd5c6', socle: '#b9b1a3', joints: true, graine: 10, elements: [
-    { t: 'porte', x0: -5.5, x1: -4.4, h: 2.9, bois: '#6b4226', arc: true, imposte: true, vantaux: 2, pierre: '#e6dfd1' },
-    { t: 'porte', x0: -3.7, x1: -2.2, h: 2.95, bois: '#7a4a28', imposte: true, vantaux: 2, chaud: true, plein: true, encadrement: '#ece6da' },
-    { t: 'bande', x0: -1.7, x1: -0.3, couleur: '#e9e4d9', h: 3.4 },
+  // (lot rue du 13/10, photo 10 à sa pose, sur le nu en saillie : la pierre du rez-de-chaussée monte à 4,2 m — la brique ne
+  // commence qu'au-dessus —, la porte de bois sombre verni, haute de 2,85 m dans son encadrement, va jusqu'à 0,95 m du coin)
+  rdc(-7.5, -0.3, YV, 4.2, { fond: '#e6e1d6', socle: '#c9c2b5', joints: true, graine: 10, elements: [
+    { t: 'porte', x0: -5.6, x1: -4.5, h: 2.9, bois: '#5a3620', arc: true, imposte: true, vantaux: 2, pierre: '#ece6da' },
+    { t: 'porte', x0: -2.35, x1: -0.95, h: 2.85, bois: '#55301a', imposte: true, vantaux: 2, plein: true, grille: true, encadrement: '#efeadf' },
   ] });
-  rdc(X0, -7.5, -0.4, 3.4, { fond: '#d9d0bf', socle: '#b6ad9e', joints: true, graine: 11, elements: [
+  rdc(X0, -7.5, YV, 3.4, { fond: '#d9d0bf', socle: '#b6ad9e', joints: true, graine: 11, elements: [
     { t: 'porte', x0: -9.9, x1: -8.9, h: 2.8, bois: '#5d3a22', vantaux: 2 },
     { t: 'plaque', x0: -8.55, x1: -8.33, bas: 2.55, h: 2.75, texte: '10' },
     { t: 'fenetre', x0: -8.1, x1: -7.6, bas: 1.0, h: 2.6 },
   ] });
-  toit(X0 - 6, -0.3, -0.4, 4.5, 19);
+  toit(X0 - 6, -0.3, YV, 4.5, 19);
   // LA MARQUISE du n° 10 (photo 09) : un auvent de verre cannelé ambré sur une armature noire, au-dessus de la porte,
   // qui penche vers la rue (relecture du 09/10/2026 : ce n'était qu'un trapèze jaune peint sur la façade)
   {
-    const g = new THREE.Group(); g.position.set(-9.4, 3.3, 0.4); ch.decor.add(g);
+    const g = new THREE.Group(); g.position.set(-9.4, 3.3, -YV); ch.decor.add(g);
     const verre = std({ map: texMarquise(), roughness: 0.3, metalness: 0.1 }, 0.35);
     const v = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.025, 0.85), verre); v.position.set(0, -0.12, 0.42); v.rotation.x = 0.28; g.add(v);
     const noir = ch.M.acierNoir;
@@ -421,52 +464,65 @@ export function poserRue(ch) {
   }
   // CÔTÉ ÉCOLE, À L'EST : le n° 4 (pierre, sa porte au numéro bleu : photo 16), l'immeuble blanc aux géraniums, les
   // immeubles crème jusqu'au carrefour
-  facade(20.1, -0.4, 30, 14, 20, pierre4);
+  // (lot rue du 13/10 — le bâti de l'IGN : le n° 4 va de l'école à x 26,9, haut de 16,6 m ; puis un immeuble blanc de
+  // 13,8 m jusqu'en 35, et un immeuble bas de 9,9 m jusqu'au coin. Le n° 4 est en saillie : son RETOUR d'enduit crème, de
+  // y -0,4 à -1,65, se voit sur la photo 16 entre la bande noire de l'école et la descente d'eau du coin.)
+  facade(20.1, YV, 26.9, 14, 16.6, pierre4);
+  facade(20.085, YV + 0.005, 20.12, -0.4, 16.6, std({ color: 0xe4dfd2, roughness: 0.9 }), { collision: false });
   // (lot rue du 13/10, photo 16 rejouée à sa pose : la porte du n° 4 est 1,3 m plus à l'est, x 22,2-23,4 — de chêne
   // clair, sous son arc de pierre, la plaque bleue au-dessus, en x 22,8 ; la descente d'eau crème en x 21,4, entre l'école
   // et elle ; la première fenêtre à barreaux blancs ne commence qu'en x 25,0. La pierre du n° 4 est claire, 200 sur la
   // photo — le jeu la rendait à 148-132-112, un beige roux.)
-  rdc(20.1, 30, -0.4, 3.6, { fond: '#e3e1db', socle: '#c9c5bc', joints: true, graine: 12, elements: [
-    { t: 'bande', x0: 21.35, x1: 21.47, couleur: '#ece7dc', h: 3.6 },
-    { t: 'porte', x0: 22.2, x1: 23.4, h: 2.75, bois: '#b8925a', arc: true, vantaux: 1, plein: true, pierre: '#e9e3d7' },
-    { t: 'plaque', x0: 22.68, x1: 22.92, bas: 3.0, h: 3.25, texte: '4' },
-    { t: 'fenetre', x0: 25.0, x1: 26.2, bas: 0.9, h: 2.5 }, { t: 'fenetre', x0: 27.0, x1: 28.2, bas: 0.9, h: 2.5 },
+  // (photo 16 à sa pose, sur le nu en saillie : la descente d'eau crème à l'angle ; le portail de pierre de x 20,4 à
+  // 21,8, sa porte de chêne clair de 0,95 m sous un arc à 2,45 m ; la plaque bleue « 4 » au-dessus, centrée en 21,14 à
+  // 2,70 m ; la première fenêtre à barreaux blancs commence en 22,8)
+  rdc(20.1, 26.9, YV, 3.6, { fond: '#cfc3ad', socle: '#b9ae98', joints: true, graine: 12, elements: [
+    { t: 'bande', x0: 20.14, x1: 20.28, couleur: '#ece7dc', h: 3.6 },
+    { t: 'porte', x0: 20.62, x1: 21.57, h: 2.45, bois: '#b8925a', arc: true, vantaux: 1, plein: true, pierre: '#e9e3d7', encadrement: '#e8e2d5' },
+    { t: 'plaque', x0: 21.02, x1: 21.26, bas: 2.58, h: 2.83, texte: '4' },
+    { t: 'fenetre', x0: 22.8, x1: 23.9, bas: 0.9, h: 2.5 }, { t: 'fenetre', x0: 25.2, x1: 26.3, bas: 0.9, h: 2.5 },
   ] });
-  toit(20.1, 30, -0.4, 4.5, 20);
-  facade(30, -0.4, 38, 14, 17, blanc);
-  rdc(30, 38, -0.4, 3.2, { fond: '#ecebe4', socle: '#c9c6bd', graine: 18, elements: [
-    { t: 'porte', x0: 31.0, x1: 32.2, h: 2.7, bois: '#e9e9e4', vantaux: 2 },
-    { t: 'fenetre', x0: 33.4, x1: 34.6, bas: 0.9, h: 2.5 }, { t: 'fenetre', x0: 35.8, x1: 37.0, bas: 0.9, h: 2.5 },
+  toit(20.1, 26.9, YV, 4.5, 16.6);
+  facade(26.9, YV, 35, 14, 13.8, blanc);
+  rdc(26.9, 35, YV, 3.2, { fond: '#ecebe4', socle: '#c9c6bd', graine: 18, elements: [
+    { t: 'porte', x0: 27.7, x1: 28.9, h: 2.7, bois: '#e9e9e4', vantaux: 2 },
+    { t: 'fenetre', x0: 30.1, x1: 31.3, bas: 0.9, h: 2.5 }, { t: 'fenetre', x0: 32.6, x1: 33.8, bas: 0.9, h: 2.5 },
   ] });
-  facade(38, -0.4, X1 + 0.5, 14, 19, creme);
-  toit(38, X1 + 0.5, -0.4, 4.5, 19);
+  facade(35, YV, X1 + 0.5, 14, 9.9, creme);
+  toit(35, X1 + 0.5, YV, 4.5, 9.9);
   // LES LANTERNES murales de Paris (photos 13, 14 : sur l'immeuble blanc ; une autre sur le 5/7)
-  lanterne(ch, 30.6, -0.4, 4.6, 1);
-  lanterne(ch, 2.0, Y_FACE, 4.6, -1);
-  lanterne(ch, 36.5, Y_FACE, 4.6, -1);
+  lanterne(ch, 28.3, YV, 4.6, 1);
+  lanterne(ch, 2.0, Y_FACE57, 4.6, -1);
 
   // EN FACE, À L'OUEST : LE 5/7 (enduit blanc, caissons de mélèze, rez-de-chaussée vitré : photos 07, 08, 09). Au rez-de-
   // chaussée, d'ouest en est : la porte de garage en lames de bois, le pilier « 5/7 », la porte vitrée blanche, des
   // baies cadrées de bois ou de gris, la porte vitrée de bois (photo 08)
   const moderne = std({ map: texFacade({ fond: '#efece4', cadre: '#9c7448', verre: '#5b6874', travee: 3.0, etage: 3.0, fl: 2.2, fh: 1.5, bois: '#b98a52', rideaux: true, graine: 7 }), roughness: 0.8 });
-  facade(-4.5, Y_FACE - 14, 15, Y_FACE, 18, moderne);
-  rdc(-4.5, 15, Y_FACE, 3.3, { fond: '#f1eee6', ppm: 70, graine: 13, elements: [
+  // (lot rue du 13/10, photo 08 à sa pose, sur le nu y -12,7 : le coin est du 5/7 est en x 12,5 — 13,2 au cadastre —, son
+  // portail de mélèze va de x 9,05 à 11,65, la porte vitrée d'aluminium à deux vantaux de 9,25 à 10,8, éclairée de
+  // l'intérieur ; à son ouest, la grande baie au bandeau dépoli commence en 8,5)
+  facade(-4.5, Y_FACE57 - 14, 12.5, Y_FACE57, 18, moderne);
+  rdc(-4.5, 12.5, Y_FACE57, 3.3, { fond: '#f1eee6', ppm: 70, graine: 13, elements: [
     { t: 'garage', x0: -4.1, x1: -1.7, h: 2.6, bois: '#a87c50' },
     { t: 'pilier', x0: -1.6, x1: -1.0, h: 3.1, texte: '5/7' },
     { t: 'porte', x0: -0.9, x1: 0.7, h: 2.75, cadre: '#f4f4f0', vantaux: 2, chaud: true },
     { t: 'vitrine', x0: 1.2, x1: 3.4, h: 2.75, cadre: '#9c7448', vantaux: 2, chaud: true },
     { t: 'pilier', x0: 3.4, x1: 4.2, h: 2.75, bois: '#c39a68' },
     { t: 'vitrine', x0: 4.2, x1: 6.0, h: 2.75, cadre: '#4a4f55', vantaux: 2 },
-    { t: 'porte', x0: 6.6, x1: 8.0, h: 2.75, cadre: '#f4f4f0', vantaux: 2 },
-    { t: 'vitrine', x0: 8.8, x1: 10.6, h: 2.75, cadre: '#9c7448', vantaux: 2, chaud: true },
-    { t: 'porte', x0: 11.2, x1: 12.9, h: 2.8, bois: '#b98a52', vantaux: 2, chaud: true },
-    { t: 'vitrine', x0: 13.1, x1: 14.8, h: 2.8, cadre: '#f2f2ee', vantaux: 2 },
+    { t: 'vitrine', x0: 6.5, x1: 8.5, h: 2.75, cadre: '#9c7448', vantaux: 2 },
+    { t: 'pilier', x0: 8.5, x1: 9.25, h: 2.95, bois: '#c39a68' },
+    { t: 'porte', x0: 9.25, x1: 10.8, h: 2.75, cadre: '#b4b8bc', vantaux: 2, chaud: true, imposte: true },
+    { t: 'pilier', x0: 10.8, x1: 11.65, h: 2.95, bois: '#c39a68' },
   ] }, 'N');
+  // (du coin du 5/7 au mur de la baie, la grille du jardin en retrait, sur le nu du 5/7)
+  jardin(ch, 12.5, 15.0, Y_FACE57);
   // au fond de l'impasse, côté sud (photo 09) : la vieille maison basse en retrait, derrière son muret et sa grille
   const enduit = std({ map: texFacade({ fond: '#dcd8cf', cadre: '#f0eee8', verre: '#56606a', travee: 2.2, etage: 2.9, fl: 1.1, fh: 1.4, graine: 14 }), roughness: 0.9 });
-  facade(X0, Y_FACE - 9, -4.5, Y_FACE - 3, 6.5, enduit, { collision: false });
-  muretGrille(ch, X0, -4.5, Y_FACE, 'x', { hMuret: 1.0, hGrille: 1.5, sol: 0 });
-  C.ajouterBoite(X0, -(Y_FACE - 0.3), -4.5, -(Y_FACE), { y1: 2.6 });
+  facade(X0, Y_FACE57 - 9, -4.5, Y_FACE57 - 3, 6.5, enduit, { collision: false });
+  muretGrille(ch, X0, -4.5, Y_FACE57, 'x', { hMuret: 1.0, hGrille: 1.5, sol: 0 });
+  C.ajouterBoite(X0, -(Y_FACE57 - 0.3), -4.5, -(Y_FACE57), { y1: 2.6 });
+  // (entre le coin du 5/7 et la grille du jardin, un mètre de mur : la baie s'arrête, le trottoir du jardin avance)
+  ch.boite(15, Y_FACE57, 15.3, Y_FACE - 0.6, 0, 1.78, betonMuret(), { ombre: false, collision: true });
   // LE JARDIN (photo 15) : muret de béton taché, grille noire de 1,9 m doublée de brande, poteaux, lisse ; l'immeuble des
   // années 60 au fond
   const [xj0, xj1] = RUE.X_JARDIN;
@@ -477,61 +533,68 @@ export function poserRue(ch) {
   const balcons = std({ map: texFacade({ fond: '#e7e4dc', cadre: '#f4f4f0', verre: '#4f5b66', travee: 2.6, etage: 2.8, fl: 2.1, fh: 1.5, balconBlanc: true, fleurs: true, rideaux: true, graine: 19 }), roughness: 0.85 });
   facade(xj0, Y_FACE - 18, 28, Y_FACE - 6, 21, balcons, { collision: false });
   toit(xj0, 28, Y_FACE - 6, 3, 21, 'N', 1.2);
-  // EN FACE, À L'EST, au coin du carrefour : un petit immeuble crème aux volets verts
-  facade(xj1, Y_FACE - 14, X1 + 0.5, Y_FACE, 19, cremeFond);
-  rdc(xj1, X1 + 0.5, Y_FACE, 3.3, { fond: '#e2dccb', socle: '#bdb5a5', joints: true, graine: 15, elements: [
-    { t: 'porte', x0: 42.6, x1: 43.8, h: 2.8, bois: '#3f4a3a', vantaux: 2, arc: true, pierre: '#e8e1d0' },
-    { t: 'fenetre', x0: 44.3, x1: 45.3, bas: 1.0, h: 2.6 },
-  ] }, 'N');
-  toit(xj1, X1 + 0.5, Y_FACE, 4.5, 19, 'N');
+  // (lot rue du 13/10 : au cadastre, la parcelle du jardin va jusqu'au coin — aucun immeuble à l'angle ; la grille tourne
+  // le long de la rue transversale)
 
   // L'IMPASSE (ouest, photo 09) : un muret de béton taché de 1 m, une grille noire de 1,5 m à pointes ; derrière, une maison
   // basse, de grands arbres et l'immeuble à l'escalier en colimaçon (js/ecole_rue_mobilier.js pose la verdure et les pots)
-  muretGrille(ch, Y_FACE, -0.4, X0, 'y', { hMuret: 1.05, hGrille: 1.5, sol: H_CHAUSSEE });
-  C.ajouterBoite(X0 - 0.3, -(-0.4), X0, -Y_FACE, { y1: 2.7 });
+  muretGrille(ch, Y_FACE57, YV, X0, 'y', { hMuret: 1.05, hGrille: 1.5, sol: H_CHAUSSEE });
+  C.ajouterBoite(X0 - 0.3, -(-0.4), X0, -Y_FACE57, { y1: 2.7 });
   facade(X0 - 16, Y_FACE - 6, X0 - 9, 12, 16, balcons, { collision: false });
   facade(X0 - 5, -3, X0 - 2, 4, 8, enduit, { collision: false });
   // LE CARREFOUR (est, photos 08, 15) : la rue transversale (chaussée de x1 + 2 à x1 + 11, trottoirs de part et d'autre),
   // l'immeuble crème d'en face, six étages, une brasserie au rez-de-chaussée sous son store sombre ; on s'arrête au bord
-  const XT = X1 + 13.5;
+  const [TC0, TC1, TCF] = RUE.CARREFOUR, XT = X1 + TCF;
   // (relecture du 09/10/2026 : la rue transversale va plus loin — de y = -34 à 22 —, pour qu'aucun bord du sol ne se
   // voie en biais depuis le bout de la rue ; ses trottoirs ont leurs bordures, et celles de la rue tournent au coin)
   const YS = -34, YN = 22;
-  plan(X1, Y_CHAUSSEE, X1 + 11, Y_TROTTOIR - 0.15, H_CHAUSSEE, chaussee);
-  plan(X1 + 2, YS, X1 + 11, Y_CHAUSSEE, H_CHAUSSEE, chaussee);
-  plan(X1 + 2, Y_TROTTOIR - 0.15, X1 + 11, YN, H_CHAUSSEE, chaussee);
-  plan(X1, Y_TROTTOIR, X1 + 2, YN, 0, trottoir);
-  plan(X1, YS, X1 + 2, Y_CHAUSSEE - 0.15, 0, trottoir);
-  plan(X1 + 11, YS, XT, YN, 0, trottoir);
-  ch.boite(X1 + 10.85, YS, X1 + 11, YN, H_CHAUSSEE, 0, granit, { ombre: false });
-  for (const y of [Y_TROTTOIR, Y_CHAUSSEE]) ch.boite(X1, y - 0.15, X1 + 2.15, y, H_CHAUSSEE, 0, granit, { ombre: false });
-  ch.boite(X1 + 2, Y_TROTTOIR - 0.15, X1 + 2.15, YN, H_CHAUSSEE, 0, granit, { ombre: false });
-  ch.boite(X1 + 2, YS, X1 + 2.15, Y_CHAUSSEE, H_CHAUSSEE, 0, granit, { ombre: false });
+  plan(X1, Y_CHAUSSEE, X1 + TC1, Y_TROTTOIR - 0.15, H_CHAUSSEE, chaussee);
+  plan(X1 + TC0, YS, X1 + TC1, Y_CHAUSSEE, H_CHAUSSEE, chaussee);
+  plan(X1 + TC0, Y_TROTTOIR - 0.15, X1 + TC1, YN, H_CHAUSSEE, chaussee);
+  plan(X1, Y_TROTTOIR, X1 + TC0, YN, 0, trottoir);
+  plan(X1, YS, X1 + TC0, Y_CHAUSSEE - 0.15, 0, trottoir);
+  plan(X1 + TC1, YS, XT, YN, 0, trottoir);
+  ch.boite(X1 + TC1 - 0.15, YS, X1 + TC1, YN, H_CHAUSSEE, 0, granit, { ombre: false });
+  for (const y of [Y_TROTTOIR, Y_CHAUSSEE]) ch.boite(X1, y - 0.15, X1 + TC0 + 0.15, y, H_CHAUSSEE, 0, granit, { ombre: false });
+  ch.boite(X1 + TC0, Y_TROTTOIR - 0.15, X1 + TC0 + 0.15, YN, H_CHAUSSEE, 0, granit, { ombre: false });
+  ch.boite(X1 + TC0, YS, X1 + TC0 + 0.15, Y_CHAUSSEE, H_CHAUSSEE, 0, granit, { ombre: false });
+  // (la grille du jardin tourne au coin, le long du trottoir de la rue transversale)
+  muretGrille(ch, -19, Y_FACE - 0.6, X1, 'y', { hMuret: 0.35, hGrille: 1.37, sol: 0 });
   // EN FACE, TROIS IMMEUBLES (photos 08, 15) : au milieu l'immeuble crème de six étages et sa brasserie ; au sud un
   // immeuble de pierre plus haut ; au nord un immeuble blanc aux persiennes grises. Chacun a son rez-de-chaussée dessiné :
   // aucune fenêtre d'étage ne descend jusqu'au trottoir (un seul mur de 50 m, avant la relecture).
-  const fondRue = std({ map: texFacade({ fond: '#eee6cf', cadre: '#f6f2e6', verre: '#5a6672', travee: 1.9, etage: 2.85, balcon: true, rideaux: true, graine: 16 }), roughness: 0.85 });
-  const fondSud = std({ map: texFacade({ fond: '#ddd3c2', cadre: '#efe9de', verre: '#56626e', travee: 2.0, etage: 3.0, balcon: true, joints: true, encadrement: '#e6ddcc', rideaux: true, graine: 21 }), roughness: 0.85 });
+  // (lot rue du 13/10, photos 08 et 15 à leur pose sur le plan x 47,8 : l'immeuble crème a QUATRE étages sur son
+  // rez-de-chaussée — 17 m, son toit en terrasse —, des travées de 3,45 m, des étages de 3,4 m, des portes-fenêtres hautes
+  // de 2 m à garde-corps noirs dont l'appui est au plancher ; il va jusqu'en y -16,8, où commence l'immeuble de pierre à
+  // balcons, au café sous son store sombre. Le jeu en faisait six étages de 2,85 m, à 58,5 m.)
+  // (mesuré sur les photos 08 et 15 à côté du jeu rejoué à leur pose : l'immeuble crème est le plus CLAIR de la rue, 226
+  // quand la pierre du n° 4, dans l'ombre de la rue, est à 143 — le jeu rendait l'inverse, 150 et 172 : il reçoit plus de
+  // jour du ciel, le n° 4 moins)
+  const fondRue = std({ map: texFacade({ fond: '#f7f3df', cadre: '#fbf9f0', verre: '#5a6672', travee: 3.45, etage: 3.4, fl: 1.15, fh: 2.0, appui: 0.15, balcon: true, rideaux: true, graine: 16 }), roughness: 0.85 }, 0.3);
+  const fondSud = std({ map: texFacade({ fond: '#e6dfcf', cadre: '#efe9de', verre: '#56626e', travee: 2.9, etage: 3.3, fl: 1.15, fh: 2.1, appui: 0.15, balcon: true, joints: true, encadrement: '#ece4d4', rideaux: true, graine: 21 }), roughness: 0.85 }, 0.24);
   const fondNord = std({ map: texFacade({ fond: '#efede6', cadre: '#ffffff', verre: '#56626e', travee: 1.8, etage: 2.9, persiennes: '#c3c8c2', graine: 22 }), roughness: 0.85 });
-  facade(XT, -14, XT + 10, 4, 19.5, fondRue, { collision: false });
-  facade(XT, YS, XT + 10, -14, 22.5, fondSud, { collision: false });
+  facade(XT, -16.8, XT + 10, 4, 17, fondRue, { collision: false });
+  facade(XT, YS, XT + 10, -16.8, 16.5, fondSud, { collision: false });
+  // (son comble de zinc, en retrait)
+  ch.boite(XT + 0.7, YS, XT + 10, -16.8, 16.5, 19.3, zinc, { ombre: false }).userData.horsAOSol = true;
   facade(XT, 4, XT + 10, YN + 2, 17, fondNord, { collision: false });
   // un rez-de-chaussée tourné vers la rue (vers l'ouest), de yN (au nord : à gauche vu de la rue) à yS
   const rdcO = (yN, yS, H, o) => {
     const L = yN - yS, m = new THREE.Mesh(new THREE.PlaneGeometry(L, H), std({ map: texRezDeChaussee(L, H, o), roughness: 0.8 }, 0.12));
     m.position.set(XT - 0.02, H / 2, -(yN + yS) / 2); m.rotation.y = -Math.PI / 2; m.userData.horsAOSol = true; ch.decor.add(m);
   };
-  rdcO(4, -14, 3.6, { fond: '#e6dcc4', socle: '#3b3430', graine: 17, elements: [
-    { t: 'fenetre', x0: 1.0, x1: 2.2, bas: 1.0, h: 2.6 }, { t: 'fenetre', x0: 3.3, x1: 4.5, bas: 1.0, h: 2.6 },
-    { t: 'plaque', x0: 5.6, x1: 6.4, bas: 2.9, h: 3.15, texte: 'RUE' },
-    { t: 'porte', x0: 7.3, x1: 8.5, h: 2.8, bois: '#3a2a20', vantaux: 2 },
-    { t: 'vitrine', x0: 9.5, x1: 15.0, h: 2.8, cadre: '#2b2422', vantaux: 4, chaud: true },
-    { t: 'auvent', x0: 9.3, x1: 15.2, h: 3.4, couleur: '#2a2e2b', texte: 'CAFÉ · BRASSERIE' },
-    { t: 'fenetre', x0: 16.2, x1: 17.4, bas: 1.0, h: 2.6 },
+  // (photo 15 : au rez-de-chaussée de l'immeuble crème, des fenêtres à barreaux clairs, la plaque bleue de la rue à
+  // 2,4 m en y -6,7, la porte grise de y -7,25 à -8,4 ; le café est celui de l'immeuble de pierre, au sud)
+  rdcO(4, -16.8, 3.6, { fond: '#f5f0dc', socle: '#ddd7c4', graine: 17, elements: [
+    { t: 'fenetre', x0: 1.6, x1: 2.9, bas: 0.9, h: 2.6, barreaux: '#d9d9d2' }, { t: 'fenetre', x0: 5.0, x1: 6.3, bas: 0.9, h: 2.6, barreaux: '#d9d9d2' },
+    { t: 'fenetre', x0: 8.4, x1: 9.7, bas: 0.9, h: 2.6, barreaux: '#d9d9d2' },
+    { t: 'plaque', x0: 10.4, x1: 11.0, bas: 2.28, h: 2.55, texte: 'RUE' },
+    { t: 'porte', x0: 11.3, x1: 12.4, h: 2.4, bois: '#c9cac6', vantaux: 2 },
+    { t: 'fenetre', x0: 13.6, x1: 14.9, bas: 0.9, h: 2.6, barreaux: '#d9d9d2' }, { t: 'fenetre', x0: 17.0, x1: 18.3, bas: 0.9, h: 2.6, barreaux: '#d9d9d2' },
   ] });
-  rdcO(-14, YS, 3.9, { fond: '#d8cdbb', socle: '#a99e8c', joints: true, graine: 23, elements: [
-    { t: 'vitrine', x0: 1.5, x1: 6.5, h: 3.0, cadre: '#1f3a2e', vantaux: 3, chaud: true },
-    { t: 'auvent', x0: 1.3, x1: 6.7, h: 3.6, couleur: '#1f3a2e' },
+  rdcO(-16.8, YS, 3.9, { fond: '#ddd4c2', socle: '#a99e8c', joints: true, graine: 23, elements: [
+    { t: 'vitrine', x0: 0.6, x1: 6.4, h: 2.9, cadre: '#231f1d', vantaux: 4, chaud: true },
+    { t: 'auvent', x0: 0.4, x1: 6.6, h: 3.5, couleur: '#26282a', texte: 'CAFÉ' },
     { t: 'porte', x0: 8.2, x1: 9.6, h: 3.1, bois: '#4a3322', vantaux: 2, arc: true, pierre: '#e3d9c8' },
     { t: 'fenetre', x0: 11.5, x1: 12.7, bas: 1.0, h: 2.8 }, { t: 'fenetre', x0: 14.0, x1: 15.2, bas: 1.0, h: 2.8 }, { t: 'fenetre', x0: 16.5, x1: 17.7, bas: 1.0, h: 2.8 },
   ] });
@@ -541,7 +604,7 @@ export function poserRue(ch) {
     { t: 'garage', x0: 10.5, x1: 13.0, h: 2.5, bois: '#6d6f70' },
     { t: 'fenetre', x0: 15.0, x1: 16.2, bas: 0.9, h: 2.5 },
   ] });
-  C.ajouterBoite(X1 - 0.5, -(-0.4), X1, -Y_FACE, { y1: 3 });
+  C.ajouterBoite(X1 - 0.5, -(-0.4), X1, -(Y_FACE - 0.6), { y1: 3 });
   // (les façades d'en face et des voisins sont solides : la rue est fermée de partout)
 
   // ---- LE MOBILIER, LES PLANTES, LES DEUX-ROUES, LES VOITURES ----
@@ -591,15 +654,21 @@ function jardin(ch, x0, x1, yF) {
   const beton = betonMuret();
   const brande = jourDehors(new THREE.MeshStandardMaterial({ map: texBrande(), roughness: 1, alphaTest: 0.5, side: THREE.DoubleSide }), 0.1);
   brande.name = 'brande';
-  ch.boite(x0, yF, x1, yF + 0.32, 0, 0.55, beton, { ombre: false });
+  // (lot rue du 13/10, photos 08 et 15 à leur pose, sur le plan de la grille : le muret s'arrête à 0,35 m, la lisse basse
+  // est à 0,45, le haut des barreaux à 1,65-1,9 m — 1,72 retenu. Le jeu montait à 2,55 m : de la chaussée, la grille
+  // fermait le ciel au lieu de laisser voir le jardin par-dessus.)
+  const HM = 0.35, HG = 1.72;
+  ch.boite(x0, yF, x1, yF + 0.32, 0, HM, beton, { ombre: false });
   ch.boite(x0, yF + 0.32, x1, yF + 0.62, 0, 0.12, beton, { ombre: false });        // la banquette au pied (photo 15)
   // la brande : un plan à 18 cm derrière les barreaux, UV en mètres
-  const L = x1 - x0, g = new THREE.PlaneGeometry(L, 1.9);
-  const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * L, uv.getY(i) * 1.9);
-  const p = new THREE.Mesh(g, brande); p.position.set((x0 + x1) / 2, 0.55 + 0.95, -(yF + 0.08)); p.userData.horsAOSol = true; ch.decor.add(p);
-  for (let x = x0 + 0.06; x < x1; x += 0.12) ch.boite(x, yF + 0.2, x + 0.02, yF + 0.22, 0.55, 2.48, M.barreaux, { ombre: false });
-  for (const h of [0.68, 2.42]) ch.boite(x0, yF + 0.19, x1, yF + 0.23, h, h + 0.04, M.barreaux, { ombre: false });
-  for (let x = x0; x <= x1 + 0.01; x += 2.6) ch.boite(x - 0.04, yF + 0.17, x + 0.04, yF + 0.25, 0.55, 2.55, M.barreaux, { ombre: false });
+  const L = x1 - x0, hb = HG - HM, g = new THREE.PlaneGeometry(L, hb);
+  const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * L, uv.getY(i) * hb);
+  const p = new THREE.Mesh(g, brande); p.position.set((x0 + x1) / 2, HM + hb / 2, -(yF + 0.08)); p.userData.horsAOSol = true; ch.decor.add(p);
+  for (let x = x0 + 0.06; x < x1; x += 0.12) ch.boite(x, yF + 0.2, x + 0.02, yF + 0.22, HM, HG, M.barreaux, { ombre: false });
+  for (const h of [HM + 0.1, HG - 0.06]) ch.boite(x0, yF + 0.19, x1, yF + 0.23, h, h + 0.04, M.barreaux, { ombre: false });
+  for (let x = x0; x <= x1 + 0.01; x += 2.6) ch.boite(x - 0.04, yF + 0.17, x + 0.04, yF + 0.25, HM, HG + 0.06, M.barreaux, { ombre: false });
+  // (photo 15, au bord droit : le poteau VERT sombre du portail du jardin, en x 16,4, au bout de la dalle de béton clair)
+  if (x0 < 16.3 && x1 > 16.5) ch.boite(16.34, yF + 0.14, 16.46, yF + 0.28, 0, 1.95, jourDehors(new THREE.MeshStandardMaterial({ color: 0x23402f, roughness: 0.6 }), 0.08), { ombre: false });
   C.ajouterBoite(x0, -(yF + 0.62), x1, -yF, { y1: 0.12 });
   C.sol(x0, -(yF + 0.62), x1, -(yF + 0.32), 0.12);          // (on monte sur la banquette au lieu d'y enfoncer les pieds)
   C.ajouterBoite(x0, -(yF + 0.32), x1, -yF, { y1: 2.6 });
