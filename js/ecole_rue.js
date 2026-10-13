@@ -233,7 +233,7 @@ function texRezDeChaussee(L, H, { fond, socle = null, joints = false, elements =
             for (let k = 1; k < 4; k++) { const x = a + (b - a) * k / 4; g.beginPath(); g.moveTo(x, top + m); g.lineTo(x, d); g.stroke(); }
             for (let k = 0; k < 5; k++) { g.beginPath(); g.arc((a + b) / 2, top + m + (d - top - m) * (k + 0.5) / 5, (b - a) * 0.3, 0, 7); g.stroke(); }
           }
-          if (e.chaud) { g.fillStyle = 'rgba(255,214,150,0.25)'; g.fillRect(a, top + m, b - a, bas - top - 2 * m); }
+          if (e.chaud) { g.fillStyle = `rgba(255,${e.chaud === 2 ? 190 : 214},${e.chaud === 2 ? 110 : 150},${e.chaud === 2 ? 0.6 : 0.25})`; g.fillRect(a, top + m, b - a, bas - top - 2 * m); }
         }
         if (e.imposte) { g.fillStyle = e.cadre || bois; g.fillRect(x0, top + (bas - top) * 0.18, ww, 4); }
         if (e.arc) { g.fillStyle = e.pierre || fond; g.beginPath(); g.moveTo(x0 - 4, top - 2); g.lineTo(x1 + 4, top - 2); g.lineTo(x1 + 4, top + ww * 0.18); g.quadraticCurveTo((x0 + x1) / 2, top - ww * 0.12, x0 - 4, top + ww * 0.18); g.fill(); }
@@ -336,18 +336,19 @@ export function poserRue(ch) {
   const traits = [];
   const trait = (x0, y0, x1, y1) => { const g = new THREE.PlaneGeometry(x1 - x0, y1 - y0).rotateX(-Math.PI / 2); g.translate((x0 + x1) / 2, H_CHAUSSEE + 0.0045, -(y0 + y1) / 2); traits.push(g); };
   // (lot rue du 13/10, photo 08 à sa pose : la limite de la baie est une ligne de TIRETS de 1,3 m tous les 2,6 m, sur
-  // y -9,3 — relevés en x 6,3-7,2, 8,3-9,4 et 11,0-12,5 — ; en travers de la chaussée, les tirets sont en x 13,25, juste à
-  // l'est du rond — de y -3,3 à -4,4 et de -5,6 à -6,6 — et non en 17,6, où la photo 15 ne montre aucune ligne)
+  // y -9,3 — relevés en x 6,3-7,2, 8,3-9,4 et 11,0-12,5 — ; en travers de la chaussée, les tirets sont 0,85 m à l'est du rond, en x 12,75 — juste à
+  // son est, de y -3,3 à -4,4 et de -5,6 à -6,6 — et non en 17,6, où la photo 15 ne montre aucune ligne)
   const yFile = Y_CHAUSSEE;
   for (let x = -9.6; x < X_BAIE - 1.5; x += 2.6) trait(x, yFile - 0.06, x + 1.3, yFile + 0.06);
   // (en travers : au droit du passage — photo 09 — et devant le rond — photo 08)
-  for (const [xl, yb] of [[1.15, yFile + 0.3], [13.25, yFile + 0.3]]) for (let y = Y_TROTTOIR - 0.35; y > yb; y -= 2.3) trait(xl - 0.07, y - 1.1, xl + 0.07, y);
+  for (const [xl, yb] of [[1.15, yFile + 0.3], [12.75, yFile + 0.3]]) for (let y = Y_TROTTOIR - 0.35; y > yb; y -= 2.3) trait(xl - 0.07, y - 1.1, xl + 0.07, y);
   const lignes = new THREE.Mesh(mergeGeometries(traits, false), peinture); lignes.userData.horsAOSol = true; ch.decor.add(lignes);
   // LE ROND D'INTERDICTION peint (bleu cerclé de rouge, barré) en face du passage (photos 08, 13, 14)
   const rond = new THREE.Mesh(new THREE.CircleGeometry(0.52, 40), std({ map: texRondInterdit(), transparent: true, depthWrite: false, roughness: 0.7 }, 0.2));
-  // (lot rue du 13/10, photo 08 à sa pose — il y est au milieu de l'image, la photo 13 ne le voit qu'au bord — : son
-  // centre en (12,4 ; -5,0), entre deux tirets de la ligne en travers)
-  rond.rotation.x = -Math.PI / 2; rond.position.set(12.4, H_CHAUSSEE + 0.006, 5.0); ch.decor.add(rond);
+  // (lot rue du 13/10 : son centre en (12,4 ; -5,0) au sol de la photo 08, en (10,9 ; -4,5) à celui de la photo 13, qui
+  // ne le voit qu'au bord — retenu entre les deux, plus près de la 08 : (11,9 ; -4,85), entre deux tirets de la ligne en
+  // travers)
+  rond.rotation.x = -Math.PI / 2; rond.position.set(11.9, H_CHAUSSEE + 0.006, 4.85); ch.decor.add(rond);
   // LES PLAQUES : regards ronds en fonte, un regard carré au milieu de la rue près des vélos (photo 15)
   const fonte = std({ map: texFonte(), roughness: 0.55, metalness: 0.6 }, 0.05);
   for (const [x, y] of [[4.2, -6.2], [14.2, -3.6], [-6.5, -5.5], [30.0, -6.0], [38.0, -4.2]]) {
@@ -355,9 +356,11 @@ export function poserRue(ch) {
   }
   const carre = ch.boite(22.4, -5.9, 23.1, -5.4, H_CHAUSSEE, H_CHAUSSEE + 0.006, fonte, { ombre: false }); void carre;
   ch.boite(1.2, -2.95, 1.75, -3.25, H_CHAUSSEE, H_CHAUSSEE + 0.005, fonte, { ombre: false });               // la grille d'avaloir
-  // (lot rue du 13/10, photos 10 et 13 : au seuil du passage, d'un jambage à l'autre et au-delà vers l'ouest, un caniveau
-  // à GRILLE de fonte de 25 cm barre le trottoir au pied de la façade)
-  ch.boite(1.7, -0.72, 4.5, -0.46, 0, 0.004, std({ color: 0x2c2b29, roughness: 0.6, metalness: 0.4 }, 0.04), { ombre: false });
+  // (lot rue du 13/10, photo 13 à sa pose, au sol : devant le seuil du passage, d'un jambage à l'autre et au-delà vers
+  // l'ouest, un caniveau à GRILLE de fonte de 0,4 m barre le trottoir, de y -0,6 à -1,0 ; entre lui et le carrelage, une
+  // bande de béton clair)
+  ch.boite(1.9, -1.02, 4.55, -0.62, 0, 0.007, std({ map: texGrille(), roughness: 0.6, metalness: 0.4 }, 0.04), { ombre: false });
+  ch.boite(1.9, -0.62, 4.55, -0.45, 0, 0.006, std({ color: 0xa9a59c, roughness: 0.9 }, 0.06), { ombre: false });
   // LA PIÈCE DE PAVÉS au milieu de la chaussée (photos 08, 15) : un rapiéçage de vieux pavés, un rien bombé
   // (lot rue du 13/10 : au sol des photos 08 et 15 à leur pose, elle est en x 14,8-15,9 × y -5,5 à -6,2 — 1,35 m plus à
   // l'ouest : sur la photo 15, elle est aux pieds de l'appareil)
@@ -511,7 +514,7 @@ export function poserRue(ch) {
     { t: 'vitrine', x0: 4.2, x1: 6.0, h: 2.75, cadre: '#4a4f55', vantaux: 2 },
     { t: 'vitrine', x0: 6.5, x1: 8.5, h: 2.75, cadre: '#9c7448', vantaux: 2 },
     { t: 'pilier', x0: 8.5, x1: 9.25, h: 2.95, bois: '#c39a68' },
-    { t: 'porte', x0: 9.25, x1: 10.8, h: 2.75, cadre: '#b4b8bc', vantaux: 2, chaud: true, imposte: true },
+    { t: 'porte', x0: 9.25, x1: 10.8, h: 2.75, cadre: '#b4b8bc', vantaux: 2, chaud: 2, imposte: true },
     { t: 'pilier', x0: 10.8, x1: 11.65, h: 2.95, bois: '#c39a68' },
   ] }, 'N');
   // (du coin du 5/7 au mur de la baie, la grille du jardin en retrait, sur le nu du 5/7)
@@ -531,8 +534,9 @@ export function poserRue(ch) {
   // l'immeuble des années 60 au fond du jardin (photo 08 : sept étages, des balcons filants à garde-corps blancs, des
   // jardinières aux balcons), à 6 m derrière la grille
   const balcons = std({ map: texFacade({ fond: '#e7e4dc', cadre: '#f4f4f0', verre: '#4f5b66', travee: 2.6, etage: 2.8, fl: 2.1, fh: 1.5, balconBlanc: true, fleurs: true, rideaux: true, graine: 19 }), roughness: 0.85 });
-  facade(xj0, Y_FACE - 18, 28, Y_FACE - 6, 21, balcons, { collision: false });
-  toit(xj0, 28, Y_FACE - 6, 3, 21, 'N', 1.2);
+  // (au cadastre, il va de x 13,2 à 26,9)
+  facade(13.2, Y_FACE - 18, 26.9, Y_FACE - 6, 21, balcons, { collision: false });
+  toit(13.2, 26.9, Y_FACE - 6, 3, 21, 'N', 1.2);
   // (lot rue du 13/10 : au cadastre, la parcelle du jardin va jusqu'au coin — aucun immeuble à l'angle ; la grille tourne
   // le long de la rue transversale)
 
@@ -708,6 +712,13 @@ function texMarquise() {
     g.fillStyle = '#c8a24e'; g.fillRect(0, 0, w, h);
     for (let x = 0; x < w; x += 8) { g.fillStyle = 'rgba(255,236,170,0.55)'; g.fillRect(x, 0, 3, h); g.fillStyle = 'rgba(90,64,20,0.25)'; g.fillRect(x + 5, 0, 2, h); }
   }, null, false, 4);
+}
+// LA GRILLE DU CANIVEAU (photos 10, 13) : des fentes sombres en travers, serrées — une tuile = 1 m de long
+function texGrille() {
+  return canvasTex(256, 128, (g, w, h) => {
+    g.fillStyle = '#3a3835'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#0f0e0d'; for (let x = 6; x < w; x += 16) g.fillRect(x, 0, 9, h);
+  }, [1, 1 / 0.4], false, 4);
 }
 // LA FONTE DES REGARDS : un quadrillage en relief, sombre
 function texFonte() {

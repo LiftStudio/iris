@@ -1678,7 +1678,7 @@ export function construireCarte(scene, renderer = null) {
     // (relecture : le mur nord du bureau sur la ligne 2,925)
     { id: 'attente', rects: [zr(5.8, ATT.ys, 13.3, ATT.yn), zr(9.165, 2.925, 13.3, ATT.ys), zr(12.5, 2.5, 13.3, 2.925)], voisines: ['hallO', 'c01', 'hall'], env: { x: 9.2, y: 1.6, z: -(10.5 + DY_A) } },
     { id: 'hall', rects: [zr(13.3, -0.45, 20.1, 4.7), zr(14.675, 4.7, 20.1, 7.6)], voisines: ['attente', 'rue', 'couloirEst'], env: { x: 15.8, y: 1.6, z: -4.0 } },
-    { id: 'rue', rects: [zr(-25, -12, 50, -0.4)], voisines: ['hall', 'passage'], env: { x: 9.5, y: 1.7, z: 3.4 } },
+    { id: 'rue', rects: [zr(-25, -13.2, 50, -0.4)], voisines: ['hall', 'passage'], env: { x: 9.5, y: 1.7, z: 3.4 } },
     ...pieces.zones,
     ...est.zones,
   ];
@@ -1743,7 +1743,7 @@ export function construireCarte(scene, renderer = null) {
     depart: { x: d.x, z: -d.y, fx: v.x / n, fz: -v.y / n },
     // (zMin -22 -> -25 : la salle David Clark allait jusqu'à y 24,35 — 09/10 ; V2, 11/10 : -24,5, le bâtiment s'arrête à
     // y 23,7, IGN)
-    bornes: { xMin: -22, xMax: 47, zMin: -24.5, zMax: 11 },
+    bornes: { xMin: -22, xMax: 47, zMin: -24.5, zMax: 12.45 },          // (lot rue du 13/10 : jusqu'au pied du 5/7, y -12,7)
     sieges: ch.sieges,
     maj,
     lumieres, portes: ch.portes, chantier: ch,

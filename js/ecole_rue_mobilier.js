@@ -1230,13 +1230,15 @@ export function poserMobilierRue(ch, R) {
   // de verdure). Loin de l'école : sans ombre portée (la carte d'ombre ne couvre pas le fond de la rue).
   // (relecture du 09/10/2026 : plus grands, plus denses et plus sombres — sur les photos 08 et 15, ils débordent
   // largement de la grille et ferment le haut de la rue côté jardin)
-  // (lot rue du 13/10, photos 08 et 15 rejouées à leur pose : le premier arbre est plus à l'est — de la photo 08, on voit
-  // l'immeuble à balcons entre le 5/7 et lui — et sa ramure, plus ample et plus basse, déborde sur le trottoir : sur la
-  // photo 15, elle ferme tout le haut de la rue côté jardin et cache l'immeuble du fond du jardin)
-  for (const [x, y, H, Rr, n] of [[19.6, R.Y_FACE - 3.2, 13, 5.6, 400], [25.2, R.Y_FACE - 3.0, 12.5, 5.0, 330], [30.8, R.Y_FACE - 3.2, 12.5, 4.6, 290], [36.3, R.Y_FACE - 3.0, 12, 4.2, 260]])
+  // (lot rue du 13/10, photos 08 et 15 rejouées à leur pose : le premier arbre a son tronc en (20 ; -14,6) — à 50° à
+  // droite de la photo 15, derrière le bord de l'immeuble à balcons sur la photo 08 —, c'est un arbre BAS et rond, 8,5 m,
+  // dont la ramure déborde sur le trottoir ; de la photo 08, on voit l'immeuble à balcons entre le 5/7 et lui, et de
+  // grands peupliers derrière lui. Le jeu plantait quatre arbres de 12 à 14 m, le premier en x 17.)
+  for (const [x, y, H, Rr, n] of [[20.0, R.Y_FACE - 3.5, 8.5, 3.6, 300], [27.0, R.Y_FACE - 3.2, 11.5, 4.2, 280], [32.5, R.Y_FACE - 3.2, 12, 4.0, 260], [37.0, R.Y_FACE - 3.0, 11, 3.8, 240]])
     arbre(Floin, A, M, x, y, H, Rr, r, { n: TELEPHONE ? Math.round(n * 0.6) : n });
-  // le peuplier élancé du fond (photo 08, au-dessus du jardin)
-  arbre(Floin, A, M, 32.5, R.Y_FACE - 6, 20, 2.8, r, { n: TELEPHONE ? 130 : 210, hFut: 0.3, applati: 2.4 });
+  // les peupliers élancés du fond (photo 08, au-dessus du jardin)
+  for (const [x, y, H] of [[23.2, R.Y_FACE - 4.6, 19], [25.4, R.Y_FACE - 5.4, 21], [34.5, R.Y_FACE - 6, 20]])
+    arbre(Floin, A, M, x, y, H, 2.6, r, { n: TELEPHONE ? 120 : 200, hFut: 0.3, applati: 2.4 });
   for (const [y, H, Rr] of [[-2.0, 7, 2.8], [-5.5, 8.5, 3.4], [-9.0, 7.5, 3.0]]) arbre(Floin, A, M, R.X0 - 2.8, y, H, Rr, r, { n: TELEPHONE ? 110 : 200, applati: 1.1 });
   for (let k = 0; k < 6; k++) bambou(Floin, A, M, R.X0 - 0.9, -3.6 - k * 1.1, 0, 2.6 + r() * 0.8, r, 8);
 
