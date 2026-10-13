@@ -2192,7 +2192,7 @@ function salleDavidClark(ch, P) {
   // (relecture, 6e passe — le mur ouest relevé colonne par colonne : c'est sa partie PROCHE, entre l'armoire et la
   // troisième table, qui est la plus claire — 185/170/154 puis 190/181/175 à mi-hauteur, quand le jeu donnait
   // 152/135/112 et 159/146/129 ; le luminaire de l'armoire l'éclaire bien, en nappe large et douce)
-  { const a = maille(new THREE.PlaneGeometry(2.6, 2.0), D.aureole, DC.x0 + 0.004, 1.2, -16.45, Math.PI / 2, ch.decor, { ombre: false, recoit: false }); a.renderOrder = 2; nePasFusionner(a); }
+  { const a = maille(new THREE.PlaneGeometry(2.2, 2.0), D.aureole, DC.x0 + 0.004, 1.2, -16.0, Math.PI / 2, ch.decor, { ombre: false, recoit: false }); a.renderOrder = 2; nePasFusionner(a); }
   // (relecture : et celle du mur du fond sous le luminaire de x 5,6, à 0,6 m de lui — la photo y relève 190 de 0,7 à
   // 1,3 m, le reste du mur à 150)
   // (6e passe : le mur du fond assombri, son auréole plus large et plus franche — au pied du mur, la photo a 180/178/171)
