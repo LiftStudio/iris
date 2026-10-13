@@ -58,7 +58,7 @@ import * as THREE from 'three';
 import { Collisions } from './collisions.js';
 import { carteLocale, poserSondeLocale, planifierOcclusionSol, optimiserDecor, nePasFusionner, animerVent, canvasTex } from './kit_decor.js';
 import { materiauxEcole, texDAE, jourDehors, texAffiche, CADRE, CADRES, texFenetreCadre } from './ecole_matieres.js';
-import { Portes, boiteM, maille, fenetreFacade, fenetreDepolie, fusionnerLocal, vitrophanies, poserCoupe } from './ecole_portes.js';
+import { Portes, boiteM, maille, fenetreFacade, fenetreDepolie, fusionnerLocal, vitrophanies, poserCoupe, VITRO } from './ecole_portes.js';
 import { couperParZones, poserVisibilite } from './ecole_visibilite.js';
 import { LumieresEcole, cuireLumiereSol } from './ecole_lumieres.js';
 import { poserMobilier } from './ecole_mobilier.js';
@@ -582,6 +582,8 @@ const H_BAIE = 2.75;
 // (et leur appui à 1,07-1,15 au-dessus du trottoir, photo 17 redressée : 1,10 et non 0,95)
 const BAS_BAIE = 1.1;
 const PORTAIL = { c: 14.86, l: 2.88, h: 2.78 };            // le portail n° 6 : x 13,42-16,30 (lot façade, photos 16, 17)
+// (lot rue du 13/10 : la ligne des vitrages de la porte 6, 1,2 m derrière le nu de la pierre — construireEntree)
+const Y_P6 = 0.8;
 function construireFacade(ch) {
   const { M } = ch;
   // le mur de façade du rez-de-chaussée (40 cm : enduit blanc dedans, pierre dehors)
@@ -657,26 +659,82 @@ function construireFacade(ch) {
     for (let y = -1.5; y < -0.45; y += 0.13) ch.boite(x - 0.012, y, x + 0.012, y + 0.024, 0.11, 2.34, M.acierNoir);
     ch.C.ajouterBoite(x - 0.04, 1.64, x + 0.04, 0.4, { y1: 2.42 });
   }
-  // LE PORTAIL N° 6 : tableaux noirs (le mur du bureau B à l'ouest, un retour à l'est), sous-face noire
-  ch.mur({ de: [16.575, -0.4], a: [16.575, 0.3], ep: 0.15, h: H_DALLE, mats: { W: M.noirMat, E: M.blanc } });
-  // (en retrait de 2 cm du nu de la façade : sa face avant ne double pas celle du linteau de pierre)
-  ch.boite(13.35, -0.38, 16.5, 0.3, 2.8, H_DALLE, M.noirMat, { ombre: false });
-  // (lot façade, 11/10 : le portail rétréci à x 13,42-16,30, son linteau à 2,78 — photos 16 et 17 —, ses tableaux et sa
-  // sous-face sont noirs jusqu'à la ligne de la porte 6 (y 0,3) ; les bouts de la porte 6 passent derrière la pierre)
+  // LE PORTAIL N° 6 (lot rue du 13/10 — les photos 16 et 17 rejouées à leur pose, ajustement d'ensemble des photos 08 à
+  // 18 à 5 px ; trois indices qui s'accordent : la bande de sol entre le seuil et le bas des vantaux, la largeur du
+  // tableau ouest vu de biais, et celle du vitrage, qui retrouve les 3,15 m de l'entrée du hall) : le renfoncement fait
+  // 1,2 m, et non 0,7 — la ligne des vitrages est en y 0,8 (Y_P6). De chaque côté, 0,5 m de pierre en retour (à l'ouest,
+  // la platine noire de l'interphone et son bouton), puis un panneau noir — à l'ouest, une grille de lames noires jusqu'à
+  // 2 m (VO q_0019-0023) ; sous le linteau de pierre, un bandeau noir de 22 cm, puis la sous-face gris clair et sa grille
+  // de ventilation, à 2,58 ; au sol, un carrelage gris anthracite derrière une cornière d'aluminium ; au pied de la
+  // pierre, de part et d'autre, le soubassement taupe de 0,48 m et son filet sombre (photos 15 à 17).
+  ch.mur({ de: [16.575, -0.4], a: [16.575, Y_P6], ep: 0.15, h: H_DALLE, mats: { W: M.noirMat, E: M.blanc } });
   const P6 = { x0: PORTAIL.c - PORTAIL.l / 2, x1: PORTAIL.c + PORTAIL.l / 2 };
-  for (const [a, b] of [[P6.x0, P6.x0 + 0.02], [P6.x1 - 0.02, P6.x1]]) ch.boite(a, -0.4, b, 0.3, 0, PORTAIL.h, M.noirMat, { ombre: false });
-  ch.boite(13.35, -0.395, 16.5, 0.3, PORTAIL.h - 0.02, PORTAIL.h, M.noirMat, { ombre: false });
+  const noirP6 = new THREE.MeshStandardMaterial({ color: 0x1c1c1e, roughness: 0.6 }); noirP6.name = 'panneaux noirs du portail';
+  // (photos 16, 17 : le soubassement est d'un taupe rosé, 105-94-90 sous le ciel couvert)
+  M.soubassement = jourDehors(new THREE.MeshStandardMaterial({ color: 0x9b9797, roughness: 0.9 }), 0.1); M.soubassement.name = 'soubassement taupe de la façade';
+  M.filetSoubassement = new THREE.MeshStandardMaterial({ color: 0x2c2829, roughness: 0.7 }); M.filetSoubassement.name = 'filet du soubassement';
+  // (les lames : une tuile de 8 cm, le dessus de la lame éclairé, son dessous dans l'ombre)
+  const lames = new THREE.MeshStandardMaterial({ roughness: 0.55, map: canvasTex(8, 32, (g, w, h) => {
+    g.fillStyle = '#17171a'; g.fillRect(0, 0, w, h); g.fillStyle = '#3a3a3e'; g.fillRect(0, 0, w, 7); g.fillStyle = '#050506'; g.fillRect(0, h - 9, w, 9);
+  }, [1, 1 / 0.08], false, 4) });
+  lames.name = 'grille à lames du portail';
+  for (const [xa, xb, s] of [[13.35, P6.x0, 1], [P6.x1, 16.5, -1]]) {
+    const xf = s > 0 ? xb : xa;                             // (la face du tableau, vue du renfoncement)
+    ch.boite(xa, 0, xb, Y_P6 - 0.04, 0, 2.6, noirP6, { ombre: false, collision: true });
+    // la pierre en retour : une dalle de 1,5 cm sur le chant du mur de façade et 10 cm au-delà ; son soubassement
+    ch.boite(Math.min(xf, xf + s * 0.015), -0.398, Math.max(xf, xf + s * 0.015), 0.1, 0, 2.58, M.pierre, { ombre: false });
+    ch.boite(Math.min(xf, xf + s * 0.02), -0.4, Math.max(xf, xf + s * 0.02), 0.1, 0, 0.48, M.soubassement, { ombre: false });
+    ch.boite(Math.min(xf, xf + s * 0.024), -0.402, Math.max(xf, xf + s * 0.024), 0.1, 0.48, 0.51, M.filetSoubassement, { ombre: false });
+  }
+  ch.boite(P6.x0, 0.1, P6.x0 + 0.012, Y_P6 - 0.04, 0.06, 2.0, lames, { ombre: false });
+  // la platine de l'interphone (0,2 x 0,31 m, de 1,32 à 1,63 : noire, son étiquette blanche en haut) et le bouton, sur
+  // le retour de pierre ouest ; au pied du même retour, le chasse-roue blanc
+  const platine = new THREE.MeshStandardMaterial({ roughness: 0.4, map: canvasTex(64, 96, (g, w, h) => {
+    g.fillStyle = '#141416'; g.fillRect(0, 0, w, h); g.strokeStyle = '#3c3c40'; g.lineWidth = 2; g.strokeRect(1, 1, w - 2, h - 2);
+    g.fillStyle = '#e9e9e6'; g.fillRect(w * 0.42, h * 0.1, w * 0.46, h * 0.22); g.fillStyle = '#8a8d90'; g.fillRect(w * 0.5, h * 0.16, w * 0.3, h * 0.03); g.fillRect(w * 0.5, h * 0.23, w * 0.22, h * 0.03);
+    g.fillStyle = '#2b2b2e'; for (let k = 0; k < 4; k++) g.fillRect(w * 0.18, h * (0.5 + k * 0.08), w * 0.64, h * 0.03);
+  }, null, false, 4) });
+  ch.panneau(platine, 0.2, 0.31, P6.x0 + 0.017, -0.19, 1.475, 'E');
+  ch.panneau(noirP6, 0.05, 0.085, P6.x0 + 0.017, -0.21, 1.18, 'E');
+  maille(new THREE.CylinderGeometry(0.035, 0.035, 0.5, 10), M.blanc, P6.x0 + 0.03, 0.25, -0.09, 0, ch.decor, { ombre: false });
+  // le bandeau noir sous le linteau (en retrait de 3 cm du nu de la pierre) et le plein au-dessus de la sous-face
+  // (un noir MAT : sous le ciel, le noir satiné des tableaux y prenait un grand reflet gris)
+  const noirBandeau = new THREE.MeshStandardMaterial({ color: 0x121213, roughness: 1, envMapIntensity: 0.15 }); noirBandeau.name = 'bandeau noir du portail';
+  ch.boite(13.35, -0.37, 16.5, Y_P6 - 0.04, 2.6, H_DALLE, noirBandeau, { ombre: false });
+  ch.boite(P6.x0, -0.37, P6.x1, -0.33, 2.56, 2.6, noirBandeau, { ombre: false });
+  const sousFace = jourDehors(new THREE.MeshStandardMaterial({ color: 0xb4b6b6, roughness: 0.7 }), 0.2); sousFace.name = 'sous-face du portail';
+  ch.boite(P6.x0, -0.33, P6.x1, Y_P6 - 0.04, 2.585, 2.6, sousFace, { ombre: false }).userData.horsAOSol = true;
+  ch.boite(13.62, -0.25, 14.14, -0.05, 2.58, 2.586, new THREE.MeshStandardMaterial({ color: 0x8f8a7c, roughness: 0.6 }), { ombre: false });
+  // le sol du renfoncement : de grands carreaux gris anthracite (joints tous les 60 cm), la cornière d'aluminium du seuil
+  // (photos 16, 17 : 107 à 120 de gris sous le ciel couvert, à peine plus sombre que le trottoir, un rien bleuté)
+  const dalleP6 = jourDehors(new THREE.MeshStandardMaterial({ roughness: 0.78, map: canvasTex(64, 64, (g, w, h) => {
+    g.fillStyle = '#565960'; g.fillRect(0, 0, w, h); g.fillStyle = '#45474c'; g.fillRect(0, 0, w, 1.5); g.fillRect(0, 0, 1.5, h);
+  }, [1 / 0.6, 1 / 0.6], false, 8) }), 0.08);
+  dalleP6.name = 'carrelage du seuil de la porte 6';
+  ch.boite(P6.x0, -0.4, P6.x1, Y_P6, 0, 0.008, dalleP6, { ombre: false });
+  ch.boite(P6.x0, -0.43, P6.x1, -0.395, 0, 0.012, M.alu, { ombre: false });
+  // LE SOUBASSEMENT de la façade de part et d'autre du portail (photos 15, 16, 17 : sous les baies de l'accueil jusqu'à
+  // la bande noire du mitoyen, et à gauche du portail derrière les pots ; près du passage, photos 10 et 14, la pierre
+  // descend claire jusqu'au trottoir)
+  for (const [a, b] of [[10.0, P6.x0], [P6.x1, 19.8]]) {
+    ch.boite(a, -0.42, b, -0.4, 0, 0.48, M.soubassement, { ombre: false });
+    ch.boite(a, -0.424, b, -0.4, 0.48, 0.51, M.filetSoubassement, { ombre: false });
+  }
   // le numéro 6, noir, sur la pierre à droite du portail ; les deux projecteurs et l'écusson tricolore au-dessus
   // (lot façade, photos 16 et 18 : le 6 est à 0,22 m du tableau est, à 0,6 m sous le linteau, haut de 13 cm — le jeu le
   // mettait à 16,85 et à 2,30, de 22 cm ; les projecteurs sont au-dessus des tableaux est du passage et du portail, à 4,0 m
   // — photos 10, 12 redressée, 17 : x 4,95 et 16,45-16,49 —, et non en x 6,9 et 16,8 à 3,67)
   const six = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.165), new THREE.MeshStandardMaterial({ map: texNumero('6'), transparent: true, roughness: 0.5 }));
   six.position.set(P6.x1 + 0.22, PORTAIL.h - 0.6, 0.405); ch.decor.add(six);
+  M.projecteur = jourDehors(new THREE.MeshStandardMaterial({ color: 0xd9dbdc, roughness: 0.5 }), 0.25); M.projecteur.name = 'boîtier des projecteurs';
   for (const x of [4.95, 16.47]) {
-    // le projecteur : une console courte, le boîtier noir penché vers le trottoir
-    ch.boite(x - 0.04, -0.52, x + 0.04, -0.4, 3.96, 4.04, M.noirMat, { ombre: false });
-    const p = maille(boiteM(0.32, 0.22, 0.09), M.acierNoir, x, 3.96, 0.58, 0, ch.decor, { ombre: false });
+    // le projecteur : une console courte, le boîtier penché vers le trottoir
+    // (lot rue du 13/10, photos 16 et 18 : le boîtier est gris clair — 225 sur la photo —, sa vitre sombre dessous)
+    ch.boite(x - 0.04, -0.52, x + 0.04, -0.4, 3.96, 4.04, M.aluGris, { ombre: false });
+    const p = maille(boiteM(0.32, 0.22, 0.09), M.projecteur, x, 3.96, 0.58, 0, ch.decor, { ombre: false });
     p.rotation.x = 0.55;
+    const v = maille(boiteM(0.26, 0.16, 0.004), M.noirMat, x, 3.96 - 0.046 * Math.cos(0.55) + 0.0, 0.58 + 0.046 * Math.sin(0.55), 0, ch.decor, { ombre: false });
+    v.rotation.x = 0.55;
   }
   // LES DRAPEAUX (photos 16 à 18) : le français à gauche, l'européen à droite, sur deux hampes qui sortent de derrière
   // l'écusson tricolore « Liberté Égalité Fraternité » et s'ouvrent EN V (17° de part et d'autre de la verticale, un peu
@@ -791,17 +849,22 @@ function texNumero(t) {
 // =====================================================================
 //  LA PORTE N° 6 ET LA PAROI VITRÉE DU PASSAGE
 // =====================================================================
-// LA PORTE 6 (photos 03, 16, 31) : la ligne des vitrages à y = 0,3. Un fixe à gauche (x 13,35-14,3), la double porte de
-// 2 x 0,95 m (automatique ici), un petit fixe à droite, l'imposte vitrée jusqu'au plafond ; aluminium gris. Les
-// vitrophanies (une texture pour toute la largeur) sont découpées en morceaux qui suivent les vantaux.
+// LA PORTE 6 (photos 03, 16, 17) : la ligne des vitrages à y = Y_P6. Un fixe à gauche, la double porte (automatique ici),
+// un fixe étroit à droite ; aluminium gris. Les vitrophanies (une texture pour toute la largeur) sont découpées en
+// morceaux qui suivent les vantaux.
+// (Lot rue du 13/10 — photos 16 et 17 rejouées à leur pose, VO q_0374-0378 de l'intérieur : la ligne des vitrages est
+// 1,2 m derrière le nu de la pierre, en y 0,8 et non 0,3 ; les vantaux font 0,98 m et montent à 2,52 m — pas d'imposte
+// vitrée, un caisson d'aluminium jusqu'au plafond du hall ; leur rencontre est en x 15,13 et non 15,25 ; le fixe ouest
+// fait 0,8 m, le fixe est 0,2 m de vitre visible ; les vitres vont de 0,15 à 2,44 m ; deux tirants plats sur les montants
+// de rencontre. Le comptoir de l'accueil finit ainsi à 0,4 m du poteau est de la porte, comme sur la VO.)
 function construireEntree(ch) {
-  const { M, C } = ch, Y = 0.3, z = -Y, hP = 2.25, hT = 2.6;
+  const { M, C } = ch, Y = Y_P6, z = -Y, hP = VITRO.h, hT = 2.6, XC = 15.13, LV = 0.98, cad = 0.075;
   const vit = vitrophanies();
   const matRue = new THREE.MeshStandardMaterial({ map: vit.rue, alphaTest: 0.5, roughness: 0.4 });
   // (côté hall, l'adhésif est vu à contre-jour, la rue derrière lui : il s'éclaire un peu de lui-même — VO 93-95 s, le
   // visage et les arcs y sont clairs ; 10/10)
   const matHall = new THREE.MeshStandardMaterial({ map: vit.hall, alphaTest: 0.5, roughness: 0.6, emissive: 0xffffff, emissiveMap: vit.hall, emissiveIntensity: 0.32 });
-  // un morceau de vitrophanie : la bande x a-b de la texture (13,45 -> 16,35), collée des deux côtés d'un vitrage
+  // un morceau de vitrophanie : la bande x a-b de la texture (VITRO), collée des deux côtés d'un vitrage
   // (10/10 : côté hall, le plan est tourné d'un demi-tour et ses u retournés — plus d'échelle négative : cousu par
   // l'optimisation du décor, le morceau du fixe ouest, miroir, tournait le dos au hall et disparaissait)
   const morceau = (parent, a, b, xl, zl) => {
@@ -809,7 +872,7 @@ function construireEntree(ch) {
       const g = new THREE.PlaneGeometry(b - a, hP);
       const uv = g.attributes.uv;
       for (let i = 0; i < uv.count; i++) {
-        const u = uv.getX(i), uu = ((a + (s > 0 ? u : 1 - u) * (b - a)) - 13.45) / 2.9;
+        const u = uv.getX(i), uu = ((a + (s > 0 ? u : 1 - u) * (b - a)) - VITRO.x0) / VITRO.l;
         uv.setX(i, uu);
       }
       const m = new THREE.Mesh(g, mat);
@@ -818,33 +881,41 @@ function construireEntree(ch) {
       m.castShadow = false; parent.add(m);
     }
   };
-  // le cadre fixe : montants, traverse au-dessus de la porte, imposte
+  // LE REFLET DE LA RUE dans les vitres de la porte (photos 16, 17 : de la rue, le hall se devine, sombre et chaud,
+  // derrière le reflet du ciel — le jeu le montrait en pleine lumière, plafond blanc et lignes lumineuses) : une face
+  // sombre et brillante entre la vitre et les adhésifs, tournée vers la rue seulement (du hall, elle n'existe pas)
+  const refletP6 = new THREE.MeshStandardMaterial({ color: 0x1c1f24, roughness: 0.08, metalness: 0.2, transparent: true, opacity: 0.7, depthWrite: false, envMapIntensity: 0.9 });
+  refletP6.name = 'vitre de la porte 6 vue de la rue';
+  const reflet = (parent, l, xl, zl) => { const r = new THREE.Mesh(new THREE.PlaneGeometry(l, hP - cad - VITRO.bas), refletP6); r.position.set(xl, (hP - cad + VITRO.bas) / 2, zl + 0.004); r.castShadow = false; parent.add(r); };
+  // un fixe : sa traverse basse (15 cm), ses montants, sa vitre jusqu'à la traverse haute
   const fixe = (x0, x1) => {
-    ch.boite(x0, Y - 0.03, x1, Y + 0.03, 0, 0.06, M.aluGris);
-    ch.boite(x0, Y - 0.03, x0 + 0.06, Y + 0.03, 0, hT, M.aluGris);
-    ch.boite(x1 - 0.06, Y - 0.03, x1, Y + 0.03, 0, hT, M.aluGris);
-    const v = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0 - 0.12, hP - 0.06), M.verre); v.position.set((x0 + x1) / 2, (hP + 0.06) / 2, z); ch.decor.add(v);
+    ch.boite(x0, Y - 0.03, x1, Y + 0.03, 0, VITRO.bas, M.aluGris);
+    ch.boite(x0, Y - 0.03, x0 + cad, Y + 0.03, 0, hP, M.aluGris);
+    ch.boite(x1 - cad, Y - 0.03, x1, Y + 0.03, 0, hP, M.aluGris);
+    ch.boite(x0, Y - 0.03, x1, Y + 0.03, hP - cad, hP, M.aluGris);
+    const v = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0 - 2 * cad, hP - cad - VITRO.bas), M.verre); v.position.set((x0 + x1) / 2, (hP - cad + VITRO.bas) / 2, z); ch.decor.add(v);
     C.ajouterBoite(x0, -(Y + 0.04), x1, -(Y - 0.04), { y1: hT, vitre: true });
+    morceau(ch.decor, x0 + cad, x1 - cad, (x0 + x1) / 2, z);
+    reflet(ch.decor, x1 - x0 - 2 * cad, (x0 + x1) / 2, z);
   };
-  fixe(13.35, 14.3); fixe(16.2, 16.5);
-  ch.boite(13.35, 0.27, 16.5, 0.29, 2.6, 2.8, M.noirMat, { ombre: false });       // le bandeau noir au-dessus de l'imposte
-  morceau(ch.decor, 13.45, 14.24, (13.45 + 14.24) / 2, z);
-  morceau(ch.decor, 16.24, 16.35, (16.24 + 16.35) / 2, z);
-  ch.boite(13.35, Y - 0.04, 16.5, Y + 0.04, hP, hP + 0.06, M.aluGris);
-  ch.boite(13.35, Y - 0.03, 16.5, Y + 0.03, hT - 0.05, hT, M.aluGris);
-  const imp = new THREE.Mesh(new THREE.PlaneGeometry(3.0, hT - hP - 0.11), M.verre); imp.position.set(14.925, (hP + 0.06 + hT - 0.05) / 2, z); ch.decor.add(imp);
+  const xo = XC - LV, xe = XC + LV;                          // les gonds : x 14,15 et 16,11
+  fixe(13.35, xo); fixe(xe, 16.5);
+  // le caisson d'aluminium au-dessus des vantaux et des fixes, jusqu'au plafond du hall (VO q_0374 : la barre de
+  // l'opérateur, pas d'imposte vitrée)
+  ch.boite(13.35, Y - 0.05, 16.5, Y + 0.05, hP, hT, M.aluGris);
   C.ajouterBoite(13.35, -(Y + 0.04), 16.5, -(Y - 0.04), { y0: hP, y1: H_DALLE, vitre: true });
   // la double porte automatique : chaque vantail emporte son morceau de vitrophanie
-  const P = ch.porte('x', Y, 15.25, { l: 1.9, h: hP, ep: 0.08, modele: 'vitree2', blanc: false, tirant: 'long', etat: 'auto', cote: 'S', huisserie: false, nom: 'entrée n° 6' });
+  const P = ch.porte('x', Y, XC, { l: 2 * LV, h: hP, ep: 0.08, modele: 'vitree2', blanc: false, tirant: 'plat', cadre: cad, basVitre: VITRO.bas, etat: 'auto', cote: 'S', huisserie: false, nom: 'entrée n° 6' });
   for (const v of P.vantaux) {
-    // le vantail : de son gond (x local 0) vers s * 0,95 ; la bande de texture correspondante
-    const xg = 15.25 - v.s * 0.95;              // le gond, en plan
-    const a = Math.min(xg, xg + v.s * 0.95), b = Math.max(xg, xg + v.s * 0.95);
+    // le vantail : de son gond (x local 0) vers s * LV ; la bande de texture correspondante
+    const xg = XC - v.s * LV;                   // le gond, en plan
+    const a = Math.min(xg, xg + v.s * LV), b = Math.max(xg, xg + v.s * LV);
     const grp = new THREE.Group(); v.g.add(grp);
-    morceau(grp, a + 0.05, b - 0.05, v.s * 0.475, 0);
+    morceau(grp, a + cad, b - cad, v.s * LV / 2, 0);
+    reflet(grp, LV - 2 * cad, v.s * LV / 2, 0);
   }
-  // le bloc de sortie au-dessus, côté hall
-  ch.sortie(15.25, 0.45, 2.45, 'N');
+  // le bloc de sortie côté hall, sur le caisson, au-dessus des vantaux
+  ch.sortie(XC, Y + 0.08, 2.565, 'N');
 }
 // LA PAROI DU PASSAGE (photos 07, 19) : en aluminium laqué blanc, la double porte automatique, et au-dessus, jusqu'au
 // plafond du passage (2,60), un bandeau PLEIN d'aluminium blanc. (09/10 : les photos 07 et 19 n'ont pas d'imposte vitrée
@@ -1204,8 +1275,8 @@ function construirePorteFond(ch) {
 function construireAccueil(ch) {
   const { M } = ch;
   poserHall(ch);
-  // le tapis d'entrée bleu-gris foncé
-  ch.boite(13.6, 0.4, 16.2, 1.9, 0, 0.012, M.tapis, { ombre: false });
+  // le tapis d'entrée bleu-gris foncé (lot rue du 13/10 : il suit la porte 6, reculée en y 0,8 — construireEntree)
+  ch.boite(13.6, Y_P6 + 0.1, 16.2, Y_P6 + 1.6, 0, 0.012, M.tapis, { ombre: false });
 }
 
 // LES RADIATEURS (photos 03, 06, 21) : panneaux blancs, grille sur le dessus
@@ -1494,7 +1565,7 @@ export function construireCarte(scene, renderer = null) {
   // LE JOUR qui entre (pour les spots : une lampe froide dehors, qui vise l'intérieur ; pour la lumière cuite : la source
   // au pied de l'ouverture, `ox/oz` le point d'où l'on découpe sa visibilité, dehors)
   const jour = (x, y, cible, zone, o = {}) => ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.6, cx: cible[0], cz: -cible[1], sx: x, sz: -(y + 0.3), ox: x, oz: -(y - 0.5), zone, ...o });
-  jour(15.25, 0.3, [15.25, 3.2], 'hall', { poids: 1.6 });
+  jour(15.13, Y_P6, [15.13, 3.4], 'hall', { poids: 1.6 });       // (la porte 6 : construireEntree)
   // (relecture du 11/10 : sa source, dehors, sous le linteau — à 2,60, à 0,5 m de lui, elle faisait une tache blanche sous
   // le linteau, vue de la rue ; la lumière cuite ne lit pas sa hauteur)
   jour(3.3, -0.4, [3.3, 2.0], 'passage', { poids: 1.4, h: 2.2 });

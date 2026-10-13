@@ -26,7 +26,9 @@ import { poserVoitures, Taches } from './ecole_rue_voitures.js';
 // LES COTES DE LA RUE (en plan)
 export const RUE = {
   X0: -10.5, X1: 45,                        // de l'impasse (nu du muret) au carrefour
-  Y_TROTTOIR: -2.8,                         // le nu de la bordure côté école (trottoir de 2,4 m)
+  // (lot rue du 13/10 : le joint du trottoir et de sa bordure mesuré sur neuf photos ajustées ensemble, 36 points : y -2,95,
+  // un trottoir de 2,55 m ; il en faisait 2,4)
+  Y_TROTTOIR: -2.95,                        // le nu de la bordure côté école (trottoir de 2,55 m)
   Y_CHAUSSEE: -9.35,                        // le nu de la bordure d'en face (chaussée de 6,4 m)
   Y_FACE: -11.1,                            // les façades d'en face (trottoir de 1,6 m)
   H_CHAUSSEE: -0.12,
@@ -251,14 +253,19 @@ export function poserRue(ch) {
   const std = (o, k = 0.12) => jourDehors(new THREE.MeshStandardMaterial(o), k);
   const taches = new Taches();
   // ---- le sol : trottoirs, bordures, caniveaux, chaussée ----
-  const trottoir = std({ map: texEnrobe(0x625f5f, 7), roughness: 0.9 }, 0.05);
+  // (lot rue du 13/10 : le jeu rejoué à la pose de la photo 16, l'œil au repos, puis mesuré aux mêmes endroits qu'elle —
+  // le trottoir sortait à 116-107-102 pour 144-140-139 sur la photo, la chaussée à 115-108-98 pour 152-150-150 : un
+  // quart trop sombres et roux, sous des plafonniers d'intérieur. Les enrobés sont éclaircis et refroidis d'autant ; la
+  // bordure de granit est CLAIRE, 198 sur la photo — le jeu la rendait à 71, plus sombre que la chaussée — ; le caniveau
+  // n'est pas une bande de béton clair, c'est l'enrobé de la chaussée, à peine plus sombre)
+  const trottoir = std({ map: texEnrobe(0x747377, 7), roughness: 0.9 }, 0.05);
   // (relecture du 09/10/2026 : mesurés sur les photos 08, 09, 13 et 15, l'enrobé de la chaussée est presque aussi clair
   // que le trottoir — un gris moyen, ~0,66 de la façade de l'école ; il en faisait 0,45 et paraissait mouillé)
-  const chaussee = std({ map: texEnrobe(0x5e5d61, 11), roughness: 0.92 }, 0.04);
+  const chaussee = std({ map: texEnrobe(0x959bb0, 11), roughness: 0.92 }, 0.04);
   for (const m of [trottoir, chaussee]) detailPhoto(m, 'beton', 4, 4, { relief: 0.5, grain: 0.15, rugo: true });
   const paves = std({ map: texPaves(5), roughness: 0.85 }, 0.05);
-  const granit = std({ color: 0x7b7b77, roughness: 0.72 }, 0.06);      // (photo 08 : la bordure n'est qu'un quart plus claire que le trottoir)
-  const caniveau = std({ color: 0x6c6a66, roughness: 0.85 }, 0.05);
+  const granit = std({ color: 0xb2b6ba, roughness: 0.72 }, 0.06);
+  const caniveau = std({ color: 0x8a8fa2, roughness: 0.9 }, 0.04);
   // (les sols : des rectangles aux UV en mètres du plan, rangés par matière puis cousus en un maillage par matière — à la
   // fin de poserRue ; leurs matières ont le grain photographique, la couture du décor ne les toucherait pas)
   const sols = new Map();
@@ -283,7 +290,7 @@ export function poserRue(ch) {
 
   // ---- LES DÉTAILS DE LA CHAUSSÉE (photos 08, 09, 13, 15) ----
   // les REPRISES d'enrobé : des rectangles plus sombres et plus lisses, surtout côté école
-  const reprise = std({ map: texEnrobe(0x4f4e52, 29), roughness: 0.78 }, 0.04);
+  const reprise = std({ map: texEnrobe(0x7d8396, 29), roughness: 0.82 }, 0.04);
   const r = alea(77);
   for (const [x0, y0, x1, y1] of [[5.6, -3.4, 8.4, -4.4], [7.2, -5.0, 10.6, -6.6], [11.2, -4.0, 13.4, -5.1], [9.8, -3.25, 11.4, -3.75], [14.6, -3.5, 16.0, -4.6],
     [-2.5, -4.2, 0.6, -5.6], [18.2, -6.0, 20.4, -7.2], [25.5, -4.6, 28.0, -6.0], [2.0, -5.8, 3.4, -6.7], [-8.5, -5.0, -6.2, -6.6]])
@@ -301,7 +308,8 @@ export function poserRue(ch) {
   const lignes = new THREE.Mesh(mergeGeometries(traits, false), peinture); lignes.userData.horsAOSol = true; ch.decor.add(lignes);
   // LE ROND D'INTERDICTION peint (bleu cerclé de rouge, barré) en face du passage (photos 08, 13, 14)
   const rond = new THREE.Mesh(new THREE.CircleGeometry(0.52, 40), std({ map: texRondInterdit(), transparent: true, depthWrite: false, roughness: 0.7 }, 0.2));
-  rond.rotation.x = -Math.PI / 2; rond.position.set(13.6, H_CHAUSSEE + 0.006, 4.3); ch.decor.add(rond);
+  // (lot rue du 13/10, photo 08 à sa pose : son centre en (12,4 ; -5,0) — 1,2 m plus à l'ouest, au milieu de la chaussée)
+  rond.rotation.x = -Math.PI / 2; rond.position.set(12.6, H_CHAUSSEE + 0.006, 4.9); ch.decor.add(rond);
   // LES PLAQUES : regards ronds en fonte, un regard carré au milieu de la rue près des vélos (photo 15)
   const fonte = std({ map: texFonte(), roughness: 0.55, metalness: 0.6 }, 0.05);
   for (const [x, y] of [[4.2, -6.2], [14.2, -3.6], [-6.5, -5.5], [30.0, -6.0], [38.0, -4.2]]) {
@@ -369,7 +377,7 @@ export function poserRue(ch) {
   // (lot façade du 11/10 : au-dessus de son rez-de-chaussée de pierre, le n° 8 est de brique chamois à rangs de brique
   // rouge, fenêtres à encadrement de pierre blanche et balcons de fer noir — photos 09 et 10 ; le jeu le faisait de pierre crème)
   const brique8 = std({ map: texFacade({ fond: '#d8cdb8', cadre: '#f2efe8', verre: '#56626e', travee: 1.9, etage: 3.0, balcon: true, encadrement: '#efebe2', rideaux: true, brique: [196, 172, 128], graine: 8 }), roughness: 0.9 });
-  const pierre4 = std({ map: texFacade({ fond: '#cdc3b6', cadre: '#efece6', verre: '#505c68', travee: 2.0, etage: 3.1, balcon: true, joints: true, encadrement: '#ddd4c6', rideaux: true, graine: 4 }), roughness: 0.85 });
+  const pierre4 = std({ map: texFacade({ fond: '#dfd9cd', cadre: '#efece6', verre: '#505c68', travee: 2.0, etage: 3.1, balcon: true, joints: true, encadrement: '#ddd4c6', rideaux: true, graine: 4 }), roughness: 0.85 });
   const blanc = std({ map: texFacade({ fond: '#efefe8', cadre: '#ffffff', verre: '#56626e', travee: 1.9, etage: 2.9, persiennes: '#dfe3d8', fleurs: true, graine: 5 }), roughness: 0.85 });
   // (photos 08, 15 : l'immeuble du coin est en pierre claire, à balcons et toit mansardé ; les volets verts du premier jet
   // n'y sont pas)
@@ -414,11 +422,15 @@ export function poserRue(ch) {
   // CÔTÉ ÉCOLE, À L'EST : le n° 4 (pierre, sa porte au numéro bleu : photo 16), l'immeuble blanc aux géraniums, les
   // immeubles crème jusqu'au carrefour
   facade(20.1, -0.4, 30, 14, 20, pierre4);
-  rdc(20.1, 30, -0.4, 3.6, { fond: '#d2c8ba', socle: '#b3a999', joints: true, graine: 12, elements: [
-    { t: 'porte', x0: 20.9, x1: 22.0, h: 2.75, bois: '#a38a62', arc: true, vantaux: 1, plein: true, pierre: '#ded5c7' },
-    { t: 'plaque', x0: 21.33, x1: 21.57, bas: 3.0, h: 3.25, texte: '4' },
-    { t: 'fenetre', x0: 23.1, x1: 24.3, bas: 0.9, h: 2.5 }, { t: 'fenetre', x0: 25.1, x1: 26.3, bas: 0.9, h: 2.5 },
-    { t: 'fenetre', x0: 27.1, x1: 28.3, bas: 0.9, h: 2.5 },
+  // (lot rue du 13/10, photo 16 rejouée à sa pose : la porte du n° 4 est 1,3 m plus à l'est, x 22,2-23,4 — de chêne
+  // clair, sous son arc de pierre, la plaque bleue au-dessus, en x 22,8 ; la descente d'eau crème en x 21,4, entre l'école
+  // et elle ; la première fenêtre à barreaux blancs ne commence qu'en x 25,0. La pierre du n° 4 est claire, 200 sur la
+  // photo — le jeu la rendait à 148-132-112, un beige roux.)
+  rdc(20.1, 30, -0.4, 3.6, { fond: '#e3e1db', socle: '#c9c5bc', joints: true, graine: 12, elements: [
+    { t: 'bande', x0: 21.35, x1: 21.47, couleur: '#ece7dc', h: 3.6 },
+    { t: 'porte', x0: 22.2, x1: 23.4, h: 2.75, bois: '#b8925a', arc: true, vantaux: 1, plein: true, pierre: '#e9e3d7' },
+    { t: 'plaque', x0: 22.68, x1: 22.92, bas: 3.0, h: 3.25, texte: '4' },
+    { t: 'fenetre', x0: 25.0, x1: 26.2, bas: 0.9, h: 2.5 }, { t: 'fenetre', x0: 27.0, x1: 28.2, bas: 0.9, h: 2.5 },
   ] });
   toit(20.1, 30, -0.4, 4.5, 20);
   facade(30, -0.4, 38, 14, 17, blanc);
@@ -537,10 +549,12 @@ export function poserRue(ch) {
   poserVoitures(ch, RUE, taches);
   // les taches d'ombre douces sous ce qui est posé dehors (la carte d'ombre du soleil ne couvre que le trottoir de l'école,
   // et l'ombre cuite ne couvre que l'intérieur)
-  for (const [x, y, sx, sy, f] of [[7.05, -1.62, 0.7, 0.32, 0.5], [10.75, -1.25, 0.6, 0.3, 0.5], [7.6, -0.72, 1.8, 0.42, 0.45], [12.62, -1.55, 0.4, 0.4, 0.5],
-    [17.3, -1.45, 0.4, 0.4, 0.5], [0.85, -1.2, 0.85, 0.7, 0.5], [20.7, -1.35, 1.0, 0.45, 0.45], [5.5, -1.22, 0.16, 0.45, 0.45], [12.05, -0.8, 0.16, 0.45, 0.45]])
+  // (lot rue du 13/10 : elles suivent les bancs, le bambou, le palmier, la moto et les vélos à leur nouvelle place)
+  for (const [x, y, sx, sy, f] of [[6.88, -1.82, 0.72, 0.32, 0.5], [11.15, -1.47, 0.66, 0.3, 0.5], [7.6, -0.72, 1.8, 0.42, 0.45], [12.98, -2.29, 0.4, 0.4, 0.5],
+    [16.87, -1.26, 0.4, 0.4, 0.5], [0.85, -1.2, 0.85, 0.7, 0.5], [5.5, -1.22, 0.16, 0.45, 0.45], [12.05, -0.8, 0.16, 0.45, 0.45]])
     taches.ajouter(x, y, sx, sy, 0, f, 0);
-  for (const [x, y, sx, sy, f] of [[22.2, -3.4, 1.8, 0.5, 0.45], [21.7, Y_CHAUSSEE + 1.0, 2.4, 1.1, 0.5], [19.7, Y_CHAUSSEE + 0.38, 0.8, 0.36, 0.5]])
+  taches.ajouter(19.55, -1.4, 1.0, 0.42, 1.91, 0.45, 0);
+  for (const [x, y, sx, sy, f] of [[17.8, -4.55, 1.8, 0.5, 0.45], [21.7, Y_CHAUSSEE + 1.0, 2.4, 1.1, 0.5], [19.7, Y_CHAUSSEE + 0.38, 0.8, 0.36, 0.5]])
     taches.ajouter(x, y, sx, sy, 0, f, H_CHAUSSEE);
   taches.ajouter(X0 + 0.35, -5.9, 0.45, 2.8, 0, 0.5, H_CHAUSSEE);
   taches.poser(ch.decor);
