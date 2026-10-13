@@ -1050,8 +1050,13 @@ function construireMurs(ch) {
   // (13/10, relecture C2 — photo 01 : vu du C01, le bout EST du mur est blanc lui aussi — c'est l'angle du mur ouest du
   // couloir ; le jeu y montrait un filet safran de haut en bas, à gauche de la porte du local)
   ch.boite(11.7, YN - 0.075, 11.703, YN + 0.075, 0, H_DALLE, B, { ombre: false });
-  ch.boite(C05.xE, YN - 0.085, 11.7, YN - 0.075, 0.85, 1.05, M.lissePVC, { ombre: false });
-  for (const h of [0.85, 1.048]) ch.boite(C05.xE, YN - 0.09, 11.7, YN - 0.085, h, h + 0.004, M.lisseGrise, { ombre: false });
+  // (13/10, relecture C2 — LA LISSE EST PLUS BASSE. Sur l'arête du mur jaune des photos 05 et 04, du sol à la sous-face
+  // de la retombée (2,30), sans passer par la pose : photo 05 — sol v 1526, plinthe 1477, lisse 1170-1073, sous-face
+  // 327 —, la lisse va de 0,745 à 0,94 ; photo 04 — 1435, 1154-1067, 414 —, de 0,68 à 0,88. Elle était à 0,85-1,05,
+  // 12 cm trop haut : sur la photo 05 rejouée, elle tombait 55 px au-dessus de la vraie. Sur r02 et la photo 02, elle
+  // passe bien DERRIÈRE le haut des dossiers des coques (0,80 m), qui la mordent. De 0,73 à 0,93.)
+  ch.boite(C05.xE, YN - 0.085, 11.7, YN - 0.075, 0.73, 0.93, M.lissePVC, { ombre: false });
+  for (const h of [0.73, 0.928]) ch.boite(C05.xE, YN - 0.09, 11.7, YN - 0.085, h, h + 0.004, M.lisseGrise, { ombre: false });
   ch.panneau(new THREE.MeshStandardMaterial({ map: texDAE(), roughness: 0.4 }), 0.4, 0.1, 6.3, YN - 0.081, 1.81, 'S');
   // l'est : le mur du fond (présentoir, radiateur) qui continue en mur est du couloir C01 (porte de la gaine)
   // (V2, 11/10 — plan_v2.md § 2.2 : le C01 s'arrête au mur du fond, y 14,475 ; le mur avec lui, à 14,55. La gaine est EN
