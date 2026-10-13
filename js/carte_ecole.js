@@ -317,7 +317,7 @@ class Chantier {
       // d'épais, mais un VERRE opale bombé, peu saillant — 5 cm —, serti dans un cercle de métal satiné large de deux
       // doigts, tenu par trois griffes ; `r` : le rayon du cercle)
       // (le cercle : éclairé par son propre verre, il sort clair sur les photos — un gris perle qui luit un peu)
-      if (!M.cercleHublot) { M.cercleHublot = new THREE.MeshStandardMaterial({ color: 0xdcdcd6, roughness: 0.4, metalness: 0.15, emissive: 0xfff0dc, emissiveIntensity: 0.3 }); M.cercleHublot.name = 'cercle de hublot'; }
+      if (!M.cercleHublot) { M.cercleHublot = new THREE.MeshStandardMaterial({ color: 0xdcdcd6, roughness: 0.4, metalness: 0.15, emissive: 0xfff0dc, emissiveIntensity: 0.55 }); M.cercleHublot.name = 'cercle de hublot'; }
       const rv = r * 0.88, f = 0.05, Rs = (rv * rv + f * f) / (2 * f), al = Math.asin(rv / Rs);
       maille(new THREE.SphereGeometry(Rs, 32, 6, 0, Math.PI * 2, Math.PI - al, al), M.opale, 0, Rs - f - 0.012, 0, 0, g, { ombre: false, recoit: false });
       maille(new THREE.CylinderGeometry(r, r * 0.96, 0.018, 36), M.cercleHublot, 0, -0.009, 0, 0, g, { ombre: false });
@@ -1059,7 +1059,9 @@ function construireMurs(ch) {
   // deux sous le plafond à 2,35)
   ch.boite(C01.xE - 0.01, 9.44, C01.xE, 9.8, 1.96, 2.3, M.creme2, { ombre: false });
   ch.boite(C01.xE - 0.01, 8.63, C01.xE, 9.35, 1.85, 2.31, M.grille, { ombre: false });
-  for (let h = 1.9; h < 2.27; h += 0.045) ch.boite(C01.xE - 0.02, 8.67, C01.xE - 0.01, 9.31, h, h + 0.02, M.noirMat, { ombre: false });
+  // (ses lames : un gris-brun sombre, 71/65/53 sur la photo, pas du noir)
+  const lame = new THREE.MeshStandardMaterial({ color: 0x5b564d, roughness: 0.6 }); lame.name = 'lames de la grille du C01';
+  for (let h = 1.885; h < 2.28; h += 0.03) ch.boite(C01.xE - 0.02, 8.67, C01.xE - 0.01, 9.31, h, h + 0.016, lame, { ombre: false });
   ch.boite(C01.xE - 0.022, 8.975, C01.xE - 0.01, 9.005, 1.87, 2.29, M.grille, { ombre: false });
   // ---- LE COULOIR C05 ET LE COULOIR C01 ----
   // LES DEUX PORTES DES TOILETTES DU C05 (photo 23, 09/10) : femmes à l'entrée, hommes aux deux tiers ; vantaux gris de
@@ -1274,7 +1276,7 @@ function construirePorteFond(ch) {
   ch.boite(x0, y0 - 0.01, x0 + c, y1 + 0.01, 0, hT, M.alu); ch.boite(x1 - c, y0 - 0.01, x1, y1 + 0.01, 0, hT, M.alu);
   ch.boite(x0, y0 - 0.01, x1, y1 + 0.01, hv, hv + 0.05, M.alu); ch.boite(x0, y0 - 0.01, x1, y1 + 0.01, hT - c, hT, M.alu);
   // (13/10, lot C2 — photo 05 : l'imposte est un gris sombre, 68/69/70, plus sombre que le vitrage et sans bleu)
-  const imposte = new THREE.MeshStandardMaterial({ color: 0x5c646f, roughness: 0.45 }); imposte.name = 'imposte dépolie de la porte bleue';
+  const imposte = new THREE.MeshStandardMaterial({ color: 0x505c6e, roughness: 0.45 }); imposte.name = 'imposte dépolie de la porte bleue';
   ch.boite(x0 + c, yL - 0.006, x1 - c, yL + 0.006, hv + 0.05, hT - c, imposte, { ombre: false });
   C.ajouterBoite(x0, -y1, x1, -y0, { y0: hv, y1: hT, vitre: true });
   ch.porte('x', yL, (x0 + x1) / 2, { l: x1 - x0 - 2 * c, h: hv, modele: 'bleue', etat: 'auto', cote: 'S', huisserie: false, libre: 1, nom: 'salle David Clark' });
@@ -1504,7 +1506,9 @@ export function construireCarte(scene, renderer = null) {
   ch.plafond(5.3, ATT.ys, 5.9, ATT.yn - 0.075, 2.6, 'dalles', { retombees: false });
   // (13/10, lot C2 — photo 01 à sa pose refaite : 2,35 et non 2,45 — la grille et la trappe du mur est s'arrêtent à 2,31
   // juste dessous, et son arête, vue du fond du couloir, tombe au droit du mur safran ; jusqu'au nu est, x 13,30)
-  ch.plafond(C01.xO, 7.8, C01.xE, 14.4, C01.hP, 'platre');           // C01 (V2 : de l'entrée, y 7,8, au fond)
+  // (et plus sombre que les murs : 146/130/107 sur la photo, près de l'appareil, quand ils font 179/167/143 — le jeu le
+  // rendait presque aussi clair qu'eux, 172/160/144)
+  { const pc = chaudPlafond(ch.plafond(C01.xO, 7.8, C01.xE, 14.4, C01.hP, 'platre')); pc.material.color.multiplyScalar(0.86); pc.material.name = 'plafond en plâtre (C01)'; }   // C01 (V2 : de l'entrée, y 7,8, au fond)
   // le hall d'entrée (retour r04 du 12/10 : des plateaux perforés de 0,6 x 1,2, leurs joints nord-sud serrés — r04 au-dessus
   // de l'accueil ; photo 03 au-dessus de l'entrée —, et non du plâtre lisse ; la retombée est-ouest : js/ecole_hall.js).
   // Plus clairs que ceux des salles : sur r04, près des fenêtres, le plafond est la surface la plus blanche (174 sur 255,

@@ -480,7 +480,7 @@ export function geoReflet(l, h, decalage) {
 function texDepoliBleu() {
   const t = canvasTex(4, 128, (g, w, h) => {
     const d = g.createLinearGradient(0, 0, 0, h);
-    d.addColorStop(0, '#8ca4bd'); d.addColorStop(0.25, '#6e8aac'); d.addColorStop(0.55, '#5575a0'); d.addColorStop(1, '#4c6077');
+    d.addColorStop(0, '#74879b'); d.addColorStop(0.25, '#566b84'); d.addColorStop(0.55, '#40587a'); d.addColorStop(1, '#394859');
     g.fillStyle = d; g.fillRect(0, 0, w, h);
   }, [1, 1 / 1.89], false, 1);
   t.offset.set(0, 0.5);
@@ -649,7 +649,10 @@ export function materiauxEcole() {
   // tirée d'un rien vers le jaune pour sortir à la teinte des photos (vérifié côte à côte avec la photo 02)
   M.orange = std({ map: texPeinture(0xeba624, 4), roughness: 0.62 }); M.orange.name = 'peinture safran';
   for (const m of [M.blanc, M.creme, M.orange]) detailPhoto(m, 'beton', 1, 1, { relief: 0.035, grain: 0, rugo: false });
-  M.bois = std({ color: 0xa87235, roughness: 0.42 }); M.bois.name = 'plinthe en bois verni';
+  // (13/10, lot C2 — les plinthes des photos 01 et 23, relevées au même endroit que le jeu : un bois MIEL, 165/120/74
+  // éclairé, 120/82/35 dans l'ombre — le vert aux trois quarts du rouge ; #A87235 sortait orange vif sous les hublots
+  // chauds, 154/83/20, le vert à la moitié)
+  M.bois = std({ color: 0xa3814f, roughness: 0.45 }); M.bois.name = 'plinthe en bois verni';
   M.lissePVC = std({ color: 0xe7e6e1, roughness: 0.35 });
   M.lisseGrise = std({ color: 0xd6d6d3, roughness: 0.4 });
   M.pilier = std({ map: texPeinture(0xc8c8cb, 3), roughness: 0.8 }); M.pilier.name = 'pilier gris clair';
@@ -671,12 +674,16 @@ export function materiauxEcole() {
   M.ossature = std({ color: 0xf1efe9, roughness: 0.6 });
 
   // ---- les portes et menuiseries ----
-  M.porte = std({ color: 0xa9a8a6, roughness: 0.45 }); M.porte.name = 'vantail gris stratifié';
+  // (13/10, lot C2 — les vantaux gris des photos 23 et 01, aux mêmes points que le jeu : 129/116/90 et 122/109/90 pour
+  // ceux des toilettes, 119/110/103 pour celui du local, quand le jeu rendait 148/135/118 et 180/162/138 — un gris un
+  // cran plus soutenu)
+  M.porte = std({ color: 0x979694, roughness: 0.45 }); M.porte.name = 'vantail gris stratifié';
   M.porteGaine = std({ color: 0x9d9c9a, roughness: 0.5 });     // (photo 01 : gris moyen, pas grège ; 09/10)
   M.huisserie = std({ color: 0xe3ded2, roughness: 0.5, metalness: 0.1 });
   // (13/10, lot C2 — le cadre de bois des fentes vitrées, photo 23 de près : un bois ROUX moyen, 1,25 fois le rouge du
-  // vantail gris sur sa face éclairée ; #4A2E1C le rendait presque noir, 0,46 fois)
-  M.noyer = std({ color: 0x7c4a2a, roughness: 0.5 });
+  // vantail gris sur sa face éclairée ; #4A2E1C le rendait presque noir, 0,46 fois ; pas plus rouge que #6A4A34 : sous
+  // les hublots chauds, #7C4A2A virait à l'orange)
+  M.noyer = std({ color: 0x6a4a34, roughness: 0.5 });
   M.inox = std({ color: 0xb9bcbe, roughness: 0.28, metalness: 0.9 });
   M.ferme = std({ color: 0x9ea2a5, roughness: 0.4, metalness: 0.6 });
   M.alu = std({ color: 0xf0f0ee, roughness: 0.38, metalness: 0.2 }); M.alu.name = 'aluminium laqué blanc';
