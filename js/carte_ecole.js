@@ -123,7 +123,7 @@ ESC.yF2 = ESC.yT + (ESC.n2 - 1) * ESC.G2;            // 11,95 : le pied de la vo
 //    à l'about du mur des portes) entre de 0,65 m dans le couloir, jusqu'à une arête en y 9,57 ; au-delà le plafond est
 //    PLUS HAUT, à 2,45 d'un bout à l'autre du mur est (cinq points à 1 px), et non plus bas — le jeu faisait l'inverse,
 //    2,40 puis 2,30. (Le plafond bas reste ici à la hauteur du hall ouest, 2,30, pour ne pas faire de ressaut au seuil :
-//    le hall est à un autre lot.) Les deux hublots : (5,34 ; 8,95) sous le plafond bas, (5,33 ; 11,44) sous le haut,
+//    le hall est à un autre lot.) Les deux hublots : (5,42 ; 9,10) sous le plafond bas (relecture : il était en (5,34 ; 8,95)), (5,33 ; 11,44) sous le haut,
 //    26 à 28 cm de diamètre (36 au jeu).
 const C05 = { xO: 4.53, xE: 5.92, xM: 5.995, yFond: 12.71, yRes: 9.57, hBas: 2.3, hHaut: 2.45, lWC: 0.93, yF: 8.48, yH: 10.983 };
 const PF = { x0: 4.70, x1: 5.612, hv: 2.05, hT: 2.40 };      // la porte bleue du fond : son huisserie, sa traverse, le haut du cadre

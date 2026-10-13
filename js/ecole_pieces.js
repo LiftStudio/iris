@@ -610,7 +610,7 @@ function texSolGlissant() {
 }
 // LA PLAQUE DES TOILETTES (photos 23 et 01, 09/10) : noire, une petite mention en haut, le pictogramme blanc dans un cadre
 // carré au trait, « Toilettes » dessous ; `picto` : 'femme' | 'homme' | 'pmr' (la personne debout et le fauteuil)
-// (13/10, lot C2 — photo 23 à sa pose refaite : la plaque est presque CARRÉE, 18 x 19 cm — le même dessin sur un fond
+// (13/10, lot C2 — photo 23 à sa pose refaite : la plaque est presque CARRÉE, 18 x 19 cm (relecture : 16,5 de côté) — le même dessin sur un fond
 // plus large)
 function texPlaqueWC(picto) {
   return canvasTex(120, 128, (g, w0) => {
