@@ -252,7 +252,10 @@ export function poserMobilier(ch) {
     C.ajouterBoite(x - 0.25, -(y - 0.42), x + 0.19, -(y + 0.42), { y1: 1.8 });
   };
   presentoir(13.11, 6.4, false);
-  presentoir(13.31, 8.5, true);
+  // (13/10, lot C2 — photo 01 à sa pose refaite, js/carte_ecole.js `C01` : le présentoir qu'elle montre n'est PAS dans le
+  // couloir. Son pied tombe en (12,9-13,3 ; 6,7-7,1), contre la face ouest de la pile, au sud de l'entrée du C01 — c'est
+  // celui de la salle d'attente, vu de dos : il n'y en a qu'UN, et le second, posé en y 8,1-8,9, se trouvait devant les
+  // portes de la gaine, qui sont en face du local, y 8,31-9,78.)
   // LE KAKÉMONO « 1ère école pour le BTS SIO en France » (retour de Haythem du 11/10, r02 : « le panneau noir au bout du
   // mur » — sur la photo 21 en pleine définition, un panneau noir à lettres blanches et dorées, plus haut qu'un homme,
   // juste après la fin du jaune ; le même que la VO de 2021, q_0038-0047, au bout est du mur safran, devant lui). Vu du
@@ -368,7 +371,9 @@ export function poserMobilier(ch) {
   // le diffuseur d'alarme blanc, sur la retombée au-dessus de l'entrée du couloir C05, contre l'angle (photos 04 et 05 :
   // un boîtier carré à grille ronde ; relecture du 09/10 ; plan V2 : la retombée du hall au bout du mur safran, qui
   // recule avec la salle d'attente — DY_A, -4,20 : y 11,965 -> 7,765 ; la bande visible va de 2,30 à 2,60)
-  const diff = new THREE.Group(); diff.position.set(5.39, 2.45, -7.765); ch.decor.add(diff);
+  // (13/10, lot C2 — photos 05 et 04 rejouées : tout en haut de la retombée, contre son angle — l'arête nord-sud est
+  // en x 5,15, js/carte_ecole.js —, x 5,21-5,33, son dessus sous le plafond de dalles)
+  const diff = new THREE.Group(); diff.position.set(5.27, 2.525, -7.765); ch.decor.add(diff);
   maille(boiteM(0.12, 0.13, 0.07), M.boitier, 0, 0, 0, 0, diff, { ombre: false });
   maille(new THREE.CylinderGeometry(0.035, 0.035, 0.01, 16), M.grille, 0, -0.005, 0.038, 0, diff, { ombre: false }).rotation.x = Math.PI / 2;
   diff.traverse((m) => { m.userData.horsAOSol = true; });
@@ -411,8 +416,9 @@ export function poserMobilier(ch) {
   //  L'ACCUEIL : le comptoir nord-sud, l'open-space, ses écrans, ses fauteuils et le manteau moutarde (VO 92,5-95,8 s,
   //  photo 03) — js/ecole_hall.js (10/10)
   // =====================================================================
-  // l'affiche bleue étroite sur le trumeau entre les fenêtres de l'accueil
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2b4c9b', '#2b4c9b', 50), roughness: 0.6 }), 0.3, 0.9, 18.15, 0.006, 1.55, 'N');
+  // (l'affiche bleue étroite que la photo 03 montre « entre les fenêtres de l'accueil » n'est pas sur le trumeau, entre les
+  // deux vraies fenêtres, mais contre l'angle du mitoyen, entre la fenêtre c 18,98 et son reflet dans le miroir — retour
+  // r05 du 13/10 : elle est posée avec le miroir, js/ecole_hall.js ; le trumeau est blanc, comme sur la VO q_0381)
   // (le totem noir « 1ère école pour le BTS SIO en France » de 2021 : retiré le 11/10 — la borne l'a remplacé, photo 21)
 }
 

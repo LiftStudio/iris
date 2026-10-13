@@ -344,6 +344,16 @@ export class Portes {
         maille(boiteM(0.13, 0.02, 0.02), M.inox, s * (w - 0.12), 1.06, z * (e / 2 + 0.05), 0, g, { ombre: false });
         maille(boiteM(0.02, 0.02, 0.05), M.inox, s * (w - 0.07), 1.06, z * (e / 2 + 0.025), 0, g, { ombre: false });
       }
+    } else if (poignee === 'rosace') {
+      // (13/10, lot C2 — photos 23 et 01 de près : pas de plaque, une béquille de tube coudé sur une ROSACE ronde, et
+      // dessous la rosace du verrou)
+      for (const z of [1, -1]) {
+        const x0 = s * (w - 0.06), zr = z * (e / 2 + 0.004);
+        maille(new THREE.CylinderGeometry(0.026, 0.026, 0.008, 20), M.inox, x0, 1.05, zr, 0, g, { ombre: false }).rotation.x = Math.PI / 2;
+        maille(new THREE.CylinderGeometry(0.023, 0.023, 0.008, 20), M.inox, x0, 0.95, zr, 0, g, { ombre: false }).rotation.x = Math.PI / 2;
+        maille(new THREE.CylinderGeometry(0.0095, 0.0095, 0.05, 10), M.inox, x0, 1.05, z * (e / 2 + 0.03), 0, g, { ombre: false }).rotation.x = Math.PI / 2;
+        maille(new THREE.CylinderGeometry(0.0095, 0.0095, 0.12, 10), M.inox, x0 - s * 0.055, 1.05, z * (e / 2 + 0.05), 0, g, { ombre: false }).rotation.z = Math.PI / 2;
+      }
     } else if (poignee === 'tirant') {
       for (const z of [1, -1]) {
         maille(new THREE.CylinderGeometry(0.012, 0.012, 0.3, 10), M.inox, s * (w - 0.08), 1.05, z * (e / 2 + 0.045), 0, g, { ombre: false });
@@ -444,7 +454,15 @@ export class Portes {
       for (const sx of [-1, 1]) maille(boiteM(0.05, h + 0.05, ep + 0.02), mh, sx * (l / 2 + 0.02), (h + 0.05) / 2, 0, 0, g);
       maille(boiteM(l + 0.09, 0.05, ep + 0.02), mh, 0, h + 0.025, 0, 0, g);
     }
-    const zf = cote * (ep / 2 - 0.03);                     // le plan du vantail fermé, dans l'épaisseur du mur
+    // (13/10, lot C2 — `retrait` : le vantail posé plus profond dans son huisserie ; les toilettes du C05, photo 23 :
+    // 6 cm d'ébrasement devant le vantail)
+    const zf = cote * (ep / 2 - 0.03 - (o.retrait || 0));  // le plan du vantail fermé, dans l'épaisseur du mur
+    if (o.retrait && o.huisserie !== false) {
+      // (la feuillure : du nu de l'huisserie au vantail, elle est du gris du vantail, dans l'ombre — pas blanche)
+      const z0 = cote * (ep / 2 + 0.01), z1 = zf + cote * 0.02, zm = (z0 + z1) / 2, dz = Math.abs(z0 - z1);
+      for (const sx of [-1, 1]) maille(boiteM(0.003, h, dz), M.porte, sx * (l / 2 - 0.0065), h / 2, zm, 0, g, { ombre: false });
+      maille(boiteM(l - 0.01, 0.003, dz), M.porte, 0, h - 0.0015, zm, 0, g, { ombre: false });
+    }
     const vantaux = [];
     const faire = (w, s) => {
       // (`matVantail` : un autre stratifié — le gris taupe des portes de l'escalier est ; `poignee: null` : un semi-fixe)

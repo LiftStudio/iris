@@ -17,23 +17,40 @@
 // mur ardoise, celui du local — 6 à 12 px trop haut : l'appareil est trop BAS. À 1,155 m, les deux se recalent à 2-4 px
 // près, et la tablette, toujours sur l'horizon, est à 1,15 m — la rainure, à la même proportion, à 0,745.)
 //
+// RETOUR r05 DU 13/10 (Haythem, sa photo renvoyée : « attention, j'espère que tu as bien corrigé l'accueil » ; puis
+// « d'ailleurs, fais attention : à droite, c'est un MIROIR, regarde bien », et r05_photo_miroir.png). À droite du mur
+// ardoise, ce n'est pas la cloison vitrée d'un bureau d'angle mais une GLACE collée sur le mitoyen, qui renvoie le hall,
+// la porte 6 et les fenêtres de la façade (miroirAccueil, plus bas : où elle est, comment elle se dessine sans coûter).
+// r04 rejouée à sa pose, pavé par pavé, Haythem là où se tenait l'appareil (les spots suivent Haythem) : le comptoir d'un
+// gris neutre, sombre et chaud au nord, clair et froid au sud dans le jour de la porte 6 ; sa tablette épaisse, à 1,18 ;
+// plus d'ombre dure ni d'ombre cuite à son pied ; le chêne miel ; le caisson haut du décroché et ses deux faces ; deux bacs,
+// la chemise rouge, la bouilloire au fond ; la face sud du pilier au jour ; le panneau haut du local, la seconde porte au
+// fond ; l'écran et son image lavande ; le portant plus haut et plus étroit, son affichette ; la retombée, le dôme, deux
+// spots ; le plafond au jour près de la glace.
+//
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; dans le jeu X = x, Z = -y) :
 //   le comptoir haut        x 16,83-17,53 y 1,1-3,6    NORD-SUD, face à l'ouest : stratifié gris clair, rainure à 0,745,
-//                                                     socle de chêne clair en retrait, tablette grise en saillie à 1,15
+//                                                     socle de chêne clair en retrait, tablette grise en saillie à 1,18
 //   le décroché PMR         x 16,88-17,6  y 3,6-4,58   son caisson bas en retrait (x 17,08), sa tablette à 0,76 et son
 //                                                     pied gris ; la bouilloire, les bacs à courrier noirs, les papiers
 //   le caisson haut         x 17,0-17,85  y 4,39-4,58  posé sur le bout du décroché, sa tablette haute (1,15) qui déborde
 //                                                     de 0,22 m vers le nord
-//   le mitoyen est          x 19,8        y 1,82-4,43  peint GRIS ARDOISE, ses deux affiches (y 2,2-2,9 et 3,4-4,0)
-//   le bureau d'angle       x - y = 17,98              la cloison BIAISE vitrée du coin sud-est (r04 et VO q_0380-0383),
-//                                                     du verre presque partout sous sa retombée blanche
+//   le mitoyen est          x 19,8        y 0,40-4,43  peint GRIS ARDOISE, ses deux affiches (y 2,2-2,9 et 3,4-4,0) ;
+//                                                     de l'angle de la façade à y 0,40, blanc, une affichette étroite
+//   le MIROIR               x 19,8        y 0,40-1,82  collé sur le mitoyen, sans cadre, de 0,95 à 2,57 m : un vrai miroir
+//                                                     (retour r05 du 13/10 — ce que la v1.9 prenait pour la cloison vitrée
+//                                                     d'un « bureau d'angle » est le REFLET du hall), penché de 2,7° ;
+//                                                     devant lui, la machine à affranchir sur son meuble blanc
 //   le local technique      x 18,8-19,8   y 4,43-7,5   portes de stratifié clair, étiquette rouge et triangle jaune ;
 //                                                     sa face sud gris clair, le bouton rouge et le boîtier blanc
 //   le pilier de bois clair x 18,14-18,8  y 5,71-6,24  devant le local, sous l'écran suspendu ; le panneau des formations
 //                                                     sur le local, à sa droite
 //   le portant des goodies  (17,48 ; 5,685)            noir, sur roulettes : sweats « iris », affichette, brochures
-//   l'open-space            x 17,53-19,8  y 0,3-4,43   le plan de travail derrière le comptoir, le bureau du mitoyen, le
-//                                                     copieur contre la cloison biaise, trois fauteuils
+//   l'open-space            x 17,53-19,8  y 0-4,43     le plan de travail derrière le comptoir, le bureau du mitoyen, la
+//                                                     machine à affranchir devant le miroir, trois fauteuils ; la fenêtre
+//                                                     c 18,98
+//   la baie du bureau       x 13,35       y 0,30-1,23  sur le mur ouest du hall, contre l'angle de la porte 6 : cadre blanc,
+//                                                     trois bandes grises, store baissé (VO q_0372-0376 ; le reflet de r04)
 //   l'angle nord-est        x 16,3-18,8   y 6,8-7,5    le photocopieur contre le cannelé, le caisson et ses corbeilles
 //                                                     (photo 24 : toujours là en 2026), le meuble noir (r04), les
 //                                                     étiquettes ocre « INFORMATIQUE »
@@ -42,16 +59,20 @@
 //                                                     (VO, photo 24)
 // (Le cannelé et le mur nord : js/ecole_est.js ; la pile, sa plaque et son annuaire : js/ecole_rdc_centre.js.)
 //
-//   poserHall(ch)       (appelé par construireAccueil, js/carte_ecole.js)
+//   poserHall(ch)       (appelé par construireAccueil, js/carte_ecole.js) -> { maj(dt, jeu) } : le miroir, à chaque image
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { Reflector } from 'three/addons/objects/Reflector.js';
 import { maille, boiteM } from './ecole_portes.js';
-import { canvasTex, detailPhoto } from './kit_decor.js';
+import { canvasTex, detailPhoto, nePasFusionner } from './kit_decor.js';
 import { texPeinture } from './ecole_matieres.js';
+import { TELEPHONE } from './appareil.js';
 
 // ---- les cotes (plan) ----
 const H_PLAF = 2.6;                                 // le plafond du hall
-const CPT = { x0: 16.83, x1: 17.53, y0: 1.1, y1: 3.6, h: 1.15, rainure: 0.745, socle: 0.115 }; // le comptoir haut (r04)
+// (13/10, r04 rejouée, profils verticaux en x 380 et 560 : la tablette est ÉPAISSE — son chant fait 12 px à 3,05 m, 5,7 cm,
+// de 1,125 à 1,18 —, l'écran « DELL » dépasse de 1,19 à 1,25 ; le jeu la faisait de 3,5 cm, son dessus à 1,15)
+const CPT = { x0: 16.83, x1: 17.53, y0: 1.1, y1: 3.6, h: 1.18, ep: 0.055, rainure: 0.745, socle: 0.115 }; // le comptoir haut (r04)
 const PMR = { xF: 17.08, x0: 16.88, y0: 3.6, y1: 4.58, h: 0.76 };                 // le décroché PMR
 const RET = { x0: 17.0, x1: 17.85, y0: 4.39, y1: 4.58, h: 1.15 };                 // le caisson haut du décroché
 const X_PERS = 18.05;                               // le dos du plan de travail du personnel
@@ -59,9 +80,7 @@ const LOC = { x0: 18.8, y0: 4.43 };                 // le local technique (sa fa
 const PIL = { x0: 18.14, x1: 18.8, y0: 5.71, y1: 6.24 };                          // le pilier de bois clair
 const Y_MUR = 7.5;                                  // la face hall du mur nord (y 7,5-7,65)
 const X_MIT = 19.8;                                 // la face du mitoyen est
-const Y_ARD = 1.82;                                 // le bout sud du mur ardoise : la cloison biaise y part
-const BIAIS = X_MIT - Y_ARD;                        // la cloison biaise : la ligne x - y = 17,98, de (19,8 ; 1,82) à la façade
-const H_VITRE = 2.07;                               // le haut de ses vitres (r04 : le bord haut à x 622, rétroprojeté)
+const Y_ARD = 1.82;                                 // le bout nord du miroir, où le mur ardoise se montre (r04 : x 616)
 
 // =====================================================================
 //  LES TEXTURES (dessinées : aucun fichier de plus à charger)
@@ -189,9 +208,9 @@ function texFormations() {
   return canvasTex(128, 384, (g, w, h) => {
     g.fillStyle = '#2b2725'; g.fillRect(0, 0, w, h);
     const bandes = [
-      ['#e2a12f', 'BAC PRO', ['• BAC pro SEN']],
-      ['#ec961f', 'BTS', ['• BTS SIO', '• BTS SN']],
-      ['#ef7a22', 'BAC+3', ['• DEESIRS', '• DEESINF', '• DEESWEB']],
+      ['#eaac36', 'BAC PRO', ['• BAC pro SEN']],
+      ['#f2a226', 'BTS', ['• BTS SIO', '• BTS SN']],
+      ['#fb8c28', 'BAC+3', ['• DEESIRS', '• DEESINF', '• DEESWEB']],
     ];
     bandes.forEach(([c, t, l], i) => {
       const y = 6 + i * 104;
@@ -221,51 +240,84 @@ function texTriangle() {
 }
 // L'ÉCRAN SUSPENDU (r04) : « Commander votre sweat à l'accueil pour 25€ », noir sur fond clair bleuté, le pavé « iris »
 // en haut à droite
+// (13/10, r04 agrandie cinq fois : l'image ne remplit pas l'écran — un rectangle clair, d'un blanc LAVANDE (150, 166, 220
+// au milieu), décalé vers le bas et la droite, au milieu d'une dalle noire et brillante où passent les reflets des
+// plafonniers ; le pavé « iris » est bleu, une petite image violette en bas à droite ; le jeu remplissait l'écran de blanc)
 function texEcranTV() {
   return canvasTex(256, 144, (g, w, h) => {
-    const f = g.createLinearGradient(0, 0, w, h); f.addColorStop(0, '#eef2f8'); f.addColorStop(1, '#cfd9ea');
-    g.fillStyle = f; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#1b1d22'; g.font = `600 19px ${POLICE}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-    ['Commander votre', 'sweat à l\'accueil', 'pour 25€'].forEach((t, i) => g.fillText(t, w / 2 - 8, 54 + i * 24));
-    paveIris(g, w - 52, 10, 40);
+    // (relecture du 13/10, r04 agrandie six fois : pas de raies en travers de la dalle — quelques pavés clairs en haut à
+    // droite, les plafonniers reflétés —, un liseré argent au bord ; l'image, vers la gauche, sur les six dixièmes, d'un
+    // lavande plus clair et plus bleu, 200, 208, 250)
+    g.fillStyle = '#131519'; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(150,156,172,0.26)'; for (const [x, y, l, e] of [[150, 9, 34, 9], [190, 11, 30, 9], [226, 15, 22, 9], [208, 27, 40, 7], [224, 43, 26, 10]]) g.fillRect(x, y, l, e);
+    g.strokeStyle = 'rgba(196,200,210,0.4)'; g.lineWidth = 2; g.strokeRect(1, 1, w - 2, h - 2);
+    const x0 = w * 0.09, y0 = h * 0.2, x1 = w * 0.72, y1 = h * 0.81;
+    const f = g.createLinearGradient(x0, y0, x1, y1); f.addColorStop(0, '#bcc8ff'); f.addColorStop(1, '#9db0fa');
+    g.fillStyle = f; g.fillRect(x0, y0, x1 - x0, y1 - y0);
+    g.fillStyle = '#20243c'; g.font = `500 13px ${POLICE}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    ['Commander votre', 'sweat à l\'accueil', 'pour 25€'].forEach((t, i) => g.fillText(t, (x0 + x1) / 2 - 12, y0 + 34 + i * 16));
+    g.fillStyle = '#3a5db8'; g.fillRect(x1 - 36, y0 + 8, 30, 15);
+    g.fillStyle = '#ffffff'; g.font = `700 11px ${GOTHIC}`; g.textAlign = 'left'; g.fillText('iris', x1 - 31, y0 + 20);
+    const d = g.createLinearGradient(x1 - 26, y1 - 30, x1 - 4, y1 - 4); d.addColorStop(0, '#7b5fc8'); d.addColorStop(1, '#4a7ad8');
+    g.fillStyle = d; g.fillRect(x1 - 26, y1 - 30, 22, 26);
   }, null, false, 4);
 }
 // LE SWEAT PLIÉ « iris » du haut du portant (r04 : blanc, le pavé noir et une ligne de texte) et celui à l'impression
 // colorée (bleu, violet, vert) en dessous
 // (relecture du 12/10 : des plis mous — l'ombre des replis en bas, le bombé éclairé en haut —, plus de rayures, qui en
 // faisaient des valises ; le sweat imprimé est gris perle, son motif en vagues bleues, violettes et vertes en bas)
-function texSweat(imprime) {
-  return canvasTex(128, 96, (g, w, h) => {
-    g.fillStyle = imprime ? '#dcdcdf' : '#efeeeb'; g.fillRect(0, 0, w, h);
+// (13/10, r04 agrandie cinq fois : le premier est un sweat BLANC, son grand pavé noir « iris » au i jaune en haut et
+// deux lignes de texte sombre ; le second, un sweat à capuche gris clair plié, la capuche en haut, une impression en
+// facettes bleues, violettes et cyan, et des lettres roses dessous)
+// (le devant du pli fait 0,34 x 0,17 m : un dessin de 2 sur 1, tracé dans l'ancien repère de 128 x 96 puis écrasé, sauf
+// le pavé, à ses vraies proportions)
+// (relecture du 13/10 : `ratio`, la largeur du devant sur sa hauteur — le sweat n'est plus une boîte de 2 sur 1)
+function texSweat(imprime, ratio = 2) {
+  return canvasTex(128, Math.round(128 / ratio), (g, W, Hc) => {
+    g.save(); g.scale(1, Hc / 96);
+    const w = 128, h = 96;
+    g.fillStyle = imprime ? '#d6d7dc' : '#f1f0ed'; g.fillRect(0, 0, w, h);
     const d = g.createLinearGradient(0, 0, 0, h); d.addColorStop(0, 'rgba(255,255,255,0.25)'); d.addColorStop(0.55, 'rgba(0,0,0,0)'); d.addColorStop(1, 'rgba(60,55,50,0.22)');
     g.fillStyle = d; g.fillRect(0, 0, w, h);
     g.strokeStyle = 'rgba(70,64,58,0.18)'; g.lineWidth = 2;
     for (const [x0, y0, x1, y1] of [[6, 70, 60, 78], [70, 80, 122, 72], [20, 88, 108, 90], [4, 30, 10, 84], [124, 26, 118, 86]]) { g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo((x0 + x1) / 2, (y0 + y1) / 2 + 4, x1, y1); g.stroke(); }
     if (imprime) {
-      const c = ['#5d53c8', '#36a2da', '#9a5fc8', '#4fbf8a'];
-      for (let k = 0; k < 4; k++) {
-        g.strokeStyle = c[k]; g.lineWidth = 7; g.globalAlpha = 0.85; g.beginPath();
-        for (let x = 8; x <= 120; x += 4) { const y = 52 + k * 8 + Math.sin(x * 0.09 + k) * 6; x === 8 ? g.moveTo(x, y) : g.lineTo(x, y); }
-        g.stroke();
-      }
-      g.globalAlpha = 1;
+      // la capuche, plus sombre, en haut ; l'impression en facettes ; les lettres roses
+      g.fillStyle = 'rgba(120,120,128,0.35)'; g.beginPath(); g.ellipse(64, 14, 46, 16, 0, 0, Math.PI * 2); g.fill();
+      const fac = [['#5a4fc4', [[16, 50], [44, 38], [52, 62]]], ['#38a6dc', [[44, 38], [78, 44], [52, 62]]], ['#9a5fcc', [[52, 62], [78, 44], [96, 66]]],
+        ['#46c6c8', [[78, 44], [112, 40], [96, 66]]], ['#7068d8', [[24, 66], [52, 62], [40, 76]]], ['#a7d6ec', [[96, 66], [112, 40], [118, 62]]]];
+      for (const [c, p] of fac) { g.fillStyle = c; g.beginPath(); g.moveTo(...p[0]); g.lineTo(...p[1]); g.lineTo(...p[2]); g.closePath(); g.fill(); }
+      g.fillStyle = '#d8589c'; for (let k = 0; k < 5; k++) g.fillRect(44 + k * 10, 80, 6, 9);
+      g.restore();
     } else {
-      paveIris(g, 30, 14, 66);
-      g.fillStyle = '#4a4a4a'; g.fillRect(36, 50, 54, 3); g.fillRect(42, 57, 42, 3);
+      g.restore();
+      paveIris(g, 20, 5, 88);
+      g.fillStyle = '#3a3a3a'; g.fillRect(26, 46, 70, 3); g.fillRect(26, 52, 50, 3);
     }
   }, null, false, 2);
 }
 // L'AFFICHETTE DU PORTANT (r04) : carton blanc, deux photos de sweats gris à gauche et à droite, le texte au milieu
+// (13/10, r04 agrandie cinq fois : deux photos en NOIR ET BLANC sur fond gris foncé — à gauche un sweat à capuche gris
+// clair de face, le pavé noir sur la poitrine ; à droite le même, de dos, la capuche — et entre elles « Affichez fièrement
+// les couleurs de votre école ! » ; le jeu dessinait deux silhouettes grises sur du blanc)
 function texAffichette() {
   return canvasTex(192, 112, (g, w, h) => {
     g.fillStyle = '#f6f5f2'; g.fillRect(0, 0, w, h);
-    for (const x of [8, w - 64]) {
-      g.fillStyle = '#d9d8d4'; g.fillRect(x, 10, 56, 92);
-      g.fillStyle = '#9a9b9e'; g.beginPath(); g.moveTo(x + 10, 98); g.lineTo(x + 12, 40); g.lineTo(x + 28, 28); g.lineTo(x + 44, 40); g.lineTo(x + 46, 98); g.closePath(); g.fill();
-      g.fillStyle = '#2a2a2c'; g.fillRect(x + 22, 52, 12, 5);
-    }
-    g.fillStyle = '#222'; g.font = `600 10px ${POLICE}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-    ['Affichez', 'vos', 'couleurs', 'iris !'].forEach((t, i) => g.fillText(t, w / 2, 36 + i * 13));
+    // (relecture du 13/10 : deux sweats à capuche qu'on reconnaisse — le corps, les manches écartées, la capuche ; de face
+    // l'ouverture de la capuche et le pavé noir, de dos la couture — ; le jeu dessinait deux cadenas)
+    const sweat = (x, dos) => {
+      g.fillStyle = '#4b4c50'; g.fillRect(x, 8, 58, 94);
+      g.fillStyle = dos ? '#bdbec1' : '#cfd0d3';
+      g.beginPath(); [[17, 40], [41, 40], [54, 56], [56, 92], [47, 94], [45, 64], [44, 100], [14, 100], [13, 64], [11, 94], [2, 92], [4, 56]].forEach(([a, b], i) => (i ? g.lineTo(x + a, b) : g.moveTo(x + a, b)));
+      g.closePath(); g.fill();
+      g.beginPath(); g.ellipse(x + 29, 32, 12, 13, 0, 0, Math.PI * 2); g.fill();
+      if (!dos) { g.fillStyle = '#77787c'; g.beginPath(); g.ellipse(x + 29, 34, 7, 8, 0, 0, Math.PI * 2); g.fill(); g.fillStyle = '#1c1c1f'; g.fillRect(x + 21, 56, 16, 7); }
+      else { g.strokeStyle = 'rgba(0,0,0,0.2)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x + 29, 21); g.lineTo(x + 29, 44); g.stroke(); }
+      g.fillStyle = 'rgba(0,0,0,0.12)'; g.fillRect(x + 14, 90, 30, 3);
+    };
+    sweat(6, false); sweat(w - 64, true);
+    g.fillStyle = '#222'; g.font = `600 9px ${POLICE}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    ['Affichez', 'fièrement', 'les', 'couleurs', 'de votre', 'école !'].forEach((t, i) => g.fillText(t, w / 2, 30 + i * 11));
   }, null, false, 2);
 }
 // LES BROCHURES « iris » des tablettes du portant (r04) : couvertures blanches, une grande image bleue et violette, le
@@ -325,59 +377,98 @@ function matieresHall() {
     // (relecture du 12/10, r04 rejouée, zone par zone : la face du comptoir 151 sur la photo, d'un gris froid à peine rosé,
     // contre 163 et crème au jeu ; la tablette 119 contre 134 — un gris moyen, nettement plus sombre que la face)
     comptoir: std({ color: 0xbfbcbd, roughness: 0.45 }, 'stratifié gris clair (comptoir)'),
-    tablette: std({ color: 0x96928f, roughness: 0.35 }, 'tablette grise (comptoir)'),
+    // (13/10, r04 rejouée, trois pavés le long de la face : la photo est plus sombre et chaude au nord, sous les spots —
+    // 145, 128, 117 —, claire et FROIDE au sud, dans le jour de la porte 6 et des fenêtres — 167, 163, 167 — ; le jeu
+    // faisait l'inverse, 174, 160, 147 au nord et 147, 134, 124 au sud. La face du comptoir haut, rien qu'elle : un gris
+    // neutre plus bas, et le jour peint en lueur froide qui monte vers le bout sud — comptoirFace, plus bas)
+    // (la tablette : son chant 120, 109, 102 sur la photo, 73, 67, 66 au jeu — mince, 3,5 cm, il ne prenait pas la lumière ;
+    // épaissi à 5,5 cm, CPT.ep, il la prend : le gris d'avant, à peine plus clair)
+    tablette: std({ color: 0x8c8884, roughness: 0.35 }, 'tablette grise (comptoir)'),
     // le caisson bas du décroché et son pied, sous la tablette PMR : dans son ombre (r04 : 100 et 113, contre 151 pour la
     // face du comptoir ; le jeu les éclairait à 167 et 161, plus clairs que le comptoir)
-    comptoirOmbre: std({ color: 0x9a9592, roughness: 0.5 }, 'stratifié gris clair à l\'ombre (décroché PMR)'),
+    // (relecture du 13/10 : le caisson bas, 121, 103, 89 sur la photo, 140, 123, 107 au jeu ; la face ouest du caisson haut,
+    // 144, 119, 98 pour 153, 135, 117 — un ton plus bas, plus chaud)
+    comptoirOmbre: std({ color: 0x8b827c, roughness: 0.5 }, 'stratifié gris clair à l\'ombre (décroché PMR)'),
     // la tablette PMR : un gris moyen, son dessus 140 et son chant 99 sur r04 — sous le spot du bout des lignes
     // lumineuses, la tablette du comptoir montait à 173-225 et 130
     tablettePMR: std({ color: 0x6f6b68, roughness: 0.4 }, 'tablette grise (décroché PMR)'),
     rainure: std({ color: 0x6f6b67, roughness: 0.5 }, 'rainure du comptoir'),
     // le socle de CHÊNE CLAIR des meubles de l'accueil (r04 : #8B6E59 à l'appareil, plus clair que les plinthes vernies)
-    chene: std({ color: 0xd2a57a, roughness: 0.5 }, 'socle de chêne clair (accueil)'),
-    boisClair: std({ map: texBoisClair(), roughness: 0.55 }, 'stratifié bois clair (pilier)'),
+    // (13/10 : un chêne MIEL, moins orangé — la plinthe du comptoir, au jour, 139-155, 99-109, 64-73 sur la photo, 121-134,
+    // 78-89, 42-47 au jeu)
+    chene: std({ color: 0xcfaa88, roughness: 0.5 }, 'socle de chêne clair (accueil)'),
+    // (relecture du 13/10 : la face ouest du pilier, sous son spot, 158, 125, 86 en haut sur la photo, 140, 115, 90 au jeu —
+    // plus chaude)
+    boisClair: std({ map: texBoisClair(), color: 0xfff0d2, emissive: 0xffc890, emissiveIntensity: 0.1, roughness: 0.55 }, 'stratifié bois clair (pilier)'),
     // les portes du local, plus loin dans l'ombre de la retombée et d'un chêne plus grisé que le pilier (relecture du
     // 12/10, r04 : 124, 97, 76 à mi-hauteur, 98, 84, 75 sous le plafond, quand le jeu les rendait à 175 et 147)
-    boisLocal: std({ map: texBoisClair(), color: 0xd0cbca, roughness: 0.6 }, 'stratifié chêne grisé (portes du local)'),
-    retour: std({ map: texPeinture(0xaca59f), roughness: 0.85 }, 'peinture gris clair (face sud du local)'),
+    boisLocal: std({ map: texBoisClair(), color: 0xd8d7dc, roughness: 0.6 }, 'stratifié chêne grisé (portes du local)'),
+    // (13/10 : 151, 139, 132 sur la photo, 154, 139, 124 au jeu — un rien plus froid)
+    // (relecture du 13/10 : 166, 156, 149 au jeu pour 151, 139, 132 — un ton plus bas)
+    retour: std({ map: texPeinture(0x9d9998), roughness: 0.85 }, 'peinture gris clair (face sud du local)'),
     joint: std({ color: 0x4a3f36, roughness: 0.6 }, 'joint des portes du local'),
     bureau: std({ color: 0x3d4150, roughness: 0.48 }, 'bureau bleu-gris foncé'),
     plan: std({ color: 0xdedcd8, roughness: 0.4 }, 'plan de travail blanc gris'),
     pied: std({ color: 0x2c2f37, roughness: 0.4, metalness: 0.4 }, 'piètement des bureaux'),
     copieur: std({ color: 0xdcdcd8, roughness: 0.45 }, 'photocopieur (corps)'),
     copieur2: std({ color: 0xaeaeab, roughness: 0.5 }, 'photocopieur (scanner, tiroirs)'),
-    copieurJour: std({ color: 0xe6e7e6, roughness: 0.5, emissive: 0xeef2f6, emissiveIntensity: 0.32 }, 'photocopieur au jour (corps)'),
-    copieurJour2: std({ color: 0xc4c6c8, roughness: 0.5, emissive: 0xeef2f6, emissiveIntensity: 0.2 }, 'photocopieur au jour (scanner)'),
+    // (13/10 : devant le miroir, dans le jour de la fenêtre c 18,98 — 182, 188, 196 sur la photo, 162, 159, 155 au jeu)
+    copieurJour: std({ color: 0xeceef0, roughness: 0.5, emissive: 0xe8eef6, emissiveIntensity: 0.5 }, 'machine à affranchir au jour (corps, meuble)'),
+    copieurJour2: std({ color: 0xc8cbcf, roughness: 0.5, emissive: 0xe8eef6, emissiveIntensity: 0.32 }, 'machine à affranchir au jour (bande grise, filets)'),
     caisson: std({ color: 0xc8c8c5, roughness: 0.55 }, 'caisson gris clair'),
     corbeille: std({ color: 0x55585e, roughness: 0.5 }, 'corbeille à courrier grise'),
     corbeilleO: std({ color: 0xe8862a, roughness: 0.5 }, 'corbeille à courrier orange'),
     meubleNoir: std({ color: 0x1d1a18, roughness: 0.45 }, 'meuble bas noir'),
-    tableB: std({ color: 0xf1f0ec, roughness: 0.4 }, 'table blanche'),
-    // (relecture du 12/10, r04 rejouée : les profils de la cloison sont d'un blanc gris au jour — 200 à 230 sur la photo ;
-    // métallisés, ils prenaient le beige de la carte d'environnement du hall, 150 ; la menuiserie de la baie étroite est
-    // gris bleu, pas noire ; le poteau, entre la vitre et le plein, gris beige — 160 à 200 sur la photo)
-    alu: std({ color: 0xf0f2f3, roughness: 0.5, emissive: 0xeef2f6, emissiveIntensity: 0.3 }, 'aluminium laqué blanc (cloison)'),
-    cadreSombre: std({ color: 0x4d5868, roughness: 0.5, metalness: 0.05 }, 'menuiserie gris bleu (cloison)'),
-    poteau: std({ color: 0xc4c1ba, roughness: 0.75, emissive: 0xe8eaec, emissiveIntensity: 0.12 }, 'poteau gris beige (cloison)'),
     argent: std({ color: 0xb8bbbe, roughness: 0.3, metalness: 0.8 }, 'cadre argent'),
     rouge: std({ color: 0xc8202a, roughness: 0.45 }, 'déclencheur rouge'),
     ecran: std({ color: 0x1e2836, roughness: 0.2, emissive: 0x4a6280, emissiveIntensity: 0.22 }, 'écran allumé'),
   };
   // (les murs peints : le léger relief d'enduit des autres peintures)
   detailPhoto(H.ardoise, 'beton', 1, 1, { relief: 0.035, grain: 0, rugo: false });
+  // LA FACE DU COMPTOIR HAUT (13/10) : un gris neutre plus bas que celui du caisson (le nord sous les spots tombe à la
+  // photo), et une lueur froide peinte, nulle au nord, pleine au bout sud — le jour de la porte 6 et des fenêtres, que les
+  // spots ne donnent pas (le nombre de lumières est figé dans les programmes, comme pour le jour du mur ardoise). Les
+  // coordonnées de texture de la boîte sont en mètres (js/ecole_portes.js boiteM : sur ses faces est et ouest, u = z local) :
+  // la lueur court sur les 2,5 m du comptoir.
+  // (relecture du 13/10, r04 rejouée, Haythem là où se tenait l'appareil : au nord 174, 161, 154 au jeu pour 145, 128,
+  // 117 ; au milieu 162, 153, 148 pour 152, 141, 138 ; au sud 157, 151, 151 pour 167, 163, 167 — l'albédo descend et se
+  // réchauffe vers le nord, la lueur froide monte vers le sud)
+  {
+    const degrade = (stops) => {
+      const t = canvasTex(256, 4, (g, w, h) => {
+        const d = g.createLinearGradient(0, 0, w, 0);
+        for (const [u, c] of stops) d.addColorStop(u, c);
+        g.fillStyle = d; g.fillRect(0, 0, w, h);
+      }, null, false, 1);
+      // (des valeurs linéaires : des facteurs, pas des couleurs à décoder)
+      t.colorSpace = THREE.NoColorSpace; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
+      t.repeat.set(1 / (CPT.y1 - CPT.y0), 1); t.offset.set(0.5, 0); t.needsUpdate = true;
+      return t;
+    };
+    const albedo = degrade([[0, '#a3958a'], [0.1, '#a99b91'], [0.4, '#ded5d9'], [0.62, '#ffffff'], [1, '#ffffff']]);
+    const jour = degrade([[0, '#000000'], [0.4, '#0d0d0d'], [0.7, '#8c8c8c'], [1, '#ffffff']]);
+    H.comptoirFace = std({ color: 0xbcbbc2, map: albedo, roughness: 0.45, emissive: 0xd4dcec, emissiveMap: jour, emissiveIntensity: 0.3 }, 'stratifié gris clair (face du comptoir haut)');
+  }
+  // LE CAISSON HAUT DU DÉCROCHÉ (13/10, r04 : sa face ouest, étroite, à l'ombre — 144, 119, 98 —, sa face sud claire —
+  // 172, 159, 154 — ; le jeu faisait l'inverse, 171, 157, 144 et 151, 142, 133)
+  H.caissonSud = std({ color: 0xbbb5b3, roughness: 0.45 }, 'stratifié gris clair au jour (caisson haut)');
+  // (le pied carré du décroché, au jour du hall : 139, 118, 102 sur la photo, 128, 114, 101 au jeu)
+  H.comptoirPied = std({ color: 0x9a9089, roughness: 0.5 }, 'stratifié gris clair (pied du décroché)');
+  // LA FACE SUD DU PILIER DE BOIS (13/10 : au jour, d'un beige gris — 162, 149, 142 sur la photo —, le jeu la jaunissait,
+  // 159, 139, 115 : le même stratifié, refroidi)
+  // (relecture du 13/10 : 129, 114, 102 au jeu, toujours à l'ombre des spots — le jour de la porte 6 l'éclaire, une lueur)
+  H.boisOmbre = std({ map: texBoisClair(), color: 0xd6d2d4, roughness: 0.55 }, 'stratifié bois clair à l\'ombre (bas de la face sud du pilier)');
+  { const t = texBoisClair(); H.boisJour = std({ map: t, color: 0xd2d8e6, emissive: 0xc6d0e4, emissiveMap: t, emissiveIntensity: 0.28, roughness: 0.55 }, 'stratifié bois clair au jour (face sud du pilier)'); }
+  // LE PANNEAU HAUT DU LOCAL, au-dessus des portes (13/10, r04 : 103, 87, 77 — plus sombre et plus gris que les portes)
+  // (relecture du 13/10 : 95, 71, 54 au jeu)
+  H.boisHaut = std({ map: texBoisClair(), color: 0xbfc9df, roughness: 0.6 }, 'stratifié chêne grisé (panneau haut du local)');
+  // LA RETOMBÉE DE L'ACCUEIL (13/10, r04 : dans la lumière chaude des spots, 169, 148, 131, quand le plâtre du jeu la
+  // rendait à 140, 134, 126 : le sien, rien qu'à elle)
+  H.retombee = std({ color: 0xf2ebe2, roughness: 0.9, emissive: 0xffd9b0, emissiveIntensity: 0.42 }, 'plâtre de la retombée de l\'accueil');
   // LES LIGNES LUMINEUSES du plafond : des rubans de LED qui éblouissent (MeshBasic au-dessus de 1 : le bloom les fait
   // briller, comme les spots — js/ecole_matieres.js M.spot)
   H.ligne = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff3e2).multiplyScalar(2.6) }); H.ligne.name = 'ligne lumineuse du plafond';
   H.profil = std({ color: 0xd9d9d6, roughness: 0.4, metalness: 0.5 }, 'profil des lignes lumineuses');
-  // LE VERRE CLAIR de la cloison biaise (r04 : on voit au travers le bureau d'angle, blanc, dans le jour de la fenêtre de
-  // façade ; photo 03 : par la porte vitrée, les barreaux de cette fenêtre) et ses BANDES de vitrophanie sombres
-  H.verre = std({ color: 0xe4eef2, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.26, depthWrite: false, envMapIntensity: 1.4, emissive: 0xf4f8fa, emissiveIntensity: 0.12, side: THREE.DoubleSide }, 'verre clair (cloison biaise)');
-  H.bande = std({ color: 0x3a4048, roughness: 0.4, transparent: true, opacity: 0.85, side: THREE.DoubleSide }, 'vitrophanie sombre (cloison biaise)');
-  H.vitreClaire = std({ color: 0xe8eff3, emissive: 0xf2f6f8, emissiveIntensity: 0.6, roughness: 0.15, side: THREE.DoubleSide }, 'vitre de la baie étroite (cloison biaise)');
-  // le blanc de la cloison biaise et de sa retombée, dans le jour des fenêtres de façade (r04 : le coin sud-est est le plus
-  // clair de la photo, 248 sur 255 ; les spots seuls le rendaient gris beige, 141)
-  // (relecture du 12/10 : 186 au jeu contre 250 sur r04, et chaud là où la photo est froide, bleutée : le jour plus fort)
-  H.blancJour = std({ map: texPeinture(0xefede8), roughness: 0.86, emissive: 0xe6eef8, emissiveIntensity: 1.3 }, 'peinture blanche au jour (bureau d\'angle)');
   return H;
 }
 
@@ -399,6 +490,27 @@ const BL = (g, mat, w, h, d, x, y, z, o) => maille(boiteM(w, h, d), mat, x, y, z
 const CL = (g, mat, r, h, x, y, z, seg = 10, o) => maille(new THREE.CylinderGeometry(r, r, h, seg), mat, x, y, z, 0, g, o);
 // un plan texturé en coordonnées locales, tourné vers +z
 const PL = (g, mat, w, h, x, y, z) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); p.position.set(x, y, z); p.receiveShadow = true; g.add(p); return p; };
+// UN CALQUE DE LUMIÈRE PEINTE qui MULTIPLIE ce qu'il recouvre (2 x source x fond : à 0,5, le dessin ne change rien ; au-dessus
+// il éclaire, en dessous il assombrit, canal par canal — ce qu'un voile additif ne sait pas faire : réchauffer). `dessin(u,
+// v)` rend les trois facteurs, u et v de 0 à 1 dans le plan du calque (v = 1 en haut du dessin). Hors des normales et des
+// ombres cuites, jamais cousu.
+function calqueLumiere(w, h, dessin, nom) {
+  const t = canvasTex(w, h, (g) => {
+    const img = g.createImageData(w, h);
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+      const f = dessin((i + 0.5) / w, 1 - (j + 0.5) / h), k = (j * w + i) * 4;
+      for (let c = 0; c < 3; c++) img.data[k + c] = Math.round(Math.min(255, 127.5 * f[c]));
+      img.data[k + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+  }, null, false, 1);
+  t.colorSpace = THREE.NoColorSpace; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.needsUpdate = true;
+  const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation,
+    blendSrc: THREE.DstColorFactor, blendDst: THREE.SrcColorFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor });
+  m.name = nom;
+  return m;
+}
+const poserCalque = (p) => { p.castShadow = false; p.receiveShadow = false; p.renderOrder = -1; p.userData.nofuse = true; p.userData.horsAOSol = true; p.userData.sansNormales = true; return p; };
 // UN SIÈGE pour le jeu (js/game.js : on s'assoit à moins de 1,1 m) : regard vers `face`, relevé en (sx, sy) du plan
 function siege(ch, x, y, h, face, sx, sy, nom) {
   const [fx, fz] = DIR[face];
@@ -437,27 +549,513 @@ function ecran(ch, x, y, h, face, allume = false, haut = 0.33, l = 0.56) {
   if (allume) { const e = new THREE.Mesh(new THREE.PlaneGeometry(l - 0.03, 0.3), H.ecran); e.position.set(0, haut, 0.016); g.add(e); }
   return g;
 }
-// LE PHOTOCOPIEUR MULTIFONCTION (VO 6,4-7,4 s ; r04, celui de l'open-space) : socle à tiroirs, corps, sortie, scanner et
-// chargeur ; `haut` : le dessus du chargeur (celui de l'open-space est plus grand : il dépasse du comptoir, r04)
-// (`jour` : celui du bureau d'angle, dans le jour de la fenêtre — r04 : blanc, 220 et plus ; le corps plein jusque sous
-// le chargeur, le jeu n'en montrait que des plaques empilées)
-function copieur(ch, x, y, face, haut = 1.15, jour = false) {
+// LE PHOTOCOPIEUR MULTIFONCTION de l'angle nord-est (VO 6,4-7,4 s) : socle à tiroirs, corps, sortie, scanner et chargeur ;
+// `haut` : le dessus du chargeur
+function copieur(ch, x, y, face, haut = 1.15) {
   const g = groupe(ch, x, y, face), k = haut / 1.15, { M } = ch;
-  const c1 = jour ? H.copieurJour : H.copieur, c2 = jour ? H.copieurJour2 : H.copieur2;
+  const c1 = H.copieur, c2 = H.copieur2;
   BL(g, c1, 0.64, 0.56 * k, 0.66, 0, 0.3 * k, 0);
   for (const h of [0.14, 0.27, 0.4, 0.53]) BL(g, c2, 0.6, 0.01, 0.005, 0, h * k, 0.332, { ombre: false });
   BL(g, M.noir, 0.64, 0.06, 0.66, 0, 0.03, 0, { ombre: false });
   BL(g, c1, 0.64, 0.34 * k, 0.62, 0, 0.75 * k, -0.02);
-  if (jour) {
-    // (le corps plein de 0,92 k jusque sous le chargeur, et la sortie du chargeur qui monte au bout, r04 de x 700 à 725)
-    BL(g, c1, 0.64, haut - 0.19 - 0.92 * k, 0.6, 0, (haut - 0.19 + 0.92 * k) / 2, -0.03);
-    BL(g, c2, 0.3, 0.04, 0.2, -0.12, haut + 0.01, -0.12, { ombre: false });
-  } else BL(g, c2, 0.5, 0.04, 0.5, 0.02, 0.94 * k, 0.0, { ombre: false });
+  BL(g, c2, 0.5, 0.04, 0.5, 0.02, 0.94 * k, 0.0, { ombre: false });
   BL(g, c1, 0.66, 0.1, 0.62, 0, haut - 0.14, -0.02);
   BL(g, c2, 0.6, 0.06, 0.5, 0, haut - 0.06, -0.04);
-  BL(g, jour ? c2 : M.noir, 0.16, 0.05, 0.08, 0.2, haut - 0.13, 0.3, { ombre: false });  // (le pupitre de commande)
+  BL(g, M.noir, 0.16, 0.05, 0.08, 0.2, haut - 0.13, 0.3, { ombre: false });           // (le pupitre de commande)
   BL(g, c2, 0.06, 0.3, 0.4, -0.35, 0.72 * k, 0.0);                                   // (le bac manuel)
   return g;
+}
+// LA MACHINE À AFFRANCHIR devant le miroir (RELECTURE DU 13/10, r04 et r05_photo_miroir agrandies six fois : ce que la
+// v1.9 et le premier passage du 13/10 dressaient en « grand copieur » de 1,42 m est une machine BASSE et LONGUE, posée à
+// hauteur de comptoir — de x 627 à 726 de la photo, 22 px de haut : 0,76 m de long, de 1,18 à 1,42 m. De gauche à
+// droite : le chargeur crème à l'étiquette jaune, plus bas, et un galet blanc arrondi devant ; le corps blanc sur sa bande
+// gris clair, un filet gris entre les deux, son écran gris-bleu et son clavier ; le plateau blanc qui remonte au bout
+// sud. Derrière elle, contre la glace, des classeurs gris-bleu debout. Sur quoi elle est posée, le comptoir le cache : un
+// meuble blanc de 1,16 m, IMAGINÉ.) Tournée vers l'ouest, dans le jour de la fenêtre c 18,98.
+function affranchisseuse(ch, x, y) {
+  const g = groupe(ch, x, y, 'W'), { M } = ch, c1 = H.copieurJour, c2 = H.copieurJour2, S = 1.16;
+  // (dans le repère du groupe : +z vers l'ouest, le hall ; +x vers le SUD — à droite, vu du hall)
+  // (le meuble : 0,50 m de profondeur seulement — à 0,62, avec le fauteuil du bout sud, il fermait le passage du personnel
+  // le long du plan de travail : joué, relecture du 13/10)
+  BL(g, c1, 0.86, S - 0.06, 0.5, 0, 0.06 + (S - 0.06) / 2, 0);
+  BL(g, M.noir, 0.86, 0.06, 0.48, 0, 0.03, 0, { ombre: false });
+  for (const h of [0.4, 0.78]) BL(g, c2, 0.82, 0.008, 0.004, 0, h, 0.251, { ombre: false });
+  BL(g, c2, 0.004, S - 0.14, 0.004, 0, 0.6, 0.251, { ombre: false });
+  // la machine : la bande gris clair, le filet, le corps blanc arrondi, son écran et son clavier sur le dessus
+  BL(g, c2, 0.52, 0.09, 0.4, 0.07, S + 0.045, 0.06);
+  BL(g, H.rainure, 0.52, 0.012, 0.402, 0.07, S + 0.096, 0.06, { ombre: false });
+  const corps = new THREE.Mesh(new RoundedBoxGeometry(0.52, 0.14, 0.38, 2, 0.03), c1); corps.position.set(0.07, S + 0.17, 0.05); g.add(corps);
+  const ecranM = new THREE.MeshStandardMaterial({ color: 0x8e9bab, roughness: 0.3, emissive: 0x9fb0c4, emissiveIntensity: 0.25 }); ecranM.name = 'écran de la machine à affranchir';
+  const e = BL(g, ecranM, 0.11, 0.004, 0.06, 0.16, S + 0.243, 0.14, { ombre: false }); e.rotation.x = 0.35;
+  const k = BL(g, c2, 0.1, 0.004, 0.07, 0.02, S + 0.243, 0.14, { ombre: false }); k.rotation.x = 0.35;
+  // le chargeur crème, plus bas, au bout nord, son étiquette jaune ; le galet blanc devant
+  const creme = new THREE.MeshStandardMaterial({ color: 0xe6dcc2, roughness: 0.5, emissive: 0xe6dcc2, emissiveIntensity: 0.3 }); creme.name = 'chargeur crème (machine à affranchir)';
+  const ch1 = new THREE.Mesh(new RoundedBoxGeometry(0.24, 0.17, 0.36, 2, 0.04), creme); ch1.position.set(-0.31, S + 0.085, 0.06); g.add(ch1);
+  BL(g, new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.5 }), 0.07, 0.035, 0.004, -0.3, S + 0.1, 0.241, { ombre: false });
+  const galet = new THREE.Mesh(new RoundedBoxGeometry(0.15, 0.09, 0.12, 2, 0.04), c1); galet.position.set(-0.14, S + 0.045, 0.19); g.add(galet);
+  // le plateau de sortie, au bout sud, qui remonte
+  const pl = BL(g, c1, 0.26, 0.012, 0.3, 0.4, S + 0.24, 0.02, { ombre: false }); pl.rotation.z = 0.5;
+  BL(g, c1, 0.08, 0.18, 0.3, 0.37, S + 0.09, 0.02, { ombre: false });
+  // les classeurs debout, contre la glace
+  const cl = new THREE.MeshStandardMaterial({ color: 0xb4bdc8, roughness: 0.6, emissive: 0xc4ccd6, emissiveIntensity: 0.25 }); cl.name = 'classeurs gris-bleu';
+  BL(g, cl, 0.32, 0.33, 0.1, -0.02, S + 0.165, -0.2);
+  for (const [dx, c] of [[-0.14, 0x3d5f9a], [-0.1, 0xf0efea], [-0.06, 0x3d5f9a]]) BL(g, new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }), 0.035, 0.3, 0.004, dx, S + 0.165, -0.148, { ombre: false });
+  return g;
+}
+
+// =====================================================================
+//  LE MIROIR DE L'ACCUEIL (retour r05 de Haythem, 13/10 : « d'ailleurs, fais attention : à droite, c'est un MIROIR,
+//  regarde bien »)
+// =====================================================================
+// OÙ IL EST. Un miroir se vérifie par ce qu'il reflète. Collé sur le mitoyen est (x 19,8), il montre la façade
+// SYMÉTRIQUE au-delà de l'angle : la rangée des fenêtres de l'accueil semble continuer derrière le comptoir.
+//   - photo 03 (la pose de la v1.9 : (11,0 ; 6,1) à 1,49, cap 130, f 600 pour 739) : derrière le comptoir, QUATRE
+//     fenêtres à barreaux avant la porte 6, quand la façade n'en a que deux à l'est de la porte. Les deux vraies, c 17,33
+//     et c 18,98, tombent en x 384-441 et 321-365 (vues : 393-410 derrière le passant, 323-363) ; leurs reflets — les
+//     fenêtres c 22,27 et c 20,62 de la façade symétrique — en 233-261 et 273-307 (vus : 227-250 et 272-295). La
+//     troisième s'arrête 12 px trop tôt et le trumeau blanc qui la sépare de la vraie est deux fois trop large : la
+//     glace s'arrête au sud en y 0,40 du mitoyen (le rayon de x 295).
+//   - VO q_0381 (2021 ; pose résolue sur la façade et le bout du mur ardoise : (13,3 ; 6,8), cap 137,6, 7 px d'écart) :
+//     le trumeau blanc entre le reflet et la vraie fenêtre c 18,98 va de x 580 à 630 (sur 1 280) ; une glace jusqu'à
+//     l'angle le mettrait de 595 à 632, une glace arrêtée en y 0,40 de 580 à 632.
+//   - r04 : le bord nord de la glace est le bout du mur ardoise (y 1,82 : x 616 de la photo, à 1 px) ; son haut est au
+//     ras du plafond (en x 616, 97 pour la glace, 99 pour le haut du mur) ; son bas est caché par le comptoir (sous
+//     1,24 m), et, de la photo 03, les appuis des fenêtres reflétées se voient : il est sous 1,12 m.
+// D'où la glace de y 0,40 à 1,82 (1,42 m), de 0,95 à 2,57 m, à 6 mm du mur, sans cadre. Ce que la v1.9 lisait comme la
+// cloison vitrée à 45° d'un « bureau d'angle » (la retombée qui monte vers la droite, les vitres, la baie à menuiserie
+// gris bleu, le jour) est le REFLET : le plafond contre la façade, les fenêtres et le jour de la façade, vus dans la glace.
+// Aucune autre image ne montre ce bureau : sa cloison, son verre, son bureau, son écran et son fauteuil sont retirés ; le
+// coin sud-est est l'open-space, ouvert jusqu'à la fenêtre c 18,98.
+//
+// COMMENT. Un Reflector de three (r170, vendor/) : la scène est redessinée depuis la caméra symétrique par rapport à la
+// glace, dans une texture que la glace reprend — Haythem s'y voit. Le hall est la pièce la plus chargée, d'où :
+//   - il ne se dessine que quand on peut le voir : la caméra du jeu au rez-de-chaussée, devant la glace, la glace dans son
+//     champ, et un de ses cinq points sans mur entre elle et lui (le monde solide ; les vitres et les portes automatiques
+//     ne cachent rien : de la rue, on le voit par la porte 6). Sinon (et en qualité basse), une glace peinte ;
+//   - son champ est RECADRÉ sur la glace : la projection de la caméra symétrique ne couvre que le rectangle que la glace
+//     occupe à l'écran ; le tri hors champ de three ne garde que ce qu'on peut voir dans la glace ;
+//   - sa texture fait la moitié de l'écran en largeur et en hauteur sur PC, 0,35 au téléphone ; elle ne se dessine qu'une
+//     fois par image (et jamais pour une autre caméra que celle du jeu, ni pour la passe des normales).
+// Le reste comme le miroir des toilettes (js/ecole_pieces.js) : à la racine de la scène, `dynamique` (caché pendant les
+// prises de la carte d'environnement), sans recalcul des ombres ni des matrices pendant son dessin. Le tri de
+// js/ecole_visibilite.js est celui de la vraie caméra (un rendu imbriqué le garde) : du hall comme de la rue, le
+// rez-de-chaussée et la rue y sont, tout ce que la glace peut renvoyer. Le HUD est en HTML : il ne s'y reflète pas.
+// La glace : une glace argentée rend ≈ 90 % de la lumière, un rien verte ; un voile léger (le verre, la poussière).
+// LE SHADER DE LA GLACE (13/10). Deux images, chacune avec sa caméra symétrique, sa projection recadrée sur la glace et sa
+// profondeur : le DÉCOR sans Haythem, refait de loin en loin, et HAYTHEM seul sur fond transparent, à chaque image où il
+// se voit. Le décor n'est pas relu tel quel : son image a été prise d'une place un peu différente de celle de la caméra.
+// Pour chaque point M de la glace, on suit le rayon réfléchi d'AUJOURD'HUI (déplié derrière la glace, depuis la caméra
+// symétrique) et on cherche, en trois pas, le point de cette image dont la profondeur tombe sur ce rayon : la parallaxe
+// est rattrapée, il ne reste que les bords des objets, un peu étirés quand la caméra s'est beaucoup déplacée. Haythem, lui,
+// est relu tout droit, et passe devant le décor là où il est plus près sur le même rayon.
+const MiroirShader = {
+  name: 'GlaceAccueil',
+  uniforms: {
+    color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: null }, voile: { value: new THREE.Color(0, 0, 0) },
+    tProf: { value: null }, uVPd: { value: new THREE.Matrix4() }, uVPdInv: { value: new THREE.Matrix4() },
+    tLui: { value: null }, tProfLui: { value: null }, uVPl: { value: new THREE.Matrix4() }, uVPlInv: { value: new THREE.Matrix4() }, uLui: { value: 0 },
+    uCam: { value: new THREE.Vector3() }, uMir: { value: new THREE.Vector4(-1, 0, 0, 0) },
+  },
+  vertexShader: /* glsl */`
+    varying vec3 vMonde;
+    #include <common>
+    #include <logdepthbuf_pars_vertex>
+    void main() {
+      vec4 w = modelMatrix * vec4( position, 1.0 );
+      vMonde = w.xyz;
+      gl_Position = projectionMatrix * viewMatrix * w;
+      #include <logdepthbuf_vertex>
+    }`,
+  fragmentShader: /* glsl */`
+    uniform vec3 color;
+    uniform vec3 voile;
+    uniform sampler2D tDiffuse, tProf, tLui, tProfLui;
+    uniform mat4 uVPd, uVPdInv, uVPl, uVPlInv;
+    uniform float uLui;
+    uniform vec3 uCam;
+    uniform vec4 uMir;
+    varying vec3 vMonde;
+    #include <logdepthbuf_pars_fragment>
+    vec2 proj( mat4 M, vec3 p ) { vec4 c = M * vec4( p, 1.0 ); return clamp( c.xy / c.w * 0.5 + 0.5, 0.001, 0.999 ); }
+    vec3 deproj( mat4 Mi, vec2 uv, float z ) { vec4 p = Mi * vec4( uv * 2.0 - 1.0, z * 2.0 - 1.0, 1.0 ); return p.xyz / p.w; }
+    void main() {
+      #include <logdepthbuf_fragment>
+      vec3 cv = uCam - 2.0 * ( dot( uMir.xyz, uCam ) + uMir.w ) * uMir.xyz;
+      vec3 dir = normalize( vMonde - cv );
+      vec2 uv = proj( uVPd, vMonde );
+      float t = 0.0;
+      for ( int i = 0; i < 3; i ++ ) {
+        t = max( 0.0, dot( deproj( uVPdInv, uv, texture2D( tProf, uv ).r ) - vMonde, dir ) );
+        uv = proj( uVPd, vMonde + dir * t );
+      }
+      vec3 c = texture2D( tDiffuse, uv ).rgb;
+      if ( uLui > 0.5 ) {
+        vec2 ul = proj( uVPl, vMonde );
+        vec4 l = texture2D( tLui, ul );
+        if ( l.a > 0.004 ) {
+          float tl = dot( deproj( uVPlInv, ul, texture2D( tProfLui, ul ).r ) - vMonde, dir );
+          if ( tl <= t + 0.03 ) c = mix( c, l.rgb / max( l.a, 0.004 ), clamp( l.a, 0.0, 1.0 ) );
+        }
+      }
+      gl_FragColor = vec4( c * color + voile, 1.0 );
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+    }`,
+};
+const COUCHE_REFLET = 12;     // la couche de Haythem dans son reflet (6, 7, 29, 30 servent déjà ailleurs)
+// LA GLACE PEINTE (qualité basse, et ce que voit la carte d'environnement) : le reflet du hall vu de l'accueil, flou —
+// le plafond clair en haut, le jour des fenêtres de la façade et leurs cadres sombres, les murs blancs, le carrelage
+function texGlacePeinte() {
+  return canvasTex(256, 192, (g, w, h) => {
+    const d = g.createLinearGradient(0, 0, 0, h);
+    d.addColorStop(0, '#eceeee'); d.addColorStop(0.22, '#e2e4e3'); d.addColorStop(0.25, '#cfd2d2'); d.addColorStop(0.75, '#d6d8d7'); d.addColorStop(1, '#a9aaa8');
+    g.fillStyle = d; g.fillRect(0, 0, w, h);
+    g.filter = 'blur(3px)';
+    // (u croît vers le sud du plan : la glace regarde l'ouest)
+    for (const [x0, x1] of [[0.08, 0.3], [0.62, 0.7], [0.86, 1.0]]) {
+      g.fillStyle = '#4c5560'; g.fillRect(x0 * w - 3, 0.27 * h, (x1 - x0) * w + 6, 0.5 * h);
+      g.fillStyle = '#f4f6f7'; g.fillRect(x0 * w, 0.29 * h, (x1 - x0) * w, 0.46 * h);
+    }
+    g.fillStyle = '#5f646a'; for (const v of [0.55, 0.6, 0.65]) g.fillRect(0.1 * w, v * h, 0.18 * w, 0.03 * h);
+    g.filter = 'none';
+    g.fillStyle = 'rgba(255,255,255,0.18)';
+    for (const [x0, l] of [[40, 30], [150, 12]]) { g.beginPath(); g.moveTo(x0, 0); g.lineTo(x0 + l, 0); g.lineTo(x0 + l - 60, h); g.lineTo(x0 - 60, h); g.closePath(); g.fill(); }
+  }, null, false, 2);
+}
+// L'AFFICHETTE ÉTROITE de l'angle (photo 03 : claire en haut, bleu nuit, prune, gris clair en bas — IMAGINÉE au-delà)
+function texAffichetteAngle() {
+  return canvasTex(64, 330, (g, w, h) => {
+    g.fillStyle = '#d9dde4'; g.fillRect(0, 0, w, h);
+    const d = g.createLinearGradient(0, h * 0.2, 0, h * 0.62); d.addColorStop(0, '#26315e'); d.addColorStop(0.55, '#3a2f5c'); d.addColorStop(1, '#5a2f4e');
+    g.fillStyle = d; g.fillRect(0, h * 0.2, w, h * 0.42);
+    g.fillStyle = '#3c4a7a'; g.fillRect(0, h * 0.62, w, h * 0.16);
+    g.fillStyle = '#1d1d22'; g.font = `600 7px ${POLICE}`; g.textAlign = 'center';
+    ['BTS SIO', 'portes', 'ouvertes'].forEach((t, i) => g.fillText(t, w / 2, h * 0.07 + i * 9));
+    g.fillStyle = '#e9e7ef'; ['Samedi', '10 h - 17 h'].forEach((t, i) => g.fillText(t, w / 2, h * 0.45 + i * 9));
+    paveIris(g, w * 0.3, h * 0.88, w * 0.4);
+  }, null, false, 2);
+}
+// LA BAIE DU BUREAU DE DIRECTION, côté hall (relecture du 13/10 : c'est elle, le « vitrage à cadre blanc et à trois bandes
+// sombres » de la gauche du reflet de r04 — et la VO q_0372-0376 la montre de face, à droite de la porte 6, son store
+// vénitien baissé) : un cadre d'aluminium laqué blanc, deux vitrages et leur meneau, trois bandes grises à hauteur
+// d'yeux, le store en dessous. `L` x `Hh` mètres, de l'angle de la façade (à gauche du dessin) vers le nord, du plafond
+// (en haut) à l'allège.
+const BAIE = { y0: 0.30, y1: 1.23, h0: 0.90, h1: 2.60, vitres: [[0.42, 0.64], [0.69, 1.07]], bandes: [[1.88, 1.99], [1.66, 1.77], [1.43, 1.55]] };
+function texBaieBureau() {
+  const L = BAIE.y1 - BAIE.y0, Hh = BAIE.h1 - BAIE.h0, k = 200;
+  return canvasTex(Math.round(L * k), Math.round(Hh * k), (g, w, h) => {
+    const X = (y) => (y - BAIE.y0) / L * w, Y = (z) => (BAIE.h1 - z) / Hh * h;
+    g.fillStyle = '#eef0f1'; g.fillRect(0, 0, w, h);
+    BAIE.vitres.forEach(([y0, y1], i) => {
+      const x0 = X(y0), x1 = X(y1), t = Y(2.50), b = Y(BAIE.h0 + 0.06), pale = i ? 1 : 0.6;
+      const d = g.createLinearGradient(0, t, 0, b); d.addColorStop(0, '#fcfdfe'); d.addColorStop(0.4, '#eef3f7'); d.addColorStop(1, '#e1e7ec');
+      g.fillStyle = d; g.fillRect(x0, t, x1 - x0, b - t);
+      // (le haut du grand vitrage : un pan plus clair, en biais — le plafond du bureau, vu d'en bas)
+      if (i) { g.fillStyle = 'rgba(255,255,255,0.75)'; g.beginPath(); g.moveTo(x0, t); g.lineTo(x1, t); g.lineTo(x1, Y(2.28)); g.lineTo(x0, Y(2.42)); g.closePath(); g.fill(); }
+      for (const [z0, z1] of BAIE.bandes) { g.fillStyle = `rgba(62,78,86,${pale})`; g.fillRect(x0, Y(z1), x1 - x0, Y(z0) - Y(z1)); }
+      for (let z = 1.37; z > BAIE.h0 + 0.07; z -= 0.025) { g.fillStyle = 'rgba(152,162,170,0.55)'; g.fillRect(x0, Y(z), x1 - x0, 1.5); }
+      g.strokeStyle = '#c6cacf'; g.lineWidth = 1; g.strokeRect(x0 + 0.5, t + 0.5, x1 - x0 - 1, b - t - 1);
+    });
+  }, null, false, 4);
+}
+// ELLE PENCHE (relecture du 13/10, r04 rejouée, le reflet à la règle). Dans la glace de la photo, le mur ouest du hall
+// (x 13,35, à 6,4 m d'elle) touche le plafond en y 144 px ; une glace d'aplomb le renvoie en 178, et met les trois bandes
+// grises de la baie du bureau entre 2,04 et 2,59 m — au ras du plafond. Tout ce qu'elle montre est remonté d'autant plus
+// qu'il est loin d'elle : son haut avance. De 2,7° (7,6 cm sur ses 1,62 m, le bas contre le mur), le mur ouest retombe en
+// 144, les bandes entre 1,43 et 1,98 m. Une glace de surveillance : de son fauteuil, l'hôtesse y voit l'entrée.
+const MIR = { x: X_MIT - 0.006, y0: 0.40, y1: 1.82, h0: 0.95, h1: 2.57, penche: 2.7 * Math.PI / 180 };
+const _v4 = new THREE.Vector4(), _n = new THREE.Vector3(), _pm = new THREE.Vector3(), _pc = new THREE.Vector3(), _vue = new THREE.Vector3();
+const _cible = new THREE.Vector3(), _regard = new THREE.Vector3(), _rot = new THREE.Matrix4(), _S = new THREE.Matrix4(), _pv = new THREE.Matrix4();
+const _plan = new THREE.Plane(), _clip = new THREE.Vector4(), _q = new THREE.Vector4(), _fr = new THREE.Frustum(), _taille = new THREE.Vector2();
+function miroirAccueil(ch) {
+  const L = MIR.y1 - MIR.y0, Hm = MIR.h1 - MIR.h0, yc = (MIR.y0 + MIR.y1) / 2, hc = (MIR.h0 + MIR.h1) / 2;
+  const K = TELEPHONE ? 0.35 : 0.5;
+  // la glace peinte : posée dans le décor, montrée quand le vrai miroir ne se dessine pas
+  const t = texGlacePeinte();
+  const repli = new THREE.Mesh(new THREE.PlaneGeometry(L, Hm), new THREE.MeshStandardMaterial({ map: t, roughness: 0.12, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.3 }));
+  repli.material.name = 'glace peinte (miroir de l\'accueil)';
+  // (penchée autour de son bord bas : l'ordre YXZ tourne d'abord la glace autour de son axe horizontal, puis vers l'ouest)
+  const pencher = (o, dx) => { o.rotation.set(MIR.penche, -Math.PI / 2, 0, 'YXZ'); o.position.set(MIR.x - dx - Hm / 2 * Math.sin(MIR.penche), MIR.h0 + Hm / 2 * Math.cos(MIR.penche), -yc); };
+  pencher(repli, 0); repli.castShadow = false; repli.userData.horsAOSol = true;
+  nePasFusionner(repli); ch.decor.add(repli);
+  // son dos : les deux joues en coin et le dessus, sombres, entre la glace et le mur (de côté, elle ne flotte pas)
+  {
+    const a = Hm * Math.sin(MIR.penche) + 0.004, h1 = MIR.h0 + Hm * Math.cos(MIR.penche), xm = X_MIT, P = [];
+    const tri = (...p) => { for (const [x, y, h] of p) P.push(x, h, -y); };
+    for (const y of [MIR.y0, MIR.y1]) tri([xm, y, MIR.h0], [xm, y, h1], [xm - a, y, h1]);
+    tri([xm, MIR.y0, h1], [xm, MIR.y1, h1], [xm - a, MIR.y1, h1]); tri([xm, MIR.y0, h1], [xm - a, MIR.y1, h1], [xm - a, MIR.y0, h1]);
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo.computeVertexNormals();
+    const dos = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0x2a2c2e, roughness: 0.7, side: THREE.DoubleSide }));
+    dos.material.name = 'dos de la glace (accueil)'; dos.castShadow = false; dos.userData.horsAOSol = true; nePasFusionner(dos); ch.decor.add(dos);
+  }
+  // le vrai miroir, à la racine de la scène
+  const m = new Reflector(new THREE.PlaneGeometry(L, Hm), { textureWidth: 256, textureHeight: 256, clipBias: 0.003, multisample: 0, shader: MiroirShader, color: 0xffffff });
+  const U = m.material.uniforms;
+  // (relecture du 13/10 : sur r04, la glace est la surface la plus claire de l'image — 224 à 250 —, pleine du jour de
+  // l'entrée ; à 0,95, celle du jeu restait grise, 172 : un rien de gain et un voile froid, ce que fait l'appareil devant
+  // une fenêtre — le reste vient du jour peint sur ce qu'elle renvoie : le mur ouest, la baie, le plafond de l'entrée)
+  // (joué en première personne, le nez sur la glace : au-delà, Haythem s'y voyait dans un brouillard)
+  U.color.value.setRGB(1.1, 1.15, 1.2); U.voile.value.setRGB(0.05, 0.062, 0.08);
+  pencher(m, 0.001);
+  m.userData.dynamique = true; m.userData.horsAOSol = true; m.name = 'miroir de l\'accueil';
+  m.visible = false; ch.scene.add(m); m.updateMatrixWorld(true);
+  const rt = m.getRenderTarget(), vc = m.camera;
+  rt.depthTexture = new THREE.DepthTexture(256, 256);
+  const rtLui = new THREE.WebGLRenderTarget(256, 256, { type: THREE.HalfFloatType, depthTexture: new THREE.DepthTexture(256, 256) });
+  U.tProf.value = rt.depthTexture; U.tLui.value = rtLui.texture; U.tProfLui.value = rtLui.depthTexture;
+  { const n = new THREE.Vector3(0, 0, 1).transformDirection(m.matrixWorld); U.uMir.value.set(n.x, n.y, n.z, -n.dot(m.position)); }
+  // ses quatre coins (monde), ses cinq points de visée, sa boîte (grossie : la caméra de l'image d'avant)
+  const coins = [[-L / 2, -Hm / 2], [L / 2, -Hm / 2], [-L / 2, Hm / 2], [L / 2, Hm / 2]].map(([a, b]) => m.localToWorld(new THREE.Vector3(a, b, 0)));
+  const points = [[yc, hc], [MIR.y0 + 0.12, 1.25], [MIR.y1 - 0.12, 1.25], [MIR.y0 + 0.12, 2.45], [MIR.y1 - 0.12, 2.45]];
+  const boite = new THREE.Box3(new THREE.Vector3(MIR.x - 0.3, MIR.h0 - 0.3, -MIR.y1 - 0.3), new THREE.Vector3(MIR.x + 0.05, MIR.h1 + 0.3, -MIR.y0 + 0.3));
+  const C = ch.C;
+  // un des points de la glace se voit-il de (cx, cy, cz) ? (les murs et les meubles du monde solide ; ni les vitres, ni
+  // les portes automatiques, ni les formes éteintes)
+  const vu = (cx, cy, cz) => {
+    for (const [y, h] of points) {
+      const bx = MIR.x - 0.05, bz = -y, dx = bx - cx, dy = h - cy, dz = bz - cz;
+      let libre = true;
+      C._parcourir(Math.min(cx, bx), Math.min(cz, bz), Math.max(cx, bx), Math.max(cz, bz), (s) => {
+        if (libre && s.camera && !s.off && !s.vitre && !s.mobile && C._segment(s, cx, cy, cz, dx, dy, dz, 0) < 1) libre = false;
+      });
+      if (libre) return true;
+    }
+    return false;
+  };
+  let camJeu = null, joueur = null, aFaire = false, luiVu = false, fait = false, image = 0, avant = false, dernier = -99, force = false, lumieres = false;
+  const etat = { actif: false, rendus: 0, rendusLui: 0, ms: 0, K, pas: 2, seuil: 0.25, coupe: false, portails: true, caches: 0 };
+  const _clair = new THREE.Color();
+  // la racine de Haythem dans la scène (celle qu'on cache pour le décor, et qu'on met sur la couche du reflet)
+  const racineLui = (u) => {
+    const o = u && (u.avatarModel || u.body);
+    let r = o; while (r && r.parent && !r.parent.isScene) r = r.parent;
+    return r && r.parent ? r : null;
+  };
+  const _der = new THREE.Vector3(1e9, 0, 0);
+  // LES PORTAILS (13/10). Dans la glace, la caméra symétrique voit tout le champ recadré — vers l'ouest, la Si 0.1, le
+  // bureau, le passage, l'escalier ; au sud, la rue — quand le hall n'en laisse voir que ce qui passe par ses ouvertures.
+  // Mesuré en vue de jeu, glace à l'écran : 242 objets dessinés pour le reflet, dont 121 hors du hall. Ce qui n'est pas
+  // dans la boîte du hall n'est dessiné que si sa sphère passe par une de ses ouvertures, vue de la caméra symétrique : la
+  // porte 6, les deux fenêtres de l'accueil, le passage de la pile, le mur nord (sa porte, le cannelé).
+  const BOITE_HALL = new THREE.Box3(new THREE.Vector3(13.3, -0.1, -7.66), new THREE.Vector3(19.86, 2.75, 0.05));
+  const PORTAILS = [
+    [[13.35, -0.05, 0], [16.5, -0.05, 0], [16.5, -0.05, 2.6], [13.35, -0.05, 2.6]],
+    [[16.73, -0.05, 1.1], [17.93, -0.05, 1.1], [17.93, -0.05, 2.6], [16.73, -0.05, 2.6]],
+    [[18.38, -0.05, 1.1], [19.58, -0.05, 1.1], [19.58, -0.05, 2.6], [18.38, -0.05, 2.6]],
+    [[13.3, 2.5, 0], [13.3, 4.75, 0], [13.3, 4.75, 2.6], [13.3, 2.5, 2.6]],
+    [[14.6, 7.66, 0], [19.8, 7.66, 0], [19.8, 7.66, 2.6], [14.6, 7.66, 2.6]],
+  ].map((P) => P.map(([x, y, h]) => new THREE.Vector3(x, h, -y)));
+  // (et, de la rue, par la porte 6 à plus de 10 m dans une glace : ni les voitures, ni les feuillages, ni le mobilier, ni
+  // les taches d'ombre — une vingtaine d'appels de dessin ; restent le sol, les façades d'en face, le ciel)
+  const DETAILS_RUE = /^(feuillage de la rue|rue : pièces|zinc patiné|taches d'ombre|carrosserie|vitres des voitures|Wheel|Wheek|Optics|ombres de contact)/;
+  const _pl = [new THREE.Plane(), new THREE.Plane(), new THREE.Plane(), new THREE.Plane(), new THREE.Plane()], _cp = new THREE.Vector3();
+  let candidats = null, rendusListe = 0;
+  const lister = (scene) => {
+    candidats = [];
+    const exclu = (o) => { for (let q = o; q; q = q.parent) if (q.userData && q.userData.dynamique) return true; return false; };
+    scene.traverse((o) => {
+      if (!(o.isMesh || o.isInstancedMesh) || o === m || o.isSkinnedMesh || o.frustumCulled === false || exclu(o)) return;
+      const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
+      const sp = g.boundingSphere.clone().applyMatrix4(o.matrixWorld);
+      if (!BOITE_HALL.intersectsSphere(sp)) candidats.push([o, sp, DETAILS_RUE.test((o.material && o.material.name) || '') || DETAILS_RUE.test(o.name || '')]);
+    });
+  };
+  // la sphère sp se voit-elle, de V, par un des portails ?
+  const parUnPortail = (V, sp) => {
+    for (const P of PORTAILS) {
+      const cx = (P[0].x + P[2].x) / 2, cy = (P[0].y + P[2].y) / 2, cz = (P[0].z + P[2].z) / 2;
+      _cp.set(cx, cy, cz);
+      let dedans = true;
+      for (let i = 0; i < 4 && dedans; i++) {
+        _pl[i].setFromCoplanarPoints(V, P[i], P[(i + 1) % 4]);
+        if (_pl[i].distanceToPoint(_cp) < 0) _pl[i].negate();
+        if (_pl[i].distanceToPoint(sp.center) < -sp.radius) dedans = false;
+      }
+      if (!dedans) continue;
+      // et au-delà du portail
+      _pl[4].setFromCoplanarPoints(P[0], P[1], P[2]);
+      if (_pl[4].distanceToPoint(V) > 0) _pl[4].negate();
+      if (_pl[4].distanceToPoint(sp.center) > -sp.radius) return true;
+    }
+    return false;
+  };
+  // Haythem se voit-il dans la glace ? (ses pieds et sa tête, reflétés, vus de la caméra : à travers la glace, grossie)
+  const lui = (u, p) => {
+    if (!u) return false;
+    for (const h of [0.4, 1.0, 1.7]) {
+      const xv = 2 * MIR.x - u.x, t = (MIR.x - p.x) / (xv - p.x);
+      if (!(t > 0 && t < 1)) continue;
+      const hy = p.y + t * (h - p.y), y = -(p.z + t * (u.z - p.z));
+      if (y > MIR.y0 - 0.5 && y < MIR.y1 + 0.5 && hy > MIR.h0 - 0.5 && hy < MIR.h1 + 0.5) return true;
+    }
+    return false;
+  };
+  // LA CAMÉRA SYMÉTRIQUE d'une caméra du jeu (le code du Reflector), sa projection RECADRÉE sur la glace (élargie de
+  // `marge`) et son plan proche oblique posé sur la glace — dans `cible` ; faux si la glace est vue de dos ou de chant
+  const poserSymetrique = (camera, cible, marge) => {
+    _pm.setFromMatrixPosition(m.matrixWorld); _pc.setFromMatrixPosition(camera.matrixWorld);
+    _rot.extractRotation(m.matrixWorld); _n.set(0, 0, 1).applyMatrix4(_rot);
+    _vue.subVectors(_pm, _pc);
+    if (_vue.dot(_n) > 0) return false;
+    _vue.reflect(_n).negate().add(_pm);
+    _rot.extractRotation(camera.matrixWorld);
+    _regard.set(0, 0, -1).applyMatrix4(_rot).add(_pc);
+    _cible.subVectors(_pm, _regard).reflect(_n).negate().add(_pm);
+    cible.position.copy(_vue); cible.up.set(0, 1, 0).applyMatrix4(_rot).reflect(_n); cible.lookAt(_cible);
+    cible.far = camera.far; cible.updateMatrixWorld();
+    // le rectangle de la glace dans l'image de la caméra symétrique (c'est celui de l'écran retourné de gauche à droite),
+    // élargi ; toute l'image si un coin est derrière la caméra
+    let ax = 1, ay = 1, bx = -1, by = -1;
+    for (const c of coins) {
+      _v4.set(c.x, c.y, c.z, 1).applyMatrix4(cible.matrixWorldInverse).applyMatrix4(camera.projectionMatrix);
+      if (_v4.w < 0.05) { ax = ay = -1; bx = by = 1; break; }
+      const x = _v4.x / _v4.w, y = _v4.y / _v4.w;
+      ax = Math.min(ax, x); bx = Math.max(bx, x); ay = Math.min(ay, y); by = Math.max(by, y);
+    }
+    ax = Math.max(-1, ax - marge); ay = Math.max(-1, ay - marge); bx = Math.min(1, bx + marge); by = Math.min(1, by + marge);
+    if (bx - ax < 0.002 || by - ay < 0.002) return false;
+    // la projection recadrée : ce rectangle remplit toute la texture
+    const sx = (bx - ax) / 2, sy = (by - ay) / 2, mx = (ax + bx) / 2, my = (ay + by) / 2;
+    _S.set(1 / sx, 0, 0, -mx / sx, 0, 1 / sy, 0, -my / sy, 0, 0, 1, 0, 0, 0, 0, 1);
+    cible.projectionMatrix.multiplyMatrices(_S, camera.projectionMatrix);
+    // le plan proche oblique, sur la glace (Lengyel, comme le Reflector)
+    _plan.setFromNormalAndCoplanarPoint(_n, _pm).applyMatrix4(cible.matrixWorldInverse);
+    _clip.set(_plan.normal.x, _plan.normal.y, _plan.normal.z, _plan.constant);
+    const e = cible.projectionMatrix.elements;
+    _q.set((Math.sign(_clip.x) + e[8]) / e[0], (Math.sign(_clip.y) + e[9]) / e[5], -1, (1 + e[10]) / e[14]);
+    _clip.multiplyScalar(2 / _clip.dot(_q));
+    e[2] = _clip.x; e[6] = _clip.y; e[10] = _clip.z + 1 - 0.003; e[14] = _clip.w;
+    cible.projectionMatrixInverse.copy(cible.projectionMatrix).invert();
+    return true;
+  };
+  // un rendu imbriqué dans celui de l'image : ni les ombres ni les matrices du monde ne sont refaites (le rendu principal
+  // vient de le faire), la glace ne se dessine pas elle-même
+  const imbrique = (renderer, scene, camera, cible, cam, dessin) => {
+    m.visible = false;
+    const avant = renderer.getRenderTarget(), xr = renderer.xr.enabled, ombres = renderer.shadowMap.autoUpdate, mat = scene.matrixWorldAutoUpdate;
+    renderer.xr.enabled = false; renderer.shadowMap.autoUpdate = false; scene.matrixWorldAutoUpdate = false;
+    try {
+      renderer.setRenderTarget(cible);
+      renderer.state.buffers.depth.setMask(true);
+      dessin();
+    } finally {
+      renderer.xr.enabled = xr; renderer.shadowMap.autoUpdate = ombres; scene.matrixWorldAutoUpdate = mat;
+      renderer.setRenderTarget(avant);
+      if (camera.viewport !== undefined) renderer.state.viewport(camera.viewport);
+      m.visible = true;
+    }
+  };
+  // LE DESSIN DU REFLET (à la place de celui du Reflector), une fois par image, pour la seule caméra du jeu
+  m.onBeforeRender = (renderer, scene, camera) => {
+    if (camera !== camJeu || scene.overrideMaterial) return;
+    U.uCam.value.setFromMatrixPosition(camera.matrixWorld);
+    if (fait || (!aFaire && !(luiVu && (image & 1 || !U.uLui.value)))) return;
+    fait = true;
+    const t0 = performance.now();
+    const racine = racineLui(joueur);
+    if (aFaire && poserSymetrique(camera, vc, 0.08)) dessinerDecor(renderer, scene, camera, racine);
+    // (Haythem : une image sur deux — 25 à 30 fois par seconde dans la glace)
+    if (luiVu && racine && dernier > -99 && (image & 1 || !U.uLui.value) && poserSymetrique(camera, vl, 0.02)) { dessinerLui(renderer, scene, camera, racine); U.uLui.value = 1; }
+    etat.ms += performance.now() - t0;
+  };
+  // LE DÉCOR, SANS HAYTHEM — refait quand la caméra s'est déplacée de 25 cm (voir maj), relu en suivant la parallaxe
+  const dessinerDecor = (renderer, scene, camera, racine) => {
+    // les portails : ce qui n'est pas dans le hall et ne passe par aucune de ses ouvertures n'est pas dessiné
+    const caches = [];
+    if (etat.portails) {
+      if (!candidats || ++rendusListe > 300) { lister(scene); rendusListe = 0; }
+      for (const [o, sp, detail] of candidats) if (o.visible && (detail || !parUnPortail(_vue, sp))) { o.visible = false; caches.push(o); }
+      etat.caches = caches.length;
+    }
+    const vuLui = racine ? racine.visible : false;
+    if (racine) racine.visible = false;
+    try {
+      imbrique(renderer, scene, camera, rt, vc, () => { if (renderer.autoClear === false) renderer.clear(); renderer.render(scene, vc); });
+    } finally {
+      if (racine) racine.visible = vuLui;
+      for (const o of caches) o.visible = true;
+    }
+    U.uVPd.value.multiplyMatrices(vc.projectionMatrix, vc.matrixWorldInverse); U.uVPdInv.value.copy(U.uVPd.value).invert();
+    _der.copy(_pc); dernier = image; force = false;
+    etat.rendus++;
+  };
+  // HAYTHEM SEUL, à chaque image où il se voit dans la glace, depuis la caméra symétrique de l'image : sa couche à lui, les
+  // lumières aussi, un fond transparent. Une dizaine d'appels de dessin, quand le décor en demande 150 : il bouge à la
+  // cadence du jeu dans la glace.
+  const vl = new THREE.PerspectiveCamera();
+  // (et, pour que three ne parcoure pas toute l'école à chaque image, les branches de la scène qui ne portent ni Haythem
+  // ni une lumière sont cachées le temps de ce dessin)
+  let porteLumieres = null;
+  const dessinerLui = (renderer, scene, camera, racine) => {
+    if (!lumieres) {
+      porteLumieres = new Set();
+      scene.traverse((o) => { if (o.isLight) { o.layers.enable(COUCHE_REFLET); let r = o; while (r.parent && !r.parent.isScene) r = r.parent; porteLumieres.add(r); } });
+      lumieres = true;
+    }
+    racine.traverse((o) => o.layers.enable(COUCHE_REFLET));
+    const fond = scene.background, alpha = renderer.getClearAlpha(); renderer.getClearColor(_clair);
+    vl.layers.set(COUCHE_REFLET);
+    scene.background = null;
+    const branches = [];
+    for (const o of scene.children) if (o.visible && o !== racine && !porteLumieres.has(o)) { o.visible = false; branches.push(o); }
+    // (à la première personne, js/game.js cache Haythem tout entier — il se voit pourtant dans la glace, tête comprise)
+    const vuLui = racine.visible; racine.visible = true;
+    try {
+      imbrique(renderer, scene, camera, rtLui, vl, () => { renderer.setClearColor(0x000000, 0); renderer.clear(true, true, true); renderer.render(scene, vl); });
+    } finally {
+      scene.background = fond; renderer.setClearColor(_clair, alpha);
+      racine.visible = vuLui;
+      for (const o of branches) o.visible = true;
+    }
+    U.uVPl.value.multiplyMatrices(vl.projectionMatrix, vl.matrixWorldInverse); U.uVPlInv.value.copy(U.uVPl.value).invert();
+    etat.rendusLui++;
+  };
+  // (débogage : tourner la glace autour de son axe vertical, en degrés — la recherche de sa pose, 13/10)
+  const tourner = (deg) => {
+    for (const o of [m, repli]) { o.rotation.y = -Math.PI / 2 + deg * Math.PI / 180; o.updateMatrixWorld(true); }
+    [[-L / 2, -Hm / 2], [L / 2, -Hm / 2], [-L / 2, Hm / 2], [L / 2, Hm / 2]].forEach(([a, b], i) => m.localToWorld(coins[i].set(a, b, 0)));
+  };
+  if (typeof window !== 'undefined') window.__miroirAccueil = { etat, m, repli, tourner };
+  return {
+    // à chaque image, avant le rendu : le vrai miroir ou la glace peinte
+    maj(dt, jeu) {
+      camJeu = jeu.camera; joueur = jeu.user; fait = false;
+      const p = camJeu.position;
+      let ok = !etat.coupe && !!(jeu.fx && jeu.fx.quality !== 'low') && p.y > -0.2 && p.y < 3.3 && p.x < MIR.x - 0.05;
+      if (ok) { camJeu.updateMatrixWorld(); _fr.setFromProjectionMatrix(_pv.multiplyMatrices(camJeu.projectionMatrix, camJeu.matrixWorldInverse)); ok = _fr.intersectsBox(boite); }
+      if (ok) ok = vu(p.x, p.y, p.z);
+      etat.actif = ok; m.visible = ok; repli.visible = !ok;
+      image++;
+      if (!ok) { aFaire = luiVu = false; avant = false; return; }
+      if (!avant) force = true;
+      avant = true;
+      jeu.renderer.getDrawingBufferSize(_taille);
+      const w = Math.max(64, Math.round(_taille.x * etat.K)), h = Math.max(64, Math.round(_taille.y * etat.K));
+      // (RELECTURE DU 13/10 : chaque cible reçoit une profondeur NEUVE, à sa taille. Celle de 256 px du départ, que le
+      // shader de la glace lit dès sa première image, était alors figée à 256 px sur la carte graphique ; si Haythem ne se
+      // reflétait pas à cette première image — on entre, on voit la glace de loin : le cas ordinaire —, sa cible, dessinée
+      // plus tard à la taille de l'écran, restait « incomplète » (GL_INVALID_FRAMEBUFFER_OPERATION, attaches de tailles
+      // différentes, 400 avertissements à la console) : il ne se voyait JAMAIS dans la glace, de toute la partie.)
+      if (rt.width !== w || rt.height !== h) {
+        for (const [cible, nom] of [[rt, 'tProf'], [rtLui, 'tProfLui']]) {
+          cible.setSize(w, h); cible.depthTexture.dispose(); cible.depthTexture = new THREE.DepthTexture(w, h); U[nom].value = cible.depthTexture;
+        }
+        force = true;
+      }
+      // QUAND REDESSINER LE DÉCOR (13/10, mesuré en vue de jeu, la glace à l'écran, en marchant : 22 ms l'image sans elle,
+      // 31,6 en la redessinant à chaque image — ≈ 150 appels de dessin, 8 à 9 ms ici quelle que soit la taille de la
+      // texture : c'est le nombre d'appels qui coûte, pas les pixels). La glace garde le décor d'avant, sa caméra et sa
+      // profondeur : le shader suit la parallaxe (MiroirShader). On le refait : au premier jour, à la taille changée ;
+      // quand la caméra s'est déplacée de plus de `seuil` (25 cm ; 15 en ultra et extrême) — au plus une image sur deux ;
+      // et au moins toutes les 30 images (une porte, un passant). Haythem, lui, est redessiné à chaque image où il se voit.
+      const q = jeu.fx && jeu.fx.quality;
+      etat.seuil = q === 'ultra' || q === 'extreme' ? 0.15 : 0.25;
+      const bouge = p.distanceToSquared(_der) > etat.seuil * etat.seuil;
+      aFaire = force || image - dernier >= 30 || (bouge && image - dernier >= etat.pas);
+      luiVu = lui(jeu.user && jeu.user.posAff, p);
+      if (!luiVu) U.uLui.value = 0;
+    },
+  };
 }
 
 // =====================================================================
@@ -469,13 +1067,19 @@ export function poserHall(ch) {
   const B = (x0, y0, x1, y1, h0, h1, mat, o) => ch.boite(Math.min(x0, x1), Math.min(y0, y1), Math.max(x0, x1), Math.max(y0, y1), h0, h1, mat, o);
 
   // =====================================================================
-  //  LE MITOYEN EST : GRIS ARDOISE de la cloison biaise au local technique (r04)
+  //  LE MITOYEN EST : GRIS ARDOISE du miroir au local technique (r04), BLANC de l'angle de la façade au miroir (photo 03)
   // =====================================================================
-  // (r04 : le gris s'arrête net au sud, en y 1,82, contre le montant de la cloison biaise ; au nord, contre la face sud
-  // du local, y 4,43. Plinthe de bois, comme tout le hall.)
-  // (au sud, dans le bureau d'angle, il est blanc et dans le jour de la fenêtre de façade : ce qu'on voit par la vitre)
-  ch.mur({ de: [19.95, -0.4], a: [19.95, Y_ARD], ep: 0.3, mats: { W: H.blancJour, E: M.blanc }, plinthes: ['W'] });
-  ch.mur({ de: [19.95, Y_ARD], a: [19.95, 7.65], ep: 0.3, mats: { W: H.ardoise, E: M.blanc }, plinthes: ['W'] });
+  // (r04 : le gris s'arrête au nord contre la face sud du local, y 4,43. Au sud, il porte le MIROIR, y 0,40-1,82 — plus
+  // bas — et s'arrête au bord sud de la glace : de là à l'angle de la façade, le mur est blanc comme elle — photo 03 : 144,
+  // 145, 156 sur la bande de l'angle, 143, 143, 154 sur le trumeau de la façade —, une affichette étroite contre l'angle.
+  // Plinthe de bois, comme tout le hall.) (13/10 : le blanc « au jour » du bureau d'angle de la v1.9 n'a plus lieu d'être.)
+  ch.mur({ de: [19.95, -0.4], a: [19.95, MIR.y0], ep: 0.3, mats: { W: M.blanc, E: M.blanc }, plinthes: ['W'] });
+  ch.mur({ de: [19.95, MIR.y0], a: [19.95, 7.65], ep: 0.3, mats: { W: H.ardoise, E: M.blanc }, plinthes: ['W'] });
+  // L'AFFICHETTE ÉTROITE de l'angle (photo 03 agrandie six fois : une bande haute et étroite, claire en haut, bleu nuit puis
+  // prune, gris clair en bas — 67, 74, 111 en moyenne —, entre la fenêtre c 18,98 et son reflet ; rétroprojetée sur le
+  // mitoyen, y 0,04-0,24, de 1,19 à 2,22 m. La VO de 2021 n'y montre rien : elle est de 2026. Son dessin est IMAGINÉ. C'est
+  // elle que js/ecole_mobilier.js posait sur le trumeau, entre les deux vraies fenêtres.)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffichetteAngle(), roughness: 0.5 }), 0.2, 1.03, X_MIT - 0.004, 0.14, 1.705, 'W');
   // LES DEUX AFFICHES (r04, rétroprojetées sur le mitoyen : 0,67 x 0,94 chacune, de 1,44 à 2,38 m ; celle au cadre
   // magenta au nord, y 3,37-4,04, celle aux lignes de couleur au sud, y 2,22-2,89 — l'ordre de la VO q_0377-0383, où
   // elles étaient lues plus au sud), sous un mince cadre d'aluminium (relecture du 12/10 : l'appareil à 1,155 m, et non
@@ -486,85 +1090,127 @@ export function poserHall(ch) {
     // (relecture du 12/10 : le cadre ne se voit presque pas sur r04 — 6 mm, et non 15)
     for (const [y0, y1, h0, h1] of [[-0.335, 0.335, A1 - 0.006, A1], [-0.335, 0.335, A0, A0 + 0.006], [-0.335, -0.329, A0, A1], [0.329, 0.335, A0, A1]]) B(xa - 0.016, y + y0, X_MIT, y + y1, h0, h1, H.argent, { ombre: false });
   }
-  // LE JOUR DU BUREAU D'ANGLE sur le bout sud du mur ardoise (relecture du 12/10, r04 : le gris s'éclaircit et bleuit vers
-  // la cloison vitrée — 92 entre les affiches, 118 et bleuté au bout sud —, la fenêtre c 18,98 l'éclaire au travers ; le
-  // nombre de lumières est figé dans les programmes : un voile additif, du bleu pâle au rien, sur 1,6 m)
+  // LE JOUR DE LA FENÊTRE c 18,98 sur le bout sud du mur ardoise (relecture du 12/10, r04 : le gris s'éclaircit et bleuit
+  // vers le miroir — 92 entre les affiches, 118 et bleuté au bout sud — : la fenêtre, à 1,4 m, l'éclaire en rasant ; le
+  // nombre de lumières est figé dans les programmes : un voile additif, du bleu pâle au rien, sur 1,6 m, de la glace vers
+  // le nord — il s'arrête au bord de la glace, qui a son propre jour : le reflet)
   {
     const tex = canvasTex(128, 8, (g, w, h) => {
       const d = g.createLinearGradient(0, 0, w, 0); d.addColorStop(0, 'rgba(255,255,255,0)'); d.addColorStop(0.65, 'rgba(255,255,255,0.45)'); d.addColorStop(1, 'rgba(255,255,255,1)');
       g.clearRect(0, 0, w, h); g.fillStyle = d; g.fillRect(0, 0, w, h);
     }, null, true, 1);
     // (le plan regarde l'ouest : son u court du nord au sud — le jour est au bout de u)
-    const m = new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color(0x2b3040), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: true });
-    m.name = 'jour du bureau d’angle sur le mur ardoise';
-    const v = ch.panneau(m, 1.6, 2.4, X_MIT - 0.03, Y_ARD + 0.8, 1.3, 'W');
+    // (relecture du 13/10 : au bout sud, 119, 119, 126 sur la photo, 103, 96, 102 au jeu — plus fort, plus froid)
+    const m = new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color(0x3c4552), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: true });
+    m.name = 'jour de la fenêtre c 18,98 sur le mur ardoise';
+    // (relecture du 13/10 : jusqu'au plafond — arrêté à 2,5 m, il laissait une bande brune de 10 cm en haut du mur)
+    const v = ch.panneau(m, 1.6, H_PLAF - 0.1, X_MIT - 0.03, Y_ARD + 0.8, (H_PLAF + 0.1) / 2, 'W');
     v.castShadow = false; v.receiveShadow = false; v.userData.nofuse = true; v.userData.horsAOSol = true; v.renderOrder = 2;
   }
   // LES DEUX CAMÉRAS DÔMES au plafond (r04 : l'une près du mitoyen, au-dessus de l'affiche aux lignes ; l'autre au fond à
   // gauche, au nord-ouest du pilier)
-  for (const [x, y] of [[19.62, 2.4], [18.1, 6.4]]) {
-    const d = maille(new THREE.SphereGeometry(0.06, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.boitier, x, H_PLAF, -y, 0, ch.decor, { ombre: false });
-    const c = maille(new THREE.CylinderGeometry(0.075, 0.075, 0.02, 20), M.boitier, x, H_PLAF - 0.01, -y, 0, ch.decor, { ombre: false });
-    d.userData.horsAOSol = c.userData.horsAOSol = true;
-  }
-
-  // =====================================================================
-  //  LE BUREAU D'ANGLE : LA CLOISON BIAISE DU COIN SUD-EST (r04 ; VO q_0383)
-  // =====================================================================
-  // (r04 : au bout du mur ardoise, une vitre claire à trois bandes sombres, que l'appareil voit presque DE FACE, puis un
-  // plein blanc, puis une étroite baie à menuiserie gris bleu ; au-dessus, une retombée blanche dont l'arête MONTE vers la
-  // droite — rétroprojetée, de (19,86 ; 1,77) à (18,98 ; 1,0) : une cloison à 45°, qui ferme le coin sud-est. La VO de
-  // 2021 voit, du nord, la même suite au même endroit : la « troisième fenêtre » au-delà du mitoyen de hall.md. Elle part
-  // du mitoyen en y 1,82 et finit sur la façade en x 17,98, au bord du trumeau : la fenêtre c 18,98 est dans le bureau.
-  // Rejouée à la pose de r04 : la vitre de 0,07 à 0,54 m du mitoyen le long de la cloison, le montant gris jusqu'à 0,64,
-  // le plein blanc jusqu'à 1,04, la baie étroite jusqu'à 1,16 ; le haut des vitres à 2,07. La porte vitrée et le reste,
-  // hors du cadre de r04 : IMAGINÉS. Le blanc y est celui du jour — H.blancJour.) (Relecture du 12/10 : les pleins, sauf
-  // le dernier contre le trumeau, sont vitrés — voir plus bas.)
+  // (13/10 : celui du fond, rétroprojeté à 2,54 m, en (17,85 ; 6,15) — en (18,1 ; 6,4), il tombait 7 px trop bas)
+  // (RELECTURE DU 13/10, r04 agrandie quatre fois : ce sont deux globes BLANCS à œil sombre, et celui du mitoyen n'est
+  // pas au plafond — son haut est 5 cm SOUS le plafond, en (553 ; 102-113) de la photo : rétroprojeté, il tombe sur le
+  // mur lui-même, en y 2,37, son centre à 2,50 m. Une applique ronde de 11 cm, l'œil vers le hall. Celui du fond pend du
+  // plafond, en (17,8 ; 6,1). Le jeu en faisait deux galettes beiges collées au plafond.)
   {
-    const L = Y_ARD * Math.SQRT2, ep = 0.1, hv = H_VITRE;
-    const g = new THREE.Group(); g.position.set(X_MIT, 0, -(X_MIT - BIAIS)); g.rotation.y = -3 * Math.PI / 4; ch.decor.add(g);
-    // le long de la cloison (x local de 0 à L, vers la façade) : [début, fin, sorte]
-    // (relecture du 12/10, la VO q_0380-0383 rejouée du nord : entre le mur ardoise et le trumeau, la cloison est du VERRE
-    // sous sa retombée — on y voit la fenêtre c 18,98 du bureau —, pas un mur blanc ; les deux « pleins » de r04, de 0,64 à
-    // 1,04 et de 1,16 à 1,42, sont le mitoyen blanc du bureau, au jour, vu au travers : des vitres claires, sans bandes)
-    const morceaux = [[0, 0.07, 'montant'], [0.07, 0.54, 'vitre'], [0.54, 0.64, 'poteau'], [0.64, 1.04, 'claire'], [1.04, 1.07, 'cadre'], [1.07, 1.13, 'baie'], [1.13, 1.16, 'cadre'], [1.16, 1.42, 'claire'], [1.42, 2.32, 'porte'], [2.32, L, 'plein']];
-    for (const [a, b, s] of morceaux) {
-      const w = b - a, cx = (a + b) / 2;
-      if (s === 'plein') BL(g, H.blancJour, w, hv, ep, cx, hv / 2, 0);
-      else if (s === 'montant') BL(g, H.alu, w, hv, ep, cx, hv / 2, 0);
-      else if (s === 'poteau') BL(g, H.poteau, w, hv, ep * 1.2, cx, hv / 2, 0);
-      else if (s === 'cadre') BL(g, H.cadreSombre, w, hv - 0.1, ep * 0.8, cx, (hv - 0.1) / 2 + 0.1, 0);
-      else {
-        // une vitre (la grande, la porte : du verre clair et trois bandes de vitrophanie, de 1,50 à 1,82 m ; la baie étroite :
-        // une vitre claire, lumineuse), son rail bas, son profil haut
-        const v = new THREE.Mesh(new THREE.PlaneGeometry(w, hv - 0.1), s === 'baie' ? H.vitreClaire : H.verre); v.position.set(cx, 0.1 + (hv - 0.1) / 2, 0); v.userData.vitre = true; v.castShadow = false; g.add(v);
-        if (s === 'vitre' || s === 'porte') for (const [b0, b1] of [[1.5, 1.57], [1.63, 1.7], [1.74, 1.82]]) { const q = PL(g, H.bande, w, b1 - b0, cx, (b0 + b1) / 2, 0.003); q.castShadow = false; q.userData.vitre = true; }
-        BL(g, s === 'baie' ? H.cadreSombre : H.alu, w, 0.1, ep, cx, 0.05, 0);
-        BL(g, s === 'baie' ? H.cadreSombre : H.alu, w, 0.04, ep, cx, hv - 0.02, 0);
-        if (s === 'porte') {
-          for (const x of [a + 0.03, b - 0.03]) BL(g, H.alu, 0.06, hv - 0.1, ep, x, (hv - 0.1) / 2 + 0.1, 0);
-          BL(g, H.alu, w, 0.05, ep, cx, 2.05, 0);
-          for (const z of [-1, 1]) BL(g, M.inox, 0.02, 0.32, 0.02, a + 0.12, 1.05, z * 0.065, { ombre: false });
-        }
-      }
-    }
-    // la retombée blanche au-dessus, jusqu'au plafond (r04)
-    BL(g, H.blancJour, L, H_PLAF - hv, ep, L / 2, (hv + H_PLAF) / 2, 0);
-    // (relecture du 12/10 : une cloison ne porte pas d'ombre, comme les murs — la sienne, sous le « soleil » des plafonniers,
-    // couvrait à moitié le copieur et le rendait beige, quand r04 le montre blanc dans le jour de la fenêtre)
-    g.traverse((m) => { if (m.isMesh) { m.receiveShadow = true; m.castShadow = false; } });
-    // le monde solide : la cloison entière ; vitrée presque partout, elle laisse passer la lumière cuite de la fenêtre
-    // de façade (le jour c 18,98, dans le bureau)
-    C.ajouterBoiteOrientee(X_MIT - Y_ARD / 2, -Y_ARD / 2, L / 2, ep / 2, 3 * Math.PI / 4, { y1: H_PLAF, vitre: true });
+    const blanc = new THREE.MeshStandardMaterial({ color: 0xf4f4f1, roughness: 0.35, emissive: 0xffffff, emissiveIntensity: 0.22 }); blanc.name = 'globe blanc (caméra dôme)';
+    const oeil = new THREE.MeshStandardMaterial({ color: 0x3c4046, roughness: 0.25 }); oeil.name = 'œil sombre (caméra dôme)';
+    const dome = (g) => {
+      // (dans le repère du globe : l'embase en haut, le globe et son œil vers le bas)
+      CL(g, blanc, 0.06, 0.03, 0, -0.015, 0, 20, { ombre: false });
+      maille(new THREE.SphereGeometry(0.055, 18, 12), blanc, 0, -0.04, 0, 0, g, { ombre: false });
+      // (l'œil : une calotte de 2 cm de rayon au bas du globe — pas une pupille)
+      maille(new THREE.SphereGeometry(0.03, 14, 10), oeil, 0, -0.0726, 0, 0, g, { ombre: false });
+      g.traverse((m) => { m.userData.horsAOSol = true; });
+    };
+    // celui du mitoyen : en applique, couché — son « bas » regarde l'ouest
+    const a = new THREE.Group(); a.position.set(X_MIT, 2.5, -2.37); a.rotation.z = -Math.PI / 2; ch.decor.add(a); dome(a);
+    // celui du fond : au plafond, l'œil vers le sud-ouest
+    const b = groupe(ch, 17.8, 6.1, 225); b.position.y = H_PLAF; dome(b);
   }
-  // DANS LE BUREAU D'ANGLE (IMAGINÉ : r04 n'y voit que la lumière de la fenêtre) : un bureau blanc sous la fenêtre de
-  // façade, son écran, son fauteuil
-  B(18.85, 0.05, 19.76, 0.7, 0.72, 0.75, H.tableB);
-  for (const [x, y] of [[18.88, 0.66], [19.73, 0.66]]) B(x - 0.02, y - 0.02, x + 0.02, y + 0.02, 0, 0.72, M.alu, { ombre: false });
-  B(18.85, 0.06, 19.76, 0.08, 0.3, 0.72, H.tableB, { ombre: false });
-  ecran(ch, 19.3, 0.3, 0.75, 'N', true);
-  fauteuil(ch, 19.45, 1.0, 'S', { place: false });
-  C.ajouterBoite(18.85, -0.7, 19.8, 0, { y1: 0.75 });
+  // LE MIROIR (retour r05 du 13/10 : plus haut, miroirAccueil)
+  const miroir = miroirAccueil(ch);
+  // LA BAIE DU BUREAU DE DIRECTION sur le mur ouest du hall (x 13,35), contre l'angle de la porte 6 (relecture du 13/10 :
+  // le reflet de r04 la montre à gauche de la glace — rétroprojetée, glace penchée : de l'angle, y 0,30, à 1,23 ; les
+  // vitrages de 0,42 à 0,64 et de 0,69 à 1,07, jusqu'à 2,50 m ; trois bandes grises de 1,43 à 1,99 ; un store à lames
+  // en dessous — et la VO q_0372-0376, de face, à droite de la porte 6, le store baissé. Son allège, que le copieur
+  // cache sur r04 : 0,90, IMAGINÉE. Posée CONTRE le mur, côté hall seulement : le store est baissé, on ne voit pas le
+  // bureau, et le bureau B — une autre pièce — n'est pas touché.) Claire : le jour de la porte 6 et celui du bureau.
+  {
+    const xb = 13.35, t = texBaieBureau();
+    const vit = new THREE.MeshStandardMaterial({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.62, roughness: 0.3 });
+    vit.name = 'baie du bureau de direction (côté hall)';
+    const p = ch.panneau(vit, BAIE.y1 - BAIE.y0, BAIE.h1 - BAIE.h0, xb + 0.012, (BAIE.y0 + BAIE.y1) / 2, (BAIE.h0 + BAIE.h1) / 2, 'E');
+    p.castShadow = false;
+    // son cadre en relief (2,5 cm) : le tour, le meneau
+    const cadre = new THREE.MeshStandardMaterial({ color: 0xf2f3f4, roughness: 0.45, emissive: 0xffffff, emissiveIntensity: 0.3 });
+    cadre.name = 'aluminium laqué blanc (baie du bureau de direction)';
+    const [v0, v1] = BAIE.vitres;
+    for (const [y0, y1, h0, h1] of [[BAIE.y0, v0[0], BAIE.h0, BAIE.h1], [v0[1], v1[0], BAIE.h0, BAIE.h1], [v1[1], BAIE.y1, BAIE.h0, BAIE.h1],
+      [BAIE.y0, BAIE.y1, 2.5, BAIE.h1], [BAIE.y0, BAIE.y1, BAIE.h0, BAIE.h0 + 0.06]]) B(xb, y0, xb + 0.025, y1, h0, h1, cadre, { ombre: false });
+    // LE JOUR DE LA PORTE 6 SUR CE MUR (relecture du 13/10 : dans la glace de r04, tout le coin de l'entrée est blanc de
+    // jour — 250, 253, 254 —, et sur la VO q_0372-0376 ce mur, à droite de la porte, est brûlé ; le jeu le rendait d'un
+    // beige de plafonnier, 190, 180, 165 : un voile additif, plein contre la porte, nul à 2,2 m — comme celui du mur
+    // ardoise, le nombre de lumières étant figé)
+    const tj = canvasTex(128, 8, (g, w, h) => {
+      const d = g.createLinearGradient(0, 0, w, 0); d.addColorStop(0, 'rgba(255,255,255,1)'); d.addColorStop(0.5, 'rgba(255,255,255,0.55)'); d.addColorStop(1, 'rgba(255,255,255,0)');
+      g.clearRect(0, 0, w, h); g.fillStyle = d; g.fillRect(0, 0, w, h);
+    }, null, true, 1);
+    const mj = new THREE.MeshBasicMaterial({ map: tj, color: new THREE.Color(0.9, 0.95, 1.0), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: true });
+    mj.name = 'jour de la porte 6 sur le mur ouest du hall';
+    // (DERRIÈRE la baie, à 6 mm du mur : devant, il noyait ses trois bandes)
+    const v = ch.panneau(mj, 2.2, H_PLAF, xb + 0.006, 0.3 + 1.1, H_PLAF / 2, 'E');
+    v.castShadow = false; v.receiveShadow = false; v.userData.nofuse = true; v.userData.horsAOSol = true; v.renderOrder = 2;
+  }
+  // LE CARRELAGE DE L'ACCUEIL SOUS SES SPOTS (relecture du 13/10, r04 rejouée, huit pavés du sol : la photo le montre
+  // GRIS-BRUN, chaud — 115, 88, 57 devant le portant, 74, 53, 32 au fond à gauche, 92, 73, 58 au milieu — et plus neutre
+  // vers la porte 6, dans le jour — 85, 72, 68 au pied du comptoir, à droite ; le jeu, gris partout, 103, 94, 85 et 112,
+  // 104, 94. Le carrelage est celui de toute l'école, et la salle d'attente, juste sur r02, est sous une autre lumière : sa
+  // matière n'est pas touchée. La lumière cuite du hall, elle, est SATURÉE — tous ses spots s'y additionnent jusqu'au blanc,
+  // 255, 255, 253, quand celle de la salle garde le chaud des plafonniers — et ne colore plus rien. Un calque à 6 mm du sol,
+  // qui MULTIPLIE ce qu'il recouvre (2 x source x fond : 0,5 ne change rien) : chaud au nord de y 1,6, plein en 4,0 ; un
+  // rien plus clair vers la porte ; fondu à rien sur 0,8 m devant le passage de la pile et 0,6 m devant le mur nord — la
+  // jonction et la salle d'attente gardent leur sol au pixel près.)
+  {
+    const X0 = 13.35, Y0 = 0.3, W = X_MIT - X0, D = Y_MUR - Y0, borne = (v) => Math.min(1, Math.max(0, v));
+    const m = calqueLumiere(65, 72, (u, v) => {
+      const x = X0 + u * W, y = Y0 + v * D;
+      const bord = borne((x - 13.45) / 0.8) * borne((Y_MUR - 0.05 - y) / 0.6) * borne((y - Y0) / 0.3);
+      const chaud = bord * borne((y - 1.6) / 2.4), jour = bord - chaud;
+      // (et, au milieu, le reflet des plafonniers sur le carrelage satiné, que la photo n'a pas : 115 au jeu pour 92 — un
+      // cinquième de moins, en rond, autour de (16,45 ; 3,9), le pavé rétroprojeté)
+      const reflet = 1 - 0.2 * bord * Math.exp(-((x - 16.45) ** 2 + (y - 3.9) ** 2) / 0.8);
+      // (aux trois quarts de ce que r04 mesure : la photo 03, prise au téléphone un jour gris, montre ce même sol gris
+      // anthracite jusque dans le hall — entre les deux, un gris-brun)
+      return [(1 + 0.04 * chaud + 0.1 * jour) * reflet, (1 - 0.12 * chaud + 0.07 * jour) * reflet, (1 - 0.3 * chaud + 0.12 * jour) * reflet];
+    }, 'lumière chaude des spots sur le carrelage de l\'accueil');
+    const p = poserCalque(new THREE.Mesh(new THREE.PlaneGeometry(W, D), m));
+    p.rotation.x = -Math.PI / 2; p.position.set(X0 + W / 2, 0.006, -(Y0 + D / 2)); p.name = 'lumière chaude du carrelage de l\'accueil';
+    ch.decor.add(p);
+  }
+  // LE VITRAGE DE LA PORTE 6 VU EN RASANT (relecture du 13/10). Dans la glace de r04, entre la baie du bureau et la fenêtre,
+  // là où la porte 6 est vue sous 10 à 14° de son plan, il n'y a que du BLANC : à cette incidence, un vitrage ne laisse
+  // plus voir à travers lui, il renvoie le hall clair (Fresnel : 40 % par face à 80°, quatre faces). Le jeu y montrait la
+  // porte comme de face — des cadres sombres, le nuage violet, le tableau noir du porche. Un voile clair DEVANT la ligne
+  // des vitrages, côté hall, que seul l'angle du regard fait apparaître : invisible tant qu'on regarde la porte à plus de
+  // 24° de son plan (du hall, de la salle, en entrant, en sortant), plein en dessous de 10° (dans la glace ; le long de la
+  // façade, de derrière le comptoir). À 13 cm devant la ligne des vitrages : les tirants des vantaux sont derrière lui. La
+  // porte, ses vantaux et la façade ne sont pas touchés.
+  {
+    const mat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, side: THREE.DoubleSide,
+      uniforms: { uC: { value: new THREE.Color(1.5, 1.56, 1.62) } },
+      vertexShader: 'varying vec3 vW; void main() { vec4 w = modelMatrix * vec4( position, 1.0 ); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }',
+      fragmentShader: 'uniform vec3 uC; varying vec3 vW; void main() { float c = abs( normalize( cameraPosition - vW ).z ); float a = smoothstep( 0.40, 0.17, c ) * 0.95; if ( a < 0.004 ) discard; gl_FragColor = vec4( uC, a ); }',
+    });
+    mat.name = 'reflet rasant du vitrage de la porte 6';
+    const p = new THREE.Mesh(new THREE.PlaneGeometry(3.15, H_PLAF), mat);
+    p.position.set(14.925, H_PLAF / 2, -0.43); p.renderOrder = 3; p.castShadow = false; p.receiveShadow = false;
+    p.userData.nofuse = true; p.userData.horsAOSol = true; p.userData.sansNormales = true; p.name = 'reflet rasant de la porte 6';
+    ch.decor.add(p);
+  }
 
   // =====================================================================
   //  LE COMPTOIR D'ACCUEIL, LE DÉCROCHÉ PMR ET SON CAISSON HAUT (r04 ; photo 03 ; VO q_0373-0384)
@@ -577,25 +1223,33 @@ export function poserHall(ch) {
   // 0,745, le socle de 11,5 cm.)
   // le comptoir haut : le socle de chêne clair en retrait de 4 cm, le caisson de stratifié gris clair, la rainure sur la
   // face avant (ouest) et sur le bout sud, la tablette grise qui déborde de 7 cm côté visiteurs
-  B(CPT.x0 + 0.04, CPT.y0 + 0.04, CPT.x1, CPT.y1, 0, CPT.socle, H.chene);
-  B(CPT.x0, CPT.y0, CPT.x1, CPT.y1, CPT.socle, CPT.h - 0.035, H.comptoir);
+  // (13/10 : ni le comptoir ni sa tablette ne portent d'ombre au « soleil » des plafonniers — elle tombait en bande noire de
+  // 0,2 m sur le carrelage, à son pied, x 449-500 de r04 : 14 à 35 au jeu, 75 à 88 sur la photo ; ni d'ombre douce cuite au
+  // sol, dont le rayon de 1,6 m assombrissait encore tout le pied — 47 à 66 au jeu, 77 à 89 sur la photo, où le carrelage
+  // reste clair jusqu'à la plinthe : l'occlusion de l'écran suffit au contact)
+  const sansOmbre = { ombre: false, horsAO: true };
+  B(CPT.x0 + 0.04, CPT.y0 + 0.04, CPT.x1, CPT.y1, 0, CPT.socle, H.chene, sansOmbre);
+  B(CPT.x0, CPT.y0, CPT.x1, CPT.y1, CPT.socle, CPT.h - CPT.ep, H.comptoirFace, sansOmbre);
   B(CPT.x0 - 0.004, CPT.y0, CPT.x0, CPT.y1, CPT.rainure - 0.008, CPT.rainure + 0.008, H.rainure, { ombre: false });
   B(CPT.x0, CPT.y0 - 0.004, CPT.x1, CPT.y0, CPT.rainure - 0.008, CPT.rainure + 0.008, H.rainure, { ombre: false });
-  B(CPT.x0 - 0.07, CPT.y0 - 0.03, CPT.x1, CPT.y1, CPT.h - 0.035, CPT.h, H.tablette);
+  B(CPT.x0 - 0.07, CPT.y0 - 0.03, CPT.x1, CPT.y1, CPT.h - CPT.ep, CPT.h, H.tablette, { ombre: false });
   // LE DÉCROCHÉ PMR (r04, à gauche) : le caisson bas EN RETRAIT de 25 cm (sa plinthe de chêne passe derrière le pied), la
   // tablette grise à 0,76 qui avance jusqu'à 16,88 et file, côté personnel, jusqu'au plan de travail ; à son angle
   // nord-ouest, le pied gris carré sur son socle de chêne
-  B(PMR.xF + 0.03, PMR.y0, X_PERS, PMR.y1 - 0.03, 0, CPT.socle, H.chene);
-  B(PMR.xF, PMR.y0, X_PERS, PMR.y1, CPT.socle, PMR.h - 0.03, H.comptoirOmbre);
-  B(PMR.x0, PMR.y0, X_PERS, PMR.y1, PMR.h - 0.035, PMR.h, H.tablettePMR);
+  B(PMR.xF + 0.03, PMR.y0, X_PERS, PMR.y1 - 0.03, 0, CPT.socle, H.chene, sansOmbre);
+  B(PMR.xF, PMR.y0, X_PERS, PMR.y1, CPT.socle, PMR.h - 0.03, H.comptoirOmbre, sansOmbre);
+  // (relecture du 13/10 : la tablette basse non plus ne porte pas d'ombre — son débord de 20 cm en jetait une bande noire
+  // au pied du décroché, x 190-300 de r04 : 34, 30, 26 au jeu, 75, 57, 42 sur la photo ; ni la tablette haute)
+  B(PMR.x0, PMR.y0, X_PERS, PMR.y1, PMR.h - 0.035, PMR.h, H.tablettePMR, { ombre: false });
   B(16.915, 4.355, 17.055, 4.495, 0, 0.08, H.chene);
-  B(16.93, 4.37, 17.04, 4.48, 0.08, PMR.h - 0.03, H.comptoirOmbre);
+  B(16.93, 4.37, 17.04, 4.48, 0.08, PMR.h - 0.03, H.comptoirPied);
   // LE CAISSON HAUT DU DÉCROCHÉ : posé sur le bout nord de la tablette basse, au-dessus du pied, du même stratifié, et sa
   // tablette haute qui déborde au nord (r04 : sa face ouest de x 178 à 200, sa face sud de 200 à 262, de 0,76 à 1,15 m,
   // les bacs noirs devant ; la tablette de x 128 à 265 — sous son débord, on voit le pilier : rien ne la porte ; 0,22 m
   // de débord : entre elle et le portant, le personnel passe)
-  B(RET.x0, RET.y0, RET.x1, RET.y1, PMR.h, RET.h - 0.03, H.comptoir);
-  B(RET.x0 - 0.05, RET.y0 - 0.07, RET.x1 + 0.05, RET.y1 + 0.22, RET.h - 0.03, RET.h, H.tablette);
+  B(RET.x0, RET.y0, RET.x1, RET.y1, PMR.h, RET.h - 0.03, H.comptoirOmbre);
+  B(RET.x0 + 0.004, RET.y0 - 0.003, RET.x1, RET.y0, PMR.h + 0.003, RET.h - 0.033, H.caissonSud, { ombre: false });
+  B(RET.x0 - 0.05, RET.y0 - 0.07, RET.x1 + 0.05, RET.y1 + 0.22, RET.h - 0.03, RET.h, H.tablette, { ombre: false });
   // derrière (est) : le plan de travail du personnel à 0,75 m, le long du comptoir haut, sur trois pieds
   B(CPT.x1, CPT.y0 + 0.05, X_PERS, CPT.y1, 0.72, 0.75, H.plan);
   for (const y of [CPT.y0 + 0.1, 2.35, CPT.y1 - 0.08]) B(X_PERS - 0.06, y - 0.025, X_PERS - 0.02, y + 0.025, 0, 0.72, H.pied, { ombre: false });
@@ -605,29 +1259,45 @@ export function poserHall(ch) {
   C.ajouterBoite(RET.x0 - 0.05, -(RET.y1 + 0.22), RET.x1 + 0.05, -PMR.y1, { y0: RET.h - 0.03, y1: RET.h });
   // SUR LE DÉCROCHÉ (r04) : les bacs à courrier noirs empilés et leurs papiers rouges et blancs, contre le caisson haut ;
   // la bouilloire inox ; une chemise rouge et des feuilles à plat au bord
-  for (let k = 0; k < 3; k++) {
-    const h = PMR.h + k * 0.055;
+  // (13/10, r04 agrandie : DEUX bacs, bas — 22 px de haut, x 205-262 —, une liasse rouge et blanche entre eux et sur le
+  // dessus, qui dépasse vers l'avant ; le jeu en empilait trois, 29 px)
+  for (let k = 0; k < 2; k++) {
+    const h = PMR.h + k * 0.058;
     B(17.03, 4.05, 17.4, 4.38, h, h + 0.008, M.noir, { ombre: false });
-    B(17.03, 4.05, 17.4, 4.065, h, h + 0.045, M.noir, { ombre: false });
-    for (const x of [17.03, 17.39]) B(x, 4.05, x + 0.01, 4.38, h, h + 0.045, M.noir, { ombre: false });
-    B(17.05, 4.08, 17.38, 4.36, h + 0.008, h + 0.016 + k * 0.004, k === 1 ? H.rouge : M.store, { ombre: false });
+    B(17.03, 4.05, 17.4, 4.065, h, h + 0.048, M.noir, { ombre: false });
+    for (const x of [17.03, 17.39]) B(x, 4.05, x + 0.01, 4.38, h, h + 0.048, M.noir, { ombre: false });
+    B(17.0, 4.08, 17.38, 4.36, h + 0.008, h + 0.02, k === 0 ? H.rouge : M.store, { ombre: false });
   }
+  B(16.99, 4.1, 17.36, 4.34, PMR.h + 0.116, PMR.h + 0.13, M.store, { ombre: false });
+  B(17.02, 4.14, 17.3, 4.3, PMR.h + 0.13, PMR.h + 0.136, H.rouge, { ombre: false });
+  // LA BOUILLOIRE INOX (13/10, r04 rejouée : elle n'est pas devant les bacs mais AU FOND du décroché, contre le plan du
+  // personnel — x 270-292 de la photo, son pied en 306 et son couvercle en 274 : rétroprojetée, (18,0 ; 4,3), 0,25 m de
+  // haut ; le jeu la posait en (17,3 ; 3,99), 15 px trop bas) : le corps inox un peu conique, le couvercle et la poignée
+  // noirs, le bec, le socle noir
   {
-    const g = groupe(ch, 17.3, 3.99, 'W'); g.position.y = PMR.h;
-    CL(g, M.inox, 0.075, 0.2, 0, 0.1, 0, 20);
-    CL(g, M.noir, 0.06, 0.02, 0, 0.21, 0, 16, { ombre: false });
-    BL(g, M.noir, 0.03, 0.15, 0.03, 0, 0.11, -0.095, { ombre: false });
-    CL(g, M.noir, 0.085, 0.015, 0, 0.0075, 0, 20, { ombre: false });
+    // (relecture du 13/10 : sur r04 elle fait 37 px de haut, 0,28 m — un huitième de plus)
+    const g = groupe(ch, 18.0, 4.3, 'N'); g.position.y = PMR.h; g.scale.setScalar(1.12);
+    CL(g, M.noir, 0.085, 0.018, 0, 0.009, 0, 20, { ombre: false });
+    maille(new THREE.CylinderGeometry(0.068, 0.078, 0.2, 24), M.inox, 0, 0.118, 0, 0, g);
+    CL(g, M.noir, 0.06, 0.03, 0, 0.233, 0, 18, { ombre: false });
+    BL(g, M.noir, 0.025, 0.012, 0.025, 0, 0.252, 0, { ombre: false });
+    BL(g, M.noir, 0.022, 0.17, 0.035, 0, 0.13, -0.098, { ombre: false });
+    for (const h of [0.05, 0.21]) BL(g, M.noir, 0.022, 0.022, 0.03, 0, h, -0.08, { ombre: false });
+    const bec = BL(g, M.inox, 0.03, 0.05, 0.04, 0, 0.19, 0.08, { ombre: false }); bec.rotation.x = 0.5;
   }
-  B(16.98, 3.64, 17.24, 3.9, PMR.h, PMR.h + 0.01, H.rouge, { ombre: false });
-  B(16.92, 3.93, 17.12, 4.2, PMR.h, PMR.h + 0.006, M.store, { ombre: false });
+  // LA CHEMISE ROUGE (r04 : x 280-316, à plat au bord, devant les bacs — (17,41 ; 3,94) rétroprojetée) et des feuilles
+  // blanches au bord de la tablette
+  B(17.28, 3.78, 17.54, 4.04, PMR.h, PMR.h + 0.01, H.rouge, { ombre: false });
+  B(16.92, 3.93, 17.16, 4.22, PMR.h, PMR.h + 0.006, M.store, { ombre: false });
   // SUR LES TABLETTES HAUTES (r04) : des feuilles et des dépliants à plat le long du bord, une petite pile blanche vers le
   // bout nord ; sur le caisson haut, des papiers
   // (relecture du 12/10 : la pile de feuilles de r04 est petite et haute — 26 px sur 9, 0,15 m sur 6 cm — avec une
   // seconde, plus basse, à sa droite ; le jeu en faisait une plaque de 0,28 m)
   B(16.9, 3.13, 17.14, 3.28, CPT.h, CPT.h + 0.06, M.store, { ombre: false });
   B(16.92, 2.95, 17.12, 3.1, CPT.h, CPT.h + 0.025, M.store, { ombre: false });
-  for (const [y, l] of [[1.45, 0.3], [1.8, 0.26], [2.12, 0.3]]) B(16.82, y, 17.03, y + l, CPT.h, CPT.h + 0.006, M.store, { ombre: false });
+  // (relecture du 13/10 : sur r04, une rangée de petites piles de dépliants court tout le bord, de x 480 au bord droit —
+  // y 2,7 à 1,4 —, hautes de 3 px, 1,5 à 2 cm : la tablette est au-dessus de l'œil, des feuilles seules ne se voient pas)
+  for (const [y, l, e] of [[1.42, 0.3, 0.018], [1.76, 0.27, 0.014], [2.07, 0.3, 0.02], [2.42, 0.27, 0.015]]) B(16.8, y, 17.02, y + l, CPT.h, CPT.h + e, M.store, { ombre: false });
   B(17.3, 4.42, 17.7, 4.66, RET.h, RET.h + 0.012, M.store, { ombre: false });
   // L'ÉCRAN DE L'HÔTESSE (r04 : son dos noir dépasse à peine du comptoir, une bande noire marquée « DELL », vers y 2,9)
   // et, sur le bureau du mitoyen, un portable ouvert (un second écran dépasserait du comptoir : r04 n'en montre pas)
@@ -635,7 +1305,7 @@ export function poserHall(ch) {
   // 78 px — et le mot « DELL », argent, est juste au-dessus de la tablette ; le jeu en montrait 12 cm, 18 px : l'écran plus
   // étroit, le logo au bas de la bande visible)
   {
-    const e = ecran(ch, 17.78, 2.92, 0.75, 'E', true, 0.31, 0.49);
+    const e = ecran(ch, 17.78, 2.92, 0.75, 'E', true, 0.33, 0.49);
     const l = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.03), new THREE.MeshStandardMaterial({ map: texDell(), roughness: 0.4 }));
     l.position.set(0, 0.435, -0.016); l.rotation.y = Math.PI; e.add(l);
   }
@@ -648,9 +1318,9 @@ export function poserHall(ch) {
   // =====================================================================
   //  L'OPEN-SPACE DU PERSONNEL (r04 ; VO q_0373-0384 ; photo 03)
   // =====================================================================
-  // (r04 : derrière le comptoir, rien ne dépasse entre le local et la cloison biaise que l'écran « DELL » et, au fond à
-  // droite, contre la cloison, le grand copieur blanc. Le reste est sous la ligne du comptoir : le bureau bleu-gris du
-  // mitoyen (VO), le plan de travail, les fauteuils. Le passage du personnel : par le nord, entre le décroché et le local
+  // (r04 : derrière le comptoir, rien ne dépasse entre le local et le miroir que l'écran « DELL » et, au fond à droite,
+  // devant la glace, la machine à affranchir. Le reste est sous la ligne du comptoir : le bureau bleu-gris du mitoyen
+  // (VO), le plan de travail, les fauteuils. Le passage du personnel : par le nord, entre le décroché et le local
   // (0,75 m), puis le long du plan de travail.)
   B(19.2, 1.98, 19.78, LOC.y0, 0.72, 0.75, H.bureau);
   B(19.74, 1.98, 19.77, LOC.y0, 0.3, 0.72, H.bureau, { ombre: false });
@@ -662,10 +1332,12 @@ export function poserHall(ch) {
   maille(new THREE.CylinderGeometry(0.09, 0.085, 0.26, 20), new THREE.MeshStandardMaterial({ map: texPotIris(), roughness: 0.4 }), 19.6, 0.88, -2.3, 0, ch.decor);
   B(19.42, 2.62, 19.74, 2.92, 0.75, 0.81, M.noir);
   ['#1d1d20', '#2f5f9a', '#f0efea'].forEach((c, i) => B(19.4, 3.9, 19.72, 4.2, 0.75 + i * 0.05, 0.8 + i * 0.05, new THREE.MeshStandardMaterial({ color: c, roughness: 0.5 }), { ombre: false }));
-  // LE GRAND COPIEUR contre la cloison biaise, tourné vers le nord-ouest (r04 : son chargeur blanc et ses bacs
-  // dépassent du comptoir au bord droit, de x 620 à 730, jusqu'à 1,4 m)
-  copieur(ch, 18.93, 1.46, 315, 1.42, true);
-  C.ajouterBoiteOrientee(18.93, -1.46, 0.33, 0.34, 3 * Math.PI / 4, { y1: 1.42 });
+  // LA MACHINE À AFFRANCHIR devant le miroir, le dos à la glace, tournée vers l'ouest (r04 : au bout du comptoir, elle
+  // dépasse de la tablette de x 627 à 730 — les rayons qui passent, contre la glace, en y 1,77 et 0,97 ; jusqu'à 1,42 m, son
+  // plateau 1,50 ; dans le jour de la fenêtre c 18,98, à 1 m. Relecture du 13/10 : ce n'est pas un copieur sur pied —
+  // affranchisseuse, plus haut ; son meuble de y 0,91 à 1,77, x 19,24 à 19,74)
+  affranchisseuse(ch, 19.49, 1.34);
+  C.ajouterBoite(19.22, -1.78, 19.78, -0.9, { y1: 1.42 });
   // LES FAUTEUILS NOIRS face au comptoir, le long du plan de travail : celui du bout sud porte le manteau moutarde (photo
   // 03 : il dépasse du comptoir vers (18,0 ; 1,7)), celui de l'hôtesse est devant l'écran « DELL », le troisième au
   // décroché, au coussin rayé (VO). Chacun laisse 0,66 m de passage à l'est ; on se relève au nord-est de sa place. (Le
@@ -693,19 +1365,33 @@ export function poserHall(ch) {
   C.ajouterBoite(LOC.x0, -Y_MUR, X_MIT, -LOC.y0, { y1: H_PLAF });
   // les portes du local : deux doubles portes de placard toute hauteur (y 4,5-5,21 et 6,45-7,35 ; r04 : le joint entre
   // les vantaux monte jusqu'au plafond), leurs joints sombres
-  const xj = LOC.x0 - 0.003, PORTES = [[4.5, 5.21], [6.45, 7.35]];
+  // (13/10, r04 agrandie : les portes s'arrêtent à 2,07 m — un joint horizontal, à 153 px au-dessus du bouton rouge —
+  // sous un PANNEAU HAUT fixe, plus sombre et plus gris ; la seconde porte est au fond, de 6,9 à 7,5, son joint en 7,2 — à
+  // x 40 de la photo, le triangle juste à sa droite, x 44 —, et non de 6,45 à 7,35)
+  const xj = LOC.x0 - 0.003, PORTES = [[4.5, 5.21], [6.9, 7.5]], H_P = 2.07;
+  B(xj - 0.002, LOC.y0, LOC.x0, Y_MUR, H_P + 0.006, H_PLAF, H.boisHaut, { ombre: false });
+  B(xj - 0.004, LOC.y0, xj - 0.002, Y_MUR, H_P - 0.004, H_P + 0.004, H.joint, { ombre: false });
   for (const [y0, y1] of PORTES) {
-    for (const y of [y0, (y0 + y1) / 2, y1]) B(xj, y - 0.004, LOC.x0, y + 0.004, 0.01, H_PLAF - 0.03, H.joint, { ombre: false });
+    for (const y of [y0, (y0 + y1) / 2, y1]) B(xj, y - 0.004, LOC.x0, y + 0.004, 0.01, H_P, H.joint, { ombre: false });
     // les poignées (deux barrettes inox, de part et d'autre du joint central)
     for (const s of [-1, 1]) B(xj - 0.025, (y0 + y1) / 2 + s * 0.05 - 0.008, xj, (y0 + y1) / 2 + s * 0.05 + 0.008, 1.0, 1.18, M.inox, { ombre: false });
   }
   for (const [y0, y1] of PORTES) B(xj, y0, LOC.x0, y1, 0.0, 0.01, H.joint, { ombre: false });
+  // LE SPOT DU FOND SUR LES PORTES DU LOCAL (relecture du 13/10 : au bord gauche de r04, au nord du pilier, le même
+  // stratifié est chaud, sous son spot — 139, 105, 61 à mi-hauteur, 127, 96, 56 en haut —, quand le jeu le laissait gris,
+  // 124, 107, 92 et 108, 97, 89 : un calque chaud du pilier au mur nord, fondu sur 0,4 m contre le pilier)
+  {
+    const l = Y_MUR - PIL.y1;
+    // (le plan regarde l'ouest : son u court du nord au sud)
+    const m = calqueLumiere(32, 4, (u) => { const k = Math.min(1, (1 - u) * l / 0.4); return [1 + 0.22 * k, 1 - 0.03 * k, 1 - 0.45 * k]; }, 'lumière chaude du spot du fond sur les portes du local');
+    poserCalque(ch.panneau(m, l, H_PLAF, LOC.x0 - 0.014, (PIL.y1 + Y_MUR) / 2, H_PLAF / 2, 'W'));
+  }
   // l'ÉTIQUETTE ROUGE en travers du haut du vantail nord, et le TRIANGLE JAUNE au coin du vantail sud (r04 : de 2,0 à
   // 2,08 m) ; le second triangle sur la porte du fond (r04, au bord gauche : vers y 7,1, à 2,0 m)
   ch.panneau(new THREE.MeshStandardMaterial({ map: texEtiquetteRouge(), roughness: 0.5 }), 0.3, 0.07, xj - 0.002, 5.03, 2.04, 'W');
   const tri = new THREE.MeshStandardMaterial({ map: texTriangle(), transparent: true, alphaTest: 0.4, roughness: 0.5 });
   ch.panneau(tri, 0.08, 0.08, xj - 0.002, 4.83, 2.04, 'W');
-  ch.panneau(tri, 0.1, 0.1, xj - 0.002, 7.12, 2.0, 'W');
+  ch.panneau(tri, 0.09, 0.09, xj - 0.002, 7.15, 2.0, 'W');
   // SUR LA FACE SUD (r04) : le déclencheur rouge, un petit boîtier bleu, le boîtier blanc à fenêtre verte et son cordon
   // noir (relecture du 12/10, r04 agrandie cinq fois : ils sont au milieu de la face — de x 316 à 345 sur la photo, à 0,25
   // m plus à l'ouest qu'au jeu — et le boîtier blanc avance plus : vu de biais, son flanc fait la moitié de sa largeur)
@@ -720,6 +1406,16 @@ export function poserHall(ch) {
   }
   // LE PILIER habillé de stratifié bois clair, sa plinthe de chêne ; son monde solide
   B(PIL.x0, PIL.y0, PIL.x1, PIL.y1, 0, H_PLAF, H.boisClair);
+  // (relecture du 13/10 : le jour ne prend que le haut de cette face — 162, 149, 142 au-dessus de 1,2 m, 133, 116, 104 en
+  // dessous, à l'ombre du décroché et de sa tablette haute, juste devant ; le jeu l'éclairait d'un seul ton, 160)
+  B(PIL.x0, PIL.y0 - 0.003, PIL.x1, PIL.y0, RET.h, H_PLAF, H.boisJour, { ombre: false });
+  B(PIL.x0, PIL.y0 - 0.003, PIL.x1, PIL.y0, 0.08, RET.h, H.boisOmbre, { ombre: false });
+  // (et sa face ouest s'assombrit vers le bas, hors du cône de son spot et derrière le portant : 165, 130, 90 à 1,9 m, 143,
+  // 114, 84 à 1,6, 99, 74, 48 sous 0,9 m sur r04 — le jeu la laissait à 145 jusqu'au sol : un calque, plein sous 0,9 m)
+  {
+    const m = calqueLumiere(4, 32, (u, v) => { const k = Math.min(1, Math.max(0, (1.5 - (0.08 + v * (H_PLAF - 0.08))) / 0.6)), f = 1 - 0.55 * k; return [f, f, f]; }, 'ombre du bas du pilier (accueil)');
+    poserCalque(ch.panneau(m, PIL.y1 - PIL.y0, H_PLAF - 0.08, PIL.x0 - 0.004, (PIL.y0 + PIL.y1) / 2, (H_PLAF + 0.08) / 2, 'W'));
+  }
   B(PIL.x0 - 0.012, PIL.y0 - 0.012, PIL.x1, PIL.y1 + 0.012, 0, 0.08, H.chene, { ombre: false });
   C.ajouterBoite(PIL.x0, -PIL.y1, PIL.x1, -PIL.y0, { y1: H_PLAF });
   // LE PANNEAU DES FORMATIONS, entre la porte du local et le pilier (r04 : 0,42 m, de ≈ 0,95 à 2,08), son cadre sombre
@@ -732,17 +1428,26 @@ export function poserHall(ch) {
   // (relecture du 12/10, r04 agrandie : l'écran tombe 10 px trop à gauche et 6 px trop court — un téléviseur de 40 pouces,
   // 0,9 x 0,5 avec son cadre, et non 0,84 x 0,46 ; 8 cm plus au sud-est, toujours sous la retombée)
   {
-    const T = { x: 18.4, y: 5.37 };
-    const g = groupe(ch, T.x, T.y, 202); g.position.y = 2.24;
+    // (relecture du 13/10, r04 agrandie trois fois, ses quatre coins relevés — (142 ; 83), (228 ; 103), (133 ; 145),
+    // (220 ; 160) — : 0,88 x 0,50, son haut à 2,50 contre la retombée ; il tombait 7 px trop bas ; l'image claire décalée
+    // vers la gauche au milieu de la dalle noire, texEcranTV)
+    // (RELECTURE DU 13/10, r04 agrandie six fois, les quatre coins du coffre noir relevés à la règle — (140 ; 80), (228 ;
+    // 101), (220 ; 157), (133 ; 143) — et rétroprojetés, son haut à 2,50 contre la retombée : le coin gauche en (17,84 ;
+    // 5,42), le droit en (18,61 ; 5,09). L'écran fait 0,84 m, regarde au cap 203 — et non 194 : au cap 194, en (18,4 ;
+    // 5,33), il tombait 8 px à droite et 6 px trop bas, son bout est trop fuyant, 54 px de haut pour 56 — ; son centre en
+    // (18,24 ; 5,29), à 2,253. Du coup son bout est sort de sous la retombée, comme sur la photo.)
+    const T = { x: 18.24, y: 5.29, cap: 203, h: 2.253 };
+    const g = groupe(ch, T.x, T.y, T.cap); g.position.y = T.h;
     const t = new THREE.Group(); t.rotation.x = 0.15; g.add(t);
-    BL(t, M.noir, 0.9, 0.5, 0.06, 0, 0, 0);
+    BL(t, M.noir, 0.85, 0.5, 0.06, 0, 0, 0);
     const tex = texEcranTV();
-    const e = PL(t, new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.5, roughness: 0.3 }), 0.74, 0.39, 0.02, 0.01, 0.031);
+    const e = PL(t, new THREE.MeshStandardMaterial({ map: tex, color: 0x303030, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 1.25, roughness: 0.32 }), 0.81, 0.46, 0, 0, 0.031);
     e.castShadow = false;
-    BL(g, M.noir, 0.04, 2.5 - 2.24 - 0.21, 0.04, -0.29, (2.5 - 2.24 + 0.21) / 2, -0.05, { ombre: false });
+    // (r04 : sa fixation monte du coin haut gauche de l'écran jusqu'au plafond — deux tiges noires et leur câble)
+    for (const x of [-0.37, -0.31]) BL(g, M.noir, 0.022, H_PLAF - T.h - 0.22, 0.022, x, (H_PLAF - T.h + 0.22) / 2, 0.0, { ombre: false });
     g.traverse((m) => { m.userData.horsAOSol = true; });
     // (la caméra seule : derrière Haythem, au personnel, elle venait se loger dans l'écran — vu en jouant, 12/10)
-    C.ajouterBoiteOrientee(T.x, -T.y, 0.47, 0.08, Math.atan2(0.375, 0.927), { y0: 1.96, y1: 2.5, joueur: false });
+    C.ajouterBoiteOrientee(T.x, -T.y, 0.5, 0.08, (T.cap - 180) * Math.PI / 180, { y0: 1.9, y1: 2.5, joueur: false });
   }
 
   // =====================================================================
@@ -759,9 +1464,12 @@ export function poserHall(ch) {
   // 0,82 à 1,13 ; les brochures de 0,48 à 0,70 et de 0,12 à 0,35. Il revient de 0,1 m vers sa place de r04, (17,48 ;
   // 5,685) : 0,64 m de passage restent devant la tablette haute — RAYON_JOUEUR 0,3.)
   {
+    // (13/10, r04 agrandie cinq fois, rétroprojetée à 4,6 m — il regarde l'appareil — : son cadre monte à 1,74 m, x 51-104,
+    // le sweat blanc de 1,49 à 1,71, le sweat à capuche de 1,17 à 1,47, l'affichette de 0,84 à 1,16 sur 0,50 m ; le jeu
+    // l'arrêtait à 1,63, ses sweats de 0,39 m, plus larges que lui)
     const P = { x: 17.48, y: 5.685 }, g = groupe(ch, P.x, P.y, 225), N = M.noir, l = 0.33;
     for (const s of [-1, 1]) {
-      BL(g, N, 0.022, 1.6, 0.022, s * l / 2, 0.83, -0.1);
+      BL(g, N, 0.022, 1.72, 0.022, s * l / 2, 0.89, -0.1);
       BL(g, N, 0.022, 0.78, 0.022, s * l / 2, 0.42, 0.09);
       BL(g, N, 0.022, 0.022, 0.22, s * l / 2, 0.07, -0.005, { ombre: false });
       for (const z of [-0.1, 0.09]) maille(new THREE.SphereGeometry(0.028, 8, 6), N, s * l / 2, 0.03, z, 0, g, { ombre: false });
@@ -772,20 +1480,29 @@ export function poserHall(ch) {
       BL(g, N, l, 0.04, 0.012, 0, h - 0.03, 0.1, { ombre: false });
       const b = PL(g, br, l - 0.03, 0.22, 0, h + 0.115, 0.01); b.rotation.x = -0.35;
     }
-    for (const h of [0.81, 1.15, 1.4]) BL(g, N, l, 0.012, 0.26, 0, h, -0.02);
+    for (const h of [0.84, 1.165, 1.48]) BL(g, N, l, 0.012, 0.26, 0, h, -0.02);
     // les sweats pliés : un pavé arrondi, mou (RoundedBox), le devant imprimé, et le pli du dessus, plus étroit, qui
     // retombe un peu de travers — sans lui, deux valises blanches
+    // (RELECTURE DU 13/10 : deux boîtes à couvercle, raides, où la photo montre du TISSU posé — un seul volume mou par
+    // sweat : plus large en bas qu'en haut, le dessus bombé, les flancs qui ondulent, le devant qui déborde un peu des
+    // montants — 0,37 m en bas ; plus de « pli du dessus » en couvercle : le repli est dans le dessin)
     const sw = (imprime, h0, h1) => {
-      const m = [new THREE.MeshStandardMaterial({ color: imprime ? 0xe4e4e6 : 0xeeedea, roughness: 0.95 }), new THREE.MeshStandardMaterial({ map: texSweat(imprime), roughness: 0.95 })];
-      const hb = (h1 - h0) * 0.78, b = new THREE.Mesh(new RoundedBoxGeometry(0.39, hb, 0.27, 3, 0.06), [m[0], m[0], m[0], m[0], m[1], m[0]]);
-      b.position.set(0, h0 + hb / 2, -0.015); b.rotation.z = imprime ? 0.012 : -0.02; b.castShadow = true; g.add(b);
-      const p = new THREE.Mesh(new RoundedBoxGeometry(0.33, (h1 - h0) * 0.3, 0.24, 3, 0.03), m[0]);
-      p.position.set(imprime ? -0.015 : 0.02, h1 - (h1 - h0) * 0.15, -0.025); p.rotation.set(0.04, imprime ? -0.06 : 0.08, imprime ? -0.03 : 0.04); p.castShadow = true; g.add(p);
+      const m = [new THREE.MeshStandardMaterial({ color: imprime ? 0xe4e4e6 : 0xeeedea, roughness: 0.95 }), new THREE.MeshStandardMaterial({ map: texSweat(imprime, 0.36 / (h1 - h0)), roughness: 0.95 })];
+      const hb = h1 - h0, geo = new RoundedBoxGeometry(0.36, hb, 0.27, 5, 0.085), P = geo.attributes.position, s = imprime ? 1.7 : 0;
+      for (let i = 0; i < P.count; i++) {
+        const x = P.getX(i), y = P.getY(i), z = P.getZ(i), t = y / hb + 0.5;          // (t : 0 en bas, 1 en haut)
+        P.setXYZ(i, x * (1.04 - 0.14 * t) + 0.007 * Math.sin(y * 38 + z * 21 + s), y + 0.012 * t * Math.cos(x * 17 + s) - 0.01 * (1 - t) * Math.abs(Math.sin(x * 9 + s)), z * (1 - 0.12 * t) + 0.006 * Math.sin(x * 26 + y * 30 + s));
+      }
+      geo.computeVertexNormals();
+      const b = new THREE.Mesh(geo, [m[0], m[0], m[0], m[0], m[1], m[0]]);
+      b.position.set(imprime ? -0.006 : 0.008, h0 + hb / 2, -0.015); b.rotation.z = imprime ? 0.014 : -0.022; b.castShadow = true; g.add(b);
     };
-    sw(false, 1.405, 1.63); sw(true, 1.155, 1.4);
-    const a = PL(g, new THREE.MeshStandardMaterial({ map: texAffichette(), roughness: 0.6 }), 0.47, 0.31, 0, 0.975, 0.115);
+    sw(false, 1.485, 1.71); sw(true, 1.17, 1.475);
+    // (relecture du 13/10, à la règle : x 38-110, y 252-297 de r04 — 0,47 m de large, son milieu à 1,045 ; à 1,0 et 0,50 m,
+    // elle tombait 6 px trop bas et dépassait de 6 px à droite)
+    const a = PL(g, new THREE.MeshStandardMaterial({ map: texAffichette(), roughness: 0.6 }), 0.47, 0.32, 0, 1.045, 0.115);
     a.rotation.x = -0.05;
-    C.ajouterBoiteOrientee(P.x, -P.y, 0.21, 0.14, 3 * Math.PI / 4, { y1: 1.65 });
+    C.ajouterBoiteOrientee(P.x, -P.y, 0.21, 0.14, 3 * Math.PI / 4, { y1: 1.74 });
   }
 
   // =====================================================================
@@ -806,9 +1523,11 @@ export function poserHall(ch) {
   C.ajouterBoite(17.04, -7.46, 17.46, -6.9, { y1: 1.35 });
   // LE MEUBLE BAS NOIR contre le mur nord, jusqu'au local (r04, au bord gauche : 1,0 m de haut, une petite étiquette
   // blanche) — à la place de la table blanche et de la chaise de hêtre de 2021, sous les étiquettes ocre
-  B(17.55, 6.98, LOC.x0, 7.48, 0, 1.0, H.meubleNoir);
-  B(18.42, 6.976, 18.54, 6.98, 0.82, 0.86, M.store, { ombre: false });
-  C.ajouterBoite(17.55, -7.48, LOC.x0, -6.98, { y1: 1.0 });
+  // (relecture du 13/10, à la règle : son bout est tombe en x 38 de r04, et non 62 — il s'arrête en x 18,5, à 0,3 m du
+  // local, dont on voit la porte jusqu'au sol entre lui et le portant ; son étiquette en (20 ; 283) : x 18,29, à 0,91 m)
+  B(17.55, 6.98, 18.5, 7.48, 0, 1.0, H.meubleNoir);
+  B(18.25, 6.976, 18.33, 6.98, 0.88, 0.94, M.store, { ombre: false });
+  C.ajouterBoite(17.55, -7.48, 18.5, -6.98, { y1: 1.0 });
   // LES ÉTIQUETTES OCRE sur le mur blanc (VO q_0027-0028, mesurées contre le semi-fixe de la porte nord : la grande de x
   // 17,54 à 18,38, de 1,98 à 2,36 m ; la petite de 17,76 à 18,16, de 1,50 à 1,88 m)
   ch.panneau(new THREE.MeshStandardMaterial({ map: texEtiquette('INFORMATIQUE', 0.84, 0.38), roughness: 0.6 }), 0.84, 0.38, 17.96, Y_MUR - 0.004, 2.17, 'S');
@@ -822,7 +1541,7 @@ export function poserHall(ch) {
   // qu'une dizaine de centimètres — l'arête, rétroprojetée à 2,50 m, tombe en y 5,28) : de la face est de la pile au
   // local, 10 cm sous les plateaux
   {
-    const r = B(14.675, 5.28, LOC.x0, 5.53, 2.5, H_PLAF, M.platre, { ombre: false, collision: true });
+    const r = B(14.675, 5.28, LOC.x0, 5.53, 2.5, H_PLAF, H.retombee, { ombre: false, collision: true });
     r.userData.horsAOSol = true;
   }
   // dans l'axe de la porte 6, au pas de 0,30 m, de la porte jusqu'à y ≈ 4,1 (les spots ronds autour : js/carte_ecole.js) ;
@@ -835,4 +1554,5 @@ export function poserHall(ch) {
     const l = B(x - 0.0175, 0.52, x + 0.0175, 4.08, H_PLAF - 0.008, H_PLAF - 0.006, H.ligne, { ombre: false });
     p.userData.horsAOSol = l.userData.horsAOSol = true; l.receiveShadow = false;
   }
+  return { maj: miroir.maj };
 }
