@@ -522,6 +522,11 @@ function matieresEst() {
   // (13/10, photo 24 : le tapis de la niche est anthracite, 0,22 du mur — le jeu 0,42, gris moyen à pastilles voyantes)
   P.tapis.color.setScalar(0.5);
   P.vinyle.lightMapIntensity = 0.8;
+  // (13/10, photos 27 et 28 rejouées à leur pose : le vinyle du palier du 1er est brun sombre, 0,37 du mur du panneau
+  // (R/V/B 0,40/0,35/0,28) — le jeu 0,6, taupe clair ; le vinyle des bandes du 2e, posé contre celui de
+  // js/ecole_etage2.js, garde sa teinte)
+  P.vinyle2 = P.vinyle.clone(); P.vinyle2.name = 'vinyle moucheté (bandes du 2e)';
+  P.vinyle.color.setRGB(0.36, 0.32, 0.26);
   return P;
 }
 const matPanneau = (tex, rugo = 0.45) => new THREE.MeshStandardMaterial({ map: tex, roughness: rugo });
@@ -1285,7 +1290,7 @@ export function poserEst(ch, { RECT }) {
     if (M.sol.aoMap && M.sol.aoMap !== ao) { ao = M.sol.aoMap; X.lino.aoMap = ao; X.lino.aoMapIntensity = M.sol.aoMapIntensity; X.lino.needsUpdate = true; }
     const S = _matSolEtage;
     if (S && (X.vinyle.lightMap !== S.lightMap || X.vinyle.aoMap !== S.aoMap)) {
-      X.vinyle.lightMap = S.lightMap; X.vinyle.aoMap = S.aoMap; X.vinyle.aoMapIntensity = S.aoMapIntensity; X.vinyle.needsUpdate = true;
+      for (const v of [X.vinyle, X.vinyle2]) { v.lightMap = S.lightMap; v.aoMap = S.aoMap; v.aoMapIntensity = S.aoMapIntensity; v.needsUpdate = true; }
     }
   };
   return { zones, zonesHaut, sols: [X.lino], maj };
@@ -1582,7 +1587,7 @@ export function poserCageHaute(ch, { groupe }) {
   // volées (xD) — l'arrivée de la volée 4, le pied de la volée 5 ; la dalle, le vinyle, le plancher
   B(ch, G, E.x0 - 0.01, E.bS[0], E.xD, E.bN[1], N2 - 0.2, N2 - 0.005, X.beton, { ombre: false });
   if (_R1) {
-    const vin = new THREE.Mesh(geoDalles([[E.x0 - 0.01, E.bS[0], E.xD, E.bS[1]], [E.x0 - 0.01, E.bN[0], E.xD, E.bN[1]]], N2, _R1), X.vinyle);
+    const vin = new THREE.Mesh(geoDalles([[E.x0 - 0.01, E.bS[0], E.xD, E.bS[1]], [E.x0 - 0.01, E.bN[0], E.xD, E.bN[1]]], N2, _R1), X.vinyle2);
     vin.receiveShadow = true; vin.castShadow = false; vin.name = 'vinyle du palier du 2e (bandes des volées)'; G.add(vin);
   }
   C.sol(E.x0 - 0.02, -E.bS[0], E.xD, -E.bN[1], N2);
