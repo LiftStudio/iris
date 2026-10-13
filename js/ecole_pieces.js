@@ -651,38 +651,46 @@ function texPlaqueSalle(nom = 'David Clark', code = 'Si 0.2') {
 }
 // L'AFFICHE DES PORTES DES TOILETTES (photo 23) : « DES PROTECTIONS HYGIÉNIQUES GRATUITES / À VOTRE DISPOSITION » sur
 // un bandeau orange, une illustration (deux étudiants devant le distributeur, dans un couloir clair), le logo iris en bas
+// (13/10, relecture C2 — la photo 23 agrandie : le bandeau est ORANGE, pas jaune, et prend tout le tiers haut, la petite
+// ligne comprise ; l'illustration descend jusqu'au pied sur un fond GRÈGE — la fenêtre à gauche, la plante, le
+// distributeur blanc à deux ovales —, les deux étudiants en grand : elle, carré brun, pull terre cuite, sac à dos et
+// livre ; lui, peau brune, tee-shirt mauve gris, le bras tendu ; au pied, un filet orange et le pavé noir « iris ».)
 function texAfficheProtections() {
   return canvasTex(256, 362, (g, w, h) => {
-    g.fillStyle = '#fbfaf6'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#ffc148'; g.fillRect(12, 12, w - 24, 112);
+    g.fillStyle = '#f6f3ec'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#f0a03a'; g.fillRect(12, 12, w - 24, 124);
     g.fillStyle = '#3b2a18'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
     g.font = '800 23px "Segoe UI", Arial, sans-serif';
-    g.fillText('DES PROTECTIONS', w / 2, 42); g.fillText('HYGIÉNIQUES', w / 2, 68); g.fillText('GRATUITES', w / 2, 94);
+    g.fillText('DES PROTECTIONS', w / 2, 44); g.fillText('HYGIÉNIQUES', w / 2, 70); g.fillText('GRATUITES', w / 2, 96);
     g.font = '700 11px "Segoe UI", Arial, sans-serif'; g.fillText('À VOTRE DISPOSITION', w / 2, 113);
-    g.fillStyle = '#7a736c'; g.font = '500 8px "Segoe UI", Arial, sans-serif'; g.fillText('Un geste de respect, d’égalité et de bien-être', w / 2, 137);
-    // l'illustration : le couloir, sa fenêtre, le distributeur au mur
-    g.fillStyle = '#e4e9ee'; g.fillRect(14, 146, w - 28, 176);
-    g.fillStyle = '#cdd8e2'; g.fillRect(24, 156, 70, 90); g.strokeStyle = '#f5f7f9'; g.lineWidth = 3; g.strokeRect(24, 156, 70, 90); g.beginPath(); g.moveTo(59, 156); g.lineTo(59, 246); g.stroke();
-    g.fillStyle = '#d3d7db'; g.fillRect(14, 292, w - 28, 30);
-    g.fillStyle = '#f4f4f2'; g.fillRect(186, 176, 44, 58); g.strokeStyle = '#9aa2aa'; g.lineWidth = 2; g.strokeRect(186, 176, 44, 58);
-    g.fillStyle = '#2c2c30'; for (const x of [198, 218]) { g.beginPath(); g.arc(x, 196, 7, 0, 7); g.fill(); }
-    // l'étudiante (cheveux bruns, haut orange, sac) et l'étudiant (chemise mauve) qui appuie sur le distributeur
+    g.fillStyle = '#6a4416'; g.font = '500 7px "Segoe UI", Arial, sans-serif'; g.fillText('Un geste de respect, d’égalité et de bien-être', w / 2, 128);
+    // l'illustration : le couloir grège, sa fenêtre à petits carreaux, la plante, le distributeur au mur
+    g.fillStyle = '#b3a8a1'; g.fillRect(12, 136, w - 24, 190);
+    g.fillStyle = '#c6beb7'; g.fillRect(128, 136, w - 140, 150);
+    g.fillStyle = '#dcdad5'; g.fillRect(20, 146, 74, 104); g.strokeStyle = '#b3a8a1'; g.lineWidth = 3;
+    for (const x of [45, 70]) { g.beginPath(); g.moveTo(x, 146); g.lineTo(x, 250); g.stroke(); }
+    for (const y of [180, 215]) { g.beginPath(); g.moveTo(20, y); g.lineTo(94, y); g.stroke(); }
+    g.fillStyle = '#7d877c'; for (const [x, y, a] of [[26, 268, -0.6], [38, 258, -0.2], [22, 284, -1.0], [42, 276, 0.3]]) { g.beginPath(); g.ellipse(x, y, 6, 15, a, 0, 7); g.fill(); }
+    g.fillStyle = '#f3f1ec'; g.fillRect(184, 170, 50, 70); g.strokeStyle = '#8f8b88'; g.lineWidth = 2; g.strokeRect(184, 170, 50, 70);
+    g.fillStyle = '#26262b'; for (const x of [198, 220]) { g.beginPath(); g.ellipse(x, 192, 7, 10, 0, 0, 7); g.fill(); } g.fillRect(194, 216, 30, 4);
+    // l'étudiante (carré brun, pull terre cuite, sac à dos, livre) et l'étudiant (tee-shirt mauve gris) qui appuie
+    g.fillStyle = '#343a52'; g.beginPath(); g.ellipse(56, 262, 13, 26, 0.15, 0, 7); g.fill();
     const corps = (x, haut, bas, peau, cheveux, long) => {
-      g.fillStyle = bas; g.fillRect(x - 15, 262, 30, 50);
-      g.fillStyle = haut; g.beginPath(); g.moveTo(x - 20, 266); g.lineTo(x - 17, 222); g.quadraticCurveTo(x, 210, x + 17, 222); g.lineTo(x + 20, 266); g.closePath(); g.fill();
-      g.fillStyle = peau; g.beginPath(); g.ellipse(x, 196, 12, 15, 0, 0, 7); g.fill(); g.fillRect(x - 4, 208, 8, 8);
-      g.fillStyle = cheveux; g.beginPath(); g.ellipse(x, 186, 13, 8, 0, Math.PI, 0); g.fill();
-      if (long) { g.fillRect(x - 14, 186, 6, 36); g.fillRect(x + 8, 186, 6, 34); }
+      g.fillStyle = bas; g.fillRect(x - 19, 290, 38, 36);
+      g.fillStyle = haut; g.beginPath(); g.moveTo(x - 25, 296); g.lineTo(x - 22, 234); g.quadraticCurveTo(x, 218, x + 22, 234); g.lineTo(x + 25, 296); g.closePath(); g.fill();
+      g.fillStyle = peau; g.beginPath(); g.ellipse(x, 198, 14, 18, 0, 0, 7); g.fill(); g.fillRect(x - 5, 212, 10, 12);
+      g.fillStyle = cheveux; g.beginPath(); g.ellipse(x, 187, 16, 11, 0, Math.PI, 0); g.fill();
+      if (long) { g.fillRect(x - 17, 186, 8, 34); g.fillRect(x + 9, 186, 8, 32); }
     };
-    corps(88, '#e9873a', '#3c4a63', '#e8b48f', '#4a2d1c', true);
-    g.fillStyle = '#b36b2c'; g.fillRect(64, 228, 12, 30);
-    corps(146, '#a79bc8', '#2e3445', '#c98d68', '#22160f', false);
-    g.strokeStyle = '#a79bc8'; g.lineWidth = 8; g.lineCap = 'round'; g.beginPath(); g.moveTo(160, 228); g.lineTo(190, 204); g.stroke();
-    // le pied : le logo iris sur son pavé sombre
-    g.fillStyle = '#ffc148'; g.fillRect(12, 330, w - 24, 4);
-    g.fillStyle = '#1d1d1f'; g.fillRect(w / 2 - 26, 336, 52, 20);
-    g.fillStyle = '#ffffff'; g.font = '600 15px "Century Gothic", "Avenir", "Segoe UI", sans-serif'; g.fillText('iris', w / 2, 351);
-    g.fillStyle = '#f08a24'; g.fillRect(w / 2 - 12, 340, 3, 2);
+    corps(88, '#d58863', '#56627b', '#f0c9ad', '#2c2230', true);
+    g.strokeStyle = '#343a52'; g.lineWidth = 5; g.beginPath(); g.moveTo(72, 232); g.lineTo(76, 286); g.stroke();
+    g.fillStyle = '#7a4a3a'; g.fillRect(84, 248, 22, 28);
+    corps(150, '#8f87a2', '#2c2f3a', '#9a6243', '#3a2418', false);
+    g.strokeStyle = '#9a6243'; g.lineWidth = 9; g.lineCap = 'round'; g.beginPath(); g.moveTo(168, 246); g.lineTo(196, 226); g.stroke();
+    // le pied : un filet orange, le logo iris sur son pavé noir
+    g.fillStyle = '#f0a03a'; g.fillRect(12, 326, w - 24, 24);
+    g.fillStyle = '#1d1d1f'; g.fillRect(w / 2 - 24, 329, 48, 18);
+    g.fillStyle = '#ffffff'; g.font = '600 14px "Century Gothic", "Avenir", "Segoe UI", sans-serif'; g.fillText('iris', w / 2, 343);
   }, null, false, 4);
 }
 // LA SECONDE AFFICHE (photo 23) : blanche, de petits personnages et des pictogrammes en bandes, un titre — illisible
@@ -1558,7 +1566,7 @@ let _affichesWC = null;
 function signaletiqueC05(ch, P, yPorte, picto) {
   // (13/10, lot C2 — photo 23 à sa pose refaite, f 1 600 : les deux plaques font 18 x 19 cm, de 1,51 à 1,70 m, leur
   // bord à 5 cm de l'huisserie — centre à 0,66 du milieu d'une porte de 0,93 ; elles faisaient 12 x 16)
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaqueWC(picto), roughness: 0.4 }), C05.xE, yPorte + 0.66, 'W', 0.18, 0.19, 1.605, { ep: 0.005 });
+  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaqueWC(picto), roughness: 0.4 }), C05.xE, yPorte + 0.66, 'W', 0.165, 0.165, 1.605, { ep: 0.005 });   // (relecture C2, photo 23 de près : 16,5 cm de côté, pas 18 x 19)
   if (!_affichesWC) _affichesWC = [texAfficheProtections(), texAffichePersonnages()].map((t) => new THREE.MeshStandardMaterial({ map: t, roughness: 0.75 }));
   const porte = ch.portes.auto.find((q) => Math.abs(q.cx - C05.xM) < 0.01 && Math.abs(q.cz + yPorte) < 0.01);
   const v = porte && porte.vantaux[0];
@@ -1587,7 +1595,9 @@ function toilettesFemmes(ch, P) {
   ch.plafond(WF.x0, WF.y0, WF.x1, WF.y1, 2.5, 'platre');
   faience(ch, P, WF, [['W', yP - dl - 0.05, yP + dl + 0.05]]);
   solGres(ch, WF);
-  ch.boite(C05.xE, yP - dl, WF.x0 + 0.05, yP + dl, 0, 0.005, P.inox, { ombre: false });       // la barre de seuil
+  // (13/10, relecture C2 — photo 23 : pas de barre d'inox devant le vantail, le carrelage du couloir file jusqu'à lui ;
+  // la barre de seuil part de sous le vantail, vers la pièce — 5 cm d'inox brillaient au pied de chaque porte)
+  ch.boite(C05.xM - 0.02, yP - dl, WF.x0 + 0.05, yP + dl, 0, 0.005, P.inox, { ombre: false });       // la barre de seuil
   const yM = (WF.y0 + WF.y1) / 2, bords = [WF.y0 + 0.012, yM, WF.y1 - 0.012];
   cabines(ch, P, 7.4, WF.x1 - 0.012, bords);
   lavabos(ch, P, WF, yP + dl + 0.12, WF.y1 - 0.012, 'wcF', [[yM + 0.155, WF.y1 - 0.167]]);
@@ -1609,7 +1619,7 @@ function toilettesHommes(ch, P) {
   ch.plafond(WH.x0, WH.y0, WH.x1, WH.y1, 2.5, 'platre');
   faience(ch, P, WH, [['W', yP - dl - 0.05, yP + dl + 0.05]]);
   solGres(ch, WH);
-  ch.boite(C05.xE, yP - dl, WH.x0 + 0.05, yP + dl, 0, 0.005, P.inox, { ombre: false });
+  ch.boite(C05.xM - 0.02, yP - dl, WH.x0 + 0.05, yP + dl, 0, 0.005, P.inox, { ombre: false });
   cabines(ch, P, 7.4, WH.x1 - 0.012, [WH.y0 + 0.012, 11.56, 12.69], { fermer: [12.69] });
   lavabos(ch, P, WH, yP + dl + 0.12, 12.92, 'wcH', [[11.715, 12.535]]);
   // les urinoirs (céramique suspendue, chasse chromée) et les écrans de séparation gris
@@ -1683,7 +1693,9 @@ function toilettesPMR(ch, P) {
   // faisait 0,15 x 0,20 et paraissait, au même point de vue, deux fois plus haute que sur la photo
   // (13/10, lot C2 — la pose refaite, f 650 : y 10,56-10,74, de 1,515 à 1,68 m — la même plaque de 18 x 19 que celles
   // du C05, son bord à 6 cm du vantail)
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaqueWC('pmr'), roughness: 0.4 }), 11.7, yP - C01.lP / 2 - 0.15, 'E', 0.18, 0.19, 1.6, { ep: 0.005 });
+  // (13/10, relecture C2 — photo 01 rejouée à sa pose : la plaque y fait les trois quarts de la hauteur de celle du jeu
+  // pour la même largeur à peu près, et leurs pieds coïncident — 16,5 cm de côté, comme celles du C05, et non 18 x 19)
+  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaqueWC('pmr'), roughness: 0.4 }), 11.7, yP - C01.lP / 2 - 0.15, 'E', 0.165, 0.165, 1.5875, { ep: 0.005 });
 }
 // UN MIROIR contre un mur, regardant vers `face` : cadre d'aluminium, glace de w x h centrée à la hauteur `h0`.
 //   - le VRAI miroir (`reel`, sur PC) : un miroir planaire (Reflector de three, comme le reflet du sol mouillé de

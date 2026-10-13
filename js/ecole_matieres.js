@@ -480,7 +480,7 @@ export function geoReflet(l, h, decalage) {
 function texDepoliBleu() {
   const t = canvasTex(4, 128, (g, w, h) => {
     const d = g.createLinearGradient(0, 0, 0, h);
-    d.addColorStop(0, '#74879b'); d.addColorStop(0.25, '#566b84'); d.addColorStop(0.55, '#40587a'); d.addColorStop(1, '#394859');
+    d.addColorStop(0, '#7d8990'); d.addColorStop(0.2, '#7f91a2'); d.addColorStop(0.42, '#566274'); d.addColorStop(0.7, '#4c5564'); d.addColorStop(1, '#42454b');
     g.fillStyle = d; g.fillRect(0, 0, w, h);
   }, [1, 1 / 1.89], false, 1);
   t.offset.set(0, 0.5);
@@ -683,7 +683,9 @@ export function materiauxEcole() {
   // (13/10, lot C2 — le cadre de bois des fentes vitrées, photo 23 de près : un bois ROUX moyen, 1,25 fois le rouge du
   // vantail gris sur sa face éclairée ; #4A2E1C le rendait presque noir, 0,46 fois ; pas plus rouge que #6A4A34 : sous
   // les hublots chauds, #7C4A2A virait à l'orange)
-  M.noyer = std({ color: 0x6a4a34, roughness: 0.5 });
+  // (13/10, relecture C2 — aux mêmes points que la photo 23 : 103/72/52 et 114/78/47 ; #6A4A34 sortait à 122/65/32, un
+  // orange vif — le bleu s'effondre sous les hublots chauds. Un brun plus gris le rattrape.)
+  M.noyer = std({ color: 0x73594a, roughness: 0.5 });
   M.inox = std({ color: 0xb9bcbe, roughness: 0.28, metalness: 0.9 });
   M.ferme = std({ color: 0x9ea2a5, roughness: 0.4, metalness: 0.6 });
   M.alu = std({ color: 0xf0f0ee, roughness: 0.38, metalness: 0.2 }); M.alu.name = 'aluminium laqué blanc';
@@ -711,11 +713,17 @@ export function materiauxEcole() {
   // (13/10, lot C2 — photo 05, la porte fermée vue du hall : le verre dépoli n'est pas un bleu franc et lumineux, c'est
   // un gris-bleu SOMBRE — la pièce derrière lui est sombre —, plus clair en haut, 104/113/119, qu'au milieu, 63/81/101,
   // et en bas, 56/66/75 ; l'imposte, plus sombre encore et sans bleu : js/carte_ecole.js construirePorteFond)
-  M.depoliBleu = std({ map: texDepoliBleu(), roughness: 0.45 });
+  // (13/10, relecture C2 — les photos 05 et 23 rejouées, la porte mesurée aux mêmes points : le jeu la rendait 1,7 fois
+  // trop SOMBRE et trop bleue — 66/78/89 en haut, 40/55/73 au milieu, quand la photo 05 a 112/128/145, puis 113/132/152,
+  // 65/80/98 et 55/62/70 en bas ; le bout du couloir est peu éclairé, et la salle derrière, elle, l'est : ses luminaires
+  // à grille font luire le dépoli. La texture est reprise sur ces valeurs — moins bleue en bas — et se rétro-éclaire.)
+  { const t = texDepoliBleu(); M.depoliBleu = std({ map: t, roughness: 0.45, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.42 }); M.depoliBleu.name = 'verre dépoli bleu (porte de la Si 0.2)'; }
   // les vitres de la façade vues de l'intérieur : le jour couvert derrière, un voile clair
   M.vitreJour = std({ color: 0xdeeaf6, roughness: 0.1, transparent: true, opacity: 0.22, depthWrite: false, envMapIntensity: 1.2, side: THREE.DoubleSide });
   // la fente vitrée des portes grises : un verre sombre (on ne voit qu'un reflet)
-  M.vitreFente = std({ color: 0x3a4246, roughness: 0.08, metalness: 0.4 });
+  // (13/10, relecture C2 — photo 23, la fente de la porte des femmes : un gris ardoise un peu bleu, 70/74/73, mat. En
+  // miroir sombre — métal 0,4 —, elle ne renvoyait que le plafond chaud : 44/35/18, un brun presque noir.)
+  M.vitreFente = std({ color: 0x3f4c55, roughness: 0.22, metalness: 0.05, emissive: 0x10161a }); M.vitreFente.name = 'verre sombre des fentes';
   M.store = std({ color: 0xeeeeea, roughness: 0.7 });
 
   // ---- l'escalier ----
