@@ -447,7 +447,9 @@ function matieresEst() {
     // (lot H, 11/10 : la photo 25 rejouée au même point de vue — girons gris-noir #2e261b à peine mouchetés, 0,28 du
     // mur nord ; ceux du jeu sortaient bruns, 0,41, et poivre et sel : le fond plus sombre et neutre, les mouchetures
     // fines et basses)
-    giron: std({ map: texMouchete({ fond: [30, 28, 25], taches: [[[44, 42, 39], 0.5], [[20, 19, 18], 0.6]], n: 5000, tuile: 0.5, w: 256, graineN: 17, nuee: 4 }), roughness: 0.66 }, 'giron moucheté'),
+    // (14/10, photos 25 et 26 rejouées à leur pose : les girons rendent 0,20 à 0,26 du mur voisin (0,37 pour le premier, sous le
+    // hublot du vestibule) — le jeu 0,09 à 0,17, presque noirs : le fond une fois et demie plus clair)
+    giron: std({ map: texMouchete({ fond: [45, 42, 37], taches: [[[62, 59, 54], 0.5], [[31, 29, 27], 0.6]], n: 5000, tuile: 0.5, w: 256, graineN: 17, nuee: 4 }), roughness: 0.66 }, 'giron moucheté'),
     // (le béton peint des volées et des paliers : vu d'en dessous, il ne reçoit que le rebond — sur la photo 25, la
     // sous-face au-dessus de la volée 1 est presque aussi claire que les murs : un léger émissif, comme les plafonds)
     // (relecture du lot H, 11/10, photo 25 rejouée : la sous-face de la volée 3 et du palier à 5,05 m, juste au-dessus
@@ -473,7 +475,8 @@ function matieresEst() {
     taupe: std({ color: 0x847f78, roughness: 0.45 }, 'vantail gris taupe'),
     // (13/10, photos 24 et 26 : les chants des vantaux sont de BOIS brun — celui du vantail du hall, face à l'appareil, et
     // celui du petit vantail du vestibule, au bord gauche de la 24 et à droite sur la 26)
-    chant: std({ color: 0x5c3d26, roughness: 0.55 }, 'chant de bois des vantaux'),
+    // (14/10, photo 26 : au chant libre du petit vantail, la bande est rosée, claire — #5c3d26 la faisait acajou)
+    chant: std({ color: 0x7a5840, roughness: 0.55 }, 'chant de bois des vantaux'),
     // (lot H, 11/10 : le petit vantail du vestibule, gris moyen — photo 26, 0,56 du mur ; repeint depuis la VO, où il
     // était crème) ; le tirant en U inox BROSSÉ du grand vantail (photo 24 : clair, il prend la lumière ; l'inox poli
     // de js/ecole_portes.js sortait noir dans la carte d'environnement) ; le verre clair de son oculus
@@ -1352,7 +1355,7 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   // palier en y 12,04-12,07, du fond jusqu'au chant gris (11,65 dans le jeu : 40 cm trop au sud — à l'image, sa plinthe
   // passait 80 px trop bas ; le rapport des deux têtes de plinthe, 630 px pour 613, ne dépend pas de la hauteur de l'œil).
   // Le palier gagne 40 cm vers le nord ; la gaine derrière, 33 cm au lieu de 73.)
-  const XK = 13.34, YK = 10.825, YRN = 12.125;
+  const XK = 13.34, YK = 10.825, YRN = 12.125, XJ = 15.13;
   // LE CÔTÉ OUEST DU PALIER 0,59 m PLUS PRÈS DE L'ESCALIER (13/10). Photo 28 : l'affiche A4 du mur du panneau met
   // l'appareil à 2,1-2,25 m de lui (2,17 ; l'œil à 0,84 m du palier) ; de là, le chant gris de l'échiffre est à 0,94 m de
   // l'appareil — 1,23 m du mur. Photo 27, recalée sur six repères du mur (réglette, panneau, poussoir, prise, pied : 5 px,
@@ -1381,7 +1384,7 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   // le pied de la volée 3)
   _R1 = R1;
   const sol = new THREE.Mesh(geoDalles([[13.55, 6.975, E.x0, 8.6], [14.2 + DXP, 8.6, E.x0, YK + 0.075], [XK2, YK + 0.075, E.x0, YRN], [E.x0, 6.975, E.xM, 9.0],
-    [E.x0, 9.0, E.xD, E.bS[1]], [E.x0, E.bN[0], E.xD, YRN], [E.xD, 9.0, E.xD + 0.27, E.bS[0]]], N1, R1), X.vinyle);
+    [E.x0, 9.0, E.xD, E.bS[1]], [E.x0, E.bN[0], E.xD, YRN], [E.xD, 9.0, E.xD + 0.27, E.bS[0]], [XJ, YRN, E.xD, E.bN[1]]], N1, R1), X.vinyle);
   sol.receiveShadow = true; sol.castShadow = false; sol.name = 'vinyle du palier est'; sol.userData.solEtage = true;
   G.add(sol);
 
@@ -1430,19 +1433,24 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   mur(ch, G, { de: [XK2, YK + 0.075], a: [XK2, YRN - 0.075], ep: 0.12, base: N1, h: DALLE2, mats: { E: BP, W: B0 }, plinthes: ['E'] });
   // (14/10, relecture de la photo 28 : pas de pilastre de 15 cm au bout du renfoncement — le mur nord file droit, et à
   // 0,3 m du nu du mur du panneau, en x 14,5, il AVANCE de 4 cm jusqu'au chant gris : une arête verticale et sa plinthe)
-  B(ch, G, 14.5, YRN - 0.115, 15.06, YRN - 0.075, N1, H1, BP, { ombre: false });
-  B(ch, G, 14.49, YRN - 0.125, 15.07, YRN - 0.115, N1, N1 + 0.08, X.plinthe, { ombre: false });
-  C.ajouterBoite(14.5, -(YRN - 0.115), 15.06, -(YRN - 0.075), { y0: N1, y1: H1 });
+  B(ch, G, 14.5, YRN - 0.115, XJ, YRN - 0.075, N1, H1, BP, { ombre: false });
+  B(ch, G, 14.49, YRN - 0.125, XJ + 0.01, YRN - 0.115, N1, N1 + 0.08, X.plinthe, { ombre: false });
+  C.ajouterBoite(14.5, -(YRN - 0.115), XJ, -(YRN - 0.075), { y0: N1, y1: H1 });
   // LE MUR NORD DU RENFONCEMENT ET DU PALIER, jusqu'à la volée 3, et la porte de son LOCAL (V2 : derrière, la gaine
   // fermée jusqu'au mur nord de la cage, y 12,45 — et au-delà, 1,4 m de bâtiment, le fond IGN en y 13,8 : la « salle de
   // cours S 1.6 » du panneau d'étage ne peut pas y être ; la porte, celle d'un local, perd sa plaque — plan_v2.md § 1.4,
   // rdc_est.md § 8. Non vue : derrière le chant gris sur la photo 28) ; la joue de la gaine au droit de la volée 3
   // (13/10, relecture de la photo 28 : depuis que le côté ouest du palier a avancé, la porte — en x 14,73-15,68 — sortait
   // de derrière le chant gris, son huisserie et son ferme-porte à gauche de lui ; la photo n'y montre que le mur nu et sa
-  // plinthe, jusqu'au chant : la porte en x 15,10-16,05, cachée comme elle l'était)
-  mur(ch, G, { de: [XK - 0.06, YRN], a: [E.xD, YRN], base: N1, h: DALLE2, mats: { S: BP, N: B0 }, plinthes: ['S'], ouvertures: [{ c: 15.575, l: 0.95, h: N1 + 2.04 }] });
-  ch.porte('x', YRN, 15.575, { l: 0.95, h: 2.04, base: N1, modele: 'grise', etat: 'fermee', cote: 'N', notices: 0, nom: 'local (palier est)' });
-  mur(ch, G, { de: [E.xD - 0.05, YRN + 0.075], a: [E.xD - 0.05, E.yN], ep: 0.1, base: N1, h: H1, mats: B0 });
+  // plinthe, jusqu'au chant)
+  // (14/10 : le mur nord, relevé en y 12,05, n'est vu que jusqu'en x 15,03 — derrière le chant gris, rien. La volée 3, elle,
+  // fait 1,65 m jusqu'au mur nord de la cage (y 12,45, photo 25 pour la volée 1) : le mur nord du palier s'arrête en XJ, à
+  // 1,15 m du pied de la volée, et le palier s'élargit jusqu'au mur de la cage — la volée débouche de toute sa largeur.
+  // Avec la joue de gaine au ras de la 1re marche, Haythem, descendant le long du mur nord, butait dedans. La porte du
+  // local, imaginée et jamais vue, n'a plus de mur où se poser : la gaine, close, n'est plus que derrière le mur)
+  mur(ch, G, { de: [XK - 0.06, YRN], a: [XJ, YRN], base: N1, h: DALLE2, mats: { S: BP, N: B0 }, plinthes: ['S'] });
+  mur(ch, G, { de: [XJ - 0.05, YRN + 0.075], a: [XJ - 0.05, E.yN - 0.075], ep: 0.1, base: N1, h: H1, mats: { E: BP, W: B0 }, plinthes: ['E'] });
+  B(ch, G, XJ, E.bN[1] - 0.015, E.xD, E.bN[1], N1, N1 + 0.08, X.plinthe, { ombre: false });
   // le mur nord de la cage (au-dessus des volées 1 et 3, il monte jusqu'au plafond de la cage ; à l'ouest, le fond de la
   // gaine) ; le mur sud de la cage, côté bande
   mur(ch, G, { de: [XK, E.yN], a: [E.x0, E.yN], base: N1, h: H_CAGE, mats: B0 });
@@ -1475,12 +1483,13 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   ch.plafond(XD1, 7.035, E.x0, 8.59, H1, 'platre').material = platreP;
   ch.plafond(14.2 + DXP, 8.59, E.x0, YK + 0.075, H1, 'platre').material = platreP;
   ch.plafond(14.2 + DXP, YK + 0.075, E.x0, YRN - 0.075, H1, 'platre').material = platreP;
+  ch.plafond(XJ, YRN - 0.075, E.xD, E.bN[1], H1, 'platre').material = platreP;      // (14/10 : la bande nord, jusqu'au mur de la cage)
   ch.plafond(XK2 + 0.06, YK + 0.075, 14.2 + DXP, YRN - 0.075, H1 - 0.06, 'platre').material = platreP;
   ch.panneau(BP, YRN - YK - 0.15, 0.06, 14.2 + DXP, (YK + YRN) / 2, H1 - 0.03, 'E');
   ch.plafond(E.x0, 7.035, E.xM, 9.0, H1, 'platre');
   // (13/10 : et au-dessus des deux bandes de 23 cm, jusqu'au départ des volées)
   ch.plafond(E.x0, 9.0, E.xD, E.bS[1], H1, 'platre');
-  ch.plafond(E.x0, E.bN[0], E.xD, YRN - 0.075, H1, 'platre');
+  ch.plafond(E.x0, E.bN[0], E.xD, YRN - 0.075, H1, 'platre').material = platreP;
   // au-dessus du palier, la cage se ferme : le mur de 6,0 m au plancher du 2e (H_CAGE) au droit des volées 1 et 3
   mur(ch, G, { de: [E.xD - 0.05, E.yE], a: [E.xD - 0.05, E.yN], ep: 0.1, base: H1, h: H_CAGE, mats: B0 });
   // (la dalle du 1er au-dessus de la volée 1 est posée par js/ecole_etage1.js : C.sol, la caméra)
