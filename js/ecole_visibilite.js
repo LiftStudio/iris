@@ -79,7 +79,8 @@ export const ZONES = [
   // (13/10, lot C2 — le C05 refait sur la photo 23, js/carte_ecole.js `C05` : son mur est sur la ligne 5,995, son mur du
   // fond sur la ligne 12,785)
   ['r0wc', [b(5.995, 7.9, 8.95, 14.0, R0)]], ['r0lt', [b(8.95, 7.9, 11.6, 14.45, R0)]],
-  ['r0si', [b(4.75, 12.785, 5.995, 14.2, R0), b(XO, 14.2, 8.95, 21.3, R0)]], ['r0sv', [b(XO, 0, 1.62, 4.85, R0)]],
+  // (r06, 13/10 : la salle David Clark va jusqu'au fond du bâtiment, y 23,7)
+  ['r0si', [b(4.75, 12.785, 5.995, 14.2, R0), b(XO, 14.2, 8.95, 23.85, R0)]], ['r0sv', [b(XO, 0, 1.62, 4.85, R0)]],
   // le -1 (ce qui n'est pas dans les deux groupes du sous-sol : la dalle-boîte, la cage est)
   ['ss', [b(XO, YF, XE, YT, SS)]],
   // le rez-de-chaussée, sa façade comprise

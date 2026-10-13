@@ -1346,7 +1346,7 @@ export function construireCarte(scene, renderer = null) {
     [1.6, Y_ESC, ESC.x1e, 14.15, 'ns', 1.75, 0], [ESC.x1e, Y_ESC, C05.xM, 14.15, 'ns', 4.558, 0],
     [5.3, 7.875, C05.xM, Y_ESC, 'ns', 1.75, 0], [C05.xM, 7.875, 11.7, 14.15, 'ns', 1.75, 0], [8.925, 14.15, 11.7, 14.55, 'ns', 1.75, 0],
     [11.7, 7.875, 12.497, 14.55, 'ns', 12.179, 0.279], [12.497, 7.875, 13.5, 14.55, 'ns', 12.497, 0.279],
-    [0.175, 14.15, 8.925, 21.075, 'ns', 1.75, 0],
+    // (r06, 13/10 : la salle David Clark a sa moquette, js/ecole_pieces.js — le carrelage s'arrête à son seuil)
   ];
   const sol = new THREE.Mesh(geoSol(RN), M.sol); sol.receiveShadow = true; sol.name = 'carrelage'; nePasFusionner(sol);
   scene.add(sol);
@@ -1623,9 +1623,10 @@ export function construireCarte(scene, renderer = null) {
   for (const x of [17.33, 18.98]) ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.4, sx: x, sz: -0.4, ox: x, oz: 0.5, zone: 'hall', reel: false, cuireForce: 0.55 });
   for (const x of [5.78, 7.43, 9.08]) ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.4, sx: x, sz: -0.4, ox: x, oz: 0.5, zone: 'si01', reel: false, cuireForce: 0.8 });
   for (const x of [10.73, 12.38]) ch.lampes.push({ type: 'jour', x, z: 0.9, h: 2.4, sx: x, sz: -0.6, ox: x, oz: 0.5, zone: 'bureauB', reel: false, cuireForce: 0.5 });
-  // (le jour des fenêtres de la salle David Clark, à travers la porte bleue : une nappe froide au bout du C05 — V2,
-  // 11/10 : la source dans l'entrée de la salle, la nappe au pied de la porte, côté C05)
-  ch.lampes.push({ type: 'jour', x: 5.156, z: -13.6, h: 2.4, sx: 5.156, sz: -(C05.yFond - 0.3), ox: 5.156, oz: -(C05.yFond - 0.1), zone: 'c05', reel: false, cuireForce: 0.3 });
+  // (la lumière de la salle David Clark, à travers la porte bleue : une nappe au bout du C05 — V2, 11/10 : la source
+  // dans l'entrée de la salle, la nappe au pied de la porte, côté C05 ; r06, 13/10 : la salle n'a pas de fenêtre, c'est
+  // le blanc de ses luminaires à grille)
+  ch.lampes.push({ type: 'jour', x: 5.156, z: -13.6, h: 2.4, sx: 5.156, sz: -(C05.yFond - 0.3), ox: 5.156, oz: -(C05.yFond - 0.1), zone: 'c05', reel: false, cuireForce: 0.25, couleur: new THREE.Color(0xf6f2ea) });
 
   // ---- LES CROCHETS : le mobilier, la rue ----
   poserMobilier(ch);
