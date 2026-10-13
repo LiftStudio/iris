@@ -413,8 +413,8 @@ function matieresHall() {
     copieur: std({ color: 0xdcdcd8, roughness: 0.45 }, 'photocopieur (corps)'),
     copieur2: std({ color: 0xaeaeab, roughness: 0.5 }, 'photocopieur (scanner, tiroirs)'),
     // (13/10 : devant le miroir, dans le jour de la fenêtre c 18,98 — 182, 188, 196 sur la photo, 162, 159, 155 au jeu)
-    copieurJour: std({ color: 0xeceef0, roughness: 0.5, emissive: 0xe8eef6, emissiveIntensity: 0.5 }, 'photocopieur au jour (corps)'),
-    copieurJour2: std({ color: 0xc8cbcf, roughness: 0.5, emissive: 0xe8eef6, emissiveIntensity: 0.32 }, 'photocopieur au jour (scanner)'),
+    copieurJour: std({ color: 0xeceef0, roughness: 0.5, emissive: 0xe8eef6, emissiveIntensity: 0.5 }, 'machine à affranchir au jour (corps, meuble)'),
+    copieurJour2: std({ color: 0xc8cbcf, roughness: 0.5, emissive: 0xe8eef6, emissiveIntensity: 0.32 }, 'machine à affranchir au jour (bande grise, filets)'),
     caisson: std({ color: 0xc8c8c5, roughness: 0.55 }, 'caisson gris clair'),
     corbeille: std({ color: 0x55585e, roughness: 0.5 }, 'corbeille à courrier grise'),
     corbeilleO: std({ color: 0xe8862a, roughness: 0.5 }, 'corbeille à courrier orange'),
@@ -549,8 +549,8 @@ function ecran(ch, x, y, h, face, allume = false, haut = 0.33, l = 0.56) {
   if (allume) { const e = new THREE.Mesh(new THREE.PlaneGeometry(l - 0.03, 0.3), H.ecran); e.position.set(0, haut, 0.016); g.add(e); }
   return g;
 }
-// LE PHOTOCOPIEUR MULTIFONCTION (VO 6,4-7,4 s ; r04, celui de l'open-space) : socle à tiroirs, corps, sortie, scanner et
-// chargeur ; `haut` : le dessus du chargeur (celui de l'open-space est plus grand : il dépasse du comptoir, r04)
+// LE PHOTOCOPIEUR MULTIFONCTION de l'angle nord-est (VO 6,4-7,4 s) : socle à tiroirs, corps, sortie, scanner et chargeur ;
+// `haut` : le dessus du chargeur
 function copieur(ch, x, y, face, haut = 1.15) {
   const g = groupe(ch, x, y, face), k = haut / 1.15, { M } = ch;
   const c1 = H.copieur, c2 = H.copieur2;
@@ -794,7 +794,8 @@ function miroirAccueil(ch) {
   // (relecture du 13/10 : sur r04, la glace est la surface la plus claire de l'image — 224 à 250 —, pleine du jour de
   // l'entrée ; à 0,95, celle du jeu restait grise, 172 : un rien de gain et un voile froid, ce que fait l'appareil devant
   // une fenêtre — le reste vient du jour peint sur ce qu'elle renvoie : le mur ouest, la baie, le plafond de l'entrée)
-  U.color.value.setRGB(1.14, 1.2, 1.26); U.voile.value.setRGB(0.06, 0.08, 0.11);
+  // (joué en première personne, le nez sur la glace : au-delà, Haythem s'y voyait dans un brouillard)
+  U.color.value.setRGB(1.1, 1.15, 1.2); U.voile.value.setRGB(0.05, 0.062, 0.08);
   pencher(m, 0.001);
   m.userData.dynamique = true; m.userData.horsAOSol = true; m.name = 'miroir de l\'accueil';
   m.visible = false; ch.scene.add(m); m.updateMatrixWorld(true);
@@ -1318,7 +1319,7 @@ export function poserHall(ch) {
   //  L'OPEN-SPACE DU PERSONNEL (r04 ; VO q_0373-0384 ; photo 03)
   // =====================================================================
   // (r04 : derrière le comptoir, rien ne dépasse entre le local et le miroir que l'écran « DELL » et, au fond à droite,
-  // devant la glace, le grand copieur blanc. Le reste est sous la ligne du comptoir : le bureau bleu-gris du mitoyen
+  // devant la glace, la machine à affranchir. Le reste est sous la ligne du comptoir : le bureau bleu-gris du mitoyen
   // (VO), le plan de travail, les fauteuils. Le passage du personnel : par le nord, entre le décroché et le local
   // (0,75 m), puis le long du plan de travail.)
   B(19.2, 1.98, 19.78, LOC.y0, 0.72, 0.75, H.bureau);
@@ -1331,12 +1332,10 @@ export function poserHall(ch) {
   maille(new THREE.CylinderGeometry(0.09, 0.085, 0.26, 20), new THREE.MeshStandardMaterial({ map: texPotIris(), roughness: 0.4 }), 19.6, 0.88, -2.3, 0, ch.decor);
   B(19.42, 2.62, 19.74, 2.92, 0.75, 0.81, M.noir);
   ['#1d1d20', '#2f5f9a', '#f0efea'].forEach((c, i) => B(19.4, 3.9, 19.72, 4.2, 0.75 + i * 0.05, 0.8 + i * 0.05, new THREE.MeshStandardMaterial({ color: c, roughness: 0.5 }), { ombre: false }));
-  // LE GRAND COPIEUR devant le miroir, le dos à la glace, tourné vers l'ouest (r04 : au bout du comptoir, son chargeur
-  // blanc et ses bacs dépassent de la tablette de x 627 à 730 — les rayons qui passent, contre la glace, en y 1,76 et
-  // 0,97 ; son dos se voit dans la glace, juste derrière lui, gris clair de x 656 à 690 ; jusqu'à 1,42 m, le chargeur
-  // 1,50 ; dans le jour de la fenêtre c 18,98, à 1 m)
-  // (relecture du 13/10 : ce n'est pas un copieur sur pied mais une MACHINE À AFFRANCHIR, basse et longue, à hauteur de
-  // comptoir — affranchisseuse, plus haut ; de y 0,91 à 1,77)
+  // LA MACHINE À AFFRANCHIR devant le miroir, le dos à la glace, tournée vers l'ouest (r04 : au bout du comptoir, elle
+  // dépasse de la tablette de x 627 à 730 — les rayons qui passent, contre la glace, en y 1,77 et 0,97 ; jusqu'à 1,42 m, son
+  // plateau 1,50 ; dans le jour de la fenêtre c 18,98, à 1 m. Relecture du 13/10 : ce n'est pas un copieur sur pied —
+  // affranchisseuse, plus haut ; son meuble de y 0,91 à 1,77, x 19,24 à 19,74)
   affranchisseuse(ch, 19.49, 1.34);
   C.ajouterBoite(19.22, -1.78, 19.78, -0.9, { y1: 1.42 });
   // LES FAUTEUILS NOIRS face au comptoir, le long du plan de travail : celui du bout sud porte le manteau moutarde (photo
@@ -1384,7 +1383,7 @@ export function poserHall(ch) {
   {
     const l = Y_MUR - PIL.y1;
     // (le plan regarde l'ouest : son u court du nord au sud)
-    const m = calqueLumiere(32, 4, (u) => { const k = Math.min(1, (1 - u) * l / 0.4); return [1 + 0.3 * k, 1 - 0.03 * k, 1 - 0.55 * k]; }, 'lumière chaude du spot du fond sur les portes du local');
+    const m = calqueLumiere(32, 4, (u) => { const k = Math.min(1, (1 - u) * l / 0.4); return [1 + 0.22 * k, 1 - 0.03 * k, 1 - 0.45 * k]; }, 'lumière chaude du spot du fond sur les portes du local');
     poserCalque(ch.panneau(m, l, H_PLAF, LOC.x0 - 0.014, (PIL.y1 + Y_MUR) / 2, H_PLAF / 2, 'W'));
   }
   // l'ÉTIQUETTE ROUGE en travers du haut du vantail nord, et le TRIANGLE JAUNE au coin du vantail sud (r04 : de 2,0 à
