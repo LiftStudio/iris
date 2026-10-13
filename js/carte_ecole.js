@@ -893,6 +893,13 @@ function construireEntree(ch) {
 // au moins derrière le linteau ; photo 07, du hall : 2,6-2,7 côté rue. Le plafond du passage est donc un RAMPANT, de
 // 2,62 à la façade à 2,42 à la paroi — construireCarte ; côté hall, l'arête du haut de la pile, sur la photo 06 refaite,
 // monte de 2,21 à 2,44 : la gorge du hall rejoint la paroi à la même hauteur.)
+// (14/10, LA LONGUEUR DU PASSAGE, 4,45 m — TOUJOURS 0,5 À 0,6 m DE TROP, et pas tranchée ici. Le carrelage de la photo 07,
+// redressé à sa pose, se compte : dix files de 26,7 cm d'un mur à l'autre, des rangs de 52,7 — de la paroi au seuil,
+// 1,40 fois la largeur, soit 3,75 à 3,9 m pour 2,675 ; la photo 10 donne 3,7 à 3,95 (f 600 à 640). Mais la photo 06 tient
+// la paroi à 0,97 m de la porte grise, à 5 px : raccourcir le passage, c'est avancer de 0,5 m vers la rue TOUTE la chaîne
+// — hall ouest, escalier, ouest du -1, arrivée au 1er —, contre la salle d'attente, juste. L'autre lecture, que le
+// carrelage soit du 30 x 60 et la porte 12 % plus grande — 2,2 x 2,55 —, ne tient pas : la photo 06 voit la tête des
+// vantaux à 2,35, sous le plafond à 2,30-2,44 du hall. En attendant, le liège et les réglettes prennent le demi-mètre.)
 function construireParoiPassage(ch) {
   const { M, C } = ch, Y = 4.05, hP = 2.3, hT = 2.42, X0 = 2.45, X1 = 4.425;
   const montant = (x) => ch.boite(x - 0.035, Y - 0.04, x + 0.035, Y + 0.04, 0, hT, M.alu);
@@ -908,7 +915,7 @@ function construireParoiPassage(ch) {
   // (13/10, photo 19 refaite à sa pose : les rangées du vantail est à 0,95 et 1,425, quatre autocollants au pas de
   // 17 cm, le premier à 23,5 cm des gonds — le jeu les étalait au pas de 23 ; le seul du vantail ouest à 1,27)
   // (14/10, photo 19 agrandie : une étiquette fait 7,8 x 4,2 cm — 37 px pour un pas de 81 —, et non 11 x 4 ; les tirants
-  // sont des méplats blancs coudés, de 0,22 à 1,60 : js/ecole_portes.js, `plat`)
+  // sont des méplats blancs coudés, de 0,22 à 1,57 : js/ecole_portes.js, `plat`)
   const rangs = (s) => (s < 0 ? [[0.95, 4, 0.235, 0.17, 0.078, 0.042], [1.425, 4, 0.235, 0.17, 0.078, 0.042]] : [[1.27, 1, undefined, undefined, 0.078, 0.042]]);
   ch.porte('x', Y, (X0 + X1) / 2, { l: X1 - X0, h: hP, ep: 0.08, modele: 'vitree2', tirant: 'plat', autocollants: rangs, etat: 'auto', cote: 'S', huisserie: false, nom: 'passage' });
   // LE BLOC DE SORTIE côté hall, au-dessus des vantaux, au milieu (plan V2 : (3,3 ; 4,17)). (Relecture du 11/10 : la photo
@@ -1754,8 +1761,9 @@ export function construireCarte(scene, renderer = null) {
   // PLEIN JOUR. Photo 06 : son mur à 1,04 / 1,15 / 1,50 du mur blanc du hall, plus clair et bleuté ; le jeu le rendait
   // à 0,82 / 0,81 / 0,72, plus sombre et jaune. Photo 07 : les cadres de la porte, à contre-jour, à 0,33 du mur du
   // passage ; le jeu : 1,03.) Un second voile, dans la porte, juste derrière les vantaux, tourné vers le hall seulement :
-  // il ÉCLAIRCIT ce qu'on voit au travers — dst × (1 + teinte) — et s'efface quand la caméra arrive à la porte, comme
-  // l'œil s'habitue ; l'exposition du rendu (js/fx.js) fait alors le contre-jour du hall.
+  // il ÉCLAIRCIT ce qu'on voit au travers — dst × (1 + teinte) — et s'efface quand la caméra, ou Haythem, arrive à la
+  // porte, comme l'œil s'habitue (`maj`, plus bas). Le contre-jour de la photo 07 — les cadres sombres — n'est pas
+  // cherché : c'est l'exposition de l'appareil ; le jeu garde celle de la photo 06, le hall juste et le passage clair.
   const voileHall = new THREE.Mesh(new THREE.PlaneGeometry(1.975, 2.3),
     new THREE.MeshBasicMaterial({ color: 0x000000, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.DstColorFactor, blendDst: THREE.OneFactor, transparent: true, depthWrite: false, toneMapped: false, fog: false }));
   voileHall.name = 'voile du passage (vu du hall)'; voileHall.position.set(3.4375, 1.15, -(4.05 - 0.075)); voileHall.rotation.y = Math.PI; voileHall.renderOrder = 1;
