@@ -667,12 +667,14 @@ function construireFacade(ch) {
   // (13/10, photo 10 refaite à sa pose — (3,19 ; −4,93) h 1,75 cap −5,1, f 600, 2,4 px sur les quatre coins de
   // l'ouverture et de la porte du fond : la grille est DEVANT la façade, sur le trottoir, large de 0,55 m ; entre les
   // jambages, dans l'épaisseur du mur, un SEUIL de pierre claire de 25 cm. Le jeu posait la grille dans l'épaisseur.)
-  ch.boite(2.05, -0.95, 4.55, -0.41, 0, 0.006, M.acierNoir, { ombre: false });
-  for (let x = 2.11; x < 4.5; x += 0.06) ch.boite(x, -0.9, x + 0.022, -0.46, 0.006, 0.009, M.noirMat, { ombre: false });
-  // (14/10, photo 10 : le seuil est un béton gris, (168, 163, 152) sous une pierre de façade à (221, 223, 220) — en plein
-  // jour, sa teinte claire sortait blanche, un trait de lumière au pied du passage)
-  // (sombre dans la matière : la lampe du jour du passage est juste au-dessus de lui)
-  ch.boite(2.175, -0.4, 4.425, -0.14, 0, 0.012, new THREE.MeshStandardMaterial({ color: 0x5d5a54, roughness: 0.85 }), { ombre: false });
+  // (14/10, la même pose, la colonne 870 lue au pixel : le sol du passage jusqu'au rang 584, le seuil CLAIR de 588 à
+  // 598 — y −0,44 à −0,63 —, la grille de 600 à 620 — y −0,66 à −1,0 —, puis le fil du caniveau. Le seuil est donc
+  // au pied de la façade, à cheval sur son nu, et la grille 22 cm plus loin sur le trottoir qu'elle n'était.)
+  ch.boite(2.05, -1.06, 4.55, -0.62, 0, 0.006, M.acierNoir, { ombre: false });
+  for (let x = 2.11; x < 4.5; x += 0.06) ch.boite(x, -1.02, x + 0.022, -0.66, 0.006, 0.009, M.noirMat, { ombre: false });
+  // (le seuil : un béton clair, (205-216, 200-210, 193) sous une pierre de façade à (221, 223, 220) ; sa teinte d'avant,
+  // sous la lampe du jour du passage, sortait blanche — un trait de lumière au pied de l'ouverture)
+  ch.boite(2.175, -0.62, 4.425, -0.36, 0, 0.012, new THREE.MeshStandardMaterial({ color: 0x9a968d, roughness: 0.85 }), { ombre: false });
   // (les tableaux et la sous-face de l'ouverture sont le bâti d'acier NOIR de la grille — photos 10 et 07 ; le jeu y
   // laissait l'enduit blanc de l'épaisseur du mur, un liseré clair autour du passage vu de la rue)
   ch.boite(2.175, -0.4, 2.181, 0, 0.012, 2.45, M.acierNoir, { ombre: false });
@@ -1274,12 +1276,13 @@ function construireMurs(ch) {
   // (14/10, les mêmes photos mesurées au pixel et rapportées au mur blanc voisin :
   //  - la fente est LARGE — photo 20, le vantail fermé de face, 182 px : le cadre de noyer en fait 43, 23,5 cm, le verre
   //    16,5, son bord à 15 cm du chant ; le jeu : 16 cm hors tout pour un verre de 10 ;
-  //  - les deux faces sont plus SOUTENUES : celle du hall à 0,65 / 0,68 / 0,77 du mur (photos 04 et 20), celle de la cage
-  //    à 0,60-0,69 / 0,56-0,67 / 0,54-0,64 (photos 06, 20, 04) — le jeu les rendait à 0,80-0,85 et 0,77-0,95 ;
+  //  - les deux faces sont plus SOUTENUES : celle du hall à 0,62-0,69 / 0,64-0,73 / 0,73-0,81 du mur (photos 04 et 20),
+  //    celle de la cage à 0,60-0,69 / 0,56-0,67 / 0,54-0,64 (photos 06, 20, 04) — le jeu les rendait à 0,70-0,85 et
+  //    0,77-0,95 ; réglées entre les trois photos, qui ne s'accordent qu'à 0,1 près ;
   //  - l'étiquette rouge est une bande de 17,5 x 5 cm à deux lignes blanches, au ras du haut du vantail, au-dessus de la
   //    fente — photo 06.)
-  const bleute = new THREE.MeshStandardMaterial({ color: 0x747c8f, roughness: 0.45 }); bleute.name = 'vantail gris bleuté, face du hall (escalier)';
-  const beige = new THREE.MeshStandardMaterial({ color: 0xb0aeab, roughness: 0.45 }); beige.name = 'vantail gris beige, face de la cage (escalier)';
+  const bleute = new THREE.MeshStandardMaterial({ color: 0x858da0, roughness: 0.45 }); bleute.name = 'vantail gris bleuté, face du hall (escalier)';
+  const beige = new THREE.MeshStandardMaterial({ color: 0xa6a4a1, roughness: 0.45 }); beige.name = 'vantail gris beige, face de la cage (escalier)';
   const OC = { bas: 0.6, l: 0.155, bord: 0.27, cadre: 0.04 };
   const PE = ch.porte('x', 13.675 + DY_S, 3.45, { l: 2.0, h: 2.1, modele: 'grise2', feu: false, oculus: { ...OC, clair: true }, fermePorte: false, matVantail: bleute, etat: 'ouverte', ouverts: [true, false], angle: 1.484, cote: 'S', notices: 0, noticesD: 0, nom: 'escalier' });
   {
@@ -1465,11 +1468,11 @@ export function construireCarte(scene, renderer = null) {
   // luminance ; photo 04, vu de la salle d'attente : un gris moyen sous la retombée blanche ; le jeu le rendait presque
   // aussi clair que les murs, 0,90. Une copie du plâtre, rien qu'ici, plus sombre et sans lueur propre.)
   const platreHallO = M.platre.clone(); platreHallO.name = 'plafond en plâtre (hall ouest)';
-  platreHallO.color.multiplyScalar(0.6); platreHallO.emissiveIntensity *= 0.35;
+  platreHallO.color.multiplyScalar(0.68); platreHallO.emissiveIntensity *= 0.35;
   // (14/10, photos 06, 20 et 04 rapportées au mur blanc voisin : il est NEUTRE — 0,59-0,68 sur les trois canaux — ; le jeu
-  // le rendait chaud, 0,70-0,88 / 0,66-0,85 / 0,58-0,81, le rebond du sol et des murs le dorait. Un rien plus sombre, et
-  // bleuté pour rester gris sous cette lumière.)
-  platreHallO.color.multiply(new THREE.Color(0.84, 0.9, 1.02)); platreHallO.emissive.multiply(new THREE.Color(0.86, 0.92, 1.04));
+  // le rendait chaud, 0,70-0,88 / 0,66-0,85 / 0,58-0,81, le rebond du sol et des murs le dorait. Un rien bleuté pour
+  // rester gris sous cette lumière.)
+  platreHallO.color.multiply(new THREE.Color(0.92, 0.95, 1.0)); platreHallO.emissive.multiply(new THREE.Color(0.92, 0.95, 1.0));
   const grisHallO = (m) => { m.material = platreHallO; return m; };
   {
     // (13/10 : la gorge rejoint la paroi à 2,44, pas 2,60 — photo 06 refaite à sa pose, l'arête du haut de la pile passe
@@ -1594,8 +1597,8 @@ export function construireCarte(scene, renderer = null) {
   // éteignait le haut du mur, la courbe du rendu assombrit ce qu'elle sature ; plus un manchon de lumière autour du
   // tube lui-même.)
   const poids = (hTube, haut, long, portee) => (i, j, W, H) => {
-    // la distance au tube (un trait de y 0,35 à 2,95 sur les 3,6 m du voile, à hTube du haut), en mètres
-    const u = (i + 0.5) / W * long, v = (j + 0.5) / H * haut, r = Math.hypot(Math.max(0, 0.35 - u, u - 2.95), v - hTube);
+    // la distance au tube (un trait de y 0,15 à 3,05 sur les 4 m du voile, à hTube du haut), en mètres
+    const u = (i + 0.5) / W * long, v = (j + 0.5) / H * haut, r = Math.hypot(Math.max(0, 0.15 - u, u - 3.05), v - hTube);
     return Math.pow(Math.max(0, Math.min(1, 1 - (r - 0.12) / portee)), 1.3);
   };
   const texLueur = (w, mult) => canvasTex(128, 64, (g, W, H) => {
@@ -1617,9 +1620,11 @@ export function construireCarte(scene, renderer = null) {
   const manchon = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.75, 0.56, 0.26), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
   manchon.name = 'halo du tube fluorescent (passage)';
   for (const [x, s] of [[1.75, 1], [4.425, -1]]) {
-    ch.tube(x, 0.35, 2.95, 2.35, s, 'passage');
+    // (14/10 : de y 0,15 à 3,05 — deux tubes de 1,45 m bout à bout ; photo 10, leur bout touche le linteau ; photo 07,
+    // l'autre est à 0,9-1,1 m de la paroi)
+    ch.tube(x, 0.15, 3.05, 2.35, s, 'passage');
     const xj = x + s * 0.06;
-    ch.boite(xj - 0.025, 1.62, xj + 0.025, 1.68, 2.3, 2.37, M.boitier, { ombre: false });
+    ch.boite(xj - 0.025, 1.57, xj + 0.025, 1.63, 2.3, 2.37, M.boitier, { ombre: false });
     // sur le mur (y 0-4,0, de 1,12 à 2,62) et au plafond (1,25 m depuis le mur, sous le rampant 2,62 -> 2,42)
     const quad = (P, mats, idx) => mats.forEach((mat, n) => {
       const g = new THREE.BufferGeometry();
@@ -1632,7 +1637,7 @@ export function construireCarte(scene, renderer = null) {
     const xm = x + s * 0.003, hp = (y) => 2.62 - 0.2 * y / 4.05 - 0.003;
     quad([[xm, 2.62, 0], [xm, 2.62, -4.0], [xm, 1.12, -4.0], [xm, 1.12, 0]], lueurMur, s > 0 ? [0, 2, 1, 0, 3, 2] : [0, 1, 2, 0, 2, 3]);
     quad([[x, hp(0), 0], [x, hp(4.0), -4.0], [x + s * 1.25, hp(4.0), -4.0], [x + s * 1.25, hp(0), 0]], lueurPlafond, s > 0 ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]);
-    const h = maille(new THREE.CylinderGeometry(0.044, 0.044, 2.5, 14, 1, true), manchon, x + s * 0.067, 2.34, -1.65, 0, ch.decor, { ombre: false, recoit: false });
+    const h = maille(new THREE.CylinderGeometry(0.044, 0.044, 2.8, 14, 1, true), manchon, x + s * 0.067, 2.34, -1.6, 0, ch.decor, { ombre: false, recoit: false });
     h.rotation.x = Math.PI / 2; h.renderOrder = 3; h.userData.horsAOSol = true; h.userData.sansNormales = true; nePasFusionner(h);
   }
   // le bloc de sortie près de la rue, côté passage : sous le plafond, au-dessus de l'ouverture — de la rue, le linteau
@@ -1874,12 +1879,17 @@ export function construireCarte(scene, renderer = null) {
   const maj = (dt, jeu) => {
     const u = jeu.user.pos, cam = jeu.camera.position;
     // (le voile du passage : entier à 2,5 m de la grille et au-delà, nul à 30 cm)
+    // (14/10 : et il s'efface aussi quand HAYTHEM arrive à l'ouverture — la caméra le suit de 2,6 m : il passait le
+    // plan du voile quand elle le voyait encore plein, coupé en deux teintes à la taille ; nul à 0,5 m de l'ouverture
+    // et dedans, entier à 2,1 m)
     {
-      const k = Math.max(0, Math.min(1, (cam.z - 0.7) / 2.2));
+      const sat = (v) => Math.max(0, Math.min(1, v)), yH = -u.z;
+      const k = sat((cam.z - 0.7) / 2.2) * (yH < -0.13 ? sat((Math.hypot(u.x - 3.3, yH + 0.13) - 0.5) / 1.6) : 0);
       voilePassage.visible = k > 0.01;
       voilePassage.material.opacity = k;
-      // (celui du hall : entier à 1,8 m de la paroi vitrée et au-delà, nul à 30 cm ; au rez-de-chaussée seulement)
-      const q = cam.y > -0.5 && cam.y < 3.2 ? Math.max(0, Math.min(1, (-cam.z - 4.05 - 0.3) / 1.5)) : 0;
+      // (celui du hall : entier quand la caméra est à 1,8 m de la paroi vitrée et au-delà, nul à 30 cm ; de même pour
+      // Haythem, nul à 0,7 m de la porte et dans le passage, entier à 2,2 m ; au rez-de-chaussée seulement)
+      const q = cam.y > -0.5 && cam.y < 3.2 ? sat((-cam.z - 4.05 - 0.3) / 1.5) * (yH > 4.05 ? sat((Math.hypot(u.x - 3.4375, yH - 4.05) - 0.7) / 1.5) : 0) : 0;
       voileHall.visible = q > 0.01;
       voileHall.material.color.setRGB(q * TEINTE_HALL[0], q * TEINTE_HALL[1], q * TEINTE_HALL[2]);
     }

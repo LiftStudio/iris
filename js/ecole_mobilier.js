@@ -407,8 +407,12 @@ export function poserMobilier(ch) {
   // est, UN SEUL tableau de liège, long de 2,1 m, de y 0,95 à 3,05, de 1,08 à 1,86, couvert de feuilles ; puis, contre la
   // paroi, une grande affiche au dégradé rose et bleu, y 3,1-3,6, de 1,12 à 1,86. Le jeu avait deux tableaux d'un mètre
   // vers la rue et trois affichettes.)
-  cadreMural(ch, M.aluGris, 4.425, 2.0, 'W', 2.14, 1.06, 1.88, 0.02);
-  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texLiegePassage(), roughness: 0.9 }), 4.405, 2.0, 'W', 2.1, 1.08, 1.86, 0.012);
+  // (14/10, photos 07 et 10 côte à côte : sur l'une comme sur l'autre, le liège finit à 0,3-0,4 m du jambage de la
+  // grille ; il faisait 2,1 m dans un passage que le jeu garde 0,6 m trop long — de la rue, 0,95 m de mur nu le séparait
+  // du jambage. Il prend les 0,5 m de trop : DEUX tableaux bord à bord, de y 0,45 à 3,05 — la photo 07 montre leur joint.)
+  cadreMural(ch, M.aluGris, 4.425, 1.75, 'W', 2.64, 1.06, 1.88, 0.02);
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texLiegePassage(), roughness: 0.9 }), 4.405, 1.75, 'W', 2.6, 1.08, 1.86, 0.012);
+  ch.boite(4.391, 1.742, 4.405, 1.758, 1.06, 1.88, M.aluGris, { ombre: false });
   cadreMural(ch, new THREE.MeshStandardMaterial({ map: texAfficheDegradee(), roughness: 0.6 }), 4.425, 3.35, 'W', 0.5, 1.12, 1.86, 0.006);
   // le mur ouest, entre la porte « Sortie » (y 1,15-2,05) et la paroi : la bande aux trois pictogrammes, y 2,29-2,67 à
   // 1,34, et la charte aux coups de pinceau bleus et rouges contre la paroi, y 2,95-3,45, de 1,32 à 1,92 (photo 07 ;
@@ -460,7 +464,7 @@ export function poserMobilier(ch) {
       g.fillStyle = 'rgba(240,120,40,0.9)'; g.beginPath(); g.arc(X(0.075), Y(1.862), 3.2, 0, 7); g.fill();
     }, null, false, 4);
     for (const v of pp.vantaux) {
-      const reflet = new THREE.MeshBasicMaterial({ map: texReflet(v.s < 0), color: new THREE.Color(0.55, 0.55, 0.55), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+      const reflet = new THREE.MeshBasicMaterial({ map: texReflet(v.s < 0), color: new THREE.Color(0.42, 0.42, 0.42), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
       reflet.name = 'reflet peint des vitrages du passage';
       for (const [m, z, o] of [[sombre, 0.0028, 1], [reflet, 0.0034, 2]]) {
         const r = new THREE.Mesh(new THREE.PlaneGeometry(0.9875 - 0.14, 2.3 - 0.14), m);
@@ -470,7 +474,7 @@ export function poserMobilier(ch) {
   }
   if (vo) {
     // (13/10, photo 19 refaite à sa pose : x 2,78-3,06, de 1,33 à 1,53 — une feuille blanche au QR code jaune et à la
-    // photo orangée, texAffichetteQR ; du hall, photo 07, on n'en voit que le dos gris)
+    // photo orangée, texAffichetteQR)
     const a = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.2), new THREE.MeshStandardMaterial({ map: texAffichetteQR(), roughness: 0.75 }));
     a.position.set(0.47, 1.43, 0.004); a.castShadow = false; a.userData.vitre = true; vo.g.add(a);
     // (14/10, photos 07 et 06 agrandies : du hall, on ne voit pas un dos gris mais LA MÊME IMAGE À L'ENVERS, par
@@ -801,15 +805,15 @@ function texPhotoImprimee() {
 // blanches, bleues et mauves, de tracts roses, punaisés de travers et qui se chevauchent — pas neuf affiches de
 // couleurs vives rangées en damier
 function texLiegePassage() {
-  return canvasTex(768, 288, (g, w, h) => {
+  return canvasTex(960, 288, (g, w, h) => {
     const r = graineMob(77);
     g.fillStyle = '#b98b56'; g.fillRect(0, 0, w, h);
     for (let k = 0; k < 9000; k++) { g.fillStyle = r() < 0.5 ? 'rgba(118,80,42,0.32)' : 'rgba(224,186,136,0.28)'; g.fillRect(r() * w, r() * h, 1.6, 1.6); }
     // (14/10, photo 07 rapportée au mur : le tableau est à 0,90 / 0,92 / 0,95 — presque tout BLANC, des A4 bord à bord
     // sur deux rangs ; le jeu, à 0,72 / 0,65 / 0,58, montrait surtout le liège sous des feuilles de 12 à 18 cm)
     const tons = ['#f4f3ee', '#f4f3ee', '#eef0f3', '#3a5fa8', '#f4f3ee', '#e9e6de', '#f4f3ee', '#f4f3ee', '#8fb4d8', '#f1e7c8', '#f4f3ee', '#f4f3ee', '#eceae4', '#c9a9c9', '#6a3f8e', '#f4f3ee'];
-    for (let i = 0; i < 22; i++) {
-      const pw = 72 + r() * 10, ph = pw * (1.36 + r() * 0.08), x = 6 + (i % 11) * 68 + (r() - 0.5) * 14, y = (i < 11 ? 18 : 150) + (r() - 0.5) * 22;
+    for (let i = 0; i < 26; i++) {
+      const pw = 72 + r() * 10, ph = pw * (1.36 + r() * 0.08), x = 6 + (i % 13) * 72 + (r() - 0.5) * 14, y = (i < 13 ? 18 : 150) + (r() - 0.5) * 22;
       const c = tons[Math.floor(r() * tons.length)], clair = c > '#c';
       g.save(); g.translate(x + pw / 2, y + ph / 2); g.rotate((r() - 0.5) * 0.14);
       g.fillStyle = 'rgba(60,40,20,0.25)'; g.fillRect(-pw / 2 + 2, -ph / 2 + 3, pw, ph);
