@@ -39,15 +39,18 @@
 //                                                     de l'angle de la façade à y 0,40, blanc, une affichette étroite
 //   le MIROIR               x 19,8        y 0,40-1,82  collé sur le mitoyen, sans cadre, de 0,95 à 2,57 m : un vrai miroir
 //                                                     (retour r05 du 13/10 — ce que la v1.9 prenait pour la cloison vitrée
-//                                                     d'un « bureau d'angle » est le REFLET du hall) ; devant lui, le grand
-//                                                     copieur blanc
+//                                                     d'un « bureau d'angle » est le REFLET du hall), penché de 2,7° ;
+//                                                     devant lui, la machine à affranchir sur son meuble blanc
 //   le local technique      x 18,8-19,8   y 4,43-7,5   portes de stratifié clair, étiquette rouge et triangle jaune ;
 //                                                     sa face sud gris clair, le bouton rouge et le boîtier blanc
 //   le pilier de bois clair x 18,14-18,8  y 5,71-6,24  devant le local, sous l'écran suspendu ; le panneau des formations
 //                                                     sur le local, à sa droite
 //   le portant des goodies  (17,48 ; 5,685)            noir, sur roulettes : sweats « iris », affichette, brochures
-//   l'open-space            x 17,53-19,8  y 0-4,43     le plan de travail derrière le comptoir, le bureau du mitoyen, le
-//                                                     copieur devant le miroir, trois fauteuils ; la fenêtre c 18,98
+//   l'open-space            x 17,53-19,8  y 0-4,43     le plan de travail derrière le comptoir, le bureau du mitoyen, la
+//                                                     machine à affranchir devant le miroir, trois fauteuils ; la fenêtre
+//                                                     c 18,98
+//   la baie du bureau       x 13,35       y 0,30-1,23  sur le mur ouest du hall, contre l'angle de la porte 6 : cadre blanc,
+//                                                     trois bandes grises, store baissé (VO q_0372-0376 ; le reflet de r04)
 //   l'angle nord-est        x 16,3-18,8   y 6,8-7,5    le photocopieur contre le cannelé, le caisson et ses corbeilles
 //                                                     (photo 24 : toujours là en 2026), le meuble noir (r04), les
 //                                                     étiquettes ocre « INFORMATIQUE »
@@ -1025,7 +1028,17 @@ function miroirAccueil(ch) {
       avant = true;
       jeu.renderer.getDrawingBufferSize(_taille);
       const w = Math.max(64, Math.round(_taille.x * etat.K)), h = Math.max(64, Math.round(_taille.y * etat.K));
-      if (rt.width !== w || rt.height !== h) { rt.setSize(w, h); rtLui.setSize(w, h); force = true; }
+      // (RELECTURE DU 13/10 : chaque cible reçoit une profondeur NEUVE, à sa taille. Celle de 256 px du départ, que le
+      // shader de la glace lit dès sa première image, était alors figée à 256 px sur la carte graphique ; si Haythem ne se
+      // reflétait pas à cette première image — on entre, on voit la glace de loin : le cas ordinaire —, sa cible, dessinée
+      // plus tard à la taille de l'écran, restait « incomplète » (GL_INVALID_FRAMEBUFFER_OPERATION, attaches de tailles
+      // différentes, 400 avertissements à la console) : il ne se voyait JAMAIS dans la glace, de toute la partie.)
+      if (rt.width !== w || rt.height !== h) {
+        for (const [cible, nom] of [[rt, 'tProf'], [rtLui, 'tProfLui']]) {
+          cible.setSize(w, h); cible.depthTexture.dispose(); cible.depthTexture = new THREE.DepthTexture(w, h); U[nom].value = cible.depthTexture;
+        }
+        force = true;
+      }
       // QUAND REDESSINER LE DÉCOR (13/10, mesuré en vue de jeu, la glace à l'écran, en marchant : 22 ms l'image sans elle,
       // 31,6 en la redessinant à chaque image — ≈ 150 appels de dessin, 8 à 9 ms ici quelle que soit la taille de la
       // texture : c'est le nombre d'appels qui coûte, pas les pixels). La glace garde le décor d'avant, sa caméra et sa
@@ -1100,12 +1113,13 @@ export function poserHall(ch) {
   // plafond, en (17,8 ; 6,1). Le jeu en faisait deux galettes beiges collées au plafond.)
   {
     const blanc = new THREE.MeshStandardMaterial({ color: 0xf4f4f1, roughness: 0.35, emissive: 0xffffff, emissiveIntensity: 0.22 }); blanc.name = 'globe blanc (caméra dôme)';
-    const oeil = new THREE.MeshStandardMaterial({ color: 0x1c1f24, roughness: 0.15 }); oeil.name = 'œil sombre (caméra dôme)';
+    const oeil = new THREE.MeshStandardMaterial({ color: 0x3c4046, roughness: 0.25 }); oeil.name = 'œil sombre (caméra dôme)';
     const dome = (g) => {
       // (dans le repère du globe : l'embase en haut, le globe et son œil vers le bas)
       CL(g, blanc, 0.06, 0.03, 0, -0.015, 0, 20, { ombre: false });
       maille(new THREE.SphereGeometry(0.055, 18, 12), blanc, 0, -0.04, 0, 0, g, { ombre: false });
-      maille(new THREE.SphereGeometry(0.03, 14, 10), oeil, 0, -0.072, 0.012, 0, g, { ombre: false });
+      // (l'œil : une calotte de 2 cm de rayon au bas du globe — pas une pupille)
+      maille(new THREE.SphereGeometry(0.03, 14, 10), oeil, 0, -0.0726, 0, 0, g, { ombre: false });
       g.traverse((m) => { m.userData.horsAOSol = true; });
     };
     // celui du mitoyen : en applique, couché — son « bas » regarde l'ouest
