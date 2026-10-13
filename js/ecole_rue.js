@@ -2,12 +2,13 @@
 //  LA RUE DEVANT L'ÉCOLE IRIS (crochet de js/carte_ecole.js) — photos 07 à 18
 // =====================================================================
 // Une petite rue de Paris en impasse. À l'ouest l'IMPASSE (~10 m après le mitoyen), fermée par un muret taché surmonté
-// d'une grille noire, une rangée de pots devant, une masse de verdure derrière (photo 09) ; à l'est la rue file ~25 m
-// après l'école jusqu'à un CARREFOUR en T, fermé par un immeuble crème de six étages (photos 08, 15).
-// Côté école : le trottoir de 2,4 m (enrobé gris clair, bordure de granit), pavé devant le n° 8 et le n° 10 (photo 09) ;
-// la chaussée de 6,4 m (photos 08, 15 : on y gare d'un côté, on y roule, et à l'est de l'école on y gare aussi des deux
-// côtés) avec sa file de stationnement côté sud, ses reprises d'enrobé, ses lignes effacées, le rond d'interdiction
-// peint, la pièce de pavés au milieu, les plaques ; le trottoir d'en face de 1,6 m.
+// d'une grille noire, une rangée de pots devant, une masse de verdure derrière (photo 09) ; à l'est la rue file 20 m
+// après l'école jusqu'à un CARREFOUR en T (x 40), fermé à 7,8 m par un immeuble crème de quatre étages et l'immeuble de
+// pierre du café (photos 08, 15 ; le gabarit de l'IGN — lot rue du 13/10, voir RUE plus bas).
+// Côté école : le trottoir de 2,55 m (enrobé gris, bordure de granit), pavé devant le n° 8 et le n° 10 (photo 09), que
+// leurs façades en saillie de 1,25 m réduisent à 1,3 m, comme celle du n° 4 ; la chaussée de 6,4 m, gris neutre, ses
+// reprises d'enrobé, ses tirets, le rond d'interdiction peint, la pièce de pavés, les plaques ; au sud, devant le 5/7,
+// la BAIE de stationnement de 2 m et son trottoir de 1,25 m ; devant le jardin, le trottoir d'en face de 1,6 m.
 // En face : l'immeuble moderne 5/7 (enduit blanc, bandeaux de mélèze, rez-de-chaussée vitré et porte de garage en bois),
 // puis le JARDIN derrière sa grille noire doublée de brande, sur un muret (photo 15), et ses grands arbres ; l'immeuble
 // des années 60 au fond du jardin. Côté école : le n° 8 et le n° 10 (pierre, haussmanniens) à l'ouest ; le n° 4 en
