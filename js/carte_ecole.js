@@ -688,7 +688,7 @@ function construireFacade(ch) {
   for (const [a, b] of [[0.3, 0.32], [1.28, 1.3]]) ch.boite(a, -0.4, b, 0, 0, 2.2, M.noirMat, { ombre: false });
   ch.boite(0.3, -0.4, 1.3, 0, 2.18, 2.2, M.noirMat, { ombre: false });
   ch.boite(1.3, -0.42, 1.46, -0.4, 0, 2.25, M.noirMat, { ombre: false });
-  ch.panneau(new THREE.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.6 }), 0.3, 0.2, 0.8, -0.45, 1.75, 'S');
+  ch.panneau(new THREE.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.6 }), 0.3, 0.2, 0.95, -0.45, 1.85, 'S');      // (relecture du 14/10, photo 10 : 15 cm plus à l'est, 10 cm plus haut)
   // le linteau d'acier noir du passage (35 cm) et, dessous, au milieu, le boîtier noir aux deux étiquettes blanches
   // (relecture du 11/10, photo 10 rejouée : un seul boîtier de 0,59 m, x 3,01-3,6, de 2,32 à 2,45 — pas deux petits
   // boîtiers aux jambages ; c'est lui qu'on voit de la rue, et non un bloc de sortie vert)

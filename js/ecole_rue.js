@@ -337,7 +337,9 @@ export function poserRue(ch) {
   for (const m of [trottoir, chaussee]) detailPhoto(m, 'beton', 4, 4, { relief: 0.5, grain: 0.15, rugo: true });
   const paves = std({ map: texPaves(5), roughness: 0.85 }, 0.05);
   const granit = std({ color: 0xb2b6ba, roughness: 0.72 }, 0.06);
-  const caniveau = std({ color: 0x6f7074, roughness: 0.94 }, 0.04);
+  // (relecture rue du 14/10, photos 15 à 17 : au pied de la bordure, la chaussée est SOMBRE — l'aplat à 0x6f7074 sortait
+  // plus clair qu'elle, une bande grise qui doublait la bordure)
+  const caniveau = std({ color: 0x57585b, roughness: 0.94 }, 0.04);
   // (les sols : des rectangles aux UV en mètres du plan, rangés par matière puis cousus en un maillage par matière — à la
   // fin de poserRue ; leurs matières ont le grain photographique, la couture du décor ne les toucherait pas)
   const sols = new Map();
@@ -362,6 +364,13 @@ export function poserRue(ch) {
   ch.boite(X0, Y_BAIE - 0.15, X_BAIE + 0.15, Y_BAIE, H_CHAUSSEE, 0, granit, { ombre: false });
   ch.boite(X_BAIE, Y_BAIE, X_BAIE + 0.15, Y_CHAUSSEE - 0.15, H_CHAUSSEE, 0, granit, { ombre: false });
   ch.boite(X_BAIE, Y_CHAUSSEE - 0.15, X1, Y_CHAUSSEE, H_CHAUSSEE, 0, granit, { ombre: false });
+  // (relecture rue du 14/10, photos 13 à 17 : de la chaussée, on ne voit de la bordure qu'un filet clair, son dessus — son
+  // chant, noirci par le ruisseau, se confond avec l'enrobé ; le jeu le montrait aussi clair, une bande blanche deux fois
+  // trop large)
+  const chant = std({ color: 0x77797c, roughness: 0.9 }, 0.04);
+  ch.boite(X0, Y_TROTTOIR - 0.156, X1, Y_TROTTOIR - 0.15, H_CHAUSSEE, -0.014, chant, { ombre: false });
+  ch.boite(X0, Y_BAIE, X_BAIE, Y_BAIE + 0.006, H_CHAUSSEE, -0.014, chant, { ombre: false });
+  ch.boite(X_BAIE, Y_CHAUSSEE, X1, Y_CHAUSSEE + 0.006, H_CHAUSSEE, -0.014, chant, { ombre: false });
   // les caniveaux : une bande de béton plus clair, 30 cm, au pied de chaque bordure
   ch.boite(X0, Y_TROTTOIR - 0.45, X1, Y_TROTTOIR - 0.15, H_CHAUSSEE, H_CHAUSSEE + 0.003, caniveau, { ombre: false });
   ch.boite(X0, Y_BAIE, X_BAIE, Y_BAIE + 0.28, H_CHAUSSEE, H_CHAUSSEE + 0.003, caniveau, { ombre: false });
@@ -486,7 +495,7 @@ export function poserRue(ch) {
   // (lot façade du 11/10 : au-dessus de son rez-de-chaussée de pierre, le n° 8 est de brique chamois à rangs de brique
   // rouge, fenêtres à encadrement de pierre blanche et balcons de fer noir — photos 09 et 10 ; le jeu le faisait de pierre crème)
   const brique8 = std({ map: texFacade({ fond: '#d8cdb8', cadre: '#f2efe8', verre: '#56626e', travee: 1.9, etage: 3.0, balcon: true, encadrement: '#efebe2', rideaux: true, brique: [196, 172, 128], graine: 8 }), roughness: 0.9 });
-  const pierre4 = std({ map: texFacade({ fond: '#cfc3ad', cadre: '#efece6', verre: '#505c68', travee: 2.0, etage: 3.1, balcon: true, joints: true, encadrement: '#c9bba3', rideaux: true, graine: 4 }), roughness: 0.85 }, 0.07);
+  const pierre4 = std({ map: texFacade({ fond: '#cfc3ad', cadre: '#efece6', verre: '#505c68', travee: 2.0, etage: 3.1, fh: 1.8, appui: 1.25, joints: true, encadrement: '#c9bba3', rideaux: true, graine: 4 }), roughness: 0.85 }, 0.07);
   const blanc = std({ map: texFacade({ fond: '#efefe8', cadre: '#ffffff', verre: '#56626e', travee: 1.9, etage: 2.9, persiennes: '#dfe3d8', fleurs: true, graine: 5 }), roughness: 0.85 });
   // (intégration du 11/10, plan V2 : arrêté en y 12,45, au sud de l'aile A — il descendait jusqu'en y 14 et entrait de 1,25 m
   // dans la courette ouest, js/ecole_pieces.js courette : par les fenêtres de la Si 0.2, son fond crème bouchait la cour)
@@ -507,6 +516,10 @@ export function poserRue(ch) {
     { t: 'porte', x0: -5.6, x1: -4.5, h: 2.9, bois: '#5a3620', arc: true, imposte: true, vantaux: 2, pierre: '#ece6da' },
     { t: 'porte', x0: -2.35, x1: -0.95, h: 2.85, bois: '#55301a', imposte: true, vantaux: 2, plein: true, grille: true, encadrement: '#efeadf' },
   ] });
+  // (relecture rue du 14/10, photo 10 : la caméra blanche et son petit panneau solaire, sur le trumeau à l'est de la porte,
+  // à 3,1 m)
+  ch.boite(-1.0, YV - 0.2, -0.9, YV, 3.07, 3.15, std({ color: 0xf2f2ee, roughness: 0.5 }, 0.2), { ombre: false }).userData.horsAOSol = true;
+  ch.boite(-0.86, YV - 0.17, -0.7, YV - 0.05, 3.15, 3.17, std({ color: 0x23262b, roughness: 0.3 }, 0.05), { ombre: false }).userData.horsAOSol = true;
   rdc(X0, -7.5, YV, 3.4, { fond: '#d9d0bf', socle: '#b6ad9e', joints: true, graine: 11, elements: [
     { t: 'porte', x0: -9.9, x1: -8.9, h: 2.8, bois: '#5d3a22', vantaux: 2 },
     { t: 'plaque', x0: -8.55, x1: -8.33, bas: 2.55, h: 2.75, texte: '10' },
@@ -533,8 +546,26 @@ export function poserRue(ch) {
   // (lot rue du 13/10 — le bâti de l'IGN : le n° 4 va de l'école à x 26,9, haut de 16,6 m ; puis un immeuble blanc de
   // 13,8 m jusqu'en 35, et un immeuble bas de 9,9 m jusqu'au coin. Le n° 4 est en saillie : son RETOUR d'enduit crème, de
   // y -0,4 à -1,65, se voit sur la photo 16 entre la bande noire de l'école et la descente d'eau du coin.)
-  facade(20.1, YV, 26.9, 14, 16.6, pierre4);
-  facade(20.085, YV + 0.005, 20.12, -0.4, 16.6, std({ color: 0xe4dfd2, roughness: 0.9 }), { collision: false });
+  // (relecture rue du 14/10, photos 15 et 16 à leur pose : chaque fenêtre des étages a son BALCONNET de fonte noire en
+  // saillie de 0,3 m sur une dalle de pierre — celui du 1er au-dessus du portail va de x 20,2 à 21,2, sa dalle à 3,5 m — ;
+  // le portail est en relief, deux pilastres et une corniche : vu de biais, le pilastre cache la moitié de la porte, comme
+  // sur la photo 16. Le jeu dessinait tout cela à plat. La boîte monte à 16,9 m pour que ses fenêtres — des tuiles de
+  // 3,1 m centrées sur elle — tombent sur les dalles : 3,5 m et tous les 3,1 m.)
+  facade(20.1, YV, 26.9, 14, 16.9, pierre4);
+  facade(20.085, YV + 0.005, 20.12, -0.4, 16.9, std({ color: 0xe4dfd2, roughness: 0.9 }), { collision: false });
+  {
+    const fer = std({ map: texFerronnerie(), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.6 }, 0.03), dalle = std({ color: 0xc4b9a3, roughness: 0.9 }, 0.06), gs = [];
+    const pan = (L, x, y, z, rot) => { const g = new THREE.PlaneGeometry(L, 0.8); const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * L); g.rotateY(rot); g.translate(x, z, -y); gs.push(g); };
+    for (let n = 0; n < 4; n++) for (const xc of [20.5, 22.5, 24.5, 26.5]) {
+      const z = 3.6 + n * 3.1, a = Math.max(20.14, xc - 0.66), b = Math.min(26.86, xc + 0.66);
+      ch.boite(a, YV - 0.32, b, YV, z - 0.08, z, dalle, { ombre: false }).userData.horsAOSol = true;
+      pan(b - a, (a + b) / 2, YV - 0.3, z + 0.4, 0); pan(0.3, a + 0.01, YV - 0.15, z + 0.4, Math.PI / 2); pan(0.3, b - 0.01, YV - 0.15, z + 0.4, Math.PI / 2);
+    }
+    const m = new THREE.Mesh(mergeGeometries(gs, false), fer); m.name = 'balconnets du n° 4'; m.userData.horsAOSol = true; m.matrixAutoUpdate = false; ch.decor.add(m);
+    const pierreP = std({ color: 0xe3ddcf, roughness: 0.9 }, 0.1);
+    for (const [a, b] of [[20.31, 20.56], [21.63, 21.88]]) ch.boite(a, YV - 0.2, b, YV, 0, 2.86, pierreP, { ombre: false }).userData.horsAOSol = true;
+    ch.boite(20.27, YV - 0.26, 21.92, YV, 2.86, 3.08, pierreP, { ombre: false }).userData.horsAOSol = true;
+  }
   // (lot rue du 13/10, photo 16 rejouée à sa pose : la porte du n° 4 est 1,3 m plus à l'est, x 22,2-23,4 — de chêne
   // clair, sous son arc de pierre, la plaque bleue au-dessus, en x 22,8 ; la descente d'eau crème en x 21,4, entre l'école
   // et elle ; la première fenêtre à barreaux blancs ne commence qu'en x 25,0. La pierre du n° 4 est claire, 200 sur la
@@ -544,11 +575,11 @@ export function poserRue(ch) {
   // 2,70 m ; la première fenêtre à barreaux blancs commence en 22,8)
   rdc(20.1, 26.9, YV, 3.6, { fond: '#cfc3ad', socle: '#b9ae98', joints: true, graine: 12, elements: [
     { t: 'bande', x0: 20.14, x1: 20.28, couleur: '#ece7dc', h: 3.6 },
-    { t: 'porte', x0: 20.62, x1: 21.57, h: 2.45, bois: '#b8925a', arc: true, vantaux: 1, plein: true, pierre: '#e9e3d7', encadrement: '#e8e2d5' },
+    { t: 'porte', x0: 20.62, x1: 21.57, h: 2.45, bois: '#a48a66', arc: true, vantaux: 1, plein: true, pierre: '#e9e3d7', encadrement: '#e8e2d5' },
     { t: 'plaque', x0: 21.02, x1: 21.26, bas: 2.58, h: 2.83, texte: '4' },
     { t: 'fenetre', x0: 22.8, x1: 23.9, bas: 0.9, h: 2.5 }, { t: 'fenetre', x0: 25.2, x1: 26.3, bas: 0.9, h: 2.5 },
   ] });
-  toit(20.1, 26.9, YV, 4.5, 16.6);
+  toit(20.1, 26.9, YV, 4.5, 16.9);
   facade(26.9, YV, 35, 14, 13.8, blanc);
   rdc(26.9, 35, YV, 3.2, { fond: '#ecebe4', socle: '#c9c6bd', graine: 18, elements: [
     { t: 'porte', x0: 27.7, x1: 28.9, h: 2.7, bois: '#e9e9e4', vantaux: 2 },
@@ -557,7 +588,9 @@ export function poserRue(ch) {
   facade(35, YV, X1 + 0.5, 14, 9.9, creme);
   toit(35, X1 + 0.5, YV, 4.5, 9.9);
   // LES LANTERNES murales de Paris (photos 13, 14 : sur l'immeuble blanc ; une autre sur le 5/7)
-  lanterne(ch, 28.3, YV, 4.6, 1);
+  // (relecture rue du 14/10, photo 15 à sa pose : c'est un lampadaire de rue sur une grande console, scellée à 8 m — et
+  // non une applique à 4,6 m)
+  lanterne(ch, 28.8, YV, 7.7, 1, 1.8);
   lanterne(ch, 2.0, Y_FACE57, 4.6, -1);
 
   // EN FACE, À L'OUEST : LE 5/7 (enduit blanc, caissons de mélèze, rez-de-chaussée vitré : photos 07, 08, 09). Au rez-de-
@@ -801,10 +834,10 @@ function jardin(ch, x0, x1, yF) {
 // LA LANTERNE DE PARIS en applique (photos 13, 14) : une console noire qui sort du mur, sa crosse en dessous, la lanterne
 // hexagonale pendue au bout, allumée doucement. `s` : +1 si la rue est au sud du mur (côté école), -1 en face.
 let _vitreLanterne = null;
-function lanterne(ch, x, yF, h, s) {
+function lanterne(ch, x, yF, h, s, e = 1) {
   const noir = ch.M.acierNoir;
   _vitreLanterne = _vitreLanterne || new THREE.MeshStandardMaterial({ color: 0x3a372f, roughness: 0.25, metalness: 0.4, emissive: 0xffdca0, emissiveIntensity: 0.45 });
-  const g = new THREE.Group(); g.position.set(x, h, -yF); ch.decor.add(g);
+  const g = new THREE.Group(); g.position.set(x, h, -yF); g.scale.setScalar(e); ch.decor.add(g);
   const bras = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.78, 6), noir); bras.rotation.x = Math.PI / 2; bras.position.set(0, 0.35, s * 0.39); g.add(bras);
   const courbe = new THREE.QuadraticBezierCurve3(new THREE.Vector3(0, -0.12, 0), new THREE.Vector3(0, 0.3, s * 0.03), new THREE.Vector3(0, 0.34, s * 0.42));
   g.add(new THREE.Mesh(new THREE.TubeGeometry(courbe, 12, 0.015, 5), noir));
@@ -846,6 +879,16 @@ function texGardeCorps() {
     g.fillRect(0, 0, w, 9); g.fillRect(0, h - 7, w, 7);
     for (let x = 2; x < w; x += 13) g.fillRect(x, 0, 7, h);
   }, [1 / 0.55, 1], true, 4);
+}
+// LA FERRONNERIE des balconnets du n° 4 (photos 15, 16) : barreaux de fonte noire, une frise de volutes sous la main
+// courante — une tuile = 0,5 m x 0,95 m
+function texFerronnerie() {
+  return canvasTex(64, 128, (g, w, h) => {
+    g.clearRect(0, 0, w, h); g.fillStyle = '#1a1a1c'; g.strokeStyle = '#1a1a1c';
+    g.fillRect(0, 0, w, 7); g.fillRect(0, 26, w, 3); g.fillRect(0, h - 7, w, 7);
+    for (let x = 3; x < w; x += 16) g.fillRect(x, 0, 2.2, h);
+    g.lineWidth = 2; for (let x = 12; x < w; x += 16) { g.beginPath(); g.arc(x, 16, 5, 0, 7); g.stroke(); }
+  }, [1 / 0.5, 1], true, 4);
 }
 // LE VERRE CANNELÉ DE LA MARQUISE (n° 10, photo 09) : des bandes ambrées, claires et foncées, dans le sens de la pente
 function texMarquise() {

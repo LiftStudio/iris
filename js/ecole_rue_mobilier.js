@@ -495,7 +495,8 @@ export function olivier(F, A, M, x, y, h0, H, r) {
   let p = vMonde(x, h0, y);
   const pts = [p];
   for (let k = 1; k <= 4; k++) { p = p.clone().add(V((r() - 0.5) * 0.08, H * 0.13, (r() - 0.5) * 0.08)); pts.push(p); }
-  for (let k = 0; k < pts.length - 1; k++) A.ajouter(tube(pts[k], pts[k + 1], 0.035 - k * 0.005, 0.03 - k * 0.005, 6), M.ecorceClaire, new THREE.Matrix4());
+  // (relecture du 14/10, photos 10 et 13 : un tronc MINCE, 4 cm au pied — il en faisait 7)
+  for (let k = 0; k < pts.length - 1; k++) A.ajouter(tube(pts[k], pts[k + 1], 0.02 - k * 0.003, 0.017 - k * 0.003, 6), M.ecorceClaire, new THREE.Matrix4());
   const c = vMonde(x, h0 + H * 0.72, y);
   for (let b = 0; b < 6; b++) {
     const az = r() * Math.PI * 2, base = pts[2 + Math.floor(r() * 3)];
@@ -1026,9 +1027,10 @@ export function potelet(ch, A, M, x, y) {
 }
 // LA STATION DE RÉPARATION orange (photos 15, 16) et SES ARCEAUX BLANCS
 // (`H` : la hauteur de la borne — lot rue du 13/10, photos 15 et 16 : 1,3 m, son dessus à hauteur de poitrine ; 1,06 avant)
-export function stationVelo(ch, A, M, x, y, a, h0 = 0, H = 1.3) {
+export function stationVelo(ch, A, M, x, y, a, h0 = 0, H = 1.25) {
   const b = pose(x, y, h0, a);
-  A.ajouter(new RoundedBoxGeometry(0.42, H, 0.3, 2, 0.03), M.orange, dans(b, 0, H / 2, 0));
+  // (relecture du 14/10, photos 15 et 16 : une colonne de 0,36 m — 110 px à 1,8 m —, et non 0,42)
+  A.ajouter(new RoundedBoxGeometry(0.36, H, 0.3, 2, 0.03), M.orange, dans(b, 0, H / 2, 0));
   A.ajouter(new THREE.BoxGeometry(0.3, 0.12, 0.31), M.noirMat, dans(b, 0, H - 0.14, 0.0));
   A.ajouter(new THREE.BoxGeometry(0.16, 0.1, 0.06), M.alu, dans(b, 0.08, H + 0.05, 0.0, 0, 0, -0.25));
   A.ajouter(tube(V(0.22, H - 0.21, 0), V(0.36, H - 0.11, 0), 0.008, 0.008, 5), M.alu, b);
@@ -1080,7 +1082,9 @@ export function poserMobilierRue(ch, R) {
   // (y -1,05) et non 0,5 — x 5,90-6,75 (l'olivier), 7,10-8,16 (les fleurs), le cyprès en 8,6, 9,05-10,05, 10,20-11,20,
   // et celui de derrière le second banc)
   const rE = alea(1105), YB = -0.725, PB = 0.65;
-  let h = jardiniere(ch, A, M, 6.32, YB, 0.85, PB, 0.95); olivier(F, A, M, 6.32, YB, h, 1.9, r);
+  // (relecture rue du 14/10, photos 10 et 13 à leur pose : le premier bac — celui de l'olivier — est plus BAS que les
+  // autres, 0,72 m : 90 px pour 120 dans le jeu, son pied au même endroit)
+  let h = jardiniere(ch, A, M, 6.32, YB, 0.85, PB, 0.72); olivier(F, A, M, 6.32, YB, h, 2.1, r);
   h = jardiniere(ch, A, M, 7.63, YB, 1.06, PB, 0.95); arbuste(F, A, M, 7.63, YB, h, 0.46, 0.5, PLANCHE.fleurs, r, 34);
   h = potRond(ch, A, M, 8.6, -0.78, 0.3, 0.24, 0.72, M.anthracite); cypres(F, A, M, 8.6, -0.78, h, 1.5, 0.27, r);
   h = jardiniere(ch, A, M, 9.55, YB, 1.0, PB, 0.95); arbuste(F, A, M, 9.55, YB, h, 0.42, 0.75, PLANCHE.arbuste, r, 38);
@@ -1142,14 +1146,17 @@ export function poserMobilierRue(ch, R) {
   // et derrière, x -0,4 à 0,7, à 0,9-1,3), le pot carré noir au laurier-rose à leur ouest (x -0,9), et les bacs
   // roulants devant la porte de secours et le trumeau noir, x 1,0-2,0 ; le jeu posait les jardinières devant la porte du
   // n° 8, en x -2,15 et -3,45 : de la rue, elles faisaient une haie)
-  const grandBac = { l: 0.68, p: 0.8, h: 1.08 };
+  // (relecture du 14/10 : derrière le grand conteneur, dont le dos est à 0,5 m de la façade, ils ne peuvent être profonds
+  // que de 0,5 m)
+  const grandBac = { l: 0.68, p: 0.5, h: 1.08 };
   // (deux contre la façade, un devant, au droit du trumeau noir — photo 10 : trois couvercles, celui de devant plus bas)
-  bacRoulant(ch, A, M, 1.0, -0.86, 0.04, M.bacGris, M.bacCouvercle, grandBac);
-  bacRoulant(ch, A, M, 1.72, -0.86, -0.04, M.bacGris, M.bacCouvercle, grandBac);
+  bacRoulant(ch, A, M, 1.0, -0.71, 0.04, M.bacGris, M.bacCouvercle, grandBac);
+  bacRoulant(ch, A, M, 1.72, -0.71, -0.04, M.bacGris, M.bacCouvercle, grandBac);
   // (lot rue du 13/10, photo 10 à sa pose : celui de devant est un peu de biais, on voit sa face et un rien de son flanc)
-  // (relecture rue du 14/10, photo 10 à sa pose : c'est un grand conteneur, sa face large de 0,98 m et haute de 1,16 —
-  // 155 x 187 px à 3,4 m —, centré en x 1,62 ; le jeu le faisait de 0,68 x 1,08)
-  bacRoulant(ch, A, M, 1.62, -1.6, 0.22, M.bacGris, M.bacCouvercle, { l: 0.98, p: 0.78, h: 1.16, quatreRoues: true });
+  // (relecture rue du 14/10, photo 10 à sa pose : c'est un grand conteneur à quatre roues — son pied à 3,2 m de l'appareil,
+  // en y -1,7, sa face large de 0,94 m et haute de 1,13 —, centré en (1,57 ; -1,3) ; le jeu le faisait de 0,68 x 1,08, plus
+  // près de la bordure)
+  bacRoulant(ch, A, M, 1.57, -1.32, 0.12, M.bacGris, M.bacCouvercle, { l: 0.94, p: 0.76, h: 1.13, quatreRoues: true });
   // (le recoin de 0,66 m entre la jardinière de devant et le bac de devant, et la fente de 0,52 m entre la jardinière de
   // derrière et la façade : bouchés — Haythem s'y coincerait)
   ch.C.ajouterBoite(0.4, 1.22, 1.15, 1.84, { y1: 0.9, camera: false });
@@ -1201,12 +1208,16 @@ export function poserMobilierRue(ch, R) {
   stationVelo(ch, A, M, SX, SY, 0, hC);
   arceau(ch, A, M, SX + 0.9, SY, 0, hC); arceau(ch, A, M, SX + 1.9, SY, 0, hC);
   velo(A, M, SX - 0.35, SY - 0.34, Math.PI + 0.06, M.cadreBlanc, { penche: 0.2, style: 'route', h: hC });
-  velo(A, M, SX + 0.95, SY - 0.32, -0.05, M.cadreBleu, { penche: -0.18, h: hC });
+  // (relecture rue du 14/10 : le grand vélo bleu se voit de flanc de la photo 15 — prise de l'ouest — comme de la 16 —
+  // prise du sud — : il est de BIAIS, la roue avant vers le sud-est ; le jeu rangeait tous les vélos dans l'axe de la rue,
+  // on ne les voyait que de face)
+  // (sur la 15, sa roue arrière cache le pied de la station, sa roue avant est à droite : il est devant elle, au sud-ouest)
+  velo(A, M, SX + 0.2, SY - 0.78, -0.82, M.cadreBleu, { penche: -0.12, h: hC });
   velo(A, M, SX + 1.8, SY + 0.23, 0.04, M.cadreNoir, { penche: 0.18, h: hC });
   velo(A, M, SX + 0.35, SY - 0.57, 0.15, M.cadreGris, { penche: -0.22, style: 'route', h: hC });
   // (photo 15 : la trottinette est debout, appuyée contre les vélos du côté de l'impasse, et non couchée)
-  trottinette(A, M, SX - 0.15, SY - 0.75, 0.25, { penche: 0.16, sol: hC });
-  ch.C.ajouterBoite(SX - 1.0, -SY - 0.3, SX + 2.45, -SY + 1.1, { y0: hC, y1: hC + 1.1, camera: false });        // (les vélos, en bloc)
+  trottinette(A, M, SX + 0.05, SY - 1.25, -0.8, { penche: 0.3, sol: hC });
+  ch.C.ajouterBoite(SX - 1.0, -SY - 0.3, SX + 2.45, -SY + 1.55, { y0: hC, y1: hC + 1.1, camera: false });        // (les vélos, en bloc)
   // devant le jardin, contre le bac de béton (photos 08, 15) : la rouge, deux scooters noirs (celui du bac sous sa housse)
   // (le bac de béton gris, 1,4 x 0,55 x 0,55, contre la bordure ; ses bords chanfreinés, l'étiquette)
   const bb = pose(19.7, R.Y_CHAUSSEE + 0.38, hC);

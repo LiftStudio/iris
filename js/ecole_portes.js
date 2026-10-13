@@ -614,10 +614,12 @@ export function fenetreFacade(parent, M, { x, l = 1.2, bas = 0.95, haut = 2.5, e
   } else maille(boiteM(l + 0.06, 0.05, 0.22), M.pierreAppui || M.pierre, 0, bas - 0.025, -ep / 2 + 0.09, 0, g);
   maille(boiteM(l, 0.025, ep / 2 - 0.02), M.blanc, 0, bas - 0.012, ep / 4 + 0.03, 0, g, { ombre: false });
   if (barreaux) {
-    const zb = -ep / 2 - 0.035;
-    for (let i = 0; i < 11; i++) maille(boiteM(0.012, h + 0.08, 0.04), M.barreaux, -l / 2 + 0.05 + i * (l - 0.1) / 10, ym, zb, 0, g);
-    for (const y of [bas + 0.12, haut - 0.12]) maille(boiteM(l + 0.06, 0.04, 0.012), M.barreaux, 0, y, zb - 0.022, 0, g);
-    for (const sx of [-1, 1]) maille(boiteM(0.03, h + 0.12, 0.05), M.barreaux, sx * (l / 2 + 0.03), ym, zb + 0.01, 0, g);
+    // (relecture rue du 14/10, photo 17 de près : la grille est DANS le tableau, 5 cm derrière le nu de la pierre — huit
+    // barreaux ronds d'un bord à l'autre du cadre, trois lisses plates ; rien ne dépasse de la baie. Le jeu la posait en
+    // applique devant la pierre, onze barreaux qui débordaient en haut et en bas comme des créneaux, deux montants dehors.)
+    const zb = -ep / 2 + 0.05;
+    for (let i = 0; i < 8; i++) maille(boiteM(0.016, h - 0.02, 0.016), M.barreaux, -l / 2 + 0.11 + i * (l - 0.22) / 7, ym, zb, 0, g);
+    for (const k of (h > 1.3 ? [0.22, 0.5, 0.78] : [0.3, 0.7])) maille(boiteM(l - 0.03, 0.035, 0.01), M.barreaux, 0, bas + h * k, zb - 0.012, 0, g);
   }
   if (stores) {
     for (let i = 0; i < 12; i++) {
