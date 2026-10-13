@@ -1532,14 +1532,22 @@ export function construireCarte(scene, renderer = null) {
       for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
         const x = 13.35 + (i + 0.5) / w * W, y = 0.3 + (j + 0.5) / h * D;   // (le haut du dessin est le bas des v : le sud)
         // (relecture : la lueur ne se voit qu'à 1,5 m de la façade, et vers l'angle ; au milieu de l'accueil, rien)
-        const jour = Math.min(1, Math.exp(-Math.max(0, y - 0.3) / 1.0) * Math.min(1, Math.max(0, (x - 16.5) / 2.5)) / 0.35);
-        const v = Math.round(255 * (0.3 + 0.7 * jour)), k = (j * w + i) * 4;
-        img.data[k] = Math.round(v * 0.97); img.data[k + 1] = Math.round(v * 0.985); img.data[k + 2] = v; img.data[k + 3] = 255;
+        // (RELECTURE DU 13/10, r04 rejouée, sept pavés du plafond rétroprojetés, du nord au sud le long de x 17,3-18,1 :
+        // 148, 133, 124 en y 4,5 — chaud, sous les spots — ; 155, 145, 139 en 3,9 ; 163 en 3,3 ; 170 en 2,7 ; 186, 189, 195
+        // en 2,1 ; 221, 226, 232 en 1,5 ; 232, 240, 247 en 0,9, contre la glace. Le jeu restait plat, 165 à 170 partout et
+        // 159 à 174 au sud. Trois choses : la lueur de base un rien plus basse et CHAUDE au nord de y 3,3 ; le jour qui monte
+        // de rien, en y 2,6, à près de dix fois la base contre la façade, bleuté ; et le jour de la PORTE 6, à l'ouest de
+        // x 16,5, aux six dixièmes — ce plafond-là, c'est la glace qui le montre, blanc. En unités de l'ancienne lueur,
+        // 0,3 : la base 0,3, le jour jusqu'à 2,9 de plus.)
+        const sud = Math.pow(Math.min(1, Math.max(0, (2.6 - y) / 1.6)), 1.2), nord = Math.min(1, Math.max(0, (y - 3.3) / 1.4));
+        const jour = sud * Math.max(0.6, Math.min(1, Math.max(0, (x - 16.5) / 1.5))) * 2.9, k = (j * w + i) * 4;
+        [1 - 0.03 * nord, 1 - 0.14 * nord, 1 - 0.24 * nord].forEach((b, c) => { img.data[k + c] = Math.round(255 * Math.min(1, (0.3 * b + jour * [0.9, 0.95, 1][c]) / 3.2)); });
+        img.data[k + 3] = 255;
       }
       g.putImageData(img, 0, 0);
     }, null, false, 1);
     t.colorSpace = THREE.NoColorSpace; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.repeat.set(1 / W, 1 / D); t.needsUpdate = true;
-    p.material.emissiveMap = t; p.material.emissiveIntensity = 1.0;
+    p.material.emissiveMap = t; p.material.emissiveIntensity = 3.2;
   }
   // le bureau B (visitable : js/ecole_pieces.js) et le passage au sud-ouest de la pile, d'un seul tenant (plateaux à 2,60)
   ch.plafond(9.9, 0, 13.35, ATT.ys, 2.6, 'plateaux');
@@ -1610,7 +1618,10 @@ export function construireCarte(scene, renderer = null) {
   // est en (18,55 ; 7,1), près du mur nord, devant le local — en (18,3 ; 6,3), il tombait sur le pilier de bois clair)
   // (retour r05 du 13/10, r04 rétroprojetée au plafond : celui du bout des lignes en (17,1 ; 5,1) — en y 4,95 il tombait
   // 22 px à droite, x 130 au lieu de 108 — ; celui du fond, contre le local, en (18,72 ; 7,12) — x 50 et non 30)
-  for (const [x, y] of [[15.4, 4.3], [16.55, 4.3], [17.1, 5.1], [17.25, 3.2], [18.75, 3.2], [17.25, 1.5], [18.75, 1.5], [15.9, 6.2], [18.72, 7.12]]) ch.spot(x, y, 2.6, 'hall');
+  // (relecture du 13/10, les trois spots de r04 rétroprojetés un à un : (17,14 ; 3,22), (18,54 ; 3,29) et (18,54 ; 1,52) —
+  // la rangée de l'est est 0,2 m plus près du comptoir que sur la VO : le spot au-dessus de l'affiche tombait 15 px trop
+  // à droite, celui du coin 11 px trop bas)
+  for (const [x, y] of [[15.4, 4.3], [16.55, 4.3], [17.1, 5.1], [17.15, 3.2], [18.55, 3.3], [17.25, 1.5], [18.55, 1.5], [15.9, 6.2], [18.72, 7.12]]) ch.spot(x, y, 2.6, 'hall');
   // (10/10 : le bureau B a perdu son angle nord-est, le passage de la pile — le second spot recule)
   for (const [x, y] of [[11.0, 2.4], [12.55, 1.55]]) ch.spot(x, y, 2.6, 'bureauB');
   // (la Si 0.1 : ses dalles LED sont posées avec son mobilier, js/ecole_pieces.js)
