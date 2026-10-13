@@ -410,15 +410,25 @@ export function poserMobilier(ch) {
   // (14/10, photos 07 et 10 côte à côte : sur l'une comme sur l'autre, le liège finit à 0,3-0,4 m du jambage de la
   // grille ; il faisait 2,1 m dans un passage que le jeu garde 0,6 m trop long — de la rue, 0,95 m de mur nu le séparait
   // du jambage. Il prend les 0,5 m de trop : DEUX tableaux bord à bord, de y 0,45 à 3,05 — la photo 07 montre leur joint.)
-  cadreMural(ch, M.aluGris, 4.425, 1.75, 'W', 2.64, 1.06, 1.88, 0.02);
-  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texLiegePassage(), roughness: 0.9 }), 4.405, 1.75, 'W', 2.6, 1.08, 1.86, 0.012);
-  ch.boite(4.391, 1.742, 4.405, 1.758, 1.06, 1.88, M.aluGris, { ombre: false });
-  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texAfficheDegradee(), roughness: 0.6 }), 4.425, 3.35, 'W', 0.5, 1.12, 1.86, 0.006);
+  // (14/10, relecture : le mur est du passage recule au nu x 4,70 — js/carte_ecole.js construireParoiPassage ; ce qu'il
+  // porte le suit)
+  // (les photos 10 et 07 reposées sur la porte à sa taille — 4 px sur seize points pour la 10, l'appareil à 1,62 m : le
+  // liège va de y 0,47 à 2,35 sur la 10, jusqu'à 2,77 sur la 07, plus rasante ; de 1,06-1,12 à 1,97-2,05, et 1,90-1,98.
+  // Les deux rayons de son bout nord se croisent en (4,73 ; 2,52), de 1,09 à 2,05. Deux tableaux de y 0,45 à 2,5, de
+  // 1,08 à 2,03 — il n'y a plus de demi-mètre de trop à leur faire prendre — ; l'affiche au dégradé contre eux,
+  // y 2,55-3,05, de 1,2 à 1,86 ; au-delà, 1 m de mur nu jusqu'à la paroi, comme sur la photo 10.)
+  cadreMural(ch, M.aluGris, 4.7, 1.475, 'W', 2.09, 1.06, 2.05, 0.02);
+  const liege = texLiegePassage(); liege.repeat.set(2.05 / 2.6, 1);
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: liege, roughness: 0.9 }), 4.68, 1.475, 'W', 2.05, 1.08, 2.03, 0.012);
+  ch.boite(4.666, 1.467, 4.68, 1.483, 1.06, 2.05, M.aluGris, { ombre: false });
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texAfficheDegradee(), roughness: 0.6 }), 4.7, 2.8, 'W', 0.5, 1.2, 1.86, 0.006);
   // le mur ouest, entre la porte « Sortie » (y 1,15-2,05) et la paroi : la bande aux trois pictogrammes, y 2,29-2,67 à
   // 1,34, et la charte aux coups de pinceau bleus et rouges contre la paroi, y 2,95-3,45, de 1,32 à 1,92 (photo 07 ;
   // photo 06, par la vitre)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texBandePictos(), roughness: 0.7 }), 0.38, 0.14, 1.756, 2.48, 1.34, 'E');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texCharte(), roughness: 0.7 }), 0.5, 0.6, 1.756, 3.2, 1.62, 'E');
+  // (14/10, relecture, photo 07 reposée sur la porte à sa taille : le bord sud de la charte en y 2,6-2,7, de 1,40 à 2,05
+  // — photo 06, par la vitre : y 2,7-3,2 ; elle et la bande reculent de 30 cm vers la rue, comme la porte « Sortie »)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texBandePictos(), roughness: 0.7 }), 0.38, 0.14, 1.756, 2.18, 1.4, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texCharte(), roughness: 0.7 }), 0.5, 0.62, 1.756, 2.9, 1.71, 'E');
   // la porte « Sortie » porte trois étiquettes, un peu du côté des gonds : la flèche bleu canard à 1,60, le disque
   // barré rouge à 1,42, la petite étiquette rouge à 1,27 (photo 07) — posées sur le vantail, elles tournent avec lui
   {
@@ -432,11 +442,14 @@ export function poserMobilier(ch) {
   // 10 rejouée, une affiche de 1,33 à 1,71 et, en bas, une grille de ventilation à lames de 0,45 x 0,7 (relecture du
   // 11/10, photo 10 agrandie : l'« affiche » est un petit tableau sombre où sont épinglées six feuilles blanches, x 1,93-
   // 2,29, et au-dessus, une étiquette blanche)
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texTableauFeuilles(), roughness: 0.7 }), 0.37, 0.39, 2.11, 4.046, 1.52, 'S');
-  ch.panneau(new THREE.MeshStandardMaterial({ color: 0xf1f0ec, roughness: 0.6 }), 0.13, 0.05, 2.13, 4.046, 1.8, 'S');
+  // (14/10, relecture, photo 10 reposée — la porte du fond à sa taille, à 4,45 m de la façade : le tableau de x 1,93 à
+  // 2,37, de 1,41 à 1,83, l'étiquette à 1,98 ; la grille de x 1,84 à 2,37, de 0,10 à 0,92 — 9 % plus grands et plus hauts
+  // que sur la pose du 13/10, qui rapprochait la paroi)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texTableauFeuilles(), roughness: 0.7 }), 0.44, 0.42, 2.15, 4.046, 1.62, 'S');
+  ch.panneau(new THREE.MeshStandardMaterial({ color: 0xf1f0ec, roughness: 0.6 }), 0.13, 0.05, 2.11, 4.046, 1.98, 'S');
   // (13/10, photo 10 agrandie : la grille est d'un gris moyen, pas blanche)
-  ch.boite(1.82, 4.03, 2.27, 4.048, 0.14, 0.85, new THREE.MeshStandardMaterial({ color: 0xa9aaa6, roughness: 0.5, metalness: 0.2 }), { ombre: false });
-  for (let h = 0.18; h < 0.82; h += 0.05) ch.boite(1.85, 4.025, 2.24, 4.03, h, h + 0.025, M.grille, { ombre: false });
+  ch.boite(1.84, 4.03, 2.37, 4.048, 0.1, 0.92, new THREE.MeshStandardMaterial({ color: 0xa9aaa6, roughness: 0.5, metalness: 0.2 }), { ombre: false });
+  for (let h = 0.14; h < 0.89; h += 0.05) ch.boite(1.87, 4.025, 2.34, 4.03, h, h + 0.025, M.grille, { ombre: false });
   // L'AFFICHETTE SCOTCHÉE sur le vantail OUEST de la porte automatique, juste au-dessus de son autocollant « iris »
   // (photo 07 côté hall, photo 19 côté passage, en transparence ; relecture du 09/10) : elle part avec le vantail
   const pp = ch.portes.auto.find((P) => P.g.name === 'porte passage');
@@ -452,7 +465,7 @@ export function poserMobilier(ch) {
     const texReflet = (miroir) => canvasTex(128, 320, (g, w, h) => {
       g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
       if (miroir) { g.translate(w, 0); g.scale(-1, 1); }
-      const X = (u) => u * w, Y = (hh) => (2.23 - hh) / 2.16 * h;
+      const X = (u) => u * w, Y = (hh) => (2.344 - hh) / 2.254 * h;
       // le jour de la rue : un pan bleuté aux bords fondus
       const gr = g.createLinearGradient(X(0.62), 0, X(1), 0); gr.addColorStop(0, 'rgba(120,140,160,0)'); gr.addColorStop(0.35, 'rgba(120,140,160,0.75)'); gr.addColorStop(1, 'rgba(140,158,176,0.95)');
       g.fillStyle = gr; g.fillRect(X(0.62), Y(1.55), X(0.38), Y(0.75) - Y(1.55));
@@ -467,22 +480,25 @@ export function poserMobilier(ch) {
       const reflet = new THREE.MeshBasicMaterial({ map: texReflet(v.s < 0), color: new THREE.Color(0.42, 0.42, 0.42), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
       reflet.name = 'reflet peint des vitrages du passage';
       for (const [m, z, o] of [[sombre, 0.0028, 1], [reflet, 0.0034, 2]]) {
-        const r = new THREE.Mesh(new THREE.PlaneGeometry(0.9875 - 0.14, 2.3 - 0.14), m);
-        r.position.set(v.s * 0.9875 / 2, 1.15, z); r.castShadow = false; r.receiveShadow = false; r.renderOrder = o; r.userData.vitre = true; r.userData.horsAOSol = true; r.userData.sansNormales = true; v.g.add(r);
+        // (14/10, relecture : le vitrage d'un vantail de 1,035 x 2,47 au cadre de 9 cm — 0,855 de large, de 0,09 à 2,344)
+        const r = new THREE.Mesh(new THREE.PlaneGeometry(1.035 - 0.18, 2.254), m);
+        r.position.set(v.s * 1.035 / 2, 1.217, z); r.castShadow = false; r.receiveShadow = false; r.renderOrder = o; r.userData.vitre = true; r.userData.horsAOSol = true; r.userData.sansNormales = true; v.g.add(r);
       }
     }
   }
   if (vo) {
     // (13/10, photo 19 refaite à sa pose : x 2,78-3,06, de 1,33 à 1,53 — une feuille blanche au QR code jaune et à la
     // photo orangée, texAffichetteQR)
-    const a = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.2), new THREE.MeshStandardMaterial({ map: texAffichetteQR(), roughness: 0.75 }));
-    a.position.set(0.47, 1.43, 0.004); a.castShadow = false; a.userData.vitre = true; vo.g.add(a);
+    // (14/10, relecture, la porte à sa taille : une A4 en large, 0,30 x 0,21, de 1,42 à 1,63 — photo 07 posée sur la
+    // porte : 1,44-1,65 ; photo 06 : 1,44-1,63 ; photo 19 : 1,41-1,62 ; son axe à 0,48 des gonds)
+    const a = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.21), new THREE.MeshStandardMaterial({ map: texAffichetteQR(), roughness: 0.75 }));
+    a.position.set(0.48, 1.525, 0.004); a.castShadow = false; a.userData.vitre = true; vo.g.add(a);
     // (14/10, photos 07 et 06 agrandies : du hall, on ne voit pas un dos gris mais LA MÊME IMAGE À L'ENVERS, par
     // transparence — la photo à gauche, le QR code jaune au milieu —, un peu éteinte)
-    const gd = new THREE.PlaneGeometry(0.28, 0.2), uvd = gd.attributes.uv;
+    const gd = new THREE.PlaneGeometry(0.3, 0.21), uvd = gd.attributes.uv;
     for (let i = 0; i < uvd.count; i++) uvd.setX(i, 1 - uvd.getX(i));
     const dos = new THREE.Mesh(gd, new THREE.MeshStandardMaterial({ map: a.material.map, color: 0xcdc8be, roughness: 0.8 }));
-    dos.position.set(0.47, 1.43, -0.004); dos.rotation.y = Math.PI; dos.castShadow = false; dos.userData.vitre = true; vo.g.add(dos);
+    dos.position.set(0.48, 1.525, -0.004); dos.rotation.y = Math.PI; dos.castShadow = false; dos.userData.vitre = true; vo.g.add(dos);
   }
 
   // (la plaque « Toilettes » du C01, photo 01 — le fauteuil roulant : avec les toilettes PMR, js/ecole_pieces.js ; 09/10)

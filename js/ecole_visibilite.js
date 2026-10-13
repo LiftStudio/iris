@@ -309,7 +309,7 @@ const VOLEE2_O1 = [-0.4, 4.9, 3.1, 7.0];         // (13/10) 1er : le palier de l
 const VERS_CAGE_E = [13.4, 6.45, 20.2, 12.75];   // la cage est et ses paliers (la règle de js/ecole_etage2.js)
 const VERS_CAGE_E1 = [6.0, 5.0, 20.2, 12.75];    // 1er : et l'espace pause, par la porte du palier est
 const VERS_CAGE_E2 = [12.0, 4.5, 20.2, 12.75];   // 2e : et le bout est du couloir rouge
-const VERS_TREMIE_R = [-0.4, 4.0, 4.5, 10.4];    // rez-de-chaussée : le hall ouest devant la porte grise, le palier « 0 »
+const VERS_TREMIE_R = [-0.4, 4.0, 4.7, 10.4];    // rez-de-chaussée : le hall ouest devant la porte grise, le palier « 0 »
 const VERS_TREMIE_S = [-0.4, 4.8, 1.9, 10.6];    // -1 : sur la volée de tôle
 const PIED_TREMIE_S = [-0.4, 4.8, 5.0, 14.5];    // -1 : et à son pied, le hall et le couloir du -1
 // (les zones du rez-de-chaussée et des étages qu'on voit d'un niveau)

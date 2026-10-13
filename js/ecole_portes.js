@@ -356,8 +356,10 @@ export class Portes {
     return g;
   }
   // UN VANTAIL VITRÉ À CADRE D'ALUMINIUM (photos 07, 19, 03) : `blanc` (passage, bureau B) ou gris (entrée)
-  _vantailVitre(w, h, s, { blanc = true, tirant = 'long', autocollants = false } = {}) {
-    const M = this.M, g = new THREE.Group(), c = blanc ? 0.07 : 0.06, e = 0.05, mat = blanc ? M.alu : M.aluGris;
+  // (14/10, relecture : `cadre` — la largeur des montants et de la traverse basse, 7 cm sinon ; `plat` — [bas, haut] du
+  // méplat du tirant)
+  _vantailVitre(w, h, s, { blanc = true, tirant = 'long', autocollants = false, cadre = null, plat = null } = {}) {
+    const M = this.M, g = new THREE.Group(), c = cadre || (blanc ? 0.07 : 0.06), e = 0.05, mat = blanc ? M.alu : M.aluGris;
     const cx = s * w / 2;
     maille(boiteM(w - 0.01, c, e), mat, cx, c / 2, 0, 0, g);
     maille(boiteM(w - 0.01, c * (blanc ? 1.4 : 1), e), mat, cx, h - c * 0.7, 0, 0, g);
@@ -376,26 +378,30 @@ export class Portes {
         // (14/10, le passage — photo 19 refaite à sa pose, agrandie, et photo 07 : ce n'est pas un tube mais un MÉPLAT
         // laqué blanc de 6,5 cm, de 0,22 à 1,57, posé sur le montant de battement — son axe à 8,5 cm du chant —, décollé
         // de 5 cm, ses deux bouts coudés vers le vantail ; dessous, à 0,945, l'entrée de clé ovale)
-        const xb = s * (w - 0.085), za = e / 2, zb = 0.075, ya = 0.22, yb = 1.57, dy = 0.03;
+        const xb = s * (w - 0.085), za = e / 2, zb = 0.075, [ya, yb] = plat || [0.22, 1.57], dy = 0.03;
         maille(boiteM(0.065, yb - ya - 2 * dy, 0.018), M.alu, xb, (ya + yb) / 2, z * zb, 0, g, { ombre: false });
         for (const k of [-1, 1]) {
           const r = maille(boiteM(0.05, Math.hypot(dy, zb - za) + 0.008, 0.014), M.alu, xb, (ya + yb) / 2 + k * ((yb - ya) / 2 - dy / 2), z * (za + zb) / 2, 0, g, { ombre: false });
           r.rotation.x = k * z * Math.atan2(zb - za, dy);
         }
-        maille(boiteM(0.022, 0.042, 0.004), M.inox, s * (w - 0.032), 0.945, z * (e / 2 + 0.002), 0, g, { ombre: false });
+        maille(boiteM(0.022, 0.042, 0.004), M.inox, s * (w - 0.032), plat ? ya + 0.775 : 0.945, z * (e / 2 + 0.002), 0, g, { ombre: false });
       }
     }
     if (autocollants) {
       // `true` : deux rangées de quatre (h 1,0 et 1,55) ; sinon la liste des rangées [[hauteur, nombre], …] (un seul
       // autocollant : au milieu du vantail). Lisibles côté +z (le passage), le dos noir de l'autre côté.
+      // (14/10, relecture — photo 07 agrandie : du hall, le dos n'est pas un rectangle NOIR opaque ; c'est l'adhésif vu
+      // par transparence, gris-brun sombre, où « iris » se lit À L'ENVERS, plus clair : la même image retournée, éteinte)
       const A = this._matAutocollant();
+      const D = this._dosAutocollant || (this._dosAutocollant = new THREE.MeshStandardMaterial({ map: A.map, color: 0x8d877f, roughness: 0.6, transparent: true, opacity: 0.74, depthWrite: false }));
       const rangs = autocollants === true ? [[1.0, 4], [1.55, 4]] : autocollants;
       // (13/10 : une rangée peut donner sa place — [hauteur, nombre, x0, pas] : le premier à x0 des gonds, puis au pas)
       // (14/10 : et sa taille — [hauteur, nombre, x0, pas, largeur, hauteur de l'étiquette] ; 11 x 4 cm sinon)
       for (const [y, nb, x0, pas, la = 0.11, ha = 0.04] of rangs) for (let i = 0; i < nb; i++) {
         const x = nb === 1 ? s * w / 2 : x0 !== undefined ? s * (x0 + i * pas) : s * (c + 0.06 + i * (w - 2 * c - 0.12) / 3.2);
         const p = plan(g, A, la, ha, x, y, 0.004, 1);
-        const q = plan(g, M.noirMat, la, ha, x, y, -0.004, -1);
+        const q = plan(g, D, la, ha, x, y, -0.004, -1), uq = q.geometry.attributes.uv;
+        for (let k = 0; k < uq.count; k++) uq.setX(k, 1 - uq.getX(k));
         p.userData.vitre = q.userData.vitre = true;
       }
     }
@@ -459,7 +465,7 @@ export class Portes {
       if (o.modele === 'blanche') return this._vantailGris(w, h, s, { oculus: false, mat: M.alu, poignee: 'bequille' });
       if (o.modele === 'noire') return this._vantailGris(w, h, s, { oculus: false, mat: M.acierNoir, poignee: null });
       // (`autocollants` : une fonction du vantail, s => rangées, quand les deux vantaux n'en portent pas autant)
-      return this._vantailVitre(w, h, s, { blanc: o.blanc !== false, tirant: o.tirant || 'long', autocollants: typeof o.autocollants === 'function' ? o.autocollants(s) : !!o.autocollants });
+      return this._vantailVitre(w, h, s, { blanc: o.blanc !== false, tirant: o.tirant || 'long', autocollants: typeof o.autocollants === 'function' ? o.autocollants(s) : !!o.autocollants, cadre: o.cadre || null, plat: o.plat || null });
     };
     if (double) {
       const w = l / 2;
