@@ -561,23 +561,35 @@ function copieur(ch, x, y, face, haut = 1.15, jour = false) {
 // js/ecole_visibilite.js est celui de la vraie caméra (un rendu imbriqué le garde) : du hall comme de la rue, le
 // rez-de-chaussée et la rue y sont, tout ce que la glace peut renvoyer. Le HUD est en HTML : il ne s'y reflète pas.
 // La glace : une glace argentée rend ≈ 90 % de la lumière, un rien verte ; un voile léger (le verre, la poussière).
+// (deux images, dessinées avec la MÊME caméra symétrique : le décor sans Haythem, et Haythem seul sur fond transparent ;
+// Haythem passe devant le décor là où sa profondeur est la plus proche)
 const MiroirShader = {
   name: 'GlaceAccueil',
-  uniforms: { color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: null }, voile: { value: new THREE.Color(0, 0, 0) } },
+  uniforms: {
+    color: { value: null }, tDiffuse: { value: null }, textureMatrix: { value: null }, voile: { value: new THREE.Color(0, 0, 0) },
+    tProf: { value: null }, tLui: { value: null }, tProfLui: { value: null }, uLui: { value: 0 },
+  },
   vertexShader: Reflector.ReflectorShader.vertexShader,
   fragmentShader: /* glsl */`
     uniform vec3 color;
     uniform vec3 voile;
-    uniform sampler2D tDiffuse;
+    uniform sampler2D tDiffuse, tProf, tLui, tProfLui;
+    uniform float uLui;
     varying vec4 vUv;
     #include <logdepthbuf_pars_fragment>
     void main() {
       #include <logdepthbuf_fragment>
-      gl_FragColor = vec4( texture2DProj( tDiffuse, vUv ).rgb * color + voile, 1.0 );
+      vec3 c = texture2DProj( tDiffuse, vUv ).rgb;
+      if ( uLui > 0.5 ) {
+        vec4 l = texture2DProj( tLui, vUv );
+        if ( l.a > 0.004 && texture2DProj( tProfLui, vUv ).r <= texture2DProj( tProf, vUv ).r + 0.00002 ) c = mix( c, l.rgb / max( l.a, 0.004 ), clamp( l.a, 0.0, 1.0 ) );
+      }
+      gl_FragColor = vec4( c * color + voile, 1.0 );
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
     }`,
 };
+const COUCHE_REFLET = 12;     // la couche de Haythem dans son reflet (6, 7, 29, 30 servent déjà ailleurs)
 // LA GLACE PEINTE (qualité basse, et ce que voit la carte d'environnement) : le reflet du hall vu de l'accueil, flou —
 // le plafond clair en haut, le jour des fenêtres de la façade et leurs cadres sombres, les murs blancs, le carrelage
 function texGlacePeinte() {
@@ -631,6 +643,9 @@ function miroirAccueil(ch) {
   m.userData.dynamique = true; m.userData.horsAOSol = true; m.name = 'miroir de l\'accueil';
   m.visible = false; ch.scene.add(m); m.updateMatrixWorld(true);
   const rt = m.getRenderTarget(), vc = m.camera, tm = U.textureMatrix.value;
+  rt.depthTexture = new THREE.DepthTexture(256, 256);
+  const rtLui = new THREE.WebGLRenderTarget(256, 256, { type: THREE.HalfFloatType, depthTexture: new THREE.DepthTexture(256, 256) });
+  U.tProf.value = rt.depthTexture; U.tLui.value = rtLui.texture; U.tProfLui.value = rtLui.depthTexture;
   // ses quatre coins (monde), ses cinq points de visée, sa boîte (grossie : la caméra de l'image d'avant)
   const coins = [[-L / 2, -Hm / 2], [L / 2, -Hm / 2], [-L / 2, Hm / 2], [L / 2, Hm / 2]].map(([a, b]) => m.localToWorld(new THREE.Vector3(a, b, 0)));
   const points = [[yc, hc], [MIR.y0 + 0.12, 1.25], [MIR.y1 - 0.12, 1.25], [MIR.y0 + 0.12, 2.45], [MIR.y1 - 0.12, 2.45]];
@@ -649,12 +664,87 @@ function miroirAccueil(ch) {
     }
     return false;
   };
-  let camJeu = null, fait = false, image = 0, avant = false;
-  const etat = { actif: false, rendus: 0, ms: 0, K, pas: 1, coupe: false };
+  let camJeu = null, joueur = null, aFaire = false, luiVu = false, fait = false, image = 0, avant = false, dernier = -99, force = false, lumieres = false;
+  const etat = { actif: false, rendus: 0, rendusLui: 0, ms: 0, K, pas: 3, coupe: false, portails: true, caches: 0 };
+  const _clair = new THREE.Color();
+  // la racine de Haythem dans la scène (celle qu'on cache pour le décor, et qu'on met sur la couche du reflet)
+  const racineLui = (u) => {
+    const o = u && (u.avatarModel || u.body);
+    let r = o; while (r && r.parent && !r.parent.isScene) r = r.parent;
+    return r && r.parent ? r : null;
+  };
+  const _der = new THREE.Vector3(1e9, 0, 0);
+  // LES PORTAILS (13/10). Dans la glace, la caméra symétrique voit tout le champ recadré — vers l'ouest, la Si 0.1, le
+  // bureau, le passage, l'escalier ; au sud, la rue — quand le hall n'en laisse voir que ce qui passe par ses ouvertures.
+  // Mesuré en vue de jeu, glace à l'écran : 242 objets dessinés pour le reflet, dont 121 hors du hall. Ce qui n'est pas
+  // dans la boîte du hall n'est dessiné que si sa sphère passe par une de ses ouvertures, vue de la caméra symétrique : la
+  // porte 6, les deux fenêtres de l'accueil, le passage de la pile, le mur nord (sa porte, le cannelé).
+  const BOITE_HALL = new THREE.Box3(new THREE.Vector3(13.3, -0.1, -7.66), new THREE.Vector3(19.86, 2.75, 0.05));
+  const PORTAILS = [
+    [[13.35, -0.05, 0], [16.5, -0.05, 0], [16.5, -0.05, 2.6], [13.35, -0.05, 2.6]],
+    [[16.73, -0.05, 1.1], [17.93, -0.05, 1.1], [17.93, -0.05, 2.6], [16.73, -0.05, 2.6]],
+    [[18.38, -0.05, 1.1], [19.58, -0.05, 1.1], [19.58, -0.05, 2.6], [18.38, -0.05, 2.6]],
+    [[13.3, 2.5, 0], [13.3, 4.75, 0], [13.3, 4.75, 2.6], [13.3, 2.5, 2.6]],
+    [[14.6, 7.66, 0], [19.8, 7.66, 0], [19.8, 7.66, 2.6], [14.6, 7.66, 2.6]],
+  ].map((P) => P.map(([x, y, h]) => new THREE.Vector3(x, h, -y)));
+  // (et, de la rue, par la porte 6 à plus de 10 m dans une glace : ni les voitures, ni les feuillages, ni le mobilier, ni
+  // les taches d'ombre — une vingtaine d'appels de dessin ; restent le sol, les façades d'en face, le ciel)
+  const DETAILS_RUE = /^(feuillage de la rue|rue : pièces|zinc patiné|taches d'ombre|carrosserie|vitres des voitures|Wheel|Wheek|Optics|ombres de contact)/;
+  const _pl = [new THREE.Plane(), new THREE.Plane(), new THREE.Plane(), new THREE.Plane(), new THREE.Plane()], _cp = new THREE.Vector3();
+  let candidats = null, rendusListe = 0;
+  const lister = (scene) => {
+    candidats = [];
+    const exclu = (o) => { for (let q = o; q; q = q.parent) if (q.userData && q.userData.dynamique) return true; return false; };
+    scene.traverse((o) => {
+      if (!(o.isMesh || o.isInstancedMesh) || o === m || o.isSkinnedMesh || o.frustumCulled === false || exclu(o)) return;
+      const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
+      const sp = g.boundingSphere.clone().applyMatrix4(o.matrixWorld);
+      if (!BOITE_HALL.intersectsSphere(sp)) candidats.push([o, sp, DETAILS_RUE.test((o.material && o.material.name) || '') || DETAILS_RUE.test(o.name || '')]);
+    });
+  };
+  // la sphère sp se voit-elle, de V, par un des portails ?
+  const parUnPortail = (V, sp) => {
+    for (const P of PORTAILS) {
+      const cx = (P[0].x + P[2].x) / 2, cy = (P[0].y + P[2].y) / 2, cz = (P[0].z + P[2].z) / 2;
+      _cp.set(cx, cy, cz);
+      let dedans = true;
+      for (let i = 0; i < 4 && dedans; i++) {
+        _pl[i].setFromCoplanarPoints(V, P[i], P[(i + 1) % 4]);
+        if (_pl[i].distanceToPoint(_cp) < 0) _pl[i].negate();
+        if (_pl[i].distanceToPoint(sp.center) < -sp.radius) dedans = false;
+      }
+      if (!dedans) continue;
+      // et au-delà du portail
+      _pl[4].setFromCoplanarPoints(P[0], P[1], P[2]);
+      if (_pl[4].distanceToPoint(V) > 0) _pl[4].negate();
+      if (_pl[4].distanceToPoint(sp.center) > -sp.radius) return true;
+    }
+    return false;
+  };
+  // Haythem se voit-il dans la glace ? (ses pieds et sa tête, reflétés, vus de la caméra : à travers la glace, grossie)
+  const lui = (u, p) => {
+    if (!u) return false;
+    for (const h of [0.4, 1.0, 1.7]) {
+      const xv = 2 * MIR.x - u.x, t = (MIR.x - p.x) / (xv - p.x);
+      if (!(t > 0 && t < 1)) continue;
+      const hy = p.y + t * (h - p.y), y = -(p.z + t * (u.z - p.z));
+      if (y > MIR.y0 - 0.5 && y < MIR.y1 + 0.5 && hy > MIR.h0 - 0.5 && hy < MIR.h1 + 0.5) return true;
+    }
+    return false;
+  };
   // LE DESSIN DU REFLET (à la place de celui du Reflector : le champ recadré sur la glace)
   m.onBeforeRender = (renderer, scene, camera) => {
-    if (fait || camera !== camJeu || scene.overrideMaterial) return;
+    if (fait || camera !== camJeu || scene.overrideMaterial || (!aFaire && !luiVu)) return;
+    fait = true;
     const t0 = performance.now();
+    const racine = racineLui(joueur);
+    if (aFaire) dessinerDecor(renderer, scene, camera, racine);
+    if (luiVu && racine && dernier > -99) dessinerLui(renderer, scene, camera, racine);
+    U.uLui.value = luiVu && racine ? 1 : 0;
+    etat.ms += performance.now() - t0;
+  };
+  // LE DÉCOR, SANS HAYTHEM, depuis la caméra symétrique — une image sur `pas` quand la caméra se déplace (voir maj)
+  const dessinerDecor = (renderer, scene, camera, racine) => {
     // la caméra symétrique (le code du Reflector)
     _pm.setFromMatrixPosition(m.matrixWorld); _pc.setFromMatrixPosition(camera.matrixWorld);
     _rot.extractRotation(m.matrixWorld); _n.set(0, 0, 1).applyMatrix4(_rot);
@@ -677,7 +767,6 @@ function miroirAccueil(ch) {
     }
     ax = Math.max(-1, ax - 0.02); ay = Math.max(-1, ay - 0.02); bx = Math.min(1, bx + 0.02); by = Math.min(1, by + 0.02);
     if (bx - ax < 0.002 || by - ay < 0.002) return;
-    fait = true;
     // la projection RECADRÉE : ce rectangle remplit toute la texture
     const sx = (bx - ax) / 2, sy = (by - ay) / 2, mx = (ax + bx) / 2, my = (ay + by) / 2;
     _S.set(1 / sx, 0, 0, -mx / sx, 0, 1 / sy, 0, -my / sy, 0, 0, 1, 0, 0, 0, 0, 1);
@@ -692,8 +781,18 @@ function miroirAccueil(ch) {
     _clip.multiplyScalar(2 / _clip.dot(_q));
     e[2] = _clip.x; e[6] = _clip.y; e[10] = _clip.z + 1 - 0.003; e[14] = _clip.w;
     vc.projectionMatrixInverse.copy(vc.projectionMatrix).invert();
-    // le dessin : ni les ombres ni les matrices du monde ne sont refaites (le rendu principal vient de le faire)
+    // les portails : ce qui n'est pas dans le hall et ne passe par aucune de ses ouvertures n'est pas dessiné
+    const caches = [];
+    if (etat.portails) {
+      if (!candidats || ++rendusListe > 300) { lister(scene); rendusListe = 0; }
+      for (const [o, sp, detail] of candidats) if (o.visible && (detail || !parUnPortail(_vue, sp))) { o.visible = false; caches.push(o); }
+      etat.caches = caches.length;
+    }
+    // le dessin : ni les ombres ni les matrices du monde ne sont refaites (le rendu principal vient de le faire) ; Haythem
+    // n'y est pas (son image à lui, plus bas, suit chaque image)
     m.visible = false;
+    const vuLui = racine ? racine.visible : false;
+    if (racine) racine.visible = false;
     const avant = renderer.getRenderTarget(), xr = renderer.xr.enabled, ombres = renderer.shadowMap.autoUpdate, mat = scene.matrixWorldAutoUpdate;
     renderer.xr.enabled = false; renderer.shadowMap.autoUpdate = false; scene.matrixWorldAutoUpdate = false;
     try {
@@ -706,8 +805,39 @@ function miroirAccueil(ch) {
       renderer.setRenderTarget(avant);
       if (camera.viewport !== undefined) renderer.state.viewport(camera.viewport);
       m.visible = true;
+      if (racine) racine.visible = vuLui;
+      for (const o of caches) o.visible = true;
     }
-    etat.rendus++; etat.ms += performance.now() - t0;
+    _der.copy(_pc); dernier = image; force = false;
+    etat.rendus++;
+  };
+  // HAYTHEM SEUL, à chaque image où il se voit dans la glace, avec la caméra du dernier décor (les deux images restent
+  // d'accord) : sa couche à lui, les lumières aussi, un fond transparent. Une dizaine d'appels de dessin, quand le décor en
+  // demande 150 : il bouge à la cadence du jeu dans la glace même quand le décor n'est refait qu'une image sur trois.
+  const dessinerLui = (renderer, scene, camera, racine) => {
+    if (!lumieres) { scene.traverse((o) => { if (o.isLight) o.layers.enable(COUCHE_REFLET); }); lumieres = true; }
+    racine.traverse((o) => o.layers.enable(COUCHE_REFLET));
+    m.visible = false;
+    const avant = renderer.getRenderTarget(), xr = renderer.xr.enabled, ombres = renderer.shadowMap.autoUpdate, mat = scene.matrixWorldAutoUpdate;
+    const fond = scene.background, alpha = renderer.getClearAlpha(); renderer.getClearColor(_clair);
+    const couches = vc.layers.mask;
+    renderer.xr.enabled = false; renderer.shadowMap.autoUpdate = false; scene.matrixWorldAutoUpdate = false;
+    scene.background = null; vc.layers.set(COUCHE_REFLET);
+    try {
+      renderer.setRenderTarget(rtLui);
+      renderer.setClearColor(0x000000, 0);
+      renderer.state.buffers.depth.setMask(true);
+      renderer.clear(true, true, true);
+      renderer.render(scene, vc);
+    } finally {
+      vc.layers.mask = couches; scene.background = fond;
+      renderer.setClearColor(_clair, alpha);
+      renderer.xr.enabled = xr; renderer.shadowMap.autoUpdate = ombres; scene.matrixWorldAutoUpdate = mat;
+      renderer.setRenderTarget(avant);
+      if (camera.viewport !== undefined) renderer.state.viewport(camera.viewport);
+      m.visible = true;
+    }
+    etat.rendusLui++;
   };
   // (débogage : tourner la glace autour de son axe vertical, en degrés — la recherche de sa pose, 13/10)
   const tourner = (deg) => {
@@ -718,19 +848,32 @@ function miroirAccueil(ch) {
   return {
     // à chaque image, avant le rendu : le vrai miroir ou la glace peinte
     maj(dt, jeu) {
-      camJeu = jeu.camera;
+      camJeu = jeu.camera; joueur = jeu.user; fait = false;
       const p = camJeu.position;
       let ok = !etat.coupe && !!(jeu.fx && jeu.fx.quality !== 'low') && p.y > -0.2 && p.y < 3.3 && p.x < MIR.x - 0.05;
       if (ok) { camJeu.updateMatrixWorld(); _fr.setFromProjectionMatrix(_pv.multiplyMatrices(camJeu.projectionMatrix, camJeu.matrixWorldInverse)); ok = _fr.intersectsBox(boite); }
       if (ok) ok = vu(p.x, p.y, p.z);
       etat.actif = ok; m.visible = ok; repli.visible = !ok;
-      // (une image sur `pas` : entre deux, la glace garde le reflet d'avant et la matrice qui va avec — il reste juste)
-      image++; fait = ok && avant && image % etat.pas !== 0; avant = ok;
-      if (ok) {
-        jeu.renderer.getDrawingBufferSize(_taille);
-        const w = Math.max(64, Math.round(_taille.x * K)), h = Math.max(64, Math.round(_taille.y * K));
-        if (rt.width !== w || rt.height !== h) rt.setSize(w, h);
-      }
+      image++;
+      if (!ok) { aFaire = luiVu = false; avant = false; return; }
+      if (!avant) force = true;
+      avant = true;
+      jeu.renderer.getDrawingBufferSize(_taille);
+      const w = Math.max(64, Math.round(_taille.x * etat.K)), h = Math.max(64, Math.round(_taille.y * etat.K));
+      if (rt.width !== w || rt.height !== h) { rt.setSize(w, h); rtLui.setSize(w, h); force = true; }
+      // QUAND REDESSINER LE DÉCOR (13/10, mesuré en vue de jeu, la glace à l'écran, en marchant : 22 ms l'image sans elle,
+      // 31,6 en la redessinant à chaque image — ≈ 150 appels de dessin, 8 à 9 ms ici quelle que soit la taille de la
+      // texture : c'est le nombre d'appels qui coûte, pas les pixels). La glace garde le décor d'avant et la matrice qui
+      // va avec : tant que la caméra ne fait que TOURNER, il reste juste (le reflet ne dépend que de sa place). On le
+      // refait : au premier jour, à la taille changée ; quand la caméra s'est déplacée de plus de 2 cm — une image sur
+      // `pas` (2 en ultra et extrême, 4 en haute, 5 en moyenne et au téléphone : en marchant, 3 cm par image, le décor
+      // reflété saute d'au plus 4 px à 5 m) ; et au moins toutes les 20 images (une porte, un passant). Haythem, lui, est
+      // redessiné à chaque image où il se voit dans la glace.
+      const q = jeu.fx && jeu.fx.quality;
+      etat.pas = TELEPHONE || q === 'medium' ? 5 : q === 'high' ? 4 : 2;
+      const bouge = p.distanceToSquared(_der) > 0.0004;
+      aFaire = force || image - dernier >= 20 || (bouge && image - dernier >= etat.pas);
+      luiVu = lui(jeu.user && jeu.user.posAff, p);
     },
   };
 }
