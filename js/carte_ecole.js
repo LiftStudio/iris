@@ -1131,8 +1131,8 @@ function construireMurs(ch) {
   // q_0026-0031). Les vantaux, la cloison, le couloir et l'escalier qui suivent : js/ecole_est.js)
   // (10/10 : à l'ouest de la porte, la pile — js/ecole_rdc_centre.js : le mur part de sa face est)
   ch.mur({ de: [14.6, 7.575], a: [16.25, 7.575], mats: B, plinthes: ['S'], ouvertures: [{ c: 15.4, l: 1.4, h: 2.1 }] });
-  // (le mitoyen est du hall, x 19,95 de y -0,4 à 7,65 : peint gris ardoise derrière le comptoir, de la cloison biaise du
-  // bureau d'angle au local technique — js/ecole_hall.js, 10/10 ; retour r04 du 12/10)
+  // (le mitoyen est du hall, x 19,95 de y -0,4 à 7,65 : peint gris ardoise derrière le comptoir, du bord sud du miroir au
+  // local technique, blanc de l'angle de la façade au miroir — js/ecole_hall.js, 10/10 ; retours r04 du 12/10, r05 du 13/10)
   // ---- L'ESCALIER : la cage (jusqu'au plafond de l'étage), les portes coupe-feu ----
   // (plan V2 : tout recule de DY_S. Le mur des portes est sur la ligne y 9,0 ; plus de trumeau entre les portes et le C05
   // — l'ouverture, élargie, va jusqu'au jambage, x 4,45, et le C05 commence au mur est de la cage)
@@ -1197,15 +1197,16 @@ function construirePorteFond(ch) {
 // L'ACCUEIL ET LE HALL D'ENTRÉE (VO 6,4-7,4 s et 92,5-95,8 s, photos 03, 16, 24 ; 10/10 ; retour r04 de Haythem du 12/10,
 // sa photo de l'accueil) : le comptoir n'est pas le long de la façade mais NORD-SUD, face à l'ouest (x 16,83-17,53, y
 // 1,1-3,6), terminé au nord par le décroché PMR et son caisson à tablette haute ; derrière lui l'open-space du personnel,
-// le mitoyen gris ardoise et ses deux affiches, la cloison biaise du bureau d'angle ; au fond, le local technique aux
+// le mitoyen gris ardoise et ses deux affiches, le MIROIR (retour r05 du 13/10) ; au fond, le local technique aux
 // portes de bois clair, le pilier et son écran, le panneau des formations, le portant des goodies ; l'angle nord-est
 // (photocopieur, étiquettes « INFORMATIQUE », meuble noir) ; la retombée et les lignes lumineuses du plafond :
-// js/ecole_hall.js.
+// js/ecole_hall.js. Rend { maj } : le miroir, à chaque image.
 function construireAccueil(ch) {
   const { M } = ch;
-  poserHall(ch);
+  const hall = poserHall(ch);
   // le tapis d'entrée bleu-gris foncé
   ch.boite(13.6, 0.4, 16.2, 1.9, 0, 0.012, M.tapis, { ombre: false });
+  return hall;
 }
 
 // LES RADIATEURS (photos 03, 06, 21) : panneaux blancs, grille sur le dessus
@@ -1271,7 +1272,7 @@ export function construireCarte(scene, renderer = null) {
   construireParoiPassage(ch);
   construirePorteFond(ch);
   construireEscalier(ch);
-  construireAccueil(ch);
+  const accueil = construireAccueil(ch);
   // (le radiateur du hall ouest : entre l'extincteur et l'affiche jaune du tri — photos 02 et 06, de gauche à droite :
   // porte grise, extincteur, radiateur, affiche, portes de l'escalier. Relecture du 09/10 : il est fixé sur la face SUD
   // de l'avancée nord, perpendiculaire au mur — la photo 02 le montre de chant, la photo 06 de trois quarts)
@@ -1404,6 +1405,24 @@ export function construireCarte(scene, renderer = null) {
     // 170, 161, 149 au jeu, et un quadrillage marqué là où la photo ne montre que des filets pâles : une lueur UNIE, d'un
     // blanc froid, qui relève d'autant les joints et le champ perforé — le contraste baisse, le dessin reste)
     p.material.emissive = new THREE.Color(0xe6e8ea); p.material.emissiveMap = null; p.material.emissiveIntensity = 0.3;
+    // (retour r05 du 13/10, r04 rejouée : contre la façade et le miroir, le plafond est dans le JOUR des fenêtres c 17,33
+    // et c 18,98 — 217, 226, 234, bleuté, au-dessus de la glace, quand le milieu de l'accueil est à 171, 168, 165 — ; le
+    // jeu l'éclairait partout pareil, 157, 154, 149 près de la glace : la même lueur, plus forte et plus froide vers
+    // l'angle sud-est. Les coordonnées de texture du plafond sont en mètres : u depuis x 13,35, v depuis le nord, y 7,5)
+    const W = 6.45, D = 7.2;
+    const t = canvasTex(64, 64, (g, w, h) => {
+      const img = g.createImageData(w, h);
+      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+        const x = 13.35 + (i + 0.5) / w * W, y = 0.3 + (j + 0.5) / h * D;   // (le haut du dessin est le bas des v : le sud)
+        // (relecture : la lueur ne se voit qu'à 1,5 m de la façade, et vers l'angle ; au milieu de l'accueil, rien)
+        const jour = Math.min(1, Math.exp(-Math.max(0, y - 0.3) / 1.0) * Math.min(1, Math.max(0, (x - 16.5) / 2.5)) / 0.35);
+        const v = Math.round(255 * (0.3 + 0.7 * jour)), k = (j * w + i) * 4;
+        img.data[k] = Math.round(v * 0.97); img.data[k + 1] = Math.round(v * 0.985); img.data[k + 2] = v; img.data[k + 3] = 255;
+      }
+      g.putImageData(img, 0, 0);
+    }, null, false, 1);
+    t.colorSpace = THREE.NoColorSpace; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.repeat.set(1 / W, 1 / D); t.needsUpdate = true;
+    p.material.emissiveMap = t; p.material.emissiveIntensity = 1.0;
   }
   // le bureau B (visitable : js/ecole_pieces.js) et le passage au sud-ouest de la pile, d'un seul tenant (plateaux à 2,60)
   ch.plafond(9.9, 0, 13.35, ATT.ys, 2.6, 'plateaux');
@@ -1466,7 +1485,9 @@ export function construireCarte(scene, renderer = null) {
   // (Retour r04 du 12/10, la photo de l'accueil rejouée à sa pose : (17,25 ; 3,2), (18,75 ; 3,2) et (18,75 ; 1,5) y sont, à
   // 0,1 m près ; pas de spot en (17,7 ; 4,3) — il en a un en (17,1 ; 4,95), devant la retombée ; au fond à gauche, le spot
   // est en (18,55 ; 7,1), près du mur nord, devant le local — en (18,3 ; 6,3), il tombait sur le pilier de bois clair)
-  for (const [x, y] of [[15.4, 4.3], [16.55, 4.3], [17.1, 4.95], [17.25, 3.2], [18.75, 3.2], [17.25, 1.5], [18.75, 1.5], [15.9, 6.2], [18.55, 7.1]]) ch.spot(x, y, 2.6, 'hall');
+  // (retour r05 du 13/10, r04 rétroprojetée au plafond : celui du bout des lignes en (17,1 ; 5,1) — en y 4,95 il tombait
+  // 22 px à droite, x 130 au lieu de 108 — ; celui du fond, contre le local, en (18,72 ; 7,12) — x 50 et non 30)
+  for (const [x, y] of [[15.4, 4.3], [16.55, 4.3], [17.1, 5.1], [17.25, 3.2], [18.75, 3.2], [17.25, 1.5], [18.75, 1.5], [15.9, 6.2], [18.72, 7.12]]) ch.spot(x, y, 2.6, 'hall');
   // (10/10 : le bureau B a perdu son angle nord-est, le passage de la pile — le second spot recule)
   for (const [x, y] of [[11.0, 2.4], [12.55, 1.55]]) ch.spot(x, y, 2.6, 'bureauB');
   // (la Si 0.1 : ses dalles LED sont posées avec son mobilier, js/ecole_pieces.js)
@@ -1625,6 +1646,7 @@ export function construireCarte(scene, renderer = null) {
     sousSol.maj(dt, jeu);
     sousSolEst.maj(dt, jeu);
     est.maj(dt, jeu);
+    accueil.maj(dt, jeu);
     // l'ombre cuite au sol vaut aussi pour le carrelage du passage et le sol du palier du sous-sol (elle est posée sur le
     // matériau du « terrain »)
     if ((scene.userData.solCuit || 0) !== cuit && M.sol.aoMap) {
