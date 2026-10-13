@@ -17,6 +17,17 @@
 // mur ardoise, celui du local — 6 à 12 px trop haut : l'appareil est trop BAS. À 1,155 m, les deux se recalent à 2-4 px
 // près, et la tablette, toujours sur l'horizon, est à 1,15 m — la rainure, à la même proportion, à 0,745.)
 //
+// RETOUR r05 DU 13/10 (Haythem, sa photo renvoyée : « attention, j'espère que tu as bien corrigé l'accueil » ; puis
+// « d'ailleurs, fais attention : à droite, c'est un MIROIR, regarde bien », et r05_photo_miroir.png). À droite du mur
+// ardoise, ce n'est pas la cloison vitrée d'un bureau d'angle mais une GLACE collée sur le mitoyen, qui renvoie le hall,
+// la porte 6 et les fenêtres de la façade (miroirAccueil, plus bas : où elle est, comment elle se dessine sans coûter).
+// r04 rejouée à sa pose, pavé par pavé, Haythem là où se tenait l'appareil (les spots suivent Haythem) : le comptoir d'un
+// gris neutre, sombre et chaud au nord, clair et froid au sud dans le jour de la porte 6 ; sa tablette épaisse, à 1,18 ;
+// plus d'ombre dure ni d'ombre cuite à son pied ; le chêne miel ; le caisson haut du décroché et ses deux faces ; deux bacs,
+// la chemise rouge, la bouilloire au fond ; la face sud du pilier au jour ; le panneau haut du local, la seconde porte au
+// fond ; l'écran et son image lavande ; le portant plus haut et plus étroit, son affichette ; la retombée, le dôme, deux
+// spots ; le plafond au jour près de la glace.
+//
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; dans le jeu X = x, Z = -y) :
 //   le comptoir haut        x 16,83-17,53 y 1,1-3,6    NORD-SUD, face à l'ouest : stratifié gris clair, rainure à 0,745,
 //                                                     socle de chêne clair en retrait, tablette grise en saillie à 1,18
