@@ -792,19 +792,23 @@ function texHetreDC(enLong) {
     }
   }, enLong ? [1 / 0.5, 1 / 2] : [1 / 2, 1 / 0.5], false, 8);
 }
-// LE FAUX PLAFOND de la salle (photo r06) : des dalles minérales de 60 x 60 d'un blanc neutre, à peine mouchetées, dans
-// une ossature dont on ne voit qu'un filet gris foncé, simple (celle du C05 a un T blanc bordé de deux feuillures). Tuile
-// de 1,2 m (quatre dalles), le joint sur le bord.
+// LE FAUX PLAFOND de la salle (photo r06) : des dalles minérales d'un blanc neutre, à peine mouchetées, dans une ossature
+// dont on ne voit qu'un filet gris foncé, simple (celle du C05 a un T blanc bordé de deux feuillures). (13/10, relecture :
+// la photo redressée sur le plan du plafond montre des dalles de 120 x 60, le long côté est-ouest — joints est-ouest
+// tous les 0,60 depuis le mur du fond, joints nord-sud tous les 1,20 seulement, en x 2,27 / 3,49 / 4,67 / 5,85 ; le jeu
+// en dessinait deux fois trop, des carrés de 60.) Tuile de 1,2 m (deux dalles) : u part du mur ouest (x 0,475), le
+// joint nord-sud au milieu (x 1,075 + 1,2 k) ; v part du mur du fond, les joints est-ouest au bord et au milieu.
 function texDallesDC() {
   const W = TELEPHONE ? 256 : 512;
   return canvasTex(W, W, (g, w, h) => {
     const r = graine(6061), k = w / 512;
     g.fillStyle = '#ecebe7'; g.fillRect(0, 0, w, h);
     for (let i = 0; i < w * h / 20; i++) { const v = 222 + (r() - 0.5) * 34; g.fillStyle = `rgba(${v},${v - 1},${v - 5},0.3)`; g.fillRect(r() * w, r() * h, k, k); }
-    for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) { const t = (r() - 0.5) * 8; g.fillStyle = `rgba(${128 + t},${128 + t},${128 + t},0.05)`; g.fillRect(i * w / 2, j * h / 2, w / 2, h / 2); }
+    for (let j = 0; j < 2; j++) { const t = (r() - 0.5) * 8; g.fillStyle = `rgba(${128 + t},${128 + t},${128 + t},0.05)`; g.fillRect(0, j * h / 2, w, h / 2); }
     const L = Math.max(1, 2.4 * k);
     g.fillStyle = 'rgba(112,108,100,0.9)';
-    for (let i = 0; i <= 2; i++) { g.fillRect(i * w / 2 - L / 2, 0, L, h); g.fillRect(0, i * h / 2 - L / 2, w, L); }
+    g.fillRect(w / 2 - L / 2, 0, L, h);
+    for (let i = 0; i <= 2; i++) g.fillRect(0, i * h / 2 - L / 2, w, L);
   }, [1 / 1.2, 1 / 1.2], false, 8);
 }
 // LES AURÉOLES DES LUMINAIRES SUR LE MUR OUEST (photo r06 : deux grandes taches claires sous les luminaires les plus
@@ -819,14 +823,24 @@ function texAureole() {
     g.globalCompositeOperation = 'destination-out'; g.fillStyle = c; g.fillRect(0, 0, w, h * 0.22);
   }, null, true, 2);
 }
-// LA BOUCHE D'EXTRACTION du plafond (photo r06, en haut à gauche) : une platine blanche, un disque percé
+// LA BOUCHE D'EXTRACTION du plafond (photo r06, en haut à gauche) : une platine blanche, à l'est un disque percé de gros
+// trous noirs (relecture : sur la photo on ne voit qu'eux, cinq rangs serrés ; le jeu dessinait des trous d'épingle) ;
+// u vers l'est. Et LA SALISSURE grise que l'air aspiré laisse autour (un dégradé posé sur le plafond, plus large)
 function texBouche() {
   return canvasTex(128, 64, (g, w, h) => {
-    g.fillStyle = '#f2f1ed'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#dedbd4'; g.beginPath(); g.arc(w * 0.62, h / 2, h * 0.42, 0, 7); g.fill();
-    g.fillStyle = '#3c3a36';
-    for (let i = -3; i <= 3; i++) for (let j = -3; j <= 3; j++) if (i * i + j * j <= 10) { g.beginPath(); g.arc(w * 0.62 + i * 5, h / 2 + j * 5, 1.6, 0, 7); g.fill(); }
+    g.fillStyle = '#f4f3ef'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(120,116,108,0.6)'; g.lineWidth = 2; g.strokeRect(1, 1, w - 2, h - 2);
+    g.fillStyle = '#d9d6ce'; g.beginPath(); g.arc(w * 0.66, h / 2, h * 0.46, 0, 7); g.fill();
+    g.fillStyle = '#1c1b19';
+    for (let i = -3; i <= 3; i++) for (let j = -2; j <= 2; j++) if (i * i * 0.8 + j * j * 1.4 <= 8.5) { g.beginPath(); g.arc(w * 0.66 + i * 8.5, h / 2 + j * 7.5, 3.1, 0, 7); g.fill(); }
   }, null, false, 2);
+}
+function texSalissure() {
+  return canvasTex(128, 64, (g, w, h) => {
+    const gr = g.createRadialGradient(w * 0.6, h / 2, 0, w * 0.6, h / 2, w * 0.45);
+    gr.addColorStop(0, 'rgba(70,62,50,0.55)'); gr.addColorStop(0.5, 'rgba(80,72,58,0.25)'); gr.addColorStop(1, 'rgba(80,72,58,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  }, null, true, 2);
 }
 
 // =====================================================================
@@ -1907,7 +1921,16 @@ function matDC(M) {
     // (les murs : le blanc de l'école un ton plus bas — v4 rejouée : 186/174/155 au jeu contre 145/135/117 sur la photo, au
     // mur du fond ; 179/163/142 contre 156/137/103 en haut du mur ouest ; c'est la lumière des luminaires qui les éclaire,
     // en auréoles)
-    mur: (() => { const m = ch_M_blanc.clone(); m.color.multiplyScalar(0.85); m.name = 'peinture blanche (salle David Clark)'; detailPhoto(m, 'beton', 1, 1, { relief: 0.035, grain: 0, rugo: false }); return m; })(),
+    // (13/10, relecture — les murs relevés colonne par colonne à la pose de la photo : sous le plafond une bande
+    // tabac, 115-125/100-110/75-80 jusqu'à 1,6 m, qui s'éclaircit vers un blanc presque neutre en bas, 150-190/145-190/
+    // 125-180 ; le jeu donnait 180/168/150 de haut en bas, partout. Les luminaires encastrés n'éclairent pas le haut des
+    // murs, la lumière d'ambiance du moteur si : on la retire ici, au fil de la hauteur — `degradeMurDC`)
+    mur: (() => { const m = ch_M_blanc.clone(); m.color.multiplyScalar(0.85); m.name = 'peinture blanche (salle David Clark)'; detailPhoto(m, 'beton', 1, 1, { relief: 0.035, grain: 0, rugo: false }); degradeMurDC(m); return m; })(),
+    // (le poteau, relecture : sa cornière, son panneau plus blanc, son joint creux, sa face est à l'ombre)
+    corniere: std({ color: 0x9c9a94, roughness: 0.55, metalness: 0.2 }, 'cornière grise du poteau (salle David Clark)'),
+    panneau: std({ color: 0xfbfaf6, roughness: 0.85 }, 'panneau blanc du poteau (salle David Clark)'),
+    joint: std({ color: 0x6f6b62, roughness: 0.9 }, 'joint creux du poteau (salle David Clark)'),
+    faceOmbre: (() => { const m = ch_M_blanc.clone(); m.color.multiply(new THREE.Color(0.47, 0.43, 0.3)); m.name = 'face à l\'ombre du poteau (salle David Clark)'; return m; })(),
     aureole: new THREE.MeshBasicMaterial({ map: texAureole(), color: new THREE.Color(0.3, 0.29, 0.27), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }),
     // (v1-v3 rejouées : elle sortait orange — 133/81/2 au jeu contre 147/103/2 sur la photo, à l'assise de la première
     // chaise du mur ouest : un moutarde plus jaune, sans bleu)
@@ -1916,13 +1939,18 @@ function matDC(M) {
     marine: std({ color: 0x1f2a52, roughness: 0.9 }, 'tissu bleu marine (salle David Clark)'),
     armoire: std({ color: 0x545c67, roughness: 0.45, metalness: 0.15 }, 'armoire anthracite'),   // (photo : 40/43/48, un gris ardoise)
     caisse: std({ color: 0xc9c7bf, roughness: 0.45, metalness: 0.2 }, 'caisson gris clair'),
+    // (relecture : le vieux boîtier de l'îlot est crème, pas gris ; les dos des deux unités centrales)
+    beige: std({ color: 0xd2c8b0, roughness: 0.5 }, 'boîtier crème (salle David Clark)'),
+    dosTour: std({ map: texDosPC(false), roughness: 0.5, metalness: 0.3 }, "dos d'unité centrale"), dosBeige: std({ map: texDosPC(true), roughness: 0.5 }, 'dos du boîtier crème'),
     ecran: std({ color: 0x0a0b0d, roughness: 0.16, metalness: 0.1 }, 'écran éteint'),
     tour: std({ color: 0x141517, roughness: 0.42 }, 'unité centrale noire'),
+    bande: std({ color: 0x34363a, roughness: 0.35, metalness: 0.4 }, "bandeau de façade d'unité centrale"),   // (relecture : pas d'éclat d'alu sur la photo)
     voile: std({ color: 0xd6cdba, roughness: 0.6 }, 'voile de fond beige'),
     plinthe: std({ color: 0x75726c, roughness: 0.5 }, 'plinthe grise (salle David Clark)'),
     tube: std({ color: 0x8e8f90, roughness: 0.4, metalness: 0.5 }, 'poteau tubulaire gris'),
     meuble: std({ color: 0xdedcd8, roughness: 0.45 }, 'meuble blanc (salle David Clark)'),
-    bouche: std({ map: texBouche(), roughness: 0.6 }),
+    bouche: std({ map: texBouche(), roughness: 0.6 }, 'bouche d\'extraction (salle David Clark)'),
+    salissure: new THREE.MeshStandardMaterial({ map: texSalissure(), transparent: true, depthWrite: false, roughness: 1 }),
     jaune: std({ color: 0xd9c12c, roughness: 0.5 }), cable: std({ color: 0xe4e3de, roughness: 0.5 }), bleu: std({ color: 0x2c5bb5, roughness: 0.5 }),
     sac: std({ color: 0x25222a, roughness: 0.85 }), sacViolet: std({ color: 0x4a3653, roughness: 0.85 }),
     lum: new THREE.MeshBasicMaterial({ map: texLumGrille(0.6, 0.6), color: BLANC_DC.clone().multiplyScalar(1.4) }),
@@ -1930,6 +1958,23 @@ function matDC(M) {
   };
   _dc.lum.name = 'luminaire à grille 60x60 (salle David Clark)'; _dc.lumL.name = 'luminaire à grille 60x120 (salle David Clark)';
   return _dc;
+}
+// LE DÉGRADÉ DES MURS de la salle (relecture du 13/10, photo r06) : la couleur multipliée selon la hauteur dans le
+// monde — un blanc à peine refroidi jusqu'à 0,9 m, puis la bande tabac qui fonce jusqu'au plafond ; facteurs en
+// couleur linéaire, réglés sur le profil du mur ouest relevé tous les 0,5 m (à 1,25 / 1,5 / 1,75 / 2,0 / 2,25 m : photo
+// 145-210 / 120-220 / 110-185 / 110-145 / 105-150, plus clair près de l'appareil). Clé de
+// programme constante ; le matériau n'est plus cousu ni dédoublonné (shader maison), ce que ses quelques murs supportent.
+function degradeMurDC(m, bas = [0.95, 0.98, 1.05], haut = [0.62, 0.55, 0.44]) {
+  const u = { uBasDC: { value: new THREE.Vector3(...bas) }, uHautDC: { value: new THREE.Vector3(...haut) } };
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, u);
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying float vHautDC;')
+      .replace('#include <project_vertex>', '#include <project_vertex>\nvHautDC = (modelMatrix * vec4(transformed, 1.0)).y;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying float vHautDC;\nuniform vec3 uBasDC;\nuniform vec3 uHautDC;')
+      .replace('#include <color_fragment>', '#include <color_fragment>\ndiffuseColor.rgb *= mix(uBasDC, uHautDC, smoothstep(0.9, 2.35, vHautDC));');
+  };
+  m.customProgramCacheKey = () => 'iris-mur-dc-1';
+  return m;
 }
 // UNE PLINTHE GRISE (8 cm) au pied d'une face de mur : comme `plinthe`, de la matière de la salle
 function plintheDC(ch, D, axe, ligne, a0, a1, s) {
@@ -1960,22 +2005,43 @@ function tableDC(ch, D, x0, y0, x1, y1, { voile = false } = {}) {
   ch.C.ajouterBoite(x0, -y0, x1, -y1, { y1: h + 0.02 });
 }
 // L'ÉCRAN ÉTEINT (photo r06 : tous noirs) sur son pied, sur la table : `w` de large, tourné vers `face`
-function ecranDC(ch, D, x, y, face, w = 0.5) {
+// (relecture : `bas` la hauteur du bas de l'écran au-dessus du plateau — 5,5 cm pour celui de l'îlot, rejoué par ses
+// quatre coins sur la photo : x 3,14-3,68, y 16,33, de 0,80 à 1,11 m)
+function ecranDC(ch, D, x, y, face, w = 0.5, bas = 0.11) {
   const g = groupe(ch, x, y, face, 0.745), hh = w * 0.6;
   B(g, D.tour, 0.2, 0.012, 0.16, 0, 0.006, -0.02, { ombre: false });
-  B(g, D.tour, 0.045, 0.16, 0.025, 0, 0.09, -0.065);
-  R(g, D.tour, w, hh, 0.028, 0.004, 0, 0.11 + hh / 2, -0.05);
-  plan(g, D.ecran, w - 0.024, hh - 0.024, 0, 0.11 + hh / 2, -0.0355);
+  B(g, D.tour, 0.045, bas + 0.05, 0.025, 0, (bas + 0.05) / 2 + 0.005, -0.065);
+  R(g, D.tour, w, hh, 0.028, 0.004, 0, bas + hh / 2, -0.05);
+  plan(g, D.ecran, w - 0.024, hh - 0.024, 0, bas + hh / 2, -0.0355);
   return g;
 }
 // L'UNITÉ CENTRALE NOIRE, sur la table (h 0,745) ou dessous (h 0), sa face avant tournée vers `face` ; `clair` : un
 // vieux boîtier gris clair (sous la table de devant)
-function tourDC(ch, D, P, x, y, face, h = 0, { clair = false, haut = 0.42 } = {}) {
+// (relecture : `prof` la profondeur ; `dos` : sa face ARRIÈRE est dessinée — tôle, alimentation, prises, câbles
+// branchés —, celle que montrent la tour noire et le boîtier beige de l'îlot sur la photo, tournés le dos à l'appareil)
+function tourDC(ch, D, P, x, y, face, h = 0, { clair = false, haut = 0.42, prof = 0.44, dos = false, mat = null } = {}) {
   const g = groupe(ch, x, y, face, h);
-  B(g, clair ? D.caisse : D.tour, 0.18, haut, 0.44, 0, haut / 2, 0);
-  B(g, P.alu, 0.16, 0.012, 0.004, 0, haut - 0.05, 0.222, { ombre: false });
-  B(g, P.plastiqueGris, 0.012, 0.012, 0.004, 0.05, 0.33, 0.222, { ombre: false });
+  B(g, mat || (clair ? D.beige : D.tour), 0.18, haut, prof, 0, haut / 2, 0);
+  B(g, D.bande, 0.16, 0.012, 0.004, 0, haut - 0.05, prof / 2 + 0.002, { ombre: false });
+  B(g, P.plastiqueGris, 0.012, 0.012, 0.004, 0.05, haut - 0.09, prof / 2 + 0.002, { ombre: false });
+  if (dos) plan(g, clair ? D.dosBeige : D.dosTour, 0.17, haut - 0.01, 0, haut / 2, -prof / 2 - 0.0015, Math.PI);
   return g;
+}
+// LE DOS D'UNE UNITÉ CENTRALE (photo r06, l'îlot) : la tôle, l'alimentation et son ventilateur en haut, la colonne des
+// prises, les caches des cartes en bas, des fiches blanches et bleues ; `beige` : le vieux boîtier crème
+function texDosPC(beige) {
+  return canvasTex(64, 160, (g, w, h) => {
+    const r = graine(beige ? 712 : 711);
+    g.fillStyle = beige ? '#b9b2a2' : '#5d6064'; g.fillRect(0, 0, w, h);
+    g.fillStyle = beige ? '#a29a88' : '#3f4245'; g.fillRect(4, 6, w - 8, 38);
+    g.fillStyle = '#1d1e20'; g.beginPath(); g.arc(w * 0.4, 25, 14, 0, 7); g.fill();
+    g.strokeStyle = '#7d8085'; g.lineWidth = 1.2; for (let k = 4; k <= 13; k += 3) { g.beginPath(); g.arc(w * 0.4, 25, k, 0, 7); g.stroke(); }
+    g.fillStyle = '#27282a'; g.fillRect(6, 52, 18, 54);
+    for (let k = 0; k < 9; k++) { g.fillStyle = ['#3a5fa8', '#9a9da2', '#d8d8d2', '#202022', '#5a8a4a'][(r() * 5) | 0]; g.fillRect(8 + (r() * 10) | 0, 55 + k * 5.5, 5 + (r() * 6) | 0, 3); }
+    g.fillStyle = beige ? '#9c9482' : '#4a4d51'; for (let k = 0; k < 6; k++) g.fillRect(30, 112 + k * 7, w - 36, 4);
+    g.strokeStyle = '#ecece6'; g.lineWidth = 2.2; g.beginPath(); g.moveTo(14, 60); g.quadraticCurveTo(22, 120, 10, h); g.stroke();
+    g.strokeStyle = '#2e63c4'; g.beginPath(); g.moveTo(18, 84); g.quadraticCurveTo(30, 130, 26, h); g.stroke();
+  }, null, false, 4);
 }
 // LA CHAISE COQUE JAUNE MOUTARDE SUR LUGE NOIRE (photo r06) : la coque d'un seul tenant, en bois moulé — l'assise
 // creusée qui remonte en se pinçant à la taille dans le haut dossier renversé, 0,88 m — sur deux luges de tube noir EN
@@ -2057,6 +2123,13 @@ function salleDavidClark(ch, P) {
   solMoquette(ch, D, DC);
   // ---- les poteaux : le gros, blanc, au milieu ; le tube gris du fond ----
   ch.boite(3.45, 17.5, 4.05, 17.8, 0, H, M.blanc, { collision: true });
+  // (13/10, relecture — le poteau rejoué arête par arête : sa face sud porte, de l'ouest à l'est, une cornière grise de
+  // 5,5 cm, un panneau plus blanc de 18 cm, un joint creux en x 3,69, puis le grand panneau ; sa face est, à l'ombre des
+  // luminaires, sort tabac sur la photo — 138/121/93 contre 193/178/159 au jeu)
+  ch.boite(3.45, 17.496, 3.505, 17.5, 0.08, H, D.corniere, { ombre: false });
+  ch.boite(3.505, 17.497, 3.688, 17.5, 0.08, H, D.panneau, { ombre: false });
+  ch.boite(3.688, 17.496, 3.698, 17.5, 0.08, H, D.joint, { ombre: false });
+  ch.boite(4.05, 17.5, 4.053, 17.8, 0.08, H, D.faceOmbre, { ombre: false });
   plintheDC(ch, D, 'x', 17.5, 3.45, 4.05, -1); plintheDC(ch, D, 'x', 17.8, 3.45, 4.05, 1);
   plintheDC(ch, D, 'y', 3.45, 17.5, 17.8, -1); plintheDC(ch, D, 'y', 4.05, 17.5, 17.8, 1);
   ch.boite(3.28, 22.8, 3.38, 22.9, 0, H, D.tube, { collision: true });
@@ -2064,7 +2137,8 @@ function salleDavidClark(ch, P) {
   // devant, hors de la photo, sur la même trame ----
   for (const L of [[1.075, 15.225, 1.675, 15.825], [2.875, 16.425, 3.475, 17.025], [5.275, 17.625, 6.475, 18.225],
     [1.075, 17.625, 1.675, 18.225], [1.075, 20.025, 1.675, 20.625], [3.475, 18.825, 4.075, 19.425],
-    [2.875, 21.225, 3.475, 21.825], [5.275, 20.025, 5.875, 21.225], [5.275, 22.425, 5.875, 23.025],
+    // (relecture : celui de x 5,275 en y 20 est un 60 x 60 — photo redressée : y 20,0-20,6 —, pas un 60 x 120)
+    [2.875, 21.225, 3.475, 21.825], [5.275, 20.025, 5.875, 20.625], [5.275, 22.425, 5.875, 23.025],
     [7.075, 15.225, 7.675, 15.825], [7.075, 17.625, 7.675, 18.825], [7.075, 20.025, 7.675, 20.625], [7.075, 22.425, 7.675, 23.025],
     // (v1 rejouée : aucun au-dessus de l'appareil ni de l'îlot — la photo n'en montre pas en haut à gauche)
     [5.275, 15.225, 5.875, 15.825], [1.075, 22.425, 1.675, 23.025]]) lumGrille(ch, D, ...L);
@@ -2074,18 +2148,29 @@ function salleDavidClark(ch, P) {
     const a = maille(new THREE.PlaneGeometry(1.7, 1.5), D.aureole, DC.x0 + 0.004, 1.42, -y, Math.PI / 2, ch.decor, { ombre: false, recoit: false });
     a.renderOrder = 2; nePasFusionner(a);
   }
-  const bo = maille(new THREE.PlaneGeometry(0.32, 0.15).rotateX(Math.PI / 2), D.bouche, 1.4, H - 0.004, -14.96, Math.PI / 2, ch.decor, { ombre: false });
-  bo.userData.horsAOSol = true;
+  // (relecture : la bouche rejouée sur la photo — x 0,96-1,45 × y 14,80-15,05, le long côté est-ouest, pas nord-sud ;
+  // une platine de 2 cm, pas un aplat ; sa salissure autour)
+  const bo = ch.boite(1.0, 14.83, 1.42, 15.03, H - 0.02, H, D.bouche, { ombre: false, horsAO: true });
+  for (let i = 0, uv = bo.geometry.attributes.uv, p = bo.geometry.attributes.position; i < uv.count; i++) uv.setXY(i, p.getX(i) / 0.42 + 0.5, p.getZ(i) / 0.2 + 0.5);
+  const sa = maille(new THREE.PlaneGeometry(0.75, 0.42).rotateX(Math.PI / 2), D.salissure, 1.26, H - 0.002, -14.93, 0, ch.decor, { ombre: false, recoit: false });
+  sa.userData.horsAOSol = true; sa.renderOrder = 1; nePasFusionner(sa);
   // ---- l'armoire anthracite à deux portes, contre la gaine, tournée vers l'est (x 0,73-1,23 × y 14,55-15,42, 1,98 m) ----
   {
     const x0 = 0.73, x1 = 1.23, y0 = 14.55, y1 = 15.42, h = 1.98, ym = 14.985;
     ch.boite(x0, y0, x1, y1, 0, h, D.caisse, { collision: true });
-    ch.boite(x1, y0 + 0.022, x1 + 0.008, ym - 0.002, 0.07, h - 0.022, D.armoire);
-    ch.boite(x1, ym + 0.002, x1 + 0.008, y1 - 0.022, 0.07, h - 0.022, D.armoire);
-    const s = groupe(ch, x1 + 0.008, ym + 0.055, 'E', 1.02);
-    CY(s, P.chrome, 0.017, 0.014, 0, 0, 0.007, 14).rotation.x = Math.PI / 2;
-    // les sacs posés dessus, à son bout sud (photo r06 : le reste du dessus est nu)
-    const sac = groupe(ch, 0.98, 14.8, 'E', h); R(sac, D.sac, 0.4, 0.13, 0.36, 0.05, 0, 0.065, 0); R(sac, D.sacViolet, 0.36, 0.1, 0.32, 0.04, 0.02, 0.18, 0.02).rotation.y = 0.12;
+    // (relecture : le cadre gris clair du caisson se voit autour des portes — 4,5 cm au bout nord, 3,5 en haut —, la
+    // serrure est un gros barillet chromé à clé, au quart de la porte de droite)
+    ch.boite(x1, y0 + 0.03, x1 + 0.008, ym - 0.002, 0.07, h - 0.035, D.armoire);
+    ch.boite(x1, ym + 0.002, x1 + 0.008, y1 - 0.045, 0.07, h - 0.035, D.armoire);
+    const s = groupe(ch, x1 + 0.008, ym + 0.085, 'E', 1.02);
+    CY(s, P.chrome, 0.024, 0.018, 0, 0, 0.009, 18).rotation.x = Math.PI / 2;
+    CY(s, P.chrome, 0.013, 0.016, 0, 0, 0.026, 12).rotation.x = Math.PI / 2;
+    B(s, P.chrome, 0.012, 0.045, 0.008, 0, 0, 0.036);
+    // les sacs posés dessus : le tas sombre à son bout sud, puis un rouleau violet couché qui court vers le nord (photo
+    // r06 : à plat, sur presque tout le dessus)
+    const sac = groupe(ch, 0.98, 14.8, 'E', h); R(sac, D.sac, 0.4, 0.12, 0.36, 0.05, 0, 0.06, 0); R(sac, D.sacViolet, 0.34, 0.08, 0.3, 0.035, 0.02, 0.16, 0.02).rotation.y = 0.12;
+    const rou = groupe(ch, 0.97, 15.12, 'S', h); R(rou, D.sacViolet, 0.3, 0.065, 0.5, 0.03, 0, 0.033, 0).rotation.y = 0.06;
+    R(rou, D.sac, 0.22, 0.045, 0.3, 0.02, 0.03, 0.085, 0.05);
   }
   corbeille(ch, P, 0.95, 14.33);
   C.ajouterCercle(0.95, -14.33, 0.16, { y1: 0.4 });
@@ -2101,7 +2186,10 @@ function salleDavidClark(ch, P) {
   // ---- l'îlot du devant (en T) : deux petites tables bout à bout (0,8 et 1,0 x 0,6), la table de l'unité centrale au
   // nord ; le vidéoprojecteur, l'écran, le clavier et la souris, une feuille, l'unité centrale et sa voisine claire, les
   // câbles jaune et blancs ; la chaise bleu marine glissée sous la table, la chaise moutarde de l'unité centrale ----
-  tableDC(ch, D, 2.25, 15.69, 3.05, 16.29); tableDC(ch, D, 3.05, 15.69, 4.08, 16.29); tableDC(ch, D, 3.38, 16.29, 4.08, 17.45);
+  // (13/10, relecture — les plateaux redressés sur la photo et les pieds rétroprojetés au sol : devant, deux tables de
+  // 0,81 et 0,93 x 0,69, de x 2,285 à 4,025 (le joint, deux pieds côte à côte, en x 3,095) ; la table de l'unité
+  // centrale, 0,72 x 1,04, décalée vers l'EST — elle dépasse de 0,22 le bout de celle de devant, comme sur la photo)
+  tableDC(ch, D, 2.285, 15.68, 3.095, 16.37); tableDC(ch, D, 3.095, 15.68, 4.025, 16.37); tableDC(ch, D, 3.52, 16.37, 4.24, 17.41);
   {
     const vp = groupe(ch, 2.85, 16.08, 'S', 0.745); vp.rotation.y += 0.25;
     R(vp, P.blancMat, 0.31, 0.1, 0.25, 0.02, 0, 0.055, 0);
@@ -2109,26 +2197,29 @@ function salleDavidClark(ch, P) {
     B(vp, P.plastiqueGris, 0.12, 0.004, 0.09, -0.06, 0.106, 0.0, { ombre: false });
     const f = groupe(ch, 3.2, 15.92, 'S', 0.745); f.rotation.y += 0.15; B(f, P.blancMat, 0.297, 0.003, 0.21, 0, 0.0015, 0, { ombre: false });
   }
-  ecranDC(ch, D, 3.6, 16.2, 'S', 0.46); clavier(ch, P, 3.6, 15.92, 0.745, 'S');
-  tourDC(ch, D, P, 3.74, 16.97, 'S', 0.745); tourDC(ch, D, P, 3.57, 16.62, 'E', 0.745, { clair: true, haut: 0.33 });
-  B(groupe(ch, 3.665, 16.528, 'E', 0.745), D.sacViolet, 0.004, 0.08, 0.12, 0, 0.2, 0, { ombre: false });
-  tourDC(ch, D, P, 3.5, 16.66, 'S', 0, { clair: true });
+  // (relecture : l'écran est un 24 pouces, ses bords en x 3,15 et 3,71 ; la tour noire et le boîtier crème montrent
+  // leur DOS à l'appareil — prises, alimentation, câbles branchés —, le crème devant la tour, à l'ouest)
+  ecranDC(ch, D, 3.41, 16.31, 'S', 0.54, 0.055); clavier(ch, P, 3.6, 15.92, 0.745, 'S');
+  tourDC(ch, D, P, 3.74, 17.01, 'N', 0.745, { dos: true }); tourDC(ch, D, P, 3.615, 16.615, 'N', 0.745, { clair: true, haut: 0.33, prof: 0.34, dos: true });
+  { const pv = groupe(ch, 3.6, 16.42, 'S', 0.745); B(pv, D.sacViolet, 0.13, 0.1, 0.004, 0, 0.045, 0, { ombre: false }).rotation.z = 0.55; }
+  tourDC(ch, D, P, 3.5, 16.66, 'S', 0, { mat: D.caisse });
   cableDC(ch, D.jaune, [[3.74, 16.75, 1.0], [3.7, 16.55, 0.76], [3.55, 16.4, 0.752], [3.62, 16.32, 0.75], [3.66, 16.3, 0.55], [3.6, 16.32, 0.2], [3.55, 16.4, 0.01]]);
   cableDC(ch, D.cable, [[3.62, 16.25, 0.86], [3.7, 16.32, 0.75], [3.8, 16.31, 0.5], [3.75, 16.35, 0.2], [3.7, 16.5, 0.01]]);
   cableDC(ch, D.cable, [[3.0, 16.1, 0.8], [3.2, 16.24, 0.752], [3.4, 16.28, 0.752], [3.52, 16.3, 0.62], [3.5, 16.33, 0.3]]);
   cableDC(ch, D.bleu, [[3.6, 16.32, 0.4], [3.5, 16.0, 0.012], [3.35, 15.45, 0.008], [3.42, 15.3, 0.008]], 0.0045);
   chaiseMarine(ch, D, 2.7, 15.9, 'N', [0, -0.75]);
-  chaiseMoutarde(ch, D, 4.27, 16.95, 'W', [0.6, 0]);
+  chaiseMoutarde(ch, D, 4.29, 16.84, 'W', [0.6, 0]);   // (relecture : l'assise rétroprojetée en (4,25 ; 16,82))
   // ---- la rangée du poteau, au nord de lui : quatre tables de 1,4 x 0,7 ; ses postes au pas de 0,62 (écran tourné
   // vers l'est, l'unité centrale debout à côté ; pas de clavier : la photo n'en montre aucun), ses chaises à l'est, à demi rentrées (le bout de leurs luges en x 4,2
   // sur la photo) ----
   for (let k = 0; k < 4; k++) tableDC(ch, D, 3.4, 17.85 + k * 1.4, 4.1, 17.85 + (k + 1) * 1.4);
-  for (let k = 0; k < 7; k++) {
-    const y = 18.5 + k * 0.62;
-    ecranDC(ch, D, 3.66, y + 0.08, 'E', 0.42);
-    tourDC(ch, D, P, 3.62, y - 0.22, 'E', 0.745);
-    chaiseMoutarde(ch, D, 4.25, y, 'W', [0.62, 0]);
-  }
+  // (13/10, relecture — rejouée bord à bord : sur la photo, à droite du poteau, une bande noire continue de gros
+  // boîtiers dont les arêtes tombent en u 400, 410, 421, 432 et 440, leur face avant presque au bord est de la table
+  // (x 3,98) ; le jeu montrait sept tours plus à l'ouest, espacées, chacune avec un éclat d'aluminium. Les unités
+  // centrales passent devant, à ces arêtes ; les écrans, derrière, entre elles)
+  for (const y of [18.6, 19.27, 19.91, 20.81, 21.96, 23.05]) tourDC(ch, D, P, 3.76, y, 'E', 0.745);
+  for (const y of [18.95, 19.6, 20.36, 21.38, 22.5]) ecranDC(ch, D, 3.58, y, 'E', 0.44);
+  for (let k = 0; k < 7; k++) chaiseMoutarde(ch, D, 4.25, 18.5 + k * 0.62, 'W', [0.62, 0]);
   // ---- la rangée de droite : quatre tables de 1,4 x 0,75 ; ses postes au pas de 0,69 (l'écran et l'unité centrale côté
   // est, tournés vers l'ouest), ses chaises à l'ouest, rentrées sous la table (leurs luges en x 5,5-5,6 sur la photo) ----
   for (let k = 0; k < 4; k++) tableDC(ch, D, 5.7, 16.65 + k * 1.4, 6.45, 16.65 + (k + 1) * 1.4);
