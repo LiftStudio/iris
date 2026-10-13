@@ -651,21 +651,23 @@ function construireFacade(ch) {
   // LE PASSAGE VU DE LA RUE (photos 10, 11, 13, 14 : sous le ciel couvert, c'est un trou sombre et CHAUD — ses murs à
   // 108-79-44, son sol presque noir, les deux réglettes seules claires ; le jeu le montrait aussi clair que la rue, blanc).
   // Un voile qui multiplie ce qu'on voit au travers, tendu dans l'ouverture et tourné vers la rue seulement : du passage,
-  // il n'existe pas. Il s'efface à mesure que l'œil s'en approche (de 4,5 à 1,2 m) : en y entrant, rien ne saute.
+  // il n'existe pas. Il s'efface à mesure que l'œil s'en approche (de 3 à 0,8 m) : en y entrant, rien ne saute.
   {
-    const voile = new THREE.MeshBasicMaterial({ color: new THREE.Color().setRGB(0.5, 0.345, 0.16), vertexColors: true, transparent: true, depthWrite: false, blending: THREE.MultiplyBlending, premultipliedAlpha: true, toneMapped: false, fog: false });
+    const voile = new THREE.MeshBasicMaterial({ color: new THREE.Color().setRGB(0.39, 0.275, 0.145), vertexColors: true, transparent: true, depthWrite: false, blending: THREE.MultiplyBlending, premultipliedAlpha: true, toneMapped: false, fog: false });
     voile.onBeforeCompile = (sh) => {
       sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>',
-        '#include <opaque_fragment>\n  { float k = smoothstep(0.5, 2.2, 1.0 / gl_FragCoord.w); gl_FragColor = vec4(mix(vec3(1.0), outgoingLight, k), 1.0); }');
+        '#include <opaque_fragment>\n  { float k = smoothstep(0.8, 3.0, 1.0 / gl_FragCoord.w); gl_FragColor = vec4(mix(vec3(1.0), outgoingLight, k), 1.0); }');
     };
-    voile.customProgramCacheKey = () => 'iris-voile-passage-2';
+    voile.customProgramCacheKey = () => 'iris-voile-passage-4';
     voile.name = 'voile du passage vu de la rue';
     // (rejoué à la pose des photos 10 et 13 : les murs sortaient justes, mais le sol et le fond deux fois trop clairs — le
     // sol du passage est presque noir, 50-35-18 — ; le voile est plus dense vers le bas, où l'on voit le sol ; il ne
-    // s'efface plus qu'à 2,2 m — la photo 13, prise à 4,9 m de la façade, le montre aussi sombre que la 10)
-    const gv = new THREE.PlaneGeometry(2.25, 2.57, 1, 4), cv = new Float32Array(gv.attributes.position.count * 3);
+    // s'efface plus qu'à 3 m — la photo 13, prise à 4,9 m de la façade, le montre aussi sombre que la 10)
+    // (les photos 11 et 14 : la double porte vitrée du fond est plus sombre que les murs, 42-32-20 — le milieu du voile aussi)
+    const gv = new THREE.PlaneGeometry(2.25, 2.57, 4, 4), cv = new Float32Array(gv.attributes.position.count * 3);
     for (let i = 0; i < gv.attributes.position.count; i++) {
-      const t = gv.attributes.position.getY(i) / 2.57 + 0.5, c = t < 0.2 ? 0.5 : t < 0.45 ? 0.62 : t < 0.7 ? 0.85 : 1;
+      const t = gv.attributes.position.getY(i) / 2.57 + 0.5, milieu = Math.abs(gv.attributes.position.getX(i)) < 0.6 && t < 0.8;
+      const c = (t < 0.2 ? 0.5 : t < 0.45 ? 0.62 : t < 0.7 ? 0.85 : 1) * (milieu ? 0.7 : 1);
       cv[i * 3] = c; cv[i * 3 + 1] = c; cv[i * 3 + 2] = c;
     }
     gv.setAttribute('color', new THREE.BufferAttribute(cv, 3));
