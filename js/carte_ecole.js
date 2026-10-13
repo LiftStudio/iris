@@ -98,15 +98,25 @@ const Y_ESC = 13.675 + DY_S;     // 9,0
 // le mur à affiches ; la volée 2, seize contremarches vers le sud, à l'OUEST du mur d'échiffre (x 1,975) — l'ancien mur
 // ouest de la cage, ligne 1,675, s'efface : la cage va du nu 0,75 au nu 4,45 ; le palier du 1er et sa double porte ne
 // bougent pas.
+// (13/10, LA VOLÉE 2 À SA VRAIE PENTE — rapport_finitions.md doute 6 : elle passait 0,5 à 1,0 m trop haut. Photo 06 rejouée
+// à sa pose, (4,95 ; 5,89) h 1,57 cap −82,8 f 600, 6 px sur dix points du hall : par le vantail ouvert, quatre nez de sa
+// crémaillère blanche se lisent de profil en y 9,66 / 10,03 / 10,39 / 10,76, à 1,71 / 1,54 / 1,36 / 1,18 — des girons de
+// 0,366 pour des contremarches de 0,175 (le jeu : 0,24), la lisse basse sombre 6 à 13 cm au-dessus, le dessous du limon
+// 0,44 dessous ; les photos 04 et 20 le recoupent à 5-10 cm. Seize contremarches la mènent donc de son pied, y 11,49, au
+// 1er en y 6,0 : elle passe DERRIÈRE l'avancée nord du hall — qui est son coffrage : l'avancée s'arrête en y 7,22, là où
+// la sous-face repasse au-dessus du plafond — et au-dessus de la trémie de la volée de tôle. Le palier du 1er et sa
+// double porte, imaginés, la suivent : elle arrive au bout ouest du couloir sombre, js/ecole_etage1.js. La volée 1 :
+// 1re contremarche en y 9,90, bord ouest 2,42, girons de 0,32 — photo 06, le pied en (2,5 ; 9,96), la platine du poteau
+// en (2,49 ; 9,87) ; photo 20 refaite à sa pose, (3,57 ; 6,51) h 1,27 cap −9,5, les nez en y 9,86 / 10,19 / 10,49 / 10,85.)
 const ESC = {
   haut: 0.175,
-  x1o: 2.38, x1e: 4.45, y1: 9.84, G1: 0.30, n1: 4,      // la volée 1 : bord ouest, nu est, 1re contremarche, giron
+  x1o: 2.42, x1e: 4.45, y1: 9.90, G1: 0.32, n1: 4,      // la volée 1 : bord ouest, nu est, 1re contremarche, giron
   hL: 0.70, yFond: 13.2,                                // le palier intermédiaire et le nu de son mur du fond
-  x2o: 0.75, x2e: 1.975, G2: 0.24, n2: 16, yT: 8.35,    // la volée 2 : nu ouest, nu de l'échiffre, giron, son arrivée
-  yP1: 12.6 + DY_S, y0: 14.2 + DY_S, hP: 3.5,           // le palier du 1er : nu sud 7,925 (porte en 7,85), bord nord 9,525
+  x2o: 0.75, x2e: 1.975, G2: 0.366, n2: 16, yT: 6.0,    // la volée 2 : nu ouest, nu de l'échiffre, giron, son arrivée
+  yP1: 5.01, hP: 3.5,                                   // le palier du 1er : le bout ouest du couloir sombre, nu sud 5,01
 };
-ESC.yL1 = ESC.y1 + (ESC.n1 - 1) * ESC.G1;            // 10,74 : le bord du palier intermédiaire, au haut de la volée 1
-ESC.yF2 = ESC.yT + (ESC.n2 - 1) * ESC.G2;            // 11,95 : le pied de la volée 2 (sa 1re contremarche)
+ESC.yL1 = ESC.y1 + (ESC.n1 - 1) * ESC.G1;            // 10,86 : le bord du palier intermédiaire, au haut de la volée 1
+ESC.yF2 = ESC.yT + (ESC.n2 - 1) * ESC.G2;            // 11,49 : le pied de la volée 2 (sa 1re contremarche)
 // la lumière principale (l'ensemble des plafonniers) : presque d'aplomb, elle porte les ombres douces
 const DIR_LUMIERE = new THREE.Vector3(0.16, 1, 0.22).normalize();
 // le rectangle du sol (ombre cuite, lumière cuite) : x -0,6-20,4, y -0,6-25,0 (09/10 : jusqu'à 25 — la salle David
@@ -395,7 +405,8 @@ function construireEscalier(ch) {
   // les lignes des nez (la hauteur du nez au droit de y) : volée 1, vers le nord ; volée 2, vers le sud
   const nez1 = (y) => R + (y - E.y1) * R / G1;
   const nez2 = (y) => HL + R + (E.yF2 - y) * R / G2;
-  const sous2 = (y) => HL - 0.2 + (E.yF2 - y) * R / G2;          // la sous-face de la paillasse de la volée 2
+  // la sous-face du limon de la volée 2 : 0,44 sous la ligne des nez (photo 06, l'arête grise sous la crémaillère)
+  const sous2 = (y) => HL - 0.26 + (E.yF2 - y) * R / G2;
   const yPorte = Y_ESC + 0.075;                                   // le nu nord du mur des portes
   // ---- LA VOLÉE 1 (est), pleine jusqu'au sol : trois marches ; sa 4e contremarche est le front du palier ----
   const p1 = [[0, 0], [0, R]];
@@ -408,7 +419,7 @@ function construireEscalier(ch) {
     ch.boite(xa, ya, xb, E.yFond, HL - 0.02, HL, M.solEtage);
   }
   // ---- LA VOLÉE 2 (ouest) : une dalle à paillasse qui part du palier vers le sud, jusqu'au palier du 1er ----
-  const p2 = [[0, HL - 0.2], [0, HL + R]];
+  const p2 = [[0, sous2(E.yF2)], [0, HL + R]];
   for (let k = 1; k < E.n2; k++) p2.push([k * G2, HL + k * R], [k * G2, HL + (k + 1) * R]);
   p2.push([(E.n2 - 1) * G2, sous2(E.yT)]);
   extru(p2, E.x2e - E.x2o, M.beton, E.x2e, -E.yF2, -Math.PI / 2);
@@ -435,13 +446,19 @@ function construireEscalier(ch) {
   ch.boite(E.x2e, yPorte, E.x2e + 0.015, E.yF2, 0, 0.08, M.bois, { ombre: false });
   // (et le JOUR entre l'échiffre et la volée 1, x 1,975-2,38 : son fond, le front du palier, a sa plinthe)
   ch.boite(E.x2e, E.yF2 - 0.015, E.x1o, E.yF2, 0, 0.08, M.bois, { ombre: false });
-  // ---- LE PALIER DU 1er ÉTAGE (dalle au nord du hall ouest, devant sa double porte, y 7,85 : au-dessus du plafond du hall
-  // à 2,30) : tout du long jusqu'en y 8,35, l'arrivée de la volée 2 ; au nord, à l'est de l'échiffre, jusqu'en y 9,525 ----
-  ch.boite(0.6, E.yP1 - 0.15, 4.75, E.yT, H_DALLE, HP - 0.02, M.beton);
-  ch.boite(E.x2e, E.yT, 4.75, E.y0, H_DALLE, HP - 0.02, M.beton);
-  ch.boite(E.x2o, E.yP1, E.x1e, E.yT, HP - 0.02, HP, M.solEtage);
-  ch.boite(E.x2e, E.yT, E.x1e, E.y0, HP - 0.02, HP, M.solEtage);
-  ch.boite(E.x2e, E.y0 - 0.04, E.x1e, E.y0, HP, HP + 0.004, M.nez, { ombre: false });
+  // ---- AU SUD DU MUR DES PORTES, LA VOLÉE 2 CONTINUE (13/10) entre deux murs, derrière l'avancée nord du hall puis
+  // au-dessus du plafond de son renfoncement, jusqu'au 1er en y 6,0 : le bout ouest du couloir sombre est son palier
+  // (le carrelage, la double porte, le plafond : js/ecole_etage1.js). Le mur OUEST, ligne 0,675, pend au-dessus de la
+  // trémie de la volée de tôle : son pied suit la sous-face du limon, par pans de 25 cm (dessous, le rampant du -1 —
+  // js/ecole_soussol.js) ; le mur EST, ligne 2,05, part du dessus de l'avancée nord (3,25), puis, au sud de y 7,22, du
+  // plafond du renfoncement (2,35). ----
+  for (let ya = E.yT; ya < 10.25 - 1e-6; ya += 0.25) {
+    const yb = Math.min(10.25, ya + 0.25);
+    ch.mur({ de: [0.675, ya], a: [0.675, yb], base: Math.max(0, sous2(yb) - 0.06), h: H_CAGE, mats: M.blanc });
+  }
+  ch.mur({ de: [2.05, E.yT], a: [2.05, 7.22], base: 2.35, h: H_CAGE, mats: M.blanc });
+  ch.mur({ de: [2.05, 7.22], a: [2.05, Y_ESC - 0.075], base: H_DALLE, h: H_CAGE, mats: M.blanc });
+  // le nez de la dernière marche, au bord du palier du 1er
   ch.boite(E.x2o, E.yT - 0.04, E.x2e, E.yT, HP, HP + 0.004, M.nez, { ombre: false });
   // (au-dessus, plus rien : l'escalier s'arrête au 1er, plan V2 § 1.3)
 
@@ -483,22 +500,19 @@ function construireEscalier(ch) {
   // se lit dessous),
   // main courante sombre à 0,95, barreaux gris ; au droit du palier du 1er (y < 9,525), les barreaux montent à 4,47 sous
   // une lisse de niveau : le garde-corps du palier, au-dessus des dernières marches
-  const xg2 = E.x2e + 0.02, yH2 = E.yT + 0.4, H2 = 0.95;
+  // (13/10, la volée 2 à sa vraie pente : photo 06, la lisse basse 6 à 13 cm au-dessus des nez, la main courante 0,82
+  // plus haut, un barreau tous les 14,5 cm ; le poteau sombre et sa platine en y 9,80, à 1,41 — sur le limon, 27 cm sous
+  // le nez. Le garde-corps s'arrête au mur des portes : au sud, la volée est entre deux murs.)
+  const xg2 = E.x2e + 0.02, yH2 = yPorte + 0.02, H2 = 0.92;
   lisse(xg2, E.yF2, nez2(E.yF2) + 0.1, yH2, nez2(yH2) + 0.1, SOMBRE, 0.045, 0.03);
   lisse(xg2, E.yF2, nez2(E.yF2) + H2, yH2, nez2(yH2) + H2, SOMBRE, 0.05, 0.035);
-  for (let y = E.yF2 - 0.06; y > yH2 + 0.03; y -= 0.115) barre(xg2, y, nez2(y) + 0.1, y < E.y0 ? HP + 0.97 : nez2(y) + H2);
+  for (let y = E.yF2 - 0.06; y > yH2 + 0.03; y -= 0.145) barre(xg2, y, nez2(y) + 0.1, nez2(y) + H2);
   // ses poteaux, gris foncé, fixés de côté sur le limon par une platine carrée (r01, 06, 04 : le montant sombre qui
   // descend jusqu'à sa platine, au-dessus de l'échiffre)
-  for (const y of [E.yF2 - 0.04, 10.95, 9.75]) {
+  for (const y of [E.yF2 - 0.04, 10.65, 9.8]) {
     ch.boite(xg2 - 0.02, y - 0.02, xg2 + 0.02, y + 0.02, sous2(y) + 0.1, nez2(y) + H2, SOMBRE, { parent: GC });
-    ch.boite(E.x2e, y - 0.06, E.x2e + 0.012, y + 0.06, sous2(y) + 0.08, sous2(y) + 0.2, M.garde, { ombre: false, parent: GC });
+    ch.boite(E.x2e, y - 0.06, E.x2e + 0.012, y + 0.06, sous2(y) + 0.1, sous2(y) + 0.22, M.garde, { ombre: false, parent: GC });
   }
-  poteau(xg2, yH2, nez2(yH2) - 0.2, HP + 1.0);
-  lisse(xg2, yH2, HP + 0.97, E.y0, HP + 0.97);
-  // LE PALIER DU 1er, au-dessus du vide (bord nord, y 9,525, de l'échiffre au mur est) : barreaux, lisse, poteaux
-  for (let x = E.x2e + 0.08; x < E.x1e - 0.05; x += 0.11) barre(x, E.y0 - 0.03, HP, HP + 0.95);
-  ch.boite(E.x2e - 0.05, E.y0 - 0.055, E.x1e, E.y0 - 0.005, HP + 0.95, HP + 0.99, M.garde, { parent: GC });
-  poteau(E.x1e - 0.03, E.y0 - 0.03, HP, HP + 0.99); poteau(xg2, E.y0 - 0.03, HP - 0.3, HP + 0.99);
   // (le groupe des garde-corps cousu par matière, gardé hors de la couture du décor, hors de la passe de normales)
   fusionnerLocal(GC); nePasFusionner(GC);
   GC.traverse((o) => { if (o.isMesh) o.userData.sansNormales = true; });
@@ -515,6 +529,8 @@ function construireEscalier(ch) {
   tubeY(E.x1e - 0.06, E.yL1, hMC, E.yFond - 0.06, hMC, 1);
   tubeY(E.x2o + 0.06, E.yT, HP + 0.9, E.yF2, nez2(E.yF2) + 0.9, -1);
   tubeY(E.x2o + 0.06, E.yF2, hMC, E.yFond - 0.06, hMC, -1);
+  // (13/10 : et sur le mur est de la volée 2, du 1er au mur des portes, où le garde-corps prend le relais)
+  tubeY(E.x2e - 0.06, E.yT, HP + 0.9, Y_ESC - 0.1, nez2(Y_ESC - 0.1) + 0.9, 1);
   const mc = maille(new THREE.CylinderGeometry(0.02, 0.02, xb - xa, 10), M.garde, (xa + xb) / 2, hMC, -(E.yFond - 0.06), 0, ch.decor);
   mc.rotation.z = Math.PI / 2;
   for (let x = xa + 0.4; x < xb - 0.1; x += 0.8) ch.boite(x - 0.01, E.yFond - 0.06, x + 0.01, E.yFond, hMC - 0.08, hMC - 0.02, M.garde, { ombre: false });
@@ -532,36 +548,30 @@ function construireEscalier(ch) {
   ch.boite(E.x1e - 0.015, E.yL1, E.x1e, E.yFond, HL, HL + 0.08, M.bois, { ombre: false });
 
   // ---- LE MONDE SOLIDE ----
-  // la volée 1 et le palier intermédiaire ; la volée 2 ; le palier du 1er (son arrivée, et son bord nord)
+  // la volée 1 et le palier intermédiaire ; la volée 2 jusqu'au 1er (son palier : la dalle de l'étage, js/ecole_etage1.js)
   C.rampe(E.x1o, -(E.yL1 + G1 / 2), E.x1e, -(E.y1 - G1 / 2), 'z', -(E.y1 - G1 / 2), 0, -(E.yL1 + G1 / 2), HL);
   C.sol(E.x1o, -E.yFond, E.x1e, -E.yL1, HL);
   C.sol(E.x2o, -E.yFond, E.x1o, -E.yF2, HL);
   C.rampe(E.x2o, -(E.yF2 + G2 / 2), E.x2e, -(E.yT - G2 / 2), 'z', -(E.yF2 + G2 / 2), HL, -(E.yT - G2 / 2), HP);
-  C.sol(E.x2o, -E.yT, E.x1e, -E.yP1, HP);
-  C.sol(E.x2e, -E.y0, E.x1e, -E.yT, HP);
-  // le bord est de la volée 2 (échiffre, garde-corps), à toutes les hauteurs ; il s'arrête à 0,40 m de l'arrivée : entre
-  // lui et le mur de la double porte, on passe de la volée au palier
-  C.ajouterBoite(1.85, -yH2, 2.0, -E.yF2, { y0: 0, y1: 5.2 });
-  // le jour (x 2,0-2,38), du mur des portes au palier : sous le palier du 1er, jusqu'à sa dalle ; au nord, à toutes hauteurs
-  // (pour le joueur seul : la caméra y voit d'une volée à l'autre)
-  C.ajouterBoite(2.0, -yPorte, E.x1o, -E.y0, { y0: 0, y1: H_DALLE, camera: false });
-  C.ajouterBoite(2.0, -E.y0, E.x1o, -E.yF2, { y0: 0, y1: 5.2, camera: false });
+  // le bord est de la volée 2 (échiffre, garde-corps), à toutes les hauteurs, du palier intermédiaire au mur des portes
+  // (au sud, le mur est de la volée)
+  C.ajouterBoite(1.85, -yPorte, 2.0, -E.yF2, { y0: 0, y1: 5.2 });
+  // le jour (x 2,0-2,42), du mur des portes au palier, à toutes hauteurs (pour le joueur seul : la caméra y voit d'une
+  // volée à l'autre)
+  C.ajouterBoite(2.0, -yPorte, E.x1o, -E.yF2, { y0: 0, y1: 5.2, camera: false });
   C.ajouterCercle(xg1, -yPied, 0.04, { y0: 0, y1: 1.2 });
-  // le garde-corps du palier du 1er, au-dessus du vide
-  C.ajouterBoite(E.x2e, -(E.y0 - 0.06), E.x1e, -E.y0, { y0: HP, y1: HP + 1.1 });
   // la caméra ne passe pas dans les volées ni sous le palier intermédiaire ; sous la volée 2, au-dessus de la trémie du -1
-  // (y < 10,3), à partir de 1,55 — dessous, les plafonds de caméra du rampant de la volée de tôle, js/ecole_soussol.js
+  // (y < 10,3), à partir de 25 cm sous son limon — dessous, les plafonds de caméra du rampant de la volée de tôle,
+  // js/ecole_soussol.js
   for (let i = 1; i < E.n1; i++) { const ya = E.y1 + (i - 1) * G1; C.ajouterBoite(E.x1o, -ya, E.x1e, -(ya + G1), { y0: 0, y1: i * R, joueur: false }); }
   C.ajouterBoite(E.x1o, -E.yL1, E.x1e, -E.yFond, { y0: 0, y1: HL, joueur: false });
   C.ajouterBoite(E.x2o, -E.yF2, E.x1o, -E.yFond, { y0: 0, y1: HL, joueur: false });
   for (let k = 1; k < E.n2; k++) {
     const yb = E.yF2 - (k - 1) * G2;
-    C.ajouterBoite(E.x2o, -(yb - G2), E.x2e, -yb, { y0: yb < 10.3 ? 1.55 : 0, y1: HL + k * R, joueur: false });
+    C.ajouterBoite(E.x2o, -(yb - G2), E.x2e, -yb, { y0: yb < 10.3 ? Math.max(0, sous2(yb) - 0.25) : 0, y1: HL + k * R, joueur: false });
   }
-  // les plafonds : sous la dalle du palier du 1er (pour qui est au pied, derrière les portes), puis celui de la cage au
-  // droit du palier (le dessous de la dalle du 2e ; au-dessus des volées, le même : js/ecole_etage1.js)
-  C.plafond(E.x2e, -E.y0, E.x1e, -(Y_ESC - 0.075), H_DALLE);
-  ch.plafond(E.x2o, E.yP1, E.x1e, E.y0, H_CAGE, 'platre', { retombees: false });
+  // (les plafonds : celui de la cage, le dessous de la dalle du 2e, et celui de la volée 2 au sud du mur des portes :
+  // js/ecole_etage1.js)
 }
 
 // =====================================================================
@@ -900,10 +910,12 @@ function construireMurs(ch) {
   ch.boite(4.413, 0, 4.425, 4.05, 0, 0.09, PG, { ombre: false });
   ch.boite(1.75, 4.038, 2.45, 4.05, 0, 0.09, PG, { ombre: false });
   // le mur ouest du hall (ligne x 1,675), derrière la pile, le renfoncement de la porte grise et l'avancée nord
-  ch.mur({ de: [1.675, 4.05], a: [1.675, 8.3], mats: B, plinthes: ['E'], ouvertures: [{ c: 9.575 + DY_SS, l: 0.95, h: 2.04 }] });
-  // (finitions du 11/10 : au nord de y 8,3, il s'arrête à 2,50, sous la volée 2 de l'escalier principal qui passe au-dessus
-  // du plafond du hall — construireEscalier ; caché derrière l'avancée nord)
-  ch.mur({ de: [1.675, 8.3], a: [1.675, 8.925], h: 2.5, mats: B });
+  // (13/10, la volée 2 de l'escalier principal à sa vraie pente — construireEscalier : elle passe au-dessus de ce mur, du
+  // 1er, en y 6,0, jusqu'au mur des portes. Sous son palier, il monte à la dalle ; puis il s'arrête au-dessus du plafond
+  // du renfoncement, à 2,45 — la sous-face est à 2,48 en y 7,22 — ; derrière l'avancée nord, à 1,60, sous le limon)
+  ch.mur({ de: [1.675, 4.05], a: [1.675, ESC.yT], mats: B, plinthes: ['E'], ouvertures: [{ c: 9.575 + DY_SS, l: 0.95, h: 2.04 }] });
+  ch.mur({ de: [1.675, ESC.yT], a: [1.675, 7.22], h: 2.45, mats: B, plinthes: ['E'] });
+  ch.mur({ de: [1.675, 7.22], a: [1.675, 8.925], h: 1.6, mats: B });
   // (09/10, la vidéo du sous-sol : elle ouvre sur le palier de l'escalier du -1, js/ecole_soussol.js ; on la TIRE depuis le
   // hall — vantail côté hall, gonds au sud, barre inox verticale, ferme-porte à glissière côté hall, photo 06 et v_001)
   // (plan V2 : y 5,02-5,95, à 0,97 m de la paroi vitrée — la chaîne du -1 suit, DY_SS ; sa fente vitrée est la longue,
@@ -922,9 +934,11 @@ function construireMurs(ch) {
   // ouest des portes de l'escalier, et le vantail ouvert s'y rabat à plat.)
   // (finitions du 11/10 : l'avancée nord s'arrête à 2,50 à l'ouest de x 1,975 — au-dessus du plafond du hall, la volée 2
   // de l'escalier principal y passe ; construireEscalier)
+  // (13/10 : la volée 2 à sa vraie pente passe DANS l'avancée, qui est son coffrage — à l'ouest de x 1,975, elle s'arrête
+  // à 1,60, sous le limon ; sa face sud, où est le radiateur, monte jusqu'au-dessus du plafond du hall, 2,32)
   for (const [ya, yb, faces] of [[4.05, 4.97, ['E', 'N']], [7.22, 8.925, ['E', 'S']]]) {
     const xa = 2.45, xc = ya > 7 ? ESC.x2e : 1.75;
-    if (xc > 1.75) ch.boite(1.75, ya, xc, yb, 0, 2.5, B, { collision: true });
+    if (xc > 1.75) { ch.boite(1.75, ya, xc, ya + 0.04, 0, 2.32, B, { collision: true }); ch.boite(1.75, ya + 0.04, xc, yb, 0, 1.6, B, { collision: true }); }
     ch.boite(xc, ya, xa, yb, 0, H_DALLE, B, { collision: true });
     if (faces.includes('E')) ch.boite(xa, ya, xa + 0.015, yb, 0, 0.08, M.bois, { ombre: false });
     if (faces.includes('S')) ch.boite(1.75, ya - 0.015, xa + 0.015, ya, 0, 0.08, M.bois, { ombre: false });
@@ -1142,12 +1156,15 @@ function construireMurs(ch) {
   // x 1,6-1,975, le mur des portes s'arrête à 2,50, sous la volée 2 ; l'ancien mur ouest de la cage, ligne 1,675, n'est
   // plus — la cage va jusqu'au nu 0,75, au-dessus de la réserve ouest imaginée et de la trémie du -1 ; son mur du fond,
   // celui des affiches, est sur la ligne 13,275)
-  ch.mur({ de: [1.6, Y_ESC], a: [ESC.x2e, Y_ESC], h: 2.5, mats: B });
+  // (13/10, la volée 2 à sa vraie pente : elle traverse la ligne du mur des portes de 1,6 à 2,0 m — à l'ouest de
+  // l'échiffre, le mur s'arrête à 1,55 ; au-dessus des portes, il monte d'un jet jusqu'au plafond de la cage : plus de
+  // palier du 1er en balcon ni de double porte ici, la volée arrive 3 m plus au sud — js/ecole_etage1.js)
+  ch.mur({ de: [1.6, Y_ESC], a: [ESC.x2e, Y_ESC], h: 1.55, mats: B });
   ch.mur({ de: [ESC.x2e, Y_ESC], a: [4.6, Y_ESC], mats: B, plinthes: ['S', 'N'], ouvertures: [{ c: 3.45, l: 2.0, h: 2.1 }] });
+  ch.mur({ de: [ESC.x2e, Y_ESC], a: [4.6, Y_ESC], base: H_DALLE, h: H_CAGE, mats: B });
   ch.mur({ de: [4.525, 13.6 + DY_S], a: [4.525, 18.75 + DY_S], h: H_CAGE, mats: B, plinthes: ['E'] });
-  // le mur ouest de la cage (ligne 0,675) : du mur sud du palier du 1er au mur du fond ; au-dessus de la trémie du -1
-  // (y < 10,25), il part de 1,75 — au-dessus du rampant de la volée de tôle, sous la volée 2
-  ch.mur({ de: [0.675, 12.45 + DY_S], a: [0.675, 10.25], base: 1.75, h: H_CAGE, mats: B });
+  // le mur ouest de la cage (ligne 0,675), de la trémie du -1 au mur du fond (au sud de y 10,25, au-dessus de la trémie,
+  // il suit la sous-face de la volée 2 : construireEscalier)
   ch.mur({ de: [0.675, 10.25], a: [0.675, ESC.yFond + 0.075], h: H_CAGE, mats: B });
   // le mur du fond, celui des affiches (ligne 13,275 : photo 20) ; derrière lui, jusqu'à l'ancien mur nord, un vide fermé
   ch.mur({ de: [0.6, ESC.yFond + 0.075], a: [4.6, ESC.yFond + 0.075], h: H_CAGE, mats: B });
@@ -1157,12 +1174,9 @@ function construireMurs(ch) {
   // photo 23 ; derrière lui, l'entrée de la salle David Clark. La cage, x 1,6-4,675, a son mur nord à elle. Il part de
   // x 4,6 : noyé dans le mur de la cage tel que le plan le place, il ferme encore l'angle si ce mur recule à l'ouest)
   ch.mur({ de: [4.6, Y_ESC + 3.675], a: [6.05, Y_ESC + 3.675], mats: B, plinthes: ['S', 'N'], ouvertures: [{ c: 5.175, l: 0.85, h: 2.28 }] });
-  // au 1er étage : le mur sud du palier (ligne y 7,85, avec sa double porte coupe-feu) et ses retours
-  // (finitions du 11/10 : jusqu'au mur ouest de la cage, ligne 0,675 — l'arrivée de la volée 2 est à l'ouest de la porte)
-  ch.mur({ de: [0.6, 12.525 + DY_S], a: [4.75, 12.525 + DY_S], base: H_DALLE, h: H_CAGE, mats: B, ouvertures: [{ c: 3.5, l: 1.8, bas: ESC.hP, h: ESC.hP + 2.1 }] });
-  ch.mur({ de: [4.525, 12.45 + DY_S], a: [4.525, 13.6 + DY_S], base: H_DALLE, h: H_CAGE, mats: B });
-  // (ouverte à demeure, ses deux vantaux rabattus côté étage, comme celle du hall ouest : le 1er étage, js/ecole_etage1.js)
-  ch.porte('x', 12.525 + DY_S, 3.5, { l: 1.8, h: 2.1, base: ESC.hP, modele: 'grise2', feu: true, etat: 'ouverte', ouverts: [true, true], angle: 1.6, cote: 'S', notices: 1, nom: '1er étage' });
+  // (13/10 : au 1er étage, le mur sud du palier — ligne y 7,85 — et sa double porte coupe-feu, imaginés, ne sont plus
+  // ici : la volée 2, à sa vraie pente, arrive au bout ouest du couloir sombre, en y 6,0 ; la double porte « 1er étage »
+  // est en travers de ce couloir — js/ecole_etage1.js)
   // LES PORTES COUPE-FEU DE L'ESCALIER (photos 04, 06, 20) : deux vantaux de 1,0 m, x 2,45-4,45 (plan V2 ; le jeu avait
   // 2 x 0,90 à partir de x 2,6). Le vantail ouest ouvert à demeure vers le hall, À PLAT contre l'avancée nord, l'affiche
   // jaune du tri derrière lui (photos 06, 20 : x 2,45-2,50, y 8,0-9,0 ; il était décollé de 25 cm — à 88°, il frôle
@@ -1325,8 +1339,15 @@ export function construireCarte(scene, renderer = null) {
   // 8,05, le plafond bas les cache)
   // (finitions du 11/10 : coupé en y 8,3 — au nord, sans retombées : celles de l'ouest et du nord, du plafond à la dalle,
   // passaient au travers de la volée 2 de l'escalier principal, au-dessus de ce plafond ; construireEscalier)
-  ch.plafond(1.75, 4.875, 4.85, 8.3, 2.3, 'platre');
-  ch.plafond(1.75, 8.3, 4.85, 8.925, 2.3, 'platre', { retombees: false });
+  // (13/10, la volée 2 à sa vraie pente : elle passe au-dessus du renfoncement, x 0,75-1,975, sa sous-face à 2,48 en
+  // y 7,22, et dans l'avancée nord — le plafond s'arrête à l'avancée, x 2,45, et ses retombées de l'ouest, qui montaient
+  // à la dalle au travers des marches, s'effacent ; reste celle de l'est, la retombée de la photo 04)
+  ch.plafond(1.75, 4.875, 4.85, 7.22, 2.3, 'platre', { retombees: false });
+  ch.plafond(2.45, 7.22, 4.85, 8.925, 2.3, 'platre', { retombees: false });
+  {
+    const q = ch.panneau(M.platre, 8.3 - 4.875, H_DALLE - 2.3, 4.85, (4.875 + 8.3) / 2, (2.3 + H_DALLE) / 2, 'E');
+    q.userData.horsAOSol = true; q.castShadow = false;
+  }
   ch.plafond(4.85, 8.05, 5.975, 8.925, 2.3, 'platre');
   // (r03, 12/10 : le mur sud de la salle recule de 0,20 — DY_R03 — ; la bande qu'il libère, x 4,5-4,85 × y 4,675-4,875,
   // prend le plafond bas du hall et sa retombée en x 4,85 continue jusqu'au mur ; les dalles de la salle partent du mur)
@@ -1475,9 +1496,8 @@ export function construireCarte(scene, renderer = null) {
   // (finitions du 11/10 : l'applique du mur du fond au-dessus de la volée 2, à 3,60 — au droit des affiches, à 2,9, elle
   // se verrait par la porte, et la photo 20 n'en montre pas)
   ch.opale(1.35, ESC.yFond, 3.6, 'escalier', { mur: 'S', r: 0.15 });
-  // (pas dans la lumière cuite du rez-de-chaussée : au-dessus de la dalle du palier, il ne l'éclaire pas — décalé, il
-  // peignait une flaque au pied des portes de l'escalier, dans le hall)
-  ch.opale(3.2, 13.4 + DY_S, H_CAGE, 'palier1', { r: 0.18, base: ESC.hP, cuire: false });
+  // (13/10 : le plafonnier de l'ancien palier du 1er n'est plus — celui de la volée 2, entre ses deux murs, et celui
+  // du haut de la cage : js/ecole_etage1.js)
   ch.opale(4.45, 15.5 + DY_S, 2.95, 'escalier', { r: 0.15, mur: 'W', cuire: false });
   // (relecture du 11/10 : le bloc de sortie de la photo 21 n'est pas suspendu près du pilier gris — ni elle, ni la VO
   // q_0038-0046 n'en montrent là ; il est fixé en haut du mur du fond, la face ouest de la pile, au-dessus de l'écart entre
@@ -1558,7 +1578,9 @@ export function construireCarte(scene, renderer = null) {
     // (plan V2 : la cage décalée de DY_S, le palier du 1er de y 7,775 à 9,525 ; le passage arrêté à la paroi, y 4,05)
     // (finitions du 11/10 : la cage va jusqu'au nu 0,75 — la volée 2 et l'ouest du palier intermédiaire ; sous 0,6 m, au-dessus
     // de la trémie, c'est la volée de tôle du -1, zone escalierSS, js/ecole_soussol.js, en tête de liste)
-    { id: 'palier1', rects: [zr(0.6, 7.775, 4.75, 14.075, 2.6)], voisines: ['escalier', 'e1hall'], env: { x: 3.2, y: 4.9, z: -8.7 } },
+    // (13/10, la volée 2 à sa vraie pente : `palier1` est la volée entre ses deux murs, du 1er — y 6,0, où elle débouche
+    // dans le couloir sombre, `e1couloir` — au mur des portes, pour des pieds au-dessus de 1,2 m, et le haut de la cage)
+    { id: 'palier1', rects: [zr(0.6, ESC.yT, 2.125, 9.075, 1.2), zr(0.6, 9.0, 4.75, 14.075, 2.6)], voisines: ['escalier', 'e1couloir'], env: { x: 1.36, y: 4.6, z: -7.6 } },
     { id: 'escalier', rects: [zr(0.6, 9.0, 4.75, 14.075)], voisines: ['hallO', 'palier1'], env: { x: 3.4, y: 2.4, z: -11.3 } },
     { id: 'passage', rects: [zr(1.6, -0.45, 4.5, 4.05)], voisines: ['hallO', 'rue'], env: { x: 3.3, y: 1.6, z: -2.0 } },
     // (V2, 11/10 : le C05 de la porte de l'escalier à la porte bleue ; au-delà, l'entrée de la salle David Clark — zone `dc`,

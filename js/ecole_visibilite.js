@@ -295,11 +295,17 @@ const TOUTES = (1 << ZONES.length) - 1;
 const dans = (x, y, R) => x > R[0] && x < R[2] && y > R[1] && y < R[3];
 const VERS_CAGE_O = [1.4, 6.5, 6.1, 14.5];       // rez-de-chaussée : devant les portes de l'escalier principal, la cage,
                                                  // l'entrée du C05
-const VOLEE2 = [0.6, 8.3, 1.4, 14.5];            // (finitions : et au-dessus de la volée 2, plus haut que 1,55 — dessous,
-                                                 // c'est la caméra de la volée de tôle, sous son rampant)
+const VOLEE2 = [0.6, 5.9, 2.15, 14.5];           // (finitions : et au-dessus de la volée 2 — dessous, c'est la caméra
+                                                 // de la volée de tôle, sous son rampant. 13/10, la volée 2 à sa vraie
+                                                 // pente, js/carte_ecole.js : de y 6,0 au palier, entre ses deux murs
+                                                 // au sud du mur des portes ; « au-dessus » : à moins de 20 cm sous son
+                                                 // limon, SUR_VOLEE2)
+const SUR_VOLEE2 = (y, h) => h > 0.24 + (11.49 - y) * 0.175 / 0.366;
 const VERS_CAGE_O1 = [-0.4, 4.9, 5.0, 14.5];     // 1er : le couloir sombre et le palier ouest, d'où l'on voit la volée
 const CAGE_O1 = [0.6, 7.0, 5.1, 14.6];           // 1er : dans la cage même (on y voit le rez-de-chaussée en bas ;
                                                  // finitions : depuis x 0,60, au-dessus de la volée 2)
+const VOLEE2_O1 = [-0.4, 4.9, 3.1, 7.0];         // (13/10) 1er : le palier de la volée 2 et le haut de la volée, d'où l'on
+                                                 // voit ses marches du bas — celles de la trémie et du rez-de-chaussée
 const VERS_CAGE_E = [13.4, 6.45, 20.2, 12.75];   // la cage est et ses paliers (la règle de js/ecole_etage2.js)
 const VERS_CAGE_E1 = [6.0, 5.0, 20.2, 12.75];    // 1er : et l'espace pause, par la porte du palier est
 const VERS_CAGE_E2 = [12.0, 4.5, 20.2, 12.75];   // 2e : et le bout est du couloir rouge
@@ -345,7 +351,7 @@ export function zonesCachees(x, h, z) {
   } else if (h <= 3.3) {
     // AU REZ-DE-CHAUSSÉE : le 2e jamais ; le 1er par les cages ; le -1 par la trémie et la cage est
     vu = VU_R | fermeesVues(x, y);
-    if (dans(x, y, VERS_CAGE_O) || (h > 1.55 && dans(x, y, VOLEE2))) vu |= T('cageO1', 'e1');
+    if (dans(x, y, VERS_CAGE_O) || (dans(x, y, VOLEE2) && SUR_VOLEE2(y, h))) vu |= T('cageO1', 'e1');
     if (dans(x, y, VERS_CAGE_E)) vu |= T('cageES', 'sse', 'cageE1', 'e1e', 'e1');
     if (dans(x, y, VERS_TREMIE_R)) vu |= T('tremieS', 'ss');
   } else if (h <= 6.45) {
@@ -354,7 +360,7 @@ export function zonesCachees(x, h, z) {
     if (dans(x, y, VERS_CAGE_O1)) vu |= T('cageO0');
     if (dans(x, y, VERS_CAGE_E1)) vu |= T('cageE0');
     // (finitions : et la trémie, que la volée 2 surplombe — ses marches au nord de y 8,30, sous 3,30, sont à elle)
-    if (dans(x, y, CAGE_O1)) vu |= T('r0', 'tremie0');
+    if (dans(x, y, CAGE_O1) || dans(x, y, VOLEE2_O1)) vu |= T('r0', 'tremie0');
     if (dans(x, y, VERS_CAGE_E)) vu |= T('cageE0', 'cageE2', 'r0e', 'e2e') | (h > 5.8 ? T('e2') : 0);
   } else {
     // AU 2e : rien du -1 ni du rez-de-chaussée ; le 1er par la cage est
