@@ -48,6 +48,9 @@ export const RUE = {
   CARREFOUR: [1.3, 6.3, 7.8],               // la rue transversale depuis x1 : son trottoir, sa chaussée de 5 m, les façades d'en face
 };
 const { X0, X1, Y_TROTTOIR, Y_CHAUSSEE, Y_FACE, H_CHAUSSEE, X_BAIE, Y_BAIE, Y_FACE57, Y_VOISINS: YV } = RUE;
+// (relecture rue du 14/10 : les pignons du 5/7, sur le nu y -12,7 — à l'ouest, photo 09 enfin posée : x -6,5 ; à l'est,
+// photo 08 à sa pose : x 12,1, l'arête de l'enduit blanc au pixel 1205)
+const X57O = -6.5, X57E = 12.1;
 
 // =====================================================================
 //  LES TEXTURES DE LA RUE
@@ -114,7 +117,9 @@ function texBrande() {
   }, [1, 1 / 1.9], true, 4);
 }
 // LE BÉTON DES MURETS, taché de coulures (photos 09, 15) — une seule matière pour tous les murets
-let _betonMuret = null;
+let _betonMuret = null, _vm = null;
+// (relecture rue du 14/10 : le VIEUX MUR du fond de l'impasse, photo 09 — le même béton, moitié plus sombre et verdi)
+const _vieuxMur = () => { if (!_vm) { _vm = betonMuret().clone(); _vm.color.setRGB(0.5, 0.51, 0.47); _vm.emissive.multiplyScalar(0.5); _vm.name = 'vieux mur du fond de l\'impasse'; } return _vm; };
 const betonMuret = () => (_betonMuret = _betonMuret || jourDehors(new THREE.MeshStandardMaterial({ map: texMuret(), roughness: 0.92 }), 0.1));
 function texMuret() {
   const r = alea(23);
@@ -189,6 +194,44 @@ function texFacade({ fond, cadre = '#2b282a', verre = '#4d5a66', travee = 1.8, e
   }, [1 / travee, 1 / etage], false, 4);
 }
 
+// LES ÉTAGES DU 5/7 dessinés d'un seul tenant (relecture rue du 14/10 — photos 08 et 09 rejouées à leur pose, chaque
+// arête rétroprojetée sur le nu y -12,7) : un enduit blanc lisse, et à chaque étage des CAISSONS de mélèze clair de
+// 2,5 m tous les 2,95 m — une allège de planches de 0,58 m, un vitrage de 1,15 m à trois vantaux, une lisse de bois devant
+// — ; l'allège du 1er commence à 4,47 m, les étages font 2,85 m ; aux étages pairs les caissons sont plus étroits
+// (1,86 m : celui du 2e relevé de x 9,77 à 11,63). Le jeu répétait une tuile de 3 m par étage de 3 m : des baies plus
+// grandes, en d'autres places, d'un bois orangé. `xEst` : le x du plan du bord gauche de l'image (la façade regarde le nord).
+const BOIS57 = '#dab286';
+function texEtages57(L, H0, H1, xEst) {
+  const r = alea(57), W = Math.min(1024, Math.round(L * 55)), k = W / L, Hp = Math.round((H1 - H0) * k);
+  return canvasTex(W, Hp, (g, w, h) => {
+    const X = (x) => (xEst - x) * k, Y = (z) => (H1 - z) * k;
+    g.fillStyle = '#f1eee6'; g.fillRect(0, 0, w, h);
+    for (let n = 0; n < w * h / 300; n++) { g.fillStyle = `rgba(${r() < 0.5 ? '0,0,0' : '255,255,255'},0.03)`; g.fillRect(r() * w, r() * h, 2, 2); }
+    const caisson = (a, b, z) => {
+      const x0 = X(b), ww = (b - a) * k, etroit = b - a < 2.2;
+      g.fillStyle = 'rgba(0,0,0,0.16)'; g.fillRect(x0 - 1, Y(z) , ww + 2, 3);                      // (son ombre sur l'enduit)
+      g.fillStyle = BOIS57; g.fillRect(x0, Y(z + 1.82), ww, 1.82 * k);
+      g.fillStyle = 'rgba(90,60,25,0.16)'; for (let p = 0.145; p < 0.58; p += 0.145) g.fillRect(x0, Y(z + p), ww, 1);
+      g.fillStyle = 'rgba(255,240,210,0.22)'; g.fillRect(x0, Y(z + 1.82), ww, 2);
+      const gx = x0 + 0.08 * k, gw = ww - 0.16 * k, gy = Y(z + 1.74), gh = 1.13 * k;
+      const gr = g.createLinearGradient(0, gy, 0, gy + gh); gr.addColorStop(0, '#c3ccd0'); gr.addColorStop(0.55, '#8f9a9f'); gr.addColorStop(1, '#5f696e');
+      g.fillStyle = gr; g.fillRect(gx, gy, gw, gh);
+      // les voilages derrière les vitres, les montants des vantaux, la lisse de bois devant
+      const nv = etroit ? 2 : 3;
+      for (let i = 0; i < nv; i++) if (r() < 0.75) { g.fillStyle = `rgba(238,235,226,${0.35 + r() * 0.4})`; g.fillRect(gx + (i + r() * 0.3) * gw / nv, gy + 1, gw / nv * (0.35 + r() * 0.35), gh - 2); }
+      g.fillStyle = BOIS57; for (let i = 1; i < nv; i++) g.fillRect(gx + i * gw / nv - 0.035 * k, gy, 0.07 * k, gh);
+      g.fillRect(x0, Y(z + 0.98), ww, 0.06 * k);
+      g.fillStyle = 'rgba(60,40,15,0.3)'; g.fillRect(x0, Y(z + 0.98) + 0.06 * k, ww, 1);
+    };
+    for (let n = 0; n < 5; n++) {
+      const z = 4.47 + n * 2.85;
+      for (const [a, b] of [[-5.84, -3.15], [-2.76, -0.26], [0.2, 2.7], [3.15, 5.65], [6.1, 8.58], [9.06, 11.57]]) {
+        if (n % 2) caisson(a + 0.7, b + 0.05, z); else caisson(a, b, z);
+      }
+    }
+  }, null, false, 8);
+}
+
 // LES REZ-DE-CHAUSSÉE dessinés d'un seul tenant (non répétés) : `elements` = [{ t, x0, x1, ... }] en mètres depuis le
 // bord gauche (vu de la rue), sur une bande de `L` x `H` m. Types : porte (bois vitré), garage (lames de bois), vitrine,
 // fenetre (à barreaux blancs ou noirs), pilier (bois, avec le numéro), auvent.
@@ -234,9 +277,15 @@ function texRezDeChaussee(L, H, { fond, socle = null, joints = false, elements =
             for (let k = 1; k < 4; k++) { const x = a + (b - a) * k / 4; g.beginPath(); g.moveTo(x, top + m); g.lineTo(x, d); g.stroke(); }
             for (let k = 0; k < 5; k++) { g.beginPath(); g.arc((a + b) / 2, top + m + (d - top - m) * (k + 0.5) / 5, (b - a) * 0.3, 0, 7); g.stroke(); }
           }
-          if (e.chaud) { g.fillStyle = `rgba(255,${e.chaud === 2 ? 190 : 214},${e.chaud === 2 ? 110 : 150},${e.chaud === 2 ? 0.6 : 0.25})`; g.fillRect(a, top + m, b - a, bas - top - 2 * m); }
+          // (relecture du 14/10 : `chaud` 2 — la porte du 5/7, photo 08 — n'éclaire fort que l'IMPOSTE ; les vantaux restent du
+          // verre, à peine dorés : à 0,6 partout, ils passaient pour deux panneaux de bois ; `sombre` : un hall éteint)
+          if (e.chaud === 2) { const yi = top + (bas - top) * (typeof e.imposte === 'number' ? e.imposte : 0.18); g.fillStyle = 'rgba(255,196,120,0.62)'; g.fillRect(a, top + m, b - a, yi - top - m); g.fillStyle = 'rgba(255,205,140,0.3)'; g.fillRect(a, yi, b - a, bas - yi - 2 * m); }
+          else if (e.chaud) { g.fillStyle = 'rgba(255,214,150,0.25)'; g.fillRect(a, top + m, b - a, bas - top - 2 * m); }
+          if (e.sombre) { g.fillStyle = 'rgba(20,22,24,0.5)'; g.fillRect(a, top + m, b - a, bas - top - 2 * m); }
         }
-        if (e.imposte) { g.fillStyle = e.cadre || bois; g.fillRect(x0, top + (bas - top) * 0.18, ww, 4); }
+        if (e.imposte) { g.fillStyle = e.cadre || bois; g.fillRect(x0, top + (bas - top) * (e.imposte === true ? 0.18 : e.imposte), ww, 4); }
+        // (le bandeau dépoli d'une baie de bureau, à hauteur d'œil — le 5/7, photo 08)
+        if (e.depoli) { g.fillStyle = 'rgba(222,230,228,0.5)'; g.fillRect(x0 + m, top + (bas - top) * 0.6, ww - 2 * m, (bas - top) * 0.17); }
         if (e.arc) { g.fillStyle = e.pierre || fond; g.beginPath(); g.moveTo(x0 - 4, top - 2); g.lineTo(x1 + 4, top - 2); g.lineTo(x1 + 4, top + ww * 0.18); g.quadraticCurveTo((x0 + x1) / 2, top - ww * 0.12, x0 - 4, top + ww * 0.18); g.fill(); }
         g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(x0, bas - 3, ww, 3);
       } else if (e.t === 'garage') {
@@ -329,7 +378,7 @@ export function poserRue(ch) {
   const reprise = std({ map: texEnrobe(0x66676b, 29), roughness: 0.88 }, 0.04);
   const r = alea(77);
   for (const [x0, y0, x1, y1] of [[5.6, -3.4, 8.4, -4.4], [7.2, -5.0, 10.6, -6.6], [11.2, -4.0, 13.4, -5.1], [9.8, -3.25, 11.4, -3.75], [14.6, -3.5, 16.0, -4.6],
-    [-2.5, -4.2, 0.6, -5.6], [18.2, -6.0, 20.4, -7.2], [25.5, -4.6, 28.0, -6.0], [2.0, -5.8, 3.4, -6.7], [-8.5, -5.0, -6.2, -6.6]])
+    [18.2, -6.0, 20.4, -7.2], [25.5, -4.6, 28.0, -6.0], [2.0, -5.8, 3.4, -6.7], [-8.5, -5.0, -6.2, -6.6]])
     ch.boite(x0, y1, x1, y0, H_CHAUSSEE, H_CHAUSSEE + 0.0025 + r() * 0.001, reprise, { ombre: false });
   // LES LIGNES BLANCHES effacées : la limite de la file de stationnement, les tirets des places, deux lignes en travers
   const peinture = std({ color: 0xdcdcda, roughness: 0.75, transparent: true, opacity: 0.55, depthWrite: false }, 0.15);
@@ -342,7 +391,18 @@ export function poserRue(ch) {
   const yFile = Y_CHAUSSEE;
   for (let x = -9.6; x < X_BAIE - 1.5; x += 2.6) trait(x, yFile - 0.06, x + 1.3, yFile + 0.06);
   // (en travers : au droit du passage — photo 09 — et devant le rond — photo 08)
-  for (const [xl, yb] of [[1.15, yFile + 0.3], [12.75, yFile + 0.3]]) for (let y = Y_TROTTOIR - 0.35; y > yb; y -= 2.3) trait(xl - 0.07, y - 1.1, xl + 0.07, y);
+  // (relecture rue du 14/10, photo 09 enfin posée — (3,31 ; -4,62), h 1,74, cap -100,7, roulis -5,2 — : la ligne en travers
+  // est en x -0,5, d'un trottoir à l'autre — rétroprojetée en quatre points, -0,39 à -0,60 —, et non en 1,15 ; autour,
+  // des plaques de peinture blanche usée)
+  for (const [xl, yb] of [[-0.5, yFile + 0.3], [12.75, yFile + 0.3]]) for (let y = Y_TROTTOIR - 0.35; y > yb; y -= 2.3) trait(xl - 0.07, y - 1.1, xl + 0.07, y);
+  {
+    const plaques = [];
+    for (const [x0, y0, x1, y1] of [[-1.75, -5.15, -0.55, -4.05], [-1.3, -5.6, -0.6, -4.9], [-1.7, -7.2, -0.9, -6.5], [-0.45, -7.3, 0.3, -6.7], [-0.4, -4.9, 0.3, -4.3], [-1.9, -10.9, -1.1, -10.35], [-1.6, -8.6, -0.9, -8.0]]) {
+      const g = new THREE.PlaneGeometry(x1 - x0, y1 - y0).rotateX(-Math.PI / 2); g.translate((x0 + x1) / 2, H_CHAUSSEE + 0.005, -(y0 + y1) / 2); plaques.push(g);
+    }
+    const usee = new THREE.Mesh(mergeGeometries(plaques, false), std({ map: texPeintureUsee(), color: 0xc9c9c4, transparent: true, opacity: 0.72, depthWrite: false, roughness: 0.8 }, 0.1));
+    usee.userData.horsAOSol = true; usee.renderOrder = 1; ch.decor.add(usee);
+  }
   const lignes = new THREE.Mesh(mergeGeometries(traits, false), peinture); lignes.userData.horsAOSol = true; ch.decor.add(lignes);
   // LE ROND D'INTERDICTION peint (bleu cerclé de rouge, barré) en face du passage (photos 08, 13, 14)
   const rond = new THREE.Mesh(new THREE.CircleGeometry(0.52, 40), std({ map: texRondInterdit(), transparent: true, depthWrite: false, roughness: 0.7 }, 0.2));
@@ -371,7 +431,9 @@ export function poserRue(ch) {
   // L'ARCEAU DE PARKING rabattu (photo 09), rayé orange et blanc, couché sur la chaussée EN TRAVERS de la rue : la barre
   // du côté du passage (est), les deux bras vers l'impasse, jusqu'à la charnière (relecture du 09/10/2026 : il était
   // couché dans le sens de la rue)
-  const arceauP = new THREE.Group(); arceauP.position.set(1.45, H_CHAUSSEE + 0.03, 5.95); arceauP.rotation.y = Math.PI / 2 + 0.1; ch.decor.add(arceauP);
+  // (relecture rue du 14/10, photo 09 à sa pose : il est sur la ligne en travers, en (-0,55 ; -5,26) — le jeu le couchait
+  // en (1,45 ; -5,95), sous les pieds de l'appareil : la photo, prise de x 3,3, le montre à 3,9 m)
+  const arceauP = new THREE.Group(); arceauP.position.set(-0.55, H_CHAUSSEE + 0.03, 5.26); arceauP.rotation.y = Math.PI / 2 + 0.1; ch.decor.add(arceauP);
   const orangeP = std({ color: 0xdf6a1c, roughness: 0.5 }, 0.12), blancP = std({ color: 0xe9e7e2, roughness: 0.5 }, 0.15);
   for (let i = 0; i < 6; i++) {
     const t = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 0.13, 8), i % 2 ? blancP : orangeP); t.rotation.z = Math.PI / 2; t.position.set(-0.36 + i * 0.14, 0, 0.22); arceauP.add(t);
@@ -501,30 +563,47 @@ export function poserRue(ch) {
   // EN FACE, À L'OUEST : LE 5/7 (enduit blanc, caissons de mélèze, rez-de-chaussée vitré : photos 07, 08, 09). Au rez-de-
   // chaussée, d'ouest en est : la porte de garage en lames de bois, le pilier « 5/7 », la porte vitrée blanche, des
   // baies cadrées de bois ou de gris, la porte vitrée de bois (photo 08)
-  const moderne = std({ map: texFacade({ fond: '#efece4', cadre: '#9c7448', verre: '#5b6874', travee: 3.0, etage: 3.0, fl: 2.2, fh: 1.5, bois: '#b98a52', rideaux: true, graine: 7 }), roughness: 0.8 });
   // (lot rue du 13/10, photo 08 à sa pose, sur le nu y -12,7 : le coin est du 5/7 est en x 12,5 — 13,2 au cadastre —, son
   // portail de mélèze va de x 9,05 à 11,65, la porte vitrée d'aluminium à deux vantaux de 9,25 à 10,8, éclairée de
   // l'intérieur ; à son ouest, la grande baie au bandeau dépoli commence en 8,5)
-  facade(-4.5, Y_FACE57 - 14, 12.5, Y_FACE57, 18, moderne);
-  rdc(-4.5, 12.5, Y_FACE57, 3.3, { fond: '#f1eee6', ppm: 70, graine: 13, elements: [
-    { t: 'garage', x0: -4.1, x1: -1.7, h: 2.6, bois: '#a87c50' },
-    { t: 'pilier', x0: -1.6, x1: -1.0, h: 3.1, texte: '5/7' },
-    { t: 'porte', x0: -0.9, x1: 0.7, h: 2.75, cadre: '#f4f4f0', vantaux: 2, chaud: true },
+  // (relecture rue du 14/10 — photos 08 et 09 de près, rejouées à leur pose : le 5/7 va de x -6,5 à 12,1 ; ses étages
+  // sont dessinés d'un seul tenant, texEtages57 ; son rez-de-chaussée monte à 3,4 m. D'ouest en est : le PORCHE DU
+  // GARAGE cadré de mélèze, x -5,91 à -3,14 — en haut une grille grise, dessous la porte de bois et ses deux affichettes — ;
+  // le pilier de bois « 5/7 », x -2,76 à -2,0, et son chant sombre ; la porte vitrée d'aluminium du hall, sombre ; puis
+  // les baies du milieu (non revues : aucune photo ne les montre de face) ; la grande baie au bandeau dépoli jusqu'à 8,5,
+  // son tableau de bois ; un trumeau blanc ; le PORCHE DE L'ENTRÉE, x 9,08 à 11,65 : la porte d'aluminium à deux vantaux
+  // de 9,18 à 10,84, haute de 2,42 sous une imposte éclairée, et un panneau de mélèze à son est. Le jeu posait le garage
+  // en -4,1 à -1,7 et le pilier en -1,6 : 1,6 m trop à l'est, et tout d'un bois orangé.)
+  facade(X57O, Y_FACE57 - 14, X57E, Y_FACE57, 18, std({ color: 0xf0ede6, roughness: 0.85 }, 0.12));
+  {
+    const L = X57E - X57O, H0 = 3.6, H1 = 18;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(L, H1 - H0), std({ map: texEtages57(L, H0, H1, X57E), roughness: 0.8 }, 0.12));
+    m.position.set((X57O + X57E) / 2, (H0 + H1) / 2, -(Y_FACE57 + 0.02)); m.rotation.y = Math.PI; m.userData.horsAOSol = true; ch.decor.add(m);
+  }
+  rdc(X57O, X57E, Y_FACE57, 3.6, { fond: '#f1eee6', ppm: 70, graine: 13, elements: [
+    { t: 'bande', x0: -5.91, x1: -3.14, h: 3.4, couleur: BOIS57 },
+    { t: 'bande', x0: -5.7, x1: -3.6, bas: 2.42, h: 3.22, couleur: '#7b7973' },
+    { t: 'garage', x0: -5.7, x1: -3.6, h: 2.42, bois: '#9a8873' },
+    { t: 'bande', x0: -3.0, x1: -2.76, h: 3.3, couleur: '#a9865c' },
+    { t: 'pilier', x0: -2.76, x1: -2.0, h: 3.3, bois: BOIS57, texte: '5/7' },
+    { t: 'porte', x0: -2.0, x1: 0.7, h: 3.3, cadre: '#d6d8d4', vantaux: 3, imposte: 0.27, sombre: true },
     { t: 'vitrine', x0: 1.2, x1: 3.4, h: 2.75, cadre: '#9c7448', vantaux: 2, chaud: true },
-    { t: 'pilier', x0: 3.4, x1: 4.2, h: 2.75, bois: '#c39a68' },
+    { t: 'pilier', x0: 3.4, x1: 4.2, h: 2.75, bois: BOIS57 },
     { t: 'vitrine', x0: 4.2, x1: 6.0, h: 2.75, cadre: '#4a4f55', vantaux: 2 },
-    { t: 'vitrine', x0: 6.5, x1: 8.5, h: 2.75, cadre: '#9c7448', vantaux: 2 },
-    { t: 'pilier', x0: 8.5, x1: 9.25, h: 2.95, bois: '#c39a68' },
-    { t: 'porte', x0: 9.25, x1: 10.8, h: 2.75, cadre: '#b4b8bc', vantaux: 2, chaud: 2, imposte: true },
-    { t: 'pilier', x0: 10.8, x1: 11.65, h: 2.95, bois: '#c39a68' },
+    { t: 'vitrine', x0: 6.3, x1: 8.5, h: 3.38, cadre: '#c6c9c6', vantaux: 2, depoli: true },
+    { t: 'bande', x0: 8.5, x1: 8.66, h: 3.38, couleur: '#a9865c' },
+    { t: 'bande', x0: 9.08, x1: 11.65, h: 3.4, couleur: BOIS57 },
+    { t: 'porte', x0: 9.18, x1: 10.84, h: 3.26, cadre: '#b4b8bc', vantaux: 2, chaud: 2, imposte: 0.26 },
   ] }, 'N');
   // (du coin du 5/7 au mur de la baie, la grille du jardin en retrait, sur le nu du 5/7)
-  jardin(ch, 12.5, 15.0, Y_FACE57);
+  jardin(ch, X57E, 15.0, Y_FACE57);
   // au fond de l'impasse, côté sud (photo 09) : la vieille maison basse en retrait, derrière son muret et sa grille
   const enduit = std({ map: texFacade({ fond: '#dcd8cf', cadre: '#f0eee8', verre: '#56606a', travee: 2.2, etage: 2.9, fl: 1.1, fh: 1.4, graine: 14 }), roughness: 0.9 });
-  facade(X0, Y_FACE57 - 9, -4.5, Y_FACE57 - 3, 6.5, enduit, { collision: false });
-  muretGrille(ch, X0, -4.5, Y_FACE57, 'x', { hMuret: 1.0, hGrille: 1.5, sol: 0 });
-  C.ajouterBoite(X0, -(Y_FACE57 - 0.3), -4.5, -(Y_FACE57), { y1: 2.6 });
+  // (relecture rue du 14/10, photo 09 à sa pose : le pignon ouest du 5/7 est en x -6,5 — -7,6 au cadastre —, et non -4,5 ;
+  // de là au fond, le même mur haut sous sa grille)
+  facade(X0, Y_FACE57 - 9, X57O, Y_FACE57 - 3, 5.2, enduit, { collision: false });
+  muretGrille(ch, X0, X57O, Y_FACE57, 'x', { hMuret: 2.42, hGrille: 1.6, sol: 0, mat: _vieuxMur() });
+  C.ajouterBoite(X0, -(Y_FACE57 - 0.3), X57O, -(Y_FACE57), { y1: 3.9 });
   // (entre le coin du 5/7 et la grille du jardin, un mètre de mur : la baie s'arrête, le trottoir du jardin avance)
   ch.boite(15, Y_FACE57, 15.3, Y_FACE - 0.6, 0, 1.78, betonMuret(), { ombre: false, collision: true });
   // LE JARDIN (photo 15) : muret de béton taché, grille noire de 1,9 m doublée de brande, poteaux, lisse ; l'immeuble des
@@ -534,18 +613,58 @@ export function poserRue(ch) {
   plan(xj0, Y_FACE - 0.6, xj1, Y_FACE, 0, trottoir);
   // l'immeuble des années 60 au fond du jardin (photo 08 : sept étages, des balcons filants à garde-corps blancs, des
   // jardinières aux balcons), à 6 m derrière la grille
-  const balcons = std({ map: texFacade({ fond: '#e7e4dc', cadre: '#f4f4f0', verre: '#4f5b66', travee: 2.6, etage: 2.8, fl: 2.1, fh: 1.5, balconBlanc: true, fleurs: true, rideaux: true, graine: 19 }), roughness: 0.85 });
   // (au cadastre, il va de x 13,2 à 26,9)
-  facade(13.2, Y_FACE - 18, 26.9, Y_FACE - 6, 21, balcons, { collision: false });
-  toit(13.2, 26.9, Y_FACE - 6, 3, 21, 'N', 1.2);
+  // (relecture rue du 14/10, photo 08 de près, à sa pose : ses BALCONS FILANTS sont en relief — une dalle blanche en saillie
+  // tous les 2,8 m, la première à 1,9 m, un garde-corps blanc à barreaux serrés, la façade sombre en retrait derrière — ; à
+  // 83 px d'un balcon à l'autre, leur nez est à 20 m de l'appareil, en y -17,7 : la façade en -19,0, et non -17,1 ; son
+  // arête est, au relèvement 126°, tombe en x 24,5. Le jeu en faisait un mur plat à fenêtres, sans balcon.)
+  {
+    const yB = -19.0, xB0 = 13.2, xB1 = 24.5, sB = 1.3;
+    const fond = std({ map: texFacade({ fond: '#dcd9d0', cadre: '#35383b', verre: '#414b53', travee: 2.8, etage: 2.8, fl: 2.3, fh: 2.15, appui: 0.02, rideaux: true, graine: 19 }), roughness: 0.85 });
+    // (la boîte est calée pour que ses tuiles d'étage — centrées sur elle — tombent sur les dalles : 1,9 + 2,8 n)
+    facade(xB0, yB - 12, xB1, yB, 20.6, fond, { collision: false });
+    const dalle = std({ color: 0xecebe6, roughness: 0.8 }, 0.14), gc = std({ map: texGardeCorps(), alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.7 }, 0.2);
+    const gs = [];
+    const pan = (L, x, y, z, rot) => { const g = new THREE.PlaneGeometry(L, 1.0); const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * L); g.rotateY(rot); g.translate(x, z, -y); gs.push(g); };
+    for (let z = 1.9; z < 20; z += 2.8) {
+      ch.boite(xB0, yB, xB1, yB + sB, z - 0.16, z, dalle, { ombre: false }).userData.horsAOSol = true;
+      pan(xB1 - xB0, (xB0 + xB1) / 2, yB + sB - 0.03, z + 0.5, Math.PI); pan(sB, xB1 - 0.03, yB + sB / 2, z + 0.5, Math.PI / 2);
+    }
+    const m = new THREE.Mesh(mergeGeometries(gs, false), gc); m.userData.horsAOSol = true; m.matrixAutoUpdate = false; ch.decor.add(m);
+    // (photo 08 : des jardinières au premier balcon, vert et rouge)
+    const fl = std({ color: 0x5f7f48, roughness: 0.9 }, 0.12), ro = std({ color: 0xb83a40, roughness: 0.9 }, 0.12);
+    for (const [x, c] of [[19.2, fl], [20.1, ro], [21.0, fl], [22.6, fl], [23.3, ro]]) ch.boite(x, yB + sB - 0.02, x + 0.7, yB + sB + 0.16, 4.7 + 0.85, 4.7 + 1.18, c, { ombre: false }).userData.horsAOSol = true;
+    toit(xB0, xB1, yB, 3, 20.6, 'N', 1.2);
+  }
   // (lot rue du 13/10 : au cadastre, la parcelle du jardin va jusqu'au coin — aucun immeuble à l'angle ; la grille tourne
   // le long de la rue transversale)
 
   // L'IMPASSE (ouest, photo 09) : un muret de béton taché de 1 m, une grille noire de 1,5 m à pointes ; derrière, une maison
   // basse, de grands arbres et l'immeuble à l'escalier en colimaçon (js/ecole_rue_mobilier.js pose la verdure et les pots)
-  muretGrille(ch, Y_FACE57, YV, X0, 'y', { hMuret: 1.05, hGrille: 1.5, sol: H_CHAUSSEE });
-  C.ajouterBoite(X0 - 0.3, -(-0.4), X0, -Y_FACE57, { y1: 2.7 });
-  facade(X0 - 16, Y_FACE - 6, X0 - 9, 12, 16, balcons, { collision: false });
+  // (relecture rue du 14/10, photo 09 à sa pose : c'est un MUR de 2,4 m — son arête à 2,6-2,8 m sur le plan x -10,2,
+  // au-dessus de l'œil de l'appareil, la poubelle verte de 1,08 m à son pied — sous une grille de 1,6 m ; le jeu en
+  // faisait un muret de 1,05 m)
+  // (mesuré au même endroit : 73-75-68 sur la photo, un vieux mur gris moussu — le béton clair des murets sortait à 151)
+  muretGrille(ch, Y_FACE57, YV, X0, 'y', { hMuret: 2.3, hGrille: 1.6, sol: H_CHAUSSEE, mat: _vieuxMur() });
+  C.ajouterBoite(X0 - 0.3, -(-0.4), X0, -Y_FACE57, { y1: 3.9 });
+  // (relecture rue du 14/10, photo 09 à sa pose : derrière la grille du fond, à 9 m, un immeuble CRÈME à balconnets — du
+  // relèvement 250° au 262° —, et à son sud, vu par-dessus le coin du 5/7, un immeuble aux balcons de bois brun devant
+  // lequel monte un ESCALIER EN COLIMAÇON blanc de 2,8 m de large — en (-18 ; -20), il sort du cadre à plus de 13 m.
+  // Le jeu n'y montrait qu'un mur à fenêtres et à géraniums.)
+  facade(X0 - 16, -16.5, X0 - 9, 12, 22, std({ map: texFacade({ fond: '#e8e1cb', cadre: '#f6f3ea', verre: '#5a6570', travee: 2.5, etage: 2.9, fl: 1.2, fh: 1.75, appui: 0.55, balcon: true, rideaux: true, graine: 31 }), roughness: 0.85 }, 0.2), { collision: false });
+  facade(X0 - 16, -32, X0 - 9.6, -16.5, 22, std({ map: texFacade({ fond: '#d9d3c5', cadre: '#3a3d40', verre: '#48525a', travee: 3.0, etage: 2.9, fl: 2.4, fh: 2.0, appui: 0.36, bandeau: '#8f6238', graine: 33 }), roughness: 0.85 }, 0.16), { collision: false });
+  {
+    const xc = -18.0, yc = -20.1, Rc = 1.4, pas = 2.9, n = 24, gs = [];
+    const blanc = std({ color: 0xf0efea, roughness: 0.7 }, 0.2);
+    for (let i = 0; i < Math.round((21 - 2.4) / pas * n); i++) {
+      const a = i / n * Math.PI * 2, z = 2.4 + i * pas / n;
+      // le limon plein, en dehors (un panneau d'un mètre, tangent), et la marche
+      const p = new THREE.BoxGeometry(0.4, 1.0, 0.05); p.translate(0, 0.5, Rc); p.rotateY(a); p.translate(xc, z, -yc); gs.push(p);
+      const m = new THREE.BoxGeometry(0.42, 0.05, Rc - 0.2); m.translate(0, 0, Rc / 2 + 0.1); m.rotateY(a); m.translate(xc, z, -yc); gs.push(m);
+    }
+    const fut = new THREE.CylinderGeometry(0.22, 0.22, 21, 10); fut.translate(xc, 10.5, -yc); gs.push(fut);
+    const esc = new THREE.Mesh(mergeGeometries(gs.map((g) => g.toNonIndexed()), false), blanc); esc.name = 'escalier en colimaçon (photo 09)'; esc.userData.horsAOSol = true; esc.castShadow = false; esc.matrixAutoUpdate = false; ch.decor.add(esc);
+  }
   facade(X0 - 5, -3, X0 - 2, 4, 8, enduit, { collision: false });
   // LE CARREFOUR (est, photos 08, 15) : la rue transversale (chaussée de x1 + 2 à x1 + 11, trottoirs de part et d'autre),
   // l'immeuble crème d'en face, six étages, une brasserie au rez-de-chaussée sous son store sombre ; on s'arrête au bord
@@ -634,8 +753,8 @@ export function poserRue(ch) {
 }
 
 // LA GRILLE SUR SON MURET (l'impasse, la vieille maison) : de `a` à `b` le long de x (à y = `l`) ou de y (à x = `l`)
-function muretGrille(ch, a, b, l, axe, { hMuret = 1.0, hGrille = 1.5, sol = 0 }) {
-  const M = ch.M, beton = betonMuret();
+function muretGrille(ch, a, b, l, axe, { hMuret = 1.0, hGrille = 1.5, sol = 0, mat = null }) {
+  const M = ch.M, beton = mat || betonMuret();
   const lo = Math.min(a, b), hi = Math.max(a, b);
   const B = (u0, v0, u1, v1, h0, h1, mat) => (axe === 'x' ? ch.boite(u0, l + v0, u1, l + v1, h0, h1, mat, { ombre: false }) : ch.boite(l + v0, u0, l + v1, u1, h0, h1, mat, { ombre: false }));
   // (au fond de l'impasse, le muret part de la chaussée : `sol`)
@@ -706,6 +825,27 @@ function texRondInterdit() {
     for (let k = 0; k < 260; k++) { g.fillStyle = `rgba(0,0,0,${0.3 + r() * 0.6})`; g.fillRect(r() * w, r() * w, 2 + r() * 4, 1 + r() * 3); }
     g.globalCompositeOperation = 'source-over';
   }, null, true, 4);
+}
+// LA PEINTURE BLANCHE USÉE de la chaussée (photo 09 : autour de l'arceau, des plaques rongées) : des éclats irréguliers
+function texPeintureUsee() {
+  return canvasTex(128, 128, (g, w) => {
+    const r = alea(31); g.clearRect(0, 0, w, w);
+    for (let k = 0; k < 46; k++) {
+      const a = r() * 6.3, d = Math.pow(r(), 0.7) * 44;
+      g.fillStyle = `rgba(226,226,221,${0.3 + r() * 0.5})`; g.beginPath(); g.ellipse(64 + Math.cos(a) * d, 64 + Math.sin(a) * d * 0.8, 5 + r() * 15, 3 + r() * 9, r() * 3, 0, 7); g.fill();
+    }
+    g.globalCompositeOperation = 'destination-out';
+    for (let k = 0; k < 420; k++) { g.fillStyle = `rgba(0,0,0,${0.3 + r() * 0.7})`; g.fillRect(r() * w, r() * w, 1 + r() * 5, 1 + r() * 3); }
+    g.globalCompositeOperation = 'source-over';
+  }, null, true, 4);
+}
+// LE GARDE-CORPS BLANC à barreaudage serré des balcons de l'immeuble d'en face (photo 08) : une tuile = 0,55 m x 1 m
+function texGardeCorps() {
+  return canvasTex(64, 128, (g, w, h) => {
+    g.clearRect(0, 0, w, h); g.fillStyle = '#eeeeea';
+    g.fillRect(0, 0, w, 9); g.fillRect(0, h - 7, w, 7);
+    for (let x = 2; x < w; x += 13) g.fillRect(x, 0, 7, h);
+  }, [1 / 0.55, 1], true, 4);
 }
 // LE VERRE CANNELÉ DE LA MARQUISE (n° 10, photo 09) : des bandes ambrées, claires et foncées, dans le sens de la pente
 function texMarquise() {

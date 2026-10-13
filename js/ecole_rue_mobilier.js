@@ -135,13 +135,14 @@ export function matieresRue() {
   M.terre = teinte(0x2e241c, 'mat');
   M.anthracite = teinte(0x34373a, 'satin');
   M.treillis = std({ map: texTreillis(), roughness: 0.6, metalness: 0.3 }, 0.04);
-  M.terreCuite = teinte(0xa4674a, 'mat');
+  M.terreCuite = teinte(0xae7862, 'mat');          // (relecture du 14/10, photo 10 : 90-61-47, une terre rosée — rendue 78-44-20, orangée)
   M.potGris = teinte(0x8e8f8c, 'mat');
   M.potTurquoise = teinte(0x2f6f74, 'laque');
   M.noirBanc = teinte(0x1e1f21, 'laque');
   M.sac = teinte(0x101012, 'laque');
-  M.bacGris = teinte(0x4e5357, 'satin');
-  M.bacCouvercle = teinte(0x3b3f42, 'satin');
+  // (relecture rue du 14/10, photo 10 : les bacs sont d'un gris-BLEU, 64-75-93 — le jeu les rendait gris neutre, 44-45-43)
+  M.bacGris = teinte(0x65758f, 'satin');
+  M.bacCouvercle = teinte(0x57657c, 'satin');
   M.bacVert = teinte(0x2f8a3a, 'satin');
   M.caoutchouc = teinte(0x141414, 'mat');
   M.alu = teinte(0xb4b7b9, 'metal');
@@ -268,7 +269,9 @@ function dessinerAtlas(g) {
         const t = 0.12 + k / n * 0.85, [x, y] = pts[Math.min(10, Math.round(t * 10))];
         const cote = k % 2 ? 1 : -1, ang = cote * (0.35 + r() * 0.65);
         const l = 22 + r() * 14;
-        feuille(g, x, y, ang, 70 + r() * 45, 7 + r() * 3.5, hsl(78 + r() * 14, 42 + r() * 12, 24 + r() * 8), hsl(74 + r() * 12, 45, l), 0.25);
+        // (relecture rue du 14/10 : le bambou mesuré sur les photos 16 et 17 à côté du jeu rejoué à leur pose — 88-102-58 et
+        // 104-113-78 pour 56-70-31 : un vert-jaune GRISÉ, moitié plus clair ; de même la palme, 92-108-56 pour 64-83-39)
+        feuille(g, x, y, ang, 70 + r() * 45, 7 + r() * 3.5, hsl(76 + r() * 14, 27 + r() * 10, 33 + r() * 8), hsl(72 + r() * 12, 30, l + 13), 0.25);
       }
     }
   });
@@ -278,8 +281,8 @@ function dessinerAtlas(g) {
     for (let i = 0; i < 36; i++) {
       const a = -1.6 + i / 35 * 3.2 + (r() - 0.5) * 0.05;
       const l = 205 + r() * 32 - Math.abs(a) * 25;
-      const lum = 24 + r() * 8;
-      feuille(g, cx + Math.sin(a) * 12, cy + Math.cos(a) * 12, a + (r() - 0.5) * 0.06, l, 5.5 + r() * 1.5, hsl(92, 38, lum - 4), hsl(88 + r() * 8, 40, lum + 4), 0.22);
+      const lum = 33 + r() * 8;
+      feuille(g, cx + Math.sin(a) * 12, cy + Math.cos(a) * 12, a + (r() - 0.5) * 0.06, l, 5.5 + r() * 1.5, hsl(84, 34, lum - 4), hsl(80 + r() * 8, 36, lum + 4), 0.22);
     }
     g.fillStyle = '#3f4a22'; g.beginPath(); g.ellipse(cx, cy + 10, 12, 9, 0, 0, 7); g.fill();
   });
@@ -350,7 +353,9 @@ function dessinerAtlas(g) {
     for (let k = 0; k < 520; k++) {
       const a = r() * Math.PI * 2, d = Math.sqrt(r()) * 112, x = 128 + Math.cos(a) * d, y = 132 + Math.sin(a) * d * 0.92;
       const coeur = 1 - d / 112;
-      feuille(g, x, y, r() * 6.3, 13 + r() * 9, 4.5 + r() * 3, hsl(95 + r() * 18, 30 + r() * 15, 14 + (1 - coeur) * 12 + r() * 8), hsl(92 + r() * 14, 36, 22 + (1 - coeur) * 14 + r() * 8), 0);
+      // (relecture rue du 14/10 : les arbres du jardin sont d'un vert GRIS, 59-62-52 sur la photo 15 et 95-100-90 sur la 08 ;
+      // le jeu les rendait vert vif, 33-60-25 et 42-72-30)
+      feuille(g, x, y, r() * 6.3, 13 + r() * 9, 4.5 + r() * 3, hsl(86 + r() * 16, 11 + r() * 8, 21 + (1 - coeur) * 12 + r() * 8), hsl(82 + r() * 14, 14, 29 + (1 - coeur) * 13 + r() * 8), 0);
     }
   });
 }
@@ -458,28 +463,31 @@ export function bambou(F, A, M, x, y, h0, H, r, n = 12) {
 // LE PALMIER DE CHINE en pot (photos 16, 17) : un stipe court et fibreux, des palmes en éventail sur de longs pétioles,
 // les plus basses qui retombent (et quelques-unes sèches)
 export function palmier(F, A, M, x, y, h0, r) {
-  const pied = vMonde(x, h0, y), tete = vMonde(x + 0.02, h0 + 0.42, y);
-  A.ajouter(tube(pied, tete, 0.1, 0.08, 8), M.stipe, new THREE.Matrix4());
+  // (relecture rue du 14/10, photos 16 à 18 : le stipe ne se voit pas — 25 cm, caché par la touffe du pied — ; les palmes
+  // partent en GERBE, la plupart dressées de 30 à 65°, cinq seulement retombent ; le jeu montrait un tronc de 42 cm et des
+  // palmes à plat, comme un cycas)
+  const pied = vMonde(x, h0, y), tete = vMonde(x + 0.02, h0 + 0.26, y);
+  A.ajouter(tube(pied, tete, 0.075, 0.06, 8), M.stipe, new THREE.Matrix4());
   const c = vMonde(x, h0 + 0.7, y);
-  const n = 22;
+  const n = 26;
   for (let i = 0; i < n; i++) {
     const az = i / n * Math.PI * 2 * 1.618 + r() * 0.3;
-    const basse = i < 8, elev = basse ? 0.0 + r() * 0.25 : 0.4 + r() * 0.65;
-    const d = dirAz(az, elev), L = 0.5 + r() * 0.4;
+    const basse = i < 5, elev = basse ? 0.0 + r() * 0.25 : 0.5 + r() * 0.65;
+    const d = dirAz(az, elev), L = 0.55 + r() * 0.4;
     const b = tete.clone().add(V(0, -0.05 + r() * 0.08, 0));
     const e = b.clone().addScaledVector(d, L);
     A.ajouter(tube(b, e, 0.012, 0.007, 4), M.petiole, new THREE.Matrix4(), false);
     // la palme continue le pétiole et retombe ; elle est large (0,8 m) et presque à plat
-    const dp = d.clone().add(V(0, -0.25 - (basse ? 0.4 : 0), 0)).normalize();
+    const dp = d.clone().add(V(0, -0.12 - (basse ? 0.5 : 0), 0)).normalize();
     let s = new THREE.Vector3().crossVectors(dp, HAUT).normalize();
     s.applyAxisAngle(dp, (r() - 0.5) * 0.5);
     const seche = basse && r() < 0.35;
-    F.carte(e, dp, s, 0.7 + r() * 0.18, 0.95, c, PLANCHE.palme, { pli: 0.35 + (basse ? 0.3 : 0), tc: seche ? [1.25, 0.95, 0.55] : [0.9 + r() * 0.2, 0.95 + r() * 0.15, 0.9] });
+    F.carte(e, dp, s, 0.7 + r() * 0.18, 0.95, c, PLANCHE.palme, { pli: 0.16 + (basse ? 0.45 : 0), tc: seche ? [1.25, 0.95, 0.55] : [0.95 + r() * 0.2, 1.0 + r() * 0.15, 0.9] });
   }
   // les petites plantes au pied (photo 16 : une touffe de feuillage au bord du pot)
-  for (let k = 0; k < 10; k++) {
-    const az = r() * Math.PI * 2, b = vMonde(x + Math.cos(az) * 0.2, h0 + 0.02, y + Math.sin(az) * 0.2);
-    F.carteVers(b, dirAz(az, 0.2 + r() * 0.5), 0.25, 0.25, vMonde(x, h0, y), PLANCHE.arbuste, r, { pli: 0.4 });
+  for (let k = 0; k < 16; k++) {
+    const az = r() * Math.PI * 2, b = vMonde(x + Math.cos(az) * 0.17, h0 + 0.02, y + Math.sin(az) * 0.17);
+    F.carteVers(b, dirAz(az, 0.25 + r() * 0.6), 0.3, 0.3, vMonde(x, h0, y), PLANCHE.arbuste, r, { pli: 0.4, teinte: 1.25 });
   }
 }
 // L'OLIVIER en jardinière (photos 08, 13) : un tronc mince et sinueux, quelques branches, un feuillage clairsemé
@@ -757,8 +765,10 @@ export function cendrier(ch, A, M, x, y) {
 }
 // LE BAC ROULANT (photo 10 : gris, couvercle sombre ; photo 09 : le vert de l'impasse). Repère : l'avant regarde +z,
 // les roues et la poignée sont derrière.
-export function bacRoulant(ch, A, M, x, y, a, corps, couvercle, { l = 0.6, p = 0.74, h = 0.98, sol = 0 } = {}) {
+export function bacRoulant(ch, A, M, x, y, a, corps, couvercle, { l = 0.6, p = 0.74, h = 0.98, sol = 0, quatreRoues = false } = {}) {
   const b = pose(x, y, sol, a);
+  // (un conteneur à quatre roues — photo 10 : deux roulettes noires se voient sous sa face, côté rue)
+  if (quatreRoues) for (const s of [-1, 1]) A.ajouter(new THREE.CylinderGeometry(0.09, 0.09, 0.05, 14).rotateZ(Math.PI / 2), M.caoutchouc, dans(b, s * (l / 2 - 0.1), 0.09, p / 2 - 0.1));
   A.ajouter(boiteEvasee(l, h - 0.08, p, 0.86), corps, dans(b, 0, (h - 0.08) / 2 + 0.06, 0));
   A.ajouter(new THREE.BoxGeometry(l + 0.04, 0.045, p + 0.06), couvercle, dans(b, 0, h, 0.01));
   A.ajouter(new THREE.BoxGeometry(l + 0.02, 0.05, 0.04), corps, dans(b, 0, h - 0.05, p / 2 + 0.02));
@@ -1137,7 +1147,9 @@ export function poserMobilierRue(ch, R) {
   bacRoulant(ch, A, M, 1.0, -0.86, 0.04, M.bacGris, M.bacCouvercle, grandBac);
   bacRoulant(ch, A, M, 1.72, -0.86, -0.04, M.bacGris, M.bacCouvercle, grandBac);
   // (lot rue du 13/10, photo 10 à sa pose : celui de devant est un peu de biais, on voit sa face et un rien de son flanc)
-  bacRoulant(ch, A, M, 1.5, -1.6, 0.22, M.bacGris, M.bacCouvercle, grandBac);
+  // (relecture rue du 14/10, photo 10 à sa pose : c'est un grand conteneur, sa face large de 0,98 m et haute de 1,16 —
+  // 155 x 187 px à 3,4 m —, centré en x 1,62 ; le jeu le faisait de 0,68 x 1,08)
+  bacRoulant(ch, A, M, 1.62, -1.6, 0.22, M.bacGris, M.bacCouvercle, { l: 0.98, p: 0.78, h: 1.16, quatreRoues: true });
   // (le recoin de 0,66 m entre la jardinière de devant et le bac de devant, et la fente de 0,52 m entre la jardinière de
   // derrière et la façade : bouchés — Haythem s'y coincerait)
   ch.C.ajouterBoite(0.4, 1.22, 1.15, 1.84, { y1: 0.9, camera: false });
@@ -1234,12 +1246,20 @@ export function poserMobilierRue(ch, R) {
   // droite de la photo 15, derrière le bord de l'immeuble à balcons sur la photo 08 —, c'est un arbre BAS et rond, 8,5 m,
   // dont la ramure déborde sur le trottoir ; de la photo 08, on voit l'immeuble à balcons entre le 5/7 et lui, et de
   // grands peupliers derrière lui. Le jeu plantait quatre arbres de 12 à 14 m, le premier en x 17.)
-  for (const [x, y, H, Rr, n] of [[20.0, R.Y_FACE - 3.5, 8.5, 3.6, 300], [27.0, R.Y_FACE - 3.2, 11.5, 4.2, 280], [32.5, R.Y_FACE - 3.2, 12, 4.0, 260], [37.0, R.Y_FACE - 3.0, 11, 3.8, 240]])
-    arbre(Floin, A, M, x, y, H, Rr, r, { n: TELEPHONE ? Math.round(n * 0.6) : n });
+  // (relecture rue du 14/10, les deux photos rejouées à leur pose : le feuillage du jeu débordait de 90 px de chaque côté —
+  // il cachait l'immeuble de pierre du café, que les photos 08 et 15 montrent, et la moitié de l'immeuble à balcons. Sur la
+  // 08, rien à gauche du relèvement 111° ni à droite de 130° ; sur la 15, rien à gauche de 114° en haut de l'image : le
+  // premier arbre a son tronc en (19,6 ; -13,6), 6,8 m de haut — son sommet à 14° au-dessus de l'horizon de la 08 —, une
+  // ramure de 2,9 m ; les suivants sont plus au sud et plus petits ; le peuplier de la 08 est en (25,5 ; -14,6))
+  for (const [x, y, H, Rr, n] of [[19.6, -13.6, 6.8, 2.9, 260], [27.5, -15.8, 9, 3.0, 220], [33, -17.5, 9.5, 2.6, 180], [38, -19.5, 9, 2.2, 140]])
+    arbre(Floin, A, M, x, y, H, Rr, r, { n: TELEPHONE ? Math.round(n * 0.6) : n, tronc: 0.16 });
   // les peupliers élancés du fond (photo 08, au-dessus du jardin)
-  for (const [x, y, H] of [[23.2, R.Y_FACE - 4.6, 19], [25.4, R.Y_FACE - 5.4, 21], [34.5, R.Y_FACE - 6, 20]])
-    arbre(Floin, A, M, x, y, H, 2.6, r, { n: TELEPHONE ? 120 : 200, hFut: 0.3, applati: 2.4 });
-  for (const [y, H, Rr] of [[-2.0, 7, 2.8], [-5.5, 8.5, 3.4], [-9.0, 7.5, 3.0]]) arbre(Floin, A, M, R.X0 - 2.8, y, H, Rr, r, { n: TELEPHONE ? 110 : 200, applati: 1.1 });
+  for (const [x, y, H] of [[25.5, -14.6, 20], [29.5, -17.5, 19]])
+    arbre(Floin, A, M, x, y, H, 2.1, r, { n: TELEPHONE ? 120 : 200, hFut: 0.3, applati: 2.9 });
+  // (relecture rue du 14/10, photo 09 à sa pose : la grande masse sombre est au NORD, du n° 10 à y -7 — elle sort du cadre
+  // en haut, plus de 9 m — ; au sud, on ne voit que des buissons au-dessus du mur, et les immeubles derrière)
+  for (const [y, H, Rr] of [[-2.4, 9.5, 3.0], [-5.6, 10.5, 3.3]]) arbre(Floin, A, M, R.X0 - 3.0, y, H, Rr, r, { n: TELEPHONE ? 110 : 200, applati: 1.25 });
+  for (const [y, H, Rr] of [[-9.2, 4.6, 1.9], [-12.4, 4.3, 1.8]]) arbre(Floin, A, M, R.X0 - 2.0, y, H, Rr, r, { n: TELEPHONE ? 50 : 90, tronc: 0.08, applati: 0.8 });
   for (let k = 0; k < 6; k++) bambou(Floin, A, M, R.X0 - 0.9, -3.6 - k * 1.1, 0, 2.6 + r() * 0.8, r, 8);
 
   // ---------------------------------------------------------------- la couture

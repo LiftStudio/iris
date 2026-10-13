@@ -748,11 +748,15 @@ function construireFacade(ch) {
   // 2 m (VO q_0019-0023) ; sous le linteau de pierre, un bandeau noir de 22 cm, puis la sous-face gris clair et sa grille
   // de ventilation, à 2,58 ; au sol, un carrelage gris anthracite derrière une cornière d'aluminium ; au pied de la
   // pierre, de part et d'autre, le soubassement taupe de 0,48 m et son filet sombre (photos 15 à 17).
-  ch.mur({ de: [16.575, -0.4], a: [16.575, Y_P6], ep: 0.15, h: H_DALLE, mats: { W: M.noirMat, E: M.blanc } });
+  // (relecture rue du 14/10 : il part du nu INTÉRIEUR du mur de façade, y 0 — parti de -0,4, son about affleurait la pierre
+  // et scintillait avec elle : une bande pointillée de 15 cm au-dessus du portail, vue des photos 16 à 18 ; de même pour le
+  // mur est du passage, x 4,5, et celui de l'ouest du portail, x 13,275)
+  ch.mur({ de: [16.575, 0], a: [16.575, Y_P6], ep: 0.15, h: H_DALLE, mats: { W: M.noirMat, E: M.blanc } });
   const P6 = { x0: PORTAIL.c - PORTAIL.l / 2, x1: PORTAIL.c + PORTAIL.l / 2 };
   const noirP6 = new THREE.MeshStandardMaterial({ color: 0x1c1c1e, roughness: 0.6 }); noirP6.name = 'panneaux noirs du portail';
   // (photos 16, 17 : le soubassement est d'un taupe rosé, 105-94-90 sous le ciel couvert)
-  M.soubassement = jourDehors(new THREE.MeshStandardMaterial({ color: 0x9b9797, roughness: 0.9 }), 0.1); M.soubassement.name = 'soubassement taupe de la façade';
+  M.soubassement = jourDehors(new THREE.MeshStandardMaterial({ color: 0x7f7a74, roughness: 0.9 }), 0.1);     // (relecture du 14/10 : 68 à 86 sur les photos 16 et 17, rendu à 91-99)
+  M.soubassement.name = 'soubassement taupe de la façade';
   M.filetSoubassement = new THREE.MeshStandardMaterial({ color: 0x2c2829, roughness: 0.7 }); M.filetSoubassement.name = 'filet du soubassement';
   // (les lames : une tuile de 8 cm, le dessus de la lame éclairé, son dessous dans l'ombre)
   const lames = new THREE.MeshStandardMaterial({ roughness: 0.55, map: canvasTex(8, 32, (g, w, h) => {
@@ -783,13 +787,15 @@ function construireFacade(ch) {
   const noirBandeau = new THREE.MeshStandardMaterial({ color: 0x121213, roughness: 1, envMapIntensity: 0.15 }); noirBandeau.name = 'bandeau noir du portail';
   ch.boite(13.35, -0.37, 16.5, Y_P6 - 0.04, 2.6, H_DALLE, noirBandeau, { ombre: false });
   ch.boite(P6.x0, -0.37, P6.x1, -0.33, 2.56, 2.6, noirBandeau, { ombre: false });
-  const sousFace = jourDehors(new THREE.MeshStandardMaterial({ color: 0xb4b6b6, roughness: 0.7 }), 0.2); sousFace.name = 'sous-face du portail';
+  // (relecture rue du 14/10 : 43 à 75 sur les photos 16 et 17, le jeu la rendait à 70-105 — dans l'ombre du renfoncement,
+  // elle est plus sombre que le trottoir)
+  const sousFace = jourDehors(new THREE.MeshStandardMaterial({ color: 0x6f7070, roughness: 0.9 }), 0.12); sousFace.name = 'sous-face du portail';
   ch.boite(P6.x0, -0.33, P6.x1, Y_P6 - 0.04, 2.585, 2.6, sousFace, { ombre: false }).userData.horsAOSol = true;
   ch.boite(13.62, -0.25, 14.14, -0.05, 2.58, 2.586, new THREE.MeshStandardMaterial({ color: 0x8f8a7c, roughness: 0.6 }), { ombre: false });
   // le sol du renfoncement : de grands carreaux gris anthracite (joints tous les 60 cm), la cornière d'aluminium du seuil
   // (photos 16, 17 : 107 à 120 de gris sous le ciel couvert, à peine plus sombre que le trottoir, un rien bleuté)
   const dalleP6 = jourDehors(new THREE.MeshStandardMaterial({ roughness: 0.78, map: canvasTex(64, 64, (g, w, h) => {
-    g.fillStyle = '#565960'; g.fillRect(0, 0, w, h); g.fillStyle = '#45474c'; g.fillRect(0, 0, w, 1.5); g.fillRect(0, 0, 1.5, h);
+    g.fillStyle = '#4b4c4f'; g.fillRect(0, 0, w, h); g.fillStyle = '#3b3c3f'; g.fillRect(0, 0, w, 1.5); g.fillRect(0, 0, 1.5, h);      // (relecture du 14/10 : 102-107 sur les photos, neutre — rendu à 124-133, bleuté)
   }, [1 / 0.6, 1 / 0.6], false, 8) }), 0.08);
   dalleP6.name = 'carrelage du seuil de la porte 6';
   ch.boite(P6.x0, -0.4, P6.x1, Y_P6, 0, 0.008, dalleP6, { ombre: false });
@@ -809,7 +815,8 @@ function construireFacade(ch) {
   six.position.set(P6.x1 + 0.22, PORTAIL.h - 0.6, 0.405); ch.decor.add(six);
   // (lot rue du 13/10, photos 10, 16, 17 et 18 : les boîtiers sont d'un gris ANTHRACITE, 70 sur la pierre claire — le jeu
   // les faisait gris perle, 215)
-  M.projecteur = jourDehors(new THREE.MeshStandardMaterial({ color: 0x4a4c50, roughness: 0.5 }), 0.25); M.projecteur.name = 'boîtier des projecteurs';
+  // (relecture rue du 14/10, mesuré aux mêmes endroits sur les photos 10, 16 et 17 : 84 à 100, le jeu rendait 38 à 65)
+  M.projecteur = jourDehors(new THREE.MeshStandardMaterial({ color: 0x70727a, roughness: 0.5 }), 0.25); M.projecteur.name = 'boîtier des projecteurs';
   for (const x of [4.95, 16.47]) {
     // le projecteur : une console courte, le boîtier penché vers le trottoir
     // (lot rue du 13/10, photos 16 et 18 : le boîtier est gris clair — 225 sur la photo —, sa vitre sombre dessous)
@@ -967,7 +974,10 @@ function construireEntree(ch) {
   // LE REFLET DE LA RUE dans les vitres de la porte (photos 16, 17 : de la rue, le hall se devine, sombre et chaud,
   // derrière le reflet du ciel — le jeu le montrait en pleine lumière, plafond blanc et lignes lumineuses) : une face
   // sombre et brillante entre la vitre et les adhésifs, tournée vers la rue seulement (du hall, elle n'existe pas)
-  const refletP6 = new THREE.MeshStandardMaterial({ color: 0x1c1f24, roughness: 0.08, metalness: 0.2, transparent: true, opacity: 0.7, depthWrite: false, envMapIntensity: 0.9 });
+  // (relecture rue du 14/10, photos 16 et 17 rejouées à leur pose et mesurées aux mêmes endroits : les vantaux sortaient à
+  // 110-136 de gris, bleutés, pour 78-84 sur les photos, le fixe ouest à 142 pour 68 — le hall se voyait presque en clair,
+  // sous un reflet de ciel bleu : la face est plus dense et son reflet plus faible)
+  const refletP6 = new THREE.MeshStandardMaterial({ color: 0x211f1d, roughness: 0.08, metalness: 0.2, transparent: true, opacity: 0.87, depthWrite: false, envMapIntensity: 0.4 });
   refletP6.name = 'vitre de la porte 6 vue de la rue';
   const reflet = (parent, l, xl, zl) => { const r = new THREE.Mesh(new THREE.PlaneGeometry(l, hP - cad - VITRO.bas), refletP6); r.position.set(xl, (hP - cad + VITRO.bas) / 2, zl + 0.004); r.castShadow = false; parent.add(r); };
   // un fixe : sa traverse basse (15 cm), ses montants, sa vitre jusqu'à la traverse haute
@@ -1087,7 +1097,7 @@ function construireMurs(ch) {
   // le mur est du passage : la ligne x 4,5 (plan V2 : le trumeau des travées 3 et 4 ; derrière, la Si 0.1), jusqu'au mur
   // sud de la salle d'attente (ligne y 4,8) ; au nord, le hall s'ouvre sur la salle. (La porte de l'ex-salle A n'est plus
   // ici : sur le mur sud de la salle d'attente.) (Côté passage, sa plinthe grise : plus haut.)
-  ch.mur({ de: [4.5, -0.4], a: [4.5, 4.05], mats: { W: CR, E: B } });
+  ch.mur({ de: [4.5, 0], a: [4.5, 4.05], mats: { W: CR, E: B } });
   // (r03, 12/10 : le mur sud de la salle recule de 0,20 — DY_R03 — ; ce mur s'arrête à son nu, 4,675)
   ch.mur({ de: [4.5, 4.05], a: [4.5, ATT.ys + EP / 2], mats: B, plinthes: ['W'] });
   // ---- LA SALLE D'ATTENTE (photos 02, 03, 21, 22 ; VO q_0027-0046) ----
@@ -1264,7 +1274,7 @@ function construireMurs(ch) {
   ch.mur({ de: [12.425, 2.5], a: [13.35, 2.5], mats: B, plinthes: ['N', 'S'], ouvertures: [{ c: 12.89, l: 0.75, h: 2.1 }] });
   ch.porte('x', 2.5, 12.89, { l: 0.75, h: 2.1, modele: 'vitree', etat: 'auto', cote: 'S', tirant: 'court', libre: 1, nom: 'bureau B' });
   // le mur est du bureau B : tableau noir du portail n° 6 jusqu'à y = 0,3, puis le hall, jusqu'au retour y 2,5
-  ch.mur({ de: [13.275, -0.4], a: [13.275, 0.3], mats: { E: M.noirMat, W: B } });
+  ch.mur({ de: [13.275, 0], a: [13.275, 0.3], mats: { E: M.noirMat, W: B } });
   ch.mur({ de: [13.275, 0.3], a: [13.275, 2.575], mats: B, plinthes: ['E', 'W'] });
   // le pilier gris de la salle d'attente (plinthes de bois tout autour)
   const pilier = (x0, y0, x1, y1, mat) => {
