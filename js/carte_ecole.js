@@ -662,7 +662,12 @@ function construireFacade(ch) {
   // linteau, sur les 0,7 m de façade que l'ouverture rétrécie découvre)
   ch.boite(1.46, -0.44, 2.175, -0.4, 0, 2.8, M.noirMat);
   // la grille d'égout en fonte en travers du seuil du passage
-  ch.boite(2.175, -0.4, 4.425, -0.1, 0, 0.006, M.acierNoir, { ombre: false });
+  // (13/10, photo 10 refaite à sa pose — (3,19 ; −4,93) h 1,75 cap −5,1, f 600, 2,4 px sur les quatre coins de
+  // l'ouverture et de la porte du fond : la grille est DEVANT la façade, sur le trottoir, large de 0,55 m ; entre les
+  // jambages, dans l'épaisseur du mur, un SEUIL de pierre claire de 25 cm. Le jeu posait la grille dans l'épaisseur.)
+  ch.boite(2.05, -0.95, 4.55, -0.41, 0, 0.006, M.acierNoir, { ombre: false });
+  for (let x = 2.11; x < 4.5; x += 0.06) ch.boite(x, -0.9, x + 0.022, -0.46, 0.006, 0.009, M.noirMat, { ombre: false });
+  ch.boite(2.175, -0.4, 4.425, -0.14, 0, 0.012, new THREE.MeshStandardMaterial({ color: 0xbdb7aa, roughness: 0.8 }), { ombre: false });
   // LA GRILLE DU PASSAGE (photos 10, 13) : deux vantaux de barreaux noirs de 1,2 x 2,4 m, ouverts à 90° sur le trottoir,
   // contre les jambages (plan V2 : x 2,15 et 4,45 ; à 2,25 m d'ouverture, chacun en ferme un peu plus de la moitié —
   // photo 10 recalée, le bout du vantail est vers y -1,65)
@@ -870,26 +875,54 @@ function construireEntree(ch) {
 // n'en montrent aucun : la double porte va de la pile du plan d'évacuation (x 2,45) au mur est (x 4,425), deux vantaux
 // de ≈ 0,99. À l'ouest, x 1,75-2,45, le pan plein est le dos de cette pile — crème comme le passage, une affiche et une
 // grille de ventilation basse, photo 10.)
+// (13/10, photo 19 refaite à sa pose — (3,59 ; 2,72) h 1,31 cap −8,7, tangage −2,1, f 600, 9 px sur les huit coins des
+// vitrages : la tête des vantaux est à 2,30, et le plafond du passage rejoint la paroi à 2,37-2,43 — au-dessus des
+// vantaux, le bandeau n'a que 12 cm, et non 30. Photo 10, de la rue : le haut de la paroi à 2,33-2,40, le plafond à 2,5
+// au moins derrière le linteau ; photo 07, du hall : 2,6-2,7 côté rue. Le plafond du passage est donc un RAMPANT, de
+// 2,62 à la façade à 2,42 à la paroi — construireCarte ; côté hall, l'arête du haut de la pile, sur la photo 06 refaite,
+// monte de 2,21 à 2,44 : la gorge du hall rejoint la paroi à la même hauteur.)
 function construireParoiPassage(ch) {
-  const { M, C } = ch, Y = 4.05, hP = 2.3, hT = 2.6, X0 = 2.45, X1 = 4.425;
+  const { M, C } = ch, Y = 4.05, hP = 2.3, hT = 2.42, X0 = 2.45, X1 = 4.425;
   const montant = (x) => ch.boite(x - 0.035, Y - 0.04, x + 0.035, Y + 0.04, 0, hT, M.alu);
   for (const x of [X0 + 0.035, X1 - 0.035]) montant(x);
-  ch.boite(X0, Y - 0.04, X1, Y + 0.04, hP, hP + 0.08, M.alu);
-  ch.boite(X0, Y - 0.04, X1, Y + 0.04, hT - 0.06, hT, M.alu);
-  ch.boite(X0, Y - 0.025, X1, Y + 0.025, hP + 0.08, hT - 0.06, M.alu);
+  ch.boite(X0, Y - 0.04, X1, Y + 0.04, hP, hP + 0.05, M.alu);
+  ch.boite(X0, Y - 0.025, X1, Y + 0.025, hP + 0.05, hT, M.alu);
   C.ajouterBoite(X0, -(Y + 0.05), X1, -(Y - 0.05), { y0: hP, y1: H_DALLE });
   // le pan plein : le dos de la pile (construireMurs), peint en crème côté passage (son affiche : js/ecole_mobilier.js)
   ch.panneau(M.creme, X0 - 1.75, hT, (1.75 + X0) / 2, Y - 0.002, hT / 2, 'S');
   // LES AUTOCOLLANTS « iris » (photos 07, 19) : deux rangées de quatre sur le vantail EST (s = -1 : à droite vu du
   // passage), un seul au milieu du vantail ouest (relecture du 11/10, photo 07 rejouée à sa pose, (3,86 ; 5,27) h 1,30
   // cap 193 : les rangées à 0,99 et 1,46, le seul du vantail ouest à 1,29)
-  const rangs = (s) => (s < 0 ? [[0.99, 4], [1.46, 4]] : [[1.29, 1]]);
+  // (13/10, photo 19 refaite à sa pose : les rangées du vantail est à 0,95 et 1,425, quatre autocollants au pas de
+  // 17 cm, le premier à 23,5 cm des gonds — le jeu les étalait au pas de 23 ; le seul du vantail ouest à 1,27)
+  const rangs = (s) => (s < 0 ? [[0.95, 4, 0.235, 0.17], [1.425, 4, 0.235, 0.17]] : [[1.27, 1]]);
   ch.porte('x', Y, (X0 + X1) / 2, { l: X1 - X0, h: hP, ep: 0.08, modele: 'vitree2', autocollants: rangs, etat: 'auto', cote: 'S', huisserie: false, nom: 'passage' });
   // LE BLOC DE SORTIE côté hall, au-dessus des vantaux, au milieu (plan V2 : (3,3 ; 4,17)). (Relecture du 11/10 : la photo
   // 07 rejouée à sa pose le montre AU-DESSUS de la traverse haute, de 2,33 à 2,45, un bloc à pictogramme — le coureur et
   // sa porte —, et non un boîtier de détecteur : le plafond du hall remonte contre la paroi, construireCarte. Du passage,
   // le bandeau plein le cache, comme sur la photo 19.)
-  ch.sortie(3.3, Y + 0.065, 2.39, 'N', { simple: true });
+  // (13/10, photo 07 refaite à sa pose — (3,90 ; 5,28) h 1,23 cap 194,4, tangage −10,2 —, agrandie : c'est un boîtier
+  // SOMBRE, sa face d'un vert presque noir où l'on devine le coureur, un voyant AMBRE allumé en bas ; il n'éclaire pas.
+  // Centré sur les vantaux, de 2,27 à 2,40, à 10 cm de la paroi. Le jeu y mettait un pictogramme vert vif.)
+  {
+    const g = new THREE.Group(); g.position.set((X0 + X1) / 2, 2.335, -(Y + 0.115)); g.rotation.y = Math.PI; ch.decor.add(g);
+    maille(boiteM(0.36, 0.13, 0.05), M.noirMat, 0, 0, 0, 0, g, { ombre: false });
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.11), new THREE.MeshStandardMaterial({ map: texSortieEteinte(), roughness: 0.35 }));
+    face.position.z = 0.026; g.add(face);
+    const voyant = new THREE.Mesh(new THREE.CircleGeometry(0.008, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.4, 1.3, 0.25) }));
+    voyant.position.set(-0.05, -0.04, 0.0265); g.add(voyant);
+    g.traverse((m) => { m.userData.horsAOSol = true; });
+  }
+}
+// la face éteinte d'un bloc de sortie : vert bouteille très sombre, le coureur et sa porte à peine plus clairs
+function texSortieEteinte() {
+  return canvasTex(128, 44, (g, w, h) => {
+    g.fillStyle = '#0d1611'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#2a3a30'; g.fillRect(78, 8, 20, 30); g.fillStyle = '#0d1611'; g.fillRect(82, 12, 12, 26);
+    g.fillStyle = '#34463b'; g.beginPath(); g.arc(58, 12, 4, 0, 7); g.fill();
+    g.fillRect(54, 17, 8, 12); g.fillRect(48, 28, 6, 9); g.fillRect(60, 28, 6, 9); g.fillRect(46, 18, 8, 3); g.fillRect(62, 20, 9, 3);
+    g.fillRect(22, 20, 18, 4); g.beginPath(); g.moveTo(22, 14); g.lineTo(12, 22); g.lineTo(22, 30); g.closePath(); g.fill();
+  }, null, false, 4);
 }
 
 // =====================================================================
@@ -897,6 +930,9 @@ function construireParoiPassage(ch) {
 // =====================================================================
 function construireMurs(ch) {
   const { M } = ch;
+  // (13/10, photos 07, 10 et 19 : sous ses réglettes, la peinture du passage est d'un crème JAUNE — (235, 215, 160) près
+  // des tubes, (240, 225, 180) en face ; elle sortait presque blanche)
+  M.creme.color.setRGB(1.0, 0.955, 0.83);
   const B = M.blanc, CR = M.creme;
   // ---- LE PASSAGE ET LE HALL OUEST (plan V2 § 2.2, 11/10 : le hall ouest repris MOT POUR MOT de la photo 06, retour r01
   // de Haythem — de 8,6 m à 4,9 m de long) ----
@@ -1309,6 +1345,12 @@ export function construireCarte(scene, renderer = null) {
   ];
   const sol = new THREE.Mesh(geoSol(RN), M.sol); sol.receiveShadow = true; sol.name = 'carrelage'; nePasFusionner(sol);
   scene.add(sol);
+  // (13/10, photo 07 refaite à sa pose, le carrelage du passage rehaussé : DIX files de carreaux d'un mur à l'autre —
+  // joints en long en x 4,09 / 3,825 / 3,56, tous les 26,5 cm —, des rangs de 51 cm ; le jeu en posait neuf de 30 x 60.
+  // Et un grès plus sombre et plus chaud : photo 19, (95, 85, 70) au premier plan, à peine plus clair que celui du hall
+  // vu par la vitre ; photo 10, de la rue, (100, 90, 75) ; il était gris clair.)
+  for (const t of [M.solPassage.map, M.solPassage.normalMap]) if (t) t.repeat.set(1 / 1.07, 1 / 1.07);
+  M.solPassage.color.setRGB(0.72, 0.67, 0.6);
   const solP = new THREE.Mesh(geoSol([[1.6, -0.4, 4.5, 4.05, 'droit', 1.75, 0]]), M.solPassage); solP.receiveShadow = true; nePasFusionner(solP);
   scene.add(solP);
   // LE « TERRAIN » que lisent le rendu et l'ombre cuite (js/fx.js setReflet, js/kit_decor.js) : un plan invisible qui
@@ -1360,7 +1402,18 @@ export function construireCarte(scene, renderer = null) {
   ch.boite(4.925, ATT.ys + 0.11, 4.975, ATT.ys + 0.112, 1.275, 1.325, M.blanc, { ombre: false });
 
   // ---- les plafonds ----
-  ch.plafond(1.75, 0, 4.425, 4.05, 2.6, 'platre');                   // le passage
+  // le passage : un RAMPANT de 2,62 à la façade à 2,42 à la paroi (13/10, photos 19, 10 et 07 — construireParoiPassage),
+  // d'un blanc que les réglettes jaunissent (photos 07, 10, 19)
+  {
+    const ya = 0, yb = 4.05, ha = 2.62, hb = 2.42, xa = 1.75, xb = 4.425;
+    const g = new THREE.BufferGeometry(), L = Math.hypot(yb - ya, ha - hb);
+    g.setAttribute('position', new THREE.Float32BufferAttribute([xa, ha, -ya, xb, ha, -ya, xb, hb, -yb, xa, hb, -yb], 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute([xa, 0, xb, 0, xb, L, xa, L], 2));
+    g.setIndex([0, 2, 1, 0, 3, 2]); g.computeVertexNormals();
+    const platrePassage = M.platre.clone(); platrePassage.name = 'plafond en plâtre (passage)'; platrePassage.color.multiply(new THREE.Color(1.0, 0.965, 0.88));
+    const m = maille(g, platrePassage, 0, 0, 0, 0, ch.decor, { ombre: false }); m.userData.horsAOSol = true;
+    C.plafond(xa, -yb, xb, -ya, hb);
+  }
   // le hall ouest (plan V2 : plâtre à 2,30 — photo 06, 2,25-2,30 ; le jeu avait 2,40) : la gorge derrière la paroi
   // vitrée, le hall jusqu'aux dalles de la salle d'attente (x 5,3), et devant le C05, au nord du mur safran
   // (Relecture du 11/10 : contre la paroi vitrée, le plafond de la gorge REMONTE en pente jusqu'au haut du bandeau,
@@ -1375,7 +1428,9 @@ export function construireCarte(scene, renderer = null) {
   platreHallO.color.multiplyScalar(0.6); platreHallO.emissiveIntensity *= 0.35;
   const grisHallO = (m) => { m.material = platreHallO; return m; };
   {
-    const ya = 4.075, yb = 4.77, ha = 2.6, hb = 2.3, xa = 2.45, xb = 4.5;
+    // (13/10 : la gorge rejoint la paroi à 2,44, pas 2,60 — photo 06 refaite à sa pose, l'arête du haut de la pile passe
+    // de 2,21 en y 4,91 à 2,44 en 4,12 ; le bandeau de la paroi s'arrête à 2,42, photo 19)
+    const ya = 4.075, yb = 4.77, ha = 2.44, hb = 2.3, xa = 2.45, xb = 4.5;
     const g = new THREE.BufferGeometry(), L = Math.hypot(yb - ya, ha - hb);
     g.setAttribute('position', new THREE.Float32BufferAttribute([xa, ha, -ya, xb, ha, -ya, xb, hb, -yb, xa, hb, -yb], 3));
     g.setAttribute('uv', new THREE.Float32BufferAttribute([xa, 0, xb, 0, xb, L, xa, L], 2));
@@ -1485,6 +1540,8 @@ export function construireCarte(scene, renderer = null) {
   // (plan V2 : les deux réglettes au-dessus des lièges, vers la rue — photos 07, 10. Relecture du 11/10 : elles partent
   // de la façade — photo 10, leurs bouts touchent le linteau — et vont jusqu'à y ≈ 3,0, photo 07 rejouée ; deux tubes
   // bout à bout, photo 19 : la jonction au milieu. Une lampe chacune, comme avant.)
+  // (13/10 : leur lumière est d'un blanc chaud, jaune sur les murs — photos 07, 10, 19)
+  M.tube.color.multiply(new THREE.Color(1.0, 0.93, 0.7));
   for (const [x, s] of [[1.75, 1], [4.425, -1]]) {
     ch.tube(x, 0.35, 2.95, 2.35, s, 'passage');
     const xj = x + s * 0.06;
@@ -1575,6 +1632,20 @@ export function construireCarte(scene, renderer = null) {
   // (le jour des fenêtres de la salle David Clark, à travers la porte bleue : une nappe froide au bout du C05 — V2,
   // 11/10 : la source dans l'entrée de la salle, la nappe au pied de la porte, côté C05)
   ch.lampes.push({ type: 'jour', x: 5.175, z: -13.6, h: 2.4, sx: 5.175, sz: -(Y_ESC + 3.3), ox: 5.175, oz: -(Y_ESC + 3.5), zone: 'c05', reel: false, cuireForce: 0.3 });
+
+  // LE PASSAGE VU DE LA RUE (13/10, rapport_finitions.md doute 4 — photos 10 et 11 : de la rue, l'intérieur du passage
+  // est JAUNE et plus SOMBRE que la façade. Photo 10 refaite à sa pose, rapportée à la pierre de la façade — (221, 223,
+  // 220) : le mur est à 0,59 / 0,48 / 0,34, le plafond à 0,50 / 0,39 / 0,26, le sol à 0,34 / 0,28 / 0,21 ; le jeu les
+  // montrait à 1,3 fois la façade, blancs, parce que sa lumière principale figure d'un même trait les plafonniers et le
+  // ciel). Un VOILE dans l'ouverture, derrière le seuil, tourné vers la rue seulement : il MULTIPLIE ce qu'on voit au
+  // travers par un jaune sourd — de l'intérieur il n'existe pas —, et s'efface à mesure que la caméra approche de la
+  // grille, comme l'œil s'habitue en entrant (`maj`, plus bas).
+  const voilePassage = new THREE.Mesh(new THREE.PlaneGeometry(2.25, 2.45),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, blending: THREE.MultiplyBlending, transparent: true, depthWrite: false, toneMapped: false, fog: false }));
+  voilePassage.name = 'voile du passage (vu de la rue)'; voilePassage.position.set(3.3, 1.225, 0.13); voilePassage.renderOrder = 4;
+  voilePassage.castShadow = false; voilePassage.userData.horsAOSol = true; voilePassage.userData.sansNormales = true;
+  nePasFusionner(voilePassage); scene.add(voilePassage);
+  const TEINTE_VOILE = [0.46, 0.39, 0.29];
 
   // ---- LES CROCHETS : le mobilier, la rue ----
   poserMobilier(ch);
@@ -1691,6 +1762,12 @@ export function construireCarte(scene, renderer = null) {
   let cuit = -1;
   const maj = (dt, jeu) => {
     const u = jeu.user.pos, cam = jeu.camera.position;
+    // (le voile du passage : entier à 2,5 m de la grille et au-delà, nul à 30 cm)
+    {
+      const k = Math.max(0, Math.min(1, (cam.z - 0.7) / 2.2));
+      voilePassage.visible = k > 0.01;
+      voilePassage.material.color.setRGB(1 - k * (1 - TEINTE_VOILE[0]), 1 - k * (1 - TEINTE_VOILE[1]), 1 - k * (1 - TEINTE_VOILE[2]));
+    }
     visibilite.maj(dt, jeu);
     ch.portes.maj(dt, u.x, u.z, cam.x, cam.z, u.y, cam.y);
     lumieres.maj(dt, u.x, u.z, jeu.renderer, u.y);

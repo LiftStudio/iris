@@ -330,8 +330,10 @@ export function poserMobilier(ch) {
   // vitrée, un cadre A2 en hauteur de 0,44 x 0,62, de 1,08 à 1,70 (photo 06 rejouée à la pose recalée — haut à 248 px,
   // bas à 402 : le jeu le mettait à 1,30-1,92, sur une lame de 25 cm, 2,7 m plus au nord)
   // (13/10, photo 06 refaite à sa pose — (5,04 ; 5,88) h 1,37, tangage −5,3, roulis −1,8 : il fait 0,40 de large, 121 px
-  // et non 134, son axe en y 4,475 ; sa hauteur tombe juste. Sa feuille : texPlanEvacuation.)
-  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texPlanEvacuation(), roughness: 0.5 }), 2.45, 4.475, 'E', 0.4, 1.08, 1.7);
+  // et non 134, son axe en y 4,475, de 1,08 à 1,70 ; photo 19, par la vitre, à la pose refaite sur les vitrages : 0,36
+  // de large, axe 4,41, de 1,00 à 1,55. Entre les deux : 0,38 x 0,59, axe 4,45, de 1,04 à 1,63. Sa feuille :
+  // texPlanEvacuation.)
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texPlanEvacuation(), roughness: 0.5 }), 2.45, 4.45, 'E', 0.38, 1.04, 1.63);
   // la prise électrique contre l'huisserie nord de la porte grise, au ras de la plinthe (photo 06, vidéo v_001)
   ch.boite(1.75, 6.01, 1.765, 6.09, 0.16, 0.24, M.blanc, { ombre: false });
   for (const dy of [-0.018, 0.018]) ch.boite(1.765, 6.05 + dy - 0.005, 1.768, 6.05 + dy + 0.005, 0.195, 0.205, M.noirMat, { ombre: false });
@@ -388,16 +390,27 @@ export function poserMobilier(ch) {
   // =====================================================================
   // (plan V2, 11/10 : le passage arrêté à la paroi vitrée en y 4,05, son mur est sur la ligne x 4,5 ; les deux lièges du mur
   // est sont vers la rue, y 0,4-1,4 et 1,5-2,6 — photos 07, 10 —, pas contre la paroi)
-  const liege = texLiege();
-  for (const [y0, y1] of [[0.4, 1.4], [1.5, 2.6]]) {
-    const yc = (y0 + y1) / 2, w = y1 - y0;
-    cadreMural(ch, M.aluGris, 4.425, yc, 'W', w + 0.04, 0.98, 1.92, 0.02);
-    cadreMural(ch, new THREE.MeshStandardMaterial({ map: liege, roughness: 0.9 }), 4.405, yc, 'W', w, 1.0, 1.9, 0.012);
+  // (13/10, photo 07 refaite à sa pose — (3,90 ; 5,28) h 1,23 cap 194,4, tangage −10,2, f 600 —, agrandie : sur le mur
+  // est, UN SEUL tableau de liège, long de 2,1 m, de y 0,95 à 3,05, de 1,08 à 1,86, couvert de feuilles ; puis, contre la
+  // paroi, une grande affiche au dégradé rose et bleu, y 3,1-3,6, de 1,12 à 1,86. Le jeu avait deux tableaux d'un mètre
+  // vers la rue et trois affichettes.)
+  cadreMural(ch, M.aluGris, 4.425, 2.0, 'W', 2.14, 1.06, 1.88, 0.02);
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texLiegePassage(), roughness: 0.9 }), 4.405, 2.0, 'W', 2.1, 1.08, 1.86, 0.012);
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texAfficheDegradee(), roughness: 0.6 }), 4.425, 3.35, 'W', 0.5, 1.12, 1.86, 0.006);
+  // le mur ouest, entre la porte « Sortie » (y 1,15-2,05) et la paroi : la bande aux trois pictogrammes, y 2,29-2,67 à
+  // 1,34, et la charte aux coups de pinceau bleus et rouges contre la paroi, y 2,95-3,45, de 1,32 à 1,92 (photo 07 ;
+  // photo 06, par la vitre)
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texBandePictos(), roughness: 0.7 }), 0.38, 0.14, 1.756, 2.48, 1.34, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texCharte(), roughness: 0.7 }), 0.5, 0.6, 1.756, 3.2, 1.62, 'E');
+  // la porte « Sortie » porte trois étiquettes, un peu du côté des gonds : la flèche bleu canard à 1,60, le disque
+  // barré rouge à 1,42, la petite étiquette rouge à 1,27 (photo 07) — posées sur le vantail, elles tournent avec lui
+  {
+    const ps = ch.portes.auto.find((P) => P.g.name === 'porte service (passage)'), v = ps && ps.vantaux[0];
+    if (v) {
+      const e = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.48), new THREE.MeshStandardMaterial({ map: texEtiquettesSortie(), roughness: 0.6, transparent: true, alphaTest: 0.5 }));
+      e.position.set(v.s * 0.32, 1.42, 0.0235); e.castShadow = false; v.g.add(e);
+    }
   }
-  [[0.75, '#2f6fb0'], [1.95, '#d6542b'], [2.3, '#f08a3c']].forEach(([y, c], i) => ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche(c, '#fbfbf8', 30 + i), roughness: 0.7 }), 0.3, 0.42, 4.39, y, 1.45 + (i % 2) * 0.15, 'W'));
-  // le mur ouest, entre la porte « Sortie » (y 1,15-2,05) et la paroi
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#e0e0e0', '#ffffff', 40), roughness: 0.7 }), 0.42, 0.3, 1.756, 3.5, 1.55, 'E');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#ffffff', 41), roughness: 0.7 }), 0.42, 0.6, 1.756, 2.75, 1.5, 'E');
   // le pan plein de la paroi, à gauche de la double porte (le dos de la pile du plan d'évacuation, x 1,75-2,45) : photo
   // 10 rejouée, une affiche de 1,33 à 1,71 et, en bas, une grille de ventilation à lames de 0,45 x 0,7 (relecture du
   // 11/10, photo 10 agrandie : l'« affiche » est un petit tableau sombre où sont épinglées six feuilles blanches, x 1,93-
@@ -411,8 +424,12 @@ export function poserMobilier(ch) {
   const pp = ch.portes.auto.find((P) => P.g.name === 'porte passage');
   const vo = pp && pp.vantaux.find((v) => v.s > 0);
   if (vo) {
-    const a = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.2), new THREE.MeshStandardMaterial({ map: texAffiche('#c98f3e', '#efe9df', 60), roughness: 0.75, side: THREE.DoubleSide }));
-    a.position.set(0.42, 1.45, -0.004); a.rotation.y = Math.PI; a.castShadow = false; a.userData.vitre = true; vo.g.add(a);
+    // (13/10, photo 19 refaite à sa pose : x 2,78-3,06, de 1,33 à 1,53 — une feuille blanche au QR code jaune et à la
+    // photo orangée, texAffichetteQR ; du hall, photo 07, on n'en voit que le dos gris)
+    const a = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.2), new THREE.MeshStandardMaterial({ map: texAffichetteQR(), roughness: 0.75 }));
+    a.position.set(0.47, 1.43, 0.004); a.castShadow = false; a.userData.vitre = true; vo.g.add(a);
+    const dos = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.2), new THREE.MeshStandardMaterial({ color: 0x9d9a94, roughness: 0.8 }));
+    dos.position.set(0.47, 1.43, -0.004); dos.rotation.y = Math.PI; dos.castShadow = false; dos.userData.vitre = true; vo.g.add(dos);
   }
 
   // (la plaque « Toilettes » du C01, photo 01 — le fauteuil roulant : avec les toilettes PMR, js/ecole_pieces.js ; 09/10)
@@ -741,6 +758,99 @@ function texPhotoImprimee() {
     g.fillStyle = 'rgba(60,44,30,0.7)'; g.fillRect(24, 100, 80, 58);
     g.fillStyle = 'rgba(255,255,255,0.35)'; g.beginPath(); g.moveTo(w - 70, 0); g.lineTo(w, 0); g.lineTo(w, 60); g.closePath(); g.fill();
   }, null, false, 4);
+}
+// LE GRAND TABLEAU DE LIÈGE DU PASSAGE (13/10, photos 07 et 10 agrandies) : un seul panneau de 2,1 m, chargé de feuilles
+// blanches, bleues et mauves, de tracts roses, punaisés de travers et qui se chevauchent — pas neuf affiches de
+// couleurs vives rangées en damier
+function texLiegePassage() {
+  return canvasTex(768, 288, (g, w, h) => {
+    const r = graineMob(77);
+    g.fillStyle = '#b98b56'; g.fillRect(0, 0, w, h);
+    for (let k = 0; k < 9000; k++) { g.fillStyle = r() < 0.5 ? 'rgba(118,80,42,0.32)' : 'rgba(224,186,136,0.28)'; g.fillRect(r() * w, r() * h, 1.6, 1.6); }
+    const tons = ['#f4f3ee', '#f4f3ee', '#eef0f3', '#3a5fa8', '#6a3f8e', '#e9e6de', '#d9689a', '#f4f3ee', '#8fb4d8', '#f1e7c8', '#2c2f4a', '#f4f3ee'];
+    for (let i = 0; i < 24; i++) {
+      const pw = 46 + r() * 34, ph = pw * (1.25 + r() * 0.25), x = 14 + (i % 12) * 62 + (r() - 0.5) * 22, y = (i < 12 ? 22 : 150) + (r() - 0.5) * 36;
+      const c = tons[Math.floor(r() * tons.length)], clair = c > '#c';
+      g.save(); g.translate(x + pw / 2, y + ph / 2); g.rotate((r() - 0.5) * 0.14);
+      g.fillStyle = 'rgba(60,40,20,0.25)'; g.fillRect(-pw / 2 + 2, -ph / 2 + 3, pw, ph);
+      g.fillStyle = c; g.fillRect(-pw / 2, -ph / 2, pw, ph);
+      g.fillStyle = clair ? 'rgba(60,70,90,0.55)' : 'rgba(255,255,255,0.7)';
+      g.fillRect(-pw / 2 + 5, -ph / 2 + 6, pw * 0.6, 5);
+      for (let l = 0; l < 6; l++) g.fillRect(-pw / 2 + 5, -ph / 2 + 18 + l * 8, pw * (0.5 + r() * 0.35), 2.5);
+      if (r() < 0.4) { g.fillStyle = ['#d0462e', '#e9b741', '#3a5fa8'][Math.floor(r() * 3)]; g.fillRect(-pw / 2 + 5, ph / 2 - 26, pw - 10, 18); }
+      g.restore();
+    }
+  }, null, false, 8);
+}
+// (un tirage pseudo-aléatoire stable pour les textures du passage)
+function graineMob(n) { let a = n >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+// L'AFFICHE AU DÉGRADÉ du mur est du passage, contre la paroi (13/10, photo 07 agrandie) : du rose au bleu, un grand
+// titre blanc en haut, un second au milieu, un pavé bleu clair en bas
+function texAfficheDegradee() {
+  return canvasTex(256, 362, (g, w, h) => {
+    const d = g.createLinearGradient(0, 0, w * 0.4, h); d.addColorStop(0, '#d9a7c4'); d.addColorStop(0.45, '#b98ac6'); d.addColorStop(1, '#5b8fd0');
+    g.fillStyle = d; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(255,255,255,0.92)'; g.font = '800 27px "Segoe UI", Arial, sans-serif'; g.fillText('STRATÉGIES', 16, 62);
+    g.font = '800 40px "Segoe UI", Arial, sans-serif'; g.fillText('TECH', 60, 200);
+    g.fillStyle = 'rgba(255,255,255,0.75)'; for (let k = 0; k < 3; k++) g.fillRect(18, 86 + k * 12, 150 - k * 30, 4);
+    g.fillStyle = 'rgba(120,190,235,0.85)'; g.fillRect(40, 250, 130, 70);
+    g.fillStyle = 'rgba(255,255,255,0.9)'; g.beginPath(); g.arc(104, 286, 14, 0, 7); g.fill();
+  }, null, false, 8);
+}
+// LA CHARTE du mur ouest du passage, contre la paroi (13/10, photos 07 et 06 agrandies) : une feuille blanche barrée de
+// larges coups de pinceau bleus et rouges où se lit le texte en blanc
+function texCharte() {
+  return canvasTex(256, 362, (g, w, h) => {
+    g.fillStyle = '#f6f5f0'; g.fillRect(0, 0, w, h);
+    const coup = (x, y, l, e, c) => { g.fillStyle = c; g.beginPath(); g.moveTo(x, y + 3); g.lineTo(x + l - 8, y); g.lineTo(x + l, y + e * 0.5); g.lineTo(x + l - 6, y + e); g.lineTo(x + 4, y + e - 2); g.closePath(); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.85)'; g.fillRect(x + 12, y + e * 0.42, l * 0.6, 3); };
+    coup(20, 14, 150, 30, '#3f86c9'); coup(96, 56, 140, 30, '#3f86c9');
+    g.fillStyle = '#51607a'; g.font = '700 15px "Segoe UI", Arial, sans-serif'; g.fillText('CHARTE DE VIE', 60, 112); g.fillText('À L’ÉCOLE', 96, 130);
+    coup(14, 146, 96, 30, '#4a6fc0'); coup(128, 150, 112, 26, '#d5475a');
+    coup(18, 190, 86, 30, '#d5475a'); coup(118, 186, 124, 30, '#3f86c9');
+    coup(30, 236, 190, 30, '#3f86c9'); coup(16, 282, 150, 30, '#d5475a'); coup(170, 286, 70, 24, '#4a6fc0');
+    g.fillStyle = '#8b9098'; g.fillRect(20, 334, 120, 3); g.fillRect(20, 343, 80, 3);
+  }, null, false, 8);
+}
+// la petite bande aux trois pictogrammes (crayon, horloge, stylo), mur ouest du passage (photo 07)
+function texBandePictos() {
+  return canvasTex(152, 56, (g, w, h) => {
+    g.fillStyle = '#f3f2ee'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#23262b'; g.fillRect(10, 8, 5, 40);
+    g.strokeStyle = '#5a78b8'; g.lineWidth = 3; g.beginPath(); g.arc(72, 26, 11, 0, 7); g.stroke();
+    g.strokeStyle = '#3f79b5'; g.lineWidth = 4; g.beginPath(); g.moveTo(112, 42); g.lineTo(136, 10); g.stroke();
+    g.fillStyle = '#8b9098'; g.fillRect(24, 38, 30, 3);
+  }, null, false, 4);
+}
+// LES TROIS ÉTIQUETTES DE LA PORTE « SORTIE » du passage (13/10, photo 07 agrandie) : la flèche « ← Sortie » bleu canard,
+// le disque barré rouge sur fond blanc, la petite étiquette rouge
+function texEtiquettesSortie() {
+  return canvasTex(128, 256, (g, w, h) => {
+    g.clearRect(0, 0, w, h);
+    g.fillStyle = '#2f6f86'; g.fillRect(4, 4, 120, 48);
+    g.fillStyle = '#ffffff'; g.font = '700 24px "Segoe UI", Arial, sans-serif'; g.fillText('Sortie', 44, 37);
+    g.fillRect(16, 25, 22, 5); g.beginPath(); g.moveTo(8, 27.5); g.lineTo(20, 17); g.lineTo(20, 38); g.closePath(); g.fill();
+    g.fillStyle = '#fbfbf8'; g.fillRect(18, 74, 92, 104);
+    g.strokeStyle = '#d5475a'; g.lineWidth = 9; g.beginPath(); g.arc(64, 126, 36, 0, 7); g.stroke();
+    g.beginPath(); g.moveTo(40, 100); g.lineTo(88, 152); g.stroke();
+    g.fillStyle = '#44484e'; g.fillRect(52, 118, 26, 6); g.fillRect(58, 130, 14, 4);
+    g.fillStyle = '#d5475a'; g.fillRect(24, 206, 80, 26);
+    g.fillStyle = '#ffffff'; g.fillRect(32, 216, 64, 5);
+  }, null, true, 4);
+}
+// L'AFFICHETTE SCOTCHÉE SUR LA VITRE (13/10, photo 19 agrandie) : une feuille blanche en largeur, deux lignes de texte et
+// un mot surligné de jaune à gauche, un QR code jaune au milieu, une photo aux tons orangés à droite
+function texAffichetteQR() {
+  return canvasTex(256, 182, (g, w, h) => {
+    g.fillStyle = '#f7f6f2'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#44484e'; g.fillRect(24, 78, 78, 4); g.fillStyle = '#e9c63c'; g.fillRect(34, 90, 56, 9); g.fillStyle = '#44484e'; g.fillRect(40, 93, 44, 3);
+    g.fillStyle = '#e3bd32'; g.fillRect(108, 62, 46, 46); g.fillStyle = '#5a4a14';
+    for (let i = 0; i < 9; i++) for (let j = 0; j < 9; j++) if ((i * 5 + j * 3 + i * j) % 3 === 0) g.fillRect(110 + i * 4.7, 64 + j * 4.7, 4, 4);
+    const d = g.createLinearGradient(160, 0, w, h); d.addColorStop(0, '#d98a4a'); d.addColorStop(0.5, '#9a8f8a'); d.addColorStop(1, '#5c6a86');
+    g.fillStyle = d; g.fillRect(160, 10, 86, 162);
+    g.fillStyle = 'rgba(240,236,228,0.9)'; g.beginPath(); g.ellipse(196, 96, 22, 14, -0.3, 0, 7); g.fill(); g.beginPath(); g.ellipse(214, 132, 16, 10, 0.2, 0, 7); g.fill();
+    g.fillStyle = 'rgba(40,44,60,0.7)'; g.fillRect(206, 20, 34, 46);
+  }, null, false, 8);
 }
 function texWifi() {
   return canvasTex(160, 136, (g, w, h) => {

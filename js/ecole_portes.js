@@ -379,8 +379,9 @@ export class Portes {
       // autocollant : au milieu du vantail). Lisibles côté +z (le passage), le dos noir de l'autre côté.
       const A = this._matAutocollant();
       const rangs = autocollants === true ? [[1.0, 4], [1.55, 4]] : autocollants;
-      for (const [y, nb] of rangs) for (let i = 0; i < nb; i++) {
-        const x = nb === 1 ? s * w / 2 : s * (c + 0.06 + i * (w - 2 * c - 0.12) / 3.2);
+      // (13/10 : une rangée peut donner sa place — [hauteur, nombre, x0, pas] : le premier à x0 des gonds, puis au pas)
+      for (const [y, nb, x0, pas] of rangs) for (let i = 0; i < nb; i++) {
+        const x = nb === 1 ? s * w / 2 : x0 !== undefined ? s * (x0 + i * pas) : s * (c + 0.06 + i * (w - 2 * c - 0.12) / 3.2);
         const p = plan(g, A, 0.11, 0.04, x, y, 0.004, 1);
         const q = plan(g, M.noirMat, 0.11, 0.04, x, y, -0.004, -1);
         p.userData.vitre = q.userData.vitre = true;
