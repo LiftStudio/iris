@@ -671,7 +671,7 @@ function miroirAccueil(ch) {
   // le vrai miroir, à la racine de la scène
   const m = new Reflector(new THREE.PlaneGeometry(L, Hm), { textureWidth: 256, textureHeight: 256, clipBias: 0.003, multisample: 0, shader: MiroirShader, color: 0xffffff });
   const U = m.material.uniforms;
-  U.color.value.setRGB(0.93, 0.96, 0.96); U.voile.value.setRGB(0.03, 0.034, 0.038);
+  U.color.value.setRGB(0.95, 0.97, 0.97); U.voile.value.setRGB(0.04, 0.045, 0.05);
   m.position.set(MIR.x - 0.001, hc, -yc); m.rotation.y = -Math.PI / 2;
   m.userData.dynamique = true; m.userData.horsAOSol = true; m.name = 'miroir de l\'accueil';
   m.visible = false; ch.scene.add(m); m.updateMatrixWorld(true);
@@ -940,7 +940,8 @@ export function poserHall(ch) {
   ch.mur({ de: [19.95, MIR.y0], a: [19.95, 7.65], ep: 0.3, mats: { W: H.ardoise, E: M.blanc }, plinthes: ['W'] });
   // L'AFFICHETTE ÉTROITE de l'angle (photo 03 agrandie six fois : une bande haute et étroite, claire en haut, bleu nuit puis
   // prune, gris clair en bas — 67, 74, 111 en moyenne —, entre la fenêtre c 18,98 et son reflet ; rétroprojetée sur le
-  // mitoyen, y 0,04-0,24, de 1,19 à 2,22 m. La VO de 2021 n'y montre rien : elle est de 2026. Son dessin est IMAGINÉ.)
+  // mitoyen, y 0,04-0,24, de 1,19 à 2,22 m. La VO de 2021 n'y montre rien : elle est de 2026. Son dessin est IMAGINÉ. C'est
+  // elle que js/ecole_mobilier.js posait sur le trumeau, entre les deux vraies fenêtres.)
   ch.panneau(new THREE.MeshStandardMaterial({ map: texAffichetteAngle(), roughness: 0.5 }), 0.2, 1.03, X_MIT - 0.004, 0.14, 1.705, 'W');
   // LES DEUX AFFICHES (r04, rétroprojetées sur le mitoyen : 0,67 x 0,94 chacune, de 1,44 à 2,38 m ; celle au cadre
   // magenta au nord, y 3,37-4,04, celle aux lignes de couleur au sud, y 2,22-2,89 — l'ordre de la VO q_0377-0383, où

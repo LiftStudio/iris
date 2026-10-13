@@ -411,8 +411,9 @@ export function poserMobilier(ch) {
   //  L'ACCUEIL : le comptoir nord-sud, l'open-space, ses écrans, ses fauteuils et le manteau moutarde (VO 92,5-95,8 s,
   //  photo 03) — js/ecole_hall.js (10/10)
   // =====================================================================
-  // l'affiche bleue étroite sur le trumeau entre les fenêtres de l'accueil
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2b4c9b', '#2b4c9b', 50), roughness: 0.6 }), 0.3, 0.9, 18.15, 0.006, 1.55, 'N');
+  // (l'affiche bleue étroite que la photo 03 montre « entre les fenêtres de l'accueil » n'est pas sur le trumeau, entre les
+  // deux vraies fenêtres, mais contre l'angle du mitoyen, entre la fenêtre c 18,98 et son reflet dans le miroir — retour
+  // r05 du 13/10 : elle est posée avec le miroir, js/ecole_hall.js ; le trumeau est blanc, comme sur la VO q_0381)
   // (le totem noir « 1ère école pour le BTS SIO en France » de 2021 : retiré le 11/10 — la borne l'a remplacé, photo 21)
 }
 
