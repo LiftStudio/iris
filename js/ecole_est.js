@@ -474,7 +474,7 @@ function matieresEst() {
     // (lot H, 11/10 : le petit vantail du vestibule, gris moyen — photo 26, 0,56 du mur ; repeint depuis la VO, où il
     // était crème) ; le tirant en U inox BROSSÉ du grand vantail (photo 24 : clair, il prend la lumière ; l'inox poli
     // de js/ecole_portes.js sortait noir dans la carte d'environnement) ; le verre clair de son oculus
-    grisVantail: std({ color: 0x67696b, roughness: 0.5 }, 'vantail gris moyen (petit vantail du vestibule)'),
+    grisVantail: std({ color: 0x777571, roughness: 0.5 }, 'vantail gris moyen (petit vantail du vestibule)'),
     inox: std({ color: 0xc4c6c7, roughness: 0.32, metalness: 0.45 }, 'tirant inox brossé'),
     // (13/10 : le cercle chromé des hublots — clair sous sa propre lampe, la carte d'environnement le rendait gris sombre)
     chrome: std({ color: 0xd6d6d3, roughness: 0.3, metalness: 0.1, emissive: 0x9a9894, emissiveIntensity: 0.6 }, 'cercle chromé des hublots'),
@@ -488,7 +488,7 @@ function matieresEst() {
     bois: std({ color: 0xe0cdb7, roughness: 0.5 }, 'huisserie de bois crème'),
     cadre: std({ color: 0xeeece6, roughness: 0.4 }, 'cadre de la cloison vitrée'),
     tapis: std({ map: texTapis(), roughness: 0.85 }, 'tapis strié noir'),
-    tapis1: std({ map: texTapis(true), roughness: 0.9 }, 'tapis strié du 1er'),
+    tapis1: std({ map: texTapis(true), roughness: 0.9, color: 0x8a8a8a }, 'tapis strié du 1er'),
     reglette: std({ color: 0xf2f1ed, roughness: 0.4 }, 'réglette'),
     diffuseur: new THREE.MeshBasicMaterial({ color: new THREE.Color(0xffe4b8).multiplyScalar(2.4) }),
     embout: std({ color: 0xe8701e, roughness: 0.5, emissive: 0xe8701e, emissiveIntensity: 0.5 }, 'embout de réglette'),
@@ -1108,8 +1108,10 @@ export function poserEst(ch, { RECT }) {
   // (relecture du lot H, 11/10 : clair, presque comme les murs — photo 25, son bord au-dessus de la 1re marche rend
   // 0,95 du mur nord ; à l'émissif commun de 0,12, il sortait à 0,41 : dans ce réduit blanc, il ne vit que du rebond)
   {
-    // (13/10, photo 25 à sa pose refaite : le bord du plafond passe 6 à 14 cm À L'EST du 1er nez de marche)
-    const m = ch.plafond(XN, 10.8, E.xD + 0.06, 12.45, HC, 'platre');
+    // (13/10, photo 25 à sa pose refaite : le plafond bas n'entre pas dans son cadre — il finit donc avant x 16,23 : au
+    // jambage, x0. La ligne claire du haut de la photo est le raccord de la sous-face de la volée 3 et du dessous du
+    // palier à 5,05 m, en x 18,29 à 4,75 m ; au-dessus du sol devant la 1re marche, le dessous de la dalle du 1er)
+    const m = ch.plafond(XN, 10.8, E.x0, 12.45, HC, 'platre');
     // (13/10 : 1,00 du mur nord et aussi chaud que lui sur la photo 25 — le jeu 0,95, R/V/B 0,93/0,95/0,99)
     m.material = M.platre.clone(); m.material.name = 'plafond en plâtre (vestibule est)'; m.material.emissiveIntensity = 0.46;
     m.material.color.set(0xf5eedf); m.material.emissive.set(0xe2d8c4);
@@ -1179,11 +1181,13 @@ export function poserEst(ch, { RECT }) {
   // en y ≈ 12,07 et 10,70 (et celle du mur nord en x ≈ 18,97). Comme au palier à 5,05 m (VO q_0356-0360, poserPalierEst),
   // elle est d'un seul tenant : le mur nord, le mitoyen, le mur sud, puis elle monte avec la volée 2 — sa crosse basse
   // disparaît ; une 3e console sur le mitoyen, une au mur sud)
-  const hH = E.hP1 + 1.08, xm = E.xM - 0.079;
+  const hH = E.hP1 + 1.08, xm = E.xM - 0.079, railS2 = (s) => rail(v2, s) + 0.2;
+  // (13/10, photo 28 : celle du mur sud de la volée 2 finit au bout du mur, 30 cm avant l'arrivée, à 0,88 m du palier du
+  // 1er — 1,10 m au-dessus des nez : elle court 20 cm plus haut que les autres)
   mainCourante(ch, D, [...crosse1(v1, yN1, -0.33), [xv(v1, fin), yN1, rail1(v1, fin)], [18.7, yN1, hH], [xm, yN1, hH], [xm, yS2, hH], [18.62, yS2, hH],
-    [xv(v2, 0.07), yS2, rail(v2, 0.07)], [xv(v2, fin), yS2, rail(v2, fin)], [E.xD - 0.04, yS2, rail(v2, fin)], [E.xD - 0.04, E.bS[0], rail(v2, fin)]],
+    [xv(v2, 0.07), yS2, railS2(0.07)], [E.xD + 0.34, yS2, railS2(fin - 0.34)], [E.xD + 0.3, yS2, railS2(fin - 0.34)], [E.xD + 0.3, E.bS[0], railS2(fin - 0.34)]],
     [[xv(v1, 0.5), yN1, rail1(v1, 0.5), 'N'], [xv(v1, 1.6), yN1, rail1(v1, 1.6), 'N'], [19.0, yN1, hH, 'N'], [xm, 12.05, hH, 'E'], [xm, 10.7, hH, 'E'], [xm, 9.6, hH, 'E'],
-      [19.1, yS2, hH, 'S'], [xv(v2, 0.5), yS2, rail(v2, 0.5), 'S'], [xv(v2, 1.6), yS2, rail(v2, 1.6), 'S']]);
+      [19.1, yS2, hH, 'S'], [xv(v2, 0.5), yS2, railS2(0.5), 'S'], [xv(v2, 1.45), yS2, railS2(1.45), 'S']]);
   mainCourante(ch, D, [...crosse1(v1, yS1), [xv(v1, fin), yS1, rail1(v1, fin)], [E.xP + 0.06, yS1, rail1(v1, fin)], [E.xP + 0.06, E.bN[0], rail1(v1, fin)]],
     [[xv(v1, 0.5), yS1, rail1(v1, 0.5), 'S'], [xv(v1, 1.6), yS1, rail1(v1, 1.6), 'S']]);
   // (relecture du 09/10 : en haut, elle ne plonge pas — l'épingle de la photo 28 fait le tour du chant gris et repart
@@ -1303,6 +1307,16 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   // y 10,90 (l'arête du mur du panneau ; axe YK 10,825, ep 0,15), le mur nord y 11,65 (axe YRN 11,725, ep 0,15), qu'il
   // prolonge jusqu'à la volée 3 ; au-delà, jusqu'au mur nord de la cage (y 12,45), une gaine fermée
   const XK = 13.34, YK = 10.825, YRN = 11.725;
+  // LE CÔTÉ OUEST DU PALIER 0,59 m PLUS PRÈS DE L'ESCALIER (13/10). Photo 28 : l'affiche A4 du mur du panneau met
+  // l'appareil à 2,1-2,25 m de lui (2,17 ; l'œil à 0,84 m du palier) ; de là, le chant gris de l'échiffre est à 0,94 m de
+  // l'appareil — 1,23 m du mur. Photo 27, recalée sur six repères du mur (réglette, panneau, poussoir, prise, pied : 5 px,
+  // l'œil à 0,70 m, piqué −5,75°, le mur à 2,10 m) : le nez de la dernière marche à 1,48 m du mur. L'audit du 1er l'avait
+  // relevé (« le palier fait 1,3-1,45 m, et non 1,83 »). Dans le jeu, 1,83 m du mur au bout de l'échiffre, 2,06 m au
+  // dernier nez depuis que la volée part de xD : le mur du panneau, son retour, la porte de l'espace pause (0,675 m
+  // derrière lui, relevé de la photo 28 gardé) et le renfoncement nord avancent ENSEMBLE de DXP — la face du mur en
+  // x 14,815, à 1,235 m du bout de l'échiffre et 1,465 m du dernier nez. Derrière, rien ne bouge chez l'espace pause
+  // (js/ecole_etage1_pause.js) : sa porte est maintenant au fond d'une alcôve de 0,59 m, large comme la baie.
+  const DXP = 0.59, XD1 = 13.55 + DXP, XK2 = XK + DXP;
 
   // ---- LE SOL : le vinyle moucheté foncé (photos 27, 28), sur la lumière et l'ombre cuites du 1er ----
   // (relecture du 09/10 : depuis l'axe de la cloison des salles, 6,975, et non sa face, 7,035 — sur les seuils du 103 et
@@ -1310,8 +1324,8 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   // (13/10 : et les deux bandes de 23 cm entre le bord du palier, x0, et le départ des volées, xD — l'arrivée de la volée 2,
   // le pied de la volée 3)
   _R1 = R1;
-  const sol = new THREE.Mesh(geoDalles([[13.55, 6.975, E.x0, 8.6], [14.2, 8.6, E.x0, YK + 0.075], [XK, YK + 0.075, E.x0, YRN], [E.x0, 6.975, E.xM, 9.0],
-    [E.x0, 9.0, E.xD, E.bS[1]], [E.x0, E.bN[0], E.xD, YRN]], N1, R1), X.vinyle);
+  const sol = new THREE.Mesh(geoDalles([[13.55, 6.975, E.x0, 8.6], [14.2 + DXP, 8.6, E.x0, YK + 0.075], [XK2, YK + 0.075, E.x0, YRN], [E.x0, 6.975, E.xM, 9.0],
+    [E.x0, 9.0, E.xD, E.bS[1]], [E.x0, E.bN[0], E.xD, YRN], [E.xD, 9.0, E.xD + 0.27, E.bS[0]]], N1, R1), X.vinyle);
   sol.receiveShadow = true; sol.castShadow = false; sol.name = 'vinyle du palier est'; sol.userData.solEtage = true;
   G.add(sol);
 
@@ -1320,30 +1334,39 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   // =====================================================================
   // LE BOUT DU COULOIR DU 1er (x 13,55) et sa porte à 1,5 vantail : le semi-fixe de 0,48 m au sud (fermé, l'affiche
   // orange côté palier), le vantail de 0,95 m au nord, ouvert vers le couloir (gonds au nord, ferme-porte côté palier)
-  mur(ch, G, { de: [13.55, 7.035], a: [13.55, 8.925], ep: 0.12, base: N1, h: DALLE2, mats: B0, plinthes: [['W', M.bois], 'E'], ouvertures: [{ c: 7.835, l: 1.43, h: N1 + 2.1 }] });
+  // (13/10 : la porte avance de DXP ; à son ancienne place, x 13,55, il ne reste que le linteau de la baie de l'alcôve —
+  // le mur est de l'espace pause et son bloc de sortie, js/ecole_etage1_pause.js, s'y appuient)
+  mur(ch, G, { de: [13.55, 7.035], a: [13.55, 8.925], ep: 0.12, base: N1, h: DALLE2, mats: B0, plinthes: [['W', M.bois], 'E'], ouvertures: [{ c: 7.8125, l: 1.555, h: N1 + 2.1 }] });
+  mur(ch, G, { de: [XD1, 7.035], a: [XD1, 8.59], ep: 0.12, base: N1, h: DALLE2, mats: B0, plinthes: [['W', M.bois], 'E'], ouvertures: [{ c: 7.835, l: 1.43, h: N1 + 2.1 }] });
   // (relecture du 09/10 : le même stratifié gris taupe que les portes du rez-de-chaussée — photo 28, le semi-fixe est
   // nettement plus sombre que le mur, comme sur la photo 24)
-  ch.porte('y', 13.55, 7.36, { l: 0.48, h: 2.06, base: N1, ep: 0.12, modele: 'grise', etat: 'fermee', cote: 'E', oculus: false, poignee: null, fermePorte: false, huisserie: false, matVantail: X.taupe, nom: 'palier est (semi-fixe)' });
+  ch.porte('y', XD1, 7.36, { l: 0.48, h: 2.06, base: N1, ep: 0.12, modele: 'grise', etat: 'fermee', cote: 'E', oculus: false, poignee: null, fermePorte: false, huisserie: false, matVantail: X.taupe, nom: 'palier est (semi-fixe)' });
   // (vérification du 10/10 : rabattu À PLAT contre le mur est de l'espace pause, au nord de la baie — VO f_66,6-67,8 s et
   // q_0269 : depuis l'espace pause, on n'en voit que la face, à plat sur le mur, entre l'affiche « ESC » et la baie ;
   // photo 28 : depuis le palier, son seul chant au jambage nord. À 100°, il barrait l'espace pause)
-  ch.porte('y', 13.55, 8.075, { l: 0.95, h: 2.06, base: N1, ep: 0.12, modele: 'grise', etat: 'ouverte', angle: 3.08, cote: 'W', charniere: 'd', huisserie: false, matVantail: X.taupe, nom: 'palier est (couloir du 1er)' });
-  ch.panneau(matPanneau(texAfficheOrange(), 0.6), 0.21, 0.297, 13.603, 7.36, N1 + 1.4, 'E');
+  // (13/10 : au fond de son alcôve, il s'ouvre à l'équerre, contre le mur nord de l'alcôve — de la photo 28, toujours son
+  // seul chant au jambage nord)
+  ch.porte('y', XD1, 8.075, { l: 0.95, h: 2.06, base: N1, ep: 0.12, modele: 'grise', etat: 'ouverte', angle: 1.6, cote: 'W', charniere: 'd', huisserie: false, matVantail: X.taupe, nom: 'palier est (couloir du 1er)' });
+  ch.panneau(matPanneau(texAfficheOrange(), 0.6), 0.21, 0.297, XD1 + 0.053, 7.36, N1 + 1.4, 'E');
   // l'huisserie (métal blanc) autour des deux vantaux ; en tête, côté palier, au-dessus du semi-fixe, le boîtier du
   // ferme-porte (photo 28)
-  for (const [y0, y1] of [[7.08, 7.12], [8.55, 8.59]]) B(ch, G, 13.48, y0, 13.62, y1, N1, N1 + 2.1, M.huisserie, { ombre: false });
-  B(ch, G, 13.48, 7.08, 13.62, 8.59, N1 + 2.06, N1 + 2.1, M.huisserie, { ombre: false });
-  B(ch, G, 13.62, 7.16, 13.675, 7.48, N1 + 2.1, N1 + 2.16, M.ferme, { ombre: false });
+  for (const [y0, y1] of [[7.08, 7.12], [8.55, 8.59]]) B(ch, G, XD1 - 0.07, y0, XD1 + 0.07, y1, N1, N1 + 2.1, M.huisserie, { ombre: false });
+  B(ch, G, XD1 - 0.07, 7.08, XD1 + 0.07, 8.59, N1 + 2.06, N1 + 2.1, M.huisserie, { ombre: false });
+  B(ch, G, XD1 + 0.07, 7.16, XD1 + 0.125, 7.48, N1 + 2.1, N1 + 2.16, M.ferme, { ombre: false });
   // le retour du mur du panneau (y 8,65) et LE MUR DU PANNEAU (face est en x 14,225, de y 8,6 à 10,9 — V2 : photo 28, son
   // arête nord en y 10,90 au pixel près ; elle était en 11,175)
-  mur(ch, G, { de: [13.61, 8.65], a: [14.075, 8.65], ep: 0.12, base: N1, h: DALLE2, mats: B0, plinthes: ['S'] });
-  mur(ch, G, { de: [14.15, 8.59], a: [14.15, YK + 0.075], base: N1, h: DALLE2, mats: B0, plinthes: ['E'] });
+  // (13/10 : le retour, allongé de DXP, est le mur nord de l'alcôve)
+  mur(ch, G, { de: [13.61, 8.65], a: [14.075 + DXP, 8.65], ep: 0.12, base: N1, h: DALLE2, mats: B0, plinthes: ['S'] });
+  mur(ch, G, { de: [14.15 + DXP, 8.59], a: [14.15 + DXP, YK + 0.075], base: N1, h: DALLE2, mats: B0, plinthes: ['E'] });
   // le renfoncement nord (V2 : x 13,40-14,2, y 10,90-11,65) sous sa retombée, son pilastre ; son mur sud part du nu ouest
   // du fond (côté espace pause, le bout de mur crème entre le fond et le mur est : js/ecole_etage1_pause.js)
-  mur(ch, G, { de: [XK - 0.06, YK], a: [14.075, YK], base: N1, h: DALLE2, mats: B0, plinthes: ['N'] });
-  mur(ch, G, { de: [XK, YK - 0.075], a: [XK, YRN + 0.075], ep: 0.12, base: N1, h: DALLE2, mats: B0, plinthes: ['E'] });
-  B(ch, G, 14.06, YRN - 0.225, 14.22, YRN - 0.075, N1, H1, B0, { collision: true, ombre: false });
-  B(ch, G, 14.05, YRN - 0.235, 14.23, YRN - 0.225, N1, N1 + 0.08, X.plinthe, { ombre: false });
+  // (13/10 : son fond avance de DXP — nu 14,025 ; l'ancien, sur l'axe XK, reste le mur est de l'espace pause, et le vide
+  // entre les deux est clos par les murs sud et nord du renfoncement)
+  mur(ch, G, { de: [XK - 0.06, YK], a: [14.075 + DXP, YK], base: N1, h: DALLE2, mats: B0, plinthes: ['N'] });
+  mur(ch, G, { de: [XK, YK - 0.075], a: [XK, YRN + 0.075], ep: 0.12, base: N1, h: DALLE2, mats: B0 });
+  mur(ch, G, { de: [XK2, YK + 0.075], a: [XK2, YRN - 0.075], ep: 0.12, base: N1, h: DALLE2, mats: B0, plinthes: ['E'] });
+  B(ch, G, 14.06 + DXP, YRN - 0.225, 14.22 + DXP, YRN - 0.075, N1, H1, B0, { collision: true, ombre: false });
+  B(ch, G, 14.05 + DXP, YRN - 0.235, 14.23 + DXP, YRN - 0.225, N1, N1 + 0.08, X.plinthe, { ombre: false });
   // LE MUR NORD DU RENFONCEMENT ET DU PALIER, jusqu'à la volée 3, et la porte de son LOCAL (V2 : derrière, la gaine
   // fermée jusqu'au mur nord de la cage, y 12,45 — et au-delà, 1,4 m de bâtiment, le fond IGN en y 13,8 : la « salle de
   // cours S 1.6 » du panneau d'étage ne peut pas y être ; la porte, celle d'un local, perd sa plaque — plan_v2.md § 1.4,
@@ -1355,9 +1378,13 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   // gaine) ; le mur sud de la cage, côté bande
   mur(ch, G, { de: [XK, E.yN], a: [E.x0, E.yN], base: N1, h: H_CAGE, mats: B0 });
   mur(ch, G, { de: [E.x0, E.yN], a: [E.xM, E.yN], base: N1, h: H_CAGE, mats: B0 });
-  // (13/10 : le mur sud de la cage part de l'arrivée de la volée 2, xD — photo 28 : au bord gauche, la main courante finit
-  // et l'on voit le mur sud du palier au-delà)
-  mur(ch, G, { de: [E.xD, E.yS], a: [E.xM, E.yS], base: N1, h: H_CAGE, mats: B0, plinthes: ['S'] });
+  // (13/10, photo 28 : le mur sud de la cage finit 0,45 m DEVANT l'appareil, lui-même 0,69 m avant le dernier nez — son
+  // bout, où finit la main courante, est donc 27 cm À L'EST de l'arrivée : au-delà, on voit le mur sud du palier et son
+  // cadre, la porte de l'espace pause. Il partait du bord du palier, et cachait toute la gauche de la photo. Entre son
+  // bout et l'arrivée, le palier s'ouvre sur le côté de la dernière marche)
+  mur(ch, G, { de: [E.xD + 0.27, E.yS], a: [E.xM, E.yS], base: N1, h: H_CAGE, mats: B0, plinthes: ['S'] });
+  B(ch, G, E.xD, 9.0, E.xD + 0.27, E.bS[0], N1 - 0.25, N1 - 0.012, X.beton, { ombre: false });
+  C.sol(E.xD, -9.0, E.xD + 0.27, -E.bS[0], N1);
   // le mitoyen au nord de la gaine de l'ascenseur (js/ecole_etage1.js le monte, plein, jusqu'à y 8,99) ; le mur d'échiffre
   mur(ch, G, { de: [19.95, 8.99], a: [19.95, 12.6], ep: 0.3, base: N1, h: H_CAGE, mats: B0 });
   mur(ch, G, { de: [E.x0, E.yE], a: [E.xP, E.yE], base: N1, h: H_CAGE, mats: B0 });
@@ -1365,17 +1392,19 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   // portent les plinthes de bois du couloir, une plinthe grise par-dessus)
   // (10/10 : plus de portes 103 et 104 sur la bande, ni d'issue de secours au bout — le doublage et l'ascenseur, et
   // leurs plinthes : js/ecole_ascenseur.js poserBandeSud)
-  B(ch, G, 13.61, 7.034, ASC.xD - 0.015, 7.052, N1, N1 + 0.082, X.plinthe, { ombre: false });
+  B(ch, G, XD1 + 0.06, 7.034, ASC.xD - 0.015, 7.052, N1, N1 + 0.082, X.plinthe, { ombre: false });
   // LE CHANT GRIS du mur d'échiffre (photo 28 : ≈ 10 cm, comme le poteau du rez-de-chaussée) : il retourne sur la face
   // sud — vu du haut de la volée 2, c'est une bande grise de 11 cm avant l'orange
   B(ch, G, E.x0 - 0.006, E.yE - 0.081, E.x0 + 0.11, E.yE + 0.081, N1, 6.1, X.poteau, { ombre: false });
   // LES PLAFONDS : le palier (plâtre, 2,50 m), la retombée du renfoncement nord, la bande sud
   // (V2 : le palier jusqu'à l'arête du mur du panneau, y 10,90, puis jusqu'au mur nord, y 11,65 ; la retombée sur le
   // seul renfoncement)
-  ch.plafond(13.55, 7.035, E.x0, YK + 0.075, H1, 'platre');
-  ch.plafond(14.2, YK + 0.075, E.x0, YRN - 0.075, H1, 'platre');
-  ch.plafond(XK + 0.06, YK + 0.075, 14.2, YRN - 0.075, H1 - 0.22, 'platre');
-  ch.panneau(B0, YRN - YK - 0.15, 0.22, 14.2, (YK + YRN) / 2, H1 - 0.11, 'E');
+  ch.plafond(13.61, 7.035, XD1, 8.59, H1, 'platre');           // (13/10 : l'alcôve de la porte)
+  ch.plafond(XD1, 7.035, E.x0, 8.59, H1, 'platre');
+  ch.plafond(14.2 + DXP, 8.59, E.x0, YK + 0.075, H1, 'platre');
+  ch.plafond(14.2 + DXP, YK + 0.075, E.x0, YRN - 0.075, H1, 'platre');
+  ch.plafond(XK2 + 0.06, YK + 0.075, 14.2 + DXP, YRN - 0.075, H1 - 0.22, 'platre');
+  ch.panneau(B0, YRN - YK - 0.15, 0.22, 14.2 + DXP, (YK + YRN) / 2, H1 - 0.11, 'E');
   ch.plafond(E.x0, 7.035, E.xM, 9.0, H1, 'platre');
   // (13/10 : et au-dessus des deux bandes de 23 cm, jusqu'au départ des volées)
   ch.plafond(E.x0, 9.0, E.xD, E.bS[1], H1, 'platre');
@@ -1393,32 +1422,41 @@ export function poserPalierEst(ch, { groupe, lampes, matSol, R1 }) {
   // (V2, 11/10 : le mur ne fait plus que 2,3 m, y 8,6-10,9 — photo 28 ; tout ce qu'il porte se recentre : le panneau
   // centré en y 9,2, l'affichette « WIFI » en 9,8, l'affiche « POINT ÉCOUTE » en 10,05, et avec eux la réglette, le
   // poussoir et la prise — à 0,1-0,2 m près, ce sont ceux de la photo)
-  const xf = 14.225, dP = -0.1, dW = -0.15, dE = -0.2;
-  ch.panneau(matPanneau(texPanneauEtageEst(), 0.5), 0.65, 0.34, xf + 0.006, 9.3 + dP, N1 + 1.6, 'E', G);
-  B(ch, G, xf, 8.97 + dP, xf + 0.005, 9.63 + dP, N1 + 1.425, N1 + 1.775, M.noirMat, { ombre: false });
-  ch.panneau(matPanneau(texWifiIris(), 0.4), 0.22, 0.16, xf + 0.004, 9.95 + dW, N1 + 1.6, 'E', G);
-  ch.panneau(matPanneau(texPointEcoute(), 0.6), 0.21, 0.297, xf + 0.003, 10.25 + dE, N1 + 1.65, 'E', G);
+  const xf = 14.225 + DXP, dP = -0.1, dW = -0.15, dE = -0.2;
+  // (13/10, photo 28, l'appareil à 2,17 m du mur, l'œil à 0,84 m : le panneau de 1,365 à 1,71 m — centre 1,54 et non 1,60 ;
+  // l'affichette « WIFI », 0,24 x 0,21, centre 1,53 ; l'affiche violette centre 1,56 ; la réglette à 1,99 m et non 2,10 ;
+  // le poussoir à 1,04, la prise à 0,21. Leurs places le long du mur étaient justes à 2-4 cm)
+  ch.panneau(matPanneau(texPanneauEtageEst(), 0.5), 0.65, 0.34, xf + 0.006, 9.3 + dP, N1 + 1.54, 'E', G);
+  B(ch, G, xf, 8.97 + dP, xf + 0.005, 9.63 + dP, N1 + 1.365, N1 + 1.715, M.noirMat, { ombre: false });
+  ch.panneau(matPanneau(texWifiIris(), 0.4), 0.24, 0.21, xf + 0.004, 9.95 + dW - 0.04, N1 + 1.53, 'E', G);
+  ch.panneau(matPanneau(texPointEcoute(), 0.6), 0.21, 0.297, xf + 0.003, 10.25 + dE, N1 + 1.56, 'E', G);
   // la réglette au-dessus des affichettes (≈ 2,1 m ; photo 28 : de la moitié du panneau à 30 cm au-delà de l'affiche
   // violette), son bouton de minuterie et la prise à l'aplomb de l'affichette WIFI ; le tapis gris anthracite
-  reglette(ch, G, xf, 9.22 + dP, 10.62 + dE, N1 + 2.1, 'E');
-  lampe({ x: xf + 0.25, z: -(9.92 + dW), h: N1 + 2.1, zone: 'e1est', type: 'tube', force: 1.1 });
+  reglette(ch, G, xf, 9.22 + dP, 10.62 + dE, N1 + 1.99, 'E');
+  // (13/10, photos 27 à 29 : le palier n'a que ce tube, chaud — murs crème, sol brun sombre ; il sortait blanc et clair)
+  lampe({ x: xf + 0.25, z: -(9.92 + dW), h: N1 + 1.99, zone: 'e1est', type: 'tube', force: 0.9, couleur: new THREE.Color(0xffe2b4) });
   // (relecture du 09/10, photo 28 en grand : la platine blanche, un boîtier qui avance de 3 cm, sa façade sombre et son
   // voyant vert — un poussoir de minuterie ; blanc sur blanc, l'ancien n'était qu'un point noir)
   const yW = 9.95 + dW;
-  B(ch, G, xf, yW - 0.04, xf + 0.012, yW + 0.04, N1 + 1.06, N1 + 1.14, M.boitier, { ombre: false });
-  B(ch, G, xf + 0.012, yW - 0.028, xf + 0.04, yW + 0.028, N1 + 1.072, N1 + 1.128, M.boitier, { ombre: false });
-  B(ch, G, xf + 0.04, yW - 0.02, xf + 0.043, yW + 0.02, N1 + 1.078, N1 + 1.114, M.noirMat, { ombre: false });
-  B(ch, G, xf + 0.043, yW - 0.016, xf + 0.045, yW - 0.01, N1 + 1.082, N1 + 1.1, X.voyant, { ombre: false });
-  B(ch, G, xf, yW - 0.04, xf + 0.018, yW + 0.04, N1 + 0.21, N1 + 0.29, M.boitier, { ombre: false });
-  B(ch, G, xf + 0.018, yW - 0.015, xf + 0.021, yW + 0.015, N1 + 0.235, N1 + 0.265, M.noirMat, { ombre: false });
+  B(ch, G, xf, yW - 0.04, xf + 0.012, yW + 0.04, N1 + 1.0, N1 + 1.08, M.boitier, { ombre: false });
+  B(ch, G, xf + 0.012, yW - 0.028, xf + 0.04, yW + 0.028, N1 + 1.012, N1 + 1.068, M.boitier, { ombre: false });
+  B(ch, G, xf + 0.04, yW - 0.02, xf + 0.043, yW + 0.02, N1 + 1.018, N1 + 1.054, M.noirMat, { ombre: false });
+  B(ch, G, xf + 0.043, yW - 0.016, xf + 0.045, yW - 0.01, N1 + 1.022, N1 + 1.04, X.voyant, { ombre: false });
+  B(ch, G, xf, yW - 0.04, xf + 0.018, yW + 0.04, N1 + 0.17, N1 + 0.25, M.boitier, { ombre: false });
+  B(ch, G, xf + 0.018, yW - 0.015, xf + 0.021, yW + 0.015, N1 + 0.195, N1 + 0.225, M.noirMat, { ombre: false });
   // (le tapis à ≈ 0,6 m du mur : photo 27, une bande de sol entre la plinthe et lui ; photo 28, au bas de l'image)
-  B(ch, G, 14.8, 9.05, 15.4, 10.65, N1, N1 + 0.008, X.tapis1, { ombre: false });
+  // (13/10, photos 27 et 28 : ce n'est pas un tapis mais la BANDE D'ÉVEIL du haut de la volée 2 — 0,32 m de caoutchouc à
+  // pastilles, son bord ouest à 0,74 m du mur du panneau (0,73 sur la photo 28), son bord est à 1,06 m, 0,4 m avant le
+  // dernier nez : entre elle et le nez, la photo 27 montre du vinyle ; large comme la volée)
+  B(ch, G, xf + 0.74, E.bS[0], xf + 1.06, E.bS[1], N1, N1 + 0.008, X.tapis1, { ombre: false });
   // (sur le mur sud du palier, près du renfoncement, la petite photo encadrée sombre et brillante, à 1,7-1,9 m)
-  B(ch, G, 14.17, 7.035, 14.45, 7.045, N1 + 1.64, N1 + 1.96, M.noirMat, { ombre: false });
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texPhotoNuit(), roughness: 0.08, metalness: 0.1 }), 0.25, 0.29, 14.31, 7.047, N1 + 1.8, 'N', G);
+  // (13/10, photo 28 : son cadre de 2,33 à 2,51 m de l'appareil — 0,17 à 0,35 m DERRIÈRE le nu du mur du panneau, entre lui
+  // et la porte ; il était devant)
+  B(ch, G, xf - 0.35, 7.035, xf - 0.07, 7.045, N1 + 1.64, N1 + 1.96, M.noirMat, { ombre: false });
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texPhotoNuit(), roughness: 0.08, metalness: 0.1 }), 0.25, 0.29, xf - 0.21, 7.047, N1 + 1.8, 'N', G);
   // LES LUMIÈRES du palier : la réglette (plus haut), un hublot au nord (non vu) ; la bande sud n'a pas de plafonnier
   // (VO q_0274-0281 : sa réglette murale l'éclaire)
-  opale(15.1, (YK + YRN) / 2, 'e1est');   // (V2 : devant le mur nord, descendu)
+  opale(15.5, (YK + YRN) / 2, 'e1est');   // (V2 : devant le mur nord, descendu)
   // LA BANDE SUD ET L'ASCENSEUR (VO 68,2-70 s) : le tableau, le doublage, le boîtier vert, la réglette, l'extincteur, la
   // façade palière et la cabine
   poserBandeSud(ch, { groupe: G, lampes });
