@@ -479,14 +479,18 @@ function matieresEst() {
     // (13/10, photos 24 et 26 : les chants des vantaux sont de BOIS brun — celui du vantail du hall, face à l'appareil, et
     // celui du petit vantail du vestibule, au bord gauche de la 24 et à droite sur la 26)
     // (14/10, photo 26 : au chant libre du petit vantail, la bande est rosée, claire — #5c3d26 la faisait acajou)
-    chant: std({ color: 0x7a5840, roughness: 0.55 }, 'chant de bois des vantaux'),
+    // (14/10, relecture, photos 24 et 26 au même point de vue : sous le hublot du vestibule, #7a5840 sortait ORANGE VIF,
+    // une bande de 100 px au bord gauche de la 24 — là, un trait brun sombre de 20 px (le chant est à feuillure : on n'en
+    // voit que la moitié) ; un brun plus neutre et plus sombre)
+    chant: std({ color: 0x5b4a40, roughness: 0.6 }, 'chant de bois des vantaux'),
     // (lot H, 11/10 : le petit vantail du vestibule, gris moyen — photo 26, 0,56 du mur ; repeint depuis la VO, où il
     // était crème) ; le tirant en U inox BROSSÉ du grand vantail (photo 24 : clair, il prend la lumière ; l'inox poli
     // de js/ecole_portes.js sortait noir dans la carte d'environnement) ; le verre clair de son oculus
     grisVantail: std({ color: 0x777571, roughness: 0.5 }, 'vantail gris moyen (petit vantail du vestibule)'),
     inox: std({ color: 0xc4c6c7, roughness: 0.32, metalness: 0.45 }, 'tirant inox brossé'),
     // (13/10 : le cercle chromé des hublots — clair sous sa propre lampe, la carte d'environnement le rendait gris sombre)
-    chrome: std({ color: 0xd6d6d3, roughness: 0.3, metalness: 0.1, emissive: 0x9a9894, emissiveIntensity: 0.6 }, 'cercle chromé des hublots'),
+    // (14/10, relecture : sur la photo 24, le cercle est BLANC, plus clair que le plafond qu'il éclaire — il sortait gris)
+    chrome: std({ color: 0xe6e6e2, roughness: 0.3, metalness: 0.1, emissive: 0xe4e1d8, emissiveIntensity: 0.95 }, 'cercle chromé des hublots'),
     creme: std({ color: 0xe9dcc8, roughness: 0.45 }, 'vantail crème'),
     // (lot H, 11/10 : le fond de la partie est — l'enduit du mur sur cour, comme la façade arrière du 2e, et le toit
     // de son local, un gravier gris comme celui de l'aile de la Robert Kahn)
@@ -1032,7 +1036,9 @@ export function poserEst(ch, { RECT }) {
     const teinte = (c, nom) => { const m = M.platre.clone(); m.name = nom; m.color.set(c); return m; };
     ch.plafond(16.2, 7.65, ASC.xF, 9.0, HC, 'platre').material = teinte(0xebc8a6, 'plafond en plâtre (dégagement est)');
     // (13/10 : la sous-face de la volée 2, qui part maintenant de xD, ne passe sous 2,55 m qu'en x 16,89)
-    ch.plafond(16.2, 9.15, 16.89, 10.65, HC, 'platre', { retombees: false }).material = teinte(0xf3e3d2, 'plafond en plâtre (niche est)');
+    // (14/10, relecture : à #f3e3d2 il faisait encore un triangle gris clair à gauche du poteau, à côté du plafond du
+    // couloir que ses hublots réchauffent — la photo 24 n'y montre aucune limite)
+    ch.plafond(16.2, 9.15, 16.89, 10.65, HC, 'platre', { retombees: false }).material = teinte(0xe8cfb4, 'plafond en plâtre (niche est)');
   }
   // (13/10 : le détecteur en (16,12 ; 8,03) — les photos 24 et 26, chacune à sa pose, le renvoient au plafond en
   // (16,14 ; 8,03) et (16,13 ; 7,99) ; il était en (15,9 ; 9,0))
@@ -1059,6 +1065,11 @@ export function poserEst(ch, { RECT }) {
       const a = k * 2.094 + 0.5, p = maille(boiteM(0.008, 0.006, 0.022), X.chrome, Math.cos(a) * 0.104, -0.015, Math.sin(a) * 0.104, -a + Math.PI / 2, g, { ombre: false, recoit: false });
       p.userData.horsAOSol = true;
     }
+    // (14/10, RELECTURE, photo 24 au même point de vue : autour de chaque hublot, le jeu creusait une COURONNE SOMBRE en
+    // dents de scie, large de 8 cm — l'occlusion ambiante de l'écran (GTAO, à demi-définition), qui prenait la vasque et
+    // son cercle, à 1 cm du plafond, pour un creux ; sur la photo, c'est là que le plafond est le plus clair. La vasque,
+    // le cercle et ses pattes sortent de la passe de normales de l'occlusion (userData.sansNormales, js/fx.js _decoupes))
+    g.traverse((m) => { m.userData.sansNormales = true; });
     // (son auréole au plafond, large : photo 24, un halo clair de près d'un mètre autour de chaque hublot)
     // (13/10 : 1,5 m — à 0,7 m du hublot du nord, le plafond rend encore 0,70 du mur blanc de la niche ; 0,60 dans le jeu)
     ch.halo(x, y, HC, 1.5);
@@ -1100,6 +1111,13 @@ export function poserEst(ch, { RECT }) {
   // (13/10 : le jambage ouest a son chambranle des deux côtés — VO q_0361-0365, une huisserie claire entre le vantail et
   // le jaune du vestibule ; le nu du mur jaune recule en 14,63, XN)
   chambranle(ch, D, 'x', E.yE, 14.70, E.x0, 0, 2.06, 0.15, { 1: [true, true], [-1]: [true, true] });
+  // (14/10, relecture, photo 24 au même point de vue : le DESSOUS DE LA TRAVERSE, vu d'en bas par la baie ouverte, est aussi
+  // clair que le plafond du couloir, on ne l'y distingue pas ; dans le jeu, où nulle lampe ne regarde vers le haut, c'était
+  // une bande brune en travers du haut de l'image — un parement clair sous la traverse, émissif comme les plafonds)
+  {
+    const m = X.bois.clone(); m.name = 'dessous de la traverse (porte du vestibule)'; m.emissive = new THREE.Color(0xd8c4a8); m.emissiveIntensity = 0.5;
+    B(ch, D, 14.70, E.yE - 0.083, E.x0, E.yE + 0.083, 2.057, 2.0605, m, { ombre: false });
+  }
   // (10/10 : OUVERT À DEMEURE, rabattu côté couloir devant le mur jaune — VO q_0051-0055 et q_0151 : on voit sa face, son
   // oculus et son bâton contre le mur jaune ; photo 24 (2026) : ouvert aussi)
   // (plan V2, lot H, 11/10, photo 24 rejouée au même point de vue : sur sa face visible, un TIRANT EN U INOX brossé
@@ -1120,17 +1138,29 @@ export function poserEst(ch, { RECT }) {
   // sortait beige clair, 0,93). Côté couloir, la VO montre sa béquille noire en J et le ferme-porte en tête, à droite :
   // c'est LUI, alors crème, la « porte crème » des q_0050-0057 — son pied passe devant la plinthe du mur du fond, son
   // haut touche le linteau de la baie)
+  // (14/10, RELECTURE, photo 26 agrandie : entre le chambranle et le vantail, une bande d'ombre de 50 px — LE TABLEAU de
+  // l'huisserie : le vantail n'est pas au nu du mur côté vestibule (le jeu l'y posait à 1 cm) mais AU MILIEU du mur, 6 cm
+  // derrière ; ses quatre coins, renvoyés au sol et à 2,04 m, tombent en y 10,67 à 10,74, gonds en 16,07-16,13, chant libre
+  // en 15,55-15,57 : FERMÉ. Sa ligne recule de 5 cm, il fait 0,48 m — de la photo 24, son chant libre sort du cadre 90 px
+  // plus à gauche que dans le jeu. C'était le doute laissé le 14/10 : il ne manque pas 15 cm entre la porte et l'escalier —
+  // la 1re contremarche est bien à 0,23-0,26 m du jambage (pose de la photo 26 refaite sur les bouts des quatre premiers
+  // nez, à 0,194 m l'un de l'autre sur le mur d'échiffre) ; c'est l'huisserie qui paraît large de 18 cm, tableau compris)
   {
-    const P = ch.porte('x', E.yE, 15.8, { l: 0.5, h: 2.06, modele: 'grise', etat: 'ouverte', angle: 0.06, cote: 'N', charniere: 'd', huisserie: false, oculus: false, poignee: null, matVantail: X.grisVantail, nom: 'vestibule est (petit vantail)' });
-    // (la béquille en J sur la face côté couloir — +z du vantail —, au chant libre, x −0,5)
-    const v = P.vantaux[0].g, z = 0.02;
+    // (0,455 m : sur le plan du vantail, la photo 24 met son chant libre en x 15,63, la photo 26 en 15,56 — 15,595)
+    const lv = 0.455;
+    const P = ch.porte('x', E.yE - 0.05, E.x0 - lv / 2, { l: lv, h: 2.06, modele: 'grise', etat: 'ouverte', angle: 0.02, cote: 'N', charniere: 'd', huisserie: false, oculus: false, poignee: null, matVantail: X.grisVantail, nom: 'vestibule est (petit vantail)' });
+    // (la béquille en J sur la face côté couloir — +z du vantail —, au chant libre, x −lv)
+    const v = P.vantaux[0].g, z = 0.02, sv = P.vantaux[0].s;
     // (13/10 : son chant libre, de bois — la bande brune du bord gauche de la photo 24, la bande rosée à droite du
-    // vantail sur la photo 26 ; à la pose refaite de la 26, il reste presque fermé, son chant libre en (15,56 ; 10,72))
-    chantsBois(ch, v, 0.5, 2.06, P.vantaux[0].s);
-    B(ch, v, -0.475, -z - 0.012, -0.425, -z, 0.94, 1.1, M.noirMat, { ombre: false });
-    B(ch, v, -0.455, -z - 0.06, -0.445, -z - 0.012, 1.03, 1.05, M.noirMat, { ombre: false });
-    B(ch, v, -0.455, -z - 0.07, -0.33, -z - 0.05, 1.03, 1.05, M.noirMat, { ombre: false });
-    B(ch, v, -0.34, -z - 0.07, -0.33, -z - 0.05, 0.99, 1.05, M.noirMat, { ombre: false });
+    // vantail sur la photo 26)
+    // (14/10, relecture : un chant À FEUILLURE — des deux photos, on n'en voit qu'un trait de 1,5 cm contre la face du
+    // vestibule, le reste dans l'ombre de la feuillure : le bois sur le tiers nord du chant, le noir derrière)
+    B(ch, v, sv * (lv - 0.006), 0.006, sv * lv, 0.0205, 0.006, 2.054, X.chant, { ombre: false });
+    B(ch, v, sv * (lv - 0.006), -0.0205, sv * lv, 0.006, 0.006, 2.054, M.noirMat, { ombre: false });
+    B(ch, v, -lv + 0.025, -z - 0.012, -lv + 0.075, -z, 0.94, 1.1, M.noirMat, { ombre: false });
+    B(ch, v, -lv + 0.045, -z - 0.06, -lv + 0.055, -z - 0.012, 1.03, 1.05, M.noirMat, { ombre: false });
+    B(ch, v, -lv + 0.045, -z - 0.07, -lv + 0.17, -z - 0.05, 1.03, 1.05, M.noirMat, { ombre: false });
+    B(ch, v, -lv + 0.16, -z - 0.07, -lv + 0.17, -z - 0.05, 0.99, 1.05, M.noirMat, { ombre: false });
   }
   // (lot H, 11/10 : le bloc de sortie côté vestibule est au-dessus du milieu de la baie, x ≈ 15,45 — photo 26 à la pose
   // résolue, en haut à droite ; en x 15,85, au-dessus du petit vantail, il sortait au milieu de l'image)
@@ -1218,7 +1248,9 @@ export function poserEst(ch, { RECT }) {
   // au-dessus du sol du vestibule (photo 25 : elle sort du cadre à gauche sans finir ; VO q_0160 : sa crosse à ≈ 1,3 m de
   // l'angle du mur jaune))
   const rail1 = (v, s) => rail(v, s) + 0.03;
-  const crosse1 = (v, y, s0 = 0) => [[xv(v, s0), y, rail1(v, s0 + 0.09) - 0.13], [xv(v, s0 + 0.09), y, rail1(v, s0 + 0.09)]];
+  // (14/10, relecture, photo 26 agrandie : la crosse est un COUDE FRANC — le tube tombe à la verticale sur 10 cm, coupé
+  // net ; celle du jeu filait en biais sur 13 cm, sans coude)
+  const crosse1 = (v, y, s0 = 0) => [[xv(v, s0 + 0.03), y, rail1(v, s0 + 0.04) - 0.1], [xv(v, s0 + 0.04), y, rail1(v, s0 + 0.04)]];
   // (plan V2, lot H, 11/10 : la photo 25 rejouée au même point de vue — la main courante horizontale du mur du fond ne
   // s'arrête pas en y 11,2 : elle file jusqu'au bout de l'échiffre, qui la cache au-delà de y ≈ 10,45, sur des consoles
   // en y ≈ 12,07 et 10,70 (et celle du mur nord en x ≈ 18,97). Comme au palier à 5,05 m (VO q_0356-0360, poserPalierEst),
@@ -1241,7 +1273,8 @@ export function poserEst(ch, { RECT }) {
     [[xv(v1, 0.5), yN1, rail1(v1, 0.5), 'N'], [xv(v1, 1.6), yN1, rail1(v1, 1.6), 'N'], [19.0, yN1, hH, 'N'], [xm, 12.05, hH, 'E'], [xm, 10.7, hH, 'E'], [xm, 9.6, hH, 'E'],
       [19.1, yS2, hH, 'S'], [xv(v2, 0.5), yS2, railS2(0.5), 'S'], [xv(v2, 1.45), yS2, railS2(1.45), 'S']]);
   mainCourante(ch, D, [...crosse1(v1, yS1), [xv(v1, fin), yS1, rail1(v1, fin)], [E.xP + 0.06, yS1, rail1(v1, fin)], [E.xP + 0.06, E.bN[0], rail1(v1, fin)]],
-    [[xv(v1, 0.5), yS1, rail1(v1, 0.5), 'S'], [xv(v1, 1.6), yS1, rail1(v1, 1.6), 'S']]);
+    [[xv(v1, 0.33), yS1, rail1(v1, 0.33), 'S'], [xv(v1, 1.6), yS1, rail1(v1, 1.6), 'S']]);
+  // (14/10, relecture : sa première console à 0,33 m du départ — photo 26, la crosse en J sous le tube en x 16,60)
   // (relecture du 09/10 : en haut, elle ne plonge pas — l'épingle de la photo 28 fait le tour du chant gris et repart
   // sur l'autre face de l'échiffre, en main courante de la volée 3 : js/ecole_est.js poserPalierEst)
   // (13/10, relecture de la photo 28 : à 0,95 m des nez — 5 cm de plus —, jusqu'à l'épingle du palier du 1er)
