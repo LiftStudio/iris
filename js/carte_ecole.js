@@ -127,6 +127,22 @@ ESC.yF2 = ESC.yT + (ESC.n2 - 1) * ESC.G2;            // 11,95 : le pied de la vo
 //    26 à 28 cm de diamètre (36 au jeu).
 const C05 = { xO: 4.53, xE: 5.92, xM: 5.995, yFond: 12.71, yRes: 9.57, hBas: 2.3, hHaut: 2.45, lWC: 0.93, yF: 8.48, yH: 10.983 };
 const PF = { x0: 4.70, x1: 5.612, hv: 2.05, hT: 2.40 };      // la porte bleue du fond : son huisserie, sa traverse, le haut du cadre
+// LE C01 REFAIT SUR LA PHOTO 01 (13/10, lot C2). Pose refaite sur vingt-deux points relus de près — les deux huisseries du
+// local, les quatre coins des portes de la gaine, le pied des deux murs, dix croisements de joints du carrelage —, la
+// largeur du couloir laissée LIBRE : 4,8 px d'écart moyen, l'appareil à 1,42 m, cap 177,5, f 650. Ce qu'elle dit :
+//  - LE COULOIR N'A QUE 1,60 m DE LARGE, pas 1,80 (13 px d'écart en l'y forçant ; et sans aucune pose : au pied de
+//    l'huisserie du local, la largeur du couloir fait 0,73 fois la hauteur de cette huisserie — 1,52 à 1,60 m). Son mur
+//    est est au nu de la face ouest de la pile, x 13,30 : le « ressaut de 20 cm » au nord de la pile n'existe pas ;
+//  - LA PORTE DU LOCAL EST À L'ENTRÉE DU COULOIR, pas à 2,8 m : le mur ouest s'arrête 0,73 m après son huisserie — on
+//    voit la salle d'attente, la fenêtre du bureau et le sol juste à gauche d'elle —, et la petite plaque noire est sur
+//    ce bout de mur. Tout le couloir était 1,65 m trop au nord : le vantail du local (0,83, pas 0,93) de 8,58 à 9,41 ;
+//    la gaine en face, de 8,31 à 9,78 ; la porte PMR de 10,80 à 11,73, sa plaque centrée en 10,65 ;
+//  - LA GAINE n'est pas une porte de 2,00 m : deux vantaux de 0,735 posés AU-DESSUS DE LA PLINTHE, qui file devant
+//    eux, de 0,08 à 1,73 m ; au-dessus, la grille (0,72 x 0,46, au milieu) et la trappe crème (0,36 x 0,34, au bout
+//    nord), sous un plafond à 2,35 — et non 2,45 : son arête tombe en y 7,8-7,95, au droit du mur safran ;
+//  - le hublot en (12,37 ; 9,21) ; les joints du carrelage en x 12,18 et 12,50, ceux en travers tous les 0,60 depuis
+//    y 9,88.
+const C01 = { xO: 11.7, xE: 13.3, xM: 13.375, yL: 8.995, lL: 0.83, yG: 9.045, lG: 1.47, yP: 11.265, lP: 0.93, hP: 2.35 };
 // la lumière principale (l'ensemble des plafonniers) : presque d'aplomb, elle porte les ombres douces
 const DIR_LUMIERE = new THREE.Vector3(0.16, 1, 0.22).normalize();
 // le rectangle du sol (ombre cuite, lumière cuite) : x -0,6-20,4, y -0,6-25,0 (09/10 : jusqu'à 25 — la salle David
@@ -300,8 +316,9 @@ class Chantier {
       // (13/10, lot C2 — les hublots des photos 23, 01 et 05, vus de près : ce n'est pas une galette blanche de 7 cm
       // d'épais, mais un VERRE opale bombé, peu saillant — 5 cm —, serti dans un cercle de métal satiné large de deux
       // doigts, tenu par trois griffes ; `r` : le rayon du cercle)
-      if (!M.cercleHublot) { M.cercleHublot = new THREE.MeshStandardMaterial({ color: 0xcbccc8, roughness: 0.38, metalness: 0.3 }); M.cercleHublot.name = 'cercle de hublot'; }
-      const rv = r * 0.84, f = 0.05, Rs = (rv * rv + f * f) / (2 * f), al = Math.asin(rv / Rs);
+      // (le cercle : éclairé par son propre verre, il sort clair sur les photos — un gris perle qui luit un peu)
+      if (!M.cercleHublot) { M.cercleHublot = new THREE.MeshStandardMaterial({ color: 0xdcdcd6, roughness: 0.4, metalness: 0.15, emissive: 0xfff0dc, emissiveIntensity: 0.3 }); M.cercleHublot.name = 'cercle de hublot'; }
+      const rv = r * 0.88, f = 0.05, Rs = (rv * rv + f * f) / (2 * f), al = Math.asin(rv / Rs);
       maille(new THREE.SphereGeometry(Rs, 32, 6, 0, Math.PI * 2, Math.PI - al, al), M.opale, 0, Rs - f - 0.012, 0, 0, g, { ombre: false, recoit: false });
       maille(new THREE.CylinderGeometry(r, r * 0.96, 0.018, 36), M.cercleHublot, 0, -0.009, 0, 0, g, { ombre: false });
       for (let k = 0; k < 3; k++) {
@@ -1014,20 +1031,36 @@ function construireMurs(ch) {
   // le nord : LE MUR SAFRAN (de x 5,8, le pilier jaune de l'entrée du C05 — photos 04, 05 —, à 11,7, l'entrée du C01), sa
   // lisse de PVC blanc, son panneau DAE (DY_A)
   const YN = ATT.yn;
-  ch.mur({ de: [5.8, YN], a: [11.7, YN], mats: { S: M.orange, N: B }, plinthes: ['S'] });
-  ch.boite(5.8, YN - 0.085, 11.7, YN - 0.075, 0.85, 1.05, M.lissePVC, { ombre: false });
-  for (const h of [0.85, 1.048]) ch.boite(5.8, YN - 0.09, 11.7, YN - 0.085, h, h + 0.004, M.lisseGrise, { ombre: false });
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texDAE(), roughness: 0.4 }), 0.4, 0.1, 6.1, YN - 0.081, 2.01, 'S');
+  // (13/10, lot C2 — L'ENTRÉE DU C05, photos 05 et 04 rejouées sur le C05 refait (dix points de la photo 05 à 5,8 px,
+  // l'appareil en (6,06 ; 6,54) ; huit points des portes de l'escalier sur la 04, (6,70 ; 6,83)) : les deux rayons de
+  // l'arête du mur jaune se croisent en (5,98 ; 7,85), ceux du bas de sa lisse en (6,00 ; 7,80) — le mur safran ne
+  // dépasse pas en « pilier » dans l'entrée du couloir, il s'arrête AU NU de son mur est, x 5,92 ; à 5,80, vu de la pose
+  // de la photo 05, il cachait toute la porte bleue. (Les deux poses refaites avec cette arête : (5,98 ; 6,55) cap −13,1
+  // pour la 05, f 640, 7,9 px sur treize points ; (6,55 ; 6,81) cap −49,6 pour la 04, f 600, 6,3 px sur onze.) Le panneau
+  // DAE : son bord gauche en x 6,07 sur la 04 et 6,12 sur la 05, de 1,76 à 1,86 m — il était 20 cm plus près de l'arête
+  // et 20 cm plus haut. Rien d'autre du mur ne change.
+  ch.mur({ de: [C05.xE, YN], a: [11.7, YN], mats: { S: M.orange, N: B }, plinthes: ['S'] });
+  ch.boite(C05.xE - 0.003, YN - 0.075, C05.xE, YN + 0.075, 0, H_DALLE, B, { ombre: false });   // (son about, blanc : le nu du mur est du C05)
+  ch.boite(C05.xE - 0.015, YN - 0.09, C05.xE, YN + 0.075, 0, 0.08, M.bois, { ombre: false });
+  ch.boite(C05.xE, YN - 0.085, 11.7, YN - 0.075, 0.85, 1.05, M.lissePVC, { ombre: false });
+  for (const h of [0.85, 1.048]) ch.boite(C05.xE, YN - 0.09, 11.7, YN - 0.085, h, h + 0.004, M.lisseGrise, { ombre: false });
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texDAE(), roughness: 0.4 }), 0.4, 0.1, 6.3, YN - 0.081, 1.81, 'S');
   // l'est : le mur du fond (présentoir, radiateur) qui continue en mur est du couloir C01 (porte de la gaine)
   // (V2, 11/10 — plan_v2.md § 2.2 : le C01 s'arrête au mur du fond, y 14,475 ; le mur avec lui, à 14,55. La gaine est EN
   // FACE DU LOCAL, presque à hauteur de l'appareil sur la photo 01 recalée — elle était 3,15 m plus au nord)
-  ch.mur({ de: [13.575, 7.5], a: [13.575, 14.55], mats: B, plinthes: ['W'], ouvertures: [{ c: 10.55, l: 1.2, h: 2.0 }] });
-  ch.porte('y', 13.575, 10.55, { l: 1.2, h: 2.0, modele: 'gaine2', etat: 'fermee', cote: 'W', nom: 'gaine technique' });
+  // (13/10, lot C2 — photo 01 à sa pose refaite, C01 en tête du fichier : le mur au nu de la pile, x 13,30 ; la gaine en
+  // face du local, y 8,31-9,78, ses vantaux au-dessus de la plinthe, de 0,08 à 1,73)
+  ch.mur({ de: [C01.xM, 7.575], a: [C01.xM, 14.55], mats: B, plinthes: ['W'], ouvertures: [{ c: C01.yG, l: C01.lG, bas: 0.08, h: 1.73 }] });
+  ch.porte('y', C01.xM, C01.yG, { l: C01.lG, h: 1.65, base: 0.08, modele: 'gaine2', etat: 'fermee', cote: 'W', nom: 'gaine technique' });
   // (la trappe crème et la grille de ventilation au-dessus de la gaine : posées sur le mur, face ouest — photo 01 : la
   // trappe au-dessus du vantail NORD, côté toilettes, la grille au-dessus du vantail sud ; elles étaient inversées, 09/10)
-  ch.boite(13.49, 10.65, 13.5, 11.1, 2.12, 2.6, M.creme2, { ombre: false });
-  ch.boite(13.49, 10.0, 13.5, 10.45, 2.1, 2.62, M.grille, { ombre: false });
-  for (let h = 2.15; h < 2.6; h += 0.05) ch.boite(13.48, 10.02, 13.49, 10.43, h, h + 0.02, M.noirMat, { ombre: false });
+  // (13/10, lot C2 — photo 01 à sa pose refaite : la grille est au MILIEU, à cheval sur les deux vantaux, 0,72 de large de
+  // 1,85 à 2,31, un montant en son milieu ; la trappe, plus petite, 0,36 x 0,34, au bout nord, de 1,96 à 2,30 — toutes
+  // deux sous le plafond à 2,35)
+  ch.boite(C01.xE - 0.01, 9.44, C01.xE, 9.8, 1.96, 2.3, M.creme2, { ombre: false });
+  ch.boite(C01.xE - 0.01, 8.63, C01.xE, 9.35, 1.85, 2.31, M.grille, { ombre: false });
+  for (let h = 1.9; h < 2.27; h += 0.045) ch.boite(C01.xE - 0.02, 8.67, C01.xE - 0.01, 9.31, h, h + 0.02, M.noirMat, { ombre: false });
+  ch.boite(C01.xE - 0.022, 8.975, C01.xE - 0.01, 9.005, 1.87, 2.29, M.grille, { ombre: false });
   // ---- LE COULOIR C05 ET LE COULOIR C01 ----
   // LES DEUX PORTES DES TOILETTES DU C05 (photo 23, 09/10) : femmes à l'entrée, hommes aux deux tiers ; vantaux gris de
   // 0,85, huisserie blanche, gonds au sud, béquille au nord, la fente vitrée haute cerclée de bois foncé côté serrure
@@ -1046,23 +1079,27 @@ function construireMurs(ch) {
   // 34,5 cm du chant libre — 17 cm de verre.)
   const WC_C05 = [[C05.yF, 'toilettes femmes'], [C05.yH, 'toilettes hommes']];
   // (le mur est du C05 se prolonge jusqu'au mur sud de la salle David Clark : c'est le mur est de son entrée)
-  ch.mur({ de: [C05.xM, 7.8], a: [C05.xM, 14.15], mats: B, plinthes: ['W'], ouvertures: WC_C05.map(([c]) => ({ c, l: C05.lWC, h: 2.04 })) });
-  for (const [c, nom] of WC_C05) ch.porte('y', C05.xM, c, { l: C05.lWC, h: 2.04, modele: 'grise', etat: 'auto', cote: 'W', retrait: 0.05, libre: 1, oculus: { bas: 0.63, haut: 1.82, l: 0.17, bord: 0.22, cadre: 0.04 }, nom });
+  // (il part du dos du mur safran, y 7,95 : le mur jaune s'arrête à son nu, il n'y a plus de « pilier » — plus haut)
+  ch.mur({ de: [C05.xM, 7.95], a: [C05.xM, 14.15], mats: B, plinthes: ['W'], ouvertures: WC_C05.map(([c]) => ({ c, l: C05.lWC, h: 2.04 })) });
+  for (const [c, nom] of WC_C05) ch.porte('y', C05.xM, c, { l: C05.lWC, h: 2.04, modele: 'grise', etat: 'auto', cote: 'W', retrait: 0.05, libre: 1, poignee: 'rosace', oculus: { bas: 0.63, haut: 1.82, l: 0.17, bord: 0.22, cadre: 0.04 }, nom });
   // LE C01 (photo 01 recalée, V2 du 11/10) : de son entrée (y 7,8, au bout est du mur safran) à son fond (y 14,475), la
   // porte du local à 2,8 m, la porte PMR 1,37 m plus loin — du mur du bureau B au local : 5,8 m (la photo : 5,2-6,5).
   // (Relecture du 11/10 : la pose de la photo 01 refaite — les deux chants du local repointés, la gaine, les pieds des deux
   // murs du C01, large de 1,80 : 17 px d'écart au lieu de 30 — met l'appareil 0,12 m plus à l'est ; vus de là, le haut du
   // vantail PMR au bord droit tombe à 1,98 m, sa béquille à 1,09 et sa plaque fait 0,15 de haut, comme celles du C05 —
   // l'ancienne pose donnait 1,70, 1,05 et 0,10. Le vantail PMR commence en y 12,43 : la porte recule de 13,115 à 12,9)
-  ch.mur({ de: [11.625, 7.95], a: [11.625, 14.475], mats: B, plinthes: ['E'], ouvertures: [{ c: 10.6, l: 0.93, h: 2.04 }, { c: 12.9, l: 0.93, h: 2.04 }] });
+  // (13/10, lot C2 — photo 01 à sa pose refaite, C01 en tête du fichier : la porte du local est À L'ENTRÉE du couloir,
+  // son huisserie à 0,73 m du bout du mur ; un vantail de 0,83, de 8,58 à 9,41 ; la porte PMR de 10,80 à 11,73)
+  ch.mur({ de: [11.625, 7.95], a: [11.625, 14.475], mats: B, plinthes: ['E'], ouvertures: [{ c: C01.yL, l: C01.lL, h: 2.04 }, { c: C01.yP, l: C01.lP, h: 2.04 }] });
   // (les portes du C01 n'ont pas d'oculus, photo 01)
   // (le local : gonds au nord, poignée au sud, photo 01)
-  ch.porte('y', 11.625, 10.6, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'auto', cote: 'E', charniere: 'd', notices: 2, nom: 'local (C01)' });
+  // (ses deux affichettes l'une au-dessus de l'autre, au milieu du vantail : js/ecole_pieces.js ; la béquille sur rosace)
+  ch.porte('y', 11.625, C01.yL, { l: C01.lL, h: 2.04, modele: 'grise', oculus: false, etat: 'auto', cote: 'E', charniere: 'd', poignee: 'rosace', nom: 'local (C01)' });
   // (la porte des toilettes PMR : sa plaque montre un fauteuil roulant, photo 01 ; 09/10)
-  ch.porte('y', 11.625, 12.9, { l: 0.93, h: 2.04, modele: 'grise', oculus: false, etat: 'auto', cote: 'E', charniere: 'd', nom: 'toilettes PMR' });
+  ch.porte('y', 11.625, C01.yP, { l: C01.lP, h: 2.04, modele: 'grise', oculus: false, etat: 'auto', cote: 'E', charniere: 'd', poignee: 'rosace', nom: 'toilettes PMR' });
   // (le fond du C01 : sa porte grise, fermée, donne sur un local du fond que personne n'a vu)
-  ch.mur({ de: [11.55, 14.475], a: [13.65, 14.475], mats: B, plinthes: ['S'], ouvertures: [{ c: 12.6, l: 0.93, h: 2.04 }] });
-  ch.porte('x', 14.475, 12.6, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'S', nom: 'fond du C01' });
+  ch.mur({ de: [11.55, 14.475], a: [C01.xM + 0.075, 14.475], mats: B, plinthes: ['S'], ouvertures: [{ c: 12.5, l: 0.93, h: 2.04 }] });
+  ch.porte('x', 14.475, 12.5, { l: 0.93, h: 2.04, modele: 'grise', etat: 'fermee', cote: 'S', nom: 'fond du C01' });
   // ---- LE BUREAU DE DIRECTION B 0.3 (le « bureau B ») ET LE PASSAGE AU SUD-OUEST DE LA PILE ----
   // (11/10, plan V2 : le « cou » n'existe pas — la salle d'attente touche le bureau ; son trumeau blanc était le pilier gris)
   // L'ANTICHAMBRE (retour de Haythem du 11/10, r02 ; x 9,24-13,3 × y 3,175-4,875). Le mur sud de la salle d'attente
@@ -1236,7 +1273,8 @@ function construirePorteFond(ch) {
   // l'huisserie sur toute l'épaisseur du mur (elle déborde d'un centimètre), la traverse sous l'imposte, le linteau
   ch.boite(x0, y0 - 0.01, x0 + c, y1 + 0.01, 0, hT, M.alu); ch.boite(x1 - c, y0 - 0.01, x1, y1 + 0.01, 0, hT, M.alu);
   ch.boite(x0, y0 - 0.01, x1, y1 + 0.01, hv, hv + 0.05, M.alu); ch.boite(x0, y0 - 0.01, x1, y1 + 0.01, hT - c, hT, M.alu);
-  const imposte = M.depoliBleu.clone(); imposte.color.set(0x6b7d99); imposte.emissiveIntensity = 0.2;
+  // (13/10, lot C2 — photo 05 : l'imposte est un gris sombre, 68/69/70, plus sombre que le vitrage et sans bleu)
+  const imposte = new THREE.MeshStandardMaterial({ color: 0x5c646f, roughness: 0.45 }); imposte.name = 'imposte dépolie de la porte bleue';
   ch.boite(x0 + c, yL - 0.006, x1 - c, yL + 0.006, hv + 0.05, hT - c, imposte, { ombre: false });
   C.ajouterBoite(x0, -y1, x1, -y0, { y0: hv, y1: hT, vitre: true });
   ch.porte('x', yL, (x0 + x1) / 2, { l: x1 - x0 - 2 * c, h: hv, modele: 'bleue', etat: 'auto', cote: 'S', huisserie: false, libre: 1, nom: 'salle David Clark' });
@@ -1301,11 +1339,11 @@ export function construireCarte(scene, renderer = null) {
     // (13/10, lot C2 — le carrelage est en carreaux de 60 x 60, js/ecole_matieres.js ; le C05 et le C01 ont leur
     // calepinage, relevé sur les photos 23 et 01 redressées. C05 : les joints en long en x 4,56 / 5,16 / 5,76 — un filet
     // de 3 cm contre la cage, une coupe de 16 cm contre le mur est —, il se prolonge dans l'entrée de la salle David
-    // Clark ; il part du joint en travers du seuil, y 9,0. C01 : trois carreaux pleins d'un mur à l'autre, x 11,7 / 12,3 /
-    // 12,9 / 13,5 — le jeu y mettait trois joints, à 11,95 / 12,55 / 13,15.)
+    // Clark ; il part du joint en travers du seuil, y 9,0. C01 : la photo 01 n'y montre que DEUX joints en long, en x 12,18
+    // et 12,50 — une bande de 0,32 entre deux rangs plus larges —, et les joints en travers tous les 0,60 depuis y 9,88.)
     [1.6, Y_ESC, ESC.x1e, 14.15, 'ns', 1.75, 0], [ESC.x1e, Y_ESC, C05.xM, 14.15, 'ns', 4.558, 0],
     [5.3, 7.875, C05.xM, Y_ESC, 'ns', 1.75, 0], [C05.xM, 7.875, 11.7, 14.15, 'ns', 1.75, 0], [8.925, 14.15, 11.7, 14.55, 'ns', 1.75, 0],
-    [11.7, 7.875, 13.5, 14.55, 'ns', 11.7, 0],
+    [11.7, 7.875, 12.497, 14.55, 'ns', 12.179, 0.279], [12.497, 7.875, 13.5, 14.55, 'ns', 12.497, 0.279],
     [0.175, 14.15, 8.925, 21.075, 'ns', 1.75, 0],
   ];
   const sol = new THREE.Mesh(geoSol(RN), M.sol); sol.receiveShadow = true; sol.name = 'carrelage'; nePasFusionner(sol);
@@ -1348,7 +1386,8 @@ export function construireCarte(scene, renderer = null) {
   // (Relecture du 11/10 : le dôme est en (4,75 ; 7,75), contre la retombée du plafond de la salle d'attente, pas devant
   // les portes de l'escalier — photo 04 rejouée à sa pose, (6,53 ; 6,81) h 1,41 cap −49, à 5 px sur les deux vantaux ; le
   // diffuseur d'alarme y retombe à 4 cm de sa place ; la photo 20, prise devant les portes, ne le voit pas)
-  const dome = maille(new THREE.SphereGeometry(0.06, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.boitier, 4.75, 2.3, -7.75, 0, ch.decor, { ombre: false });
+  // (13/10, lot C2 : en (5,02 ; 7,58), contre la retombée, qui est en x 5,15 — photo 04 rejouée sur les portes de l'escalier)
+  const dome = maille(new THREE.SphereGeometry(0.06, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), M.boitier, 5.02, 2.3, -7.58, 0, ch.decor, { ombre: false });
   dome.userData.horsAOSol = true;
   // (13/10, lot C2 : plus de boîtier blanc en haut du jambage des portes de l'escalier, côté C05 — la photo 23, prise à
   // 1,7 m de lui, montre l'about du mur nu jusqu'au plafond, au-dessus du bras du ferme-porte ; le diffuseur est sur la
@@ -1388,8 +1427,12 @@ export function construireCarte(scene, renderer = null) {
   // de l'image, qui tombe en (5,18 ; 7,76) et (5,02 ; 7,83) — au jeu, un pan du plafond de dalles, à 2,60, entrait dans
   // le coin de l'image ; la photo 05 rejouée met l'arête est-ouest de la retombée vers y 7,9, au bout du pilier jaune :
   // elle est dans le plan de la face sud du mur safran, y 7,80, et non en 8,05. Jusqu'au nu est du couloir, 5,92.)
-  ch.plafond(4.85, 7.8, 5.8, 8.925, C05.hBas, 'platre');
-  ch.plafond(5.8, 7.95, C05.xE, 8.925, C05.hBas, 'platre', { retombees: false });
+  ch.plafond(4.85, 7.8, C05.xE, 8.925, C05.hBas, 'platre');
+  // (et SA RETOMBÉE NORD-SUD, devant la salle d'attente : les photos 05 et 04, rejouées chacune à sa pose, mettent toutes
+  // deux son arête en x 5,15 — de y 7,03 à l'angle, où elle tourne vers le mur jaune —, et le dôme de la caméra en
+  // (5,02 ; 7,58), contre elle ; le jeu l'arrêtait en x 4,85. Une bande de plafond bas de 30 cm de plus, du mur des jours
+  // à l'angle ; le plafond de dalles de la salle, à 2,60, passe au-dessus.)
+  ch.plafond(4.85, ATT.ys + EP / 2, 5.15, 7.8, C05.hBas, 'platre');
   // (r03, 12/10 : le mur sud de la salle recule de 0,20 — DY_R03 — ; la bande qu'il libère, x 4,5-4,85 × y 4,675-4,875,
   // prend le plafond bas du hall et sa retombée en x 4,85 continue jusqu'au mur ; les dalles de la salle partent du mur)
   ch.plafond(4.5, ATT.ys + EP / 2, 4.85, 4.875, 2.3, 'platre');
@@ -1459,7 +1502,9 @@ export function construireCarte(scene, renderer = null) {
   enLames(chaudPlafond(ch.plafond(5.9, Y_LONG, 13.5, ATT.yn - 0.075, 2.6, 'plateaux', { retombees: false })), ATT.yn - 0.075 - Y_LONG);
   chaudPlafond(ch.plafond(5.9, ATT.ys, 13.5, ATT.ys + 0.675, 2.58, 'dalles'));
   ch.plafond(5.3, ATT.ys, 5.9, ATT.yn - 0.075, 2.6, 'dalles', { retombees: false });
-  ch.plafond(11.7, 7.8, 13.5, 14.4, 2.45, 'platre');                 // C01 (V2 : de l'entrée, y 7,8, au fond)
+  // (13/10, lot C2 — photo 01 à sa pose refaite : 2,35 et non 2,45 — la grille et la trappe du mur est s'arrêtent à 2,31
+  // juste dessous, et son arête, vue du fond du couloir, tombe au droit du mur safran ; jusqu'au nu est, x 13,30)
+  ch.plafond(C01.xO, 7.8, C01.xE, 14.4, C01.hP, 'platre');           // C01 (V2 : de l'entrée, y 7,8, au fond)
   // le hall d'entrée (retour r04 du 12/10 : des plateaux perforés de 0,6 x 1,2, leurs joints nord-sud serrés — r04 au-dessus
   // de l'accueil ; photo 03 au-dessus de l'entrée —, et non du plâtre lisse ; la retombée est-ouest : js/ecole_hall.js).
   // Plus clairs que ceux des salles : sur r04, près des fenêtres, le plafond est la surface la plus blanche (174 sur 255,
@@ -1505,7 +1550,9 @@ export function construireCarte(scene, renderer = null) {
   // (13/10, lot C2 — photo 23 à sa pose refaite : le premier en (5,34 ; 8,95), à l'aplomb du mur des portes de l'escalier,
   // sous le plafond bas ; le second en (5,33 ; 11,44), sous le plafond haut, devant la porte des hommes — et non en y 9,4
   // et 11,0. Leur verre fait 26 à 28 cm, cerclé de métal satiné : Ø 36, ils paraissaient d'un quart trop gros.)
-  ch.opale(5.34, 8.95, C05.hBas, 'c05', { r: 0.14 }); ch.opale(5.33, 11.44, C05.hHaut, 'c05', { r: 0.14 });
+  // (leur lumière : chaude — sur la photo 23, les murs blancs sortent crème, le bleu à 70 % du rouge ; au jeu, 87 %)
+  const chaudC05 = new THREE.Color(0xffd6a6);
+  ch.opale(5.34, 8.95, C05.hBas, 'c05', { r: 0.14, couleur: chaudC05 }); ch.opale(5.33, 11.44, C05.hHaut, 'c05', { r: 0.14, couleur: chaudC05 });
   // (la salle d'attente : DY_A ; les deux spots du « cou » disparaissent avec lui, celui du passage de la pile est posé
   // avec elle, js/ecole_rdc_centre.js)
   // (Retour de Haythem du 11/10, r02 — « l'éclairage : plus chaud sur la photo » ; les spots relevés sur les photos 21 et
@@ -1529,7 +1576,8 @@ export function construireCarte(scene, renderer = null) {
   for (const [x, y, h] of [[5.5, yS, 2.6], [7.15, yS, 2.58], [8.8, yS, 2.58], [9.95, 4.8, 2.58], [5.35, 6.8, 2.6], [8.7, 6.8, 2.6], [12.05, 6.8, 2.6]]) ch.spot(x, y, h, 'attente', { couleur: chaudAtt });
   // (V2, 11/10 : la photo 01 recalée met le hublot qu'elle voit en (12,3 ; 10,7), au-dessus du local et de la gaine, un peu
   // à l'ouest de l'axe ; l'autre est derrière l'appareil, vers le fond)
-  for (const [x, y] of [[12.3, 10.7], [12.3, 13.4]]) ch.opale(x, y, 2.45, 'c01');
+  // (13/10, lot C2 — la pose refaite : en (12,37 ; 9,21), devant le local et la gaine ; le même verre de 28 cm, chaud)
+  for (const [x, y] of [[12.37, 9.21], [12.37, 11.9]]) ch.opale(x, y, C01.hP, 'c01', { r: 0.14, couleur: chaudC05 });
   // (10/10, VO 92,6-94,8 s : les spots ronds du hall relevés depuis la porte nord — une rangée vers y 4,3 au bout des
   // lignes lumineuses, une vers y 3,2 au-dessus du comptoir ; au-dessus de l'open-space et dans l'angle nord-est, rouvert,
   // posés au même pas. Les huit lignes : js/ecole_hall.js)
@@ -1640,7 +1688,7 @@ export function construireCarte(scene, renderer = null) {
     // safran, jusqu'à x 6,05)
     // (r03, 12/10 : jusqu'au mur sud de la salle, qui recule de 0,20 — DY_R03)
     { id: 'hallO', rects: [zr(1.6, 4.05, 4.5, 4.875), zr(1.6, ATT.ys + EP / 2, 5.8, 7.8), zr(1.6, 7.8, C05.xM, 9.0)], voisines: ['passage', 'attente', 'c05', 'escalier'], env: { x: 3.6, y: 1.6, z: -6.4 } },
-    { id: 'c01', rects: [zr(11.6, 7.875, 13.6, 14.475)], voisines: ['attente'], env: { x: 12.6, y: 1.5, z: -11.1 } },
+    { id: 'c01', rects: [zr(11.6, 7.875, C01.xM, 14.475)], voisines: ['attente'], env: { x: 12.5, y: 1.5, z: -10.4 } },
     // (11/10, plan V2 : la salle d'attente (DY_A) et le passage au sud-ouest de la pile, au droit des deux redents du
     // bureau B, jusqu'à la face ouest de la pile — plus de « cou » ; le hall perd la pile, js/ecole_rdc_centre.js)
     // (retour r02 du 11/10 : et l'antichambre, de l'axe du retour x 9,165 à la pile, jusqu'à l'axe du mur nord du bureau)

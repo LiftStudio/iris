@@ -83,7 +83,12 @@ const SV = { x0: 0, x1: 1.6, y0: 0, y1: 4.925 };
 // 1,25 m, et la salle David Clark rentre dans le bâtiment)
 const DY_S = -4.675;
 const Y_ESC = 13.675 + DY_S;                                 // 9,0 : le mur des portes de l'escalier
-const LT = { x0: 9.0, x1: 11.55, y0: 7.95, y1: 11.95 };      // le local technique (porte du C01, y 10,6)
+// (13/10, lot C2 — le C01 refait sur la photo 01, js/carte_ecole.js `C01` : la porte du local est à l'entrée du couloir,
+// y 8,58-9,41, celle des toilettes PMR en 10,80-11,73 — 1,65 m plus près de la salle d'attente ; la cloison entre les
+// deux pièces passe de la ligne 12,025 à la ligne 10,6 : le local n'a plus que 2,58 m de profondeur, les toilettes PMR
+// 2,23 ; derrière elles, jusqu'au fond du C01, un vide fermé)
+const C01 = { yL: 8.995, lL: 0.83, yP: 11.265, lP: 0.93 };
+const LT = { x0: 9.0, x1: 11.55, y0: 7.95, y1: 10.525 };     // le local technique (porte du C01, y 8,995)
 // (13/10, lot C2 — le C05 refait sur la photo 23, js/carte_ecole.js `C05` : son mur est sur la ligne 5,995 (nu du couloir
 // 5,92, nu des toilettes 6,07), son mur du fond en 12,71-12,86 ; les deux portes des toilettes ont des vantaux de 0,93,
 // celui des femmes centré en 8,48, celui des hommes en 10,983 — la cloison entre les deux pièces recule de 17,5 cm, ligne
@@ -91,7 +96,7 @@ const LT = { x0: 9.0, x1: 11.55, y0: 7.95, y1: 11.95 };      // le local techniq
 const C05 = { xO: 4.53, xE: 5.92, xM: 5.995, yFond: 12.71, lWC: 0.93, yF: 8.48, yH: 10.983 };
 const WF = { x0: 6.07, x1: 8.85, y0: 7.95, y1: 10.275 };     // les toilettes femmes (porte du C05, y 8,48)
 const WH = { x0: 6.07, x1: 8.85, y0: 10.425, y1: 13.925 };   // les toilettes hommes (porte du C05, y 10,983)
-const PM = { x0: 9.0, x1: 11.55, y0: 12.1, y1: 14.4 };       // les toilettes PMR (porte du C01, y 12,9)
+const PM = { x0: 9.0, x1: 11.55, y0: 10.675, y1: 12.9 };     // les toilettes PMR (porte du C01, y 11,265)
 const DC = { x0: 0.475, x1: 8.85, y0: 14.15, y1: 20.925 };   // la salle David Clark, Si 0.2 (59 m² avec son entrée)
 const DCE = { x0: 4.75, x1: C05.xE, y0: C05.yFond + 0.15, y1: 14.15 };   // son entrée, derrière la porte bleue du C05
 const CO = { x0: -4.1, x1: 0.175, y0: 12.75, y1: 16.8 };     // la courette ouest, entre les deux ailes (dehors)
@@ -111,14 +116,14 @@ const ZONES = [
   // js/ecole_rdc_centre.js)
   { ...zone('bureauB', BB, { x: 11.0, y: 1.6, z: -1.6 }), rects: [[9.975, -2.925, 12.5, -BB.y0, -1], [12.5, -2.5, 13.275, -BB.y0, -1]] },
   { ...zone('service', SV, { x: 0.8, y: 1.5, z: -2.6 }), rects: [[0, -4.95, 1.675, 0, -1]] },
-  zone('local', LT, { x: 10.3, y: 1.7, z: -9.9 }),
+  zone('local', LT, { x: 10.3, y: 1.7, z: -9.05 }),
   // (relecture du 09/10 : les deux toilettes du C05 prennent leur vue HAUT, à 2,20 m, et loin des portes safran des
   // cabines — à 50 cm d'elles, à hauteur d'homme, la carte n'était qu'un mur safran : faïence, peinture, embrasure et
   // jusqu'au mur du C05 vu par la porte sortaient orangés. Femmes : côté porte ; hommes : devant les urinoirs)
   // (V2, 11/10 : la zone prend aussi l'embrasure de la porte, x 6,05-6,125 — elle n'était à personne)
   { ...zone('wcF', WF, { x: 6.5, y: 2.2, z: -8.6 }), rects: [[C05.xM, -WF.y1, WF.x1, -WF.y0, -1]] },
   { ...zone('wcH', WH, { x: 7.0, y: 2.2, z: -13.1 }), rects: [[C05.xM, -WH.y1, WH.x1, -WH.y0, -1]] },
-  zone('pmr', PM, { x: 10.3, y: 1.5, z: -13.2 }),
+  zone('pmr', PM, { x: 10.3, y: 1.5, z: -11.8 }),
   // (V2, 11/10 : la salle David Clark et son entrée, ouvertes sur le C05 par la porte bleue — `dc`, plan_v2.md § 2.2)
   { id: 'dc', rects: [[DC.x0 - 0.075, -21.0, 8.925, -14.075, -1], [C05.xO, -14.075, C05.xM, -(C05.yFond + 0.075), -1]], voisines: ['c05'], env: { x: 4.7, y: 1.7, z: -17.6 } },
 ];
@@ -1253,12 +1258,15 @@ function couloirService(ch, P) {
 // y 21,0 ; derrière elle, au nord du C01, le local du fond, fermé — plan_v2.md § 2.2).
 function cloisonsBande(ch) {
   const B0 = ch.M.blanc;
-  ch.mur({ de: [8.925, 7.875], a: [8.925, 12.025], mats: B0, plinthes: ['E'] });
-  ch.mur({ de: [8.925, 12.025], a: [8.925, 14.075], mats: B0 });
+  // (13/10, lot C2 : la cloison local / PMR sur la ligne 10,6 ; le fond des toilettes PMR sur la ligne 12,975)
+  const yLP = (LT.y1 + PM.y0) / 2;
+  ch.mur({ de: [8.925, 7.875], a: [8.925, yLP], mats: B0, plinthes: ['E'] });
+  ch.mur({ de: [8.925, yLP], a: [8.925, 14.075], mats: B0 });
   ch.mur({ de: [8.925, 14.075], a: [8.925, 21.075], mats: B0, plinthes: ['W'] });
   ch.mur({ de: [C05.xM, (WF.y1 + WH.y0) / 2], a: [8.925, (WF.y1 + WH.y0) / 2], mats: B0 });   // femmes / hommes (13/10 : ligne 10,35)
-  ch.mur({ de: [8.925, 12.025], a: [11.625, 12.025], mats: B0, plinthes: ['S'] });      // local / PMR
-  ch.mur({ de: [8.925, 14.475], a: [11.55, 14.475], mats: B0 });                        // le fond des toilettes PMR
+  ch.mur({ de: [8.925, yLP], a: [11.625, yLP], mats: B0, plinthes: ['S'] });            // local / PMR
+  ch.mur({ de: [8.925, PM.y1 + 0.075], a: [11.55, PM.y1 + 0.075], mats: B0 });          // le fond des toilettes PMR
+  ch.mur({ de: [8.925, 14.475], a: [11.55, 14.475], mats: B0 });                        // (et celui du vide fermé, derrière elles)
 }
 
 // =====================================================================
@@ -1271,7 +1279,7 @@ function localTechnique(ch, P) {
   // le plafond (la dalle brute) ; les plinthes qui manquent (le dos du mur safran, le mur du C01)
   ch.plafond(LT.x0, LT.y0, LT.x1, LT.y1, H_DALLE, 'platre');
   plinthe(ch, 'x', LT.y0, LT.x0, LT.x1, 1);
-  for (const [a0, a1] of [[LT.y0, 10.09], [11.11, LT.y1]]) plinthe(ch, 'y', LT.x1, a0, a1, -1);
+  for (const [a0, a1] of [[LT.y0, C01.yL - C01.lL / 2 - 0.045], [C01.yL + C01.lL / 2 + 0.045, LT.y1]]) plinthe(ch, 'y', LT.x1, a0, a1, -1);
   // ---- les deux baies serveurs (42 U) au mur nord, leurs diodes qui clignotent ----
   const face = new THREE.MeshStandardMaterial({ map: texBaie(), roughness: 0.6 });
   const diodes = texDiodes(); diodes.repeat.set(1, 0.5);
@@ -1297,13 +1305,14 @@ function localTechnique(ch, P) {
   ch.boite(10.55, LT.y1 - 0.7, 11.0, LT.y1 - 0.01, 0, 0.92, P.plastique, { collision: true });
   ch.boite(10.6, LT.y1 - 0.71, 10.95, LT.y1 - 0.7, 0.75, 0.85, P.plastiqueGris, { ombre: false });
   maille(new THREE.CircleGeometry(0.008, 8), P.led, 10.9, 0.8, -(LT.y1 - 0.712), 0, ch.decor, { ombre: false });
-  const te = groupe(ch, LT.x1, 11.53, 'W', 0.35);
+  const te = groupe(ch, LT.x1, LT.y1 - 0.47, 'W', 0.35);
   B(te, P.grisClair, 0.8, 1.7, 0.25, 0, 0.85, 0.125);
   plan(te, new THREE.MeshStandardMaterial({ map: texTableauElec(), roughness: 0.55 }), 0.76, 1.66, 0, 0.85, 0.2505);
   B(te, P.plastiqueGris, 0.03, 0.12, 0.03, 0.32, 0.85, 0.265, { ombre: false });
-  C.ajouterBoite(LT.x1 - 0.28, -11.13, LT.x1, -11.93, { y0: 0.35, y1: 2.05 });
+  C.ajouterBoite(LT.x1 - 0.28, -(LT.y1 - 0.87), LT.x1, -(LT.y1 - 0.07), { y0: 0.35, y1: 2.05 });
   // l'étagère métallique du mur ouest : cartons d'archives, ramettes, vieux écrans, rouleaux de câble
-  for (const [yc, gn] of [[9.2, 1]]) {
+  // (13/10, lot C2 : le local n'a plus que 2,58 m de profondeur — plus d'étagère au mur ouest, elle entrait dans les baies)
+  for (const [yc, gn] of []) {
     const g = groupe(ch, LT.x0 + 0.25, yc, 'E');
     const r = graine(gn * 19);
     for (const sx of [-0.73, 0.73]) for (const sz of [-0.22, 0.22]) B(g, P.metal, 0.03, 2.0, 0.03, sx, 1.0, sz);
@@ -1320,7 +1329,7 @@ function localTechnique(ch, P) {
     C.ajouterBoite(LT.x0, -(yc - 0.76), LT.x0 + 0.5, -(yc + 0.76), { y1: 2.0 });
   }
   // le climatiseur (unité murale) au-dessus de l'étagère
-  const cl = groupe(ch, LT.x0, 9.2, 'E', 2.55);
+  const cl = groupe(ch, LT.x0, 9.0, 'E', 2.55);
   R(cl, P.blancMat, 0.9, 0.3, 0.22, 0.04, 0, 0.15, 0.11);
   B(cl, P.plastiqueGris, 0.8, 0.012, 0.06, 0, 0.02, 0.19, { ombre: false });
   maille(new THREE.CircleGeometry(0.006, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.4, 1.8, 2.4) }), 0.33, 0.2, 0.221, 0, cl, { ombre: false });
@@ -1359,7 +1368,7 @@ function localTechnique(ch, P) {
     CY(ch.decor, m, 0.009, 0.86, x + dx, 2.43, -(yB + dy), 6, { ombre: false });
   }
   // deux réglettes LED suspendues, dans la longueur du local : des LAMPES (type tube)
-  for (const y of [8.95, 10.85]) {
+  for (const y of [8.6, 9.85]) {
     const g = groupe(ch, 10.25, y, 'S', 2.92);
     B(g, P.blancMat, 0.08, 0.06, 1.25, 0, 0, 0);
     maille(boiteM(0.06, 0.005, 1.2), P.led, 0, -0.032, 0, 0, g, { ombre: false, recoit: false });
@@ -1368,12 +1377,23 @@ function localTechnique(ch, P) {
     ch.lampes.push({ x: 10.25, z: -y, h: 2.9, zone: 'local', type: 'tube', force: 1.0, cuireForce: 1.05 });
   }
   // l'extincteur CO2 près de la porte (au sud : au nord, le tableau électrique)
-  const ex = groupe(ch, LT.x1 - 0.1, 9.7, 'W');
+  const ex = groupe(ch, LT.x1 - 0.1, 8.32, 'W');
   CY(ex, P.rouge, 0.07, 0.55, 0, 1.2, 0, 16); CY(ex, P.noirMat, 0.035, 0.1, 0, 1.52, 0, 10);
   const cor = CY(ex, P.noirMat, 0.03, 0.18, 0.08, 1.35, 0.0, 10); cor.rotation.z = 0.5;
-  C.ajouterCercle(LT.x1 - 0.1, -9.7, 0.09, { y0: 0.9, y1: 1.6 });
+  C.ajouterCercle(LT.x1 - 0.1, -8.32, 0.09, { y0: 0.9, y1: 1.6 });
   // la plaque « Local technique » côté C01, contre l'huisserie sud de la porte (photo 01 : la petite plaque noire)
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaque('Local technique', 'eclair'), roughness: 0.4 }), 11.7, 9.8, 'E', 0.17, 0.17, 1.6, { ep: 0.006 });
+  // (13/10, lot C2 — photo 01 à sa pose refaite : sur le bout de mur entre l'angle de l'entrée et l'huisserie, à 0,2 m
+  // de l'angle, de 1,55 à 1,77 m ; elle était au sud de la porte, mais 1,65 m plus loin dans le couloir)
+  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaque('Local technique', 'eclair'), roughness: 0.4 }), 11.7, 8.02, 'E', 0.18, 0.19, 1.66, { ep: 0.006 });
+  // LES DEUX AFFICHETTES du vantail (photo 01) : l'une au-dessus de l'autre, au milieu — une étiquette sombre, bleu nuit,
+  // de 1,61 à 1,81 m, une feuille blanche dessous, de 1,34 à 1,59 ; elles partent avec le vantail
+  {
+    const porte = ch.portes.auto.find((q) => Math.abs(q.cx - 11.625) < 0.01 && Math.abs(q.cz + C01.yL) < 0.01), v = porte && porte.vantaux[0];
+    if (v) {
+      const feuilles = [[new THREE.MeshStandardMaterial({ map: texAffiche('#f4f4f0', '#1f2a4a', 31), roughness: 0.6 }), 0.105, 0.2, 1.71], [new THREE.MeshStandardMaterial({ map: texConsignes(), roughness: 0.75 }), 0.17, 0.25, 1.465]];
+      for (const [mat, w, h, hc] of feuilles) { const a = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); a.position.set(v.s * C01.lL / 2, hc, 0.0235); a.castShadow = false; v.g.add(a); }
+    }
+  }
 }
 
 // =====================================================================
@@ -1561,12 +1581,13 @@ function urinoir(ch, P, x, y) {
 // 13,25), la pièce n'a plus que 2,3 m de profondeur). (Relecture du 11/10 : la porte recule à 12,9, photo 01 recalée —
 // js/carte_ecole.js ; la poubelle passe sous le sèche-mains, hors du balayage du vantail)
 function toilettesPMR(ch, P) {
-  const { C } = ch, yP = 12.9;
+  // (13/10, lot C2 — photo 01 à sa pose refaite : la porte en y 10,80-11,73, la pièce de 10,675 à 12,9)
+  const { C } = ch, yP = C01.yP;
   ch.plafond(PM.x0, PM.y0, PM.x1, PM.y1, 2.5, 'platre');
   faience(ch, P, PM, [['E', yP - 0.51, yP + 0.51]]);
   solGres(ch, PM);
   ch.boite(11.5, yP - 0.47, 11.7, yP + 0.47, 0, 0.005, P.inox, { ombre: false });
-  for (const [x, y] of [[10.3, 12.75], [9.95, 13.75]]) ch.spot(x, y, 2.5, 'pmr');
+  for (const [x, y] of [[10.3, PM.y0 + 0.65], [9.95, PM.y1 - 0.65]]) ch.spot(x, y, 2.5, 'pmr');
   wcSuspendu(ch, P, 9.48, PM.y1 - 0.012, 'S');
   C.ajouterCercle(9.48, -(PM.y1 - 0.3), 0.24, { y1: 0.5 });
   const ba = groupe(ch, PM.x0 + 0.012, PM.y1 - 0.6, 'E', 0.8);
@@ -1588,11 +1609,13 @@ function toilettesPMR(ch, P) {
   miroir(ch, P, PM.x0 + 0.012, yL, 1.4, 0.5, 0.7, 'E', PM);
   const sav = groupe(ch, PM.x0 + 0.012, yL + 0.41, 'E', 1.05); R(sav, P.blancMat, 0.1, 0.18, 0.09, 0.02, 0, 0.09, 0.045);
   secheMains(ch, P, 10.5, PM.y0 + 0.012, 'N');
-  poubelleWC(ch, P, 10.5, 12.3);
+  poubelleWC(ch, P, 10.5, PM.y0 + 0.2);
   // la plaque côté C01, au sud de la porte, contre son huisserie (photo 01 : le fauteuil roulant et « Toilettes »). Relecture
   // du 11/10, à la pose refaite : y 12,21-12,39, de 1,51 à 1,66 m — la plaque des toilettes du C05, 0,12 x 0,16 ; elle
   // faisait 0,15 x 0,20 et paraissait, au même point de vue, deux fois plus haute que sur la photo
-  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaqueWC('pmr'), roughness: 0.4 }), 11.7, 12.3, 'E', 0.12, 0.16, 1.59, { ep: 0.005 });
+  // (13/10, lot C2 — la pose refaite, f 650 : y 10,56-10,74, de 1,515 à 1,68 m — la même plaque de 18 x 19 que celles
+  // du C05, son bord à 6 cm du vantail)
+  cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPlaqueWC('pmr'), roughness: 0.4 }), 11.7, yP - C01.lP / 2 - 0.15, 'E', 0.18, 0.19, 1.6, { ep: 0.005 });
 }
 // UN MIROIR contre un mur, regardant vers `face` : cadre d'aluminium, glace de w x h centrée à la hauteur `h0`.
 //   - le VRAI miroir (`reel`, sur PC) : un miroir planaire (Reflector de three, comme le reflet du sol mouillé de

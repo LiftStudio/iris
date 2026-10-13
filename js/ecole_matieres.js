@@ -475,16 +475,29 @@ export function geoReflet(l, h, decalage) {
 // =====================================================================
 //  LES PANNEAUX DESSINÉS (signalétique, affiches) : des cartes à poser telles quelles
 // =====================================================================
-// LE PANNEAU DAE (photos 04, 05) : vert #1E7B4E, cœur et éclair blancs, « DAE »
+// LE VERRE DÉPOLI DE LA PORTE BLEUE (photo 05) : un dégradé de haut en bas, sur la hauteur du vitrage (1,89 m ; les UV de
+// la boîte partent de son milieu : d'où le décalage d'une demi-tuile)
+function texDepoliBleu() {
+  const t = canvasTex(4, 128, (g, w, h) => {
+    const d = g.createLinearGradient(0, 0, 0, h);
+    d.addColorStop(0, '#8ca4bd'); d.addColorStop(0.25, '#6e8aac'); d.addColorStop(0.55, '#5575a0'); d.addColorStop(1, '#4c6077');
+    g.fillStyle = d; g.fillRect(0, 0, w, h);
+  }, [1, 1 / 1.89], false, 1);
+  t.offset.set(0, 0.5);
+  return t;
+}
+// LE PANNEAU DAE (photos 04, 05) : vert sombre #215A41, cœur et éclair blancs, « DAE »
+// (13/10, lot C2 — photos 04 et 05 : un vert SOMBRE, 56/65/46 sous la lumière chaude, pas le vert vif des blocs de
+// sortie ; à #1E7B4E, il sortait à 61/106/72)
 export function texDAE() {
   return canvasTex(256, 64, (g, w, h) => {
-    g.fillStyle = '#1e7b4e'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#215a41'; g.fillRect(0, 0, w, h);
     g.strokeStyle = '#ffffff'; g.lineWidth = 3; g.strokeRect(3, 3, w - 6, h - 6);
     g.fillStyle = '#ffffff'; g.beginPath();
     const cx = 36, cy = 34;
     g.moveTo(cx, cy - 8); g.bezierCurveTo(cx, cy - 20, cx - 22, cy - 20, cx - 22, cy - 4); g.bezierCurveTo(cx - 22, cy + 8, cx, cy + 18, cx, cy + 24);
     g.bezierCurveTo(cx, cy + 18, cx + 22, cy + 8, cx + 22, cy - 4); g.bezierCurveTo(cx + 22, cy - 20, cx, cy - 20, cx, cy - 8); g.fill();
-    g.fillStyle = '#1e7b4e'; g.beginPath(); g.moveTo(cx + 3, cy - 14); g.lineTo(cx - 7, cy + 2); g.lineTo(cx + 1, cy + 2); g.lineTo(cx - 4, cy + 16); g.lineTo(cx + 9, cy - 3); g.lineTo(cx + 1, cy - 3); g.closePath(); g.fill();
+    g.fillStyle = '#215a41'; g.beginPath(); g.moveTo(cx + 3, cy - 14); g.lineTo(cx - 7, cy + 2); g.lineTo(cx + 1, cy + 2); g.lineTo(cx - 4, cy + 16); g.lineTo(cx + 9, cy - 3); g.lineTo(cx + 1, cy - 3); g.closePath(); g.fill();
     g.fillStyle = '#ffffff'; g.fillRect(58, 10, 3, 12); g.fillRect(54, 14, 11, 3);
     g.font = '700 38px "Segoe UI", Arial, sans-serif'; g.textBaseline = 'middle'; g.fillText('DAE', 76, 35);
   }, null, false, 4);
@@ -661,7 +674,9 @@ export function materiauxEcole() {
   M.porte = std({ color: 0xa9a8a6, roughness: 0.45 }); M.porte.name = 'vantail gris stratifié';
   M.porteGaine = std({ color: 0x9d9c9a, roughness: 0.5 });     // (photo 01 : gris moyen, pas grège ; 09/10)
   M.huisserie = std({ color: 0xe3ded2, roughness: 0.5, metalness: 0.1 });
-  M.noyer = std({ color: 0x4a2e1c, roughness: 0.5 });
+  // (13/10, lot C2 — le cadre de bois des fentes vitrées, photo 23 de près : un bois ROUX moyen, 1,25 fois le rouge du
+  // vantail gris sur sa face éclairée ; #4A2E1C le rendait presque noir, 0,46 fois)
+  M.noyer = std({ color: 0x7c4a2a, roughness: 0.5 });
   M.inox = std({ color: 0xb9bcbe, roughness: 0.28, metalness: 0.9 });
   M.ferme = std({ color: 0x9ea2a5, roughness: 0.4, metalness: 0.6 });
   M.alu = std({ color: 0xf0f0ee, roughness: 0.38, metalness: 0.2 }); M.alu.name = 'aluminium laqué blanc';
@@ -686,7 +701,10 @@ export function materiauxEcole() {
   // la porte de secours du fond (photo 05) : verre dépoli bleu, éclairé par le jour derrière (relecture du 09/10 : un
   // gris-bleu éteint — mesuré sur la photo, rapporté au mur blanc voisin, R 0,40 V 0,50 B 0,70 ; il sortait d'un bleu
   // franc, 0,40 / 0,57 / 0,83 : #4F6D96 -> #546479)
-  M.depoliBleu = std({ color: 0x546479, roughness: 0.5, emissive: 0x848ea0, emissiveIntensity: 0.13 });
+  // (13/10, lot C2 — photo 05, la porte fermée vue du hall : le verre dépoli n'est pas un bleu franc et lumineux, c'est
+  // un gris-bleu SOMBRE — la pièce derrière lui est sombre —, plus clair en haut, 104/113/119, qu'au milieu, 63/81/101,
+  // et en bas, 56/66/75 ; l'imposte, plus sombre encore et sans bleu : js/carte_ecole.js construirePorteFond)
+  M.depoliBleu = std({ map: texDepoliBleu(), roughness: 0.45 });
   // les vitres de la façade vues de l'intérieur : le jour couvert derrière, un voile clair
   M.vitreJour = std({ color: 0xdeeaf6, roughness: 0.1, transparent: true, opacity: 0.22, depthWrite: false, envMapIntensity: 1.2, side: THREE.DoubleSide });
   // la fente vitrée des portes grises : un verre sombre (on ne voit qu'un reflet)
