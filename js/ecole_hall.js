@@ -19,7 +19,7 @@
 //
 // LE PLAN (repère de js/carte_ecole.js : x le long de la façade, y vers le fond ; dans le jeu X = x, Z = -y) :
 //   le comptoir haut        x 16,83-17,53 y 1,1-3,6    NORD-SUD, face à l'ouest : stratifié gris clair, rainure à 0,745,
-//                                                     socle de chêne clair en retrait, tablette grise en saillie à 1,15
+//                                                     socle de chêne clair en retrait, tablette grise en saillie à 1,18
 //   le décroché PMR         x 16,88-17,6  y 3,6-4,58   son caisson bas en retrait (x 17,08), sa tablette à 0,76 et son
 //                                                     pied gris ; la bouilloire, les bacs à courrier noirs, les papiers
 //   le caisson haut         x 17,0-17,85  y 4,39-4,58  posé sur le bout du décroché, sa tablette haute (1,15) qui déborde
@@ -56,7 +56,9 @@ import { TELEPHONE } from './appareil.js';
 
 // ---- les cotes (plan) ----
 const H_PLAF = 2.6;                                 // le plafond du hall
-const CPT = { x0: 16.83, x1: 17.53, y0: 1.1, y1: 3.6, h: 1.15, rainure: 0.745, socle: 0.115 }; // le comptoir haut (r04)
+// (13/10, r04 rejouée, profils verticaux en x 380 et 560 : la tablette est ÉPAISSE — son chant fait 12 px à 3,05 m, 5,7 cm,
+// de 1,125 à 1,18 —, l'écran « DELL » dépasse de 1,19 à 1,25 ; le jeu la faisait de 3,5 cm, son dessus à 1,15)
+const CPT = { x0: 16.83, x1: 17.53, y0: 1.1, y1: 3.6, h: 1.18, ep: 0.055, rainure: 0.745, socle: 0.115 }; // le comptoir haut (r04)
 const PMR = { xF: 17.08, x0: 16.88, y0: 3.6, y1: 4.58, h: 0.76 };                 // le décroché PMR
 const RET = { x0: 17.0, x1: 17.85, y0: 4.39, y1: 4.58, h: 1.15 };                 // le caisson haut du décroché
 const X_PERS = 18.05;                               // le dos du plan de travail du personnel
@@ -231,8 +233,8 @@ function texEcranTV() {
   return canvasTex(256, 144, (g, w, h) => {
     g.fillStyle = '#16181d'; g.fillRect(0, 0, w, h);
     g.fillStyle = 'rgba(120,124,132,0.22)'; for (const y of [10, 24, 36]) g.fillRect(0, y, w, 4);
-    const x0 = w * 0.17, y0 = h * 0.21, x1 = w * 0.85, y1 = h * 0.93;
-    const f = g.createLinearGradient(x0, y0, x1, y1); f.addColorStop(0, '#e6e8fb'); f.addColorStop(1, '#c9d0f3');
+    const x0 = w * 0.1, y0 = h * 0.22, x1 = w * 0.78, y1 = h * 0.85;
+    const f = g.createLinearGradient(x0, y0, x1, y1); f.addColorStop(0, '#c4cdf6'); f.addColorStop(1, '#a9b5ee');
     g.fillStyle = f; g.fillRect(x0, y0, x1 - x0, y1 - y0);
     g.fillStyle = '#20243c'; g.font = `500 13px ${POLICE}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
     ['Commander votre', 'sweat à l\'accueil', 'pour 25€'].forEach((t, i) => g.fillText(t, (x0 + x1) / 2 - 12, y0 + 34 + i * 16));
@@ -249,8 +251,12 @@ function texEcranTV() {
 // (13/10, r04 agrandie cinq fois : le premier est un sweat BLANC, son grand pavé noir « iris » au i jaune en haut et
 // deux lignes de texte sombre ; le second, un sweat à capuche gris clair plié, la capuche en haut, une impression en
 // facettes bleues, violettes et cyan, et des lettres roses dessous)
+// (le devant du pli fait 0,34 x 0,17 m : un dessin de 2 sur 1, tracé dans l'ancien repère de 128 x 96 puis écrasé, sauf
+// le pavé, à ses vraies proportions)
 function texSweat(imprime) {
-  return canvasTex(128, 96, (g, w, h) => {
+  return canvasTex(128, 64, (g, W, Hc) => {
+    g.save(); g.scale(1, Hc / 96);
+    const w = 128, h = 96;
     g.fillStyle = imprime ? '#d6d7dc' : '#f1f0ed'; g.fillRect(0, 0, w, h);
     const d = g.createLinearGradient(0, 0, 0, h); d.addColorStop(0, 'rgba(255,255,255,0.25)'); d.addColorStop(0.55, 'rgba(0,0,0,0)'); d.addColorStop(1, 'rgba(60,55,50,0.22)');
     g.fillStyle = d; g.fillRect(0, 0, w, h);
@@ -263,9 +269,11 @@ function texSweat(imprime) {
         ['#46c6c8', [[78, 44], [112, 40], [96, 66]]], ['#7068d8', [[24, 66], [52, 62], [40, 76]]], ['#a7d6ec', [[96, 66], [112, 40], [118, 62]]]];
       for (const [c, p] of fac) { g.fillStyle = c; g.beginPath(); g.moveTo(...p[0]); g.lineTo(...p[1]); g.lineTo(...p[2]); g.closePath(); g.fill(); }
       g.fillStyle = '#d8589c'; for (let k = 0; k < 5; k++) g.fillRect(44 + k * 10, 80, 6, 9);
+      g.restore();
     } else {
-      paveIris(g, 22, 10, 84);
-      g.fillStyle = '#3a3a3a'; g.fillRect(28, 52, 64, 4); g.fillRect(28, 60, 44, 4);
+      g.restore();
+      paveIris(g, 20, 5, 88);
+      g.fillStyle = '#3a3a3a'; g.fillRect(26, 46, 70, 3); g.fillRect(26, 52, 50, 3);
     }
   }, null, false, 2);
 }
@@ -354,7 +362,9 @@ function matieresHall() {
     tablette: std({ color: 0xb4afab, roughness: 0.35 }, 'tablette grise (comptoir)'),
     // le caisson bas du décroché et son pied, sous la tablette PMR : dans son ombre (r04 : 100 et 113, contre 151 pour la
     // face du comptoir ; le jeu les éclairait à 167 et 161, plus clairs que le comptoir)
-    comptoirOmbre: std({ color: 0x9a9592, roughness: 0.5 }, 'stratifié gris clair à l\'ombre (décroché PMR)'),
+    // (relecture du 13/10 : le caisson bas, 121, 103, 89 sur la photo, 140, 123, 107 au jeu ; la face ouest du caisson haut,
+    // 144, 119, 98 pour 153, 135, 117 — un ton plus bas, plus chaud)
+    comptoirOmbre: std({ color: 0x8b827c, roughness: 0.5 }, 'stratifié gris clair à l\'ombre (décroché PMR)'),
     // la tablette PMR : un gris moyen, son dessus 140 et son chant 99 sur r04 — sous le spot du bout des lignes
     // lumineuses, la tablette du comptoir montait à 173-225 et 130
     tablettePMR: std({ color: 0x6f6b68, roughness: 0.4 }, 'tablette grise (décroché PMR)'),
@@ -393,23 +403,40 @@ function matieresHall() {
   // spots ne donnent pas (le nombre de lumières est figé dans les programmes, comme pour le jour du mur ardoise). Les
   // coordonnées de texture de la boîte sont en mètres (js/ecole_portes.js boiteM : sur ses faces est et ouest, u = z local) :
   // la lueur court sur les 2,5 m du comptoir.
+  // (relecture du 13/10, r04 rejouée, Haythem là où se tenait l'appareil : au nord 174, 161, 154 au jeu pour 145, 128,
+  // 117 ; au milieu 162, 153, 148 pour 152, 141, 138 ; au sud 157, 151, 151 pour 167, 163, 167 — l'albédo descend et se
+  // réchauffe vers le nord, la lueur froide monte vers le sud)
   {
-    const t = canvasTex(256, 4, (g, w, h) => {
-      const d = g.createLinearGradient(0, 0, w, 0);
-      d.addColorStop(0, '#000000'); d.addColorStop(0.35, '#0b0b0b'); d.addColorStop(0.7, '#444444'); d.addColorStop(1, '#a0a0a0');
-      g.fillStyle = d; g.fillRect(0, 0, w, h);
-    }, null, false, 1);
-    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.repeat.set(1 / (CPT.y1 - CPT.y0), 1); t.offset.set(0.5, 0); t.needsUpdate = true;
-    H.comptoirFace = std({ color: 0xa9a8b0, roughness: 0.45, emissive: 0xd4dcec, emissiveMap: t, emissiveIntensity: 0.55 }, 'stratifié gris clair (face du comptoir haut)');
+    const degrade = (stops) => {
+      const t = canvasTex(256, 4, (g, w, h) => {
+        const d = g.createLinearGradient(0, 0, w, 0);
+        for (const [u, c] of stops) d.addColorStop(u, c);
+        g.fillStyle = d; g.fillRect(0, 0, w, h);
+      }, null, false, 1);
+      // (des valeurs linéaires : des facteurs, pas des couleurs à décoder)
+      t.colorSpace = THREE.NoColorSpace; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
+      t.repeat.set(1 / (CPT.y1 - CPT.y0), 1); t.offset.set(0.5, 0); t.needsUpdate = true;
+      return t;
+    };
+    const albedo = degrade([[0, '#a3958a'], [0.1, '#a99b91'], [0.4, '#ded5d9'], [0.62, '#ffffff'], [1, '#ffffff']]);
+    const jour = degrade([[0, '#000000'], [0.4, '#0d0d0d'], [0.7, '#8c8c8c'], [1, '#ffffff']]);
+    H.comptoirFace = std({ color: 0xbcbbc2, map: albedo, roughness: 0.45, emissive: 0xd4dcec, emissiveMap: jour, emissiveIntensity: 0.3 }, 'stratifié gris clair (face du comptoir haut)');
   }
   // LE CAISSON HAUT DU DÉCROCHÉ (13/10, r04 : sa face ouest, étroite, à l'ombre — 144, 119, 98 —, sa face sud claire —
   // 172, 159, 154 — ; le jeu faisait l'inverse, 171, 157, 144 et 151, 142, 133)
-  H.caissonSud = std({ color: 0xd8d6dc, roughness: 0.45 }, 'stratifié gris clair au jour (caisson haut)');
+  H.caissonSud = std({ color: 0xcfc9c7, roughness: 0.45 }, 'stratifié gris clair au jour (caisson haut)');
+  // (le pied carré du décroché, au jour du hall : 139, 118, 102 sur la photo, 128, 114, 101 au jeu)
+  H.comptoirPied = std({ color: 0xa69c95, roughness: 0.5 }, 'stratifié gris clair (pied du décroché)');
   // LA FACE SUD DU PILIER DE BOIS (13/10 : au jour, d'un beige gris — 162, 149, 142 sur la photo —, le jeu la jaunissait,
   // 159, 139, 115 : le même stratifié, refroidi)
-  H.boisJour = std({ map: texBoisClair(), color: 0xd2d8e6, roughness: 0.55 }, 'stratifié bois clair au jour (face sud du pilier)');
+  // (relecture du 13/10 : 129, 114, 102 au jeu, toujours à l'ombre des spots — le jour de la porte 6 l'éclaire, une lueur)
+  { const t = texBoisClair(); H.boisJour = std({ map: t, color: 0xd2d8e6, emissive: 0xc6d0e4, emissiveMap: t, emissiveIntensity: 0.28, roughness: 0.55 }, 'stratifié bois clair au jour (face sud du pilier)'); }
   // LE PANNEAU HAUT DU LOCAL, au-dessus des portes (13/10, r04 : 103, 87, 77 — plus sombre et plus gris que les portes)
-  H.boisHaut = std({ map: texBoisClair(), color: 0xb4aeb0, roughness: 0.6 }, 'stratifié chêne grisé (panneau haut du local)');
+  // (relecture du 13/10 : 95, 71, 54 au jeu)
+  H.boisHaut = std({ map: texBoisClair(), color: 0xbab8c2, roughness: 0.6 }, 'stratifié chêne grisé (panneau haut du local)');
+  // LA RETOMBÉE DE L'ACCUEIL (13/10, r04 : dans la lumière chaude des spots, 169, 148, 131, quand le plâtre du jeu la
+  // rendait à 140, 134, 126 : le sien, rien qu'à elle)
+  H.retombee = std({ color: 0xf2ebe2, roughness: 0.9, emissive: 0xffe6cc, emissiveIntensity: 0.1 }, 'plâtre de la retombée de l\'accueil');
   // LES LIGNES LUMINEUSES du plafond : des rubans de LED qui éblouissent (MeshBasic au-dessus de 1 : le bloom les fait
   // briller, comme les spots — js/ecole_matieres.js M.spot)
   H.ligne = new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff3e2).multiplyScalar(2.6) }); H.ligne.name = 'ligne lumineuse du plafond';
@@ -599,7 +626,7 @@ function miroirAccueil(ch) {
   // le vrai miroir, à la racine de la scène
   const m = new Reflector(new THREE.PlaneGeometry(L, Hm), { textureWidth: 256, textureHeight: 256, clipBias: 0.003, multisample: 0, shader: MiroirShader, color: 0xffffff });
   const U = m.material.uniforms;
-  U.color.value.setRGB(0.88, 0.91, 0.89); U.voile.value.setRGB(0.01, 0.011, 0.011);
+  U.color.value.setRGB(0.93, 0.96, 0.96); U.voile.value.setRGB(0.03, 0.034, 0.038);
   m.position.set(MIR.x - 0.001, hc, -yc); m.rotation.y = -Math.PI / 2;
   m.userData.dynamique = true; m.userData.horsAOSol = true; m.name = 'miroir de l\'accueil';
   m.visible = false; ch.scene.add(m); m.updateMatrixWorld(true);
@@ -749,7 +776,8 @@ export function poserHall(ch) {
       g.clearRect(0, 0, w, h); g.fillStyle = d; g.fillRect(0, 0, w, h);
     }, null, true, 1);
     // (le plan regarde l'ouest : son u court du nord au sud — le jour est au bout de u)
-    const m = new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color(0x2b3040), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: true });
+    // (relecture du 13/10 : au bout sud, 119, 119, 126 sur la photo, 103, 96, 102 au jeu — plus fort, plus froid)
+    const m = new THREE.MeshBasicMaterial({ map: tex, color: new THREE.Color(0x4a5462), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: true });
     m.name = 'jour de la fenêtre c 18,98 sur le mur ardoise';
     const v = ch.panneau(m, 1.6, 2.4, X_MIT - 0.03, Y_ARD + 0.8, 1.3, 'W');
     v.castShadow = false; v.receiveShadow = false; v.userData.nofuse = true; v.userData.horsAOSol = true; v.renderOrder = 2;
@@ -777,21 +805,23 @@ export function poserHall(ch) {
   // le comptoir haut : le socle de chêne clair en retrait de 4 cm, le caisson de stratifié gris clair, la rainure sur la
   // face avant (ouest) et sur le bout sud, la tablette grise qui déborde de 7 cm côté visiteurs
   // (13/10 : ni le comptoir ni sa tablette ne portent d'ombre au « soleil » des plafonniers — elle tombait en bande noire de
-  // 0,2 m sur le carrelage, à son pied, x 449-500 de r04 : 14 à 35 au jeu, 75 à 88 sur la photo ; l'ombre douce cuite au
-  // sol reste)
-  B(CPT.x0 + 0.04, CPT.y0 + 0.04, CPT.x1, CPT.y1, 0, CPT.socle, H.chene, { ombre: false });
-  B(CPT.x0, CPT.y0, CPT.x1, CPT.y1, CPT.socle, CPT.h - 0.035, H.comptoirFace, { ombre: false });
+  // 0,2 m sur le carrelage, à son pied, x 449-500 de r04 : 14 à 35 au jeu, 75 à 88 sur la photo ; ni d'ombre douce cuite au
+  // sol, dont le rayon de 1,6 m assombrissait encore tout le pied — 47 à 66 au jeu, 77 à 89 sur la photo, où le carrelage
+  // reste clair jusqu'à la plinthe : l'occlusion de l'écran suffit au contact)
+  const sansOmbre = { ombre: false, horsAO: true };
+  B(CPT.x0 + 0.04, CPT.y0 + 0.04, CPT.x1, CPT.y1, 0, CPT.socle, H.chene, sansOmbre);
+  B(CPT.x0, CPT.y0, CPT.x1, CPT.y1, CPT.socle, CPT.h - CPT.ep, H.comptoirFace, sansOmbre);
   B(CPT.x0 - 0.004, CPT.y0, CPT.x0, CPT.y1, CPT.rainure - 0.008, CPT.rainure + 0.008, H.rainure, { ombre: false });
   B(CPT.x0, CPT.y0 - 0.004, CPT.x1, CPT.y0, CPT.rainure - 0.008, CPT.rainure + 0.008, H.rainure, { ombre: false });
-  B(CPT.x0 - 0.07, CPT.y0 - 0.03, CPT.x1, CPT.y1, CPT.h - 0.035, CPT.h, H.tablette, { ombre: false });
+  B(CPT.x0 - 0.07, CPT.y0 - 0.03, CPT.x1, CPT.y1, CPT.h - CPT.ep, CPT.h, H.tablette, { ombre: false });
   // LE DÉCROCHÉ PMR (r04, à gauche) : le caisson bas EN RETRAIT de 25 cm (sa plinthe de chêne passe derrière le pied), la
   // tablette grise à 0,76 qui avance jusqu'à 16,88 et file, côté personnel, jusqu'au plan de travail ; à son angle
   // nord-ouest, le pied gris carré sur son socle de chêne
-  B(PMR.xF + 0.03, PMR.y0, X_PERS, PMR.y1 - 0.03, 0, CPT.socle, H.chene, { ombre: false });
-  B(PMR.xF, PMR.y0, X_PERS, PMR.y1, CPT.socle, PMR.h - 0.03, H.comptoirOmbre, { ombre: false });
+  B(PMR.xF + 0.03, PMR.y0, X_PERS, PMR.y1 - 0.03, 0, CPT.socle, H.chene, sansOmbre);
+  B(PMR.xF, PMR.y0, X_PERS, PMR.y1, CPT.socle, PMR.h - 0.03, H.comptoirOmbre, sansOmbre);
   B(PMR.x0, PMR.y0, X_PERS, PMR.y1, PMR.h - 0.035, PMR.h, H.tablettePMR);
   B(16.915, 4.355, 17.055, 4.495, 0, 0.08, H.chene);
-  B(16.93, 4.37, 17.04, 4.48, 0.08, PMR.h - 0.03, H.comptoirOmbre);
+  B(16.93, 4.37, 17.04, 4.48, 0.08, PMR.h - 0.03, H.comptoirPied);
   // LE CAISSON HAUT DU DÉCROCHÉ : posé sur le bout nord de la tablette basse, au-dessus du pied, du même stratifié, et sa
   // tablette haute qui déborde au nord (r04 : sa face ouest de x 178 à 200, sa face sud de 200 à 262, de 0,76 à 1,15 m,
   // les bacs noirs devant ; la tablette de x 128 à 265 — sous son débord, on voit le pilier : rien ne la porte ; 0,22 m
@@ -851,7 +881,7 @@ export function poserHall(ch) {
   // 78 px — et le mot « DELL », argent, est juste au-dessus de la tablette ; le jeu en montrait 12 cm, 18 px : l'écran plus
   // étroit, le logo au bas de la bande visible)
   {
-    const e = ecran(ch, 17.78, 2.92, 0.75, 'E', true, 0.31, 0.49);
+    const e = ecran(ch, 17.78, 2.92, 0.75, 'E', true, 0.33, 0.49);
     const l = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.03), new THREE.MeshStandardMaterial({ map: texDell(), roughness: 0.4 }));
     l.position.set(0, 0.435, -0.016); l.rotation.y = Math.PI; e.add(l);
   }
@@ -956,17 +986,22 @@ export function poserHall(ch) {
   // (relecture du 12/10, r04 agrandie : l'écran tombe 10 px trop à gauche et 6 px trop court — un téléviseur de 40 pouces,
   // 0,9 x 0,5 avec son cadre, et non 0,84 x 0,46 ; 8 cm plus au sud-est, toujours sous la retombée)
   {
-    const T = { x: 18.4, y: 5.37 };
-    const g = groupe(ch, T.x, T.y, 202); g.position.y = 2.24;
+    // (relecture du 13/10, r04 agrandie trois fois, ses quatre coins relevés — (142 ; 83), (228 ; 103), (133 ; 145),
+    // (220 ; 160) — : 0,88 x 0,50, son haut à 2,50 contre la retombée ; il tombait 7 px trop bas ; l'image claire décalée
+    // vers la gauche au milieu de la dalle noire, texEcranTV)
+    const T = { x: 18.4, y: 5.33 };
+    // (et il regarde plus au sud, cap 194 : de l'appareil, son bout est fuit plus — 86 px de large pour 97 au cap 202)
+    const g = groupe(ch, T.x, T.y, 194); g.position.y = 2.25;
     const t = new THREE.Group(); t.rotation.x = 0.15; g.add(t);
-    BL(t, M.noir, 0.9, 0.5, 0.06, 0, 0, 0);
+    BL(t, M.noir, 0.88, 0.5, 0.06, 0, 0, 0);
     const tex = texEcranTV();
-    const e = PL(t, new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.5, roughness: 0.3 }), 0.74, 0.39, 0.02, 0.01, 0.031);
+    const e = PL(t, new THREE.MeshStandardMaterial({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.55, roughness: 0.18 }), 0.84, 0.46, 0, 0, 0.031);
     e.castShadow = false;
-    BL(g, M.noir, 0.04, 2.5 - 2.24 - 0.21, 0.04, -0.29, (2.5 - 2.24 + 0.21) / 2, -0.05, { ombre: false });
+    // (r04 : un câble noir monte du haut de l'écran, côté ouest, jusqu'au plafond)
+    BL(g, M.noir, 0.016, H_PLAF - 2.25 - 0.24, 0.016, -0.35, (H_PLAF - 2.25 + 0.24) / 2, -0.04, { ombre: false });
     g.traverse((m) => { m.userData.horsAOSol = true; });
     // (la caméra seule : derrière Haythem, au personnel, elle venait se loger dans l'écran — vu en jouant, 12/10)
-    C.ajouterBoiteOrientee(T.x, -T.y, 0.47, 0.08, Math.atan2(0.375, 0.927), { y0: 1.96, y1: 2.5, joueur: false });
+    C.ajouterBoiteOrientee(T.x, -T.y, 0.5, 0.08, 14 * Math.PI / 180, { y0: 1.9, y1: 2.5, joueur: false });
   }
 
   // =====================================================================
@@ -1049,7 +1084,7 @@ export function poserHall(ch) {
   // qu'une dizaine de centimètres — l'arête, rétroprojetée à 2,50 m, tombe en y 5,28) : de la face est de la pile au
   // local, 10 cm sous les plateaux
   {
-    const r = B(14.675, 5.28, LOC.x0, 5.53, 2.5, H_PLAF, M.platre, { ombre: false, collision: true });
+    const r = B(14.675, 5.28, LOC.x0, 5.53, 2.5, H_PLAF, H.retombee, { ombre: false, collision: true });
     r.userData.horsAOSol = true;
   }
   // dans l'axe de la porte 6, au pas de 0,30 m, de la porte jusqu'à y ≈ 4,1 (les spots ronds autour : js/carte_ecole.js) ;

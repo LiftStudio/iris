@@ -1414,14 +1414,15 @@ export function construireCarte(scene, renderer = null) {
       const img = g.createImageData(w, h);
       for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
         const x = 13.35 + (i + 0.5) / w * W, y = 0.3 + (j + 0.5) / h * D;   // (le haut du dessin est le bas des v : le sud)
-        const jour = Math.exp(-Math.max(0, y - 0.3) / 1.5) * (0.35 + 0.65 * Math.min(1, Math.max(0, (x - 15.5) / 3.5)));
-        const v = Math.round(255 * Math.min(1, 0.42 + 0.58 * jour)), k = (j * w + i) * 4;
+        // (relecture : la lueur ne se voit qu'à 1,5 m de la façade, et vers l'angle ; au milieu de l'accueil, rien)
+        const jour = Math.min(1, Math.exp(-Math.max(0, y - 0.3) / 1.0) * Math.min(1, Math.max(0, (x - 16.5) / 2.5)) / 0.35);
+        const v = Math.round(255 * (0.3 + 0.7 * jour)), k = (j * w + i) * 4;
         img.data[k] = Math.round(v * 0.97); img.data[k + 1] = Math.round(v * 0.985); img.data[k + 2] = v; img.data[k + 3] = 255;
       }
       g.putImageData(img, 0, 0);
     }, null, false, 1);
-    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.repeat.set(1 / W, 1 / D); t.needsUpdate = true;
-    p.material.emissiveMap = t; p.material.emissiveIntensity = 0.3 / 0.42;
+    t.colorSpace = THREE.NoColorSpace; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.repeat.set(1 / W, 1 / D); t.needsUpdate = true;
+    p.material.emissiveMap = t; p.material.emissiveIntensity = 1.0;
   }
   // le bureau B (visitable : js/ecole_pieces.js) et le passage au sud-ouest de la pile, d'un seul tenant (plateaux à 2,60)
   ch.plafond(9.9, 0, 13.35, ATT.ys, 2.6, 'plateaux');
