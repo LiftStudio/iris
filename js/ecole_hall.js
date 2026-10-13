@@ -358,8 +358,9 @@ function matieresHall() {
     // 145, 128, 117 —, claire et FROIDE au sud, dans le jour de la porte 6 et des fenêtres — 167, 163, 167 — ; le jeu
     // faisait l'inverse, 174, 160, 147 au nord et 147, 134, 124 au sud. La face du comptoir haut, rien qu'elle : un gris
     // neutre plus bas, et le jour peint en lueur froide qui monte vers le bout sud — comptoirFace, plus bas)
-    // (la tablette : son chant 120, 109, 102 sur la photo, 73, 67, 66 au jeu — deux tons plus clair)
-    tablette: std({ color: 0xb4afab, roughness: 0.35 }, 'tablette grise (comptoir)'),
+    // (la tablette : son chant 120, 109, 102 sur la photo, 73, 67, 66 au jeu — mince, 3,5 cm, il ne prenait pas la lumière ;
+    // épaissi à 5,5 cm, CPT.ep, il la prend : le gris d'avant, à peine plus clair)
+    tablette: std({ color: 0x9c9893, roughness: 0.35 }, 'tablette grise (comptoir)'),
     // le caisson bas du décroché et son pied, sous la tablette PMR : dans son ombre (r04 : 100 et 113, contre 151 pour la
     // face du comptoir ; le jeu les éclairait à 167 et 161, plus clairs que le comptoir)
     // (relecture du 13/10 : le caisson bas, 121, 103, 89 sur la photo, 140, 123, 107 au jeu ; la face ouest du caisson haut,
@@ -874,10 +875,13 @@ function miroirAccueil(ch) {
     scene.background = null;
     const branches = [];
     for (const o of scene.children) if (o.visible && o !== racine && !porteLumieres.has(o)) { o.visible = false; branches.push(o); }
+    // (à la première personne, js/game.js cache Haythem tout entier — il se voit pourtant dans la glace, tête comprise)
+    const vuLui = racine.visible; racine.visible = true;
     try {
       imbrique(renderer, scene, camera, rtLui, vl, () => { renderer.setClearColor(0x000000, 0); renderer.clear(true, true, true); renderer.render(scene, vl); });
     } finally {
       scene.background = fond; renderer.setClearColor(_clair, alpha);
+      racine.visible = vuLui;
       for (const o of branches) o.visible = true;
     }
     U.uVPl.value.multiplyMatrices(vl.projectionMatrix, vl.matrixWorldInverse); U.uVPlInv.value.copy(U.uVPl.value).invert();
