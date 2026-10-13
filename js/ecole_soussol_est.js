@@ -230,8 +230,10 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     const B0 = M.blanc, W = P.blancSas, base = Y_SS;
     // LE MUR OUEST (x 14,6, sous le mur jaune du couloir est et celui du vestibule) : la porte crème « réservé au
     // personnel » (y 7,95-8,85), le boîtier noir, le passage (y 9,2-10,3, 2,20 m) ; au nord, le mur du panneau du palier
-    mur(ch, F, { de: [14.6, 7.65], a: [14.6, 10.65], base, h: 0, mats: W, plinthes: ['E'], ouvertures: [{ c: 8.4, l: 0.9, h: Y_SS + 2.04 }, { c: 9.75, l: 1.1, h: H_PASS }] });
-    mur(ch, F, { de: [14.6, 10.65], a: [14.6, 12.6], base, h: 0, mats: B0, plinthes: ['E'] });
+    // (13/10 : le nu du mur jaune d'en haut recule en 14,63 — js/ecole_est.js XN, photo 24 : leur tête, à 0, affleurait
+    // en blanc dans le lino du couloir sur 4,5 cm ; arrêtés 1 cm dessous, comme les autres)
+    mur(ch, F, { de: [14.6, 7.65], a: [14.6, 10.65], base, h: -0.01, mats: W, plinthes: ['E'], ouvertures: [{ c: 8.4, l: 0.9, h: Y_SS + 2.04 }, { c: 9.75, l: 1.1, h: H_PASS }] });
+    mur(ch, F, { de: [14.6, 10.65], a: [14.6, 12.6], base, h: -0.01, mats: B0, plinthes: ['E'] });
     // LE MUR SUD DU SAS (y 7,725) : la porte double ⚡ (x 15,0-16,0), le trumeau et sa plaque, la porte grise (16,44-17,37)
     mur(ch, F, { de: [14.525, 7.725], a: [17.75, 7.725], base, h: -0.01, mats: W, plinthes: ['N'], ouvertures: [{ c: 15.5, l: 1.0, h: Y_SS + 2.04 }, { c: 16.9, l: 0.93, h: Y_SS + 2.04 }] });
     // ses retours à l'est : le bout du sas au sud (x 17,675), puis, au nord de y 9,0, le mur sous la tête de la volée A
