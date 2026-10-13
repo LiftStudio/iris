@@ -247,9 +247,9 @@ function texEcranTV() {
     // lavande plus clair et plus bleu, 200, 208, 250)
     g.fillStyle = '#131519'; g.fillRect(0, 0, w, h);
     g.fillStyle = 'rgba(150,156,172,0.26)'; for (const [x, y, l, e] of [[150, 9, 34, 9], [190, 11, 30, 9], [226, 15, 22, 9], [208, 27, 40, 7], [224, 43, 26, 10]]) g.fillRect(x, y, l, e);
-    g.strokeStyle = 'rgba(196,200,210,0.6)'; g.lineWidth = 2; g.strokeRect(1, 1, w - 2, h - 2);
+    g.strokeStyle = 'rgba(196,200,210,0.4)'; g.lineWidth = 2; g.strokeRect(1, 1, w - 2, h - 2);
     const x0 = w * 0.18, y0 = h * 0.22, x1 = w * 0.81, y1 = h * 0.81;
-    const f = g.createLinearGradient(x0, y0, x1, y1); f.addColorStop(0, '#c8d2ff'); f.addColorStop(1, '#aebcfa');
+    const f = g.createLinearGradient(x0, y0, x1, y1); f.addColorStop(0, '#b4c2ff'); f.addColorStop(1, '#93a6f6');
     g.fillStyle = f; g.fillRect(x0, y0, x1 - x0, y1 - y0);
     g.fillStyle = '#20243c'; g.font = `500 13px ${POLICE}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
     ['Commander votre', 'sweat à l\'accueil', 'pour 25€'].forEach((t, i) => g.fillText(t, (x0 + x1) / 2 - 12, y0 + 34 + i * 16));
@@ -268,8 +268,9 @@ function texEcranTV() {
 // facettes bleues, violettes et cyan, et des lettres roses dessous)
 // (le devant du pli fait 0,34 x 0,17 m : un dessin de 2 sur 1, tracé dans l'ancien repère de 128 x 96 puis écrasé, sauf
 // le pavé, à ses vraies proportions)
-function texSweat(imprime) {
-  return canvasTex(128, 64, (g, W, Hc) => {
+// (relecture du 13/10 : `ratio`, la largeur du devant sur sa hauteur — le sweat n'est plus une boîte de 2 sur 1)
+function texSweat(imprime, ratio = 2) {
+  return canvasTex(128, Math.round(128 / ratio), (g, W, Hc) => {
     g.save(); g.scale(1, Hc / 96);
     const w = 128, h = 96;
     g.fillStyle = imprime ? '#d6d7dc' : '#f1f0ed'; g.fillRect(0, 0, w, h);
@@ -299,13 +300,17 @@ function texSweat(imprime) {
 function texAffichette() {
   return canvasTex(192, 112, (g, w, h) => {
     g.fillStyle = '#f6f5f2'; g.fillRect(0, 0, w, h);
+    // (relecture du 13/10 : deux sweats à capuche qu'on reconnaisse — le corps, les manches écartées, la capuche ; de face
+    // l'ouverture de la capuche et le pavé noir, de dos la couture — ; le jeu dessinait deux cadenas)
     const sweat = (x, dos) => {
       g.fillStyle = '#4b4c50'; g.fillRect(x, 8, 58, 94);
-      g.fillStyle = '#c9cacc';
-      g.beginPath(); g.moveTo(x + 6, 100); g.lineTo(x + 8, 46); g.quadraticCurveTo(x + 12, 34, x + 22, 32); g.lineTo(x + 36, 32); g.quadraticCurveTo(x + 46, 34, x + 50, 46); g.lineTo(x + 52, 100); g.closePath(); g.fill();
-      g.fillStyle = dos ? '#b8b9bc' : '#d6d7d9'; g.beginPath(); g.ellipse(x + 29, 28, 13, 15, 0, 0, Math.PI * 2); g.fill();
-      if (!dos) { g.fillStyle = '#5a5b5f'; g.beginPath(); g.ellipse(x + 29, 30, 7, 9, 0, 0, Math.PI * 2); g.fill(); g.fillStyle = '#1c1c1f'; g.fillRect(x + 20, 54, 18, 8); }
-      g.fillStyle = 'rgba(0,0,0,0.12)'; g.fillRect(x + 8, 80, 44, 3);
+      g.fillStyle = dos ? '#bdbec1' : '#cfd0d3';
+      g.beginPath(); [[17, 40], [41, 40], [54, 56], [56, 92], [47, 94], [45, 64], [44, 100], [14, 100], [13, 64], [11, 94], [2, 92], [4, 56]].forEach(([a, b], i) => (i ? g.lineTo(x + a, b) : g.moveTo(x + a, b)));
+      g.closePath(); g.fill();
+      g.beginPath(); g.ellipse(x + 29, 32, 12, 13, 0, 0, Math.PI * 2); g.fill();
+      if (!dos) { g.fillStyle = '#77787c'; g.beginPath(); g.ellipse(x + 29, 34, 7, 8, 0, 0, Math.PI * 2); g.fill(); g.fillStyle = '#1c1c1f'; g.fillRect(x + 21, 56, 16, 7); }
+      else { g.strokeStyle = 'rgba(0,0,0,0.2)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x + 29, 21); g.lineTo(x + 29, 44); g.stroke(); }
+      g.fillStyle = 'rgba(0,0,0,0.12)'; g.fillRect(x + 14, 90, 30, 3);
     };
     sweat(6, false); sweat(w - 64, true);
     g.fillStyle = '#222'; g.font = `600 9px ${POLICE}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
@@ -375,7 +380,7 @@ function matieresHall() {
     // neutre plus bas, et le jour peint en lueur froide qui monte vers le bout sud — comptoirFace, plus bas)
     // (la tablette : son chant 120, 109, 102 sur la photo, 73, 67, 66 au jeu — mince, 3,5 cm, il ne prenait pas la lumière ;
     // épaissi à 5,5 cm, CPT.ep, il la prend : le gris d'avant, à peine plus clair)
-    tablette: std({ color: 0x9c9893, roughness: 0.35 }, 'tablette grise (comptoir)'),
+    tablette: std({ color: 0x8c8884, roughness: 0.35 }, 'tablette grise (comptoir)'),
     // le caisson bas du décroché et son pied, sous la tablette PMR : dans son ombre (r04 : 100 et 113, contre 151 pour la
     // face du comptoir ; le jeu les éclairait à 167 et 161, plus clairs que le comptoir)
     // (relecture du 13/10 : le caisson bas, 121, 103, 89 sur la photo, 140, 123, 107 au jeu ; la face ouest du caisson haut,
@@ -396,7 +401,8 @@ function matieresHall() {
     // 12/10, r04 : 124, 97, 76 à mi-hauteur, 98, 84, 75 sous le plafond, quand le jeu les rendait à 175 et 147)
     boisLocal: std({ map: texBoisClair(), color: 0xd8d7dc, roughness: 0.6 }, 'stratifié chêne grisé (portes du local)'),
     // (13/10 : 151, 139, 132 sur la photo, 154, 139, 124 au jeu — un rien plus froid)
-    retour: std({ map: texPeinture(0xaba7a7), roughness: 0.85 }, 'peinture gris clair (face sud du local)'),
+    // (relecture du 13/10 : 166, 156, 149 au jeu pour 151, 139, 132 — un ton plus bas)
+    retour: std({ map: texPeinture(0x9d9998), roughness: 0.85 }, 'peinture gris clair (face sud du local)'),
     joint: std({ color: 0x4a3f36, roughness: 0.6 }, 'joint des portes du local'),
     bureau: std({ color: 0x3d4150, roughness: 0.48 }, 'bureau bleu-gris foncé'),
     plan: std({ color: 0xdedcd8, roughness: 0.4 }, 'plan de travail blanc gris'),
@@ -448,6 +454,7 @@ function matieresHall() {
   // LA FACE SUD DU PILIER DE BOIS (13/10 : au jour, d'un beige gris — 162, 149, 142 sur la photo —, le jeu la jaunissait,
   // 159, 139, 115 : le même stratifié, refroidi)
   // (relecture du 13/10 : 129, 114, 102 au jeu, toujours à l'ombre des spots — le jour de la porte 6 l'éclaire, une lueur)
+  H.boisOmbre = std({ map: texBoisClair(), color: 0xd6d2d4, roughness: 0.55 }, 'stratifié bois clair à l\'ombre (bas de la face sud du pilier)');
   { const t = texBoisClair(); H.boisJour = std({ map: t, color: 0xd2d8e6, emissive: 0xc6d0e4, emissiveMap: t, emissiveIntensity: 0.28, roughness: 0.55 }, 'stratifié bois clair au jour (face sud du pilier)'); }
   // LE PANNEAU HAUT DU LOCAL, au-dessus des portes (13/10, r04 : 103, 87, 77 — plus sombre et plus gris que les portes)
   // (relecture du 13/10 : 95, 71, 54 au jeu)
@@ -480,6 +487,27 @@ const BL = (g, mat, w, h, d, x, y, z, o) => maille(boiteM(w, h, d), mat, x, y, z
 const CL = (g, mat, r, h, x, y, z, seg = 10, o) => maille(new THREE.CylinderGeometry(r, r, h, seg), mat, x, y, z, 0, g, o);
 // un plan texturé en coordonnées locales, tourné vers +z
 const PL = (g, mat, w, h, x, y, z) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); p.position.set(x, y, z); p.receiveShadow = true; g.add(p); return p; };
+// UN CALQUE DE LUMIÈRE PEINTE qui MULTIPLIE ce qu'il recouvre (2 x source x fond : à 0,5, le dessin ne change rien ; au-dessus
+// il éclaire, en dessous il assombrit, canal par canal — ce qu'un voile additif ne sait pas faire : réchauffer). `dessin(u,
+// v)` rend les trois facteurs, u et v de 0 à 1 dans le plan du calque (v = 1 en haut du dessin). Hors des normales et des
+// ombres cuites, jamais cousu.
+function calqueLumiere(w, h, dessin, nom) {
+  const t = canvasTex(w, h, (g) => {
+    const img = g.createImageData(w, h);
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+      const f = dessin((i + 0.5) / w, 1 - (j + 0.5) / h), k = (j * w + i) * 4;
+      for (let c = 0; c < 3; c++) img.data[k + c] = Math.round(Math.min(255, 127.5 * f[c]));
+      img.data[k + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
+  }, null, false, 1);
+  t.colorSpace = THREE.NoColorSpace; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.needsUpdate = true;
+  const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation,
+    blendSrc: THREE.DstColorFactor, blendDst: THREE.SrcColorFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor });
+  m.name = nom;
+  return m;
+}
+const poserCalque = (p) => { p.castShadow = false; p.receiveShadow = false; p.renderOrder = -1; p.userData.nofuse = true; p.userData.horsAOSol = true; p.userData.sansNormales = true; return p; };
 // UN SIÈGE pour le jeu (js/game.js : on s'assoit à moins de 1,1 m) : regard vers `face`, relevé en (sx, sy) du plan
 function siege(ch, x, y, h, face, sx, sy, nom) {
   const [fx, fz] = DIR[face];
@@ -564,7 +592,7 @@ function affranchisseuse(ch, x, y) {
   const pl = BL(g, c1, 0.26, 0.012, 0.3, 0.4, S + 0.24, 0.02, { ombre: false }); pl.rotation.z = 0.5;
   BL(g, c1, 0.08, 0.18, 0.3, 0.37, S + 0.09, 0.02, { ombre: false });
   // les classeurs debout, contre la glace
-  const cl = new THREE.MeshStandardMaterial({ color: 0x93a0b0, roughness: 0.6 }); cl.name = 'classeurs gris-bleu';
+  const cl = new THREE.MeshStandardMaterial({ color: 0xb4bdc8, roughness: 0.6, emissive: 0xc4ccd6, emissiveIntensity: 0.25 }); cl.name = 'classeurs gris-bleu';
   BL(g, cl, 0.32, 0.33, 0.1, -0.02, S + 0.165, -0.24);
   for (const [dx, c] of [[-0.14, 0x3d5f9a], [-0.1, 0xf0efea], [-0.06, 0x3d5f9a]]) BL(g, new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }), 0.035, 0.3, 0.004, dx, S + 0.165, -0.188, { ombre: false });
   return g;
@@ -719,7 +747,7 @@ function texBaieBureau() {
       g.fillStyle = d; g.fillRect(x0, t, x1 - x0, b - t);
       // (le haut du grand vitrage : un pan plus clair, en biais — le plafond du bureau, vu d'en bas)
       if (i) { g.fillStyle = 'rgba(255,255,255,0.75)'; g.beginPath(); g.moveTo(x0, t); g.lineTo(x1, t); g.lineTo(x1, Y(2.28)); g.lineTo(x0, Y(2.42)); g.closePath(); g.fill(); }
-      for (const [z0, z1] of BAIE.bandes) { g.fillStyle = `rgba(86,102,110,${0.95 * pale})`; g.fillRect(x0, Y(z1), x1 - x0, Y(z0) - Y(z1)); }
+      for (const [z0, z1] of BAIE.bandes) { g.fillStyle = `rgba(62,78,86,${pale})`; g.fillRect(x0, Y(z1), x1 - x0, Y(z0) - Y(z1)); }
       for (let z = 1.37; z > BAIE.h0 + 0.07; z -= 0.025) { g.fillStyle = 'rgba(152,162,170,0.55)'; g.fillRect(x0, Y(z), x1 - x0, 1.5); }
       g.strokeStyle = '#c6cacf'; g.lineWidth = 1; g.strokeRect(x0 + 0.5, t + 0.5, x1 - x0 - 1, b - t - 1);
     });
@@ -1130,27 +1158,17 @@ export function poserHall(ch) {
   // jonction et la salle d'attente gardent leur sol au pixel près.)
   {
     const X0 = 13.35, Y0 = 0.3, W = X_MIT - X0, D = Y_MUR - Y0, borne = (v) => Math.min(1, Math.max(0, v));
-    const t = canvasTex(65, 72, (g, w, h) => {
-      const img = g.createImageData(w, h);
-      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
-        const x = X0 + (i + 0.5) / w * W, y = Y_MUR - (j + 0.5) / h * D;
-        const bord = borne((x - 13.45) / 0.8) * borne((Y_MUR - 0.05 - y) / 0.6) * borne((y - Y0) / 0.3);
-        const chaud = bord * borne((y - 1.6) / 2.4), jour = bord - chaud, k = (j * w + i) * 4;
-        // (et, au milieu, sous le bout des lignes lumineuses, leur reflet sur le carrelage satiné, que la photo n'a pas :
-        // 115 au jeu pour 92 — un sixième de moins, en rond, autour de (15,9 ; 3,2))
-        const reflet = 1 - 0.17 * bord * Math.exp(-((x - 15.9) ** 2 + (y - 3.2) ** 2) / 1.6);
-        [1 + 0.05 * chaud + 0.1 * jour, 1 - 0.17 * chaud + 0.07 * jour, 1 - 0.4 * chaud + 0.12 * jour].forEach((f, c) => { img.data[k + c] = Math.round(127.5 * f * reflet); });
-        img.data[k + 3] = 255;
-      }
-      g.putImageData(img, 0, 0);
-    }, null, false, 1);
-    t.colorSpace = THREE.NoColorSpace; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.needsUpdate = true;
-    const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation,
-      blendSrc: THREE.DstColorFactor, blendDst: THREE.SrcColorFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor });
-    m.name = 'lumière chaude des spots sur le carrelage de l\'accueil';
-    const p = new THREE.Mesh(new THREE.PlaneGeometry(W, D), m);
-    p.rotation.x = -Math.PI / 2; p.position.set(X0 + W / 2, 0.006, -(Y0 + D / 2)); p.renderOrder = -1; p.castShadow = false; p.receiveShadow = false;
-    p.userData.nofuse = true; p.userData.horsAOSol = true; p.userData.sansNormales = true; p.name = 'lumière chaude du carrelage de l\'accueil';
+    const m = calqueLumiere(65, 72, (u, v) => {
+      const x = X0 + u * W, y = Y0 + v * D;
+      const bord = borne((x - 13.45) / 0.8) * borne((Y_MUR - 0.05 - y) / 0.6) * borne((y - Y0) / 0.3);
+      const chaud = bord * borne((y - 1.6) / 2.4), jour = bord - chaud;
+      // (et, au milieu, le reflet des plafonniers sur le carrelage satiné, que la photo n'a pas : 115 au jeu pour 92 — un
+      // cinquième de moins, en rond, autour de (16,45 ; 3,9), le pavé rétroprojeté)
+      const reflet = 1 - 0.2 * bord * Math.exp(-((x - 16.45) ** 2 + (y - 3.9) ** 2) / 0.8);
+      return [(1 + 0.05 * chaud + 0.1 * jour) * reflet, (1 - 0.17 * chaud + 0.07 * jour) * reflet, (1 - 0.4 * chaud + 0.12 * jour) * reflet];
+    }, 'lumière chaude des spots sur le carrelage de l\'accueil');
+    const p = poserCalque(new THREE.Mesh(new THREE.PlaneGeometry(W, D), m));
+    p.rotation.x = -Math.PI / 2; p.position.set(X0 + W / 2, 0.006, -(Y0 + D / 2)); p.name = 'lumière chaude du carrelage de l\'accueil';
     ch.decor.add(p);
   }
   // LE VITRAGE DE LA PORTE 6 VU EN RASANT (relecture du 13/10). Dans la glace de r04, entre la baie du bureau et la fenêtre,
@@ -1159,7 +1177,8 @@ export function poserHall(ch) {
   // porte comme de face — des cadres sombres, le nuage violet, le tableau noir du porche. Un voile clair DEVANT la ligne
   // des vitrages, côté hall, que seul l'angle du regard fait apparaître : invisible tant qu'on regarde la porte à plus de
   // 24° de son plan (du hall, de la salle, en entrant, en sortant), plein en dessous de 10° (dans la glace ; le long de la
-  // façade, de derrière le comptoir). La porte, ses vantaux et la façade ne sont pas touchés.
+  // façade, de derrière le comptoir). À 13 cm devant la ligne des vitrages : les tirants des vantaux sont derrière lui. La
+  // porte, ses vantaux et la façade ne sont pas touchés.
   {
     const mat = new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, side: THREE.DoubleSide,
@@ -1169,7 +1188,7 @@ export function poserHall(ch) {
     });
     mat.name = 'reflet rasant du vitrage de la porte 6';
     const p = new THREE.Mesh(new THREE.PlaneGeometry(3.15, H_PLAF), mat);
-    p.position.set(14.925, H_PLAF / 2, -0.35); p.renderOrder = 3; p.castShadow = false; p.receiveShadow = false;
+    p.position.set(14.925, H_PLAF / 2, -0.43); p.renderOrder = 3; p.castShadow = false; p.receiveShadow = false;
     p.userData.nofuse = true; p.userData.horsAOSol = true; p.userData.sansNormales = true; p.name = 'reflet rasant de la porte 6';
     ch.decor.add(p);
   }
@@ -1257,7 +1276,9 @@ export function poserHall(ch) {
   // seconde, plus basse, à sa droite ; le jeu en faisait une plaque de 0,28 m)
   B(16.9, 3.13, 17.14, 3.28, CPT.h, CPT.h + 0.06, M.store, { ombre: false });
   B(16.92, 2.95, 17.12, 3.1, CPT.h, CPT.h + 0.025, M.store, { ombre: false });
-  for (const [y, l] of [[1.45, 0.3], [1.8, 0.26], [2.12, 0.3]]) B(16.82, y, 17.03, y + l, CPT.h, CPT.h + 0.006, M.store, { ombre: false });
+  // (relecture du 13/10 : sur r04, une rangée de petites piles de dépliants court tout le bord, de x 480 au bord droit —
+  // y 2,7 à 1,4 —, hautes de 3 px, 1,5 à 2 cm : la tablette est au-dessus de l'œil, des feuilles seules ne se voient pas)
+  for (const [y, l, e] of [[1.42, 0.3, 0.018], [1.76, 0.27, 0.014], [2.07, 0.3, 0.02], [2.42, 0.27, 0.015]]) B(16.8, y, 17.02, y + l, CPT.h, CPT.h + e, M.store, { ombre: false });
   B(17.3, 4.42, 17.7, 4.66, RET.h, RET.h + 0.012, M.store, { ombre: false });
   // L'ÉCRAN DE L'HÔTESSE (r04 : son dos noir dépasse à peine du comptoir, une bande noire marquée « DELL », vers y 2,9)
   // et, sur le bureau du mitoyen, un portable ouvert (un second écran dépasserait du comptoir : r04 n'en montre pas)
@@ -1339,6 +1360,15 @@ export function poserHall(ch) {
     for (const s of [-1, 1]) B(xj - 0.025, (y0 + y1) / 2 + s * 0.05 - 0.008, xj, (y0 + y1) / 2 + s * 0.05 + 0.008, 1.0, 1.18, M.inox, { ombre: false });
   }
   for (const [y0, y1] of PORTES) B(xj, y0, LOC.x0, y1, 0.0, 0.01, H.joint, { ombre: false });
+  // LE SPOT DU FOND SUR LES PORTES DU LOCAL (relecture du 13/10 : au bord gauche de r04, au nord du pilier, le même
+  // stratifié est chaud, sous son spot — 139, 105, 61 à mi-hauteur, 127, 96, 56 en haut —, quand le jeu le laissait gris,
+  // 124, 107, 92 et 108, 97, 89 : un calque chaud du pilier au mur nord, fondu sur 0,4 m contre le pilier)
+  {
+    const l = Y_MUR - PIL.y1;
+    // (le plan regarde l'ouest : son u court du nord au sud)
+    const m = calqueLumiere(32, 4, (u) => { const k = Math.min(1, (1 - u) * l / 0.4); return [1 + 0.3 * k, 1 - 0.03 * k, 1 - 0.55 * k]; }, 'lumière chaude du spot du fond sur les portes du local');
+    poserCalque(ch.panneau(m, l, H_PLAF, LOC.x0 - 0.014, (PIL.y1 + Y_MUR) / 2, H_PLAF / 2, 'W'));
+  }
   // l'ÉTIQUETTE ROUGE en travers du haut du vantail nord, et le TRIANGLE JAUNE au coin du vantail sud (r04 : de 2,0 à
   // 2,08 m) ; le second triangle sur la porte du fond (r04, au bord gauche : vers y 7,1, à 2,0 m)
   ch.panneau(new THREE.MeshStandardMaterial({ map: texEtiquetteRouge(), roughness: 0.5 }), 0.3, 0.07, xj - 0.002, 5.03, 2.04, 'W');
@@ -1359,7 +1389,16 @@ export function poserHall(ch) {
   }
   // LE PILIER habillé de stratifié bois clair, sa plinthe de chêne ; son monde solide
   B(PIL.x0, PIL.y0, PIL.x1, PIL.y1, 0, H_PLAF, H.boisClair);
-  B(PIL.x0, PIL.y0 - 0.003, PIL.x1, PIL.y0, 0.08, H_PLAF, H.boisJour, { ombre: false });
+  // (relecture du 13/10 : le jour ne prend que le haut de cette face — 162, 149, 142 au-dessus de 1,2 m, 133, 116, 104 en
+  // dessous, à l'ombre du décroché et de sa tablette haute, juste devant ; le jeu l'éclairait d'un seul ton, 160)
+  B(PIL.x0, PIL.y0 - 0.003, PIL.x1, PIL.y0, RET.h, H_PLAF, H.boisJour, { ombre: false });
+  B(PIL.x0, PIL.y0 - 0.003, PIL.x1, PIL.y0, 0.08, RET.h, H.boisOmbre, { ombre: false });
+  // (et sa face ouest s'assombrit vers le bas, hors du cône de son spot et derrière le portant : 165, 130, 90 à 1,9 m, 143,
+  // 114, 84 à 1,6, 99, 74, 48 sous 0,9 m sur r04 — le jeu la laissait à 145 jusqu'au sol : un calque, plein sous 0,9 m)
+  {
+    const m = calqueLumiere(4, 32, (u, v) => { const k = Math.min(1, Math.max(0, (1.5 - (0.08 + v * (H_PLAF - 0.08))) / 0.6)), f = 1 - 0.55 * k; return [f, f, f]; }, 'ombre du bas du pilier (accueil)');
+    poserCalque(ch.panneau(m, PIL.y1 - PIL.y0, H_PLAF - 0.08, PIL.x0 - 0.004, (PIL.y0 + PIL.y1) / 2, (H_PLAF + 0.08) / 2, 'W'));
+  }
   B(PIL.x0 - 0.012, PIL.y0 - 0.012, PIL.x1, PIL.y1 + 0.012, 0, 0.08, H.chene, { ombre: false });
   C.ajouterBoite(PIL.x0, -PIL.y1, PIL.x1, -PIL.y0, { y1: H_PLAF });
   // LE PANNEAU DES FORMATIONS, entre la porte du local et le pilier (r04 : 0,42 m, de ≈ 0,95 à 2,08), son cadre sombre
@@ -1427,15 +1466,24 @@ export function poserHall(ch) {
     for (const h of [0.84, 1.165, 1.48]) BL(g, N, l, 0.012, 0.26, 0, h, -0.02);
     // les sweats pliés : un pavé arrondi, mou (RoundedBox), le devant imprimé, et le pli du dessus, plus étroit, qui
     // retombe un peu de travers — sans lui, deux valises blanches
+    // (RELECTURE DU 13/10 : deux boîtes à couvercle, raides, où la photo montre du TISSU posé — un seul volume mou par
+    // sweat : plus large en bas qu'en haut, le dessus bombé, les flancs qui ondulent, le devant qui déborde un peu des
+    // montants — 0,37 m en bas ; plus de « pli du dessus » en couvercle : le repli est dans le dessin)
     const sw = (imprime, h0, h1) => {
-      const m = [new THREE.MeshStandardMaterial({ color: imprime ? 0xe4e4e6 : 0xeeedea, roughness: 0.95 }), new THREE.MeshStandardMaterial({ map: texSweat(imprime), roughness: 0.95 })];
-      const hb = (h1 - h0) * 0.78, b = new THREE.Mesh(new RoundedBoxGeometry(0.34, hb, 0.27, 3, 0.06), [m[0], m[0], m[0], m[0], m[1], m[0]]);
-      b.position.set(0, h0 + hb / 2, -0.015); b.rotation.z = imprime ? 0.012 : -0.02; b.castShadow = true; g.add(b);
-      const p = new THREE.Mesh(new RoundedBoxGeometry(0.29, (h1 - h0) * 0.3, 0.24, 3, 0.03), m[0]);
-      p.position.set(imprime ? -0.015 : 0.02, h1 - (h1 - h0) * 0.15, -0.025); p.rotation.set(0.04, imprime ? -0.06 : 0.08, imprime ? -0.03 : 0.04); p.castShadow = true; g.add(p);
+      const m = [new THREE.MeshStandardMaterial({ color: imprime ? 0xe4e4e6 : 0xeeedea, roughness: 0.95 }), new THREE.MeshStandardMaterial({ map: texSweat(imprime, 0.36 / (h1 - h0)), roughness: 0.95 })];
+      const hb = h1 - h0, geo = new RoundedBoxGeometry(0.36, hb, 0.27, 5, 0.085), P = geo.attributes.position, s = imprime ? 1.7 : 0;
+      for (let i = 0; i < P.count; i++) {
+        const x = P.getX(i), y = P.getY(i), z = P.getZ(i), t = y / hb + 0.5;          // (t : 0 en bas, 1 en haut)
+        P.setXYZ(i, x * (1.04 - 0.14 * t) + 0.007 * Math.sin(y * 38 + z * 21 + s), y + 0.012 * t * Math.cos(x * 17 + s) - 0.01 * (1 - t) * Math.abs(Math.sin(x * 9 + s)), z * (1 - 0.12 * t) + 0.006 * Math.sin(x * 26 + y * 30 + s));
+      }
+      geo.computeVertexNormals();
+      const b = new THREE.Mesh(geo, [m[0], m[0], m[0], m[0], m[1], m[0]]);
+      b.position.set(imprime ? -0.006 : 0.008, h0 + hb / 2, -0.015); b.rotation.z = imprime ? 0.014 : -0.022; b.castShadow = true; g.add(b);
     };
     sw(false, 1.485, 1.71); sw(true, 1.17, 1.475);
-    const a = PL(g, new THREE.MeshStandardMaterial({ map: texAffichette(), roughness: 0.6 }), 0.5, 0.32, 0, 1.0, 0.115);
+    // (relecture du 13/10, à la règle : x 38-110, y 252-297 de r04 — 0,47 m de large, son milieu à 1,045 ; à 1,0 et 0,50 m,
+    // elle tombait 6 px trop bas et dépassait de 6 px à droite)
+    const a = PL(g, new THREE.MeshStandardMaterial({ map: texAffichette(), roughness: 0.6 }), 0.47, 0.32, 0, 1.045, 0.115);
     a.rotation.x = -0.05;
     C.ajouterBoiteOrientee(P.x, -P.y, 0.21, 0.14, 3 * Math.PI / 4, { y1: 1.74 });
   }
@@ -1458,9 +1506,11 @@ export function poserHall(ch) {
   C.ajouterBoite(17.04, -7.46, 17.46, -6.9, { y1: 1.35 });
   // LE MEUBLE BAS NOIR contre le mur nord, jusqu'au local (r04, au bord gauche : 1,0 m de haut, une petite étiquette
   // blanche) — à la place de la table blanche et de la chaise de hêtre de 2021, sous les étiquettes ocre
-  B(17.55, 6.98, LOC.x0, 7.48, 0, 1.0, H.meubleNoir);
-  B(18.42, 6.976, 18.54, 6.98, 0.82, 0.86, M.store, { ombre: false });
-  C.ajouterBoite(17.55, -7.48, LOC.x0, -6.98, { y1: 1.0 });
+  // (relecture du 13/10, à la règle : son bout est tombe en x 38 de r04, et non 62 — il s'arrête en x 18,5, à 0,3 m du
+  // local, dont on voit la porte jusqu'au sol entre lui et le portant ; son étiquette en (20 ; 283) : x 18,29, à 0,91 m)
+  B(17.55, 6.98, 18.5, 7.48, 0, 1.0, H.meubleNoir);
+  B(18.25, 6.976, 18.33, 6.98, 0.88, 0.94, M.store, { ombre: false });
+  C.ajouterBoite(17.55, -7.48, 18.5, -6.98, { y1: 1.0 });
   // LES ÉTIQUETTES OCRE sur le mur blanc (VO q_0027-0028, mesurées contre le semi-fixe de la porte nord : la grande de x
   // 17,54 à 18,38, de 1,98 à 2,36 m ; la petite de 17,76 à 18,16, de 1,50 à 1,88 m)
   ch.panneau(new THREE.MeshStandardMaterial({ map: texEtiquette('INFORMATIQUE', 0.84, 0.38), roughness: 0.6 }), 0.84, 0.38, 17.96, Y_MUR - 0.004, 2.17, 'S');
