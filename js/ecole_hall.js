@@ -575,10 +575,12 @@ function copieur(ch, x, y, face, haut = 1.15) {
 function affranchisseuse(ch, x, y) {
   const g = groupe(ch, x, y, 'W'), { M } = ch, c1 = H.copieurJour, c2 = H.copieurJour2, S = 1.16;
   // (dans le repère du groupe : +z vers l'ouest, le hall ; +x vers le SUD — à droite, vu du hall)
-  BL(g, c1, 0.86, S - 0.06, 0.62, 0, 0.06 + (S - 0.06) / 2, 0);
-  BL(g, M.noir, 0.86, 0.06, 0.6, 0, 0.03, 0, { ombre: false });
-  for (const h of [0.4, 0.78]) BL(g, c2, 0.82, 0.008, 0.004, 0, h, 0.311, { ombre: false });
-  BL(g, c2, 0.004, S - 0.14, 0.004, 0, 0.6, 0.311, { ombre: false });
+  // (le meuble : 0,50 m de profondeur seulement — à 0,62, avec le fauteuil du bout sud, il fermait le passage du personnel
+  // le long du plan de travail : joué, relecture du 13/10)
+  BL(g, c1, 0.86, S - 0.06, 0.5, 0, 0.06 + (S - 0.06) / 2, 0);
+  BL(g, M.noir, 0.86, 0.06, 0.48, 0, 0.03, 0, { ombre: false });
+  for (const h of [0.4, 0.78]) BL(g, c2, 0.82, 0.008, 0.004, 0, h, 0.251, { ombre: false });
+  BL(g, c2, 0.004, S - 0.14, 0.004, 0, 0.6, 0.251, { ombre: false });
   // la machine : la bande gris clair, le filet, le corps blanc arrondi, son écran et son clavier sur le dessus
   BL(g, c2, 0.52, 0.09, 0.4, 0.07, S + 0.045, 0.06);
   BL(g, H.rainure, 0.52, 0.012, 0.402, 0.07, S + 0.096, 0.06, { ombre: false });
@@ -590,14 +592,14 @@ function affranchisseuse(ch, x, y) {
   const creme = new THREE.MeshStandardMaterial({ color: 0xe6dcc2, roughness: 0.5, emissive: 0xe6dcc2, emissiveIntensity: 0.3 }); creme.name = 'chargeur crème (machine à affranchir)';
   const ch1 = new THREE.Mesh(new RoundedBoxGeometry(0.24, 0.17, 0.36, 2, 0.04), creme); ch1.position.set(-0.31, S + 0.085, 0.06); g.add(ch1);
   BL(g, new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.5 }), 0.07, 0.035, 0.004, -0.3, S + 0.1, 0.241, { ombre: false });
-  const galet = new THREE.Mesh(new RoundedBoxGeometry(0.15, 0.09, 0.12, 2, 0.04), c1); galet.position.set(-0.14, S + 0.045, 0.27); g.add(galet);
+  const galet = new THREE.Mesh(new RoundedBoxGeometry(0.15, 0.09, 0.12, 2, 0.04), c1); galet.position.set(-0.14, S + 0.045, 0.19); g.add(galet);
   // le plateau de sortie, au bout sud, qui remonte
   const pl = BL(g, c1, 0.26, 0.012, 0.3, 0.4, S + 0.24, 0.02, { ombre: false }); pl.rotation.z = 0.5;
   BL(g, c1, 0.08, 0.18, 0.3, 0.37, S + 0.09, 0.02, { ombre: false });
   // les classeurs debout, contre la glace
   const cl = new THREE.MeshStandardMaterial({ color: 0xb4bdc8, roughness: 0.6, emissive: 0xc4ccd6, emissiveIntensity: 0.25 }); cl.name = 'classeurs gris-bleu';
-  BL(g, cl, 0.32, 0.33, 0.1, -0.02, S + 0.165, -0.24);
-  for (const [dx, c] of [[-0.14, 0x3d5f9a], [-0.1, 0xf0efea], [-0.06, 0x3d5f9a]]) BL(g, new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }), 0.035, 0.3, 0.004, dx, S + 0.165, -0.188, { ombre: false });
+  BL(g, cl, 0.32, 0.33, 0.1, -0.02, S + 0.165, -0.2);
+  for (const [dx, c] of [[-0.14, 0x3d5f9a], [-0.1, 0xf0efea], [-0.06, 0x3d5f9a]]) BL(g, new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }), 0.035, 0.3, 0.004, dx, S + 0.165, -0.148, { ombre: false });
   return g;
 }
 
@@ -1333,8 +1335,8 @@ export function poserHall(ch) {
   // 1,50 ; dans le jour de la fenêtre c 18,98, à 1 m)
   // (relecture du 13/10 : ce n'est pas un copieur sur pied mais une MACHINE À AFFRANCHIR, basse et longue, à hauteur de
   // comptoir — affranchisseuse, plus haut ; de y 0,91 à 1,77)
-  affranchisseuse(ch, 19.43, 1.34);
-  C.ajouterBoite(19.1, -1.78, 19.78, -0.9, { y1: 1.42 });
+  affranchisseuse(ch, 19.49, 1.34);
+  C.ajouterBoite(19.22, -1.78, 19.78, -0.9, { y1: 1.42 });
   // LES FAUTEUILS NOIRS face au comptoir, le long du plan de travail : celui du bout sud porte le manteau moutarde (photo
   // 03 : il dépasse du comptoir vers (18,0 ; 1,7)), celui de l'hôtesse est devant l'écran « DELL », le troisième au
   // décroché, au coussin rayé (VO). Chacun laisse 0,66 m de passage à l'est ; on se relève au nord-est de sa place. (Le
