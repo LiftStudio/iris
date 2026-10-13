@@ -318,8 +318,10 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     // LE MONDE SOLIDE DE LA CAMÉRA : sous la volée 2 (au-dessus de la volée A), sous la volée 1 (au-dessus de la volée B),
     // sous le palier intermédiaire : des plafonds en marches, au plus bas de chaque giron (js/ecole_est.js : leurs
     // paillasses montent de 1,50 en x 18,29 à 3,0 en x 16,05, et de -0,25 en x 16,05 à 1,26 en x 18,29)
-    const sof2 = (x) => (x >= EST.xP ? EST.hP1 - 0.25 : EST.hP1 - 0.25 + (EST.xP - x) * 1.5056 / 2.24);
-    const sof1 = (x) => (x >= EST.xP ? EST.hP1 - 0.25 : -0.25 + (x - EST.x0) * 1.5056 / 2.24);
+    // (13/10 : les volées 1 et 2 partent de xD = 16,28, girons de 0,251 — js/ecole_est.js, photos 25 et 26)
+    const L12 = (EST.n - 1) * EST.g;
+    const sof2 = (x) => (x >= EST.xP ? EST.hP1 - 0.25 : EST.hP1 - 0.25 + Math.min(L12, EST.xP - x) * 1.5056 / L12);
+    const sof1 = (x) => (x >= EST.xP ? EST.hP1 - 0.25 : -0.25 + Math.max(0, x - EST.xD) * 1.5056 / L12);
     for (let i = 0; i < NM - 1; i++) {
       const xa = XA + i * G, xb = xa + G;
       C.plafond(xa, -10.65, xb, -9.15, sof2(xb));
