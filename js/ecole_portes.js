@@ -372,6 +372,17 @@ export class Portes {
         for (const dy of [-0.5, 0.5]) maille(boiteM(0.02, 0.02, 0.05), blanc ? M.alu : M.inox, tx, 1.05 + dy, z * 0.045, 0, g, { ombre: false });
       } else if (tirant === 'court') {
         maille(new THREE.CylinderGeometry(0.012, 0.012, 0.35, 10), M.inox, tx, 1.05, z * 0.06, 0, g, { ombre: false });
+      } else if (tirant === 'plat') {
+        // (14/10, le passage — photo 19 refaite à sa pose, agrandie, et photo 07 : ce n'est pas un tube mais un MÉPLAT
+        // laqué blanc de 6,5 cm, de 0,22 à 1,57, posé sur le montant de battement — son axe à 8,5 cm du chant —, décollé
+        // de 5 cm, ses deux bouts coudés vers le vantail ; dessous, à 0,945, l'entrée de clé ovale)
+        const xb = s * (w - 0.085), za = e / 2, zb = 0.075, ya = 0.22, yb = 1.57, dy = 0.03;
+        maille(boiteM(0.065, yb - ya - 2 * dy, 0.018), M.alu, xb, (ya + yb) / 2, z * zb, 0, g, { ombre: false });
+        for (const k of [-1, 1]) {
+          const r = maille(boiteM(0.05, Math.hypot(dy, zb - za) + 0.008, 0.014), M.alu, xb, (ya + yb) / 2 + k * ((yb - ya) / 2 - dy / 2), z * (za + zb) / 2, 0, g, { ombre: false });
+          r.rotation.x = k * z * Math.atan2(zb - za, dy);
+        }
+        maille(boiteM(0.022, 0.042, 0.004), M.inox, s * (w - 0.032), 0.945, z * (e / 2 + 0.002), 0, g, { ombre: false });
       }
     }
     if (autocollants) {
@@ -380,10 +391,11 @@ export class Portes {
       const A = this._matAutocollant();
       const rangs = autocollants === true ? [[1.0, 4], [1.55, 4]] : autocollants;
       // (13/10 : une rangée peut donner sa place — [hauteur, nombre, x0, pas] : le premier à x0 des gonds, puis au pas)
-      for (const [y, nb, x0, pas] of rangs) for (let i = 0; i < nb; i++) {
+      // (14/10 : et sa taille — [hauteur, nombre, x0, pas, largeur, hauteur de l'étiquette] ; 11 x 4 cm sinon)
+      for (const [y, nb, x0, pas, la = 0.11, ha = 0.04] of rangs) for (let i = 0; i < nb; i++) {
         const x = nb === 1 ? s * w / 2 : x0 !== undefined ? s * (x0 + i * pas) : s * (c + 0.06 + i * (w - 2 * c - 0.12) / 3.2);
-        const p = plan(g, A, 0.11, 0.04, x, y, 0.004, 1);
-        const q = plan(g, M.noirMat, 0.11, 0.04, x, y, -0.004, -1);
+        const p = plan(g, A, la, ha, x, y, 0.004, 1);
+        const q = plan(g, M.noirMat, la, ha, x, y, -0.004, -1);
         p.userData.vitre = q.userData.vitre = true;
       }
     }

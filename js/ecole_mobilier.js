@@ -346,22 +346,33 @@ export function poserMobilier(ch) {
   // (13/10, photo 06 refaite à sa pose, agrandie : son corps va de 0,66 à 1,00 sous une tête arrondie — 70 px, le jeu
   // en montrait 90 —, d'un rouge plus sourd ; la poignée vers 1,10, la boucle du tuyau jusqu'à 1,25 ; il est 7 cm plus
   // au nord, ses deux plaques avec lui — le pictogramme, 12 cm, à 1,87, la petite plaque à 1,49)
-  const yE = 6.97, rougeExt = new THREE.MeshStandardMaterial({ color: 0xb4241c, roughness: 0.35, metalness: 0.1 }); rougeExt.name = 'extincteur rouge (hall ouest)';
-  const ext = new THREE.Group(); ext.position.set(1.86, 0, -yE); ch.decor.add(ext);
-  maille(new THREE.CylinderGeometry(0.09, 0.09, 0.34, 18), rougeExt, 0, 0.83, 0, 0, ext);
-  maille(new THREE.SphereGeometry(0.09, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), rougeExt, 0, 1.0, 0, 0, ext);
-  maille(new THREE.CylinderGeometry(0.03, 0.045, 0.07, 10), M.noirMat, 0, 1.085, 0, 0, ext);
-  maille(boiteM(0.04, 0.06, 0.06), M.noirMat, -0.095, 0.96, 0, 0, ext);
-  // (photo 06 : la poignée et son levier, l'étiquette blanche, le tuyau noir qui fait une boucle au-dessus de la tête
-  // puis descend le long du corps jusqu'à la lance clipsée en bas ; 09/10)
-  maille(boiteM(0.12, 0.018, 0.035), M.noirMat, 0.03, 1.13, 0, 0, ext).rotation.z = -0.25;
-  const etiq = maille(new THREE.CylinderGeometry(0.0915, 0.0915, 0.2, 18, 1, true, -0.7, 1.4), M.boitier, 0, 0.82, 0, Math.PI / 2, ext, { ombre: false });
+  // (14/10, photo 06 à sa pose, agrandie sept fois : il PENCHE de 7° vers le nord sur son crochet ; son rouge est sombre
+  // — (130, 35, 25) sous un mur à (172, 158, 131), le jeu le rendait vermillon, (235, 25, 25) — ; le tuyau fait une
+  // grande BOUCLE DANS LE PLAN DU MUR, de l'épaule sud jusqu'à 27 cm au-dessus du corps, et redescend sur la tête — le
+  // jeu la tournait vers la pièce : de face, un trait ; la poignée est verte, vers le nord ; l'étiquette, claire à
+  // lignes rouges, couvre la moitié basse du corps)
+  // (et la même pose le met en y 6,78-6,98, sa tête en 6,90 : 9 cm plus au sud que le 13/10 ; ses plaques en y 6,92)
+  const yE = 6.88, rougeExt = new THREE.MeshStandardMaterial({ color: 0x8a2219, roughness: 0.32, metalness: 0.1 }); rougeExt.name = 'extincteur rouge (hall ouest)';
+  const ext = new THREE.Group(); ext.position.set(1.86, 0.83, -yE); ext.rotation.x = -0.12; ch.decor.add(ext);
+  maille(new THREE.CylinderGeometry(0.09, 0.09, 0.34, 18), rougeExt, 0, 0, 0, 0, ext);
+  maille(new THREE.SphereGeometry(0.09, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), rougeExt, 0, 0.17, 0, 0, ext);
+  maille(new THREE.CylinderGeometry(0.03, 0.045, 0.07, 10), M.noirMat, 0, 0.255, 0, 0, ext);
+  maille(boiteM(0.04, 0.06, 0.06), M.noirMat, -0.095, 0.13, 0, 0, ext);
+  const vertExt = new THREE.MeshStandardMaterial({ color: 0x1f4a33, roughness: 0.5 }); vertExt.name = 'poignée verte (extincteur)';
+  maille(boiteM(0.03, 0.02, 0.13), vertExt, 0.005, 0.305, -0.04, 0, ext).rotation.x = -0.22;
+  maille(boiteM(0.026, 0.016, 0.1), M.noirMat, 0.005, 0.275, -0.035, 0, ext);
+  const etiq = maille(new THREE.CylinderGeometry(0.0915, 0.0915, 0.2, 18, 1, true, -0.9, 1.8), new THREE.MeshStandardMaterial({ map: canvasTex(96, 96, (g, w, h) => {
+    g.fillStyle = '#d9d2c6'; g.fillRect(0, 0, w, h); g.fillStyle = '#a3261d';
+    g.fillRect(8, 6, w - 16, 9); for (let k = 0; k < 6; k++) g.fillRect(10, 24 + k * 9, w - 20 - (k % 3) * 12, 3);
+    g.strokeStyle = '#a3261d'; g.lineWidth = 2; g.strokeRect(22, 78, 16, 14); g.strokeRect(54, 78, 16, 14);
+  }, null, false, 4), roughness: 0.5 }), 0, -0.03, 0, Math.PI / 2, ext, { ombre: false });
   void etiq;
-  const tuyau = new THREE.CatmullRomCurve3([[0.0, 1.1, 0.02], [-0.05, 1.22, 0.05], [0.07, 1.25, 0.07], [0.13, 1.08, 0.08], [0.125, 0.85, 0.08], [0.085, 0.7, 0.075]].map((p) => new THREE.Vector3(...p)));
-  maille(new THREE.TubeGeometry(tuyau, 24, 0.009, 6), M.noirMat, 0, 0, 0, 0, ext, { ombre: false });
+  const tuyau = new THREE.CatmullRomCurve3([[0.035, 0.26, -0.005], [0.04, 0.36, 0.0], [0.045, 0.43, 0.04], [0.045, 0.44, 0.09], [0.04, 0.37, 0.125], [0.035, 0.25, 0.122], [0.03, 0.14, 0.1]].map((p) => new THREE.Vector3(...p)));
+  maille(new THREE.TubeGeometry(tuyau, 28, 0.011, 7), M.noirMat, 0, 0, 0, 0, ext, { ombre: false });
+  maille(boiteM(0.022, 0.2, 0.022), M.noirMat, 0.035, 0.02, -0.098, 0, ext, { ombre: false });
   C.ajouterCercle(1.86, -yE, 0.11, { y0: 0.6, y1: 1.3 });
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.12, 0.12, 1.755, yE, 1.87, 'E');
-  ch.panneau(new THREE.MeshStandardMaterial({ map: texPlaqueRougeBleue(), roughness: 0.5 }), 0.1, 0.1, 1.755, yE, 1.49, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 0.12, 0.12, 1.755, yE + 0.04, 1.87, 'E');
+  ch.panneau(new THREE.MeshStandardMaterial({ map: texPlaqueRougeBleue(), roughness: 0.5 }), 0.1, 0.1, 1.755, yE + 0.04, 1.49, 'E');
   // l'affiche jaune du tri, à gauche des portes de l'escalier : sur la face est de l'avancée nord du mur OUEST (09/10 :
   // elle était sur le mur des portes, cachée par le vantail ouvert ; photos 04, 20 : on la voit à gauche du vantail, sur
   // le mur en fuite). (Plan V2, photo 06 : son bord gauche à 0,29 m de l'angle de l'avancée, y 7,51 ; la photo rejouée la
@@ -369,7 +380,9 @@ export function poserMobilier(ch) {
   // plat, y 7,955-8,955, comme sur la photo 06.)
   // (13/10, photos 06, 20 et 04 refaites à leur pose : son haut est 10 cm plus bas, à 1,93 — sur la 06, au rang 172 et
   // non 155 ; sur la 20, 12 cm —, et son bas à 0,90, rang 392 : 0,68 x 1,03 ; son dessin : texTriHall)
-  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texTriHall(), roughness: 0.6 }), 2.45, 7.85, 'E', 0.68, 0.9, 1.93);
+  // (14/10, la pose refaite de la 06 — 15 points, 9 px : rangs 170 et 392 à son bord gauche, soit 0,96-1,98 ; la 04 de
+  // même ; la 20, floue, 0,85-1,92. Elle remonte de 4 cm, son bord gauche en y 7,53.)
+  cadreMural(ch, new THREE.MeshStandardMaterial({ map: texTriHall(), roughness: 0.6 }), 2.45, 7.87, 'E', 0.68, 0.94, 1.97);
   // LES DEUX A4 DU VANTAIL FERMÉ des portes de l'escalier (vantail est, x 3,45-4,45, face hall à y 8,935), l'un au-dessus
   // de l'autre, côté gonds (photos 06, 20 : une fiche de consignes de 1,25 à 1,70, une photo imprimée de 1,75 à 2,0 ; le
   // jeu les mettait côte à côte vers 1,65)
@@ -424,12 +437,47 @@ export function poserMobilier(ch) {
   // (photo 07 côté hall, photo 19 côté passage, en transparence ; relecture du 09/10) : elle part avec le vantail
   const pp = ch.portes.auto.find((P) => P.g.name === 'porte passage');
   const vo = pp && pp.vantaux.find((v) => v.s > 0);
+  // LES REFLETS DES VITRAGES, côté passage (14/10, photos 19 et 10 : vus du passage, les deux vantaux sont des miroirs
+  // sombres — les deux réglettes s'y reflètent en biais, des angles du haut vers le milieu, et le jour de la rue au
+  // centre ; le hall, derrière, se devine. Le verre clair du jeu, à 16 % d'opacité, ne renvoyait rien.) Deux faces de
+  // plus sur chaque vantail, tournées vers le passage seulement — du hall, elles n'existent pas : un voile sombre, et
+  // le reflet PEINT, relevé sur la photo 19 : la réglette de (0,085 ; 1,855) à (0,66 ; 1,55) du vitrage, son embout
+  // orange dehors ; le jour de la rue sur le tiers du côté du battement, de 0,75 à 1,55.
+  if (pp) {
+    const sombre = new THREE.MeshBasicMaterial({ color: 0x2a2e30, transparent: true, opacity: 0.2, depthWrite: false }); sombre.name = 'voile sombre des vitrages du passage';
+    const texReflet = (miroir) => canvasTex(128, 320, (g, w, h) => {
+      g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
+      if (miroir) { g.translate(w, 0); g.scale(-1, 1); }
+      const X = (u) => u * w, Y = (hh) => (2.23 - hh) / 2.16 * h;
+      // le jour de la rue : un pan bleuté aux bords fondus
+      const gr = g.createLinearGradient(X(0.62), 0, X(1), 0); gr.addColorStop(0, 'rgba(120,140,160,0)'); gr.addColorStop(0.35, 'rgba(120,140,160,0.75)'); gr.addColorStop(1, 'rgba(140,158,176,0.95)');
+      g.fillStyle = gr; g.fillRect(X(0.62), Y(1.55), X(0.38), Y(0.75) - Y(1.55));
+      g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(X(0.62), Y(0.9), X(0.38), 3);
+      // la réglette : un trait chaud dans son halo, l'embout orange au bout du dehors
+      for (const [l, c] of [[22, 'rgba(255,206,120,0.07)'], [13, 'rgba(255,214,140,0.12)'], [7, 'rgba(255,224,160,0.22)'], [3.5, 'rgba(255,236,190,0.7)']]) {
+        g.strokeStyle = c; g.lineWidth = l; g.lineCap = 'round'; g.beginPath(); g.moveTo(X(0.085), Y(1.855)); g.lineTo(X(0.66), Y(1.55)); g.stroke();
+      }
+      g.fillStyle = 'rgba(240,120,40,0.9)'; g.beginPath(); g.arc(X(0.075), Y(1.862), 3.2, 0, 7); g.fill();
+    }, null, false, 4);
+    for (const v of pp.vantaux) {
+      const reflet = new THREE.MeshBasicMaterial({ map: texReflet(v.s < 0), color: new THREE.Color(0.55, 0.55, 0.55), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+      reflet.name = 'reflet peint des vitrages du passage';
+      for (const [m, z, o] of [[sombre, 0.0028, 1], [reflet, 0.0034, 2]]) {
+        const r = new THREE.Mesh(new THREE.PlaneGeometry(0.9875 - 0.14, 2.3 - 0.14), m);
+        r.position.set(v.s * 0.9875 / 2, 1.15, z); r.castShadow = false; r.receiveShadow = false; r.renderOrder = o; r.userData.vitre = true; r.userData.horsAOSol = true; r.userData.sansNormales = true; v.g.add(r);
+      }
+    }
+  }
   if (vo) {
     // (13/10, photo 19 refaite à sa pose : x 2,78-3,06, de 1,33 à 1,53 — une feuille blanche au QR code jaune et à la
     // photo orangée, texAffichetteQR ; du hall, photo 07, on n'en voit que le dos gris)
     const a = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.2), new THREE.MeshStandardMaterial({ map: texAffichetteQR(), roughness: 0.75 }));
     a.position.set(0.47, 1.43, 0.004); a.castShadow = false; a.userData.vitre = true; vo.g.add(a);
-    const dos = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.2), new THREE.MeshStandardMaterial({ color: 0x9d9a94, roughness: 0.8 }));
+    // (14/10, photos 07 et 06 agrandies : du hall, on ne voit pas un dos gris mais LA MÊME IMAGE À L'ENVERS, par
+    // transparence — la photo à gauche, le QR code jaune au milieu —, un peu éteinte)
+    const gd = new THREE.PlaneGeometry(0.28, 0.2), uvd = gd.attributes.uv;
+    for (let i = 0; i < uvd.count; i++) uvd.setX(i, 1 - uvd.getX(i));
+    const dos = new THREE.Mesh(gd, new THREE.MeshStandardMaterial({ map: a.material.map, color: 0xcdc8be, roughness: 0.8 }));
     dos.position.set(0.47, 1.43, -0.004); dos.rotation.y = Math.PI; dos.castShadow = false; dos.userData.vitre = true; vo.g.add(dos);
   }
 
@@ -660,9 +708,12 @@ function texTableauFeuilles() {
 // blanc sur un fond bleu, la consigne en blanc dessous
 function texPlaqueRougeBleue() {
   return canvasTex(64, 64, (g, w, h) => {
-    g.fillStyle = '#244a9a'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#ffffff'; g.fillRect(6, 5, w - 12, 34); g.fillStyle = '#d32f2f'; g.fillRect(9, 8, w - 18, 28);
-    g.fillStyle = '#f2f2f2'; for (let k = 0; k < 3; k++) g.fillRect(9, 44 + k * 6, w - 18 - k * 8, 2);
+    // (14/10, photo 06 agrandie : un carré ROUGE BRIQUE, son quart bas gauche bleu, des lignes blanches en haut à gauche —
+    // et non un cadre bleu autour d'un pavé rouge vif)
+    g.fillStyle = '#9a3a2c'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#2f55a4'; g.fillRect(0, 34, 30, 30);
+    g.fillStyle = '#e9dfd8'; for (let k = 0; k < 3; k++) g.fillRect(5, 9 + k * 7, 24 - k * 4, 3); g.fillRect(34, 16, 10, 4); g.fillRect(48, 12, 9, 4);
+    g.fillRect(5, 52, 18, 5);
   }, null, false, 4);
 }
 // LE PLAN D'ÉVACUATION DU HALL OUEST (13/10, photos 06 et 19 agrandies) : une feuille blanche sous un cadre d'aluminium,
@@ -713,7 +764,8 @@ function texTriHall() {
   return canvasTex(256, 362, (g, w, h) => {
     g.fillStyle = '#f3f1ea'; g.fillRect(0, 0, w, h);
     const X = (u) => 5 + u * (w - 10), Y = (v) => 5 + v * (h - 16);
-    g.fillStyle = '#e9b741'; g.fillRect(X(0), Y(0), w - 10, h - 16);
+    // (14/10 : un jaune moins saturé — photos 06 et 20, à 0,93 / 0,80 / 0,43 du mur ; il sortait à 0,94 / 0,75 / 0,24)
+    g.fillStyle = '#e9be64'; g.fillRect(X(0), Y(0), w - 10, h - 16);
     const poly = (c, pts) => { g.fillStyle = c; g.beginPath(); pts.forEach(([u, v], i) => (i ? g.lineTo(X(u), Y(v)) : g.moveTo(X(u), Y(v)))); g.closePath(); g.fill(); };
     poly('#5c2a4a', [[0.447, 0.396], [0.94, 0.185], [1.0, 0.21], [1.0, 0.8], [0.82, 0.8], [0.73, 0.71], [0.73, 0.396]]);
     poly('#5c2a4a', [[0.33, 0.525], [0.42, 0.465], [0.515, 0.5], [0.5, 0.53]]);
@@ -753,9 +805,11 @@ function texLiegePassage() {
     const r = graineMob(77);
     g.fillStyle = '#b98b56'; g.fillRect(0, 0, w, h);
     for (let k = 0; k < 9000; k++) { g.fillStyle = r() < 0.5 ? 'rgba(118,80,42,0.32)' : 'rgba(224,186,136,0.28)'; g.fillRect(r() * w, r() * h, 1.6, 1.6); }
-    const tons = ['#f4f3ee', '#f4f3ee', '#eef0f3', '#3a5fa8', '#6a3f8e', '#e9e6de', '#f4f3ee', '#f4f3ee', '#8fb4d8', '#f1e7c8', '#2c2f4a', '#f4f3ee', '#eceae4', '#c9a9c9'];
-    for (let i = 0; i < 28; i++) {
-      const pw = 40 + r() * 26, ph = pw * (1.25 + r() * 0.25), x = 10 + (i % 14) * 53 + (r() - 0.5) * 20, y = (i < 14 ? 26 : 156) + (r() - 0.5) * 40;
+    // (14/10, photo 07 rapportée au mur : le tableau est à 0,90 / 0,92 / 0,95 — presque tout BLANC, des A4 bord à bord
+    // sur deux rangs ; le jeu, à 0,72 / 0,65 / 0,58, montrait surtout le liège sous des feuilles de 12 à 18 cm)
+    const tons = ['#f4f3ee', '#f4f3ee', '#eef0f3', '#3a5fa8', '#f4f3ee', '#e9e6de', '#f4f3ee', '#f4f3ee', '#8fb4d8', '#f1e7c8', '#f4f3ee', '#f4f3ee', '#eceae4', '#c9a9c9', '#6a3f8e', '#f4f3ee'];
+    for (let i = 0; i < 22; i++) {
+      const pw = 72 + r() * 10, ph = pw * (1.36 + r() * 0.08), x = 6 + (i % 11) * 68 + (r() - 0.5) * 14, y = (i < 11 ? 18 : 150) + (r() - 0.5) * 22;
       const c = tons[Math.floor(r() * tons.length)], clair = c > '#c';
       g.save(); g.translate(x + pw / 2, y + ph / 2); g.rotate((r() - 0.5) * 0.14);
       g.fillStyle = 'rgba(60,40,20,0.25)'; g.fillRect(-pw / 2 + 2, -ph / 2 + 3, pw, ph);
