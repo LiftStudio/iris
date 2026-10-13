@@ -246,13 +246,13 @@ function texTriangle() {
 function texEcranTV() {
   return canvasTex(256, 144, (g, w, h) => {
     // (relecture du 13/10, r04 agrandie six fois : pas de raies en travers de la dalle — quelques pavés clairs en haut à
-    // droite, les plafonniers reflétés —, un liseré argent au bord ; l'image, des 0,20 aux 0,82 de la largeur, d'un
+    // droite, les plafonniers reflétés —, un liseré argent au bord ; l'image, vers la gauche, sur les six dixièmes, d'un
     // lavande plus clair et plus bleu, 200, 208, 250)
     g.fillStyle = '#131519'; g.fillRect(0, 0, w, h);
     g.fillStyle = 'rgba(150,156,172,0.26)'; for (const [x, y, l, e] of [[150, 9, 34, 9], [190, 11, 30, 9], [226, 15, 22, 9], [208, 27, 40, 7], [224, 43, 26, 10]]) g.fillRect(x, y, l, e);
     g.strokeStyle = 'rgba(196,200,210,0.4)'; g.lineWidth = 2; g.strokeRect(1, 1, w - 2, h - 2);
-    const x0 = w * 0.18, y0 = h * 0.22, x1 = w * 0.81, y1 = h * 0.81;
-    const f = g.createLinearGradient(x0, y0, x1, y1); f.addColorStop(0, '#b4c2ff'); f.addColorStop(1, '#93a6f6');
+    const x0 = w * 0.09, y0 = h * 0.2, x1 = w * 0.72, y1 = h * 0.81;
+    const f = g.createLinearGradient(x0, y0, x1, y1); f.addColorStop(0, '#bcc8ff'); f.addColorStop(1, '#9db0fa');
     g.fillStyle = f; g.fillRect(x0, y0, x1 - x0, y1 - y0);
     g.fillStyle = '#20243c'; g.font = `500 13px ${POLICE}`; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
     ['Commander votre', 'sweat à l\'accueil', 'pour 25€'].forEach((t, i) => g.fillText(t, (x0 + x1) / 2 - 12, y0 + 34 + i * 16));
@@ -1169,7 +1169,7 @@ export function poserHall(ch) {
   // 104, 94. Le carrelage est celui de toute l'école, et la salle d'attente, juste sur r02, est sous une autre lumière : sa
   // matière n'est pas touchée. La lumière cuite du hall, elle, est SATURÉE — tous ses spots s'y additionnent jusqu'au blanc,
   // 255, 255, 253, quand celle de la salle garde le chaud des plafonniers — et ne colore plus rien. Un calque à 6 mm du sol,
-  // qui MULTIPLIE ce qu'il recouvre (2 x source x fond : 0,5 ne change rien) : chaud au nord de y 1,2, plein en 3,8 ; un
+  // qui MULTIPLIE ce qu'il recouvre (2 x source x fond : 0,5 ne change rien) : chaud au nord de y 1,6, plein en 4,0 ; un
   // rien plus clair vers la porte ; fondu à rien sur 0,8 m devant le passage de la pile et 0,6 m devant le mur nord — la
   // jonction et la salle d'attente gardent leur sol au pixel près.)
   {
@@ -1181,7 +1181,9 @@ export function poserHall(ch) {
       // (et, au milieu, le reflet des plafonniers sur le carrelage satiné, que la photo n'a pas : 115 au jeu pour 92 — un
       // cinquième de moins, en rond, autour de (16,45 ; 3,9), le pavé rétroprojeté)
       const reflet = 1 - 0.2 * bord * Math.exp(-((x - 16.45) ** 2 + (y - 3.9) ** 2) / 0.8);
-      return [(1 + 0.05 * chaud + 0.1 * jour) * reflet, (1 - 0.17 * chaud + 0.07 * jour) * reflet, (1 - 0.4 * chaud + 0.12 * jour) * reflet];
+      // (aux trois quarts de ce que r04 mesure : la photo 03, prise au téléphone un jour gris, montre ce même sol gris
+      // anthracite jusque dans le hall — entre les deux, un gris-brun)
+      return [(1 + 0.04 * chaud + 0.1 * jour) * reflet, (1 - 0.12 * chaud + 0.07 * jour) * reflet, (1 - 0.3 * chaud + 0.12 * jour) * reflet];
     }, 'lumière chaude des spots sur le carrelage de l\'accueil');
     const p = poserCalque(new THREE.Mesh(new THREE.PlaneGeometry(W, D), m));
     p.rotation.x = -Math.PI / 2; p.position.set(X0 + W / 2, 0.006, -(Y0 + D / 2)); p.name = 'lumière chaude du carrelage de l\'accueil';
@@ -1440,7 +1442,7 @@ export function poserHall(ch) {
     const t = new THREE.Group(); t.rotation.x = 0.15; g.add(t);
     BL(t, M.noir, 0.85, 0.5, 0.06, 0, 0, 0);
     const tex = texEcranTV();
-    const e = PL(t, new THREE.MeshStandardMaterial({ map: tex, color: 0x303030, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 1.0, roughness: 0.32 }), 0.81, 0.46, 0, 0, 0.031);
+    const e = PL(t, new THREE.MeshStandardMaterial({ map: tex, color: 0x303030, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 1.25, roughness: 0.32 }), 0.81, 0.46, 0, 0, 0.031);
     e.castShadow = false;
     // (r04 : sa fixation monte du coin haut gauche de l'écran jusqu'au plafond — deux tiges noires et leur câble)
     for (const x of [-0.37, -0.31]) BL(g, M.noir, 0.022, H_PLAF - T.h - 0.22, 0.022, x, (H_PLAF - T.h + 0.22) / 2, 0.0, { ombre: false });
