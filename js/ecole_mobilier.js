@@ -417,7 +417,8 @@ export function poserMobilier(ch) {
   // 2,29, et au-dessus, une étiquette blanche)
   ch.panneau(new THREE.MeshStandardMaterial({ map: texTableauFeuilles(), roughness: 0.7 }), 0.37, 0.39, 2.11, 4.046, 1.52, 'S');
   ch.panneau(new THREE.MeshStandardMaterial({ color: 0xf1f0ec, roughness: 0.6 }), 0.13, 0.05, 2.13, 4.046, 1.8, 'S');
-  ch.boite(1.82, 4.03, 2.27, 4.048, 0.14, 0.85, M.alu, { ombre: false });
+  // (13/10, photo 10 agrandie : la grille est d'un gris moyen, pas blanche)
+  ch.boite(1.82, 4.03, 2.27, 4.048, 0.14, 0.85, new THREE.MeshStandardMaterial({ color: 0xa9aaa6, roughness: 0.5, metalness: 0.2 }), { ombre: false });
   for (let h = 0.18; h < 0.82; h += 0.05) ch.boite(1.85, 4.025, 2.24, 4.03, h, h + 0.025, M.grille, { ombre: false });
   // L'AFFICHETTE SCOTCHÉE sur le vantail OUEST de la porte automatique, juste au-dessus de son autocollant « iris »
   // (photo 07 côté hall, photo 19 côté passage, en transparence ; relecture du 09/10) : elle part avec le vantail
@@ -643,21 +644,6 @@ function texBrochures() {
     }
   }, null, false, 4);
 }
-function texLiege() {
-  return canvasTex(256, 256, (g, w, h) => {
-    g.fillStyle = '#b88a55'; g.fillRect(0, 0, w, h);
-    for (let k = 0; k < 3000; k++) { const v = Math.random(); g.fillStyle = v < 0.5 ? 'rgba(120,80,40,0.35)' : 'rgba(220,180,130,0.3)'; g.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5); }
-    const cols = ['#ffffff', '#f2b705', '#2f6fb0', '#e04e3a', '#ffffff', '#3e9b6b', '#f7f7f2'];
-    for (let i = 0; i < 9; i++) {
-      const x = 8 + (i % 3) * 82 + Math.random() * 10, y = 8 + Math.floor(i / 3) * 82 + Math.random() * 10;
-      g.save(); g.translate(x + 35, y + 35); g.rotate((Math.random() - 0.5) * 0.12);
-      g.fillStyle = cols[i % cols.length]; g.fillRect(-35, -38, 66, 76);
-      g.fillStyle = 'rgba(60,60,60,0.5)'; for (let l = 0; l < 5; l++) g.fillRect(-28, -26 + l * 12, 50, 4);
-      g.fillStyle = '#d0262d'; g.beginPath(); g.arc(0, -34, 3, 0, 7); g.fill();
-      g.restore();
-    }
-  }, null, false, 4);
-}
 // l'affichette WIFI (photo 03) : noire, le titre et deux lignes en blanc, le QR code à droite
 // LE PETIT TABLEAU du pan plein du passage (photo 10) : sombre, six feuilles blanches épinglées sur deux colonnes
 function texTableauFeuilles() {
@@ -767,9 +753,9 @@ function texLiegePassage() {
     const r = graineMob(77);
     g.fillStyle = '#b98b56'; g.fillRect(0, 0, w, h);
     for (let k = 0; k < 9000; k++) { g.fillStyle = r() < 0.5 ? 'rgba(118,80,42,0.32)' : 'rgba(224,186,136,0.28)'; g.fillRect(r() * w, r() * h, 1.6, 1.6); }
-    const tons = ['#f4f3ee', '#f4f3ee', '#eef0f3', '#3a5fa8', '#6a3f8e', '#e9e6de', '#d9689a', '#f4f3ee', '#8fb4d8', '#f1e7c8', '#2c2f4a', '#f4f3ee'];
-    for (let i = 0; i < 24; i++) {
-      const pw = 46 + r() * 34, ph = pw * (1.25 + r() * 0.25), x = 14 + (i % 12) * 62 + (r() - 0.5) * 22, y = (i < 12 ? 22 : 150) + (r() - 0.5) * 36;
+    const tons = ['#f4f3ee', '#f4f3ee', '#eef0f3', '#3a5fa8', '#6a3f8e', '#e9e6de', '#f4f3ee', '#f4f3ee', '#8fb4d8', '#f1e7c8', '#2c2f4a', '#f4f3ee', '#eceae4', '#c9a9c9'];
+    for (let i = 0; i < 28; i++) {
+      const pw = 40 + r() * 26, ph = pw * (1.25 + r() * 0.25), x = 10 + (i % 14) * 53 + (r() - 0.5) * 20, y = (i < 14 ? 26 : 156) + (r() - 0.5) * 40;
       const c = tons[Math.floor(r() * tons.length)], clair = c > '#c';
       g.save(); g.translate(x + pw / 2, y + ph / 2); g.rotate((r() - 0.5) * 0.14);
       g.fillStyle = 'rgba(60,40,20,0.25)'; g.fillRect(-pw / 2 + 2, -ph / 2 + 3, pw, ph);
@@ -777,7 +763,7 @@ function texLiegePassage() {
       g.fillStyle = clair ? 'rgba(60,70,90,0.55)' : 'rgba(255,255,255,0.7)';
       g.fillRect(-pw / 2 + 5, -ph / 2 + 6, pw * 0.6, 5);
       for (let l = 0; l < 6; l++) g.fillRect(-pw / 2 + 5, -ph / 2 + 18 + l * 8, pw * (0.5 + r() * 0.35), 2.5);
-      if (r() < 0.4) { g.fillStyle = ['#d0462e', '#e9b741', '#3a5fa8'][Math.floor(r() * 3)]; g.fillRect(-pw / 2 + 5, ph / 2 - 26, pw - 10, 18); }
+      if (r() < 0.22) { g.fillStyle = ['#7b5a9a', '#c9a13c', '#3a5fa8'][Math.floor(r() * 3)]; g.fillRect(-pw / 2 + 5, ph / 2 - 20, pw - 10, 12); }
       g.restore();
     }
   }, null, false, 8);

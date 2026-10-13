@@ -668,6 +668,11 @@ function construireFacade(ch) {
   ch.boite(2.05, -0.95, 4.55, -0.41, 0, 0.006, M.acierNoir, { ombre: false });
   for (let x = 2.11; x < 4.5; x += 0.06) ch.boite(x, -0.9, x + 0.022, -0.46, 0.006, 0.009, M.noirMat, { ombre: false });
   ch.boite(2.175, -0.4, 4.425, -0.14, 0, 0.012, new THREE.MeshStandardMaterial({ color: 0xbdb7aa, roughness: 0.8 }), { ombre: false });
+  // (les tableaux et la sous-face de l'ouverture sont le bâti d'acier NOIR de la grille — photos 10 et 07 ; le jeu y
+  // laissait l'enduit blanc de l'épaisseur du mur, un liseré clair autour du passage vu de la rue)
+  ch.boite(2.175, -0.4, 2.181, 0, 0.012, 2.45, M.acierNoir, { ombre: false });
+  ch.boite(4.419, -0.4, 4.425, 0, 0.012, 2.45, M.acierNoir, { ombre: false });
+  ch.boite(2.175, -0.4, 4.425, 0, 2.444, 2.45, M.acierNoir, { ombre: false });
   // LA GRILLE DU PASSAGE (photos 10, 13) : deux vantaux de barreaux noirs de 1,2 x 2,4 m, ouverts à 90° sur le trottoir,
   // contre les jambages (plan V2 : x 2,15 et 4,45 ; à 2,25 m d'ouverture, chacun en ferme un peu plus de la moitié —
   // photo 10 recalée, le bout du vantail est vers y -1,65)
