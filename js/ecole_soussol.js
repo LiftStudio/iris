@@ -1044,8 +1044,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     ret(2.55, 7.36, 10.45, 7.66);
     ret(7.7, 2.41, 8.0, 7.36); ret(7.7, 7.66, 8.0, 10.26);
     ret(9.95, 2.41, 10.45, 4.75);
-    // la dalle qui manque au-dessus du baby-foot (le noir du plénum) et le détecteur rond près du passage
-    B(5.4, 4.6, 6.0, 5.2, H_PAUSE - 0.003, H_PAUSE + 0.2, std({ color: 0x0d0d0c, roughness: 1 }), { ombre: false });
+    // les deux dalles qui manquent (le noir du plénum : v_060, v_059 — près du fond, au-dessus du plafonnier du milieu ;
+    // v_067 — de part et d'autre de la retombée nord-sud) et le détecteur rond près du passage
+    for (const [x0, y0] of [[8.15, 3.75], [7.1, 4.4]]) B(x0, y0, x0 + 0.6, y0 + 0.6, H_PAUSE - 0.003, H_PAUSE + 0.2, std({ color: 0x0d0d0c, roughness: 1 }), { ombre: false });
     maille(new THREE.CylinderGeometry(0.06, 0.07, 0.04, 18), X.blancMat, 9.4, H_PAUSE - 0.02, -6.4, 0, ch.decor, { ombre: false });
     // les plafonniers ronds (v_060 en met deux en x 6,65 y 5,70 et x 7,26 y 3,81 de ce repère : la colonne du milieu)
     for (const [x, y] of [[3.8, 11.11], [6.2, 11.11], [9.2, 11.11], [3.8, 8.91], [6.2, 8.91], [9.2, 8.91],
@@ -1236,7 +1237,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // (le monnayeur à droite pour qui fait face à la machine : à l'ouest)
     const lf = montant ? l - 0.24 : l - 0.08, xa = montant ? x1 - 0.2 - lf : x0 + 0.04;
     const p = new THREE.Mesh(new THREE.PlaneGeometry(lf, vitre ? 1.5 : 1.6), mat);
-    p.position.set(xa + lf / 2, Y_SS + (vitre ? 0.95 : 1.0), -(y1 - 0.035)); p.castShadow = false; ch.decor.add(p);
+    p.position.set(xa + lf / 2, Y_SS + (vitre ? 0.95 : 1.0), -(y1 - 0.035)); p.rotation.y = Math.PI; p.castShadow = false; ch.decor.add(p);
     if (montant) {
       B(x1 - 0.2, y1 - 0.04, x1 - 0.04, y1 - 0.03, Y_SS + 0.25, Y_SS + 1.7, X.montant, { ombre: false });
       B(x1 - 0.17, y1 - 0.03, x1 - 0.07, y1 - 0.025, Y_SS + 1.1, Y_SS + 1.35, X.vitreNoire, { ombre: false });
@@ -1249,19 +1250,23 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // ---- le long du mur vert : cinq mange-debout à colonne, deux tabourets verts et trois noirs devant (relecture du
     // 14/10 : à 0,85 m du mur, et non 0,45 — v_063, v_064 rejouées sur les deux cadres, leurs embases tombaient 0,4 m
     // trop haut dans l'image ; le premier agent le mesurait aussi) ----
-    [5.7, 6.45, 7.2, 7.95, 8.7].forEach((x, i) => {
-      mangeDebout(x, 10.86, 'colonne');
-      tabouret(x + (i % 2 ? 0.05 : -0.05), 10.36, 0, -1, i === 1 || i === 3 ? 'tolix' : 'miura');
-    });
+    // (v_063 : les embases posées sur le sol — x 5,2, 6,55, 7,25, 7,9 —, la première à part, un tabouret noir de chaque
+    // côté ; le Tolix vert entre la troisième et la quatrième)
+    for (const x of [5.2, 6.5, 7.25, 7.9, 8.5]) mangeDebout(x, 10.83, 'colonne');
+    [[4.72, 'miura'], [5.85, 'miura'], [6.88, 'miura'], [7.58, 'tolix'], [8.2, 'miura']].forEach(([x, sorte]) => tabouret(x, 10.5, 0, -1, sorte));
     // ---- LE MILIEU (v_059 à v_061, les pieds posés sur le sol depuis la porte, à 0,2 m près ; v_066, v_067) : la grande
     // table en X et ses tabourets noirs à 2,5 m de la porte, l'îlot des mange-debout trépieds et le Tolix vert à côté,
     // le baby-foot nord-sud devant les distributeurs (VO q_0088, q_0136, q_0137), la table grise entre lui et le mur ouest,
     // un mange-debout devant les distributeurs ----
-    grandeTable(4.35, 6.65); autour(4.35, 6.65, 0.62, [100, 175, 300]);
+    // (deux tabourets noirs, côté porte : v_060, leurs pieds en x 3,95-4,7 y 7,0-7,1 ; on passe entre eux et la tablette)
+    grandeTable(4.35, 6.65); autour(4.35, 6.65, 0.62, [75, 140]);
     mangeDebout(5.6, 6.85, 'trepied'); autour(5.6, 6.85, 0.55, [117, 250], ['tolix', 'miura']);
     mangeDebout(6.75, 7.9, 'trepied'); autour(6.75, 7.9, 0.55, [175, 310], ['miura', 'tolix']);
-    mangeDebout(7.45, 6.45, 'trepied'); autour(7.45, 6.45, 0.5, [40, 220]);
-    babyFoot(5.65, 4.9);
+    // (la seconde table en X, à la croisée des retombées : v_066, v_067 — Haythem passe à côté, le dos au mur vert)
+    grandeTable(7.55, 8.35); autour(7.55, 8.35, 0.62, [75, 200, 320]);
+    // (le baby-foot : son flanc de bois au cap 116-122° de la porte, derrière la grande table — v_060 —, devant la branche
+    // sud du comptoir — v_066, v_067)
+    babyFoot(7.0, 5.5);
     {
       // (la table grise — v_059, v_060 : le plateau gris au bord droit, son pied noir posé en x 4,45 y 5,37)
       B(3.95, 4.95, 4.75, 5.55, Y_SS + 0.73, Y_SS + 0.76, X.tablette, { collision: true });
@@ -1301,8 +1306,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     distributeur(5.675, L_.friandises);
     distributeur(4.825, L_.cafe, { vitre: false, montant: false });
     distributeur(3.975, L_.frais);
+    // (au-dessus des machines, le mur blanc : v_066, v_067 ; le coffre gris n'en garde que son bout ouest, contre le mur)
     B(2.55, 2.41, 3.55, 3.21, Y_SS, Y_SS + 2.1, X.montant, { collision: true });
-    B(3.55, 2.41, 6.1, 3.15, Y_SS + 1.83, Y_SS + 2.1, X.montant);
     // ---- LE MUR EST, au nord du comptoir : les casiers blancs et la poubelle grise dessous (v_060, v_061 : y 7,35-7,95
     // du plan), le passage, la grille à persiennes, deux A4 bleues et la poubelle bleue ----
     const poubelle = (x, y, mat, c = 0.36) => {
