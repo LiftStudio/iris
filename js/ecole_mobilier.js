@@ -458,13 +458,13 @@ export function poserMobilier(ch) {
   // sombres — les deux réglettes s'y reflètent en biais, des angles du haut vers le milieu, et le jour de la rue au
   // centre ; le hall, derrière, se devine. Le verre clair du jeu, à 16 % d'opacité, ne renvoyait rien.) Deux faces de
   // plus sur chaque vantail, tournées vers le passage seulement — du hall, elles n'existent pas : un voile sombre, et
-  // le reflet PEINT, relevé sur la photo 19 : la réglette de (0,085 ; 1,855) à (0,66 ; 1,55) du vitrage, son embout
-  // orange dehors ; le jour de la rue sur le tiers du côté du battement, de 0,75 à 1,55.
+  // le reflet PEINT, relevé sur la photo 19 : le jour de la rue sur le tiers du côté du battement, de 0,75 à 1,55 (la
+  // réglette peinte, toujours au même endroit, a laissé place à son vrai reflet le 14/10 : plus bas).
   // (14/10, relecture — photo 19 rejouée à sa pose, les teintes rapportées au plafond du passage : vu du passage, le
   // HALL EST JAUNE — la face de la pile à (199, 172, 119), le mur du fond à (182, 168, 129), le sol brun sombre (100, 89,
   // 67) —, le passage lui-même d'un blanc neutre ; le jeu rendait le hall d'un gris neutre, bleuté au milieu, (188, 176,
   // 153) et (135, 125, 102) au sol : la lumière du hall est plus chaude que celle du passage, et l'appareil s'est réglé
-  // sur le passage. Le voile sombre MULTIPLIE donc, d'un jaune sourd — 0,92 / 0,80 / 0,56 de 0,2 à 1,85 m —, et
+  // sur le passage. Le voile sombre MULTIPLIE donc, d'un jaune sourd — 0,92 / 0,80 / 0,56 de 1,35 à 1,8 m —, et
   // presque neutre en haut du vitrage, où l'on voit le plafond du hall, gris neutre sur la photo (127, 122, 121). Les
   // réglettes ne sont plus peintes sur le verre : leur vrai reflet, js/carte_ecole.js.)
   if (pp) {
