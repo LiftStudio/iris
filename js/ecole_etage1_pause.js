@@ -410,7 +410,9 @@ export function poserPause1(ch, ctx) {
     // (la vidéo : brun taupe, satiné — les tables s'y reflètent ; sous les spots chauds du jeu, la teinte du relevé sortait
     // trop claire : un voile — relecture 10/10 : et trop rouge, chocolat ; un voile vert-gris le ramène au taupe mesuré sur
     // la vidéo, VO f_45,5 s : 104/76/45 contre 96/55/30)
-    lino: std({ map: texLino(), color: 0xbac6c2, roughness: 0.3 }, 'lino taupe (espace pause du 1er)'),
+    // (14/10 — VO q_0183 rejouée : le sol rend 0,52 du mur des jours, 78/59/39 contre 151/134/120 ; le jeu, 0,69. Un cran
+    // plus sombre et plus brillant — la photo 28 le voit clair, mais en rasant, où il renvoie le jour des murs)
+    lino: std({ map: texLino(), color: 0x8f9995, roughness: 0.24 }, 'lino taupe (espace pause du 1er)'),
     moquette: std({ map: texMoquette(), color: 0xa9adb6, roughness: 0.97 }, 'moquette en dalles (salle S 1.3)'),
     // (relecture 10/10 : un rien plus gris — sous nos lampes chaudes le #d8cab2 du relevé sortait crème jaune, VO f_51,6 s gris
     // beige)
@@ -893,7 +895,8 @@ export function poserPause1(ch, ctx) {
   // (ses deux tabourets à l'est et au nord-est : entre lui et celui du milieu, on passe — 0,7 m)
   for (const [x, y] of [[10.35, 7.35], [12.8, Yv(10.9)], [9.85, 8.9], [10.55, 10.05]]) mangeDebout(x, y);
   miura(10.75, 8.0, 'S', [11.2, 8.45]); miura(12.85, Yv(11.45), 'S', [12.4, Yv(11.75)]); miura(11.0, 7.55, 'W', [11.6, 7.55]);
-  miura(12.8, Yv(10.35), 'N', [12.3, 9.6]); miura(11.15, 10.1, 'W', [11.75, 10.1]);
+  // (14/10 : la sortie du tabouret du nord-est 5 cm plus loin — à 0,51 m de son axe, Haythem frôlait le tabouret)
+  miura(12.8, Yv(10.35), 'N', [12.25, 9.5]); miura(11.15, 10.1, 'W', [11.75, 10.1]);
   coque(8.7, 6.7, 'E', P.coqueOrange, [8.7, 7.3]); coque(9.25, 6.45, 'N', P.coqueMenthe, [9.25, 7.05]);
   // (la lime contre le muret court, entre la niche et le 1er poteau — relecture V2 : devant le 1er, le meuble bas occupe
   // l'angle du local)
