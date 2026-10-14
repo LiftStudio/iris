@@ -111,6 +111,15 @@
 // sombre ; dans la S 1.3, le triptyque entier et les cache-radiateurs sous les jours. Joué : palier est → pause → porte
 // du fond → couloir sombre → escalier principal descendu et remonté, → Si 1.4, → S 1.3, → recoin, → niche ; l'escalier
 // est monté et descendu ; les 22 places de l'espace pause prises et quittées ; ?tel=1.
+// RELU (14/10, relecture du « 100 % » : VO q_0183, q_0187, q_0195, q_0204, q_0210, q_0212, q_0218, q_0221, q_0270 et la
+// photo 28 rejouées à leurs poses, planches côte à côte et en fondu ; f_47-49,6 s, f_52,8-55,4 s, f_66-67,4 s à 12,5 i/s,
+// scratchpad iris_CR5) — ce qui avait échappé : les trois chaises coque ne sont pas hautes (à hauteur de table, sur tour
+// Eiffel noire) ; le 3e poteau fait 0,62 m, sa sketchnote 0,50 x 0,72, le 2e est 0,5 m plus à l'ouest, une retombée
+// blanche court sur la ligne des poteaux ; l'habillage des distributeurs va jusqu'au meuble bas, qui est devant lui ; la
+// lime est au sud-ouest de la rouge ; la notice du pan est est un A2 ; dans la S 1.3, les dossiers avaient perdu leurs
+// trous (un « destination-out » à 5 %) et leurs luges argent étaient quatre pieds noirs. Joué : palier est → pause →
+// niche → Si 1.4 → porte du fond → couloir sombre → escalier principal descendu et remonté → S 1.3 et son allée →
+// recoin → palier est → escalier est descendu et remonté ; les 22 places de l'espace pause prises et quittées ; ?tel=1.
 import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex } from './kit_decor.js';
