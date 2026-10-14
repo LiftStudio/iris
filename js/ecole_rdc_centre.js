@@ -46,6 +46,9 @@ export const PILE = { x0: 13.30, x1: 14.675, y0: 4.7, y1: 7.575 };
 // à l'angle, mais les photos de 2026 priment : x 9,09)
 // (retour de Haythem du 12/10, r03 : la salle d'attente élargie, son mur sud recule de 0,20 vers la rue — ligne 4,6, nu
 // nord 4,675, js/carte_ecole.js DY_R03 — ; le drapeau et la plaque restent à l'angle de son bout, contre lui)
+// (retour r07 de Haythem du 14/10 : la porte de la Si 0.1 et son mur avancent de 0,81 m vers le passage de la pile, ligne
+// x 9,975 — js/carte_ecole.js ; le bout du mur sud ne bouge pas, et son chant, x 9,24, de 4,125 à 4,675, au fond du redan,
+// garde la plaque, face à l'est, contre les jours — VO q_0040-0043 —, et le drapeau sur sa face nord — r02)
 const Y_BUREAU = 4.875 - 0.20, X_RETOUR = 9.24;
 const Y_PLAQUE = Y_BUREAU - 0.145, X_DRAPEAU = 9.09;
 
