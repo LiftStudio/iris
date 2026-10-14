@@ -225,20 +225,30 @@ function texLino() {
     for (let k = 0; k < 2600; k++) { const v = (r2() - 0.5) * 40; g.fillStyle = rgb(122 + v, 100 + v, 85 + v, 0.3); g.fillRect(r2() * w, r2() * h, 1, 1); }
   }, [1 / 2, 1 / 2], false, 8);
 }
-// LE DOSSIER DES CHAISES DE LA SALLE (VO q_0204-0212) : contreplaqué de hêtre moulé, ses trous ronds en « visage » —
-// deux en haut, un arc de cinq dessous (les trous sont transparents : alphaTest)
+// LE DOSSIER DES CHAISES DE LA SALLE (VO q_0204-0212) : contreplaqué de hêtre moulé, ses trous en « visage » (les trous
+// sont transparents : alphaTest)
 function texDossierHetre() {
   return canvasTex(128, 96, (g, w, h) => {
     const r2 = graine(911), gr = g.createLinearGradient(0, 0, w, 0);
     gr.addColorStop(0, '#c99a68'); gr.addColorStop(0.5, '#dcb385'); gr.addColorStop(1, '#c99a68');
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
     for (let k = 0; k < 40; k++) { g.fillStyle = `rgba(120,78,40,${0.05 + r2() * 0.08})`; g.fillRect(0, r2() * h, w, 1); }
-    g.globalCompositeOperation = 'destination-out';
-    const trou = (x, y, r) => { g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); };
-    trou(w * 0.36, h * 0.3, 6.5); trou(w * 0.64, h * 0.3, 6.5);
-    for (let i = 0; i < 5; i++) { const a = -0.55 + i * 0.275; trou(w / 2 + Math.sin(a) * w * 0.3, h * 0.48 + Math.cos(a) * h * 0.2, 5.5); }
-    g.globalCompositeOperation = 'source-over';
-  }, null, true, 4);
+  }, null, false, 4);
+}
+// (relecture du 14/10 : les trous ne se voyaient pas — « destination-out » efface d'autant que le remplissage est opaque,
+// et le dernier fillStyle était celui des veines, à 5-13 % : le trou gardait 241/255 d'alpha, l'alphaTest ne coupait
+// rien. VO q_0204, q_0206, q_0212 de près : deux YEUX, des fentes arrondies de 3 x 2,5 cm, et une BOUCHE, une fente en arc
+// renversé de 11 cm — le « visage » boudeur des chaises de collège ; pas un arc de cinq trous ronds. Les trous vont dans
+// une carte d'alpha à part : percés dans la couleur, leur noir bavait en traînées sur le hêtre, vu en biais)
+function texDossierTrous() {
+  return canvasTex(128, 96, (g, w, h) => {
+    g.fillStyle = '#fff'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#000'; g.strokeStyle = '#000';
+    const oeil = (x, y) => { g.beginPath(); g.ellipse(x, y, 5.5, 4.2, 0, 0, 7); g.fill(); };
+    oeil(w * 0.37, h * 0.3); oeil(w * 0.63, h * 0.3);
+    g.lineWidth = 5; g.lineCap = 'round';
+    g.beginPath(); g.arc(w / 2, h * 0.99, 30, Math.PI * 1.3, Math.PI * 1.7); g.stroke();
+  }, null, false, 4);
 }
 // LE DISTRIBUTEUR DE BOISSONS CHAUDES (VO q_0186 : façade noire, le grand visuel de tasse en haut, la colonne de touches
 // à droite, le monnayeur, la niche du gobelet en bas à cadre blanc) — 0,65 x 1,83 m
@@ -433,9 +443,11 @@ export function poserPause1(ch, ctx) {
     plateau: std({ color: 0xd8d0c2, roughness: 0.48 }, 'stratifié hêtre clair (tables de la salle)'),
     chant: std({ color: 0xa48a68, roughness: 0.5 }),
     pietement: std({ color: 0x2b2d33, roughness: 0.45, metalness: 0.5 }, 'piétement anthracite'),
-    chrome: std({ color: 0xa8a9ad, roughness: 0.3, metalness: 0.85 }, 'tube chromé'),
+    // (relecture du 14/10 : à 0,85 de métal, sans carte d'environnement dans la salle, le tube sortait NOIR ; VO q_0200-0212,
+    // les luges des chaises sont d'un gris argent clair, plus claires que la moquette et que le piètement des tables)
+    chrome: std({ color: 0xc6c9cc, roughness: 0.3, metalness: 0.4 }, 'tube chromé'),
     hetre: std({ color: 0xd2a676, roughness: 0.55 }, 'contreplaqué de hêtre'),
-    dossier: std({ map: texDossierHetre(), roughness: 0.55, alphaTest: 0.5, side: THREE.DoubleSide }, 'dossier de hêtre percé'),
+    dossier: std({ map: texDossierHetre(), alphaMap: texDossierTrous(), roughness: 0.55, alphaTest: 0.5, side: THREE.DoubleSide }, 'dossier de hêtre percé'),
     laque: std({ color: 0x1b1b1b, roughness: 0.16, metalness: 0.2 }, 'laqué noir brillant'),
     noir: std({ color: 0x1d1d1c, roughness: 0.5, metalness: 0.15 }, 'acier noir des mange-debout'),
     miura: std({ color: 0x2a2826, roughness: 0.55 }, 'polypropylène noir (tabourets)'),
@@ -1123,14 +1135,20 @@ export function poserPause1(ch, ctx) {
     g.computeVertexNormals();
     return g;
   })();
-  const _geoTube = new THREE.CylinderGeometry(0.009, 0.009, 1, 6);
   const chaiseHetre = (x, y, dir, sortie) => {
     const [fx, fz] = DIR[dir];
     const g = new THREE.Group(); g.position.set(x, N1, -y); g.rotation.y = Math.atan2(fx, fz); groupe.add(g);
     maille(_geoAssise, P.hetre, 0, 0.455, 0.02, 0, g);
     const d = maille(_geoDos, P.dossier, 0, 0.67, -0.19, 0, g); d.rotation.x = -0.12;
-    for (const [px, pz] of [[-0.18, 0.17], [0.18, 0.17], [-0.18, -0.15], [0.18, -0.15]]) { const t = maille(_geoTube, P.chrome, px, 0.225, pz, 0, g); t.scale.y = 0.45; }
-    for (const px of [-0.17, 0.17]) { const t = maille(_geoTube, P.chrome, px, 0.6, -0.175, 0, g); t.scale.y = 0.3; t.rotation.x = -0.12; }
+    // (relecture du 14/10 — VO q_0200, q_0204, q_0206, q_0212 de près : pas quatre pieds droits, une LUGE — de chaque côté,
+    // un tube qui descend de l'avant de l'assise, court au sol vers l'arrière, remonte derrière l'assise et tient le
+    // dossier)
+    for (const px of [-0.19, 0.19]) {
+      tige(g, P.chrome, [px, 0.445, 0.19], [px, 0.012, 0.225], 0.009);
+      tige(g, P.chrome, [px, 0.012, 0.225], [px, 0.012, -0.2], 0.009);
+      tige(g, P.chrome, [px, 0.012, -0.2], [px, 0.445, -0.17], 0.009);
+      tige(g, P.chrome, [px, 0.445, -0.17], [px, 0.79, -0.215], 0.009);
+    }
     C.ajouterCercle(g.position.x, g.position.z, 0.2, { y0: N1, y1: N1 + 0.9 });
     sieges.push({ x: g.position.x + fx * 0.04, z: g.position.z + fz * 0.04, y: 0.47, fx, fz, sx: sortie[0], sz: -sortie[1], nom: 'la chaise', sol: N1 });
   };
