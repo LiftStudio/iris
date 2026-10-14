@@ -1152,6 +1152,14 @@ function construireMurs(ch) {
   // 4,125, reste caché sur r02, et l'ouverture vers le hall est intacte) ; la plaque du bureau de direction reste sur le
   // chant du bout du mur, face à l'est, contre les jours (VO q_0040-0043), le drapeau sur sa face nord (r02). La Si 0.1
   // gagne l'angle x 9,09-9,9 × y 2,85-3,975.)
+  // (RELECTURE r07 DU 14/10, mesures refaites : r02, hauteurs sol-plafond prises à la même colonne sur la photo et sur le
+  // jeu rejoué à la même pose — le pilier 958 px (jeu 956), la face ouest de la pile près de son angle 547 px (jeu 505) :
+  // 1,75 contre 1,89, la pile 0,63 m (± 0,2) plus près du pilier et du bout du mur sud qu'au jeu ; et l'ouverture vue à
+  // droite du pilier ne fait que 4,9° sur la photo, 8,5° au jeu — le bout du mur est plutôt à l'est de sa place qu'à
+  // l'ouest. La photo 22 (2021), posée sur la pile seule — neuf points, f 480, l'appareil juste passé la porte 6 —, voit
+  // le pilier à sa place par rapport à la pile, à 0-0,4 m près selon la focale. Les deux bornent la ligne du mur de la
+  // porte à 3,1-3,5 m de la pile : 3,25 est dedans. Aucune photo ne montre ce mur de face ; le redan reste caché sur r02,
+  // la photo 02 et la VO, qui sont identiques avant et après.)
   const XSB = 9.975, YRD = 4.05;
   // le mur entre la Si 0.1 et le bureau, prolongé au nord jusqu'au mur du redan : c'est maintenant LE MUR DE LA PORTE de la
   // Si 0.1 (r07), sa face est fermant l'antichambre à l'ouest (y 3,0-4,125)
