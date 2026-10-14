@@ -152,7 +152,12 @@ const XK = 13.34, YK = 10.825;
 // etage1.md § 5 (b) — la salle Robert Kahn garde sa porte à 4,40 m de son mur ouest (VO q_0221 : l'allée est dans
 // l'axe de la porte) et tient dans le gabarit IGN, x 6,125-12,525)
 const DXN = -1.85;
-const POTEAUX = [8.0 + DXN, 9.25 + DXN, 10.5 + DXN], DP = 0.21;   // (42 x 42 cm)
+// (relecture du 14/10 — VO q_0183, q_0187, q_0218, f_53,5 s et 54,4 s : le 3e poteau, celui de la sketchnote, est bien
+// plus large que les deux autres — sur q_0218, vu presque de face, 53 px pour 0,42 m de l'un des deux autres à 35 px ;
+// sur q_0183, pose tirée du seul côté sud, son angle sud-ouest tombe en x 8,25, le sud-est en 8,87 : 0,62 m. Il garde
+// sa face est, 8,86 — l'angle du passage vers la Si 1.4 —, et s'élargit vers l'ouest, 42 cm de profondeur)
+const POTEAUX = [8.0 + DXN, 9.25 + DXN, 10.4 + DXN], DP = 0.21;   // (42 x 42 cm ; le 3e, 62 x 42)
+const DXP = [DP, DP, 0.31];                                        // la demi-largeur en x de chacun
 // (V2 : la face sud du local — relecture V2 : les poses de q_0183 et de q_0195, chacune tirée du seul côté sud, mettent
 // le bord gauche de la machine à café en y 7,60 et 7,62 : l'habillage commence 0,9 m après le semi-fixe, et non 2,1 m —
 // q_0195, le mur des affichettes ne fait que 1,8 fois la largeur du semi-fixe —, comme sur master)
@@ -675,10 +680,19 @@ export function poserPause1(ch, ctx) {
     // (14/10 — VO q_0183, q_0214, q_0218, de face et de biais : après la vitrée, l'habillage ne fait plus qu'un montant
     // gris de 0,25-0,35 m, puis le mur blanc du local jusqu'au meuble bas et au muret court ; il en faisait 1,0 m — sur
     // q_0183 rejouée, son bord droit sortait 65 px trop à droite)
-    const y0 = YB + 0.15, y1 = 10.55, xa = XB + 0.06, xb = XN, hh = HP, hm = N1 + 1.9;
+    // (relecture du 14/10 — VO q_0187, q_0214, q_0218, de biais et presque de face : après la vitrée, l'habillage gris-beige
+    // continue, du sol aux dalles, sur 0,6-0,7 m — 60 px sur q_0187 et sur q_0218, quand le jeu n'en montrait que 16 —,
+    // jusqu'au meuble bas brun qui s'y adosse. Sur q_0183, ce que le jeu prenait pour le mur blanc du local est aussi
+    // sombre que l'habillage (103/77/47 contre 110/92/72 ; le mur blanc, 178/134/93), son bord, u 452, tombe en y 11,29
+    // sur la pose tirée du côté sud. Ce bout-là est d'un brun-beige plus chaud — q_0187 : 103/79/45 —, l'habillage revient
+    // en y 11,27)
+    const y0 = YB + 0.15, y1 = 11.27, xa = XB + 0.06, xb = XN, hh = HP, hm = N1 + 1.9;
     const yc0 = y0 + 0.1, yc1 = y0 + 0.9, ys0 = y0 + 1.1, ys1 = y0 + 2.75;          // la machine à café, la vitrée
-    B(xa, y0, xb, y1, hm, hh, P.habillage, { collision: true });
-    for (const [a, b] of [[y0, yc0], [yc1, ys0], [ys1, y1]]) B(xa, a, xb, b, N1, hm, P.habillage, { collision: true });
+    const chaud = new THREE.MeshStandardMaterial({ map: texPeinture(0x8c7a5e, 3), roughness: 0.6 });
+    chaud.name = 'habillage brun-beige (au-delà de la vitrée)';
+    B(xa, y0, xb, ys1, hm, hh, P.habillage, { collision: true });
+    for (const [a, b] of [[y0, yc0], [yc1, ys0]]) B(xa, a, xb, b, N1, hm, P.habillage, { collision: true });
+    B(xa, ys1, xb, y1, N1, hh, chaud, { collision: true });
     const grille = new THREE.MeshStandardMaterial({ map: texGrilleVent(), roughness: 0.6 });
     // (14/10 — VO q_0183, q_0214 : DEUX grilles, une au-dessus de chaque machine ; la vitrée en avait deux)
     for (const yc of [(yc0 + yc1) / 2, (ys0 + ys1) / 2]) panneau(grille, 0.5, 0.19, xb + 0.002, yc, N1 + 2.2, 'E');
@@ -692,7 +706,7 @@ export function poserPause1(ch, ctx) {
     // (relecture V2 : entre le bout de l'habillage et le muret court, le meuble bas brun sombre — VO q_0187, q_0189,
     // q_0215 : à hauteur d'appui, contre la face du local)
     const brun = new THREE.MeshStandardMaterial({ color: 0x3b2f29, roughness: 0.55 });
-    // (14/10 : il garde sa longueur de 0,52 m contre le muret court, le mur blanc du local se montre entre lui et l'habillage)
+    // (14/10 : il garde sa longueur de 0,52 m contre le muret court ; relecture : l'habillage le touche)
     B(xa, 11.32, xa + 0.45, YP - 0.155, N1, N1 + 0.88, brun, { collision: true });
   }
   // LE MUR EST : le bloc de sortie au-dessus de la porte du palier, la grande affiche encadrée « ESC… » ; dans le recoin,
@@ -712,16 +726,24 @@ export function poserPause1(ch, ctx) {
   // (V2 : sur le pan plein entre l'angle du recoin et la porte du palier, VO q_0268-0272 : le déclencheur à 1,2 m, la
   // notice A3 à 1,5 m, à un pas de la porte)
   declencheur(13.49, 6.86, 1.25, 'W');
-  cadre(texConsignes(), 0.32, 0.5, 13.49, 6.5, 1.47, 'W', 0.01);
+  // (relecture du 14/10 — VO q_0270 rejouée : au même u que dans le jeu, donc sur le même point du mur, la notice y fait
+  // 1,2 fois la hauteur et 1,65 fois la largeur du cadre de 0,32 x 0,50, son bas plus près du déclencheur : un A2)
+  cadre(texConsignes(), 0.44, 0.6, 13.49, 6.45, 1.42, 'W', 0.01);
 
   // LE CÔTÉ NORD : les trois poteaux blancs, les murets lilas à tablette blanche (on s'y accoude), l'alcôve derrière
-  for (const x of POTEAUX) {
-    const e = DP + 0.01;
-    B(x - DP, YP - DP, x + DP, YP + DP, N1, HP, M.blanc, { collision: true, ombre: false });
-    for (const [a, b, c, dd] of [[x - e, YP - e, x + e, YP - DP], [x - e, YP - DP, x - DP, YP + DP], [x + DP, YP - DP, x + e, YP + DP]]) B(a, b, c, dd, N1, N1 + 0.08, P.plinthe, { ombre: false });
-  }
+  POTEAUX.forEach((x, i) => {
+    const dx = DXP[i], ex = dx + 0.01, e = DP + 0.01;
+    B(x - dx, YP - DP, x + dx, YP + DP, N1, HP, M.blanc, { collision: true, ombre: false });
+    for (const [a, b, c, dd] of [[x - ex, YP - e, x + ex, YP - DP], [x - ex, YP - DP, x - dx, YP + DP], [x + dx, YP - DP, x + ex, YP + DP]]) B(a, b, c, dd, N1, N1 + 0.08, P.plinthe, { ombre: false });
+  });
+  // (relecture du 14/10 — VO q_0187, q_0218, f_53,5 s, f_54,4 s : au-dessus des murets, entre les poteaux, l'orange de
+  // l'alcôve s'arrête sous une bande blanche, d'un poteau à l'autre — une RETOMBÉE qui file sur la ligne des poteaux,
+  // du local au 3e ; au-delà, vers la Si 1.4, l'orange monte jusqu'aux dalles. Sur q_0218, 12 px de blanc pour 123
+  // d'orange au-dessus de la tablette : 22 cm)
+  B(XB + 0.06, YP - 0.15, POTEAUX[2] - DXP[2], YP + 0.15, HP - 0.22, HP, M.blanc, { ombre: false });
+  C.ajouterBoite(XB + 0.06, -(YP - 0.15), POTEAUX[2] - DXP[2], -(YP + 0.15), { y0: HP - 0.22, y1: HP });
   // (le muret court, du local au 1er poteau, puis les deux autres)
-  const murets = [[XB + 0.06, POTEAUX[0] - DP], [POTEAUX[0] + DP, POTEAUX[1] - DP], [POTEAUX[1] + DP, POTEAUX[2] - DP]];
+  const murets = [[XB + 0.06, POTEAUX[0] - DP], [POTEAUX[0] + DP, POTEAUX[1] - DP], [POTEAUX[1] + DP, POTEAUX[2] - DXP[2]]];
   for (const [a, b] of murets) {
     B(a, YP - 0.075, b, YP + 0.075, N1, N1 + 0.97, P.lilas, { collision: true });
     B(a, YP - 0.125, b, YP + 0.125, N1 + 0.97, N1 + 1.0, P.tablette);
@@ -732,8 +754,10 @@ export function poserPause1(ch, ctx) {
   // la plaque noire juste à droite du 1er poteau ; f_54,6 s, au tiers du jour entre le 1er et le 2e), la sketchnote A2 sur
   // le 3e poteau et la fiche bleue sur sa face est
   plaque('Espace', 'pause', null, POTEAUX[0] + 0.07, YO - 0.063, 'S', 1.65, 'tasse');
-  panneau(new THREE.MeshStandardMaterial({ map: texSketchnote(), roughness: 0.6 }), 0.36, 0.51, POTEAUX[2], YP - DP - 0.002, N1 + 1.9, 'S');
-  panneau(new THREE.MeshStandardMaterial({ map: texFiche('#2f62b5', '#e8eef8'), roughness: 0.6 }), 0.21, 0.297, POTEAUX[2] + DP + 0.002, YP, N1 + 1.6, 'E');
+  // (relecture du 14/10 — VO q_0218, vue presque de face : la sketchnote couvre 42 px de large sur les 53 de la face, 63
+  // de haut, centrée à 1,85 m : 0,50 x 0,72 — elle faisait 0,36 x 0,51 ; q_0187 la donne à 0,48 x 0,68)
+  panneau(new THREE.MeshStandardMaterial({ map: texSketchnote(), roughness: 0.6 }), 0.5, 0.72, POTEAUX[2] - 0.02, YP - DP - 0.002, N1 + 1.85, 'S');
+  panneau(new THREE.MeshStandardMaterial({ map: texFiche('#2f62b5', '#e8eef8'), roughness: 0.6 }), 0.21, 0.297, POTEAUX[2] + DXP[2] + 0.002, YP, N1 + 1.6, 'E');
 
   // =====================================================================
   //  LE MOBILIER DE L'ESPACE PAUSE (on s'y assoit)
@@ -802,23 +826,43 @@ export function poserPause1(ch, ctx) {
   // leur tablette (1,0 m) ; sur q_0183, l'assise de la menthe est à 0,7 m. Le jeu les dessinait d'une calotte et d'une
   // bande de cylindre — « des palettes plates », ce que Haythem avait relevé au rez-de-chaussée (r02))
   const HC = 0.27;                                       // (la coque montée de 27 cm : l'assise à 0,72 m)
-  const coque = (x, y, dir, mat, sortie = null) => {
-    const [fx, fz] = DIR[dir];
+  // (relecture du 14/10 — VO f_48,4-49,2 s, q_0197, q_0214 : l'orange et la menthe, près des jours, ne sont PAS hautes.
+  // Sur f_48,8 s, l'appareil passe à 2 m d'elles et les jours donnent l'échelle — appui 0,98, linteau 2,44 : le haut du
+  // dossier de la menthe tombe 120 px sous l'horizon, sa coque fait 90 px de large ; un dossier à 0,80 la met à 2,7 m
+  // pour 0,52 m de large — la coque d'une DAR vue de biais —, un dossier à 1,07 à 1,6 m pour 0,31 : trop petite de
+  // moitié. De même l'orange (90 px sous l'horizon, 75 de large : 0,58 m contre 0,35). Et leurs dossiers, rétroprojetés
+  // à 0,80 depuis les poses de q_0183 et de q_0195, tombent à 0,5 m l'un de l'autre (à 1,07 : à 1,3 m). Ce sont des DAR
+  // à hauteur de table, sur le piètement « tour Eiffel » noir de f_47,6 s ; seule la lime, devant les murets, est haute
+  // — son dossier passe au-dessus de leur tablette)
+  const coque = (x, y, dir, mat, sortie = null, haute = true) => {
+    const [fx, fz] = DIR[dir], hc = haute ? HC : 0;
     const g = new THREE.Group(); g.position.set(x, N1, -y); g.rotation.y = Math.atan2(fx, fz); groupe.add(g);
-    maille(geoCoque(), mat, 0, HC, 0, 0, g, { ombre: false });
-    maille(geoOurletCoque(), mat, 0, HC, 0, 0, g, { ombre: false });
-    // (le piètement noir : quatre pieds écartés, l'anneau repose-pieds à 0,30 m, les fils en X qui remontent sous
-    // l'assise, la platine)
-    const pied = (px, pz, hp) => [px * (0.215 - 0.1 * hp / 0.67), hp, pz * (0.2 - 0.1 * hp / 0.67)];
-    for (const [px, pz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-      tige(g, P.noir, pied(px, pz, 0.01), pied(px, pz, 0.675), 0.009);
-      tige(g, P.noir, pied(px, pz, 0.46), [0, 0.66, 0], 0.0045);
+    maille(geoCoque(), mat, 0, hc, 0, 0, g, { ombre: false });
+    maille(geoOurletCoque(), mat, 0, hc, 0, 0, g, { ombre: false });
+    if (haute) {
+      // (le piètement noir : quatre pieds écartés, l'anneau repose-pieds à 0,30 m, les fils en X qui remontent sous
+      // l'assise, la platine)
+      const pied = (px, pz, hp) => [px * (0.215 - 0.1 * hp / 0.67), hp, pz * (0.2 - 0.1 * hp / 0.67)];
+      for (const [px, pz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+        tige(g, P.noir, pied(px, pz, 0.01), pied(px, pz, 0.675), 0.009);
+        tige(g, P.noir, pied(px, pz, 0.46), [0, 0.66, 0], 0.0045);
+      }
+      const anneau = maille(new THREE.TorusGeometry(0.19, 0.008, 6, 28), P.noir, 0, 0.3, 0, 0, g, { ombre: false }); anneau.rotation.x = Math.PI / 2;
+      maille(boiteM(0.22, 0.012, 0.2), P.noir, 0, 0.67, -0.01, 0, g, { ombre: false });
+    } else {
+      // (la « tour Eiffel » de la salle d'attente, js/ecole_mobilier.js, en fil noir : quatre pieds, la ceinture à 19 cm,
+      // les fils en X qui remontent sous l'assise, la platine)
+      const pied = (px, pz, hp) => [px * (0.235 - 0.08 * hp / 0.4), hp, pz * (0.212 - 0.082 * hp / 0.4)];
+      for (const [px, pz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+        tige(g, P.noir, pied(px, pz, 0.01), pied(px, pz, 0.405), 0.0075);
+        tige(g, P.noir, pied(px, pz, 0.19), [0, 0.39, 0], 0.0045);
+      }
+      for (const [a, b] of [[[-1, -1], [-1, 1]], [[1, -1], [1, 1]], [[-1, 1], [1, 1]], [[-1, -1], [1, -1]]]) tige(g, P.noir, pied(...a, 0.19), pied(...b, 0.19), 0.0045);
+      maille(boiteM(0.24, 0.012, 0.21), P.noir, 0, 0.4, -0.01, 0, g, { ombre: false });
     }
-    const anneau = maille(new THREE.TorusGeometry(0.19, 0.008, 6, 28), P.noir, 0, 0.3, 0, 0, g, { ombre: false }); anneau.rotation.x = Math.PI / 2;
-    maille(boiteM(0.22, 0.012, 0.2), P.noir, 0, 0.67, -0.01, 0, g, { ombre: false });
-    C.ajouterCercle(x, -y, 0.28, { y0: N1, y1: N1 + 1.07 });
+    C.ajouterCercle(x, -y, 0.28, { y0: N1, y1: N1 + 0.8 + hc });
     const so = sortie || [x - fx * 0.65, y + fz * 0.65];
-    siege(g.position.x + fx * 0.02, y - fz * 0.02, fx, fz, 0.45 + HC + 0.01, so[0], so[1], 'la chaise haute');
+    siege(g.position.x + fx * 0.02, y - fz * 0.02, fx, fz, 0.45 + hc + 0.01, so[0], so[1], haute ? 'la chaise haute' : 'la chaise');
   };
   // LA BANQUETTE COURBE (VO : monobloc de mousse gainée de simili, 50 cm de large, assise à 45 cm) le long d'une ligne
   // médiane `pts` (plan) ; on s'y assoit tous les 60 cm, des deux côtés ou d'un seul (`cotes` : +1 à gauche de la ligne,
@@ -909,7 +953,9 @@ export function poserPause1(ch, ctx) {
   miura(10.75, 8.0, 'S', [11.2, 8.45]); miura(12.85, Yv(11.45), 'S', [12.4, Yv(11.75)]); miura(11.0, 7.55, 'W', [11.6, 7.55]);
   // (14/10 : la sortie du tabouret du nord-est 5 cm plus loin — à 0,51 m de son axe, Haythem frôlait le tabouret)
   miura(12.8, Yv(10.35), 'N', [12.25, 9.5]); miura(11.15, 10.1, 'W', [11.75, 10.1]);
-  coque(8.7, 6.7, 'E', P.coqueOrange, [8.7, 7.3]); coque(9.25, 6.45, 'N', P.coqueMenthe, [9.25, 7.05]);
+  // (relecture du 14/10 : à hauteur de table, voir plus haut ; leurs dossiers rétroprojetés à 0,80 — q_0183 : orange
+  // (8,56 ; 7,06), menthe (9,47 ; 7,13) ; q_0195 : (8,05 ; 6,57), (8,92 ; 6,55) — : la coque au milieu, un pas devant)
+  coque(8.5, 6.75, 'E', P.coqueOrange, [8.5, 7.4], false); coque(9.2, 6.95, 'N', P.coqueMenthe, [9.2, 7.6], false);
   // (la lime contre le muret court, entre la niche et le 1er poteau — relecture V2 : devant le 1er, le meuble bas occupe
   // l'angle du local)
   // (14/10 : 5 cm à l'est — la coque de 0,63 m mordait sur le meuble bas)
