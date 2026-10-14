@@ -230,8 +230,10 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     const B0 = M.blanc, W = P.blancSas, base = Y_SS;
     // LE MUR OUEST (x 14,6, sous le mur jaune du couloir est et celui du vestibule) : la porte crème « réservé au
     // personnel » (y 7,95-8,85), le boîtier noir, le passage (y 9,2-10,3, 2,20 m) ; au nord, le mur du panneau du palier
-    mur(ch, F, { de: [14.6, 7.65], a: [14.6, 10.65], base, h: 0, mats: W, plinthes: ['E'], ouvertures: [{ c: 8.4, l: 0.9, h: Y_SS + 2.04 }, { c: 9.75, l: 1.1, h: H_PASS }] });
-    mur(ch, F, { de: [14.6, 10.65], a: [14.6, 12.6], base, h: 0, mats: B0, plinthes: ['E'] });
+    // (13/10 : le nu du mur jaune d'en haut recule en 14,63 — js/ecole_est.js XN, photo 24 : leur tête, à 0, affleurait
+    // en blanc dans le lino du couloir sur 4,5 cm ; arrêtés 1 cm dessous, comme les autres)
+    mur(ch, F, { de: [14.6, 7.65], a: [14.6, 10.65], base, h: -0.01, mats: W, plinthes: ['E'], ouvertures: [{ c: 8.4, l: 0.9, h: Y_SS + 2.04 }, { c: 9.75, l: 1.1, h: H_PASS }] });
+    mur(ch, F, { de: [14.6, 10.65], a: [14.6, 12.6], base, h: -0.01, mats: B0, plinthes: ['E'] });
     // LE MUR SUD DU SAS (y 7,725) : la porte double ⚡ (x 15,0-16,0), le trumeau et sa plaque, la porte grise (16,44-17,37)
     mur(ch, F, { de: [14.525, 7.725], a: [17.75, 7.725], base, h: -0.01, mats: W, plinthes: ['N'], ouvertures: [{ c: 15.5, l: 1.0, h: Y_SS + 2.04 }, { c: 16.9, l: 0.93, h: Y_SS + 2.04 }] });
     // ses retours à l'est : le bout du sas au sud (x 17,675), puis, au nord de y 9,0, le mur sous la tête de la volée A
@@ -316,8 +318,10 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     // LE MONDE SOLIDE DE LA CAMÉRA : sous la volée 2 (au-dessus de la volée A), sous la volée 1 (au-dessus de la volée B),
     // sous le palier intermédiaire : des plafonds en marches, au plus bas de chaque giron (js/ecole_est.js : leurs
     // paillasses montent de 1,50 en x 18,29 à 3,0 en x 16,05, et de -0,25 en x 16,05 à 1,26 en x 18,29)
-    const sof2 = (x) => (x >= EST.xP ? EST.hP1 - 0.25 : EST.hP1 - 0.25 + (EST.xP - x) * 1.5056 / 2.24);
-    const sof1 = (x) => (x >= EST.xP ? EST.hP1 - 0.25 : -0.25 + (x - EST.x0) * 1.5056 / 2.24);
+    // (13/10 : les volées 1 et 2 partent de xD = 16,28, girons de 0,251 — js/ecole_est.js, photos 25 et 26)
+    const L12 = (EST.n - 1) * EST.g;
+    const sof2 = (x) => (x >= EST.xP ? EST.hP1 - 0.25 : EST.hP1 - 0.25 + Math.min(L12, EST.xP - x) * 1.5056 / L12);
+    const sof1 = (x) => (x >= EST.xP ? EST.hP1 - 0.25 : -0.25 + Math.max(0, x - EST.xD) * 1.5056 / L12);
     for (let i = 0; i < NM - 1; i++) {
       const xa = XA + i * G, xb = xa + G;
       C.plafond(xa, -10.65, xb, -9.15, sof2(xb));
