@@ -515,8 +515,8 @@ function geoDossierCoque(wb, wh, h, e, r, creux, galbe, trous = []) {
   const g = new THREE.ExtrudeGeometry(s, { depth: e, bevelEnabled: true, bevelThickness: Math.min(0.004, e / 3), bevelSize: Math.min(0.004, e / 3), bevelSegments: 1, curveSegments: 8 });
   g.translate(0, 0, -e / 2);
   const p = g.attributes.position;
+  // (les normales restent celles de la plaque : recalculées sur les longs triangles des faces, elles rayaient la coque)
   for (let i = 0; i < p.count; i++) { const u = p.getX(i) / (wh / 2); p.setZ(i, p.getZ(i) + galbe * u * u); }
-  g.computeVertexNormals();
   g.rotateX(-Math.PI / 2);
   return g;
 }
@@ -585,7 +585,7 @@ export function poserEtage2(ch, renderer = null) {
     hetre: std({ map: texHetre(), roughness: 0.42 }, 'stratifié hêtre (tables du 2e)'),
     // (relecture du 14/10, q_0304 et q_0314 : les coques de la salle 1 sont d'un ocre doré — brut #835c29, R/V 1,42, B/V
     // 0,45 — ; le jeu les rendait beige orangé, R/V 1,28, B/V 0,55)
-    coque1: std({ color: 0xc89a3e, roughness: 0.5 }, 'coque de hêtre (salle 1)'),
+    coque1: std({ color: 0xb48a3a, roughness: 0.5 }, 'coque de hêtre (salle 1)'),
     // (14/10, q_0330 : celles de la salle 2 sont d'un hêtre pâle, beige rosé — #cdaa8c, R/V 1,2, B/V 0,82 — ; le jeu les
     // rendait orangées, R/V 1,43)
     coque2: std({ color: 0xd2ae8c, roughness: 0.5 }, 'coque de hêtre (salle 2)'),
@@ -986,7 +986,8 @@ export function poserEtage2(ch, renderer = null) {
   // montants noirs, une chaise d'écolier)
   const _dossierCoque = geoDossierCoque(0.31, 0.43, 0.33, 0.012, 0.07, 0.016, 0.035);
   // (q_0322-0337 et 80-84 s à 25 i/s : la coque de la salle 2 est la même, ses six trous dans le haut du dossier)
-  const _dossierCoqueTrous = geoDossierCoque(0.31, 0.43, 0.33, 0.012, 0.07, 0.016, 0.035, [-0.1, 0, 0.1].flatMap((x) => [[x, 0.085, 0.02], [x, 0.01, 0.02]]));
+  // (en grand, q_0330 et q_0333 : aussi haut que large, ses trous ronds en deux rangs de trois au tiers haut)
+  const _dossierCoqueTrous = geoDossierCoque(0.31, 0.42, 0.37, 0.012, 0.08, 0.012, 0.035, [-0.1, 0, 0.1].flatMap((x) => [[x, 0.1, 0.021], [x, 0.025, 0.021]]));
   const _dossierTrous = geoPlaque(0.41, 0.25, 0.012, 0.05, [-0.1, 0, 0.1].flatMap((x) => [[x, 0.045, 0.021], [x, -0.04, 0.021]]));
   const _tube = (L) => new THREE.CylinderGeometry(0.011, 0.011, L, 6);
   const _patin = _tube(0.44), _montant = _tube(0.44), _barre = _tube(0.4), _dos = _tube(0.34);
