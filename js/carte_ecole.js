@@ -2442,7 +2442,9 @@ export function construireCarte(scene, renderer = null) {
   };
   // le départ : dans le hall d'entrée, juste passé la porte 6, plein nord, face à la pile et à sa plaque « iris » — là
   // où entre la visite officielle (VO q_0026-0028 ; 10/10)
-  const d = { x: 14.9, y: 3.2 }, v = { x: 0, y: 1 }, n = Math.hypot(v.x, v.y);   // (11/10 : y 1,3 -> 3,2 : la caméra du lot A, 2,6 m derrière lui, est dans le hall en y 0,6 comme la VO à 6,4 s, plus dans la rue)
+  // (intégration v2.0, 14/10 : la porte 6 reculée en y 0,8 — la relecture de la rue —, le départ recule d'autant, y 3,7 :
+  // à 3,2, la caméra était dans le porche, derrière le vitrage, et le reflet rasant de la porte barrait le bord gauche)
+  const d = { x: 14.9, y: 3.7 }, v = { x: 0, y: 1 }, n = Math.hypot(v.x, v.y);   // (11/10 : y 1,3 -> 3,2 : la caméra du lot A, 2,6 m derrière lui, est dans le hall en y 0,6 comme la VO à 6,4 s, plus dans la rue)
   return {
     nom: 'IRIS — rez-de-chaussée',
     collisions: C,
