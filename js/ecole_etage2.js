@@ -340,15 +340,24 @@ function texPhotoTurquoise() {
     g.fillStyle = '#ffffff'; g.font = '600 15px "Century Gothic", "Segoe UI", sans-serif'; g.fillText('iris', w - m - 34, h - m - 12);
   }, null, false, 4);
 }
-// L'AFFICHE A2 À BANDEAU ROUGE ORANGÉ du mur sud du couloir (VO q_0297-0303) : un titre blanc sur le bandeau, du texte
+// L'AFFICHE À BANDEAU ROUGE du mur sud du couloir (VO q_0297-0303 ; 78,5-79,0 s à 25 i/s, en grand) : deux fois plus haute
+// que large ; le quart haut rouge à titre blanc, puis une photo claire (gris perle, une silhouette), puis dans le bas
+// une photo sombre (vert olive et gris) et une ligne de texte
+// (14/10 : le jeu y mettait un A2 blanc couvert de lignes de texte noires sous un bandeau orangé ; sur la VO, le bas de
+// l'affiche est sombre et l'on ne voit pas de texte d'un bout à l'autre)
 function texAfficheRouge() {
-  return canvasTex(256, 362, (g, w, h) => {
-    g.fillStyle = '#faf8f3'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#d9512c'; g.fillRect(0, 0, w, 88);
-    g.fillStyle = '#ffffff'; g.font = '800 26px "Segoe UI", Arial, sans-serif'; g.fillText('RÈGLEMENT', 18, 40); g.fillText('INTÉRIEUR', 18, 70);
-    const r2 = graine(19);
-    g.fillStyle = '#4a4a4f';
-    for (let y = 112; y < h - 24; y += 13) g.fillRect(18, y, (0.55 + r2() * 0.35) * (w - 36), 5);
+  return canvasTex(256, 512, (g, w, h) => {
+    g.fillStyle = '#eeebe6'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#c4322b'; g.fillRect(0, 0, w, 140);
+    g.fillStyle = '#ffffff'; g.font = '800 30px "Segoe UI", Arial, sans-serif'; g.fillText('RÈGLEMENT', 16, 52); g.fillText('INTÉRIEUR', 16, 88);
+    g.fillStyle = 'rgba(255,255,255,0.75)'; g.fillRect(16, 108, w * 0.5, 6);
+    const d = g.createLinearGradient(0, 140, 0, 330); d.addColorStop(0, '#d9d6d1'); d.addColorStop(1, '#a9a7a3');
+    g.fillStyle = d; g.fillRect(14, 150, w - 28, 180);
+    g.fillStyle = 'rgba(70,72,78,0.55)'; g.beginPath(); g.ellipse(120, 205, 22, 26, 0, 0, 7); g.fill(); g.fillRect(92, 228, 56, 102);
+    g.fillStyle = '#4c5240'; g.fillRect(14, 340, w - 28, 128);
+    g.fillStyle = '#6f7562'; g.fillRect(14, 340, (w - 28) * 0.45, 128);
+    g.fillStyle = '#2f3330'; g.fillRect(150, 380, 70, 88);
+    g.fillStyle = '#5a5a5e'; g.fillRect(16, 480, w * 0.7, 8); g.fillRect(16, 494, w * 0.45, 6);
   }, null, false, 4);
 }
 // L'AFFICHE ÉTROITE du mur rouge, face à la porte de la salle 2 (VO q_0338-0345 ; 84,4-86,2 s à 25 i/s, de face) : sur un
@@ -525,7 +534,9 @@ export function poserEtage2(ch, renderer = null) {
     // (10/10, côte à côte avec q_0299 : #9a8a7a sortait rose pâle sous les spots chauds — un taupe plus sombre et plus gris)
     // (relecture du 10/10 : la carte d'environnement du couloir ne vire plus au saumon — le lino sortait alors #8d755a, plus
     // sombre et plus jaune que la vidéo, q_0299 #ae8d7e : un peu plus clair, un peu plus froid)
-    lino: std({ map: texMouchete({ fond: [142, 128, 120], taches: [[[174, 163, 155], 0.7], [[98, 88, 82], 0.75], [[124, 112, 105], 0.6]], n: 8000, graineN: 23 }), roughness: 0.401 }, 'lino taupe du 2e'),
+    // (14/10, q_0297, q_0300 au même point de vue : sous les spots, le lino du jeu sortait plus jaune que la VO — bleu/vert
+    // 0,79-0,80 contre 0,87-0,93, et un peu plus sombre — : un taupe plus rosé, un ton plus clair)
+    lino: std({ map: texMouchete({ fond: [152, 133, 129], taches: [[[182, 166, 162], 0.7], [[104, 90, 88], 0.75], [[130, 114, 111], 0.6]], n: 8000, graineN: 23 }), roughness: 0.401 }, 'lino taupe du 2e'),
     // (10/10, relecture côte à côte avec q_0283 : le vinyle sortait beige ; il est gris-brun, plus sombre que le lino)
     vinyle: std({ map: texMouchete({ fond: [102, 97, 92], taches: [[[134, 128, 120], 0.6], [[70, 66, 62], 0.7], [[150, 145, 138], 0.3]], n: 8000, graineN: 29 }), roughness: 0.551 }, 'vinyle du palier du 2e'),
     tapis: std({ color: 0x3b3b3d, roughness: 0.92 }, 'tapis anthracite (palier du 2e)'),
@@ -878,7 +889,8 @@ export function poserEtage2(ch, renderer = null) {
     // (sous verre : elle renvoie le couloir — VO q_0293, le reflet d'un spot et du cadreur)
     panneau(matPan(texPhotoTurquoise(), 0.3), 0.62, 0.85, 14.75, Y_RUE + EP / 2 + 0.022, N2 + 1.5, 'N');
     panneau(matPan(texPlaque2('Salle de cours', 'S 2.8'), 0.4), 0.2, 0.11, 11.2, Y_RUE + EP / 2 + 0.004, N2 + 1.65, 'N');
-    panneau(matPan(texAfficheRouge(), 0.6), 0.42, 0.6, 9.35, Y_RUE + EP / 2 + 0.003, N2 + 1.7, 'N');
+    // (14/10, 78,5-79,0 s : l'affiche fait la hauteur du dossier d'une chaise et demie au-dessus d'elle — ≈ 0,40 x 0,80 —)
+    panneau(matPan(texAfficheRouge(), 0.6), 0.40, 0.80, 9.35, Y_RUE + EP / 2 + 0.003, N2 + 1.72, 'N');
     // (plan V2, etage2.md § 4 : sur la VO, juste à l'ouest de D1, sous l'affiche à bandeau rouge — q_0300 : assises en
     // x ≈ 7,5-9,5 ; q_0316 : la 1re chaise touche presque le chambranle ouest de D1. Elles étaient 1,2 m trop à l'ouest)
     for (const x of [8.3, 8.85, 9.4]) chaiseVisiteur(x, Y_RUE + EP / 2 + 0.27, 'N');
@@ -889,13 +901,18 @@ export function poserEtage2(ch, renderer = null) {
   }
   // LA CHAISE « VISITEUR » NOIRE du couloir (VO q_0297-0303) : tube d'acier noir, quatre pieds, assise et dossier
   // rembourrés noirs ; dos au mur
+  // (14/10, q_0300-0303, q_0316 et 78,5-79,2 s à 25 i/s en grand : ce sont des chaises « ISO » — une assise rembourrée aux
+  // angles arrondis, un dossier ovale détaché d'elle, plus haut que large, penché contre le mur, quatre pieds de tube
+  // mince ; le jeu en faisait des cubes à dossier carré)
+  const _assiseIso = geoPlaque(0.46, 0.43, 0.055, 0.09), _dossierIso = geoPlaque(0.42, 0.29, 0.045, 0.12);
   function chaiseVisiteur(x, y, dir) {
     const [fx, fz] = DIR[dir];
     const g = new THREE.Group(); g.position.set(x, N2, -y); g.rotation.y = Math.atan2(fx, fz); fixe.add(g);
-    maille(boiteM(0.46, 0.06, 0.44), X.similiNoir, 0, 0.45, 0.02, 0, g);
-    const d = maille(boiteM(0.44, 0.34, 0.05), X.similiNoir, 0, 0.7, -0.22, 0, g); d.rotation.x = -0.1;
-    for (const [px, pz] of [[-0.2, 0.2], [0.2, 0.2], [-0.2, -0.18], [0.2, -0.18]]) maille(boiteM(0.02, 0.43, 0.02), X.noir, px, 0.215, pz, 0, g);
-    for (const px of [-0.2, 0.2]) maille(boiteM(0.02, 0.32, 0.02), X.noir, px, 0.6, -0.2, 0, g);
+    maille(_assiseIso, X.similiNoir, 0, 0.45, 0.02, 0, g);
+    const d = maille(_dossierIso, X.similiNoir, 0, 0.76, -0.225, 0, g); d.rotation.x = Math.PI / 2 - 0.28;
+    const pied = (px, pz, L, ax = 0, az = 0) => { const m = maille(new THREE.CylinderGeometry(0.009, 0.009, L, 6), X.noir, px, L / 2, pz, 0, g); m.rotation.set(ax, 0, az); };
+    for (const [px, pz] of [[-0.2, 0.19], [0.2, 0.19], [-0.2, -0.17], [0.2, -0.17]]) pied(px, pz, 0.43, pz > 0 ? 0.05 : -0.05, px > 0 ? -0.04 : 0.04);
+    for (const px of [-0.17, 0.17]) { const m = maille(new THREE.CylinderGeometry(0.009, 0.009, 0.3, 6), X.noir, px, 0.6, -0.2, 0, g); m.rotation.x = -0.28; }
     C.ajouterCercle(g.position.x, g.position.z, 0.24, { y0: N2, y1: N2 + 0.9 });
     sieges.push({ x: g.position.x + fx * 0.04, z: g.position.z + fz * 0.04, y: 0.47, fx, fz, sx: x + fx * 0.6, sz: -y + fz * 0.6, nom: 'la chaise du couloir', sol: N2 });
   }
