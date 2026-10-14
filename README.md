@@ -466,6 +466,9 @@ qui dépend d'une zone à l'autre :
   rasant du vitrage avancent de 0,5 m avec l'angle (la baie était pour moitié dans le porche, et la glace de r04 ne la
   montrait plus) ; le retour est du porche, côté hall, blanc de jour comme dans la glace de r04 ; le départ recule à
   y 3,7 (sa caméra était dans le porche, derrière le vitrage).
+- les baies du milieu du 5/7, qu'on voit au fond du passage sur la photo 07 (ses rayons renvoyés sur la façade d'en
+  face) : une porte vitrée à cadre blanc, de l'enduit, une baie à cadre sombre — au lieu d'une baie à cadre gris, d'un
+  pilier de mélèze et d'une baie à cadre de bois.
 
 Joué (intégration, port 8340) : rue → passage → porte automatique → hall ouest → volée 1 → palier → volée 2 → 1er
 (3,50) → couloir sombre → double porte → espace pause → palier est, et la descente ; l'escalier est du 1er au
@@ -566,8 +569,8 @@ Restent aussi imaginés ou incertains (avec la photo qui trancherait) :
   de la travée 7 du 2e (les deux photos sont prises de l'ouest) ; le reflet des vitres est une seule tuile, qui se répète
   de près ; le premier banc (± 0,4 m), le totem du passage (13 cm trop loin de la bordure) et la trottinette (± 0,3 m) ;
   la hauteur de l'appareil de la photo 09 (1,74 m, dont dépend le fond de l'impasse, gardé en x −10,5 ; l'IGN dit −7,4) ;
-  le milieu du rez-de-chaussée du 5/7 (x 0,7-6,3), dessiné sans photo — on le voit pourtant au fond du passage sur la
-  photo 07 — et ses caissons des étages pairs ; la bordure de 12 cm (4 à 6 cm sur les photos) ; corbeille, poubelle
+  le milieu du rez-de-chaussée du 5/7, relevé seulement au fond du passage de la photo 07 (x 2,4-5,9 : de loin, les
+  voitures devant), le reste dessiné sans photo, et ses caissons des étages pairs ; la bordure de 12 cm (4 à 6 cm sur les photos) ; corbeille, poubelle
   haute et bambou peut-être 15 à 25 cm trop près de la bordure ; la Kia en carrosserie compacte ; les drapeaux raides,
   la moto générique, le portail vert du jardin réduit à un poteau, l'oriel du n° 8, les plantes du n° 8.
 - **La caméra** : garder sa tête dans l'image fait tourner la vue plus vite aux demi-tours des paliers (le réglage :

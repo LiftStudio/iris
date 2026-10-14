@@ -622,9 +622,13 @@ export function poserRue(ch) {
     { t: 'bande', x0: -3.0, x1: -2.76, h: 3.3, couleur: '#a9865c' },
     { t: 'pilier', x0: -2.76, x1: -2.0, h: 3.3, bois: BOIS57, texte: '5/7' },
     { t: 'porte', x0: -2.0, x1: 0.7, h: 3.3, cadre: '#d6d8d4', vantaux: 3, imposte: 0.27, sombre: true },
-    { t: 'vitrine', x0: 1.2, x1: 3.4, h: 2.75, cadre: '#9c7448', vantaux: 2, chaud: true },
-    { t: 'pilier', x0: 3.4, x1: 4.2, h: 2.75, bois: BOIS57 },
-    { t: 'vitrine', x0: 4.2, x1: 6.0, h: 2.75, cadre: '#4a4f55', vantaux: 2 },
+    // (intégration v2.0, 14/10 — les baies du milieu, qu'on voit au fond du passage sur la photo 07, du hall : ses rayons,
+    // à la pose de la relecture du passage — (3,90 ; 5,37) h 1,40 cap 191,4 —, renvoyés sur le nu y -12,7, mettent une
+    // porte vitrée à CADRE BLANC et deux vantaux de x 3,95 à 5,9, jusqu'à 3,4 m, puis 0,6 m d'enduit blanc, puis une baie
+    // à cadre SOMBRE de 3,35 vers l'ouest, haute de 3,1 ; le jeu y mettait une baie à cadre gris, un pilier de mélèze et
+    // une baie à cadre de bois)
+    { t: 'vitrine', x0: 1.2, x1: 3.35, h: 3.1, cadre: '#2e2826', vantaux: 2, chaud: true },
+    { t: 'porte', x0: 3.95, x1: 5.9, h: 3.3, cadre: '#e4e3de', vantaux: 2 },
     { t: 'vitrine', x0: 6.3, x1: 8.5, h: 3.38, cadre: '#c6c9c6', vantaux: 2, depoli: true },
     { t: 'bande', x0: 8.5, x1: 8.66, h: 3.38, couleur: '#a9865c' },
     { t: 'bande', x0: 9.08, x1: 11.65, h: 3.4, couleur: BOIS57 },
