@@ -39,7 +39,9 @@
 //   la porte à deux vantaux     y 10,725       x 14,70-16,05  0,85 + 0,50, automatique, vers le palier
 //   le sas technique            x 14,6-17,6    y 7,8-9,0, et x 14,6-16,8 y 9,0-10,65 ; plafond à 2,40 m
 //   le passage P                x 14,0-14,6    y 9,2-10,3     plafond à 2,20 m (plan V2 : raccourci, il partait de x 12,9)
-//   le passage sombre           x 13,05-14,0   y 7,7-10,3     plafond à 2,20 m ; à l'ouest, en y 7,81-8,71, la porte de 2026
+//   le passage sombre           x 13,05-14,0   y 7,7-10,3     plafond à 2,20 m ; à l'ouest, en y 8,15-9,3, le passage aux
+//                                                            deux portes crème de l'espace pause (relecture du 14/10 : la
+//                                                            porte sombre de 2026 est au mur sud de la pause, sur un local)
 //   le placard ⚡               x 14,075-14,525 y 7,8-9,05    derrière la porte crème du sas (fermé)
 //
 // LES PIÈGES (ceux du sous-sol, js/ecole_soussol.js) : des dalles à 0 au-dessus de tout, sauf la volée A ; un sol au -1
