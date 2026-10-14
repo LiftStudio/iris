@@ -90,7 +90,12 @@ const DALLE3 = N3 - 0.2;            // le dessous de la dalle du 3e : les cloiso
 // salle 2 à 2,26-2,49 (q_0322, q_0330), salle 1 à 2,38-2,46 (haut des trumeaux, q_0304), le haut des fenêtres à
 // ≈ 0,15 m du plafond dans les deux salles ; couloir 2,39-2,58 (q_0300, q_0302), sas ≈ 2,45 au droit de la porte, q_0354)
 const H_SALLE = N2 + 2.40;          // les dalles 60 x 60 des deux salles (VO : ≈ 2,40 m)
-const H_COUL = N2 + 2.45;           // le plâtre lisse du couloir (VO : 2,39 à 2,58)
+// (14/10, retour au même point de vue que la VO : le couloir n'était « non tranché » qu'entre 2,39 et 2,58. Deux rapports
+// pris DANS UN MÊME PLAN, qui ne dépendent ni de la pose ni de la focale, le tranchent : au fond, le mur de la porte grise
+// fait 1,26 fois sa porte (q_0300 : 107 px pour 84 ; q_0302 : 112 pour 89) — 2,57 à 2,62 pour une porte de 2,04-2,08 — ;
+// au droit de D1, l'imposte monte à 2,43-2,46 et laisse 0,11 à 0,15 de mur sous le plafond (q_0297, ses deux jambages).
+// À 2,45, l'imposte touchait le plafond et le fond paraissait tassé : 2,58)
+const H_COUL = N2 + 2.58;           // le plâtre lisse du couloir (VO : 2,57 à 2,62)
 const H_PAL = N2 + 2.5;             // le plafond du palier (comme au 1er, photo 27 ; VO : > 2,42, hors cadre)
 const H_SAS = N2 + 2.45, H_RET = N2 + 2.25;      // le sas et sa retombée côté porte
 const EP = 0.12;                    // les cloisons
@@ -249,13 +254,15 @@ function texStoreFerme() {
 }
 // LES STORES OUVERTS de la salle 1 (VO crops/fenetres_c1) : des lames verticales de 9 cm vues presque par la tranche —
 // une bande claire de 2 cm et son ombre, tous les 9 cm, le jour entre elles (transparent : découpé). Tuile : 9 cm.
+// (14/10, q_0304 et q_0308 en grand, au même point de vue : à contre-jour, les lames se lisent comme des TRAITS SOMBRES
+// minces — 2 à 3 px, ≈ 1,5 cm —, huit à neuf par fenêtre, au pas de ≈ 11 cm ; le jeu les dessinait en bandes claires de
+// 2 cm sur fond de jour, la fenêtre paraissait voilée de blanc)
 function texStoresOuverts() {
   const t = canvasTex(64, 16, (g, w, h) => {
     g.clearRect(0, 0, w, h);
-    g.fillStyle = '#e6e4de'; g.fillRect(4, 0, 12, h);
-    g.fillStyle = '#a9a7a1'; g.fillRect(16, 0, 4, h);
-    g.fillStyle = '#b8b8b4'; g.fillRect(0, 0, w, 1);
-  }, [1 / 0.09, 1], true, 4);
+    g.fillStyle = '#3f3e3b'; g.fillRect(26, 0, 9, h);
+    g.fillStyle = '#6c6a65'; g.fillRect(35, 0, 2, h);
+  }, [1 / 0.11, 1], true, 4);
   t.wrapT = THREE.ClampToEdgeWrapping;
   return t;
 }
@@ -344,21 +351,63 @@ function texAfficheRouge() {
     for (let y = 112; y < h - 24; y += 13) g.fillRect(18, y, (0.55 + r2() * 0.35) * (w - 36), 5);
   }, null, false, 4);
 }
-// L'AFFICHE A3 JAUNE PÂLE du mur rouge, face à la porte de la salle 2 (VO q_0338-0345) : des pictogrammes colorés (violet,
-// bleu, jaune) et du texte en colonnes — une affiche d'information iris
+// L'AFFICHE ÉTROITE du mur rouge, face à la porte de la salle 2 (VO q_0338-0345 ; 84,4-86,2 s à 25 i/s, de face) : sur un
+// papier blanc crème, deux fois plus haute que large, un tiers haut de dessins au feutre (un nuage bleu, des pastilles
+// jaune, orange, bleu ciel, vert d'eau, des traits), trois colonnes de texte aux titres orange et rouge, en bas un rond,
+// un crayon vert et un petit logo sombre à gauche
+// (14/10 : le jeu y mettait un A3 jaune pâle à titre violet et six disques réguliers, à 1,46-1,91 m ; la VO montre une
+// affiche blanche de ≈ 0,30 x 0,58 dont le haut est à ≈ 2,05 m — sur q_0300, q_0301, q_0303, c'est le rectangle blanc
+// étroit qu'on voit de loin sur le rouge)
 function texAfficheA3() {
-  return canvasTex(256, 362, (g, w, h) => {
-    g.fillStyle = '#fff5d6'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#3b2a6b'; g.font = '800 22px "Segoe UI", Arial, sans-serif'; g.fillText('BIEN VIVRE', 18, 34); g.fillText('À L’ÉCOLE', 18, 58);
-    const cols = ['#6b3fa0', '#2f6fb0', '#e8b21e', '#d0502c', '#3e9b6b', '#6b3fa0'];
-    cols.forEach((c, i) => {
-      const x = 22 + (i % 2) * 118, y = 86 + Math.floor(i / 2) * 86;
-      g.fillStyle = c; g.beginPath(); g.arc(x + 18, y + 18, 17, 0, 7); g.fill();
-      g.fillStyle = '#ffffff'; g.fillRect(x + 10, y + 15, 16, 6);
-      g.fillStyle = '#6d6a64'; for (let k = 0; k < 4; k++) g.fillRect(x + 42, y + 6 + k * 10, 60 - (k % 2) * 16, 4);
-    });
-    g.fillStyle = '#111'; g.fillRect(w - 70, h - 34, 56, 22);
-    g.fillStyle = '#fff'; g.font = '600 15px "Century Gothic", "Segoe UI", sans-serif'; g.fillText('iris', w - 56, h - 17);
+  return canvasTex(256, 500, (g, w, h) => {
+    g.fillStyle = '#f7f3ea'; g.fillRect(0, 0, w, h);
+    const r2 = graine(338);
+    // le haut : des dessins au feutre, pleins et cernés
+    const tache = (x, y, rx, ry, c, trait) => {
+      g.fillStyle = c; g.beginPath(); g.ellipse(x, y, rx, ry, r2() * 3, 0, 7); g.fill();
+      if (trait) { g.strokeStyle = trait; g.lineWidth = 2; g.stroke(); }
+    };
+    tache(40, 92, 34, 24, '#5a7fd0', '#34509a'); tache(28, 70, 18, 14, '#7f9ee0');                 // le nuage bleu, à gauche
+    tache(150, 98, 30, 18, '#2c7fb0', '#1d5578'); tache(160, 140, 26, 12, '#f2c91e');               // la pastille bleue, la jaune
+    tache(92, 42, 16, 16, '#f0a14a'); tache(210, 46, 18, 14, '#9fd0ea', '#5f9fc0');                 // l'orange, le bleu ciel
+    tache(214, 120, 14, 22, '#a8dcc8', '#6aa890'); tache(100, 150, 12, 12, '#f08a7a');              // le vert d'eau, le corail
+    g.strokeStyle = '#3e3a52'; g.lineWidth = 2.2;
+    for (let k = 0; k < 7; k++) {
+      g.beginPath(); const x = 20 + r2() * 210, y = 24 + r2() * 150; g.moveTo(x, y);
+      g.bezierCurveTo(x + 20 - r2() * 40, y + 18, x + 30 - r2() * 60, y - 12, x + 28 - r2() * 56, y + 22); g.stroke();
+    }
+    g.strokeStyle = '#2f2f3a'; g.strokeRect(186, 22, 30, 22); g.beginPath(); g.moveTo(186, 22); g.lineTo(201, 34); g.lineTo(216, 22); g.stroke();
+    // trois colonnes de texte, leurs titres orange et rouge
+    for (let c = 0; c < 3; c++) {
+      const x0 = 14 + c * 80;
+      for (let b = 0; b < 3; b++) {
+        const y0 = 200 + b * 82;
+        g.fillStyle = b === 1 ? '#e2562e' : '#ef8a3c'; g.fillRect(x0, y0, 44 + r2() * 20, 8);
+        g.fillStyle = '#8b8a90';
+        for (let k = 0; k < 5; k++) g.fillRect(x0, y0 + 16 + k * 10, (0.6 + r2() * 0.35) * 68, 4);
+      }
+    }
+    // le bas : un rond, un crayon vert, le logo
+    g.strokeStyle = '#4a5a8a'; g.lineWidth = 3; g.beginPath(); g.arc(120, 448, 16, 0, 7); g.stroke();
+    g.strokeStyle = '#3e9b6b'; g.lineWidth = 6; g.beginPath(); g.moveTo(190, 470); g.lineTo(236, 420); g.stroke();
+    g.fillStyle = '#26262c'; g.fillRect(12, 462, 46, 18);
+    g.fillStyle = '#f2f2ee'; g.font = '600 12px "Century Gothic", "Segoe UI", sans-serif'; g.fillText('iris', 22, 475);
+  }, null, false, 4);
+}
+// LE REBOND DU MUR ROUGE (14/10, q_0298-0303 et 78,5-79 s à 25 i/s) : le mur sud du couloir et le plafond sont blancs,
+// mais face au rouge vermillon, à 1,85 m, ils en prennent la teinte — sur la VO, au droit des chaises, le mur sud est
+// pêche (#f0bda1, R/V 1,27) quand le mur du fond, dans la même lumière, reste blanc (#d3beae, 1,11), et le plafond tire au
+// saumon (#c68e88) ; près du sas, en face d'un mur blanc, le mur sud redevient crème (q_0293, #edd8c8). Le jeu n'a pas
+// d'éclairage indirect entre deux murs : le rebond est peint, en dégradé le long du couloir (une tuile de 20 m en x)
+function texRebondRouge(blanc, chaud) {
+  return canvasTex(512, 4, (g, w, h) => {
+    const r2 = graine(1203);
+    for (let i = 0; i < w; i++) {
+      const x = i / w * 20, s = (a, b, t) => { const u = Math.min(1, Math.max(0, (t - a) / (b - a))); return u * u * (3 - 2 * u); };
+      const f = s(3.5, 5.6, x) * (1 - s(11.2, 13.4, x)), n = (r2() - 0.5) * 2;
+      g.fillStyle = rgb(blanc[0] + (chaud[0] - blanc[0]) * f + n, blanc[1] + (chaud[1] - blanc[1]) * f + n, blanc[2] + (chaud[2] - blanc[2]) * f + n);
+      g.fillRect(i, 0, 1, h);
+    }
   }, null, false, 4);
 }
 // LA PLAQUE VERTE du mur sud du palier, à l'est de la porte (VO 72,6 s : verticale, 20 x 35 cm — une consigne)
@@ -486,7 +535,10 @@ export function poserEtage2(ch, renderer = null) {
     pierre: jourDehors(std({ map: texPierreEtage(), roughness: 0.75, color: TEINTE_PIERRE }, 'pierre de la façade (2e)'), 0.1),
     enduit: jourDehors(std({ color: 0xd8d6cf, roughness: 0.92 }, 'enduit de la façade arrière'), 0.12),
     plinthe: std({ color: 0x6e6358, roughness: 0.5 }, 'plinthe taupe foncé (couloir du 2e)'),
-    plinthePal: std({ color: 0x5b544d, roughness: 0.5 }, 'plinthe gris foncé (palier du 2e)'),
+    // (14/10, q_0283 et q_0285 : la plinthe du palier est un gris moyen à peine mauve, aux deux tiers de la clarté du mur
+    // — brut #8d767b sous #ddc5c5 —, pas le brun noir qui la dessinait comme un trait de feutre)
+    plinthePal: std({ color: 0x938a8b, roughness: 0.5 }, 'plinthe grise (palier du 2e)'),
+    grisInter: std({ color: 0xb9b8b3, roughness: 0.45 }, 'gris clair (poussoir et prise du 2e)'),
     plintheSalle: std({ color: 0x3e3d3c, roughness: 0.5 }, 'plinthe des salles du 2e'),
     taupe: std({ color: 0xa39d94, roughness: 0.45 }, 'vantail gris taupe (2e)'),
     // (relecture du 10/10 : le vantail de la porte coupe-feu, gris clair à peine chaud sur la vidéo, 88,3 s : #b9b3ac)
@@ -669,19 +721,24 @@ export function poserEtage2(ch, renderer = null) {
     lampe({ x: xf + 0.25, z: -9.9, h: N2 + 2.12, zone: 'e2palier', type: 'tube', force: 1.1 });
     B(xf, 9.88, xf + 0.012, 9.96, N2 + 1.11, N2 + 1.19, M.boitier, { ombre: false });
     B(xf + 0.012, 9.892, xf + 0.04, 9.948, N2 + 1.122, N2 + 1.178, M.boitier, { ombre: false });
-    B(xf + 0.04, 9.9, xf + 0.043, 9.94, N2 + 1.128, N2 + 1.164, M.noirMat, { ombre: false });
+    // (14/10, q_0285 et q_0287 en grand : le poussoir et la prise sont BLANCS — une touche blanche cernée d'un filet gris, un
+    // puits gris clair — ; leur carré noir mat de 4 cm se lisait de loin comme un trou sombre dans le mur)
+    B(xf + 0.04, 9.9, xf + 0.042, 9.94, N2 + 1.128, N2 + 1.164, X.grisInter, { ombre: false });
     B(xf, 9.88, xf + 0.018, 9.96, N2 + 0.21, N2 + 0.29, M.boitier, { ombre: false });
-    B(xf + 0.018, 9.905, xf + 0.021, 9.935, N2 + 0.235, N2 + 0.265, M.noirMat, { ombre: false });
-    // LE RECOIN SUD-OUEST : l'extincteur au sol, ses deux pictogrammes au-dessus (rouge à 1,9 m, rouge et bleu à 1,35 m)
+    B(xf + 0.018, 9.905, xf + 0.02, 9.935, N2 + 0.235, N2 + 0.265, X.grisInter, { ombre: false });
+    // LE RECOIN SUD-OUEST : l'extincteur accroché, ses deux pictogrammes au-dessus (rouge à 1,65 m, rouge et bleu à 1,2 m)
     // (relecture du 10/10, 71,6-72,6 s à 25 i/s, contraste poussé : en tournant vers la porte, on voit de gauche à droite
     // l'ouverture du sas, un pan blanc frontal de 0,7 m (le mur sud, à l'ouest de la porte), un angle rentrant, puis le mur
     // de l'extincteur, de face quand on regarde l'ouest (q_0285) et fuyant quand on regarde le sud (q_0290) : le mur OUEST
     // du recoin, comme le relevé — l'extincteur est au pied de ce mur, contre l'angle sud-ouest)
     // (plan V2 : ce mur est en x 13,78 — q_0285, son pied ; 72,1 s, le pan blanc entre la porte et l'angle fait ≈ 0,5 m et
     // non 0,725 : le recoin est un peu plus petit, l'extincteur et ses pictogrammes suivent)
-    extincteur(X_REC + 0.02, 8.12, 'E');
-    panneau(matPan(texPictoExtincteur(), 0.5), 0.15, 0.15, X_REC + 0.003, 8.12, N2 + 1.9, 'E');
-    panneau(matPan(texPictoAlarme(), 0.5), 0.1, 0.1, X_REC + 0.003, 8.12, N2 + 1.35, 'E');
+    // (14/10, q_0283, q_0285 et q_0287 aux poses calées sur le mur du panneau, 1,7 à 2 px : l'extincteur est ACCROCHÉ au
+    // mur, son pied à 0,45 m et sa tête à 1,0 m — il était posé au sol —, son pictogramme à 1,65 m et celui de l'alarme à
+    // 1,2 m — ils étaient à 1,9 et 1,35 — ; et les trois sont plus au sud que dans le jeu, contre l'angle du pan blanc)
+    extincteur(X_REC + 0.02, 8.06, 'E', 0.45);
+    panneau(matPan(texPictoExtincteur(), 0.5), 0.15, 0.15, X_REC + 0.003, 8.06, N2 + 1.65, 'E');
+    panneau(matPan(texPictoAlarme(), 0.5), 0.1, 0.1, X_REC + 0.003, 8.06, N2 + 1.2, 'E');
     // LA PORTE COUPE-FEU (VO q_0288-0292, g140, g152 ; 88,3 s vue du couloir) : un vantail de 0,95 m, gonds à l'est, qui
     // s'ouvre vers le palier (on la tire du palier, on la pousse du couloir) — bâton inox, oculus étroit cerclé de bois côté
     // serrure (ouest), étiquette rouge, ferme-porte côté sas, une feuille A4 côté couloir ; l'huisserie de bois brun
@@ -781,9 +838,12 @@ export function poserEtage2(ch, renderer = null) {
     mur({ de: [4.84, Y_COUR], a: [12.0, Y_COUR], mats: { N: B0, S: X.rouge }, plinthes: [['S', P], ['N', PS]] });
     mur({ de: [12.0, Y_COUR], a: [X_BOUT, Y_COUR], mats: B0, plinthes: [['S', P]], ouvertures: [{ c: 12.45, l: 0.9, h: N2 + 2.04 }, { c: (X_SAS0 + X_SAS1) / 2, l: X_SAS1 - X_SAS0 - EP, h: N2 + 2.25 }] });
     plinthe(12.9, Y_COUR + EP / 2, X_S1E - EP / 2, Y_COUR + EP / 2 + 0.015, PS);
-    // LE MUR SUD : la porte (fermée) de la salle Bjarne Stroustrup, la porte D1 de la salle 2 et son imposte
-    mur({ de: [X_FOND, Y_RUE], a: [X_S2, Y_RUE], mats: B0, plinthes: [['N', P]], ouvertures: [{ c: 4.35, l: 0.93, h: N2 + 2.04 }] });
-    mur({ de: [X_S2, Y_RUE], a: [X_S2E, Y_RUE], mats: B0, ouvertures: [{ c: 10.52, l: 0.95, h: N2 + 2.4 }] });
+    // LE MUR SUD : la porte (fermée) de la salle Bjarne Stroustrup, la porte D1 de la salle 2 et son imposte ; côté
+    // couloir, le rebond du mur rouge (texRebondRouge : la face nord a u = -x)
+    const tMur = texRebondRouge([239, 237, 232], [244, 214, 194]); tMur.repeat.set(-1 / 20, 1);
+    const rebondMur = std({ map: tMur, roughness: 0.86 }, 'peinture blanche, rebond du rouge (couloir du 2e)');
+    mur({ de: [X_FOND, Y_RUE], a: [X_S2, Y_RUE], mats: { N: rebondMur, S: B0 }, plinthes: [['N', P]], ouvertures: [{ c: 4.35, l: 0.93, h: N2 + 2.04 }] });
+    mur({ de: [X_S2, Y_RUE], a: [X_S2E, Y_RUE], mats: { N: rebondMur, S: B0 }, ouvertures: [{ c: 10.52, l: 0.95, h: N2 + 2.45 }] });
     plinthe(X_S2, Y_RUE + EP / 2, 10.0, Y_RUE + EP / 2 + 0.015, P); plinthe(11.0, Y_RUE + EP / 2, X_BOUT - EP / 2, Y_RUE + EP / 2 + 0.015, P);
     plinthe(X_S2 + EP / 2, Y_RUE - EP / 2 - 0.015, 10.0, Y_RUE - EP / 2, PS); plinthe(11.0, Y_RUE - EP / 2 - 0.015, X_S2E - EP / 2, Y_RUE - EP / 2, PS);
     // LES DEUX BOUTS : au fond ouest, la porte grise à oculus (fermée) sous son bloc de sortie, plus près du mur sud ; au
@@ -797,11 +857,13 @@ export function poserEtage2(ch, renderer = null) {
     panneau(matPan(texPlaque2('Bureau des Conseillers', 'B 2.3'), 0.4), 0.2, 0.11, X_BOUT - EP / 2 - 0.004, 6.25, N2 + 1.62, 'W');
     ch.porte('x', Y_RUE, 4.35, { l: 0.93, h: 2.04, base: N2, ep: EP, modele: 'blanche', etat: 'fermee', cote: 'S', nom: 'salle Bjarne Stroustrup Si 2.6' });
     panneau(matPan(texPlaque2('Salle Bjarne Stroustrup', 'Si 2.6'), 0.4), 0.2, 0.11, 5.05, Y_RUE + EP / 2 + 0.004, N2 + 1.62, 'N');
-    // LE SOL (lino taupe satiné), LE PLAFOND (plâtre lisse à 2,45 m) et ses six spots sur l'axe, tous les 2,15 m ; la
-    // bouche de ventilation près du fond
+    // LE SOL (lino taupe satiné), LE PLAFOND (plâtre lisse à 2,58 m, saumoné par le rouge — son u vaut x - 3,30) et ses six
+    // spots sur l'axe, tous les 2,15 m ; la bouche de ventilation près du fond
     const sol = new THREE.Mesh(geoDalles([[X_FOND, Y_RUE, X_BOUT, Y_COUR]], N2, R2), X.lino);
     sol.receiveShadow = true; sol.name = 'lino du couloir du 2e'; sol.userData.solE2 = true; fixe.add(sol); sols.push(X.lino);
-    ch.plafond(X_FOND + EP / 2, Y_RUE + EP / 2, X_BOUT - EP / 2, Y_COUR - EP / 2, H_COUL, 'platre');
+    const plaf = ch.plafond(X_FOND + EP / 2, Y_RUE + EP / 2, X_BOUT - EP / 2, Y_COUR - EP / 2, H_COUL, 'platre');
+    const tPlaf = texRebondRouge([237, 235, 230], [238, 210, 204]); tPlaf.repeat.set(1 / 20, 1); tPlaf.offset.set((X_FOND + EP / 2) / 20, 0);
+    plaf.material = std({ map: tPlaf, roughness: 0.92 }, 'plafond en plâtre, rebond du rouge (couloir du 2e)');
     for (const x of [14.75, 12.6, 10.45, 8.3, 6.15, 4.0]) spot(x, 5.575, H_COUL, 'e2couloir');
     B(4.55, 5.0, 4.85, 5.3, H_COUL - 0.01, H_COUL, M.grille, { ombre: false });
     // (au-dessus de l'ouverture du sas, le mur du couloir descend jusqu'à 2,25 m : le linteau du sas)
@@ -815,9 +877,9 @@ export function poserEtage2(ch, renderer = null) {
     // (plan V2, etage2.md § 4 : sur la VO, juste à l'ouest de D1, sous l'affiche à bandeau rouge — q_0300 : assises en
     // x ≈ 7,5-9,5 ; q_0316 : la 1re chaise touche presque le chambranle ouest de D1. Elles étaient 1,2 m trop à l'ouest)
     for (const x of [8.3, 8.85, 9.4]) chaiseVisiteur(x, Y_RUE + EP / 2 + 0.27, 'N');
-    // ---- LE MUR ROUGE : la plaque de la salle 1 près de sa porte, l'affiche A3 jaune pâle face à la porte D1 ----
+    // ---- LE MUR ROUGE : la plaque de la salle 1 près de sa porte, l'affiche étroite blanche face à la porte D1 ----
     panneau(matPan(texPlaque2('Salle de cours', 'S 2.7'), 0.4), 0.2, 0.11, 11.6, Y_COUR - EP / 2 - 0.004, N2 + 1.65, 'S');
-    panneau(matPan(texAfficheA3(), 0.55), 0.32, 0.45, 10.0, Y_COUR - EP / 2 - 0.003, N2 + 1.68, 'S');
+    panneau(matPan(texAfficheA3(), 0.55), 0.30, 0.58, 10.05, Y_COUR - EP / 2 - 0.003, N2 + 1.76, 'S');
     // (la caméra de surveillance est dans le sas, en haut de son mur est : construireSas — relecture du 10/10)
   }
   // LA CHAISE « VISITEUR » NOIRE du couloir (VO q_0297-0303) : tube d'acier noir, quatre pieds, assise et dossier
@@ -940,7 +1002,7 @@ export function poserEtage2(ch, renderer = null) {
     ch.plafond(X_S1 + EP / 2, Y_COUR + EP / 2, X_S1E - EP / 2, yi, H_SALLE, 'dalles');
     for (const x of [6.6, 9.1, 11.6]) for (const y of [7.8, 9.4, 11.0]) dalle(x, y, 'e2s1');
     // LE MUR OUEST, du sud au nord (VO q_0313 projetée sur le mur, faisceau e2x/bundle2.py) : le poteau de l'angle
-    // sud-ouest, l'extincteur et ses deux pictogrammes (rouge à 1,8 m, rouge et bleu à 1,35 m) et le haut-parleur au-dessus,
+    // sud-ouest, l'extincteur et ses deux pictogrammes (rouge à 1,8 m, rouge et bleu à 1,2 m) et le haut-parleur au-dessus,
     // puis le tableau blanc en trois panneaux (VO : 1,0 + 2,07 + 1,1 m, de y 7,23 à 11,4 ; de 0,95 à 1,95 m), presque
     // contre l'angle nord-ouest ; le vidéoprojecteur à 1,5 m du mur
     // (plan V2 : tableau centré en y ≈ 9,1 sur le mur raccourci — ici 9,25, de 7,20 à 11,30 : q_0313 projetée sur le mur le
@@ -957,9 +1019,14 @@ export function poserEtage2(ch, renderer = null) {
     // (entre ce poteau et le bout des rangées, 0,88 m : l'allée de la porte, VO ≈ 1,25 hors poteau)
     B(9.0, Y_COUR + EP / 2, 9.35, 6.92, N2, H_SALLE, B0, { ombre: false, collision: true });
     plinthe(8.985, Y_COUR + EP / 2, 9.0, 6.935, PS); plinthe(9.35, Y_COUR + EP / 2, 9.365, 6.935, PS); plinthe(9.0, 6.92, 9.35, 6.935, PS);
-    extincteur(X_S1 + EP / 2 + 0.02, 7.04, 'E');
+    // (14/10, q_0310-0314 et 77,5-78,4 s à 25 i/s : contre la face est de ce poteau, le long du mur du couloir, une table
+    // d'élève de plus — plateau de hêtre, passe-câble, pieds marine —, au premier plan en bas à gauche de toutes ces vues ;
+    // l'allée de la porte garde 0,67 m entre elle et le bout des rangées)
+    table(9.97, 6.88, 1.2, 0.5, { pied: X.marine, passe: 'E' });
+    // (14/10, q_0310-0313 : accroché, le pied à ≈ 0,22 m du sol ; le pictogramme de l'alarme à 1,2 m)
+    extincteur(X_S1 + EP / 2 + 0.02, 7.04, 'E', 0.22);
     panneau(matPan(texPictoExtincteur(), 0.5), 0.15, 0.15, X_S1 + EP / 2 + 0.003, 7.04, N2 + 1.8, 'E');
-    panneau(matPan(texPictoAlarme(), 0.5), 0.1, 0.1, X_S1 + EP / 2 + 0.003, 7.04, N2 + 1.35, 'E');
+    panneau(matPan(texPictoAlarme(), 0.5), 0.1, 0.1, X_S1 + EP / 2 + 0.003, 7.04, N2 + 1.2, 'E');
     // LE COIN DU PROFESSEUR, dans l'angle nord-ouest (VO q_0304, q_0309, q_0313 ; plan V2) : le mur aveugle de 1,47 m entre
     // l'angle et la 1re fenêtre, au nu des trumeaux (q_0304 : rien ne le sépare du trumeau de la 1re fenêtre) ; contre lui,
     // le meuble noir (x 4,35-4,95) et un caisson gris, l'affiche A4 bleue et blanche au-dessus (x 4,5) ; devant le
@@ -1004,11 +1071,13 @@ export function poserEtage2(ch, renderer = null) {
     B(10.03, Y_RUE - EP / 2 - 0.006, 11.01, Y_RUE + EP / 2 + 0.006, N2 + 2.06, N2 + 2.1, M.alu, { ombre: false });
     for (const s of [1, -1]) {
       const yy = Y_RUE + s * (EP / 2 + 0.003);
-      for (const [x0, x1, h0, h1] of [[10.03, 11.01, N2 + 2.1, N2 + 2.14], [10.03, 11.01, N2 + 2.36, N2 + 2.4], [10.03, 10.07, N2 + 2.1, N2 + 2.4], [10.97, 11.01, N2 + 2.1, N2 + 2.4]]) B(x0, yy - 0.005, x1, yy + 0.005, h0, h1, M.alu, { ombre: false });
+      for (const [x0, x1, h0, h1] of [[10.03, 11.01, N2 + 2.1, N2 + 2.14], [10.03, 11.01, N2 + 2.41, N2 + 2.45], [10.03, 10.07, N2 + 2.1, N2 + 2.45], [10.97, 11.01, N2 + 2.1, N2 + 2.45]]) B(x0, yy - 0.005, x1, yy + 0.005, h0, h1, M.alu, { ombre: false });
     }
     // (plan V2 : l'imposte sous le plafond de la salle, à 2,40 — son verre de 0,22 m entre la traverse et le haut du cadre)
-    const imp = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.22), depoli); imp.position.set(10.52, N2 + 2.25, -Y_RUE); fixe.add(imp);
-    C.ajouterBoite(10.03, -(Y_RUE - EP / 2), 11.01, -(Y_RUE + EP / 2), { y0: N2 + 2.06, y1: N2 + 2.4 });
+    // (14/10, q_0297 : côté couloir, l'imposte monte à 2,43-2,46 sous un bandeau de mur de 0,11 à 0,15 — le couloir est à
+    // 2,58 — : son verre de 0,27 m, le haut du cadre à 2,45 ; dans la salle, les dalles à 2,40 en cachent le haut)
+    const imp = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.27), depoli); imp.position.set(10.52, N2 + 2.275, -Y_RUE); fixe.add(imp);
+    C.ajouterBoite(10.03, -(Y_RUE - EP / 2), 11.01, -(Y_RUE + EP / 2), { y0: N2 + 2.06, y1: N2 + 2.45 });
     // la prise double, dedans, à côté de la porte (1,1 m)
     B(11.3, Y_RUE - EP / 2 - 0.02, 11.44, Y_RUE - EP / 2, N2 + 1.06, N2 + 1.14, X.blancMeuble, { ombre: false });
     // LE SOL (moquette en dalles, damier anthracite et gris foncé), LE PLAFOND (dalles 60 x 60), six luminaires à grille
@@ -1239,11 +1308,12 @@ export function poserEtage2(ch, renderer = null) {
   // l'est, en plein jour sur q_0304 ; les cinq autres ont leurs lamelles)
   // `traverse` : false, un seul vantail sans traverse, sa poignée à l'ouest (la 6e : q_0304, à 1,4 m)
   function fenetreCour({ c, l, bas, haut, store = true, traverse = true }) {
-    const ym = Y_S1N, c0 = 0.075, x0 = c - l / 2, x1 = c + l / 2, mat = M.menuiserie, e = 0.035, yi = Y_S1N - EP_ARR / 2;
+    // (14/10, q_0304 en grand : le cadre brun-noir fait ≈ 10 cm autour du jour, la traverse n'est qu'un trait de ≈ 3 cm)
+    const ym = Y_S1N, c0 = 0.095, x0 = c - l / 2, x1 = c + l / 2, mat = M.menuiserie, e = 0.035, yi = Y_S1N - EP_ARR / 2;
     B(x0, ym - e, x1, ym + e, bas, bas + c0, mat, { ombre: false }); B(x0, ym - e, x1, ym + e, haut - c0, haut, mat, { ombre: false });
     B(x0, ym - e, x0 + c0, ym + e, bas, haut, mat, { ombre: false }); B(x1 - c0, ym - e, x1, ym + e, bas, haut, mat, { ombre: false });
     const ht = bas + (haut - bas) * 0.4;
-    if (traverse) B(x0, ym - e, x1, ym + e, ht - 0.035, ht + 0.035, mat, { ombre: false });
+    if (traverse) B(x0, ym - e, x1, ym + e, ht - 0.016, ht + 0.016, mat, { ombre: false });
     else {
       B(x0 + c0 + 0.015, ym - e - 0.035, x0 + c0 + 0.035, ym - e, bas + 0.22, bas + 0.35, M.alu, { ombre: false });
       B(x0 + c0 + 0.015, ym - e - 0.05, x0 + c0 + 0.13, ym - e - 0.035, bas + 0.32, bas + 0.345, M.alu, { ombre: false });
@@ -1259,8 +1329,8 @@ export function poserEtage2(ch, renderer = null) {
     d.position.set(c, (bas + haut) / 2, -(ym + 0.02)); d.rotation.y = Math.PI; d.castShadow = false; fixe.add(d);
     B(x0, yi - 0.02, x1, ym - e, bas - 0.025, bas, M.blanc, { ombre: false });
     C.ajouterBoite(x0, -yi, x1, -(Y_S1N + EP_ARR / 2), { y0: bas, y1: haut, vitre: true });
-    // les stores à lamelles verticales claires (9 cm), ouvertes — vues de la salle, des traits clairs sur le jour (VO
-    // crops/fenetres_c1, fen_c1_225) : un plan découpé (les lames vues par la tranche)
+    // les stores à lamelles verticales, ouvertes — vues de la salle, à contre-jour, des traits sombres sur le jour (VO
+    // crops/fenetres_c1, fen_c1_225 ; 14/10) : un plan découpé (les lames vues par la tranche)
     // (relecture, 11/10 : de toute la hauteur — sur q_0304 (W5) et q_0311 (W1 à W3) en grand, les lames descendent devant
     // la traverse jusqu'à la tablette ; seulement sur les trois cinquièmes du haut, le bas de la fenêtre restait nu)
     if (store) {
