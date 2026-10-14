@@ -49,7 +49,7 @@
 //   l'open-space            x 17,53-19,8  y 0-4,43     le plan de travail derrière le comptoir, le bureau du mitoyen, la
 //                                                     machine à affranchir devant le miroir, trois fauteuils ; la fenêtre
 //                                                     c 18,98
-//   la baie du bureau       x 13,35       y 0,30-1,23  sur le mur ouest du hall, contre l'angle de la porte 6 : cadre blanc,
+//   la baie du bureau       x 13,35       y 0,80-1,73  sur le mur ouest du hall, contre l'angle de la porte 6 : cadre blanc,
 //                                                     trois bandes grises, store baissé (VO q_0372-0376 ; le reflet de r04)
 //   l'angle nord-est        x 16,3-18,8   y 6,8-7,5    le photocopieur contre le cannelé, le caisson et ses corbeilles
 //                                                     (photo 24 : toujours là en 2026), le meuble noir (r04), les
@@ -740,7 +740,12 @@ function texAffichetteAngle() {
 // vénitien baissé) : un cadre d'aluminium laqué blanc, deux vitrages et leur meneau, trois bandes grises à hauteur
 // d'yeux, le store en dessous. `L` x `Hh` mètres, de l'angle de la façade (à gauche du dessin) vers le nord, du plafond
 // (en haut) à l'allège.
-const BAIE = { y0: 0.30, y1: 1.23, h0: 0.90, h1: 2.60, vitres: [[0.42, 0.64], [0.69, 1.07]], bandes: [[1.88, 1.99], [1.66, 1.77], [1.43, 1.55]] };
+// (intégration v2.0, 14/10 : la relecture de la rue recule la ligne des vitrages de la porte 6 de y 0,30 à 0,80 — photos
+// 16 et 17 rejouées, le renfoncement fait 1,2 m, js/carte_ecole.js Y_P6. La baie, « contre l'angle de la porte 6 », se
+// trouvait pour moitié dans le porche, derrière son tableau noir, et dans la glace de r04 le vitrage la cachait toute :
+// elle suit l'angle, et avec elle le jour de la porte sur ce mur et le reflet rasant du vitrage — DY_P6.)
+const DY_P6 = 0.5;
+const BAIE = { y0: 0.30 + DY_P6, y1: 1.23 + DY_P6, h0: 0.90, h1: 2.60, vitres: [[0.42 + DY_P6, 0.64 + DY_P6], [0.69 + DY_P6, 1.07 + DY_P6]], bandes: [[1.88, 1.99], [1.66, 1.77], [1.43, 1.55]] };
 function texBaieBureau() {
   const L = BAIE.y1 - BAIE.y0, Hh = BAIE.h1 - BAIE.h0, k = 200;
   return canvasTex(Math.round(L * k), Math.round(Hh * k), (g, w, h) => {
@@ -1161,7 +1166,22 @@ export function poserHall(ch) {
     const mj = new THREE.MeshBasicMaterial({ map: tj, color: new THREE.Color(0.9, 0.95, 1.0), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: true });
     mj.name = 'jour de la porte 6 sur le mur ouest du hall';
     // (DERRIÈRE la baie, à 6 mm du mur : devant, il noyait ses trois bandes)
-    const v = ch.panneau(mj, 2.2, H_PLAF, xb + 0.006, 0.3 + 1.1, H_PLAF / 2, 'E');
+    const v = ch.panneau(mj, 2.2, H_PLAF, xb + 0.006, 0.3 + DY_P6 + 1.1, H_PLAF / 2, 'E');
+    v.castShadow = false; v.receiveShadow = false; v.userData.nofuse = true; v.userData.horsAOSol = true; v.renderOrder = 2;
+  }
+  // LE RETOUR EST DU PORCHE, CÔTÉ HALL (intégration v2.0, 14/10). La porte 6 reculée de 0,5 m, le mur du tableau est du
+  // portail (x 16,575, js/carte_ecole.js) avance d'autant dans le hall : sa face est, de la façade à la ligne des
+  // vitrages, entre dans la glace de r04, à côté de la baie. Sur la photo, tout ce coin est BLANC de jour — la fenêtre
+  // c 17,33 est à 0,7 m de lui ; le jeu le rendait d'un gris de plafonnier, un grand pan terne au bord droit du reflet.
+  // Le même voile additif que le mur ouest, plein contre la façade.
+  {
+    const tj = canvasTex(128, 8, (g, w, h) => {
+      const d = g.createLinearGradient(0, 0, w, 0); d.addColorStop(0, 'rgba(255,255,255,1)'); d.addColorStop(1, 'rgba(255,255,255,0.6)');
+      g.clearRect(0, 0, w, h); g.fillStyle = d; g.fillRect(0, 0, w, h);
+    }, null, true, 1);
+    const mj = new THREE.MeshBasicMaterial({ map: tj, color: new THREE.Color(0.9, 0.95, 1.0), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: true });
+    mj.name = 'jour de la façade sur le retour est du porche (hall)';
+    const v = ch.panneau(mj, 0.3 + DY_P6, H_PLAF, 16.65 + 0.006, (0.3 + DY_P6) / 2, H_PLAF / 2, 'E');
     v.castShadow = false; v.receiveShadow = false; v.userData.nofuse = true; v.userData.horsAOSol = true; v.renderOrder = 2;
   }
   // LE CARRELAGE DE L'ACCUEIL SOUS SES SPOTS (relecture du 13/10, r04 rejouée, huit pavés du sol : la photo le montre
@@ -1207,7 +1227,7 @@ export function poserHall(ch) {
     });
     mat.name = 'reflet rasant du vitrage de la porte 6';
     const p = new THREE.Mesh(new THREE.PlaneGeometry(3.15, H_PLAF), mat);
-    p.position.set(14.925, H_PLAF / 2, -0.43); p.renderOrder = 3; p.castShadow = false; p.receiveShadow = false;
+    p.position.set(14.925, H_PLAF / 2, -(0.43 + DY_P6)); p.renderOrder = 3; p.castShadow = false; p.receiveShadow = false;
     p.userData.nofuse = true; p.userData.horsAOSol = true; p.userData.sansNormales = true; p.name = 'reflet rasant de la porte 6';
     ch.decor.add(p);
   }
