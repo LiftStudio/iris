@@ -221,8 +221,9 @@ function texResine() {
     for (let k = 0; k < 2500; k++) { const v = 120 + (r2() - 0.5) * 30; g.fillStyle = rgb(v, v, v - 2, 0.18); g.fillRect(r2() * w, r2() * h, 1.5, 1.5); }
   }, [0.5, 0.5], false, 8);
 }
-// UN CARRELAGE CARRÉ de 60 x 60 (tuile de dessin 1,2 m : quatre carreaux, chacun son ton) : `base` sa teinte, `joint`
-function texCarreaux(base, joint, graineN, nuee = 8) {
+// UN CARRELAGE CARRÉ de 60 x 60 (tuile de dessin 1,2 m : quatre carreaux, chacun son ton) : `base` sa teinte, `joint` ;
+// `cote` : le côté d'un carreau (14/10 : 0,45 pour l'espace pause)
+function texCarreaux(base, joint, graineN, nuee = 8, cote = 0.6) {
   const W = TELEPHONE ? 256 : 512;
   return canvasTex(W, W, (g, w, h) => {
     const r2 = graine(graineN), c = w / 2, j = Math.max(1.2, w * 0.0035);
@@ -236,7 +237,7 @@ function texCarreaux(base, joint, graineN, nuee = 8) {
     for (let k = 0; k < w * h / 60; k++) { const v = (r2() - 0.5) * 18; g.fillStyle = rgb(base[0] + v, base[1] + v, base[2] + v, 0.25); g.fillRect(r2() * w, r2() * h, 1.3, 1.3); }
     g.fillStyle = joint;
     for (let i = 0; i <= 2; i++) { g.fillRect(i * c - j / 2, 0, j, h); g.fillRect(0, i * c - j / 2, w, j); }
-  }, [1 / 1.2, 1 / 1.2], false, 8);
+  }, [1 / (2 * cote), 1 / (2 * cote)], false, 8);
 }
 // LE GRÈS GRIS FONCÉ du couloir (plan V2, soussol.md § 2.3 ; v_047 à v_051) : de grands carreaux de 1,2 m, #56544e, SANS
 // JOINT LONGITUDINAL — un carreau couvre toute la largeur du couloir —, des joints transversaux à peine visibles. Tuile
@@ -592,7 +593,12 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     couloir: nommer(std({ map: texGres([79, 78, 74], '#454340', 909, 6), roughness: 0.47 }), 'grès gris foncé du couloir'),
     // (relecture du 09/10 : #c6bfa6 sortait presque blanc sous les plafonniers ; mesuré sur v_063, le carrelage est d'un
     // tiers plus sombre que les murs)
-    pause: nommer(std({ map: texCarreaux([150, 145, 127], '#827d72', 512, 14), roughness: 0.33 }), 'carrelage beige 60x60'),
+    // (14/10 : des carreaux de 45 cm, et non de 60 — v_060, les joints des deux familles relevés à la transformée de Hough :
+    // leurs points de fuite, orthogonaux, rendent la focale, 962 px, et l'appareil à 1,35 m — l'assise du Tolix, 0,75, et
+    // le plateau du mange-debout, 1,05, retombent à leur place —, les joints au pas de 0,45 m, à 1 cm près ; la même
+    // mesure sur l'image du jeu au même point de vue rend ses 0,60. Et d'un beige plus gris : 160,156,135 sur v_060 et
+    // v_063, le jeu sortait 164,151,121)
+    pause: nommer(std({ map: texCarreaux([146, 143, 129], '#87837a', 512, 14, 0.45), roughness: 0.33 }), 'carrelage beige 45x45'),
   };
   avecRelief(SOL.pause, normalesCarreaux(), 0.35);
   avecRelief(SOL.couloir, normalesGres(), 0.3);
@@ -855,17 +861,27 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     const biais = (xa, ya, xb, yb) => C.ajouterBoiteOrientee((xa + xb) / 2, -(ya + yb) / 2, Math.hypot(xb - xa, yb - ya) / 2, 0.02, Math.atan2(-(yb - ya), xb - xa), { y0: 0, y1: 1.9, camera: false });
     biais(0.0, ESC.y0 - 0.36, X_REB + 0.03, ESC.y0 + 0.03);
     biais(1.22, ESC.y0 + 0.03, 1.62, ESC.y0 - 0.1);
-    // LE GARDE-CORPS (x 1,28) : départ au nez 0, arrivée au nez 16, montants aux nez 3, 7, 11, 15
+    // LE GARDE-CORPS (x 1,28) : départ au nez 0, arrivée au pied, montants plats ENTRE les nez.
+    // (14/10 : v_010 à la pose refaite sur 35 nez — f 1 026, rms 1,8 px — : les quatre montants qu'on voit sont aux rangs
+    // 5,6, 9,6, 13,1 et 15,8 — y 7,43, 8,45, 9,35, 10,07 —, et non aux nez 7, 11, 15 et 16 : ils sortaient un demi-mètre
+    // trop bas sur la volée. La main courante est à 0,85 m des nez — leurs têtes taillées en pointe la dépassent à peine —
+    // et non à 0,95 : à 0,95, elle passait 20 px au-dessus de celle de la vidéo)
     const xg = x1 + 0.03, hn = (y) => -R * (y - ESC.y0) / G;     // la ligne des nez
-    const yA = ESC.y0 - 0.05, yB = ESC.yPied + 0.05;
-    tube(ch.decor, X.inox, P3(xg, hn(yA) + 0.95, yA), P3(xg, hn(yB) + 0.95, yB), 0.021, 12);
-    for (const k of [1, 2, 3, 4]) tube(ch.decor, X.inox, P3(xg, hn(yA) + 0.95 - k * 0.19, yA), P3(xg, hn(yB) + 0.95 - k * 0.19, yB), 0.009, 8);
-    for (const k of [0, 3, 7, 11, 15, 16]) {
-      const y = nez(k) - (k === 16 ? 0.03 : 0), h0 = -R * k - 0.25;
-      B(xg - 0.005, y - 0.02, xg + 0.005, y + 0.02, h0, hn(y) + 0.95, X.inox);
+    const yA = ESC.y0 - 0.05, yB = ESC.yPied + 0.05, HM = 0.85;
+    // (14/10 : sans ombre portée — sous la lumière presque d'aplomb, les quatre lisses rayaient la cloison de traînées
+    // sombres, tachetées ; sur v_010 à v_030, la cloison est nette)
+    tube(ch.decor, X.inox, P3(xg, hn(yA) + HM, yA), P3(xg, hn(yB) + HM, yB), 0.021, 12, false);
+    for (const k of [1, 2, 3, 4]) tube(ch.decor, X.inox, P3(xg, hn(yA) + HM - k * 0.17, yA), P3(xg, hn(yB) + HM - k * 0.17, yB), 0.009, 8, false);
+    // (aucun montant entre le départ et le rang 5,6 : v_010, la main courante file seule jusqu'au bord de l'image)
+    const MONTANTS = [0, 5.6, 9.6, 13.2, 15.85];
+    for (const k of MONTANTS) {
+      const y = nez(k), h0 = hn(y) - 0.25;
+      B(xg - 0.005, y - 0.02, xg + 0.005, y + 0.02, h0, hn(y) + HM + 0.01, X.inox, { ombre: false });
+      // (la tête en pointe, au-dessus de la main courante)
+      B(xg - 0.004, y - 0.01, xg + 0.004, y + 0.01, hn(y) + HM + 0.01, hn(y) + HM + 0.045, X.inox, { ombre: false });
     }
     // les pattes du garde-corps sur le limon
-    for (const k of [0, 3, 7, 11, 15, 16]) B(x1 - 0.03, nez(k) - 0.03, xg, nez(k) + 0.01, -R * k - 0.2, -R * k - 0.12, X.limon, { ombre: false });
+    for (const k of MONTANTS) B(x1 - 0.03, nez(k) - 0.03, xg, nez(k) + 0.01, hn(nez(k)) - 0.2, hn(nez(k)) - 0.12, X.limon, { ombre: false });
     // LE RAMPANT (plâtre blanc, tourné vers le bas) de y 6,65 à 9,99, de x 0,2 à 1,35, du plafond du palier (2,50) à la
     // face de la retombée du pied (+0,14)
     const Lr = Math.hypot(Y_RAMP1 - Y_RAMP0, rampant(Y_RAMP0) - rampant(Y_RAMP1));
