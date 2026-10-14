@@ -34,12 +34,13 @@
 //                                                         au fond, la face ouest de la pile (11/10, plan V2 : DY_A ;
 //                                                         12/10, r03 : 3,125 m nu à nu, le mur des jours a reculé)
 //   le couloir C01             x 11,7-13,5   y 12,0-20,6  toilettes, gaine technique (photo 01)
-//   l'antichambre, le passage  x 10,05-13,3  y 3,0-4,675   (r07, 14/10 : son mur ouest, celui de la porte de la Si 0.1, en
-//                                                         x 9,975 ; le redan jusqu'au bout du mur sud, x 9,24, au nord de
-//                                                         y 4,125) derrière le bout du mur sud de la salle d'attente, devant le mur
+//   l'antichambre, le passage  x 10,05-13,3  y 3,0-4,675   derrière le bout du mur sud de la salle d'attente, devant le mur
 //   de la pile                                            nord du bureau de direction (porte de la Si 0.1, jour du
 //                                                         bureau) ; il rejoint le hall au sud-ouest de la pile ; au
-//                                                         bout, la porte vitrée du bureau (photos 01, 03, r02 ; 11/10)
+//                                                         bout, la porte vitrée du bureau (photos 01, 03, r02 ; 11/10) ;
+//                                                         son mur ouest, celui de la porte de la Si 0.1, en x 9,975, et
+//                                                         le redan jusqu'au bout du mur sud, x 9,24, au nord de y 4,125
+//                                                         (r07, 14/10)
 //   la pile du hall            x 13,3-14,65  y 4,7-7,575  la plaque « iris », l'horloge, les annuaires (VO 6,4-12,4 s) :
 //                                                         js/ecole_rdc_centre.js
 //   le hall d'entrée, accueil  x 13,35-19,8  y 0,3-7,5    porte n° 6, le comptoir nord-sud et l'open-space, l'angle nord-est
@@ -1160,6 +1161,9 @@ function construireMurs(ch) {
   // antichambre, prolonge celle du mur de la porte
   ch.mur({ de: [XE - EP, YRD], a: [XSB + EP / 2, YRD], mats: B, plinthes: ['N', 'S'] });
   ch.boite(XSB + EP / 2, YRD - EP / 2, XSB + EP / 2 + 0.015, YRD + EP / 2 + 0.015, 0, 0.08, M.bois, { ombre: false });
+  // (relecture r07, 14/10 : et celle de son about ouest, côté Si 0.1 — x 9,09, de 3,975 à 4,125, entre la plinthe du mur
+  // du redan et celle du retour du bout du mur sud : il manquait 15 cm de plinthe dans l'angle de la salle)
+  ch.boite(XE - EP - 0.015, YRD - EP / 2 - 0.015, XE - EP, YRD + EP / 2, 0, 0.08, M.bois, { ombre: false });
   // LE MUR NORD DU BUREAU, ligne y 2,925 (x 10,05-12,575 ; r07 : il partait de x 9,09, la Si 0.1 a pris son bout ouest), et
   // son JOUR DÉPOLI (photo 01 : 0,6 m, de 1,05 à 2,5, sa bande haute claire laisse voir les barreaux de la fenêtre de façade
   // c 10,73 derrière lui ; son bord est à 0,91 m de l'angle, en x 11,63 — rétroprojeté du C01 sur la ligne 3,1, il tombe en
