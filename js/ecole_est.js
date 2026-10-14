@@ -680,8 +680,13 @@ function reglette(ch, parent, x, y0, y1, h, face) {
   // corps, se voyaient du palier comme deux taquets)
   B(ch, parent, x + s * 0.012, y0 + 0.01, x + s * 0.092, y1 - 0.01, h - 0.045, h - 0.03, X.diffuseur, { ombre: false });
   B(ch, parent, x + s * 0.085, y0 + 0.01, x + s * 0.092, y1 - 0.01, h - 0.03, h + 0.03, X.diffuseur, { ombre: false });
-  for (const [a, b] of [[y0, y0 + 0.01], [y1 - 0.01, y1]]) B(ch, parent, xa, a, x + s * 0.086, b, h - 0.04, h + 0.04, X.embout, { ombre: false });
-  parent.children.slice(-5).forEach((o) => { o.userData.horsAOSol = true; });
+  // (14/10, relecture : de face, même à 1 cm, l'embout orange faisait un coin vif à chaque bout ; sur la photo 28, le bout
+  // est blanc comme le corps, l'orange n'y est qu'un liseré de 3 mm au ras du mur)
+  for (const [a, b] of [[y0, y0 + 0.01], [y1 - 0.01, y1]]) {
+    B(ch, parent, xa, a, x + s * 0.086, b, h - 0.04, h + 0.04, X.reglette, { ombre: false });
+    B(ch, parent, xa, a, x + s * 0.003, b, h - 0.04, h + 0.04, X.embout, { ombre: false });
+  }
+  parent.children.slice(-7).forEach((o) => { o.userData.horsAOSol = true; });
   // (13/10, photos 25, 27 et 28 : le tube allumé baigne le mur autour de lui — une lueur additive sur le nu du mur, comme
   // les auréoles des plafonniers ; la réglette du jeu n'était qu'un trait blanc sur un mur égal)
   if (!X.lueurTube) {
