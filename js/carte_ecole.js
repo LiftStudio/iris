@@ -1130,9 +1130,10 @@ function construireMurs(ch) {
   // La photo 01 le voudrait plutôt plus au nord — mais elle ne le dit qu'à travers la hauteur supposée de la porte vitrée :
   // les deux autres l'emportent.)
   const YB = 2.925;
-  // (RETOUR r07 DE HAYTHEM DU 14/10 — sa capture du jeu, rejouée : la caméra en (14,97 ; 2,99) à 2,06 m, cap −77,4, piqué
-  // 15,4, f 706 — treize points du retour, de la porte, de la plaque, du drapeau et du pilier à 3 px —, Haythem en
-  // (12,4 ; 3,6), dans le passage de la pile, face à l'ouest : « Attention, la porte avec le mur n'est pas aussi loin »,
+  // (RETOUR r07 DE HAYTHEM DU 14/10 — sa capture du jeu, rejouée : la caméra en (14,72 ; 3,13) à 1,99 m, cap −78,3, piqué
+  // 15,4, f 670 — seize points du retour, de la porte, de la plaque, du drapeau, du pilier, de l'angle et du jour du
+  // bureau, 5,5 px —, Haythem en (12,3 ; 3,6), dans le passage de la pile, face à l'ouest : « Attention, la porte avec le
+  // mur n'est pas aussi loin »,
   // puis « regarde bien les photos pour ça ». Le mur, c'est le retour de l'antichambre et la porte grise de la Si 0.1 ; il
   // était à 4,06 m de la ligne de la pile (x 9,24 -> 13,30). AUCUNE PHOTO NE LE MONTRE (r02 le voit de dos, caché par le
   // bout du mur sud ; la photo 01 s'arrête au bout du mur ouest du C01 ; la photo 03 tourne le dos ; la VO de 2021 n'en
