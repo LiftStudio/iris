@@ -235,7 +235,11 @@ export function poserMobilier(ch) {
   const presentoir = (x, y, roulettes) => {
     const pres = new THREE.Group(); pres.position.set(x, 0, -y); pres.rotation.y = -Math.PI / 2; ch.decor.add(pres);
     const b0 = roulettes ? 0.07 : 0.02;
-    for (const sx of [-0.39, 0.39]) maille(boiteM(0.022, 1.73, 0.36), M.noir, sx, b0 + 0.865, 0, 0, pres);
+    // (13/10, relecture C2 — photo 01, le présentoir vu de chant depuis le C01 : son flanc n'est pas un panneau plein
+    // de 36 cm — c'est un montant noir étroit, 12 cm, à l'arrière, et devant lui les tablettes inclinées et leurs
+    // brochures de couleur DÉPASSENT, bien visibles de côté ; le jeu montrait une caisse noire. Les flancs réduits au
+    // montant arrière ; de face — r02, photo 21 — rien ne change.)
+    for (const sx of [-0.39, 0.39]) maille(boiteM(0.022, 1.73, 0.13), M.noir, sx, b0 + 0.865, -0.115, 0, pres);
     maille(boiteM(0.76, 1.62, 0.012), M.noir, 0, b0 + 0.88, -0.17, 0, pres);
     maille(boiteM(0.8, 0.03, 0.36), M.noir, 0, b0 + 1.715, 0, 0, pres);
     maille(boiteM(0.76, 0.05, 0.3), M.noir, 0, b0 + 0.025, 0, 0, pres);
@@ -262,7 +266,11 @@ export function poserMobilier(ch) {
   // bout ouest, presque de chant : il est donc DEVANT le mur, à 0,25 m, de x 11,0 à 11,75, un rien tourné vers la salle ;
   // sa cassette d'aluminium au sol, son mât, sa barre haute. Il ne gêne ni les chaises ni l'entrée du C01.
   {
-    const kx = 11.375, ky = 7.54, th = -0.105;
+    // (13/10, relecture C2 — photo 01, du C01 vers le sud : à gauche du bout du mur ouest du couloir, on ne voit QUE le
+    // mur du bureau, son jour et le sol — pas de panneau noir. La visée qui rase ce bout de mur, de (12,16 ; 11,77) par
+    // (11,70 ; 7,95), passe en x 11,65 à la hauteur du kakémono : en x 10,95-11,81, il y dépassait de 16 cm, une bande
+    // noire de haut en bas. Reculé de 18 cm vers l'ouest : de 10,77 à 11,62, toujours au bout du mur jaune.)
+    const kx = 11.195, ky = 7.54, th = -0.105;
     const k = new THREE.Group(); k.position.set(kx, 0, -ky); k.rotation.y = th; ch.decor.add(k);
     maille(boiteM(0.86, 0.085, 0.11), M.aluGris, 0, 0.0425, 0, 0, k);
     for (const s of [-1, 1]) maille(boiteM(0.04, 0.012, 0.3), M.aluGris, s * 0.36, 0.006, 0, 0, k, { ombre: false });

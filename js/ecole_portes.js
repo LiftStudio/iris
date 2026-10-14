@@ -441,8 +441,13 @@ export class Portes {
     const zf = cote * (ep / 2 - 0.03 - (o.retrait || 0));  // le plan du vantail fermé, dans l'épaisseur du mur
     if (o.retrait && o.huisserie !== false) {
       // (la feuillure : du nu de l'huisserie au vantail, elle est du gris du vantail, dans l'ombre — pas blanche)
+      // (13/10, relecture C2 — photo 23, la porte des femmes de près : la feuillure n'est PAS dans le noir. Elle sort à
+      // 168/154/128 quand le vantail est à 187/172/134 — 0,9 fois — ; le jeu, qui ne l'éclaire que de biais, la rendait à
+      // 87/75/58, un cadre sombre autour de chaque porte. Sa matière luit donc un peu, pour tenir ce rapport ; celle du
+      // linteau reste dans l'ombre, comme sur la photo.)
       const z0 = cote * (ep / 2 + 0.01), z1 = zf + cote * 0.02, zm = (z0 + z1) / 2, dz = Math.abs(z0 - z1);
-      for (const sx of [-1, 1]) maille(boiteM(0.003, h, dz), M.porte, sx * (l / 2 - 0.0065), h / 2, zm, 0, g, { ombre: false });
+      if (!M.feuillure) { M.feuillure = M.porte.clone(); M.feuillure.emissive = new THREE.Color(0x979694); M.feuillure.emissiveIntensity = 0.55; M.feuillure.name = 'feuillure grise (jambages)'; }
+      for (const sx of [-1, 1]) maille(boiteM(0.003, h, dz), M.feuillure, sx * (l / 2 - 0.0065), h / 2, zm, 0, g, { ombre: false });
       maille(boiteM(l - 0.01, 0.003, dz), M.porte, 0, h - 0.0015, zm, 0, g, { ombre: false });
     }
     const vantaux = [];
