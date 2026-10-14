@@ -52,7 +52,7 @@ let _coque = null, _ourlet = null;
 // accoudoirs à 0,635, le haut du dossier à 0,80, ourlet compris. Le plan raccourcit (demi-profondeur 0,278 -> 0,25), le
 // dossier monte un peu moins (+0,157 au lieu de +0,175, les flancs +0,22 au lieu de +0,235) et se renverse un peu moins
 // (0,24 au lieu de 0,26) ; la largeur, le baquet et le piètement ne changent pas.)
-function geoCoque() {
+export function geoCoque() {
   if (_coque) return _coque;
   const NA = 72, NS = 7, NC = 16, A = 0.312, P = 0.25, Y = 0.45, n = 3.6, T0 = 0.66, K = 0.92;
   const pos = [], idx = [], ourlet = [];
@@ -92,6 +92,8 @@ function geoCoque() {
   _ourlet = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ourlet, true), NA * 2, 0.0085, 6, true);
   return (_coque = g);
 }
+// (14/10 : la même coque pour les DAR de l'espace pause du 1er, js/ecole_etage1_pause.js — VO q_0195, q_0214, q_0218)
+export function geoOurletCoque() { geoCoque(); return _ourlet; }
 const _matsCoque = new Map();
 // le voile d'ombre d'une chaise : un dégradé radial noir, transparent, sans écriture de profondeur (partagé)
 let _geoVoile = null, _matVoile = null;
