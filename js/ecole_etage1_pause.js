@@ -102,6 +102,15 @@
 // relevé à sa place) ; zones au pas de 5 cm (rien sans zone hors de la cage du lot B) ; essai de fusion avec le lot B
 // relu (la double porte de la ligne 7,85, l'escalier principal descendu et remonté) ; ?tel=1 ; console sans erreur (hors
 // service worker).
+// LE « 100 % » (14/10, VO q_0183, q_0187, q_0195, q_0212, q_0214, q_0218, q_0270 et la photo 28 rejouées, planches
+// côte à côte et en fondu, scratchpad iris_C5) : ce que la vidéo et la photo montrent et que le jeu n'avait pas — les
+// chaises coque sont de vraies DAR sur piètement de bar (c'étaient des calottes plates), les « Miura » sont minces et
+// anguleux (des tabourets de traite), les banquettes bombées sur socle noir, moutarde ambré et rouge orangé, la rouge
+// en J ; l'habillage des distributeurs arrêté au bout de la vitrée, deux grilles ; les plafonniers en disques de 33 cm,
+// leur lumière froide et les murs blancs de la photo 28 ; le couloir sombre noir par la porte du fond ; le lino plus
+// sombre ; dans la S 1.3, le triptyque entier et les cache-radiateurs sous les jours. Joué : palier est → pause → porte
+// du fond → couloir sombre → escalier principal descendu et remonté, → Si 1.4, → S 1.3, → recoin, → niche ; l'escalier
+// est monté et descendu ; les 22 places de l'espace pause prises et quittées ; ?tel=1.
 import * as THREE from 'three';
 import { maille, boiteM } from './ecole_portes.js';
 import { canvasTex } from './kit_decor.js';
