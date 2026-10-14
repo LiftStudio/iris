@@ -858,7 +858,10 @@ export function poserPause1(ch, ctx) {
   // ont glissé de DXN avec tout le côté nord)
   const Yv = (y) => Math.round((Y_S + (y - 6.975) * (YP - Y_S) / (YP - 6.975)) * 100) / 100;
   banquette([[9.15, 8.75], [8.6, 9.35], [8.75, 10.05], [8.3, 10.6]].map(([x, y]) => [x + DXN, Yv(y)]), P.jaune, 'banquette jaune');
-  banquette([[8.7, 11.1], [9.3, 11.45], [10.05, 11.45], [10.6, 11.15], [10.75, 10.65]].map(([x, y]) => [x + DXN, Yv(y)]), P.rouge, 'banquette rouge', [-1]);
+  // (14/10 — VO q_0183, q_0214, q_0218 : la rouge n'est pas un haricot fermé en U, c'est un J — son bout ouest file le long
+  // des murets jusque sous la lime, son bout est seul revient vers le sud, sous le mange-debout du 3e poteau ; le jeu
+  // recourbait aussi le bout ouest vers le sud, à 0,5 m des murets)
+  banquette([[6.75, 11.3], [7.45, 11.4], [8.2, 11.35], [8.75, 10.95], [8.95, 10.3]], P.rouge, 'banquette rouge', [-1]);
   {
     // (V2 : 0,3 m plus à l'est — étirée, la banquette jaune l'approchait : ses places de l'est se relevaient dans la table)
     // (vérification finale du 11/10 : encore 0,3 m à l'est. Entre la jaune, la rouge et la table, l'intérieur du haricot
@@ -955,6 +958,14 @@ export function poserPause1(ch, ctx) {
   const yPil = Y_S - 0.06;                               // (le nu nord de la salle)
   for (const x of [3.3, 4.95, 6.6, 8.25, 9.9]) pilastre(x, yPil - 0.2, yPil);
   B(1.71, yPil - 0.2, 1.885, yPil, N1, HS, P.blancSalle, { collision: true, ombre: false });
+  // (14/10 — VO q_0210, q_0212, bord droit agrandi : sous chaque jour, entre ses deux pilastres, un CACHE-RADIATEUR blanc
+  // jusqu'à l'appui du jour, sa tablette et sa grille ; le jeu n'avait là que le mur nu. 9 cm de saillie : les tables du
+  // bloc nord, à 1 cm du mur, n'ont pas à bouger)
+  for (const c of JOURS) {
+    B(c - 0.65, yPil - 0.09, c + 0.65, yPil, N1, N1 + 0.92, P.blancSalle, { collision: true });
+    B(c - 0.655, yPil - 0.12, c + 0.655, yPil, N1 + 0.92, N1 + 0.95, P.blancSalle);
+    B(c - 0.55, yPil - 0.0905, c + 0.55, yPil - 0.09, N1 + 0.74, N1 + 0.86, M.grille || M.noirMat, { ombre: false });
+  }
   // LES JOURS DÉPOLIS (verre sablé, cadre blanc, des deux côtés) ; L'IMPOSTE VITRÉE de la porte
   for (const c of JOURS) {
     const a = c - 0.475, b = c + 0.475, h0 = J0, h1 = J1, k = 0.05;
@@ -1002,15 +1013,20 @@ export function poserPause1(ch, ctx) {
     // au sud, 1,9-2,0 m, puis un de 1,0 m au nord, le joint aux deux tiers ; la cote du haut au bas, 1,24 m, donne les
     // largeurs. C'est le panneau central de master, 2,0 m, et son volet nord ouvert, 0,98 ; du volet sud, aucune vue ne
     // montre rien — et non trois panneaux de 0,7 / 1,5 / 0,7. Le tout centré sur 2,45 — q_0212, 0,9 m de mur au nord)
-    const xw = 1.71, wc = 2.0, wv = 0.98, y0 = 2.45 - (wc + wv) / 2, yc = y0 + wc / 2;
+    // (14/10 — VO q_0212 agrandie, q_0206, q_0208, q_0210 contrastées : le VOLET SUD est là — un émail aussi blanc que le
+    // mur sous le jour des fenêtres, presque invisible, mais son cadre gris et son auget prolongent ceux du panneau, à
+    // gauche, sur une largeur de volet : u 237,5 / 278 / 362 / 408 sur q_0212, 40 + 84 + 46 px ; avant lui, 15 px de mur
+    // jusqu'à l'angle sud-ouest, après le volet nord 38 px jusqu'à l'angle nord-ouest. Le triptyque de master, 0,98 + 2,0 +
+    // 0,98, mis dans le mur de 4,89 m aux proportions de la vidéo : 0,29 m de mur au sud, 0,64 au nord)
+    const xw = 1.71, wc = 2.0, wv = 0.98, y0 = 0.29 + wv, yc = y0 + wc / 2;
     // (relecture 10/10 : l'émail blanc, un peu lumineux — il sortait beige, VO f_51,6 s il est le plus blanc de la salle)
     const triptyque = (n) => new THREE.MeshStandardMaterial({ map: texTriptyque(n), color: 0xeef2f8, roughness: 0.16, emissive: 0xe8eef6, emissiveIntensity: 0.16 });
-    for (const [y, w, n] of [[yc, wc, 0], [y0 + wc + wv / 2, wv, 2]]) {
+    for (const [y, w, n] of [[yc, wc, 0], [y0 + wc + wv / 2, wv, 2], [y0 - wv / 2, wv, 1]]) {
       B(xw, y - w / 2 - 0.02, xw + 0.025, y + w / 2 + 0.02, N1 + 0.88, N1 + 2.12, M.alu, { ombre: false });
       panneau(triptyque(n), w, 1.2, xw + 0.026, y, N1 + 1.5, 'E');
     }
-    // (la charnière entre le panneau et son volet : le joint gris qu'on voit aux deux tiers, VO q_0208-0212)
-    B(xw, y0 + wc - 0.008, xw + 0.04, y0 + wc + 0.008, N1 + 0.88, N1 + 2.12, M.boitier, { ombre: false });
+    // (les charnières entre le panneau et ses volets : les joints gris, VO q_0208-0212)
+    for (const yj of [y0, y0 + wc]) B(xw, yj - 0.008, xw + 0.04, yj + 0.008, N1 + 0.88, N1 + 2.12, M.boitier, { ombre: false });
     B(xw, yc - 0.6, xw + 0.07, yc + 0.6, N1 + 0.86, N1 + 0.88, M.alu, { ombre: false });
     B(xw, yc - 0.13, xw + 0.12, yc + 0.13, N1 + 2.26, HS - 0.02, M.boitier);
     projecteur(3.75, yc, 'W');
