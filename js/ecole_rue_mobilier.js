@@ -130,20 +130,24 @@ export function matieresRue() {
   if (_M) return _M;
   const std = (o, k = 0.08) => jourDehors(new THREE.MeshStandardMaterial(o), k);
   const M = {};
-  M.zinc = std({ map: texZinc(), roughness: 0.5, metalness: 0.35 }, 0.1); M.zinc.name = 'zinc patiné (jardinières)';
+  // (lot rue du 13/10, photos 13 et 17 : un gris bleuté CLAIR, 150 à 170 sous le ciel couvert — le jeu le rendait à 100)
+  M.zinc = std({ map: texZinc(), roughness: 0.55, metalness: 0.12 }, 0.16); M.zinc.name = 'zinc patiné (jardinières)';
   M.terre = teinte(0x2e241c, 'mat');
   M.anthracite = teinte(0x34373a, 'satin');
   M.treillis = std({ map: texTreillis(), roughness: 0.6, metalness: 0.3 }, 0.04);
-  M.terreCuite = teinte(0xa4674a, 'mat');
+  M.terreCuite = teinte(0xae7862, 'mat');          // (relecture du 14/10, photo 10 : 90-61-47, une terre rosée — rendue 78-44-20, orangée)
   M.potGris = teinte(0x8e8f8c, 'mat');
   M.potTurquoise = teinte(0x2f6f74, 'laque');
   M.noirBanc = teinte(0x1e1f21, 'laque');
   M.sac = teinte(0x101012, 'laque');
-  M.bacGris = teinte(0x4e5357, 'satin');
-  M.bacCouvercle = teinte(0x3b3f42, 'satin');
+  // (relecture rue du 14/10, photo 10 : les bacs sont d'un gris-BLEU, 64-75-93 — le jeu les rendait gris neutre, 44-45-43)
+  M.bacGris = teinte(0x65758f, 'satin');
+  M.bacCouvercle = teinte(0x57657c, 'satin');
   M.bacVert = teinte(0x2f8a3a, 'satin');
   M.caoutchouc = teinte(0x141414, 'mat');
   M.alu = teinte(0xb4b7b9, 'metal');
+  M.aluTotem = teinte(0x8b8d90, 'satin');       // (les chants des totems : un aluminium anodisé gris moyen, 125 sur les photos 10 et 13)
+  M.potArdoise = teinte(0x55585b, 'mat');       // (les pots du bambou et du palmier : un gris ardoise mat, photos 16 et 17 — pas le noir des autres pots)
   M.chrome = teinte(0xc4c8cc, 'metal');          // (un peu moins blanc : sous le ciel couvert il ne doit pas briller comme une peinture blanche)
   M.noirMat = teinte(0x18181a, 'mat');
   M.noirBrillant = teinte(0x111214, 'laque');
@@ -191,7 +195,7 @@ function texZinc() {
   // le zinc des jardinières : gris bleuté, marbré de patine, des coulures verticales plus sombres et des arêtes claires
   return canvasTex(256, 256, (g, w, h) => {
     const r = alea(31);
-    g.fillStyle = '#939ca0'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#a7b1b7'; g.fillRect(0, 0, w, h);
     for (let k = 0; k < 90; k++) {
       const c = 120 + r() * 60;
       g.fillStyle = `rgba(${c - 6},${c + 2},${c + 8},0.22)`;
@@ -265,7 +269,9 @@ function dessinerAtlas(g) {
         const t = 0.12 + k / n * 0.85, [x, y] = pts[Math.min(10, Math.round(t * 10))];
         const cote = k % 2 ? 1 : -1, ang = cote * (0.35 + r() * 0.65);
         const l = 22 + r() * 14;
-        feuille(g, x, y, ang, 70 + r() * 45, 7 + r() * 3.5, hsl(78 + r() * 14, 42 + r() * 12, 24 + r() * 8), hsl(74 + r() * 12, 45, l), 0.25);
+        // (relecture rue du 14/10 : le bambou mesuré sur les photos 16 et 17 à côté du jeu rejoué à leur pose — 88-102-58 et
+        // 104-113-78 pour 56-70-31 : un vert-jaune GRISÉ, moitié plus clair ; de même la palme, 92-108-56 pour 64-83-39)
+        feuille(g, x, y, ang, 70 + r() * 45, 7 + r() * 3.5, hsl(76 + r() * 14, 27 + r() * 10, 33 + r() * 8), hsl(72 + r() * 12, 30, l + 13), 0.25);
       }
     }
   });
@@ -275,8 +281,8 @@ function dessinerAtlas(g) {
     for (let i = 0; i < 36; i++) {
       const a = -1.6 + i / 35 * 3.2 + (r() - 0.5) * 0.05;
       const l = 205 + r() * 32 - Math.abs(a) * 25;
-      const lum = 24 + r() * 8;
-      feuille(g, cx + Math.sin(a) * 12, cy + Math.cos(a) * 12, a + (r() - 0.5) * 0.06, l, 5.5 + r() * 1.5, hsl(92, 38, lum - 4), hsl(88 + r() * 8, 40, lum + 4), 0.22);
+      const lum = 33 + r() * 8;
+      feuille(g, cx + Math.sin(a) * 12, cy + Math.cos(a) * 12, a + (r() - 0.5) * 0.06, l, 5.5 + r() * 1.5, hsl(84, 34, lum - 4), hsl(80 + r() * 8, 36, lum + 4), 0.22);
     }
     g.fillStyle = '#3f4a22'; g.beginPath(); g.ellipse(cx, cy + 10, 12, 9, 0, 0, 7); g.fill();
   });
@@ -347,7 +353,9 @@ function dessinerAtlas(g) {
     for (let k = 0; k < 520; k++) {
       const a = r() * Math.PI * 2, d = Math.sqrt(r()) * 112, x = 128 + Math.cos(a) * d, y = 132 + Math.sin(a) * d * 0.92;
       const coeur = 1 - d / 112;
-      feuille(g, x, y, r() * 6.3, 13 + r() * 9, 4.5 + r() * 3, hsl(95 + r() * 18, 30 + r() * 15, 14 + (1 - coeur) * 12 + r() * 8), hsl(92 + r() * 14, 36, 22 + (1 - coeur) * 14 + r() * 8), 0);
+      // (relecture rue du 14/10 : les arbres du jardin sont d'un vert GRIS, 59-62-52 sur la photo 15 et 95-100-90 sur la 08 ;
+      // le jeu les rendait vert vif, 33-60-25 et 42-72-30)
+      feuille(g, x, y, r() * 6.3, 13 + r() * 9, 4.5 + r() * 3, hsl(86 + r() * 16, 11 + r() * 8, 21 + (1 - coeur) * 12 + r() * 8), hsl(82 + r() * 14, 14, 29 + (1 - coeur) * 13 + r() * 8), 0);
     }
   });
 }
@@ -455,28 +463,31 @@ export function bambou(F, A, M, x, y, h0, H, r, n = 12) {
 // LE PALMIER DE CHINE en pot (photos 16, 17) : un stipe court et fibreux, des palmes en éventail sur de longs pétioles,
 // les plus basses qui retombent (et quelques-unes sèches)
 export function palmier(F, A, M, x, y, h0, r) {
-  const pied = vMonde(x, h0, y), tete = vMonde(x + 0.02, h0 + 0.42, y);
-  A.ajouter(tube(pied, tete, 0.1, 0.08, 8), M.stipe, new THREE.Matrix4());
+  // (relecture rue du 14/10, photos 16 à 18 : le stipe ne se voit pas — 25 cm, caché par la touffe du pied — ; les palmes
+  // partent en GERBE, la plupart dressées de 30 à 65°, cinq seulement retombent ; le jeu montrait un tronc de 42 cm et des
+  // palmes à plat, comme un cycas)
+  const pied = vMonde(x, h0, y), tete = vMonde(x + 0.02, h0 + 0.26, y);
+  A.ajouter(tube(pied, tete, 0.075, 0.06, 8), M.stipe, new THREE.Matrix4());
   const c = vMonde(x, h0 + 0.7, y);
-  const n = 22;
+  const n = 26;
   for (let i = 0; i < n; i++) {
     const az = i / n * Math.PI * 2 * 1.618 + r() * 0.3;
-    const basse = i < 8, elev = basse ? 0.0 + r() * 0.25 : 0.4 + r() * 0.65;
-    const d = dirAz(az, elev), L = 0.5 + r() * 0.4;
+    const basse = i < 5, elev = basse ? 0.0 + r() * 0.25 : 0.5 + r() * 0.65;
+    const d = dirAz(az, elev), L = 0.55 + r() * 0.4;
     const b = tete.clone().add(V(0, -0.05 + r() * 0.08, 0));
     const e = b.clone().addScaledVector(d, L);
-    A.ajouter(tube(b, e, 0.012, 0.007, 4), M.petiole, new THREE.Matrix4());
+    A.ajouter(tube(b, e, 0.012, 0.007, 4), M.petiole, new THREE.Matrix4(), false);
     // la palme continue le pétiole et retombe ; elle est large (0,8 m) et presque à plat
-    const dp = d.clone().add(V(0, -0.25 - (basse ? 0.4 : 0), 0)).normalize();
+    const dp = d.clone().add(V(0, -0.12 - (basse ? 0.5 : 0), 0)).normalize();
     let s = new THREE.Vector3().crossVectors(dp, HAUT).normalize();
     s.applyAxisAngle(dp, (r() - 0.5) * 0.5);
     const seche = basse && r() < 0.35;
-    F.carte(e, dp, s, 0.7 + r() * 0.18, 0.95, c, PLANCHE.palme, { pli: 0.35 + (basse ? 0.3 : 0), tc: seche ? [1.25, 0.95, 0.55] : [0.9 + r() * 0.2, 0.95 + r() * 0.15, 0.9] });
+    F.carte(e, dp, s, 0.7 + r() * 0.18, 0.95, c, PLANCHE.palme, { pli: 0.16 + (basse ? 0.45 : 0), tc: seche ? [1.25, 0.95, 0.55] : [0.95 + r() * 0.2, 1.0 + r() * 0.15, 0.9] });
   }
   // les petites plantes au pied (photo 16 : une touffe de feuillage au bord du pot)
-  for (let k = 0; k < 10; k++) {
-    const az = r() * Math.PI * 2, b = vMonde(x + Math.cos(az) * 0.2, h0 + 0.02, y + Math.sin(az) * 0.2);
-    F.carteVers(b, dirAz(az, 0.2 + r() * 0.5), 0.25, 0.25, vMonde(x, h0, y), PLANCHE.arbuste, r, { pli: 0.4 });
+  for (let k = 0; k < 16; k++) {
+    const az = r() * Math.PI * 2, b = vMonde(x + Math.cos(az) * 0.17, h0 + 0.02, y + Math.sin(az) * 0.17);
+    F.carteVers(b, dirAz(az, 0.25 + r() * 0.6), 0.3, 0.3, vMonde(x, h0, y), PLANCHE.arbuste, r, { pli: 0.4, teinte: 1.25 });
   }
 }
 // L'OLIVIER en jardinière (photos 08, 13) : un tronc mince et sinueux, quelques branches, un feuillage clairsemé
@@ -484,7 +495,8 @@ export function olivier(F, A, M, x, y, h0, H, r) {
   let p = vMonde(x, h0, y);
   const pts = [p];
   for (let k = 1; k <= 4; k++) { p = p.clone().add(V((r() - 0.5) * 0.08, H * 0.13, (r() - 0.5) * 0.08)); pts.push(p); }
-  for (let k = 0; k < pts.length - 1; k++) A.ajouter(tube(pts[k], pts[k + 1], 0.035 - k * 0.005, 0.03 - k * 0.005, 6), M.ecorceClaire, new THREE.Matrix4());
+  // (relecture du 14/10, photos 10 et 13 : un tronc MINCE, 4 cm au pied — il en faisait 7)
+  for (let k = 0; k < pts.length - 1; k++) A.ajouter(tube(pts[k], pts[k + 1], 0.02 - k * 0.003, 0.017 - k * 0.003, 6), M.ecorceClaire, new THREE.Matrix4());
   const c = vMonde(x, h0 + H * 0.72, y);
   for (let b = 0; b < 6; b++) {
     const az = r() * Math.PI * 2, base = pts[2 + Math.floor(r() * 3)];
@@ -588,7 +600,10 @@ export function jardiniereTerre(ch, A, M, x, y, lx, ly, h) {
 // =====================================================================
 //  LES TOTEMS « iris » (photos 08, 10, 13, 18)
 // =====================================================================
-const TOTEM = { l: 0.7, h: 2.6, ep: 0.09 };
+// (lot rue du 13/10, photos 08, 10 et 13 à leur pose : la face imprimée fait 0,53 m — 0,47 à 0,57 selon la photo —, le
+// totem est un caisson ÉPAIS de 12 cm aux chants d'aluminium gris moyen — on en voit 4, 9 et 10 cm selon l'angle —, posé
+// sur un socle sombre de 12 cm en retrait ; le jeu en faisait une lame de 0,70 x 0,09 m)
+const TOTEM = { l: 0.53, h: 2.6, ep: 0.12, socle: 0.12 };
 const POLICE_LOGO = '"Century Gothic", "Futura", "Avenir Next", "Questrial", "Trebuchet MS", sans-serif';
 // les continents (longitude, latitude), assez pour la carte stylisée de la photo 08 (Europe, Afrique, Proche-Orient)
 const CONTINENTS = [
@@ -606,27 +621,30 @@ const CONTINENTS = [
   [[-97, 26], [-90, 30], [-84, 30], [-81, 25], [-80, 27], [-81, 32], [-76, 35], [-75, 39], [-70, 41], [-70, 44], [-66, 45], [-64, 44], [-61, 46], [-56, 47], [-56, 52], [-61, 56], [-65, 60], [-78, 62], [-82, 58], [-92, 58], [-95, 62], [-110, 62], [-112, 40]],
 ];
 function texTotem(face) {
-  const W = 512, H = Math.round(W * TOTEM.h / TOTEM.l);
+  const W = 512, H = Math.round(W * (TOTEM.h - TOTEM.socle) / TOTEM.l);
   return canvasTex(W, H, (g) => {
-    const haut = Math.round(H * 0.27);              // (le panneau clair : un quart de la hauteur, photo 10)
+    const haut = Math.round(H * 0.262);             // (le panneau clair : 0,65 m, jusqu'à 1,95 m du sol — photos 08, 10, 13)
     // le panneau haut, gris clair, et la partie noire
     g.fillStyle = '#d6d7d4'; g.fillRect(0, 0, W, haut);
     g.fillStyle = '#0f1011'; g.fillRect(0, haut, W, H - haut);
     const logo = (x, y, w, h, taille, jaune) => {
-      g.fillStyle = '#3d3e40'; g.fillRect(x, y, w, h);
+      // (photos 08, 10, 13 : le cartouche est en deux tons — un bandeau gris au tiers haut, le reste presque noir —, les
+      // lettres blanches à cheval sur les deux)
+      g.fillStyle = '#26272b'; g.fillRect(x, y, w, h);
+      g.fillStyle = '#8f9194'; g.fillRect(x, y, w, h * 0.35);
       if (jaune) { g.fillStyle = '#f2b705'; g.fillRect(x - w * 0.02, y - h * 0.05, w * 0.07, h * 0.16); }
       g.fillStyle = '#ffffff'; g.font = `700 ${taille}px ${POLICE_LOGO}`; g.textBaseline = 'middle'; g.textAlign = 'center';
-      g.fillText('iris', x + w / 2, y + h * 0.53);
+      g.fillText('iris', x + w / 2, y + h * 0.57);
     };
     if (face === 'ouest') {
-      logo(30, 60, W - 60, 200, 210, false);
-      g.fillStyle = '#121212'; g.font = '700 38px "Arial Narrow", "Roboto Condensed", Arial, sans-serif'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-      ['INSTITUT SUPÉRIEUR', 'DE RESSOURCES', 'INFORMATIQUES'].forEach((t, i) => g.fillText(t, 32, 330 + i * 52));
+      logo(56, 70, W - 132, 232, 190, false);
+      g.fillStyle = '#4a4b4e'; g.font = '700 37px "Arial Narrow", "Roboto Condensed", Arial, sans-serif'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+      ['INSTITUT SUPÉRIEUR', 'DE RESSOURCES', 'INFORMATIQUES'].forEach((t, i) => g.fillText(t, 60, 372 + i * 58));
       // LA CARTE DU MONDE (photos 08, 10, 13) : un grand globe vu au-dessus de l'Atlantique, au milieu de la partie noire
       // (centré à 61 % de la hauteur, rayon d'un quart de la hauteur), coupé par le bord gauche : l'Amérique du Sud à gauche,
       // l'Afrique et l'Europe à droite contre le bord du globe ; en trame grise, sous les traces du circuit imprimé.
       // (relecture du 09/10/2026 : le globe était posé tout en bas du panneau, à moitié hors du cadre)
-      const R = H * 0.235, cx = W * 0.1, cy = H * 0.61, l0 = -38 * Math.PI / 180, p0 = 18 * Math.PI / 180;
+      const R = H * 0.235, cx = W * 0.99 - R, cy = H * 0.61, l0 = -38 * Math.PI / 180, p0 = 18 * Math.PI / 180;
       // la projection orthographique ; z < 0 : la face cachée, rabattue sur le bord du globe (les contours qui y passent)
       const proj = ([lo, la]) => {
         const a = lo * Math.PI / 180 - l0, b = la * Math.PI / 180;
@@ -681,15 +699,14 @@ export function totem(ch, A, M, x, y, faceEst = 'ouest', a = 0) {
     const mk = (f) => jourDehors(new THREE.MeshStandardMaterial({ map: texTotem(f), roughness: 0.45 }), 0.1);
     _totemMats = { ouest: mk('ouest'), est: mk('est') };
   }
-  const { l, h, ep } = TOTEM, b = pose(x, y, 0, a);
-  A.ajouter(new THREE.BoxGeometry(ep, h, l), M.noirMat, dans(b, 0, h / 2 + 0.02, 0));
-  // les deux faces imprimées (l'ouest regarde -x, l'est +x ; aucune n'est vue en miroir)
-  A.ajouter(new THREE.PlaneGeometry(l - 0.02, h - 0.04), _totemMats.ouest, dans(b, -ep / 2 - 0.002, h / 2 + 0.02, 0, 0, -Math.PI / 2));
-  A.ajouter(new THREE.PlaneGeometry(l - 0.02, h - 0.04), _totemMats[faceEst], dans(b, ep / 2 + 0.002, h / 2 + 0.02, 0, 0, Math.PI / 2));
-  // les montants d'aluminium, le socle
-  for (const s of [-1, 1]) A.ajouter(new THREE.BoxGeometry(ep + 0.02, h + 0.04, 0.03), M.alu, dans(b, 0, h / 2 + 0.02, s * (l / 2 + 0.012)));
-  A.ajouter(new THREE.BoxGeometry(ep + 0.08, 0.02, l + 0.12), M.alu, dans(b, 0, 0.01, 0));
-  ch.C.ajouterBoiteOrientee(x, -y, 0.07, l / 2 + 0.03, -a, { y1: h });
+  const { l, h, ep, socle } = TOTEM, b = pose(x, y, 0, a), hp = h - socle, hc = socle + hp / 2;
+  // le caisson d'aluminium (ses chants et son dessus restent nus), les deux faces imprimées (l'ouest regarde -x, l'est
+  // +x ; aucune n'est vue en miroir), le socle sombre en retrait
+  A.ajouter(new THREE.BoxGeometry(ep, hp, l + 0.016), M.aluTotem, dans(b, 0, hc, 0));
+  A.ajouter(new THREE.PlaneGeometry(l, hp - 0.008), _totemMats.ouest, dans(b, -ep / 2 - 0.002, hc, 0, 0, -Math.PI / 2));
+  A.ajouter(new THREE.PlaneGeometry(l, hp - 0.008), _totemMats[faceEst], dans(b, ep / 2 + 0.002, hc, 0, 0, Math.PI / 2));
+  A.ajouter(new THREE.BoxGeometry(ep - 0.035, socle, l - 0.05), M.anthracite, dans(b, 0, socle / 2, 0));
+  ch.C.ajouterBoiteOrientee(x, -y, ep / 2 + 0.02, l / 2 + 0.03, -a, { y1: h });
 }
 
 // =====================================================================
@@ -729,24 +746,30 @@ export function banc(ch, A, M, x, y, L = 1.25, a = 0, { lattesDos = 4, nom = 'le
 // LA CORBEILLE NOIRE À SAC (photos 08, 13, 17) et LE CENDRIER sur pied
 export function corbeille(ch, A, M, x, y) {
   const b = pose(x, y);
-  A.ajouter(new THREE.CylinderGeometry(0.205, 0.19, 0.6, 20), M.noirBanc, dans(b, 0, 0.3, 0));
-  A.ajouter(new THREE.CylinderGeometry(0.222, 0.214, 0.13, 20, 1, true), M.sac, dans(b, 0, 0.56, 0));
-  A.ajouter(new THREE.TorusGeometry(0.214, 0.018, 6, 24).rotateX(Math.PI / 2), M.sac, dans(b, 0, 0.615, 0));
-  A.ajouter(new THREE.CircleGeometry(0.2, 16).rotateX(-Math.PI / 2), M.sac, dans(b, 0, 0.602, 0));
-  ch.C.ajouterCercle(x, -y, 0.24, { y1: 0.65, camera: false });
+  // (lot rue du 13/10, photos 08, 13 et 17 à leur pose : elle est TRAPUE — 0,50 m de haut pour 0,45 de large, le jeu la
+  // faisait de 0,60 pour 0,41)
+  A.ajouter(new THREE.CylinderGeometry(0.225, 0.2, 0.5, 20), M.noirBanc, dans(b, 0, 0.25, 0));
+  A.ajouter(new THREE.CylinderGeometry(0.242, 0.234, 0.12, 20, 1, true), M.sac, dans(b, 0, 0.46, 0));
+  A.ajouter(new THREE.TorusGeometry(0.234, 0.018, 6, 24).rotateX(Math.PI / 2), M.sac, dans(b, 0, 0.515, 0));
+  A.ajouter(new THREE.CircleGeometry(0.22, 16).rotateX(-Math.PI / 2), M.sac, dans(b, 0, 0.502, 0));
+  ch.C.ajouterCercle(x, -y, 0.26, { y1: 0.56, camera: false });
 }
 export function cendrier(ch, A, M, x, y) {
   const b = pose(x, y);
-  A.ajouter(new THREE.CylinderGeometry(0.1, 0.1, 0.84, 18), M.noirBanc, dans(b, 0, 0.42, 0));
-  A.ajouter(new THREE.SphereGeometry(0.1, 18, 6, 0, Math.PI * 2, 0, Math.PI / 2), M.noirBanc, dans(b, 0, 0.84, 0));
-  A.ajouter(new THREE.BoxGeometry(0.09, 0.025, 0.01), M.sac, dans(b, 0, 0.78, 0.097));
-  A.ajouter(new THREE.CylinderGeometry(0.13, 0.13, 0.015, 18), M.noirBanc, dans(b, 0, 0.008, 0));
-  ch.C.ajouterCercle(x, -y, 0.12, { y1: 0.95, camera: false });
+  // (lot rue du 13/10, photos 08, 13, 17 et 18 à leur pose : la poubelle haute fait 0,65 m et non 0,94 — sur toutes, elle
+  // dépasse à peine la corbeille — pour 23 cm de diamètre ; son dessus est un couvercle presque plat)
+  A.ajouter(new THREE.CylinderGeometry(0.115, 0.115, 0.6, 18), M.noirBanc, dans(b, 0, 0.3, 0));
+  A.ajouter(new THREE.SphereGeometry(0.115, 18, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.45, 1), M.noirBanc, dans(b, 0, 0.6, 0));
+  A.ajouter(new THREE.BoxGeometry(0.09, 0.025, 0.01), M.sac, dans(b, 0, 0.54, 0.112));
+  A.ajouter(new THREE.CylinderGeometry(0.14, 0.14, 0.015, 18), M.noirBanc, dans(b, 0, 0.008, 0));
+  ch.C.ajouterCercle(x, -y, 0.14, { y1: 0.68, camera: false });
 }
 // LE BAC ROULANT (photo 10 : gris, couvercle sombre ; photo 09 : le vert de l'impasse). Repère : l'avant regarde +z,
 // les roues et la poignée sont derrière.
-export function bacRoulant(ch, A, M, x, y, a, corps, couvercle, { l = 0.6, p = 0.74, h = 0.98, sol = 0 } = {}) {
+export function bacRoulant(ch, A, M, x, y, a, corps, couvercle, { l = 0.6, p = 0.74, h = 0.98, sol = 0, quatreRoues = false } = {}) {
   const b = pose(x, y, sol, a);
+  // (un conteneur à quatre roues — photo 10 : deux roulettes noires se voient sous sa face, côté rue)
+  if (quatreRoues) for (const s of [-1, 1]) A.ajouter(new THREE.CylinderGeometry(0.09, 0.09, 0.05, 14).rotateZ(Math.PI / 2), M.caoutchouc, dans(b, s * (l / 2 - 0.1), 0.09, p / 2 - 0.1));
   A.ajouter(boiteEvasee(l, h - 0.08, p, 0.86), corps, dans(b, 0, (h - 0.08) / 2 + 0.06, 0));
   A.ajouter(new THREE.BoxGeometry(l + 0.04, 0.045, p + 0.06), couvercle, dans(b, 0, h, 0.01));
   A.ajouter(new THREE.BoxGeometry(l + 0.02, 0.05, 0.04), corps, dans(b, 0, h - 0.05, p / 2 + 0.02));
@@ -1003,14 +1026,16 @@ export function potelet(ch, A, M, x, y) {
   ch.C.ajouterCercle(x, -y, 0.07, { y1: 1.04, camera: false });
 }
 // LA STATION DE RÉPARATION orange (photos 15, 16) et SES ARCEAUX BLANCS
-export function stationVelo(ch, A, M, x, y, a, h0 = 0) {
+// (`H` : la hauteur de la borne — lot rue du 13/10, photos 15 et 16 : 1,3 m, son dessus à hauteur de poitrine ; 1,06 avant)
+export function stationVelo(ch, A, M, x, y, a, h0 = 0, H = 1.25) {
   const b = pose(x, y, h0, a);
-  A.ajouter(new RoundedBoxGeometry(0.42, 1.06, 0.3, 2, 0.03), M.orange, dans(b, 0, 0.53, 0));
-  A.ajouter(new THREE.BoxGeometry(0.3, 0.12, 0.31), M.noirMat, dans(b, 0, 0.92, 0.0));
-  A.ajouter(new THREE.BoxGeometry(0.16, 0.1, 0.06), M.alu, dans(b, 0.08, 1.11, 0.0, 0, 0, -0.25));
-  A.ajouter(tube(V(0.22, 0.85, 0), V(0.36, 0.95, 0), 0.008, 0.008, 5), M.alu, b);
-  A.ajouter(new THREE.TorusGeometry(0.1, 0.008, 4, 12, Math.PI * 1.4), M.noirMat, dans(b, -0.21, 0.6, 0.0, 0, Math.PI / 2, 0));
-  ch.C.ajouterBoiteOrientee(x, -y, 0.24, 0.17, -a, { y0: h0, y1: h0 + 1.1, camera: false });
+  // (relecture du 14/10, photos 15 et 16 : une colonne de 0,36 m — 110 px à 1,8 m —, et non 0,42)
+  A.ajouter(new RoundedBoxGeometry(0.36, H, 0.3, 2, 0.03), M.orange, dans(b, 0, H / 2, 0));
+  A.ajouter(new THREE.BoxGeometry(0.3, 0.12, 0.31), M.noirMat, dans(b, 0, H - 0.14, 0.0));
+  A.ajouter(new THREE.BoxGeometry(0.16, 0.1, 0.06), M.alu, dans(b, 0.08, H + 0.05, 0.0, 0, 0, -0.25));
+  A.ajouter(tube(V(0.22, H - 0.21, 0), V(0.36, H - 0.11, 0), 0.008, 0.008, 5), M.alu, b);
+  A.ajouter(new THREE.TorusGeometry(0.1, 0.008, 4, 12, Math.PI * 1.4), M.noirMat, dans(b, -0.21, H * 0.57, 0.0, 0, Math.PI / 2, 0));
+  ch.C.ajouterBoiteOrientee(x, -y, 0.24, 0.17, -a, { y0: h0, y1: h0 + H + 0.04, camera: false });
 }
 export function arceau(ch, A, M, x, y, a, h0 = 0) {
   const b = pose(x, y, h0, a);
@@ -1037,7 +1062,10 @@ export function poserMobilierRue(ch, R) {
   ch.C.ajouterBoiteOrientee(5.0, 1.12, 0.36, 0.12, -(Math.PI / 2 + 0.12), { y1: 1.1, camera: false });
   // (relecture du lot façade, 11/10 : le totem du passage 0,55 m plus à l'ouest — photo 10 recalée, son pied en x 5,1-5,6 ;
   // photos 11 et 18 : à côté de la trottinette, juste avant le premier bac de zinc)
-  totem(ch, A, M, 5.45, -1.25, 'est', 20 * Math.PI / 180);
+  // (lot rue du 13/10 : ses arêtes relevées en haut et en bas sur les photos 10 et 13 à leur pose — son bout nord en
+  // (5,38 ; -1,1), son bout sud en (5,5 ; -1,6) — ; son cap par l'écrasement des lettres « iris » sur les photos 08, 10
+  // et 13, vues à 18°, 45° et 49° de la normale : sa face « INSTITUT » regarde l'ouest à 13° vers la rue, et non 20°)
+  totem(ch, A, M, 5.44, -1.36, 'est', 13 * Math.PI / 180);
   // les jardinières de zinc sous les fenêtres de la salle A, et ce qu'elles portent (photos 08, 13, 14)
   // (relecture du lot façade, 11/10 : les photos 17 et 18 recalées — leur sol tombe sur le seuil de la porte 6 à 5 px
   // près —, le pied de chaque objet relevé au sol : les bacs de zinc sont GRANDS, 0,9 à 1,1 m de large et 0,95 de haut —
@@ -1049,40 +1077,70 @@ export function poserMobilierRue(ch, R) {
   // en 12,95 ; -2,06 sur les photos 17 et 18, 12,6 sur la 11) : de 0,2 à 0,7 m de leur ancienne place — la corbeille, la
   // poubelle et le premier banc vers l'ouest, le second banc, le totem et le bambou vers l'est. Les plantes gardent leur
   // tirage : le bac de derrière le second banc a le sien)
-  const rE = alea(1105);
-  let h = jardiniere(ch, A, M, 6.02, -0.67, 0.85, 0.5, 0.95); olivier(F, A, M, 6.02, -0.67, h, 1.9, r);
-  h = jardiniere(ch, A, M, 7.22, -0.67, 1.05, 0.5, 0.95); arbuste(F, A, M, 7.22, -0.67, h, 0.46, 0.5, PLANCHE.fleurs, r, 34);
-  h = potRond(ch, A, M, 8.21, -0.72, 0.3, 0.24, 0.72, M.anthracite); cypres(F, A, M, 8.21, -0.72, h, 1.5, 0.27, r);
-  h = jardiniere(ch, A, M, 9.2, -0.67, 1.0, 0.5, 0.95); arbuste(F, A, M, 9.2, -0.67, h, 0.42, 0.75, PLANCHE.arbuste, r, 38);
-  h = jardiniere(ch, A, M, 10.45, -0.67, 1.05, 0.5, 0.95); olivier(F, A, M, 10.45, -0.67, h, 1.1, r); arbuste(F, A, M, 10.45, -0.67, h, 0.3, 0.45, PLANCHE.arbuste, r, 18);
-  h = jardiniere(ch, A, M, 12.0, -0.67, 0.9, 0.5, 0.95); arbuste(F, A, M, 12.0, -0.67, h, 0.34, 0.55, PLANCHE.arbuste, rE, 26);
-  banc(ch, A, M, 6.85, -1.4, 1.25, 0);
-  corbeille(ch, A, M, 8.87, -1.36);
-  cendrier(ch, A, M, 9.72, -1.65);
+  // (lot rue du 13/10 — la photo 17 à sa pose ajustée, le pied de chaque bac rétroprojeté au sol, recoupé par les photos 13
+  // et 14 pour le premier : les bacs sont 0,3 à 0,4 m plus à l'est et plus PROFONDS, leur face avant à 0,65 m de la pierre
+  // (y -1,05) et non 0,5 — x 5,90-6,75 (l'olivier), 7,10-8,16 (les fleurs), le cyprès en 8,6, 9,05-10,05, 10,20-11,20,
+  // et celui de derrière le second banc)
+  const rE = alea(1105), YB = -0.725, PB = 0.65;
+  // (relecture rue du 14/10, photos 10 et 13 à leur pose : le premier bac — celui de l'olivier — est plus BAS que les
+  // autres, 0,72 m : 90 px pour 120 dans le jeu, son pied au même endroit)
+  let h = jardiniere(ch, A, M, 6.32, YB, 0.85, PB, 0.72); olivier(F, A, M, 6.32, YB, h, 2.1, r);
+  h = jardiniere(ch, A, M, 7.63, YB, 1.06, PB, 0.95); arbuste(F, A, M, 7.63, YB, h, 0.46, 0.5, PLANCHE.fleurs, r, 34);
+  h = potRond(ch, A, M, 8.6, -0.78, 0.3, 0.24, 0.72, M.anthracite); cypres(F, A, M, 8.6, -0.78, h, 1.5, 0.27, r);
+  h = jardiniere(ch, A, M, 9.55, YB, 1.0, PB, 0.95); arbuste(F, A, M, 9.55, YB, h, 0.42, 0.75, PLANCHE.arbuste, r, 38);
+  h = jardiniere(ch, A, M, 10.7, YB, 1.0, PB, 0.95); olivier(F, A, M, 10.7, YB, h, 1.1, r); arbuste(F, A, M, 10.7, YB, h, 0.3, 0.45, PLANCHE.arbuste, r, 18);
+  h = jardiniere(ch, A, M, 12.0, YB, 0.9, PB, 0.95); arbuste(F, A, M, 12.0, YB, h, 0.34, 0.55, PLANCHE.arbuste, rE, 26);
+  // (LOT RUE DU 13/10 — les photos 08, 10, 11, 13 à 18 ajustées ENSEMBLE, poses et objets à la fois : 218 mesures, 5,5 px
+  // d'écart moyen ; chaque objet vu de 3 à 7 photos, de l'ouest comme de l'est. Le joint du trottoir et de sa bordure est à
+  // 2,55 m de la pierre (y -2,95) ; ce qui est posé AU MILIEU du trottoir était 0,45 m trop près de la façade — les
+  // relevés du 11/10 partaient de poses dont l'appareil était trop bas : le premier banc (pieds avant en y -2,03, arrière
+  // en -1,6 : un passage de 0,7 m entre lui et les bacs), la corbeille (8,98 ; -1,85), la poubelle haute (9,82 ; -2,14),
+  // le bambou (12,98 ; -2,29, à 0,35 m de la bordure) ; le second banc 0,3 m plus à l'est et 0,3 m plus loin du mur, long
+  // de 1,15 m (son pied avant ouest en 11,31 ; -1,72 sur la photo 17, 11,25 ; -1,69 sur la photo 18).)
+  banc(ch, A, M, 6.88, -1.82, 1.3, 0);
+  corbeille(ch, A, M, 8.98, -1.85);
+  cendrier(ch, A, M, 9.82, -2.14);
   // le second banc, plus court, au droit du bureau B ; le totem de l'entrée n° 6 ; le bambou ; la jardinière en treillis
-  banc(ch, A, M, 11.55, -1.17, 1.05, 0, { lattesDos: 6 });
+  // (relecture rue du 14/10, photos 11 et 13 de près, prises du même endroit : le banc est à GAUCHE du totem de la porte 6,
+  // qui se voit jusqu'au sol — dans le jeu, le banc passait devant et en cachait le pied. De 35 à 40 px entre eux, 0,55 m
+  // en travers du trottoir : le banc recule contre son bac — y -1,25 —, le totem avance de 0,3 m — y -1,45 ; la photo 17,
+  // de face, garde le banc à sa place à 5 px près)
+  banc(ch, A, M, 11.85, -1.25, 1.15, 0, { lattesDos: 6 });
   // (les recoins trop étroits pour Haythem — 30 à 55 cm entre le totem, les jardinières, les bancs, la corbeille et le
   // cendrier — sont bouchés : il s'y coinçait en tremblant entre deux obstacles. Relecture du 09/10/2026 ; refaits pour
-  // la nouvelle place des objets à la relecture du lot façade, 11/10)
-  ch.C.ajouterBoite(5.6, 0.92, 10.96, 1.4, { y1: 0.9, camera: false });
-  ch.C.ajouterBoite(5.6, 1.4, 6.25, 1.7, { y1: 0.9, camera: false });
-  ch.C.ajouterBoite(8.6, 1.4, 9.84, 1.77, { y1: 0.9, camera: false });
-  ch.C.ajouterBoite(12.04, 0.92, 12.7, 1.47, { y1: 0.9, camera: false });
-  totem(ch, A, M, 12.75, -1.15, 'ouest');
-  // (le bambou monte jusqu'aux appuis des fenêtres du 1er étage, photos 16 et 17 : 2,6 m au-dessus du pot)
-  h = potRond(ch, A, M, 12.85, -1.83, 0.31, 0.23, 0.78, M.anthracite); bambou(F, A, M, 12.85, -1.83, h, 2.6, r, 28);
-  const tb = pose(13.08, -1.3);
-  A.ajouter(new THREE.BoxGeometry(0.44, 0.58, 0.44), M.treillis, dans(tb, 0, 0.29, 0));
-  A.ajouter(new THREE.BoxGeometry(0.4, 0.01, 0.4), M.terre, dans(tb, 0, 0.55, 0), false);
+  // la nouvelle place des objets le 13/10 : entre le totem et le premier bac, le long des bacs, derrière le premier banc,
+  // entre la corbeille et les bacs, entre la corbeille et la poubelle haute, derrière le second banc et à son bout est,
+  // entre le bambou et la jardinière en treillis)
+  ch.C.ajouterBoite(5.45, 0.6, 5.9, 1.35, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(5.9, 1.0, 11.2, 1.12, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(5.9, 1.12, 7.56, 1.6, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(8.6, 1.12, 9.35, 1.68, { y1: 0.6, camera: false });
+  ch.C.ajouterBoite(9.12, 1.8, 9.74, 2.18, { y1: 0.6, camera: false });
+  ch.C.ajouterBoite(11.2, 1.0, 12.45, 1.24, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(12.4, 1.0, 12.75, 1.72, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(12.75, 1.5, 13.3, 2.0, { y1: 0.6, camera: false });
+  totem(ch, A, M, 12.8, -1.45, 'ouest');
+  // (lot rue du 13/10, photos 16, 17 et 18 rejouées à leur pose : le pot du bambou est un tronc de cône GRIS ARDOISE de
+  // 0,47 m de large en haut et de 0,67 de haut — le jeu le faisait noir, de 0,62 x 0,78 — ; le bambou s'arrête sous les
+  // appuis du 1er étage, 2,15 m au-dessus du pot et non 2,6 ; la jardinière en treillis est ÉTROITE, 0,30 m, haute de
+  // 0,60 ; le pot noir rond est juste à son est, contre le tableau du portail)
+  h = potRond(ch, A, M, 12.98, -2.29, 0.235, 0.18, 0.67, M.potArdoise); bambou(F, A, M, 12.98, -2.29, h, 2.15, r, 24);
+  const tb = pose(13.02, -1.3);
+  A.ajouter(new THREE.BoxGeometry(0.3, 0.6, 0.3), M.treillis, dans(tb, 0, 0.3, 0));
+  A.ajouter(new THREE.BoxGeometry(0.27, 0.01, 0.27), M.terre, dans(tb, 0, 0.57, 0), false);
   ch.C.ajouterBoite(12.86, 1.08, 13.3, 1.52, { y1: 0.6, camera: false });
-  arbuste(F, A, M, 13.08, -1.3, 0.55, 0.28, 0.45, PLANCHE.choisya, r, 16);
-  h = potRond(ch, A, M, 13.18, -0.7, 0.2, 0.15, 0.48, M.anthracite); arbuste(F, A, M, 13.18, -0.7, h, 0.22, 0.35, PLANCHE.arbuste, r, 12);
+  arbuste(F, A, M, 13.02, -1.3, 0.57, 0.2, 0.4, PLANCHE.choisya, r, 12);
+  h = potRond(ch, A, M, 13.42, -1.12, 0.21, 0.16, 0.45, M.anthracite); arbuste(F, A, M, 13.42, -1.12, h, 0.24, 0.4, PLANCHE.arbuste, r, 14);
   // le palmier à droite de la porte 6, devant la fenêtre de l'accueil
   // (relecture du lot façade, 11/10 : son pied relevé au sol sur les photos 16, 17 et 18 recalées — avant en 16,65 ;
   // 16,51 ; 16,36 — est au droit du trumeau entre le portail et la baie, contre le tableau du portail : x 16,45 et non
   // 17,3 ; derrière lui, contre la façade, la fente de 0,57 m est bouchée)
-  h = potRond(ch, A, M, 16.45, -1.3, 0.31, 0.22, 0.58, M.anthracite); palmier(F, A, M, 16.45, -1.3, h, r);
-  ch.C.ajouterBoite(16.12, 0.4, 16.78, 1.0, { y1: 0.6, camera: false });
+  // (lot rue du 13/10, photos 16, 17 et 18 ajustées ensemble : le pied du pot en 16,87 ; -1,26 — devant le bord ouest de
+  // la première baie de l'accueil, et non devant le tableau du portail : de face, photo 16, il ne cache pas la porte 6)
+  // (ses palmes dans le feuillage sans ombre portée : sous la lumière d'aplomb, elles dessinaient une étoile noire au pied du
+  // pot — photo 16 : ciel couvert, aucune ombre)
+  h = potRond(ch, A, M, 16.87, -1.26, 0.275, 0.2, 0.52, M.potArdoise); palmier(Floin, A, M, 16.87, -1.26, h, r);
+  ch.C.ajouterBoite(16.54, 0.4, 17.2, 0.96, { y1: 0.6, camera: false });
 
   // ---------------------------------------------------------------- à l'ouest du passage : les bacs, le n° 8
   // (photo 10) trois bacs roulants gris devant la porte de secours ; (photos 09, 10) les jardinières de terre cuite du
@@ -1092,20 +1150,30 @@ export function poserMobilierRue(ch, R) {
   // et derrière, x -0,4 à 0,7, à 0,9-1,3), le pot carré noir au laurier-rose à leur ouest (x -0,9), et les bacs
   // roulants devant la porte de secours et le trumeau noir, x 1,0-2,0 ; le jeu posait les jardinières devant la porte du
   // n° 8, en x -2,15 et -3,45 : de la rue, elles faisaient une haie)
-  const grandBac = { l: 0.68, p: 0.8, h: 1.08 };
+  // (relecture du 14/10 : derrière le grand conteneur, dont le dos est à 0,5 m de la façade, ils ne peuvent être profonds
+  // que de 0,5 m)
+  const grandBac = { l: 0.68, p: 0.5, h: 1.08 };
   // (deux contre la façade, un devant, au droit du trumeau noir — photo 10 : trois couvercles, celui de devant plus bas)
-  bacRoulant(ch, A, M, 1.0, -0.86, 0.04, M.bacGris, M.bacCouvercle, grandBac);
-  bacRoulant(ch, A, M, 1.72, -0.86, -0.04, M.bacGris, M.bacCouvercle, grandBac);
-  bacRoulant(ch, A, M, 1.45, -1.72, 0.08, M.bacGris, M.bacCouvercle, grandBac);
+  bacRoulant(ch, A, M, 1.0, -0.71, 0.04, M.bacGris, M.bacCouvercle, grandBac);
+  bacRoulant(ch, A, M, 1.72, -0.71, -0.04, M.bacGris, M.bacCouvercle, grandBac);
+  // (lot rue du 13/10, photo 10 à sa pose : celui de devant est un peu de biais, on voit sa face et un rien de son flanc)
+  // (relecture rue du 14/10, photo 10 à sa pose : c'est un grand conteneur à quatre roues — son pied à 3,2 m de l'appareil,
+  // en y -1,7, sa face large de 0,94 m et haute de 1,13 —, centré en (1,57 ; -1,3) ; le jeu le faisait de 0,68 x 1,08, plus
+  // près de la bordure)
+  bacRoulant(ch, A, M, 1.57, -1.32, 0.12, M.bacGris, M.bacCouvercle, { l: 0.94, p: 0.76, h: 1.13, quatreRoues: true });
   // (le recoin de 0,66 m entre la jardinière de devant et le bac de devant, et la fente de 0,52 m entre la jardinière de
   // derrière et la façade : bouchés — Haythem s'y coincerait)
   ch.C.ajouterBoite(0.4, 1.22, 1.15, 1.84, { y1: 0.9, camera: false });
-  ch.C.ajouterBoite(-0.4, 0.4, 0.66, 0.94, { y1: 0.9, camera: false });
-  h = jardiniereTerre(ch, A, M, -0.08, -1.62, 1.05, 0.4, 0.38); arbuste(F, A, M, -0.08, -1.62, h, 0.8, 1.85, PLANCHE.choisya, r, 80);
-  h = jardiniereTerre(ch, A, M, 0.15, -1.12, 1.1, 0.4, 0.38); arbuste(F, A, M, 0.15, -1.12, h, 0.75, 1.75, PLANCHE.choisya, r, 72);
-  h = potCarre(ch, A, M, -0.9, -1.62, 0.44, 0.62, M.anthracite); bambou(F, A, M, -0.9, -1.62, h, 1.6, r, 10);
-  h = potCarre(ch, A, M, -4.6, -0.72, 0.46, 0.6, M.anthracite); arbuste(F, A, M, -4.6, -0.72, h, 0.42, 1.05, PLANCHE.arbuste, r, 30);
-  h = potRond(ch, A, M, -7.1, -0.72, 0.24, 0.17, 0.62, M.potGris); cypres(F, A, M, -7.1, -0.72, h, 1.35, 0.24, r);
+  ch.C.ajouterBoite(-0.3, 0.4, 0.85, 0.94, { y1: 0.9, camera: false });
+  ch.C.ajouterBoite(-1.25, 1.3, 0.5, 2.15, { y1: 0.9, camera: false });
+  // (lot rue du 13/10 : le n° 8 est en saillie de 1,25 m — js/ecole_rue.js —, son coin en (-0,3 ; -1,65) : la jardinière de
+  // derrière tient dans le renfoncement de l'école, celle de devant et le pot carré passent devant le coin, les pots du
+  // n° 8 et du n° 10 sont au pied de leur façade avancée)
+  h = jardiniereTerre(ch, A, M, -0.08, -1.92, 1.05, 0.4, 0.38); arbuste(F, A, M, -0.08, -1.92, h, 0.72, 1.7, PLANCHE.arbuste, r, 52);
+  h = jardiniereTerre(ch, A, M, 0.3, -1.12, 1.1, 0.4, 0.38); arbuste(F, A, M, 0.3, -1.12, h, 0.7, 1.75, PLANCHE.choisya, r, 50);
+  h = potCarre(ch, A, M, -0.95, -1.95, 0.44, 0.62, M.anthracite); bambou(F, A, M, -0.95, -1.95, h, 1.6, r, 10);
+  h = potCarre(ch, A, M, -4.6, -1.97, 0.46, 0.6, M.anthracite); arbuste(F, A, M, -4.6, -1.97, h, 0.42, 1.05, PLANCHE.arbuste, r, 30);
+  h = potRond(ch, A, M, -7.1, -1.97, 0.24, 0.17, 0.62, M.potGris); cypres(F, A, M, -7.1, -1.97, h, 1.35, 0.24, r);
 
   // ---------------------------------------------------------------- l'IMPASSE (photo 09) : les pots devant le muret
   const xi = R.X0 + 0.32;
@@ -1127,20 +1195,33 @@ export function poserMobilierRue(ch, R) {
   // sur le trottoir pavé du n° 10 : la terre cuite et le grand pot rond gris au thuya
   // (le premier contre le muret : entre les deux, un passage de 50 cm où Haythem se coinçait — relecture du 09/10/2026)
   h = potRond(ch, A, M, R.X0 + 0.32, -1.9, 0.27, 0.2, 0.42, M.terreCuite); arbuste(F, A, M, R.X0 + 0.32, -1.9, h, 0.35, 0.9, PLANCHE.choisya, r, 22);
-  h = potRond(ch, A, M, R.X0 + 1.9, -0.75, 0.27, 0.19, 0.72, M.potGris); cypres(F, A, M, R.X0 + 1.9, -0.75, h, 1.6, 0.26, r);
+  h = potRond(ch, A, M, R.X0 + 1.9, -2.0, 0.27, 0.19, 0.72, M.potGris); cypres(F, A, M, R.X0 + 1.9, -2.0, h, 1.6, 0.26, r);
 
   // ---------------------------------------------------------------- les deux-roues
   // devant le n° 4 (photos 15, 16) : la moto routière noire sur le trottoir, le nez vers la façade
-  moto(ch, A, M, 20.7, -1.35, 2.2, 'routiere', M.noirBrillant, { penche: -0.1 });
-  // la station de réparation et ses arceaux, sur la chaussée contre la bordure (photos 08, 13, 15, 16), les vélos
-  stationVelo(ch, A, M, 21.35, -3.28, 0, hC);
-  arceau(ch, A, M, 22.25, -3.28, 0, hC); arceau(ch, A, M, 23.25, -3.28, 0, hC);
-  velo(A, M, 21.0, -3.62, Math.PI + 0.06, M.cadreBlanc, { penche: 0.2, style: 'route', h: hC });
-  velo(A, M, 22.3, -3.6, -0.05, M.cadreBleu, { penche: -0.18, h: hC });
-  velo(A, M, 23.15, -3.05, 0.04, M.cadreNoir, { penche: 0.18, h: hC });
-  velo(A, M, 21.7, -3.85, 0.15, M.cadreGris, { penche: -0.22, style: 'route', h: hC });
-  trottinette(A, M, 22.4, -4.25, 0.5, { couchee: true, sol: hC });
-  ch.C.ajouterBoite(20.6, 3.0, 23.8, 4.4, { y0: hC, y1: hC + 1.1, camera: false });        // (les vélos, en bloc)
+  // (lot rue du 13/10 : la roue avant vue des photos 15 et 16, la roue arrière et le top-case recoupés des deux — la moto
+  // est presque en travers du trottoir, le nez vers le mur, devant le bout est de l'école et sa bande noire : roue avant
+  // en (19,3 ; -0,7), arrière en (19,8 ; -2,1) ; le jeu la garait 1,15 m plus à l'est, devant le n° 4)
+  moto(ch, A, M, 19.55, -1.4, 1.91, 'routiere', M.noirBrillant, { penche: -0.1 });
+  // la station de réparation et ses arceaux, sur la chaussée (photos 08, 13, 15, 16), les vélos
+  // (lot rue du 13/10 : la station est EN FACE DE LA PORTE 6, à 1,4 m de la bordure — son pied en (16,84 ; -4,24) sur la
+  // photo 15, sur la ligne y -4,3 vue de la photo 13, et à 47° à droite de l'appareil de la photo 16, à 1,8 m : (17,0 ;
+  // -4,35) ; de la porte, photos 16 et 17, les guidons sont au premier plan à droite. Le jeu la posait contre la bordure
+  // devant le n° 4, 4,4 m plus à l'est.)
+  const SX = 16.95, SY = -4.38;
+  stationVelo(ch, A, M, SX, SY, 0, hC);
+  arceau(ch, A, M, SX + 0.9, SY, 0, hC); arceau(ch, A, M, SX + 1.9, SY, 0, hC);
+  velo(A, M, SX - 0.35, SY - 0.34, Math.PI + 0.06, M.cadreBlanc, { penche: 0.2, style: 'route', h: hC });
+  // (relecture rue du 14/10 : le grand vélo bleu se voit de flanc de la photo 15 — prise de l'ouest — comme de la 16 —
+  // prise du sud — : il est de BIAIS, la roue avant vers le sud-est ; le jeu rangeait tous les vélos dans l'axe de la rue,
+  // on ne les voyait que de face)
+  // (sur la 15, sa roue arrière cache le pied de la station, sa roue avant est à droite : il est devant elle, au sud-ouest)
+  velo(A, M, SX + 0.2, SY - 0.78, -0.82, M.cadreBleu, { penche: -0.12, h: hC });
+  velo(A, M, SX + 1.8, SY + 0.23, 0.04, M.cadreNoir, { penche: 0.18, h: hC });
+  velo(A, M, SX + 0.35, SY - 0.57, 0.15, M.cadreGris, { penche: -0.22, style: 'route', h: hC });
+  // (photo 15 : la trottinette est debout, appuyée contre les vélos du côté de l'impasse, et non couchée)
+  trottinette(A, M, SX + 0.05, SY - 1.25, -0.8, { penche: 0.3, sol: hC });
+  ch.C.ajouterBoite(SX - 1.0, -SY - 0.3, SX + 2.45, -SY + 1.55, { y0: hC, y1: hC + 1.1, camera: false });        // (les vélos, en bloc)
   // devant le jardin, contre le bac de béton (photos 08, 15) : la rouge, deux scooters noirs (celui du bac sous sa housse)
   // (le bac de béton gris, 1,4 x 0,55 x 0,55, contre la bordure ; ses bords chanfreinés, l'étiquette)
   const bb = pose(19.7, R.Y_CHAUSSEE + 0.38, hC);
@@ -1156,26 +1237,44 @@ export function poserMobilierRue(ch, R) {
   // (les trois en bloc, comme les vélos : entre deux guidons il reste 40 à 60 cm, où Haythem se coinçait en tremblant)
   ch.C.ajouterBoite(20.6, -(ys - 1.07), 23.7, -(ys + 1.07), { y0: hC, y1: hC + 1.2, camera: false });
   // les plantes un peu plus loin, contre la façade du n° 4 et de l'immeuble blanc (photo 15 : palmier, arbustes)
-  h = potRond(ch, A, M, 27.6, -0.75, 0.3, 0.22, 0.55, M.anthracite); palmier(F, A, M, 27.6, -0.75, h, r);
-  h = potRond(ch, A, M, 28.6, -0.7, 0.26, 0.2, 0.5, M.terreCuite); arbuste(F, A, M, 28.6, -0.7, h, 0.45, 0.9, PLANCHE.choisya, r, 26);
+  // (lot rue du 13/10, photo 15 à sa pose : leurs pieds au sol en x 29,7 à 34,6, au ras de la façade en saillie — le
+  // yucca d'abord, puis des arbustes de plus en plus hauts ; devant, garé contre la bordure, un scooter noir à top-case)
+  h = potRond(ch, A, M, 30.1, -2.05, 0.3, 0.22, 0.55, M.anthracite); palmier(Floin, A, M, 30.1, -2.05, h, r);
+  h = potRond(ch, A, M, 31.7, -2.02, 0.26, 0.2, 0.5, M.terreCuite); arbuste(Floin, A, M, 31.7, -2.02, h, 0.5, 1.1, PLANCHE.choisya, r, 30);
+  h = potCarre(ch, A, M, 33.2, -2.05, 0.46, 0.55, M.anthracite); arbuste(Floin, A, M, 33.2, -2.05, h, 0.6, 1.5, PLANCHE.arbuste, r, 44);
+  h = potCarre(ch, A, M, 34.5, -2.05, 0.46, 0.55, M.potGris); arbuste(Floin, A, M, 34.5, -2.05, h, 0.55, 1.3, PLANCHE.choisya, r, 40);
+  moto(ch, A, M, 27.6, -3.95, Math.PI / 2 + 0.25, 'scooter', M.noirBrillant, { penche: -0.1, sol: hC });
 
   // ---------------------------------------------------------------- les potelets du carrefour (photo 15)
   // au bout des deux trottoirs, là où la balade s'arrête, et le long du trottoir d'en face de la rue transversale
   // (sur la ligne où le monde solide arrête Haythem : js/ecole_rue.js, la boîte de x1 - 0,5 à x1)
-  for (const y of [-0.85, -1.7, -2.5]) potelet(ch, A, M, R.X1 - 0.45, y);
+  for (const y of [-1.95, -2.6]) potelet(ch, A, M, R.X1 - 0.45, y);
   for (const y of [R.Y_CHAUSSEE - 0.3, R.Y_CHAUSSEE - 1.1]) potelet(ch, A, M, R.X1 - 0.45, y);
-  for (let y = -13; y <= 1; y += 2.8) potelet(ch, A, M, R.X1 + 11.3, y);
+  for (let y = -13; y <= 1; y += 2.8) potelet(ch, A, M, R.X1 + R.CARREFOUR[1] + 0.3, y);
 
   // ---------------------------------------------------------------- les arbres du jardin et de l'impasse
   // (photos 08, 09, 15 : de grands arbres débordent de la grille du jardin ; derrière le muret de l'impasse, une masse
   // de verdure). Loin de l'école : sans ombre portée (la carte d'ombre ne couvre pas le fond de la rue).
   // (relecture du 09/10/2026 : plus grands, plus denses et plus sombres — sur les photos 08 et 15, ils débordent
   // largement de la grille et ferment le haut de la rue côté jardin)
-  for (const [x, y, H, Rr, n] of [[17.0, R.Y_FACE - 3.0, 14, 4.3, 290], [22.5, R.Y_FACE - 2.8, 12, 3.8, 240], [28.0, R.Y_FACE - 3.2, 12.5, 4.0, 250], [37.5, R.Y_FACE - 3.0, 12, 3.8, 240]])
-    arbre(Floin, A, M, x, y, H, Rr, r, { n: TELEPHONE ? Math.round(n * 0.6) : n });
-  // le peuplier élancé du fond (photo 08, au-dessus du jardin)
-  arbre(Floin, A, M, 32.5, R.Y_FACE - 6, 20, 2.8, r, { n: TELEPHONE ? 130 : 210, hFut: 0.3, applati: 2.4 });
-  for (const [y, H, Rr] of [[-2.0, 7, 2.8], [-5.5, 8.5, 3.4], [-9.0, 7.5, 3.0]]) arbre(Floin, A, M, R.X0 - 2.8, y, H, Rr, r, { n: TELEPHONE ? 110 : 200, applati: 1.1 });
+  // (lot rue du 13/10, photos 08 et 15 rejouées à leur pose : le premier arbre a son tronc en (20 ; -14,6) — à 50° à
+  // droite de la photo 15, derrière le bord de l'immeuble à balcons sur la photo 08 —, c'est un arbre BAS et rond, 8,5 m,
+  // dont la ramure déborde sur le trottoir ; de la photo 08, on voit l'immeuble à balcons entre le 5/7 et lui, et de
+  // grands peupliers derrière lui. Le jeu plantait quatre arbres de 12 à 14 m, le premier en x 17.)
+  // (relecture rue du 14/10, les deux photos rejouées à leur pose : le feuillage du jeu débordait de 90 px de chaque côté —
+  // il cachait l'immeuble de pierre du café, que les photos 08 et 15 montrent, et la moitié de l'immeuble à balcons. Sur la
+  // 08, rien à gauche du relèvement 111° ni à droite de 130° ; sur la 15, rien à gauche de 114° en haut de l'image : le
+  // premier arbre a son tronc en (19,6 ; -13,6), 6,8 m de haut — son sommet à 14° au-dessus de l'horizon de la 08 —, une
+  // ramure de 2,9 m ; les suivants sont plus au sud et plus petits ; le peuplier de la 08 est en (25,5 ; -14,6))
+  for (const [x, y, H, Rr, n] of [[19.6, -13.6, 6.8, 2.9, 260], [27.5, -15.8, 9, 3.0, 220], [33, -17.5, 9.5, 2.6, 180], [38, -19.5, 9, 2.2, 140]])
+    arbre(Floin, A, M, x, y, H, Rr, r, { n: TELEPHONE ? Math.round(n * 0.6) : n, tronc: 0.16 });
+  // les peupliers élancés du fond (photo 08, au-dessus du jardin)
+  for (const [x, y, H] of [[25.5, -14.6, 20], [29.5, -17.5, 19]])
+    arbre(Floin, A, M, x, y, H, 2.1, r, { n: TELEPHONE ? 120 : 200, hFut: 0.3, applati: 2.9 });
+  // (relecture rue du 14/10, photo 09 à sa pose : la grande masse sombre est au NORD, du n° 10 à y -7 — elle sort du cadre
+  // en haut, plus de 9 m — ; au sud, on ne voit que des buissons au-dessus du mur, et les immeubles derrière)
+  for (const [y, H, Rr] of [[-2.4, 9.5, 3.0], [-5.6, 10.5, 3.3]]) arbre(Floin, A, M, R.X0 - 3.0, y, H, Rr, r, { n: TELEPHONE ? 110 : 200, applati: 1.25 });
+  for (const [y, H, Rr] of [[-9.2, 4.6, 1.9], [-12.4, 4.3, 1.8]]) arbre(Floin, A, M, R.X0 - 2.0, y, H, Rr, r, { n: TELEPHONE ? 50 : 90, tronc: 0.08, applati: 0.8 });
   for (let k = 0; k < 6; k++) bambou(Floin, A, M, R.X0 - 0.9, -3.6 - k * 1.1, 0, 2.6 + r() * 0.8, r, 8);
 
   // ---------------------------------------------------------------- la couture

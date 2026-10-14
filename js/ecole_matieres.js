@@ -367,7 +367,11 @@ function texPierre() {
 // 1,30 x 1,25 à 0,95, deux vantaux et une imposte, un store une fois sur deux.)
 export const TRAVEE = { u: 1.65, v: 3.1 };
 export const FENETRE_ETAGE = { l: 1.2, bas: 0.85, haut: 2.2 };
-export const TEINTE_PIERRE = 0xddeeff;                     // (la teinte froide de la pierre de la façade : materiauxEcole)
+// (lot rue du 13/10 : sur les photos 10 à 18, la pierre est CLAIRE — 220 sous le ciel couvert, la surface la plus claire
+// de la rue avec le ciel ; le jeu la rendait à 155, un gris moyen. La teinte froide est gardée, 2,6 fois plus forte — une
+// couleur hors gamme, au-delà de 1 : la pierre renvoie plus que les plafonniers d'intérieur ne lui donnent, c'est le jour
+// de la rue qu'ils ne font pas ; elle sort à 200, les joints et les coulures restent lisibles)
+export const TEINTE_PIERRE = new THREE.Color().setRGB(0.72 * 2.6, 0.85 * 2.6, 2.6);
 // (relecture du lot façade, 11/10 : mesurée au même point de vue sur les photos 12, 16 et 17 — R/B 1,00-1,03, V/B 1,01 —,
 // la pierre du jeu restait chaude avec 0xebf6ff — R/B 1,06-1,08, V/B 1,05 — : un cran plus froide)
 // LES ENCADREMENTS ROUGES (photos 10, 11, 12, 16, 17, 18 ; lot façade du 11/10) : plus HAUTS que larges, 1,47 x 2,53 m —

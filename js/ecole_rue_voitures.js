@@ -38,14 +38,28 @@ const KITS = {
 // LES VOITURES : x (centre, plan), file ('sud' ou 'nord'), sens (+1 : le nez vers l'est), teinte, échelle
 // (relecture du 09/10/2026 : la Fiat est le vert d'eau pâle mesuré sur la photo 09, presque aussi bleu que vert)
 export const VOITURES = [
-  { nom: 'Peugeot 207 blanche', kit: 'compacte', x: -2.15, file: 'sud', sens: -1, teinte: 0xe6e7e4, e: 1.02 },
-  { nom: 'Fiat 500 vert d\'eau', kit: 'citadine', x: 3.4, file: 'sud', sens: 1, teinte: 0xb4dbd5, e: 1.06 },
-  { nom: 'la rouge', kit: 'compacte', x: 7.75, file: 'sud', sens: -1, teinte: 0x7a1420, e: 1.0 },
-  { nom: 'Kia Niro gris anthracite', kit: 'berline', x: 12.6, file: 'sud', sens: -1, teinte: 0x3b4049, e: 1.0 },
-  { nom: 'la grise', kit: 'berline', x: 26.4, file: 'nord', sens: 1, teinte: 0x9fa4a9, e: 1.0 },
-  { nom: 'la blanche du bout', kit: 'compacte', x: 28.4, file: 'sud', sens: -1, teinte: 0xeeeeec, e: 1.08 },
-  { nom: 'le SUV noir', kit: 'suv', x: 33.5, file: 'sud', sens: -1, teinte: 0x16171a, e: 0.92 },
-  { nom: 'la bleu nuit', kit: 'compacte', x: 38.6, file: 'sud', sens: 1, teinte: 0x26385a, e: 1.0 },
+  // (relecture rue du 14/10, photo 09 enfin posée, les roues rétroprojetées au sol : la Peugeot est devant la porte de
+  // garage du 5/7, ses roues droites en x -3,5 et -6,4, le nez vers le fond, un peu tourné vers l'école — le jeu la garait
+  // 2,75 m plus à l'est, elle paraissait moitié plus grosse que sur la photo ; la roue arrière de la Fiat est en x -0,3 :
+  // son milieu en 1,0, là où elle était avant de reculer — la rouge commence à 4,2, elles ne se gênent pas)
+  // (sa roue arrière droite au sol en (-2,8 ; -9,7) — son diamètre, 56 px, la met à 6,4 m de l'appareil — : le milieu de la
+  // caisse en (-4,0 ; -10,55), serrée contre le trottoir du garage ; la Fiat : sa roue arrière en (0,0 ; -9,4), son milieu en 1,15)
+  { nom: 'Peugeot 207 blanche', kit: 'compacte', x: -4.0, y: -10.55, file: 'sud', sens: -1, teinte: 0xe6e7e4, e: 1.08, cap: 0.05 },
+  // (lot rue du 13/10, photo 08 à sa pose, les roues rétroprojetées au sol : la ROUGE a le nez vers l'est, sa roue avant
+  // en x 7,7 ; la Kia Niro, un crossover gris-bleu sombre, le nez vers l'ouest, ses roues en 9,9 et 12,7 — le jeu la
+  // garait 1,3 m plus à l'est, elle entrait dans le champ de la photo 15, qui ne la voit pas. Toutes deux dans la BAIE,
+  // au sud de la ligne de tirets. Photo 15 : la grise, un petit coupé, contre la bordure nord de x 22,6 à 26,2 ; le SUV
+  // blanc au bout, côté jardin, de x 27 à 31, le nez vers l'école ; la Fiat recule de 1,2 m pour laisser sa place à la rouge.)
+  { nom: 'Fiat 500 vert d\'eau', kit: 'citadine', x: 1.15, file: 'sud', sens: 1, teinte: 0xbfe8dc, e: 1.1, haut: 1.02 },
+  // (relecture rue du 14/10, photo 08 de près : la rouge est une BERLINE à coffre, bordeaux ; la Kia Niro est une compacte
+  // haute aux formes rondes, 4,36 x 1,55 m, gris-bleu sombre — 45-47-54 —, et non le gros 4x4 carré à calandre chromée)
+  // (la roue avant de la rouge : 90 px de diamètre au pixel 1493 de la photo 08 — à 4,5 m de l'appareil, en (6,7 ; -9,1) :
+  // son milieu en (5,4 ; -9,95), 1 m plus à l'ouest ; le capot de la Kia, tourné vers l'appareil, est plus long : `long`)
+  { nom: 'la rouge', kit: 'berline', x: 5.4, y: -9.95, file: 'sud', sens: 1, teinte: 0x8a1c2c, e: 1.0 },
+  { nom: 'Kia Niro gris anthracite', kit: 'compacte', x: 11.2, file: 'sud', sens: -1, teinte: 0x2d313b, e: 1.1, haut: 1.12, long: 1.1 },
+  { nom: 'la grise', kit: 'citadine', x: 24.4, file: 'nord', sens: 1, teinte: 0xb4b7ba, e: 1.1 },
+  { nom: 'la blanche du bout', kit: 'suv', x: 29.1, file: 'sud', sens: -1, teinte: 0xeeeeec, e: 0.96 },
+  { nom: 'le SUV noir', kit: 'suv', x: 34.6, file: 'sud', sens: -1, teinte: 0x16171a, e: 0.92 },
 ];
 
 // LA TACHE D'OMBRE sous une caisse : un rectangle aux bords très doux, plus sombre au milieu (le ciel y est caché)
@@ -154,9 +168,10 @@ function repeindre(image, kit, teinte) {
 // =====================================================================
 // R : les cotes de la rue (js/ecole_rue.js). Le monde solide et les taches tout de suite ; les carrosseries au chargement.
 export function poserVoitures(ch, R, taches) {
-  const yFile = (f) => (f === 'nord' ? R.Y_TROTTOIR - 0.15 - 1.02 : R.Y_CHAUSSEE + 1.05);
+  // (lot rue du 13/10 : devant le 5/7, à l'ouest de x R.X_BAIE, la file du sud est une baie au-delà de la chaussée)
+  const yFile = (v) => v.y ?? (v.file === 'nord' ? R.Y_TROTTOIR - 0.15 - 1.02 : v.x < R.X_BAIE ? R.Y_BAIE + 1.02 : R.Y_CHAUSSEE + 1.05);
   for (const v of VOITURES) {
-    const K = KITS[v.kit], L = K.L * v.e, l = K.l * v.e, y = yFile(v.file);
+    const K = KITS[v.kit], L = K.L * v.e * (v.long || 1), l = K.l * v.e, y = yFile(v);
     ch.C.ajouterBoite(v.x - L / 2 + 0.08, -(y + l / 2 - 0.08), v.x + L / 2 - 0.08, -(y - l / 2 + 0.08), { y0: R.H_CHAUSSEE, y1: R.H_CHAUSSEE + K.h * v.e * 0.92 });
     taches.ajouter(v.x, y, L / 2 + 0.25, l / 2 + 0.22, 0, 0.88, R.H_CHAUSSEE);
     taches.ajouter(v.x, y, L / 2 - 0.2, l / 2 - 0.15, 0, 0.55, R.H_CHAUSSEE + 0.001);
@@ -210,8 +225,9 @@ function monter(gltf, groupe, R, yFile) {
   for (const v of VOITURES) {
     const P = G[v.kit];
     if (!P) continue;
-    const m = new THREE.Matrix4().compose(new THREE.Vector3(v.x, R.H_CHAUSSEE, -yFile(v.file)),
-      new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), v.sens > 0 ? 0 : Math.PI), new THREE.Vector3(v.e, v.e, v.e));
+    // (`cap` : garée de biais, en radians ; `haut` : une caisse plus haute que son gabarit)
+    const m = new THREE.Matrix4().compose(new THREE.Vector3(v.x, R.H_CHAUSSEE, -yFile(v)),
+      new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (v.sens > 0 ? 0 : Math.PI) + (v.cap || 0)), new THREE.Vector3(v.e * (v.long || 1), v.e * (v.haut || 1), v.e));
     // LA CAISSE : sa texture repeinte (une par voiture), la rugosité et le métal d'origine ; ses morceaux (les enjoliveurs
     // du SUV sont dans la matière de la caisse) cousus en un seul maillage
     const cle = v.kit + v.teinte, mat0 = P.caisse[0].mat;
