@@ -478,7 +478,8 @@ C05 jusqu'à la salle David Clark ; le couloir du 2e. Aucun blocage, aucune chut
 l'autre dans les volées. Les **346 sièges** (116 au -1, 64 au rez-de-chaussée et dans la rue, 111 au 1er, 55 au 2e) :
 assis puis relevé sur chacun, à son niveau. Le tri par zones rendu actif puis coupé, pixel à pixel, en une soixantaine de poses (les
 volées, les paliers, les couloirs des quatre niveaux, la pause du -1, la rue) : identique. Les photos 10, 07, 06, 04,
-23, 28 et r04 rejouées à leur pose après fusion. `?tel=1` (740 × 360) : chargé, joué. Console sans erreur hors service
+23, 28 et r04 rejouées à leur pose après fusion (photo | 1.9.3 | 2.0 | fondu), et une trentaine de places des
+quatre niveaux et de la rue en vue de jeu, la caméra derrière Haythem. `?tel=1` (740 × 360) : chargé, joué. Console sans erreur hors service
 worker.
 
 ### Ce qui reste imaginé
