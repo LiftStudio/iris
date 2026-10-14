@@ -706,8 +706,11 @@ export function poserPause1(ch, ctx) {
     // (relecture V2 : entre le bout de l'habillage et le muret court, le meuble bas brun sombre — VO q_0187, q_0189,
     // q_0215 : à hauteur d'appui, contre la face du local)
     const brun = new THREE.MeshStandardMaterial({ color: 0x3b2f29, roughness: 0.55 });
-    // (14/10 : il garde sa longueur de 0,52 m contre le muret court ; relecture : l'habillage le touche)
-    B(xa, 11.32, xa + 0.45, YP - 0.155, N1, N1 + 0.88, brun, { collision: true });
+    // (relecture du 14/10 — VO q_0183, f_53,5 s, q_0218 : il est DEVANT le bout de l'habillage, contre lui, juste après la
+    // vitrée — sur q_0183, pose tirée du côté sud, son milieu tombe en u 442, y 11,0 sur un devant à x 5,75 ; le jeu le
+    // mettait après l'habillage, contre le muret court, 24 px plus à droite. Au-delà, le mur blanc du local)
+    // (vu de biais, 11 px de large à 8 m : 0,3 m de profondeur, pas 0,45)
+    B(XN, 10.85, XN + 0.3, 11.25, N1, N1 + 0.88, brun, { collision: true });
   }
   // LE MUR EST : le bloc de sortie au-dessus de la porte du palier, la grande affiche encadrée « ESC… » ; dans le recoin,
   // le déclencheur et le cadre de consignes (VO 67 s)
@@ -948,7 +951,10 @@ export function poserPause1(ch, ctx) {
   // (relecture du 14/10 : elle non plus n'est pas haute. VO q_0183, pose tirée du seul côté sud : le haut de son dossier
   // tombe en v 177, 21 px sous celui d'un dossier à 1,07 à sa place — à 7,6 m, 0,37 m plus bas ; VO q_0218 : sous sa
   // coque, entre elle et le dessus de la rouge, 5 px à peine — sur un piètement de bar il y en aurait près de 40)
-  coque(6.05, 11.3, 'S', P.coqueLime, [6.05, 10.65]);
+  // (et pas contre le muret court : sur VO q_0183, son dossier tombe en u 445, 30 px à gauche de sa place du jeu — sur
+  // ce rayon, à 0,80 de haut, elle est en (6,3 ; 10,95), au sud-ouest du bout de la rouge, à côté du meuble bas ; elle
+  // ouvre vers l'est, vers l'appareil de q_0183)
+  coque(6.3, 10.95, 'E', P.coqueLime, [6.9, 10.6]);
 
   // =====================================================================
   //  LA SALLE DE COURS S 1.3 (travées 2 à 8 ; VO q_0198-0213)
