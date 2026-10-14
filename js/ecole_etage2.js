@@ -879,7 +879,12 @@ export function poserEtage2(ch, renderer = null) {
     sol.receiveShadow = true; sol.name = 'lino du couloir du 2e'; sol.userData.solE2 = true; fixe.add(sol); sols.push(X.lino);
     const plaf = ch.plafond(X_FOND + EP / 2, Y_RUE + EP / 2, X_BOUT - EP / 2, Y_COUR - EP / 2, H_COUL, 'platre');
     const tPlaf = texRebondRouge([237, 235, 230], [238, 210, 204]); tPlaf.repeat.set(1 / 20, 1); tPlaf.offset.set((X_FOND + EP / 2) / 20, 0);
-    plaf.material = std({ map: tPlaf, roughness: 0.92 }, 'plafond en plâtre, rebond du rouge (couloir du 2e)');
+    // (comme le plafond du couloir est et son rebond du jaune, js/ecole_est.js : une lueur à peine émise, le plafond n'est
+    // éclairé que par le rebond — au téléphone, sans carte d'environnement, il sortait brun)
+    const platreRouge = M.platre.clone(); platreRouge.name = 'plafond en plâtre, rebond du rouge (couloir du 2e)';
+    platreRouge.map = tPlaf; platreRouge.color.set(0xffffff);
+    platreRouge.emissive.set(0xffffff); platreRouge.emissiveMap = tPlaf; platreRouge.emissiveIntensity = 0.1;
+    plaf.material = platreRouge;
     for (const x of [14.75, 12.6, 10.45, 8.3, 6.15, 4.0]) spot(x, 5.575, H_COUL, 'e2couloir');
     B(4.55, 5.0, 4.85, 5.3, H_COUL - 0.01, H_COUL, M.grille, { ombre: false });
     // (au-dessus de l'ouverture du sas, le mur du couloir descend jusqu'à 2,25 m : le linteau du sas)
