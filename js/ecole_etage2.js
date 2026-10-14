@@ -502,6 +502,24 @@ function geoPlaque(w, d, e, r, trous = []) {
   g.rotateX(-Math.PI / 2);
   return g;
 }
+// LE DOSSIER EN ÉCUSSON d'une coque de hêtre (salle 1, relecture du 14/10) : `wb` de large à sa base, `wh` en haut, `h` de
+// haut, les oreilles arrondies de `r`, le bord haut creusé de `creux`, galbé de `galbe` (ses côtés avancent vers l'assis) ;
+// posé comme geoPlaque (à plat, épaisseur en y ; dressé par la chaise, son haut vers +y du dessin)
+function geoDossierCoque(wb, wh, h, e, r, creux, galbe, trous = []) {
+  const s = new THREE.Shape(), yb = -h / 2, yh = h / 2;
+  s.moveTo(-wb / 2, yb); s.lineTo(wb / 2, yb);
+  s.lineTo(wh / 2, yh - r); s.quadraticCurveTo(wh / 2, yh, wh / 2 - r, yh);
+  s.quadraticCurveTo(0, yh - 2 * creux, -wh / 2 + r, yh);
+  s.quadraticCurveTo(-wh / 2, yh, -wh / 2, yh - r); s.lineTo(-wb / 2, yb);
+  for (const [tx, ty, tr] of trous) { const p = new THREE.Path(); p.absarc(tx, ty, tr, 0, Math.PI * 2, true); s.holes.push(p); }
+  const g = new THREE.ExtrudeGeometry(s, { depth: e, bevelEnabled: true, bevelThickness: Math.min(0.004, e / 3), bevelSize: Math.min(0.004, e / 3), bevelSegments: 1, curveSegments: 8 });
+  g.translate(0, 0, -e / 2);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) { const u = p.getX(i) / (wh / 2); p.setZ(i, p.getZ(i) + galbe * u * u); }
+  g.computeVertexNormals();
+  g.rotateX(-Math.PI / 2);
+  return g;
+}
 // le sol d'un niveau : des rectangles du plan à la hauteur `h`, UV en mètres, uv1 sur le rectangle `R` (v = 1 au nord)
 function geoDalles(rects, h, R) {
   const pos = [], nor = [], uv = [], uv1 = [], idx = [], W = R.x1 - R.x0, L = R.y1 - R.y0;
@@ -548,7 +566,9 @@ export function poserEtage2(ch, renderer = null) {
     tapis: std({ color: 0x3b3b3d, roughness: 0.92 }, 'tapis anthracite (palier du 2e)'),
     // (10/10, q_0305 et q_0331 : la marine est éteinte, presque grise ; le damier de la salle 2 à peine marqué)
     moquette1: std({ map: texMoquette([40, 43, 60], [54, 55, 61], 5), roughness: 0.971 }, 'moquette marine (salle 1 du 2e)'),
-    moquette2: std({ map: texMoquette([50, 49, 51], [63, 60, 60], 6), roughness: 0.962 }, 'moquette anthracite (salle 2 du 2e)'),
+    // (relecture du 14/10, q_0330 au même point de vue : la moquette de la VO est un anthracite bleuté, #282d32, son damier à
+    // peine lisible ; le jeu la rendait brun gris, #574739, son damier franc)
+    moquette2: std({ map: texMoquette([46, 49, 55], [55, 58, 64], 6), roughness: 0.962 }, 'moquette anthracite (salle 2 du 2e)'),
     pierre: jourDehors(std({ map: texPierreEtage(), roughness: 0.75, color: TEINTE_PIERRE }, 'pierre de la façade (2e)'), 0.1),
     enduit: jourDehors(std({ color: 0xd8d6cf, roughness: 0.92 }, 'enduit de la façade arrière'), 0.12),
     plinthe: std({ color: 0x6e6358, roughness: 0.5 }, 'plinthe taupe foncé (couloir du 2e)'),
@@ -560,10 +580,15 @@ export function poserEtage2(ch, renderer = null) {
     taupe: std({ color: 0xa39d94, roughness: 0.45 }, 'vantail gris taupe (2e)'),
     // (relecture du 10/10 : le vantail de la porte coupe-feu, gris clair à peine chaud sur la vidéo, 88,3 s : #b9b3ac)
     grisCF: std({ color: 0xaaa9a6, roughness: 0.45 }, 'vantail gris clair (coupe-feu du 2e)'),
+    grisFond: std({ color: 0xd2d0cc, roughness: 0.45 }, 'vantail gris très clair (porte du fond du couloir du 2e)'),
     boisBrun: std({ color: 0x6e4a2c, roughness: 0.5 }, 'huisserie de bois brun'),
     hetre: std({ map: texHetre(), roughness: 0.42 }, 'stratifié hêtre (tables du 2e)'),
-    coque1: std({ color: 0xc89a5c, roughness: 0.5 }, 'coque de hêtre (salle 1)'),
-    coque2: std({ color: 0xc49464, roughness: 0.5 }, 'coque de hêtre (salle 2)'),
+    // (relecture du 14/10, q_0304 et q_0314 : les coques de la salle 1 sont d'un ocre doré — brut #835c29, R/V 1,42, B/V
+    // 0,45 — ; le jeu les rendait beige orangé, R/V 1,28, B/V 0,55)
+    coque1: std({ color: 0xc89a3e, roughness: 0.5 }, 'coque de hêtre (salle 1)'),
+    // (14/10, q_0330 : celles de la salle 2 sont d'un hêtre pâle, beige rosé — #cdaa8c, R/V 1,2, B/V 0,82 — ; le jeu les
+    // rendait orangées, R/V 1,43)
+    coque2: std({ color: 0xd2ae8c, roughness: 0.5 }, 'coque de hêtre (salle 2)'),
     marine: std({ color: 0x1f2638, roughness: 0.5, metalness: 0.3 }, 'pieds bleu marine'),
     chrome: std({ color: 0xc9cbcd, roughness: 0.22, metalness: 0.9 }, 'tube chromé'),
     noir: std({ color: 0x1b1b1c, roughness: 0.5, metalness: 0.3 }, 'tube noir'),
@@ -664,11 +689,20 @@ export function poserEtage2(ch, renderer = null) {
   const opale = (x, y, h, zone, o = {}) => { ch.opale(x, y, h, zone, opts(o)); noter(); };
   const lampe = (L) => { const l = opts(L); ch.lampes.push(l); lampes.push(l); return l; };
   // LE LUMINAIRE À GRILLE 60 x 60 des salles (VO q_0304-0337 : grille argentée, deux lignes)
+  // (relecture du 14/10, q_0304 et q_0330 rejouées au même point de vue : les deux salles sortaient CRÈME — murs et plafond
+  // R/V 1,03-1,08, B/V 0,90-0,95 — sous le blanc chaud des spots du couloir ; sur la VO, la salle 1 est d'un blanc neutre
+  // (trumeaux #c2c8ce, B/V 1,03) et la salle 2, baignée de jour par ses cinq fenêtres, d'un blanc FROID (mur nord #def3fe,
+  // plafond #b3c0cf, B/V 1,04-1,08) : leurs luminaires prennent un blanc neutre et un blanc froid)
+  const TEINTE_SALLE = { e2s1: new THREE.Color(0xf6f4f0), e2s2: new THREE.Color(0xe6eefb) };
+  const matDalleSalle = {
+    e2s1: (() => { const m = matDalle.clone(); m.color.set(0xfcf8f2).multiplyScalar(1.75); m.name = 'luminaire à grille allumé (salle 1 du 2e)'; return m; })(),
+    e2s2: (() => { const m = matDalle.clone(); m.color.set(0xf2f6fd).multiplyScalar(1.75); m.name = 'luminaire à grille allumé (salle 2 du 2e)'; return m; })(),
+  };
   const dalle = (x, y, zone) => {
     B(x - 0.31, y - 0.31, x + 0.31, y + 0.31, H_SALLE - 0.012, H_SALLE + 0.02, M.boitier, { ombre: false });
-    const d = maille(new THREE.PlaneGeometry(0.58, 0.58), matDalle, x, H_SALLE - 0.0125, -y, 0, fixe, { ombre: false, recoit: false });
+    const d = maille(new THREE.PlaneGeometry(0.58, 0.58), matDalleSalle[zone] || matDalle, x, H_SALLE - 0.0125, -y, 0, fixe, { ombre: false, recoit: false });
     d.rotation.x = Math.PI / 2;
-    lampe({ x, z: -y, h: H_SALLE, zone, type: 'dalle', force: 1.05 });
+    lampe({ x, z: -y, h: H_SALLE, zone, type: 'dalle', force: 1.05, couleur: TEINTE_SALLE[zone] });
   };
   // LE DIFFUSEUR LINÉAIRE À FENTES (VO : deux par salle, entre les luminaires) : une bande sombre de 1,2 m
   const fente = (x0, x1, y) => {
@@ -872,7 +906,10 @@ export function poserEtage2(ch, renderer = null) {
     // bout est (non vu), la porte du Bureau des Conseillers
     mur({ de: [X_FOND, Y_RUE - EP / 2], a: [X_FOND, Y_COUR + EP / 2], mats: B0, plinthes: [['E', P]], ouvertures: [{ c: 5.25, l: 0.93 }] });
     mur({ de: [X_BOUT, Y_RUE - EP / 2], a: [X_BOUT, Y_COUR + EP / 2], mats: B0, plinthes: [['W', P]], ouvertures: [{ c: 5.575, l: 0.93 }] });
-    ch.porte('y', X_FOND, 5.25, { l: 0.93, h: 2.04, base: N2, ep: EP, modele: 'grise', etat: 'fermee', cote: 'E', oculus: { bas: 0.85, haut: 1.85, l: 0.12, bord: 0.2 }, feu: true, matVantail: X.taupe, nom: '2e étage (dégagement ouest)' });
+    // (relecture du 14/10, q_0300, q_0302 et q_0315 en grand : le vantail du fond est GRIS TRÈS CLAIR, à peine plus sombre
+    // que le mur qui l'entoure — seule la fente de l'oculus y fait un trait sombre — ; le gris taupe sortait brun kaki sous
+    // les spots, une porte sombre au bout du couloir)
+    ch.porte('y', X_FOND, 5.25, { l: 0.93, h: 2.04, base: N2, ep: EP, modele: 'grise', etat: 'fermee', cote: 'E', oculus: { bas: 0.85, haut: 1.85, l: 0.12, bord: 0.2 }, feu: true, matVantail: X.grisFond, nom: '2e étage (dégagement ouest)' });
     ch.sortie(X_FOND + EP / 2 + 0.035, 5.25, N2 + 2.3, 'E');
     B(X_FOND + EP / 2, 4.72, X_FOND + EP / 2 + 0.07, 4.84, H_COUL - 0.16, H_COUL - 0.02, M.noirMat, { ombre: false });
     ch.porte('y', X_BOUT, 5.575, { l: 0.93, h: 2.04, base: N2, ep: EP, modele: 'grise', etat: 'fermee', cote: 'W', oculus: false, matVantail: X.taupe, nom: 'bureau des conseillers B 2.3' });
@@ -907,7 +944,11 @@ export function poserEtage2(ch, renderer = null) {
     for (const x of [8.3, 8.85, 9.4]) chaiseVisiteur(x, Y_RUE + EP / 2 + 0.27, 'N');
     // ---- LE MUR ROUGE : la plaque de la salle 1 près de sa porte, l'affiche étroite blanche face à la porte D1 ----
     panneau(matPan(texPlaque2('Salle de cours', 'S 2.7'), 0.4), 0.2, 0.11, 11.6, Y_COUR - EP / 2 - 0.004, N2 + 1.65, 'S');
-    panneau(matPan(texAfficheA3(), 0.55), 0.30, 0.58, 10.05, Y_COUR - EP / 2 - 0.003, N2 + 1.76, 'S');
+    // (relecture du 14/10 : en sortant de la salle 2 par D1 — 84,0-84,8 s à 25 i/s, q_0339-0342 —, l'affiche reste collée au
+    // bord OUEST de la baie, sa marge gauche mangée par le jambage ; rejouée au même point de vue, celle du jeu tombait au
+    // quart de la baie, 0,3 m trop à l'est ; de loin, q_0300, elle est plus à l'ouest encore — mal conditionné. Sa hauteur
+    // et sa taille se superposent : 9,75)
+    panneau(matPan(texAfficheA3(), 0.55), 0.30, 0.58, 9.75, Y_COUR - EP / 2 - 0.003, N2 + 1.76, 'S');
     // (la caméra de surveillance est dans le sas, en haut de son mur est : construireSas — relecture du 10/10)
   }
   // LA CHAISE « VISITEUR » NOIRE du couloir (VO q_0297-0303) : tube d'acier noir, quatre pieds, assise et dossier
@@ -919,11 +960,14 @@ export function poserEtage2(ch, renderer = null) {
   function chaiseVisiteur(x, y, dir) {
     const [fx, fz] = DIR[dir];
     const g = new THREE.Group(); g.position.set(x, N2, -y); g.rotation.y = Math.atan2(fx, fz); fixe.add(g);
-    maille(_assiseIso, X.similiNoir, 0, 0.45, 0.02, 0, g);
-    const d = maille(_dossierIso, X.similiNoir, 0, 0.76, -0.225, 0, g); d.rotation.x = Math.PI / 2 - 0.28;
-    const pied = (px, pz, L, ax = 0, az = 0) => { const m = maille(new THREE.CylinderGeometry(0.009, 0.009, L, 6), X.noir, px, L / 2, pz, 0, g); m.rotation.set(ax, 0, az); };
+    // (relecture du 14/10, q_0300 rejouée au même point de vue : sous les spots, les trois chaises jetaient sur le lino de
+    // longues ombres nettes en biais ; la VO n'y montre qu'une pénombre douce sous les assises — l'ombre cuite du sol)
+    const o = { ombre: false };
+    maille(_assiseIso, X.similiNoir, 0, 0.45, 0.02, 0, g, o);
+    const d = maille(_dossierIso, X.similiNoir, 0, 0.76, -0.225, 0, g, o); d.rotation.x = Math.PI / 2 - 0.28;
+    const pied = (px, pz, L, ax = 0, az = 0) => { const m = maille(new THREE.CylinderGeometry(0.009, 0.009, L, 6), X.noir, px, L / 2, pz, 0, g, o); m.rotation.set(ax, 0, az); };
     for (const [px, pz] of [[-0.2, 0.19], [0.2, 0.19], [-0.2, -0.17], [0.2, -0.17]]) pied(px, pz, 0.43, pz > 0 ? 0.05 : -0.05, px > 0 ? -0.04 : 0.04);
-    for (const px of [-0.17, 0.17]) { const m = maille(new THREE.CylinderGeometry(0.009, 0.009, 0.3, 6), X.noir, px, 0.6, -0.2, 0, g); m.rotation.x = -0.28; }
+    for (const px of [-0.17, 0.17]) { const m = maille(new THREE.CylinderGeometry(0.009, 0.009, 0.3, 6), X.noir, px, 0.6, -0.2, 0, g, o); m.rotation.x = -0.28; }
     C.ajouterCercle(g.position.x, g.position.z, 0.24, { y0: N2, y1: N2 + 0.9 });
     sieges.push({ x: g.position.x + fx * 0.04, z: g.position.z + fz * 0.04, y: 0.47, fx, fz, sx: x + fx * 0.6, sz: -y + fz * 0.6, nom: 'la chaise du couloir', sol: N2 });
   }
@@ -936,26 +980,42 @@ export function poserEtage2(ch, renderer = null) {
   // s'y assied ; `sortie` : où il se relève (dans l'allée).
   const _assise = geoPlaque(0.42, 0.4, 0.012, 0.06);
   const _dossierPlein = geoPlaque(0.41, 0.25, 0.012, 0.05);
+  // (relecture du 14/10, q_0304, q_0309-0314 et 77-78 s à 25 i/s en grand, vus de dos : dans la salle 1, la coque de hêtre
+  // est un DOSSIER HAUT EN ÉCUSSON — étroit à sa jonction avec l'assise, large en haut, les oreilles arrondies, le bord
+  // haut à peine creusé, galbé —, sans tube derrière lui ; le jeu y mettait une plaque rectangulaire de 0,25 m entre deux
+  // montants noirs, une chaise d'écolier)
+  const _dossierCoque = geoDossierCoque(0.31, 0.43, 0.33, 0.012, 0.07, 0.016, 0.035);
+  // (q_0322-0337 et 80-84 s à 25 i/s : la coque de la salle 2 est la même, ses six trous dans le haut du dossier)
+  const _dossierCoqueTrous = geoDossierCoque(0.31, 0.43, 0.33, 0.012, 0.07, 0.016, 0.035, [-0.1, 0, 0.1].flatMap((x) => [[x, 0.085, 0.02], [x, 0.01, 0.02]]));
   const _dossierTrous = geoPlaque(0.41, 0.25, 0.012, 0.05, [-0.1, 0, 0.1].flatMap((x) => [[x, 0.045, 0.021], [x, -0.04, 0.021]]));
   const _tube = (L) => new THREE.CylinderGeometry(0.011, 0.011, L, 6);
   const _patin = _tube(0.44), _montant = _tube(0.44), _barre = _tube(0.4), _dos = _tube(0.34);
   // (`rc`, `dc` : le rayon de sa forme solide et son avance sous l'assise — la salle 1, où l'on passe derrière les dossiers)
-  const chaiseLuge = (x, y, dir, { trous = false, coque = X.coque1, pied = X.noir, sortie = null, nom = 'la chaise', rc = 0.2, dc = 0 } = {}) => {
+  // (`ecusson` : le dossier haut de la salle 1, sans montants derrière lui ; `tire` : de combien la place où l'on s'assied
+  // est en arrière de la chaise RENTRÉE sous sa table — on s'assied comme sur une chaise tirée, le torse hors du plateau)
+  const chaiseLuge = (x, y, dir, { trous = false, coque = X.coque1, pied = X.noir, sortie = null, nom = 'la chaise', rc = 0.2, dc = 0, ecusson = false, tire = 0 } = {}) => {
     const [fx, fz] = DIR[dir];
     const g = new THREE.Group(); g.position.set(x, N2, -y); g.rotation.y = Math.atan2(fx, fz); fixe.add(g);
     maille(_assise, coque, 0, 0.455, 0.02, 0, g);
-    const d = maille(trous ? _dossierTrous : _dossierPlein, coque, 0, 0.75, -0.205, 0, g); d.rotation.x = Math.PI / 2 - 0.17;
+    if (ecusson) {
+      // le dossier naît au bord arrière de l'assise (0,49 m) et monte à 0,81 m, penché de 10° ; la coque d'une pièce :
+      // un pli de contreplaqué entre l'assise et lui
+      const d = maille(trous ? _dossierCoqueTrous : _dossierCoque, coque, 0, 0.65, -0.198, 0, g); d.rotation.x = Math.PI / 2 - 0.17;
+      const pli = maille(geoPlaque(0.32, 0.06, 0.012, 0.02), coque, 0, 0.47, -0.18, 0, g); pli.rotation.x = 0.75;
+    } else {
+      const d = maille(trous ? _dossierTrous : _dossierPlein, coque, 0, 0.75, -0.205, 0, g); d.rotation.x = Math.PI / 2 - 0.17;
+    }
     for (const sx of [-0.19, 0.19]) {
       const p = maille(_patin, pied, sx, 0.012, 0.0, 0, g); p.rotation.x = Math.PI / 2;
       maille(_montant, pied, sx, 0.23, 0.21, 0, g);
       const s = maille(_barre, pied, sx, 0.445, 0.01, 0, g); s.rotation.x = Math.PI / 2;
-      const r = maille(_dos, pied, sx, 0.6, -0.2, 0, g); r.rotation.x = -0.17;
+      if (!ecusson) { const r = maille(_dos, pied, sx, 0.6, -0.2, 0, g); r.rotation.x = -0.17; }
       maille(_montant, pied, sx, 0.23, -0.21, 0, g);
     }
     const b = maille(_barre, pied, 0, 0.43, 0.19, 0, g); b.rotation.z = Math.PI / 2;
     C.ajouterCercle(g.position.x + fx * dc, g.position.z + fz * dc, rc, { y0: N2, y1: N2 + 0.9 });
     const s = sortie || [x - fx * 0.6, y + fz * 0.6];
-    sieges.push({ x: g.position.x + fx * 0.04, z: g.position.z + fz * 0.04, y: 0.46, fx, fz, sx: s[0], sz: -s[1], nom, sol: N2 });
+    sieges.push({ x: g.position.x + fx * (0.04 - tire), z: g.position.z + fz * (0.04 - tire), y: 0.46, fx, fz, sx: s[0], sz: -s[1], nom, sol: N2 });
     return g;
   };
   // UNE TABLE : plateau de hêtre (chant hêtre), quatre pieds de tube carré (marine ou chromé), `lx` x `ly` en plan ;
@@ -1074,17 +1134,21 @@ export function poserEtage2(ch, renderer = null) {
     panneau(matPan(texConsignes(), 0.5), 0.21, 0.297, 4.5, yi - 0.2 - 0.003, N2 + 1.7, 'S');
     table(4.5, 10.3, 0.7, 1.4, { pied: X.marine });
     poste(4.55, 10.45, 'W');
-    chaiseLuge(4.0, 10.3, 'E', { sortie: [4.0, 9.25], nom: 'la chaise du professeur' });
+    chaiseLuge(4.0, 10.3, 'E', { sortie: [4.0, 9.25], nom: 'la chaise du professeur', ecusson: true });
     // LES TABLES DES ÉLÈVES : cinq rangées nord-sud (les élèves regardent l'ouest), trois tables de 1,15 m bout à bout de
     // y 7,80 à 11,25 (l'allée de la porte au sud), deux chaises par table ; passe-câbles au bord ouest, quelques multiprises
     // (plan V2, etage2.md § 2 : rangées au pas de 1,45 — VO 1,39-1,45, q_0309 —, 2,0 m entre le tableau et la 1re ; les
     // chaises rentrées à 0,40 m de l'axe des tables et leur forme resserrée sous l'assise : 0,65 m libres derrière les
     // dossiers, Haythem passe entre deux rangées et s'assied aux 30 places)
+    // (relecture du 14/10, q_0304 rejouée à la pose des six fenêtres — 4 px — et 77-78 s à 25 i/s : la salle vide a ses
+    // chaises RENTRÉES, l'assise sous le plateau, le dossier presque au ras du chant ; le jeu les laissait tirées, 0,30 m
+    // de jour entre le dossier et la table. Rentrées de 0,14 : la place où l'on s'assied ne bouge pas — xr + 0,36, le torse
+    // hors du plateau —, et l'on passe plus large derrière les dossiers, 0,70 m)
     let n = 0;
     for (const xr of [5.95, 7.40, 8.85, 10.30, 11.75]) {
       for (const yc of [8.375, 9.525, 10.675]) {
         table(xr, yc, 0.6, 1.15, { pied: X.marine, passe: 'W', multi: (n % 5) === 2 });
-        for (const s of [-1, 1]) chaiseLuge(xr + 0.4, yc + s * 0.29, 'W', { coque: X.coque1, pied: X.noir, sortie: [xr + 0.825, yc + s * 0.29], rc: 0.15, dc: 0.05 });
+        for (const s of [-1, 1]) chaiseLuge(xr + 0.26, yc + s * 0.29, 'W', { coque: X.coque1, pied: X.noir, sortie: [xr + 0.825, yc + s * 0.29], rc: 0.2, dc: 0, ecusson: true, tire: 0.14 });
         n++;
       }
     }
@@ -1144,7 +1208,7 @@ export function poserEtage2(ch, renderer = null) {
     table(17.35, 0.85, 1.2, 0.6, { pied: X.chrome });
     poste(17.35, 0.85, 'W');
     maille(new THREE.CylinderGeometry(0.035, 0.035, 0.22, 12), X.blancMeuble, 17.75, N2 + 0.85, -0.75, 0, fixe, { ombre: false });
-    chaiseLuge(17.85, 0.95, 'W', { trous: true, coque: X.coque2, pied: X.chrome, sortie: [17.8, 1.7], nom: 'la chaise du professeur' });
+    chaiseLuge(17.85, 0.95, 'W', { trous: true, coque: X.coque2, pied: X.chrome, sortie: [17.8, 1.7], nom: 'la chaise du professeur', ecusson: true });
     // LES TABLES DES ÉLÈVES : deux colonnes de cinq tables pour deux (1,3 x 0,5), l'une le long du mur nord, l'autre le
     // long des fenêtres, l'allée au milieu ; les élèves regardent l'est
     // (10/10, en jouant : rangs au pas de 1,15 m — au pas de 1,25 le dernier rang venait contre le vantail ouvert de la
@@ -1162,7 +1226,7 @@ export function poserEtage2(ch, renderer = null) {
       for (const [yc, allee] of [[3.58, 2.55], [1.05, 2.15]]) {
         table(xr, yc, 0.5, 1.3, { pied: X.chrome });
         for (const s of [-1, 1]) {
-          chaiseLuge(xr - 0.55 + RENTREE, yc + s * 0.33, 'E', { trous: true, coque: X.coque2, pied: X.chrome, sortie: [xr - 0.62, allee] });
+          chaiseLuge(xr - 0.55 + RENTREE, yc + s * 0.33, 'E', { trous: true, coque: X.coque2, pied: X.chrome, sortie: [xr - 0.62, allee], ecusson: true });
           if (R && yc < 2) { const S = sieges[sieges.length - 1]; S.rang = R; R.sieges.push(S); }
         }
       }
