@@ -891,7 +891,9 @@ export function poserEtage2(ch, renderer = null) {
     // bouge pas, le mur est blanc des deux côtés jusqu'à 4,84, la salle 1 derrière dès 3,6)
     mur({ de: [X_FOND, Y_COUR], a: [X_S1, Y_COUR], mats: B0, plinthes: [['S', P]] });
     mur({ de: [X_S1, Y_COUR], a: [4.84, Y_COUR], mats: B0, plinthes: [['S', P], ['N', PS]] });
-    mur({ de: [4.84, Y_COUR], a: [12.0, Y_COUR], mats: { N: B0, S: X.rouge }, plinthes: [['S', P], ['N', PS]] });
+    // (relecture du 14/10, q_0300, q_0339-0342 et 84,0-84,8 s : au pied du mur rouge, pas de plinthe sombre — le rouge
+    // descend jusqu'au lino ; sa plinthe taupe foncé y traçait un trait brun d'un bout à l'autre : elle est peinte en rouge)
+    mur({ de: [4.84, Y_COUR], a: [12.0, Y_COUR], mats: { N: B0, S: X.rouge }, plinthes: [['S', X.rouge], ['N', PS]] });
     mur({ de: [12.0, Y_COUR], a: [X_BOUT, Y_COUR], mats: B0, plinthes: [['S', P]], ouvertures: [{ c: 12.45, l: 0.9, h: N2 + 2.04 }, { c: (X_SAS0 + X_SAS1) / 2, l: X_SAS1 - X_SAS0 - EP, h: N2 + 2.25 }] });
     plinthe(12.9, Y_COUR + EP / 2, X_S1E - EP / 2, Y_COUR + EP / 2 + 0.015, PS);
     // LE MUR SUD : la porte (fermée) de la salle Bjarne Stroustrup, la porte D1 de la salle 2 et son imposte ; côté
