@@ -704,17 +704,23 @@ function construireFacade(ch) {
   for (const c of BAIES_HAUTES) ch.C.ajouterBoite(c - 0.6, 0.4, c + 0.6, 0, { y0: BAS_BAIE, y1: H_BAIE, vitre: true });
   for (const c of BAIES_BUREAU) ch.C.ajouterBoite(c - 0.6, 0.4, c + 0.6, 0, { y0: 1.75, y1: H_BAIE, vitre: true });
   // la porte de secours (vantail d'acier noir, fermée, côté rue), son panneau rouge et la ventilation au-dessus
-  ch.porte('x', -0.2, 0.8, { l: 1.0, h: 2.2, ep: 0.4, modele: 'noire', etat: 'fermee', cote: 'S', huisserie: false });
+  // (vérification finale v2.0, 14/10 — photo 10 à sa pose, mesurée aux mêmes points : la porte, son bâti et le panneau
+  // jusqu'au passage sont d'un noir de charbon, 28 à 50 sous le ciel couvert, les lames d'un gris de 90 ; le jeu les
+  // sortait à 8-17, un noir d'encre, et ses lames d'acier à 48 — d'où ces trois matières, mates, à elles)
+  const noirSecours = new THREE.MeshStandardMaterial({ color: 0x3e3d40, roughness: 0.62, metalness: 0.12 }); noirSecours.name = 'acier peint de la porte de secours';
+  const noirBati = new THREE.MeshStandardMaterial({ color: 0x353437, roughness: 0.8 }); noirBati.name = 'bâti noir de la porte de secours';
+  const lamesVentil = new THREE.MeshStandardMaterial({ color: 0xbab7b2, roughness: 0.5, metalness: 0.2 }); lamesVentil.name = 'lames de la ventilation';
+  ch.porte('x', -0.2, 0.8, { l: 1.0, h: 2.2, ep: 0.4, modele: 'noire', matCadre: noirSecours, etat: 'fermee', cote: 'S', huisserie: false });
   // (lot rue du 13/10, photo 10 à sa pose : le bâti noir va de x 0,3 au passage et monte à 2,80 comme le linteau ; ses
   // lames grises occupent x 0,4-1,85 de 2,15 à 2,56 — elles étaient 15 cm plus haut et s'arrêtaient à 1,6)
-  ch.boite(0.3, -0.44, 2.175, -0.4, 2.15, 2.8, M.noirMat);
+  ch.boite(0.3, -0.44, 2.175, -0.4, 2.15, 2.8, noirBati);
   // (lot façade du 11/10, photo 10 recalée : les lames de la ventilation sont d'un gris d'acier, plus claires que leur
   // cadre ; la porte est dans un bâti noir — ses tableaux et l'entre-deux jusqu'au trumeau noir, x 1,30-1,46 — : de la
   // rue, du pilier de pierre (x 0-0,3) au passage, tout est sombre)
-  for (let h = 2.18; h < 2.55; h += 0.045) ch.boite(0.4, -0.47, 1.85, -0.44, h, h + 0.012, M.aluGris, { ombre: false });
-  for (const [a, b] of [[0.3, 0.32], [1.28, 1.3]]) ch.boite(a, -0.4, b, 0, 0, 2.2, M.noirMat, { ombre: false });
-  ch.boite(0.3, -0.4, 1.3, 0, 2.18, 2.2, M.noirMat, { ombre: false });
-  ch.boite(1.3, -0.42, 1.46, -0.4, 0, 2.25, M.noirMat, { ombre: false });
+  for (let h = 2.18; h < 2.55; h += 0.045) ch.boite(0.4, -0.47, 1.85, -0.44, h, h + 0.012, lamesVentil, { ombre: false });
+  for (const [a, b] of [[0.3, 0.32], [1.28, 1.3]]) ch.boite(a, -0.4, b, 0, 0, 2.2, noirBati, { ombre: false });
+  ch.boite(0.3, -0.4, 1.3, 0, 2.18, 2.2, noirBati, { ombre: false });
+  ch.boite(1.3, -0.42, 1.46, -0.4, 0, 2.25, noirBati, { ombre: false });
   ch.panneau(new THREE.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.6 }), 0.3, 0.2, 0.95, -0.45, 1.85, 'S');      // (relecture du 14/10, photo 10 : 15 cm plus à l'est, 10 cm plus haut)
   // le linteau d'acier noir du passage (35 cm) et, dessous, au milieu, le boîtier noir aux deux étiquettes blanches
   // (relecture du 11/10, photo 10 rejouée : un seul boîtier de 0,59 m, x 3,01-3,6, de 2,32 à 2,45 — pas deux petits
@@ -732,7 +738,7 @@ function construireFacade(ch) {
   // trop sombre. Seul celui du passage reste : construireCarte.)
   // (plan V2, photo 10 : entre la porte de secours et le passage, le cadre noir commun — un panneau d'acier noir jusqu'au
   // linteau, sur les 0,7 m de façade que l'ouverture rétrécie découvre)
-  ch.boite(1.46, -0.44, 2.175, -0.4, 0, 2.8, M.noirMat);
+  ch.boite(1.46, -0.44, 2.175, -0.4, 0, 2.8, noirBati);
   // la grille d'égout en fonte en travers du seuil du passage
   // (13/10, photo 10 refaite à sa pose — (3,19 ; −4,93) h 1,75 cap −5,1, f 600, 2,4 px sur les quatre coins de
   // l'ouverture et de la porte du fond : la grille est DEVANT la façade, sur le trottoir, large de 0,55 m ; entre les
@@ -971,6 +977,10 @@ function texNumero(t) {
 // de rencontre. Le comptoir de l'accueil finit ainsi à 0,4 m du poteau est de la porte, comme sur la VO.)
 function construireEntree(ch) {
   const { M, C } = ch, Y = Y_P6, z = -Y, hP = VITRO.h, hT = 2.6, XC = 15.13, LV = 0.98, cad = 0.075;
+  // (vérification finale v2.0, 14/10 : l'aluminium de la porte, un anodisé argent mat — du hall, photo 03 et VO q_0372-0380,
+  // ses montants sortent clairs, presque blancs ; l'aluminium gris à 70 % de métal y prenait le reflet du carrelage et
+  // du hall chaud et sortait BRUN, comme du bois. De la rue, photos 16 et 17, il reste d'un gris argent moyen)
+  const alu = M.aluGris.clone(); alu.color.setHex(0xbcc0c3); alu.metalness = 0.25; alu.roughness = 0.45; alu.name = 'aluminium anodisé de la porte 6';
   const vit = vitrophanies();
   const matRue = new THREE.MeshStandardMaterial({ map: vit.rue, alphaTest: 0.5, roughness: 0.4 });
   // (côté hall, l'adhésif est vu à contre-jour, la rue derrière lui : il s'éclaire un peu de lui-même — VO 93-95 s, le
@@ -1004,10 +1014,10 @@ function construireEntree(ch) {
   const reflet = (parent, l, xl, zl) => { const r = new THREE.Mesh(new THREE.PlaneGeometry(l, hP - cad - VITRO.bas), refletP6); r.position.set(xl, (hP - cad + VITRO.bas) / 2, zl + 0.004); r.castShadow = false; parent.add(r); };
   // un fixe : sa traverse basse (15 cm), ses montants, sa vitre jusqu'à la traverse haute
   const fixe = (x0, x1) => {
-    ch.boite(x0, Y - 0.03, x1, Y + 0.03, 0, VITRO.bas, M.aluGris);
-    ch.boite(x0, Y - 0.03, x0 + cad, Y + 0.03, 0, hP, M.aluGris);
-    ch.boite(x1 - cad, Y - 0.03, x1, Y + 0.03, 0, hP, M.aluGris);
-    ch.boite(x0, Y - 0.03, x1, Y + 0.03, hP - cad, hP, M.aluGris);
+    ch.boite(x0, Y - 0.03, x1, Y + 0.03, 0, VITRO.bas, alu);
+    ch.boite(x0, Y - 0.03, x0 + cad, Y + 0.03, 0, hP, alu);
+    ch.boite(x1 - cad, Y - 0.03, x1, Y + 0.03, 0, hP, alu);
+    ch.boite(x0, Y - 0.03, x1, Y + 0.03, hP - cad, hP, alu);
     const v = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0 - 2 * cad, hP - cad - VITRO.bas), M.verre); v.position.set((x0 + x1) / 2, (hP - cad + VITRO.bas) / 2, z); ch.decor.add(v);
     C.ajouterBoite(x0, -(Y + 0.04), x1, -(Y - 0.04), { y1: hT, vitre: true });
     morceau(ch.decor, x0 + cad, x1 - cad, (x0 + x1) / 2, z);
@@ -1017,10 +1027,10 @@ function construireEntree(ch) {
   fixe(13.35, xo); fixe(xe, 16.5);
   // le caisson d'aluminium au-dessus des vantaux et des fixes, jusqu'au plafond du hall (VO q_0374 : la barre de
   // l'opérateur, pas d'imposte vitrée)
-  ch.boite(13.35, Y - 0.05, 16.5, Y + 0.05, hP, hT, M.aluGris);
+  ch.boite(13.35, Y - 0.05, 16.5, Y + 0.05, hP, hT, alu);
   C.ajouterBoite(13.35, -(Y + 0.04), 16.5, -(Y - 0.04), { y0: hP, y1: H_DALLE, vitre: true });
   // la double porte automatique : chaque vantail emporte son morceau de vitrophanie
-  const P = ch.porte('x', Y, XC, { l: 2 * LV, h: hP, ep: 0.08, modele: 'vitree2', blanc: false, tirant: 'barres', cadre: cad, basVitre: VITRO.bas, etat: 'auto', cote: 'S', huisserie: false, nom: 'entrée n° 6' });
+  const P = ch.porte('x', Y, XC, { l: 2 * LV, h: hP, ep: 0.08, modele: 'vitree2', blanc: false, matCadre: alu, tirant: 'barres', cadre: cad, basVitre: VITRO.bas, etat: 'auto', cote: 'S', huisserie: false, nom: 'entrée n° 6' });
   for (const v of P.vantaux) {
     // le vantail : de son gond (x local 0) vers s * LV ; la bande de texture correspondante
     const xg = XC - v.s * LV;                   // le gond, en plan
@@ -2358,8 +2368,15 @@ export function construireCarte(scene, renderer = null) {
     // (r07, 14/10 : l'antichambre commence à l'axe du mur de la porte, x 9,975 ; le redan, devant le retour du bout du mur
     // sud, de l'axe du mur du redan, y 4,05, au mur sud)
     { id: 'attente', rects: [zr(5.8, ATT.ys, 13.3, ATT.yn), zr(9.975, 2.925, 13.3, ATT.ys), zr(9.165, 4.05, 9.975, ATT.ys), zr(12.5, 2.5, 13.3, 2.925)], voisines: ['hallO', 'c01', 'hall'], env: { x: 9.2, y: 1.6, z: -(10.5 + DY_A) } },
-    { id: 'hall', rects: [zr(13.3, -0.45, 20.1, 4.7), zr(14.675, 4.7, 20.1, 7.6)], voisines: ['attente', 'rue', 'couloirEst'], env: { x: 15.8, y: 1.6, z: -4.0 } },
-    { id: 'rue', rects: [zr(-25, -13.2, 50, -0.4)], voisines: ['hall', 'passage'], env: { x: 9.5, y: 1.7, z: 3.4 } },
+    // (vérification finale v2.0, 14/10 : le RENFONCEMENT de la porte 6 — 1,2 m depuis la relecture de la rue, les vitrages
+    // en Y_P6 — est une zone à lui, DEHORS, voisine de la rue seule ; le hall commence aux vitrages. Resté dans le hall, il
+    // laissait la caméra y glisser derrière les vantaux ouverts : Haythem juste passé la porte, tourné vers l'accueil, elle
+    // filmait la vitrophanie à bout portant, sans lui — et le seuil, vu de biais, passait pour ouvert. Elle s'arrête
+    // maintenant aux vitrages, des deux côtés ; de la rue, elle entre dans le renfoncement. Sa carte d'environnement est
+    // celle de la rue)
+    { id: 'hall', rects: [zr(13.3, Y_P6, 20.1, 4.7), zr(16.575, -0.45, 20.1, Y_P6), zr(14.675, 4.7, 20.1, 7.6)], voisines: ['attente', 'rue', 'couloirEst'], env: { x: 15.8, y: 1.6, z: -4.0 } },
+    { id: 'porche', rects: [zr(13.3, -0.45, 16.575, Y_P6)], voisines: ['rue'], env: { x: 9.5, y: 1.7, z: 3.4 } },
+    { id: 'rue', rects: [zr(-25, -13.2, 50, -0.4)], voisines: ['hall', 'passage', 'porche'], env: { x: 9.5, y: 1.7, z: 3.4 } },
     ...pieces.zones,
     ...est.zones,
   ];

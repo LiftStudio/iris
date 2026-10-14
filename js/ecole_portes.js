@@ -382,8 +382,9 @@ export class Portes {
   // à `cadre` a sa traverse haute de la largeur des montants, au ras du haut — la porte 6, photos 16 et 17 : montants de
   // 7,5 cm, vitre de 0,15 à 2,44 m ; `tirant: 'barres'` : ses deux barres plates d'aluminium sur les montants de
   // rencontre, de 0,40 à 1,81 m)
-  _vantailVitre(w, h, s, { blanc = true, tirant = 'long', autocollants = false, cadre = null, bas = null, plat = null } = {}) {
-    const M = this.M, g = new THREE.Group(), c = cadre ?? (blanc ? 0.07 : 0.06), e = 0.05, mat = blanc ? M.alu : M.aluGris;
+  // (vérification finale du 14/10 : `mat` — la matière du cadre, quand ce n'est ni le blanc ni le gris d'ici : la porte 6)
+  _vantailVitre(w, h, s, { blanc = true, tirant = 'long', autocollants = false, cadre = null, bas = null, plat = null, mat: matCadre = null } = {}) {
+    const M = this.M, g = new THREE.Group(), c = cadre ?? (blanc ? 0.07 : 0.06), e = 0.05, mat = matCadre || (blanc ? M.alu : M.aluGris);
     const cx = s * w / 2, cb = bas ?? c;
     maille(boiteM(w - 0.01, cb, e), mat, cx, cb / 2, 0, 0, g);
     if (cadre && !blanc) maille(boiteM(w - 0.01, c, e), mat, cx, h - c / 2, 0, 0, g);
@@ -506,9 +507,9 @@ export class Portes {
       if (o.modele.startsWith('gaine')) return this._vantailGaine(w, h, s);
       if (o.modele === 'bleue') return this._vantailBleu(w, h, s);
       if (o.modele === 'blanche') return this._vantailGris(w, h, s, { oculus: false, mat: M.alu, poignee: 'bequille' });
-      if (o.modele === 'noire') return this._vantailGris(w, h, s, { oculus: false, mat: M.acierNoir, poignee: null });
+      if (o.modele === 'noire') return this._vantailGris(w, h, s, { oculus: false, mat: o.matCadre || M.acierNoir, poignee: null });
       // (`autocollants` : une fonction du vantail, s => rangées, quand les deux vantaux n'en portent pas autant)
-      return this._vantailVitre(w, h, s, { blanc: o.blanc !== false, tirant: o.tirant || 'long', autocollants: typeof o.autocollants === 'function' ? o.autocollants(s) : !!o.autocollants, cadre: o.cadre ?? null, bas: o.basVitre ?? null, plat: o.plat || null });
+      return this._vantailVitre(w, h, s, { blanc: o.blanc !== false, tirant: o.tirant || 'long', autocollants: typeof o.autocollants === 'function' ? o.autocollants(s) : !!o.autocollants, cadre: o.cadre ?? null, bas: o.basVitre ?? null, plat: o.plat || null, mat: o.matCadre || null });
     };
     if (double) {
       const w = l / 2;

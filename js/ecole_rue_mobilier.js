@@ -1151,16 +1151,18 @@ export function poserMobilierRue(ch, R) {
   // roulants devant la porte de secours et le trumeau noir, x 1,0-2,0 ; le jeu posait les jardinières devant la porte du
   // n° 8, en x -2,15 et -3,45 : de la rue, elles faisaient une haie)
   // (relecture du 14/10 : derrière le grand conteneur, dont le dos est à 0,5 m de la façade, ils ne peuvent être profonds
-  // que de 0,5 m)
-  const grandBac = { l: 0.68, p: 0.5, h: 1.08 };
+  // que de 0,5 m — vérification finale : ce conteneur était un bac vu de flanc, voir plus bas)
   // (deux contre la façade, un devant, au droit du trumeau noir — photo 10 : trois couvercles, celui de devant plus bas)
-  bacRoulant(ch, A, M, 1.0, -0.71, 0.04, M.bacGris, M.bacCouvercle, grandBac);
-  bacRoulant(ch, A, M, 1.72, -0.71, -0.04, M.bacGris, M.bacCouvercle, grandBac);
-  // (lot rue du 13/10, photo 10 à sa pose : celui de devant est un peu de biais, on voit sa face et un rien de son flanc)
-  // (relecture rue du 14/10, photo 10 à sa pose : c'est un grand conteneur à quatre roues — son pied à 3,2 m de l'appareil,
-  // en y -1,7, sa face large de 0,94 m et haute de 1,13 —, centré en (1,57 ; -1,3) ; le jeu le faisait de 0,68 x 1,08, plus
-  // près de la bordure)
-  bacRoulant(ch, A, M, 1.57, -1.32, 0.12, M.bacGris, M.bacCouvercle, { l: 0.94, p: 0.76, h: 1.13, quatreRoues: true });
+  // (vérification finale v2.0, 14/10 — photo 10 à sa pose, les rayons renvoyés au sol et sur les plans des faces : TROIS bacs
+  // à DEUX roues, et non un conteneur qui cachait les deux autres. Derrière, contre la façade, leur face en y -1,23 — le pied
+  // du bac de droite y tombe au sol, et les couvercles des deux à 1,03-1,04 sur ce plan ; leur poignée au nu de la pierre —, x 0,8-1,4 et 1,45-2,05 ; le
+  // couvercle de celui de gauche dépasse au-dessus de celui de devant, celui de droite se voit entre lui et la grille.
+  // Devant, un bac vu de FLANC : sa poignée et sa roue à l'est (la roue en x 1,81), son flanc de x 1,15 à 1,85 en y -1,8,
+  // son couvercle à 1,05 ; la face « large de 0,94 m » de la relecture était ce flanc et sa poignée)
+  const bacFond = { l: 0.6, p: 0.75, h: 1.03 };
+  bacRoulant(ch, A, M, 1.1, -0.86, 0.04, M.bacGris, M.bacCouvercle, bacFond);
+  bacRoulant(ch, A, M, 1.75, -0.86, -0.03, M.bacGris, M.bacCouvercle, bacFond);
+  bacRoulant(ch, A, M, 1.5, -1.51, -Math.PI / 2 + 0.06, M.bacGris, M.bacCouvercle, { l: 0.58, p: 0.7, h: 1.03 });
   // (le recoin de 0,66 m entre la jardinière de devant et le bac de devant, et la fente de 0,52 m entre la jardinière de
   // derrière et la façade : bouchés — Haythem s'y coincerait)
   ch.C.ajouterBoite(0.4, 1.22, 1.15, 1.84, { y1: 0.9, camera: false });
