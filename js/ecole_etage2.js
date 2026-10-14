@@ -64,6 +64,12 @@
 // dès 0,60 ; l'affiche du mur rouge étroite et blanche, celle du mur sud de 0,40 x 0,80 ; les chaises « ISO » ; le lino
 // plus rosé ; au palier, poussoir et prise blancs, plinthe grise, extincteur accroché ; dans la salle 1, les stores en
 // traits sombres à contre-jour, le cadre des fenêtres de 10 cm, l'extincteur accroché, la table contre le poteau.
+// SA RELECTURE (14/10, iris_CR6/ : poses refaites — q_0285 sur le mur du panneau, 2,9 px ; q_0300 sur la porte du fond et
+// le mur rouge, 2,7 px ; q_0304 sur les six fenêtres, 4 px —, côte à côte et en fondu) : dans les deux salles, les coques
+// à dossier haut en écusson (six trous dans la salle 2), rentrées sous les tables dans la salle 1 ; la lumière des salles
+// neutre (salle 1) et froide (salle 2), la moquette de la salle 2 anthracite bleuté ; la porte du fond gris très clair ;
+// l'affiche du mur rouge au bord ouest de la baie de D1 ; le pied du mur rouge sans plinthe sombre ; les chaises du
+// couloir sans ombre nette.
 //
 // LES PIÈGES D'UN NIVEAU DE PLUS (ceux du 1er, js/ecole_etage1.js, et du sous-sol, js/ecole_soussol.js) :
 //   1. des SOLS (C.sol à 6,60) sous tout ce qu'on foule, la cage exceptée : sinon solEn rendrait le plancher du 1er ;
