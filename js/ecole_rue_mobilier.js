@@ -1155,8 +1155,9 @@ export function poserMobilierRue(ch, R) {
   // (deux contre la façade, un devant, au droit du trumeau noir — photo 10 : trois couvercles, celui de devant plus bas)
   // (vérification finale v2.0, 14/10 — photo 10 à sa pose, les rayons renvoyés au sol et sur les plans des faces : TROIS bacs
   // à DEUX roues, et non un conteneur qui cachait les deux autres. Derrière, contre la façade, leur face en y -1,23 — le pied
-  // du bac de droite y tombe au sol, et les couvercles des deux à 1,03-1,04 sur ce plan ; leur poignée au nu de la pierre —, x 0,8-1,4 et 1,45-2,05 ; le
-  // couvercle de celui de gauche dépasse au-dessus de celui de devant, celui de droite se voit entre lui et la grille.
+  // du bac de droite y tombe au sol, et les couvercles des deux à 1,03-1,04 sur ce plan ; leur poignée au nu de la
+  // pierre —, x 0,8-1,4 et 1,45-2,05 ; le couvercle de celui de gauche dépasse au-dessus de celui de devant, celui de
+  // droite se voit entre lui et la grille.
   // Devant, un bac vu de FLANC : sa poignée et sa roue à l'est (la roue en x 1,81), son flanc de x 1,15 à 1,85 en y -1,8,
   // son couvercle à 1,05 ; la face « large de 0,94 m » de la relecture était ce flanc et sa poignée)
   const bacFond = { l: 0.6, p: 0.75, h: 1.03 };
