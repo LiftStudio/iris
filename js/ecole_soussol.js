@@ -595,7 +595,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // (14/10 : v_050, le grès mesure 91,87,79 ; à [86, 84, 79] et 1,0, le jeu sortait 109,101,87 — un cran plus sombre)
     // (relecture du 14/10 : v_050 rejouée — l'appareil à 1,48 m, le fond à 6,5 m —, le grès sortait 56,49,38, brun et
     // sombre, pour 88,85,77 sur la vidéo : la lumière du couloir le chauffe ; une base plus claire et plus froide)
-    couloir: nommer(std({ map: texGres([102, 106, 108], '#53575a', 909, 6), roughness: 0.47 }), 'grès gris foncé du couloir'),
+    couloir: nommer(std({ map: texGres([112, 117, 120], '#5a5e61', 909, 6), roughness: 0.47 }), 'grès gris foncé du couloir'),
     // (relecture du 09/10 : #c6bfa6 sortait presque blanc sous les plafonniers ; mesuré sur v_063, le carrelage est d'un
     // tiers plus sombre que les murs)
     // (14/10 : des carreaux de 45 cm, et non de 60 — v_060, les joints des deux familles relevés à la transformée de Hough :
@@ -1087,6 +1087,10 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     for (const [c, nom] of [[PORTE_HALL, 'hall -1 → pause']]) {
       const P = ch.porte('y', X_MUR, c, { l: L_PORTE, h: 2.04, ep: EP_MUR, base: Y_SS, modele: 'grise', poignee: 'tirant', etat: 'auto', cote: 'E', libre: -1, nom });
       papiers(P, 2);
+      // (relecture du 14/10 : côté pause, une affiche A3 sombre à cartouche blanc, en haut, vers le bord libre — v_060,
+      // v_061 : la porte tirée vers le hall, on la voit sur le vantail)
+      { const v = P.vantaux[0], af = new THREE.Mesh(new THREE.PlaneGeometry(0.297, 0.42), new THREE.MeshStandardMaterial({ map: texAffiche('#1c1c1c', '#f2f2ee', 55), roughness: 0.6 }));
+        af.position.set(v.s * 0.62, 1.72, 0.024); af.castShadow = false; v.g.add(af); }
       // (par l'oculus, l'espace pause : v_043, v_055 — un verre clair)
       P.g.traverse((o) => { if (o.isMesh && o.material === M.vitreFente) o.material = M.verre; });
       // le ferme-porte à glissière, côté couloir : le rail et le boîtier, en haut de l'huisserie
@@ -1271,9 +1275,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     mangeDebout(6.75, 7.9, 'trepied'); autour(6.75, 7.9, 0.55, [175, 310], ['miura', 'tolix']);
     // (la seconde table en X, à la croisée des retombées : v_066, v_067 — Haythem passe à côté, le dos au mur vert)
     grandeTable(7.55, 8.35); autour(7.55, 8.35, 0.62, [75, 200, 320]);
-    // (le baby-foot : son flanc de bois au cap 116-122° de la porte, derrière la grande table — v_060 —, devant la branche
-    // sud du comptoir — v_066, v_067)
-    babyFoot(7.0, 5.5);
+    // (le baby-foot : son flanc de bois au cap 114-122° de la porte, derrière la grande table — v_060 —, à gauche, devant
+    // la branche sud du comptoir — v_066, v_067)
+    babyFoot(8.0, 5.5);
     {
       // (la table grise — v_059, v_060 : le plateau gris au bord droit, son pied noir posé en x 4,45 y 5,37)
       B(3.95, 4.95, 4.75, 5.55, Y_SS + 0.73, Y_SS + 0.76, X.tablette, { collision: true });
