@@ -460,8 +460,27 @@ export function poserMobilier(ch) {
   // plus sur chaque vantail, tournées vers le passage seulement — du hall, elles n'existent pas : un voile sombre, et
   // le reflet PEINT, relevé sur la photo 19 : la réglette de (0,085 ; 1,855) à (0,66 ; 1,55) du vitrage, son embout
   // orange dehors ; le jour de la rue sur le tiers du côté du battement, de 0,75 à 1,55.
+  // (14/10, relecture — photo 19 rejouée à sa pose, les teintes rapportées au plafond du passage : vu du passage, le
+  // HALL EST JAUNE — la face de la pile à (199, 172, 119), le mur du fond à (182, 168, 129), le sol brun sombre (100, 89,
+  // 67) —, le passage lui-même d'un blanc neutre ; le jeu rendait le hall d'un gris neutre, bleuté au milieu, (188, 176,
+  // 153) et (135, 125, 102) au sol : la lumière du hall est plus chaude que celle du passage, et l'appareil s'est réglé
+  // sur le passage. Le voile sombre MULTIPLIE donc, d'un jaune sourd — 0,92 / 0,80 / 0,56 de 0,2 à 1,85 m —, et
+  // presque neutre en haut du vitrage, où l'on voit le plafond du hall, gris neutre sur la photo (127, 122, 121). Les
+  // réglettes ne sont plus peintes sur le verre : leur vrai reflet, js/carte_ecole.js.)
   if (pp) {
-    const sombre = new THREE.MeshBasicMaterial({ color: 0x2a2e30, transparent: true, opacity: 0.2, depthWrite: false }); sombre.name = 'voile sombre des vitrages du passage';
+    const sombre = new THREE.MeshBasicMaterial({ map: canvasTex(4, 64, (g, w, h) => {
+      const s = (v) => Math.round(255 * Math.pow(v, 1 / 2.2));
+      // (le bas, où l'on voit le sol du hall — brun sombre, (97, 85, 66) sur la photo, (132, 112, 74) au jeu —, plus
+      // sombre ; le haut, où l'on voit son plafond, un rien bleuté)
+      const PTS = [[0, [0.6, 0.53, 0.46]], [1.0, [0.62, 0.55, 0.47]], [1.35, [0.92, 0.8, 0.56]], [1.8, [0.92, 0.8, 0.56]], [2.05, [0.8, 0.81, 0.9]], [2.4, [0.8, 0.81, 0.9]]];
+      for (let j = 0; j < h; j++) {
+        const z = ((h - 1 - j) / (h - 1)) * 2.254 + 0.09, i1 = PTS.findIndex((p) => p[0] >= z), k = i1 < 0 ? PTS.length - 1 : Math.max(1, i1);
+        const [z0, a] = PTS[k - 1], [z1, b] = PTS[k];
+        const q = Math.max(0, Math.min(1, (z - z0) / (z1 - z0))), f = q * q * (3 - 2 * q);
+        g.fillStyle = `rgb(${a.map((t, i) => s(t + (b[i] - t) * f)).join(',')})`; g.fillRect(0, j, w, 1);
+      }
+    }, null, false, 1), blending: THREE.MultiplyBlending, transparent: true, depthWrite: false, toneMapped: false, fog: false });
+    sombre.name = 'voile sombre des vitrages du passage';
     const texReflet = (miroir) => canvasTex(128, 320, (g, w, h) => {
       g.fillStyle = '#000'; g.fillRect(0, 0, w, h);
       if (miroir) { g.translate(w, 0); g.scale(-1, 1); }
@@ -470,11 +489,6 @@ export function poserMobilier(ch) {
       const gr = g.createLinearGradient(X(0.62), 0, X(1), 0); gr.addColorStop(0, 'rgba(120,140,160,0)'); gr.addColorStop(0.35, 'rgba(120,140,160,0.75)'); gr.addColorStop(1, 'rgba(140,158,176,0.95)');
       g.fillStyle = gr; g.fillRect(X(0.62), Y(1.55), X(0.38), Y(0.75) - Y(1.55));
       g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(X(0.62), Y(0.9), X(0.38), 3);
-      // la réglette : un trait chaud dans son halo, l'embout orange au bout du dehors
-      for (const [l, c] of [[22, 'rgba(255,206,120,0.07)'], [13, 'rgba(255,214,140,0.12)'], [7, 'rgba(255,224,160,0.22)'], [3.5, 'rgba(255,236,190,0.7)']]) {
-        g.strokeStyle = c; g.lineWidth = l; g.lineCap = 'round'; g.beginPath(); g.moveTo(X(0.085), Y(1.855)); g.lineTo(X(0.66), Y(1.55)); g.stroke();
-      }
-      g.fillStyle = 'rgba(240,120,40,0.9)'; g.beginPath(); g.arc(X(0.075), Y(1.862), 3.2, 0, 7); g.fill();
     }, null, false, 4);
     for (const v of pp.vantaux) {
       const reflet = new THREE.MeshBasicMaterial({ map: texReflet(v.s < 0), color: new THREE.Color(0.42, 0.42, 0.42), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });

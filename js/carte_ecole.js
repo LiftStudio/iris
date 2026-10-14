@@ -1022,6 +1022,9 @@ function construireMurs(ch) {
   // ferme-porte : une glissière d'aluminium gris clair de 0,70 m sur la traverse de l'huisserie, depuis l'angle de la
   // pile, et un petit boîtier BLANC en haut du vantail, près des gonds — le jeu : un gros boîtier gris foncé au mur)
   const taupe = new THREE.MeshStandardMaterial({ color: 0x979795, roughness: 0.45 }); taupe.name = 'vantail gris taupe (porte grise du hall ouest)';
+  // (14/10, relecture : un rien plus chaud — photo 06, 0,26 / 0,23 / 0,15 du mur du plan d'évacuation ; le jeu 0,29 / 0,25
+  // / 0,21)
+  taupe.color.multiply(new THREE.Color(0.94, 0.93, 0.78));
   const PG0 = ch.porte('y', 1.675, 9.575 + DY_SS, { l: 0.93, h: 2.04, modele: 'grise', oculus: { bas: 0.63, haut: 1.84, l: 0.155, bord: 0.27, cadre: 0.04, clair: true }, matVantail: taupe, poignee: 'tirant', fermePorte: false, etat: 'auto', cote: 'E', libre: 1, nom: 'service (hall)' });
   {
     const glis = new THREE.MeshStandardMaterial({ color: 0xb1b3b0, roughness: 0.45, metalness: 0.3 }); glis.name = 'glissière de ferme-porte (hall ouest)';
@@ -1050,6 +1053,25 @@ function construireMurs(ch) {
     if (faces.includes('E')) ch.boite(xa, ya, xa + 0.015, yb, 0, 0.08, M.bois, { ombre: false });
     if (faces.includes('S')) ch.boite(1.75, ya - 0.015, xa + 0.015, ya, 0, 0.08, M.bois, { ombre: false });
     if (faces.includes('N')) ch.boite(1.75, yb, xa + 0.015, yb + 0.015, 0, 0.08, M.bois, { ombre: false });
+  }
+  // (14/10, relecture — photo 06 (r01) rejouée à sa pose, les teintes rapportées au mur du plan d'évacuation, sous le
+  // cadre : le mur du fond du RENFONCEMENT est dans la pénombre, à 0,96 / 0,96 / 0,79 de ce mur ; le jeu l'éclairait en
+  // plein, 1,21 / 1,22 / 1,25, et d'un blanc froid. Un voile qui multiplie, à 2 mm du mur — l'ouverture de la porte
+  // grise laissée libre : son vantail, lui, était juste (plus haut) ; l'huisserie, la glissière, l'extincteur et ses plaques,
+  // devant, n'en sont pas touchés. Le retour nord de la pile, l'angle rentrant, de même : 0,42 / 0,40 / 0,32 sur la
+  // photo, 0,82 / 0,84 / 0,87 au jeu — le décroché d'ombre à l'angle de la pile ne se voyait plus.)
+  {
+    const ombre = (c) => { const m = new THREE.MeshBasicMaterial({ color: c, blending: THREE.MultiplyBlending, transparent: true, depthWrite: false, toneMapped: false, fog: false }); m.name = 'pénombre du renfoncement (hall ouest)'; return m; };
+    const fond = ombre(new THREE.Color(0.75, 0.78, 0.7)), retour = ombre(new THREE.Color(0.62, 0.6, 0.55));
+    const pan = (mat, w, h, x, y, z, ry) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); m.position.set(x, z, -y); m.rotation.y = ry; m.renderOrder = 1;
+      m.castShadow = false; m.receiveShadow = false; m.userData.horsAOSol = true; m.userData.sansNormales = true; nePasFusionner(m); ch.decor.add(m);
+    };
+    pan(retour, 0.7, 2.3, 2.1, 4.972, 1.15, Math.PI);
+    const yp0 = 9.575 + DY_SS - 0.465, yp1 = yp0 + 0.93;   // (l'ouverture de la porte grise : 5,02-5,95)
+    pan(fond, yp0 - 4.97, 2.3, 1.752, (4.97 + yp0) / 2, 1.15, Math.PI / 2);
+    pan(fond, 7.22 - yp1, 2.3, 1.752, (yp1 + 7.22) / 2, 1.15, Math.PI / 2);
+    pan(fond, yp1 - yp0, 0.26, 1.752, (yp0 + yp1) / 2, 2.17, Math.PI / 2);
   }
   // le mur est du passage : la ligne x 4,5 (plan V2 : le trumeau des travées 3 et 4 ; derrière, la Si 0.1), jusqu'au mur
   // sud de la salle d'attente (ligne y 4,8) ; au nord, le hall s'ouvre sur la salle. (La porte de l'ex-salle A n'est plus
@@ -1352,6 +1374,19 @@ function construireMurs(ch) {
     ch.boite(2.4, 8.895, 4.5, 8.925, 2.11, 2.3, bandeau, { ombre: false });
     ch.boite(2.45, 8.88, 4.45, 8.895, 2.11, 2.135, new THREE.MeshStandardMaterial({ color: 0x858a91, roughness: 0.45, metalness: 0.3 }), { ombre: false });
   }
+  // LA CAGE VUE DU HALL (14/10, relecture — photos 06, 20 et 04 rejouées à leur pose : par la porte ouverte, la cage est
+  // d'un blanc CHAUD, crème — photo 06, ses murs à 0,91 / 0,84 / 0,61 du mur du plan d'évacuation ; photo 20, à 0,86 /
+  // 0,76 / 0,65 du mur blanc voisin — ; le jeu la rendait d'un blanc neutre, 0,88 / 0,89 / 0,91 et 0,95 / 1,00 / 1,08.
+  // Comme pour le passage : la lumière de la cage n'est pas celle du hall, et l'appareil s'est réglé sur le hall.) Un
+  // voile qui multiplie, dans l'ouverture des portes, côté cage, tourné vers le hall seulement : de la cage, il n'existe
+  // pas ; les vantaux, devant lui, n'en sont pas touchés.
+  {
+    const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.9, 0.72), blending: THREE.MultiplyBlending, transparent: true, depthWrite: false, toneMapped: false, fog: false });
+    m.name = 'voile de la cage (vue du hall)';
+    const v = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 2.1), m); v.position.set(3.45, 1.05, -(Y_ESC + 0.1)); v.renderOrder = 1;
+    v.castShadow = false; v.receiveShadow = false; v.userData.horsAOSol = true; v.userData.sansNormales = true; nePasFusionner(v); ch.decor.add(v);
+    ch.voileCage = v;    // (il s'efface quand Haythem arrive à la porte : `maj`, js/carte_ecole.js construireCarte)
+  }
 }
 
 // LA PORTE DU FOND DE C05 (photos 05, 23) : ce n'est PAS une issue de secours (09/10) — c'est celle d'une salle
@@ -1649,7 +1684,9 @@ export function construireCarte(scene, renderer = null) {
   // tube lui-même.)
   const poids = (hTube, haut, long, portee) => (i, j, W, H) => {
     // la distance au tube (un trait de y 0,15 à 3,05 sur les 4 m du voile, à hTube du haut), en mètres
-    const u = (i + 0.5) / W * long, v = (j + 0.5) / H * haut, r = Math.hypot(Math.max(0, 0.15 - u, u - 3.05), v - hTube);
+    // (14/10, relecture, photo 19 : au-delà du bout des tubes, vers la paroi, le plafond est d'un blanc neutre — (166,
+    // 155, 153) au-dessus de la porte, le jeu (161, 147, 124) — : la lueur y tombe 2,2 fois plus vite)
+    const u = (i + 0.5) / W * long, v = (j + 0.5) / H * haut, r = Math.hypot(2.2 * Math.max(0, 0.15 - u, u - 3.05), v - hTube);
     return Math.pow(Math.max(0, Math.min(1, 1 - (r - 0.12) / portee)), 1.3);
   };
   const texLueur = (w, mult) => canvasTex(128, 64, (g, W, H) => {
@@ -1697,6 +1734,55 @@ export function construireCarte(scene, renderer = null) {
     const h = maille(new THREE.CylinderGeometry(0.044, 0.044, 2.8, 14, 1, true), manchon, xj + s * 0.007, ht - 0.01, -1.6, 0, ch.decor, { ombre: false, recoit: false });
     h.rotation.x = Math.PI / 2; h.renderOrder = 3; h.userData.horsAOSol = true; h.userData.sansNormales = true; nePasFusionner(h);
   }
+  // LE REFLET DES DEUX RÉGLETTES DANS LA PORTE VITRÉE, vu du passage (relecture du 14/10, photo 19 rejouée à sa pose —
+  // (3,67 ; 2,57) h 1,39 cap −6,6, sur le vantail ouest et huit points du hall : les deux tubes s'y voient en grand, d'un
+  // jaune blanc, leur embout orange au bout le plus proche — celui de l'ouest de (2,69 ; 1,99) à (3,20 ; 1,71) du vitrage
+  // ouest, celui de l'est sur le vitrage est ; le jeu n'en peignait qu'un trait pâle, toujours au même endroit, quelle
+  // que soit la caméra.) Le vrai reflet : les tubes, leurs halos et leurs embouts, rabattus de l'autre côté du plan du
+  // verre (y 4,045), et chaque sommet ramené SUR ce plan le long du rayon de la caméra — à l'écran, au même endroit que
+  // l'image virtuelle, mais à la profondeur du verre : les montants, Haythem devant la porte, le cachent comme il faut ; ce
+  // qui tombe hors des deux vitrages est jeté. Visible du côté du passage, la porte fermée (`maj`). On y retrouve les
+  // deux rayons de la photo 19 : de la caméra à l'image de l'embout ouest, (2,06 ; 5,05) à 2,43, le verre est coupé en
+  // (2,71 ; 2,01) — la photo le montre en (2,69 ; 1,99).
+  const Y_MIROIR = 4.045;
+  const refletVerre = (mat) => {
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.uMiroir = { value: Y_MIROIR };
+      sh.vertexShader = 'uniform float uMiroir;\nvarying vec3 vSurVerre;\n' + sh.vertexShader.replace('#include <project_vertex>', `
+        vec4 pMonde = modelMatrix * vec4(transformed, 1.0);
+        vec3 pVerre = cameraPosition + (pMonde.xyz - cameraPosition) * ((-uMiroir - cameraPosition.z) / (pMonde.z - cameraPosition.z));
+        vSurVerre = pVerre;
+        vec4 mvPosition = viewMatrix * vec4(pVerre, 1.0);
+        gl_Position = projectionMatrix * mvPosition;`);
+      sh.fragmentShader = 'varying vec3 vSurVerre;\n' + sh.fragmentShader.replace('void main() {', `void main() {
+        if (vSurVerre.y < 0.09 || vSurVerre.y > 2.344 || vSurVerre.x < 2.63 || vSurVerre.x > 4.52 || (vSurVerre.x > 3.485 && vSurVerre.x < 3.665)) discard;`);
+    };
+    mat.customProgramCacheKey = () => 'iris-reflet-verre-passage';
+    mat.name = 'reflet des réglettes (porte vitrée du passage)';
+    return mat;
+  };
+  const refletsTubes = new THREE.Group(); refletsTubes.name = 'reflet des réglettes dans la porte vitrée (passage)';
+  {
+    const add = { transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, fog: false };
+    // (photo 19 agrandie : le tube reflété est d'un JAUNE soutenu, (235, 205, 110) sur le hall à (170, 150, 110) ; l'embout,
+    // d'un orange brun, (200, 120, 70) : ce qu'il faut ajouter au fond, sans bleu)
+    const mTube = refletVerre(new THREE.MeshBasicMaterial({ color: new THREE.Color(0.95, 0.62, 0.08), ...add }));
+    const mHalo = refletVerre(new THREE.MeshBasicMaterial({ color: new THREE.Color(0.3, 0.19, 0.02), ...add }));
+    const mEmbout = refletVerre(new THREE.MeshBasicMaterial({ color: new THREE.Color(0.5, 0.13, 0.02), ...add }));
+    const yM = (y) => -(2 * Y_MIROIR - y);
+    for (const [x, s, dx, ht] of [[1.75, 1, 0.25, 2.43], [4.7, -1, 0.06, 2.33]]) {
+      const xt = x + s * (dx + 0.06), a = -s * 0.5, xc = xt + 0.014 * Math.sin(a), hc = ht - 0.014 * Math.cos(a);
+      const pose = (geo, mat, px, py, y0, ordre) => {
+        const m = new THREE.Mesh(geo, mat); m.position.set(px, py, yM(y0)); m.rotation.x = Math.PI / 2; m.renderOrder = ordre;
+        m.castShadow = false; m.receiveShadow = false; m.frustumCulled = false; m.userData.horsAOSol = true; m.userData.sansNormales = true;
+        refletsTubes.add(m);
+      };
+      pose(new THREE.CylinderGeometry(0.021, 0.021, 2.82, 10), mTube, xc, hc, 1.6, 6);
+      pose(new THREE.CylinderGeometry(0.044, 0.044, 2.8, 12, 1, true), mHalo, xc + s * 0.007, ht - 0.01, 1.6, 5);
+      for (const y of [0.17, 3.03]) pose(new THREE.BoxGeometry(0.055, 0.05, 0.05), mEmbout, xt, ht, y, 6);
+    }
+  }
+  refletsTubes.visible = false; nePasFusionner(refletsTubes); scene.add(refletsTubes);
   // le bloc de sortie près de la rue, côté passage : sous le plafond, au-dessus de l'ouverture — de la rue, le linteau
   // le cache et l'on ne voit que le boîtier noir (photo 10), du hall il est vert (photo 07) ; et à côté de lui, à l'est,
   // le hublot rond du plafond, allumé (photo 07)
@@ -1827,7 +1913,11 @@ export function construireCarte(scene, renderer = null) {
   voileHall.name = 'voile du passage (vu du hall)'; voileHall.position.set(3.575, 1.235, -(4.05 - 0.075)); voileHall.rotation.y = Math.PI; voileHall.renderOrder = 1;
   voileHall.castShadow = false; voileHall.userData.horsAOSol = true; voileHall.userData.sansNormales = true;
   nePasFusionner(voileHall); scene.add(voileHall);
-  const TEINTE_HALL = [1.2, 1.26, 1.4];
+  // (14/10, relecture — photos 06 et 07 rejouées à leur pose, rapportées au mur blanc du hall : vu du hall, le passage
+  // est d'un blanc FROID — photo 06, son mur à (179, 182, 197) et son sol à (137, 135, 145) ; photo 07, son sol gris
+  // neutre (111, 110, 112), la porte « Sortie » blanche (185, 183, 178) — ; le jeu le rendait crème, (195, 184, 163),
+  // et son sol beige, (139, 131, 116). Plus de bleu, un peu moins de rouge : 0,98 / 1,30 / 2,77 et non 1,2 / 1,26 / 1,4.)
+  const TEINTE_HALL = [0.98, 1.3, 2.77];
 
   // ---- LES CROCHETS : le mobilier, la rue ----
   poserMobilier(ch);
@@ -1942,6 +2032,7 @@ export function construireCarte(scene, renderer = null) {
 
   // ---- LA CARTE VIVANTE (js/game.js, à chaque image) ----
   let cuit = -1;
+  const porteP = ch.portes.auto.find((P) => P.g.name === 'porte passage');
   const maj = (dt, jeu) => {
     const u = jeu.user.pos, cam = jeu.camera.position;
     // (le voile du passage : entier à 2,5 m de la grille et au-delà, nul à 30 cm)
@@ -1958,6 +2049,14 @@ export function construireCarte(scene, renderer = null) {
       const q = cam.y > -0.5 && cam.y < 3.2 ? sat((-cam.z - 4.05 - 0.3) / 1.5) * (yH > 4.05 ? sat((Math.hypot(u.x - 3.575, yH - 4.05) - 0.7) / 1.5) : 0) : 0;
       voileHall.visible = q > 0.01;
       voileHall.material.color.setRGB(q * TEINTE_HALL[0], q * TEINTE_HALL[1], q * TEINTE_HALL[2]);
+      // (le reflet des réglettes : la caméra du côté du passage — ou de la rue —, au rez-de-chaussée, la porte fermée)
+      // (le voile de la cage, vu du hall : entier, nul quand Haythem est à 0,7 m de la porte ou dans la cage)
+      if (ch.voileCage) {
+        const kc = cam.y > -0.5 && cam.y < 3.2 && yH < Y_ESC ? sat((Math.hypot(u.x - 3.45, yH - Y_ESC) - 0.7) / 1.5) : 0;
+        ch.voileCage.visible = kc > 0.01;
+        ch.voileCage.material.color.setRGB(1, 1 - kc * 0.1, 1 - kc * 0.28);
+      }
+      refletsTubes.visible = cam.y > 0.3 && cam.y < 3.0 && -cam.z < Y_MIROIR - 0.02 && -cam.z > -8 && cam.x > -1 && cam.x < 8 && (!porteP || porteP.k < 0.02);
     }
     visibilite.maj(dt, jeu);
     ch.portes.maj(dt, u.x, u.z, cam.x, cam.z, u.y, cam.y);
