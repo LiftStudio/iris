@@ -11,7 +11,9 @@
 //        tournés vers le nord (écrans, claviers, unités centrales, chaises de bureau où l'on s'assoit), le
 //        poste de l'enseignant, la toile de projection descendue devant les jours dépolis et son vidéoprojecteur, le
 //        tableau blanc du mur est, les stores enrouleurs des trois fenêtres sur rue, quatre dalles LED dans le plafond à
-//        plateaux, l'imprimante, l'horloge ; sa porte s'ouvre dans le retour x 9,165, sur l'antichambre
+//        plateaux, l'imprimante, l'horloge ; sa porte s'ouvre dans le retour x 9,165, sur l'antichambre (r07, 14/10 : dans
+//        le mur x 9,975, 0,81 m plus près du passage de la pile ; la salle reprend l'angle x 9,09-9,9 × y 2,85-3,975, devant
+//        le mur du redan, où l'on entre)
 //   LE BUREAU DE DIRECTION B 0.3  x 10,05-13,2 y 0-2,85, l'angle nord-est écorné (11/10 ; r02 : son mur nord en y 2,925)
 //        bureau de chêne clair, fauteuil,
 //        deux chaises visiteurs (on s'y assoit), armoire, bibliothèque, tableau, grande plante, tapis, porte-manteau ; sa
@@ -111,7 +113,9 @@ const ZONES = [
   // l'éclaireraient à travers le mur)
   // (retour r02 du 11/10 : sans son angle nord-est, à l'antichambre — jusqu'à l'axe du retour x 9,165 au nord de y 3,1)
   // (r03, 12/10 : jusqu'à l'axe du mur sud de la salle d'attente, la ligne 4,6)
-  { ...zone('si01', SA, { x: 7.7, y: 1.6, z: -2.45 }), rects: [[4.5, -(4.8 + DY_R03), 9.165, -SA.y0, -1], [9.165, -2.925, 9.975, -SA.y0, -1]] },
+  // (r07, 14/10 : elle reprend l'angle x 9,165-9,975 jusqu'à l'axe du mur du redan, y 4,05 — sa porte est dans le mur
+  // x 9,975, js/carte_ecole.js)
+  { ...zone('si01', SA, { x: 7.7, y: 1.6, z: -2.45 }), rects: [[4.5, -(4.8 + DY_R03), 9.165, -SA.y0, -1], [9.165, -4.05, 9.975, -SA.y0, -1]] },
   // (10/10 : le bureau B a perdu son angle nord-est, le passage au sud-ouest de la pile du hall ; 11/10 : jusqu'aux axes de
   // ses murs — retour r02 : son mur nord est la ligne y 3,1, la ligne 2,925 à la relecture ; js/carte_ecole.js et
   // js/ecole_rdc_centre.js)
@@ -1095,7 +1099,8 @@ function salleA(ch, P) {
   // photo 23) : sur le vantail, côté gonds — le bout de mur au nord de la porte porte déjà, de l'autre côté de l'angle, la
   // plaque du bureau de direction ; elle part avec lui ----
   // (retour r02 du 11/10 : la porte est dans le retour x 9,165 — la plaque sur la face du vantail tournée vers l'antichambre)
-  const pSi = ch.portes.auto.find((Q) => Math.abs(Q.cx - 9.165) < 0.01 && Math.abs(Q.cz + 3.98) < 0.01);
+  // (r07, 14/10 : la porte est passée dans le mur x 9,975, c 3,53 — js/carte_ecole.js)
+  const pSi = ch.portes.auto.find((Q) => Math.abs(Q.cx - 9.975) < 0.01 && Math.abs(Q.cz + 3.53) < 0.01);
   const vSi = pSi && pSi.vantaux[0];
   if (vSi) {
     const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.17, 0.099), new THREE.MeshStandardMaterial({ map: texPlaqueSalle('Tim Berners-Lee', 'Si 0.1'), roughness: 0.4 }));
