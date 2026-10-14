@@ -42,14 +42,17 @@
 //   le couloir                 x 1,50-2,42  y 3,80-10,09  0,92 m de large, plafond à 2,50 m, caisson et grille au fond,
 //                                                         deux spots ; AUCUNE porte (14/10)
 //   la porte de la pause       mur est du hall, y 10,26-11,26 : la seule porte grise vers l'espace pause (14/10)
-//   l'espace pause             x 2,55-12,9  y 10,21-14,41 et son aile x 5,0-12,9 y 5,11-10,21 ; dalles à 2,55 m
-//   le sas des toilettes       x 10,55-12,9 y 12,26-13,56 deux portes crème à plaque rouge (fermées)
-//   la porte sombre            mur est, y 7,81-8,71       le passage sombre vers le sas technique (js/ecole_soussol_est.js)
+//   l'espace pause             x 2,55-10,45 y 5,11-14,41 UNE seule salle (relecture du 14/10 : plus d'aile ni de retour
+//                                                         sud) ; dalles à 2,55 m ; le mur ouest vert, sa tablette
+//   le passage                 x 10,45-13,05 y 8,15-9,3   au mur est, ses deux portes crème à plaque rouge (fermées) ;
+//                                                         au bout, le passage sombre vers le sas technique
+//                                                         (js/ecole_soussol_est.js)
+//   la porte sombre            mur sud, x 6,2-7,1         ouverte sur un local éteint (imaginé, x 5,9-7,9 y 3,9-4,96)
 //   la grande salle S -1.14    x 2,55-13,3  y 14,56-23,71 derrière le mur vert (js/ecole_amphi.js : la vidéo officielle
 //                                                         de visite, 2021 — comme l'aile et ses murs sud et ouest, 10/10)
 // (14/10 : l'espace pause, son aile, le sas, la porte sombre et la grande salle sont posés dans LEUR repère — celui de
 // leur porte, relevé depuis elle — décalé de DY_P = 2,70 vers le nord : js/ecole_amphi.js DY_P, et `decaler` plus bas.
-// Les y du code de la pause et de la salle sont ceux de ce repère : y 7,51-11,71 pour la pause, etc.)
+// Les y du code de la pause et de la salle sont ceux de ce repère : y 2,41-11,71 pour la pause, etc.)
 // Le sol du sous-sol est à Y_SS = -3,06 (17 x 0,18).
 //
 // LES PIÈGES D'UN NIVEAU SOUS LE SOL (js/collisions.js : solEn rend le sol le plus haut qui ne dépasse pas les pieds de
@@ -590,7 +593,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   const SOL = {
     hall: nommer(std({ map: texResine(), roughness: 0.43 }), 'résine grise du hall du -1'),
     // (14/10 : v_050, le grès mesure 91,87,79 ; à [86, 84, 79] et 1,0, le jeu sortait 109,101,87 — un cran plus sombre)
-    couloir: nommer(std({ map: texGres([79, 78, 74], '#454340', 909, 6), roughness: 0.47 }), 'grès gris foncé du couloir'),
+    // (relecture du 14/10 : v_050 rejouée — l'appareil à 1,48 m, le fond à 6,5 m —, le grès sortait 56,49,38, brun et
+    // sombre, pour 88,85,77 sur la vidéo : la lumière du couloir le chauffe ; une base plus claire et plus froide)
+    couloir: nommer(std({ map: texGres([102, 106, 108], '#53575a', 909, 6), roughness: 0.47 }), 'grès gris foncé du couloir'),
     // (relecture du 09/10 : #c6bfa6 sortait presque blanc sous les plafonniers ; mesuré sur v_063, le carrelage est d'un
     // tiers plus sombre que les murs)
     // (14/10 : des carreaux de 45 cm, et non de 60 — v_060, les joints des deux familles relevés à la transformée de Hough :
@@ -1015,7 +1020,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // 2,9 et 0,8 m avant le caisson, au pas de 2,15 : y 5,80 et 7,97 ; les quatre au pas de 1,8 en montraient trois)
     for (const y of [7.97, 5.8]) spot(1.96, y, H_COUL, 'couloirSS');
     B(1.5, Y_COUL0, 2.42, Y_COUL0 + 0.8, Y_SS + 2.1, H_COUL, M.platre, { ombre: false });
-    B(1.6, Y_COUL0 + 0.795, 2.32, Y_COUL0 + 0.8, Y_SS + 2.18, Y_SS + 2.26, std({ color: 0x141414, roughness: 0.6 }), { ombre: false });
+    // (relecture du 14/10 : v_050 — une fente noire de 45 cm, au milieu, au bas du caisson ; posée DANS sa face, elle
+    // scintillait en rayures blanches)
+    B(1.735, Y_COUL0 + 0.8, 2.185, Y_COUL0 + 0.806, Y_SS + 2.12, Y_SS + 2.17, std({ color: 0x141414, roughness: 0.6 }), { ombre: false });
     C.plafond(1.5, -(Y_COUL0 + 0.8), 2.42, -Y_COUL0, Y_SS + 2.1, H_COUL - Y_SS - 2.1);
     // le bloc de sortie au-dessus de la porte de l'espace pause, côté salle ; au fond du hall, le bloc lumineux
     ch.sortie(X_MUR + 0.09, PORTE_HALL, Y_SS + 2.2, 'E');
@@ -1256,8 +1263,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     [[4.72, 'miura'], [5.85, 'miura'], [6.88, 'miura'], [7.58, 'tolix'], [8.2, 'miura']].forEach(([x, sorte]) => tabouret(x, 10.5, 0, -1, sorte));
     // ---- LE MILIEU (v_059 à v_061, les pieds posés sur le sol depuis la porte, à 0,2 m près ; v_066, v_067) : la grande
     // table en X et ses tabourets noirs à 2,5 m de la porte, l'îlot des mange-debout trépieds et le Tolix vert à côté,
-    // le baby-foot nord-sud devant les distributeurs (VO q_0088, q_0136, q_0137), la table grise entre lui et le mur ouest,
-    // un mange-debout devant les distributeurs ----
+    // le baby-foot nord-sud (VO q_0088, q_0136, q_0137 : devant les distributeurs ; 2026 : devant le comptoir), la table
+    // grise entre lui et le mur ouest ; devant les distributeurs, le passage libre ----
     // (deux tabourets noirs, côté porte : v_060, leurs pieds en x 3,95-4,7 y 7,0-7,1 ; on passe entre eux et la tablette)
     grandeTable(4.35, 6.65); autour(4.35, 6.65, 0.62, [75, 140]);
     mangeDebout(5.6, 6.85, 'trepied'); autour(5.6, 6.85, 0.55, [117, 250], ['tolix', 'miura']);
@@ -1272,7 +1279,6 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       B(3.95, 4.95, 4.75, 5.55, Y_SS + 0.73, Y_SS + 0.76, X.tablette, { collision: true });
       for (const [x, y] of [[4.0, 5.0], [4.7, 5.0], [4.0, 5.5], [4.7, 5.5]]) B(x - 0.02, y - 0.02, x + 0.02, y + 0.02, Y_SS, Y_SS + 0.73, X.noir);
     }
-    mangeDebout(4.55, 3.85, 'trepied'); autour(4.55, 3.85, 0.5, [80]);
     // ---- LE COMPTOIR HAUT en équerre dans le coin sud-est (v_060 : son bout nord au cap 114°, en y 7,3 du plan — à la
     // hauteur de 1,05, le même point ; son bout ouest sous le trombinoscope, cap 137°) : stratifié gris clair, pieds
     // d'acier, trois tabourets noirs dessous ; ses trois petits cadres au-dessus de la branche est ----
