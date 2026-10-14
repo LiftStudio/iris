@@ -270,7 +270,9 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     // pause dépassait de 10 cm)
     mur(ch, F, { de: [14.0375, yS(4.85)], a: [14.0375, 9.2], ep: 0.075, base, h: -0.01, mats: { W: P.blancEteint, E: W } });
     mur(ch, F, { de: [12.975, yS(4.925)], a: [14.075, yS(4.925)], base, h: -0.01, mats: { N: P.blancEteint, S: B0 } });
-    for (const [a, b] of [[yS(5.0), yS(5.085)], [yS(6.035), 10.3]]) B(13.05, a, 13.054, b, Y_SS, H_PASS, P.blancEteint, { ombre: false });
+    // (relecture du 14/10 : l'ouverture n'est plus la porte sombre — passée au mur sud de la pause — mais le bout du
+    // passage aux deux portes crème, y 5,45-6,6 du repère de la pause : js/ecole_soussol.js mursPause)
+    for (const [a, b] of [[yS(5.0), yS(5.425)], [yS(6.625), 10.3]]) B(13.05, a, 13.054, b, Y_SS, H_PASS, P.blancEteint, { ombre: false });
     // LE PLACARD ⚡ derrière la porte crème du sas (x 14,075-14,525, y 7,8-9,05 : fermé, son dedans n'est pas modélisé) :
     // le mur sud du sas le ferme au sud
     // (relecture du 11/10 : il part du dos du mur du passage, x 14,075 — depuis x 14,0, son bout blanc perçait la face
@@ -410,11 +412,11 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
     // 90 cm autour d'elle (sa flaque déborde par la porte sombre, comme la lumière d'un couloir).
     ch.sortie(13.525, 10.272, Y_SS + 2.05, 'S', { simple: true });
     const baes = { x: 13.525, z: -10.15, h: Y_SS + 2.0, zone: 'passageSS', type: 'spot', base: Y_SS, cuire: false, force: 0.1, cuireForce: 0.12, couleur: new THREE.Color(0.72, 1.0, 0.8) };
-    const veilleuse = { x: 13.82, z: -yS(5.55), h: Y_SS + 0.45, zone: 'passageSS', type: 'spot', base: Y_SS, cuire: false, force: 0.3, cuireForce: 0.4, couleur: new THREE.Color(1.0, 0.78, 0.5) };
+    const veilleuse = { x: 13.82, z: -yS(6.025), h: Y_SS + 0.45, zone: 'passageSS', type: 'spot', base: Y_SS, cuire: false, force: 0.3, cuireForce: 0.4, couleur: new THREE.Color(1.0, 0.78, 0.5) };
     for (const L of [baes, veilleuse]) { ch.lampes.push(L); lampes.push(L); }
-    B(13.982, yS(5.505), 14.0, yS(5.595), Y_SS + 0.355, Y_SS + 0.445, M.blanc, { ombre: false });
+    B(13.982, yS(5.98), 14.0, yS(6.07), Y_SS + 0.355, Y_SS + 0.445, M.blanc, { ombre: false });
     const lueur = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.72, 0.38).multiplyScalar(1.6) }); lueur.name = 'veilleuse allumée';
-    panneau(lueur, 0.07, 0.07, 13.981, yS(5.55), Y_SS + 0.4, 'W');
+    panneau(lueur, 0.07, 0.07, 13.981, yS(6.025), Y_SS + 0.4, 'W');
     // (et le reflet de chacune sur son mur : une lueur additive, douce du centre au bord — les spots tournés vers le sol
     // n'éclairent pas le mur qui les porte)
     const texLueur = canvasTex(64, 64, (g, w) => {
@@ -428,11 +430,10 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
       const m = maille(new THREE.PlaneGeometry(d, d), mat, x, h, -y, rotY, F, { ombre: false, recoit: false });
       m.renderOrder = 2; m.userData.horsAOSol = true;
     };
-    aureole([1.0, 0.68, 0.36], 0.55, 13.996, yS(5.55), Y_SS + 0.4, 0.9, -Math.PI / 2, 'lueur de la veilleuse');
-    aureole([1.0, 0.68, 0.36], 0.22, 13.72, yS(5.235), Y_SS + 0.3, 0.7, Math.PI, 'lueur de la veilleuse sur le vantail rabattu');
+    aureole([1.0, 0.68, 0.36], 0.55, 13.996, yS(6.025), Y_SS + 0.4, 0.9, -Math.PI / 2, 'lueur de la veilleuse');
     aureole([0.35, 0.95, 0.5], 0.3, 13.525, 10.296, Y_SS + 1.95, 0.9, 0, 'lueur du bloc de sortie');
-    // la barre de seuil à l'entrée du passage sombre, côté espace pause (sous la porte de 2026)
-    B(12.9, yS(5.11), 13.05, yS(6.01), Y_SS, Y_SS + 0.006, M.inox, { ombre: false });
+    // la barre de seuil à l'entrée du passage sombre, au bout du passage aux portes crème (relecture du 14/10)
+    B(13.0, yS(5.45), 13.06, yS(6.6), Y_SS, Y_SS + 0.006, M.inox, { ombre: false });
   }
 
   // =====================================================================
@@ -443,7 +444,7 @@ export function poserSousSolEst(ch, renderer = null, { RECT = { x0: -0.6, x1: 20
       const m = new THREE.Mesh(geoDalles(rects, Y_SS, R_SSE), mat);
       m.receiveShadow = true; m.castShadow = false; m.name = nom; m.userData.solSS = true; groupe.add(m);
     };
-    sol([[14.675, 7.8, 17.6, 9.0], [14.675, 9.0, 16.8, 10.725], [14.0, 9.2, 14.675, 10.3], [13.05, yS(5.0), 14.0, 10.3], [12.9, yS(5.11), 13.05, yS(6.01)]], P.sas, 'sol du sas technique du -1');
+    sol([[14.675, 7.8, 17.6, 9.0], [14.675, 9.0, 16.8, 10.725], [14.0, 9.2, 14.675, 10.3], [13.05, yS(5.0), 14.0, 10.3]], P.sas, 'sol du sas technique du -1');
     sol([[14.675, 10.725, XA, 12.45]], P.vinyle, 'sol du palier du -1 (escalier est)');
     // AU -1 : le sas, le passage sombre et P, le palier (la volée B a sa rampe, le palier bas sa dalle)
     C.sol(13.0, -yS(4.9), 14.1, -7.65, Y_SS);
