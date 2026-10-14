@@ -595,7 +595,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // (14/10 : v_050, le grès mesure 91,87,79 ; à [86, 84, 79] et 1,0, le jeu sortait 109,101,87 — un cran plus sombre)
     // (relecture du 14/10 : v_050 rejouée — l'appareil à 1,48 m, le fond à 6,5 m —, le grès sortait 56,49,38, brun et
     // sombre, pour 88,85,77 sur la vidéo : la lumière du couloir le chauffe ; une base plus claire et plus froide)
-    couloir: nommer(std({ map: texGres([112, 117, 120], '#5a5e61', 909, 6), roughness: 0.47 }), 'grès gris foncé du couloir'),
+    couloir: nommer(std({ map: texGres([110, 115, 118], '#595d60', 909, 6), roughness: 0.47 }), 'grès gris foncé du couloir'),
     // (relecture du 09/10 : #c6bfa6 sortait presque blanc sous les plafonniers ; mesuré sur v_063, le carrelage est d'un
     // tiers plus sombre que les murs)
     // (14/10 : des carreaux de 45 cm, et non de 60 — v_060, les joints des deux familles relevés à la transformée de Hough :
