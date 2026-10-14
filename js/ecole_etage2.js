@@ -23,7 +23,7 @@
 //                                                       l'extincteur x 13,78-14,225 y 7,96-8,59 ; au nord, la fenêtre DANS
 //                                                       le mur du panneau (y 11,1-11,8 : elle donne sur une courette)
 //   le vestibule (ascenseur) x 16,05-17,9  y 6,94-9,0   ouvert sur le palier au sud de la cage
-//   la porte coupe-feu      x 14,275-15,225 dans le mur y 7,9 (gonds à l'est, ouverte à demeure, rabattue côté palier)
+//   la porte coupe-feu      x 14,275-15,225 dans le mur y 7,9 (gonds à l'est, automatique, s'ouvre vers le palier)
 //   le sas                  x 13,72-15,5   y 6,5-7,84   (relecture : 0,55 m de mur à l'ouest de la porte, sa plaque)
 //   le couloir              x 3,3-15,9     y 4,65-6,5   mur nord rouge de x 4,84 à 12,0 ; porte du fond (x 3,3) fermée
 //   la salle 1 (cour)       x 3,6-12,95    y 6,62-11,55 porte x 12,0-12,9 (gonds à l'est, s'ouvre vers la salle)
@@ -749,8 +749,13 @@ export function poserEtage2(ch, renderer = null) {
     // (plan V2 du 11/10, etage2.md § 5 : automatique, le vantail s'ouvrait à 83° vers le palier et restait dressé en
     // x 15,2, de y 7,96 à 8,9 — il barrait la vue et le passage direct de la porte au vestibule de l'ascenseur. Ouvert à
     // demeure, rabattu contre le mur sud du palier à 165°, comme celui du palier est du 1er : la plaque verte est derrière)
-    const CF = ch.porte('x', Y_PAL, 14.75, { l: 0.95, h: 2.04, base: N2, ep: EP, modele: 'grise', etat: 'ouverte', angle: 2.88, cote: 'N', charniere: 'd',
-      oculus: { bas: 0.85, haut: 1.85, l: 0.12, bord: 0.2 }, poignee: null, feu: false, notices: 1, huisserie: false, matVantail: X.grisCF, nom: 'coupe-feu du 2e' });
+    // (14/10, rejouée au même point de vue : depuis le couloir, sur toutes les vues de la VO — q_0351 à q_0355, 88,0-88,7 s —
+    // elle est FERMÉE : le vantail gris, son oculus, la feuille A4, la plaque noire à côté ; ouverte à demeure, elle montrait
+    // à la place la volée rouge et le palier. Elle redevient automatique et s'ouvre toujours vers le palier (on la tire du
+    // palier, comme le cadreur à 72,2 s, q_0289-0292) ; son vantail ouvert n'arrête plus personne. L'oculus descend à
+    // 0,60 m : sur q_0354, la fente cerclée de bois va de 0,55-0,62 à 1,86 m)
+    const CF = ch.porte('x', Y_PAL, 14.75, { l: 0.95, h: 2.04, base: N2, ep: EP, modele: 'grise', etat: 'auto', libre: -1, cote: 'N', charniere: 'd',
+      oculus: { bas: 0.6, haut: 1.85, l: 0.12, bord: 0.2 }, poignee: null, feu: false, notices: 1, huisserie: false, matVantail: X.grisCF, nom: 'coupe-feu du 2e' });
     // (dans le repère du vantail : les gonds en x = 0, le vantail vers s ; +z côté sas, -z côté palier)
     for (const v of CF.vantaux) {
       const sv = v.s, w = 0.95, e = 0.04, o = { ombre: false };
