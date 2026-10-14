@@ -392,8 +392,9 @@ export class Portes {
       // autocollant : au milieu du vantail). Lisibles côté +z (le passage), le dos noir de l'autre côté.
       // (14/10, relecture — photo 07 agrandie : du hall, le dos n'est pas un rectangle NOIR opaque ; c'est l'adhésif vu
       // par transparence, gris-brun sombre, où « iris » se lit À L'ENVERS, plus clair : la même image retournée, éteinte)
+      // (14/10, relecture C1, photo 07 rejouée : presque noir, (60, 50, 45) — il sortait gris moyen, (120, 110, 100))
       const A = this._matAutocollant();
-      const D = this._dosAutocollant || (this._dosAutocollant = new THREE.MeshStandardMaterial({ map: A.map, color: 0x8d877f, roughness: 0.6, transparent: true, opacity: 0.74, depthWrite: false }));
+      const D = this._dosAutocollant || (this._dosAutocollant = new THREE.MeshStandardMaterial({ map: A.map, color: 0x4a453f, roughness: 0.6, transparent: true, opacity: 0.88, depthWrite: false }));
       const rangs = autocollants === true ? [[1.0, 4], [1.55, 4]] : autocollants;
       // (13/10 : une rangée peut donner sa place — [hauteur, nombre, x0, pas] : le premier à x0 des gonds, puis au pas)
       // (14/10 : et sa taille — [hauteur, nombre, x0, pas, largeur, hauteur de l'étiquette] ; 11 x 4 cm sinon)

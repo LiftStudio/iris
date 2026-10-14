@@ -490,6 +490,11 @@ export function poserMobilier(ch) {
       g.fillStyle = gr; g.fillRect(X(0.62), Y(1.55), X(0.38), Y(0.75) - Y(1.55));
       g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(X(0.62), Y(0.9), X(0.38), 3);
     }, null, false, 4);
+    // (relecture C1 du 14/10 : le reflet d'un spot du passage — celui de la réglette est — posait sur le haut du vitrage
+    // est une grosse tache claire et floue, au-dessus du reflet des tubes, que la photo 19 n'a pas : le verre de cette
+    // porte, presque mat au reflet des lampes, n'en garde rien ; les tubes, eux, s'y reflètent : js/carte_ecole.js)
+    let verreP = null;
+    pp.g.traverse((o) => { if (o.material && o.material.name === 'verre clair') { verreP = verreP || o.material.clone(); verreP.roughness = 0.6; verreP.envMapIntensity = 0.5; o.material = verreP; } });
     for (const v of pp.vantaux) {
       const reflet = new THREE.MeshBasicMaterial({ map: texReflet(v.s < 0), color: new THREE.Color(0.42, 0.42, 0.42), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
       reflet.name = 'reflet peint des vitrages du passage';

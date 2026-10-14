@@ -1476,6 +1476,18 @@ export function construireCarte(scene, renderer = null) {
   // (14/10, relecture : le passage fait 2,95 m — dix files de 29,5 cm, des carreaux de 30 x 60 recoupés aux murs)
   for (const t of [M.solPassage.map, M.solPassage.normalMap]) if (t) t.repeat.set(1 / 1.18, 1 / 1.18);
   M.solPassage.color.setRGB(0.72, 0.67, 0.6);
+  // (14/10, relecture C1 — photos 10, 07 et 19 rejouées : les joints du passage se devinent à peine, un trait un rien
+  // plus sombre ; le jeu les dessinait en lignes claires bien marquées, une grille qu'on voyait de la rue. L'image du
+  // carrelage, voilée de sa teinte moyenne à 55 %, et le relief des joints divisé par deux et demi.)
+  if (M.solPassage.map && M.solPassage.map.image && M.solPassage.map.image.width) {
+    const src = M.solPassage.map.image, cv = document.createElement('canvas'); cv.width = src.width; cv.height = src.height;
+    const g = cv.getContext('2d'); g.drawImage(src, 0, 0);
+    const d = g.getImageData(0, 0, cv.width, cv.height).data, moy = [0, 0, 0];
+    for (let i = 0; i < d.length; i += 4) { moy[0] += d[i]; moy[1] += d[i + 1]; moy[2] += d[i + 2]; }
+    const n = d.length / 4; g.globalAlpha = 0.55; g.fillStyle = `rgb(${moy.map((v) => Math.round(v / n)).join(',')})`; g.fillRect(0, 0, cv.width, cv.height);
+    const t = M.solPassage.map.clone(); t.image = cv; t.needsUpdate = true; M.solPassage.map = t;
+  }
+  if (M.solPassage.normalScale) M.solPassage.normalScale.multiplyScalar(0.4);
   const solP = new THREE.Mesh(geoSol([[1.6, -0.4, 4.715, 4.05, 'droit', 1.75, 0]]), M.solPassage); solP.receiveShadow = true; nePasFusionner(solP);
   scene.add(solP);
   // LE « TERRAIN » que lisent le rendu et l'ombre cuite (js/fx.js setReflet, js/kit_decor.js) : un plan invisible qui
@@ -1886,10 +1898,15 @@ export function construireCarte(scene, renderer = null) {
   // la porte à 0,93 pour 0,39 —, et le pied du passage, gris neutre au jour de la rue, sortait doré. La teinte du voile
   // suit maintenant la hauteur en trois temps : le pied neutre, une bande SOMBRE de 0,25 à 1,25 m — on y voit le sol,
   // le bas des murs et le bas de la porte —, la teinte du 13/10 au-dessus de 1,75 m, où sont les tubes.)
-  const TEINTE_VOILE = [0.46, 0.39, 0.29];
+  // (14/10, relecture — photo 10 rejouée à sa pose, les teintes prises telles quelles, sans passer par la pierre de la
+  // façade, que le jeu rend plus sombre que la photo — (144, 145, 139) contre (215, 215, 213) : les rapports à la pierre
+  // assombrissaient tout. Le jeu restait deux fois trop sombre et sans bleu : le sol au milieu à (42, 27, 10) pour (70,
+  // 55, 39), près du seuil à (71, 62, 53) pour (111, 104, 97), le bas du mur ouest à (77, 51, 20) pour (137, 109, 72), le
+  // plafond à (92, 70, 47) pour (117, 97, 72). La bande sombre s'éclaircit et reprend du bleu, le haut aussi.)
+  const TEINTE_VOILE = [0.56, 0.5, 0.4];
   const texVoile = canvasTex(4, 64, (g, w, h) => {
     const s = (v) => Math.round(255 * Math.pow(v, 1 / 2.2));
-    const PTS = [[0, [0.42, 0.44, 0.5]], [0.25, [0.2, 0.15, 0.09]], [1.25, [0.2, 0.15, 0.09]], [1.75, TEINTE_VOILE], [2.45, TEINTE_VOILE]];
+    const PTS = [[0, [0.6, 0.6, 0.62]], [0.25, [0.42, 0.37, 0.3]], [1.25, [0.42, 0.37, 0.3]], [1.75, TEINTE_VOILE], [2.45, TEINTE_VOILE]];
     for (let j = 0; j < h; j++) {
       const z = ((h - 1 - j) / (h - 1)) * 2.45, k = Math.max(1, PTS.findIndex((p) => p[0] >= z)), [z0, a] = PTS[k - 1], [z1, b] = PTS[k];
       const q = Math.max(0, Math.min(1, (z - z0) / (z1 - z0))), f = q * q * (3 - 2 * q);
@@ -1908,16 +1925,27 @@ export function construireCarte(scene, renderer = null) {
   // il ÉCLAIRCIT ce qu'on voit au travers — dst × (1 + teinte) — et s'efface quand la caméra, ou Haythem, arrive à la
   // porte, comme l'œil s'habitue (`maj`, plus bas). Le contre-jour de la photo 07 — les cadres sombres — n'est pas
   // cherché : c'est l'exposition de l'appareil ; le jeu garde celle de la photo 06, le hall juste et le passage clair.
-  const voileHall = new THREE.Mesh(new THREE.PlaneGeometry(2.25, 2.47),
-    new THREE.MeshBasicMaterial({ color: 0x000000, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.DstColorFactor, blendDst: THREE.OneFactor, transparent: true, depthWrite: false, toneMapped: false, fog: false }));
-  voileHall.name = 'voile du passage (vu du hall)'; voileHall.position.set(3.575, 1.235, -(4.05 - 0.075)); voileHall.rotation.y = Math.PI; voileHall.renderOrder = 1;
-  voileHall.castShadow = false; voileHall.userData.horsAOSol = true; voileHall.userData.sansNormales = true;
-  nePasFusionner(voileHall); scene.add(voileHall);
   // (14/10, relecture — photos 06 et 07 rejouées à leur pose, rapportées au mur blanc du hall : vu du hall, le passage
   // est d'un blanc FROID — photo 06, son mur à (179, 182, 197) et son sol à (137, 135, 145) ; photo 07, son sol gris
   // neutre (111, 110, 112), la porte « Sortie » blanche (185, 183, 178) — ; le jeu le rendait crème, (195, 184, 163),
-  // et son sol beige, (139, 131, 116). Plus de bleu, un peu moins de rouge : 0,98 / 1,30 / 2,77 et non 1,2 / 1,26 / 1,4.)
-  const TEINTE_HALL = [0.98, 1.3, 2.77];
+  // et son sol beige, (139, 131, 116). Plus de bleu, un peu moins de rouge : 1,0 / 1,25 / 2,4 et non 1,2 / 1,26 / 1,4.
+  // Mais pas partout : à hauteur des tubes — de 1,55 à 2,0 m sur le voile, pour l'appareil des photos 06 et 07 —, le
+  // haut des murs reste JAUNE, (200, 170, 100) près de la réglette ouest sur la photo 07 : la teinte d'avant ; et
+  // plus haut, où l'on voit le plafond, d'un blanc à peine froid. Une image, multipliée par `q × 3` : `maj`.)
+  const texHall = canvasTex(4, 64, (g, w, h) => {
+    const s = (v) => Math.round(255 * Math.pow(v / 3, 1 / 2.2)), BAS = [1.0, 1.25, 2.4], TUBES = [1.2, 1.26, 1.4], HAUT = [1.05, 1.2, 1.9];
+    const PTS = [[0, BAS], [1.2, BAS], [1.55, TUBES], [2.0, TUBES], [2.25, HAUT], [2.47, HAUT]];
+    for (let j = 0; j < h; j++) {
+      const z = ((h - 1 - j) / (h - 1)) * 2.47, i1 = PTS.findIndex((p) => p[0] >= z), k = i1 < 0 ? PTS.length - 1 : Math.max(1, i1);
+      const [z0, a] = PTS[k - 1], [z1, b] = PTS[k], q = Math.max(0, Math.min(1, (z - z0) / (z1 - z0))), f = q * q * (3 - 2 * q);
+      g.fillStyle = `rgb(${a.map((t, i) => s(t + (b[i] - t) * f)).join(',')})`; g.fillRect(0, j, w, 1);
+    }
+  }, null, false, 1);
+  const voileHall = new THREE.Mesh(new THREE.PlaneGeometry(2.25, 2.47),
+    new THREE.MeshBasicMaterial({ color: 0x000000, map: texHall, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.DstColorFactor, blendDst: THREE.OneFactor, transparent: true, depthWrite: false, toneMapped: false, fog: false }));
+  voileHall.name = 'voile du passage (vu du hall)'; voileHall.position.set(3.575, 1.235, -(4.05 - 0.075)); voileHall.rotation.y = Math.PI; voileHall.renderOrder = 1;
+  voileHall.castShadow = false; voileHall.userData.horsAOSol = true; voileHall.userData.sansNormales = true;
+  nePasFusionner(voileHall); scene.add(voileHall);
 
   // ---- LES CROCHETS : le mobilier, la rue ----
   poserMobilier(ch);
@@ -2048,7 +2076,7 @@ export function construireCarte(scene, renderer = null) {
       // Haythem, nul à 0,7 m de la porte et dans le passage, entier à 2,2 m ; au rez-de-chaussée seulement)
       const q = cam.y > -0.5 && cam.y < 3.2 ? sat((-cam.z - 4.05 - 0.3) / 1.5) * (yH > 4.05 ? sat((Math.hypot(u.x - 3.575, yH - 4.05) - 0.7) / 1.5) : 0) : 0;
       voileHall.visible = q > 0.01;
-      voileHall.material.color.setRGB(q * TEINTE_HALL[0], q * TEINTE_HALL[1], q * TEINTE_HALL[2]);
+      voileHall.material.color.setScalar(q * 3);
       // (le reflet des réglettes : la caméra du côté du passage — ou de la rue —, au rez-de-chaussée, la porte fermée)
       // (le voile de la cage, vu du hall : entier, nul quand Haythem est à 0,7 m de la porte ou dans la cage)
       if (ch.voileCage) {
