@@ -452,7 +452,8 @@ function matieresEst() {
     // fines et basses)
     // (14/10, photos 25 et 26 rejouées à leur pose : les girons rendent 0,20 à 0,26 du mur voisin (0,37 pour le premier, sous le
     // hublot du vestibule) — le jeu 0,09 à 0,17, presque noirs : le fond une fois et demie plus clair)
-    giron: std({ map: texMouchete({ fond: [45, 42, 37], taches: [[[62, 59, 54], 0.5], [[31, 29, 27], 0.6]], n: 5000, tuile: 0.5, w: 256, graineN: 17, nuee: 4 }), roughness: 0.66 }, 'giron moucheté'),
+    // (14/10, relecture, photo 25 : gris-vert neutre — R/V/B 1/1/0,85 ; sous la lumière chaude, le fond du jeu sortait brun)
+    giron: std({ map: texMouchete({ fond: [47, 49, 46], taches: [[[64, 66, 62], 0.5], [[32, 33, 31], 0.6]], n: 5000, tuile: 0.5, w: 256, graineN: 17, nuee: 4 }), roughness: 0.66 }, 'giron moucheté'),
     // (le béton peint des volées et des paliers : vu d'en dessous, il ne reçoit que le rebond — sur la photo 25, la
     // sous-face au-dessus de la volée 1 est presque aussi claire que les murs : un léger émissif, comme les plafonds)
     // (relecture du lot H, 11/10, photo 25 rejouée : la sous-face de la volée 3 et du palier à 5,05 m, juste au-dessus
@@ -471,7 +472,7 @@ function matieresEst() {
     bande: std({ color: 0x1b1b1b, roughness: 0.42 }, 'bande antidérapante'),
     // (lot H, 11/10, photo 25 : la plinthe rampante est GRIS FONCÉ, du ton des contremarches dans l'ombre — noire, elle
     // dessinait de larges coins noirs le long des volées)
-    limon: std({ color: 0x2a2826, roughness: 0.55, side: THREE.DoubleSide }, 'plinthe rampante gris foncé'),
+    limon: std({ color: 0x47443f, roughness: 0.55, side: THREE.DoubleSide }, 'plinthe rampante gris foncé'),
     rail: std({ color: 0x1e1c1a, roughness: 0.36, metalness: 0.35 }, 'main courante noire'),
     // (13/10, photo 24 à sa pose refaite : le semi-fixe du hall rend 0,61 du mur blanc de la niche, le grand vantail du
     // vestibule 0,44 dans l'ombre — à #9d978f ils sortaient à 0,85 et 0,57, beige clair)
@@ -734,7 +735,9 @@ function mainCourante(ch, parent, pts, consoles, ecart = 0.079) {
 // LA PLINTHE RAMPANTE NOIRE (photos 25, 26) : au pied du mur, une bande de 13 cm qui suit la ligne des nez et descend
 // en dents de scie sur les marches. Sur le mur de face `y` (plan), une volée de `x0` dans le sens `sens`.
 function limon(ch, parent, { x0, sens, y, b, n, r, g, cote }) {
-  const xs = (s) => x0 + sens * s, hn = (s) => b + r + s * r / g + 0.13;
+  // (14/10, relecture, photo 25 au même point de vue : de chaque côté de la volée, la plinthe est une bande GRISE de 50 à
+  // 60 px, plus claire que les marches ; celle du jeu, 13 cm et presque noire, en faisait 90 : 10 cm, un gris moyen)
+  const xs = (s) => x0 + sens * s, hn = (s) => b + r + s * r / g + 0.1;
   const sh = new THREE.Shape(), fin = (n - 1) * g;
   sh.moveTo(xs(-0.05), b);
   sh.lineTo(xs(0), b);
@@ -1068,7 +1071,9 @@ export function poserEst(ch, { RECT }) {
     // (14/10, RELECTURE, photo 24 au même point de vue : autour de chaque hublot, le jeu creusait une COURONNE SOMBRE en
     // dents de scie, large de 8 cm — l'occlusion ambiante de l'écran (GTAO, à demi-définition), qui prenait la vasque et
     // son cercle, à 1 cm du plafond, pour un creux ; sur la photo, c'est là que le plafond est le plus clair. La vasque,
-    // le cercle et ses pattes sortent de la passe de normales de l'occlusion (userData.sansNormales, js/fx.js _decoupes))
+    // le cercle et ses pattes sortent de la passe de normales de l'occlusion (userData.sansNormales, js/fx.js _decoupes) —
+    // et de la fusion du décor, qui leur ferait perdre la marque (userData.nofuse, js/kit_decor.js))
+    g.userData.nofuse = true;
     g.traverse((m) => { m.userData.sansNormales = true; });
     // (son auréole au plafond, large : photo 24, un halo clair de près d'un mètre autour de chaque hublot)
     // (13/10 : 1,5 m — à 0,7 m du hublot du nord, le plafond rend encore 0,70 du mur blanc de la niche ; 0,60 dans le jeu)
@@ -1115,7 +1120,7 @@ export function poserEst(ch, { RECT }) {
   // clair que le plafond du couloir, on ne l'y distingue pas ; dans le jeu, où nulle lampe ne regarde vers le haut, c'était
   // une bande brune en travers du haut de l'image — un parement clair sous la traverse, émissif comme les plafonds)
   {
-    const m = X.bois.clone(); m.name = 'dessous de la traverse (porte du vestibule)'; m.emissive = new THREE.Color(0xd8c4a8); m.emissiveIntensity = 0.5;
+    const m = X.bois.clone(); m.name = 'dessous de la traverse (porte du vestibule)'; m.emissive = new THREE.Color(0xd8c4a8); m.emissiveIntensity = 0.3;
     B(ch, D, 14.70, E.yE - 0.083, E.x0, E.yE + 0.083, 2.057, 2.0605, m, { ombre: false });
   }
   // (10/10 : OUVERT À DEMEURE, rabattu côté couloir devant le mur jaune — VO q_0051-0055 et q_0151 : on voit sa face, son
@@ -1211,7 +1216,12 @@ export function poserEst(ch, { RECT }) {
   // (10/10 : sa plinthe s'arrête au dégagement — au nord, la cage descend au -1, js/ecole_soussol_est.js)
   mur(ch, D, { de: [19.95, 7.65], a: [19.95, 9.075], ep: 0.3, h: N1, mats: B0, plinthes: ['W'] });
   mur(ch, D, { de: [19.95, 9.075], a: [19.95, 12.6], ep: 0.3, h: N1, mats: B0 });
-  mur(ch, D, { de: [E.x0, E.yE], a: [E.xP, E.yE], h: N1, mats: B0 });
+  // (14/10, relecture, photo 25 : la face de l'échiffre côté volée 1, que le tube du palier n'éclaire pas, rend 0,81 du mur
+  // nord — 0,99 dans le jeu, les deux murs de la volée aussi clairs l'un que l'autre : la même peinture, dans l'ombre)
+  {
+    const Bn = M.blanc.clone(); Bn.name = 'peinture blanche (échiffre, côté volée 1, dans l\'ombre)'; Bn.color.multiplyScalar(0.85);
+    mur(ch, D, { de: [E.x0, E.yE], a: [E.xP, E.yE], h: N1, mats: { N: Bn, S: B0 } });
+  }
   // LE PALIER INTERMÉDIAIRE (1,75 m) contre le mitoyen ; ses plinthes ; le monde solide. (10/10 : une DALLE de 25 cm et
   // non plus un plein — dessous, le palier bas de la descente au -1, à -1,53 m)
   B(ch, D, E.xP, E.bS[0], E.xM, E.bN[1], E.hP1 - 0.25, E.hP1 - 0.02, X.beton);
@@ -1306,7 +1316,7 @@ export function poserEst(ch, { RECT }) {
   // mur du palier blanc neutre, #b6af9b, aussi clair que le mur nord ; sous la lumière chaude des plafonniers, il sortait
   // pêche, #dbc2a3)
   ch.lampes.push({ x: E.xM - 0.25, z: -10.7, h: E.hP1 + 2.65, zone: 'escEst', type: 'tube', force: 0.85, base: E.hP1, cuire: false, couleur: REGLETTE_EST });
-  sortieEst(ch, E.xM - 0.03, 10.72, E.hP1 + 3.04, 'W');
+  sortieEst(ch, E.xM - 0.03, 10.72, E.hP1 + 3.04, 'W').scale.y = 1.3;   // (14/10 : 0,16 m de haut, comme relevé — il en faisait 0,125)
   ch.panneau(matPanneau(texAfficheIris(), 0.55), 0.5, 0.7, E.xM - 0.004, 10.48, E.hP1 + 2.08, 'W');
   // (pour la caméra : le dessous du palier de la volée 3, au-dessus du palier intermédiaire)
   C.plafond(E.xP, -E.bS[0], E.xM, -E.bN[1], E.hP2 - 0.25);
