@@ -1222,6 +1222,19 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     B(x0 + 0.03, ya, x0 + 0.04, ya + lf, Y_SS + 0.08, Y_SS + 0.18, X.vitreNoire, { ombre: false });
   };
 
+  // DOUTE MESURÉ (14/10, à reprendre — scratchpad iris_C4) : depuis la porte, la vidéo ne montre PAS la pause du plan.
+  // Sur v_060 et v_063, les joints du carrelage donnent deux points de fuite orthogonaux (focale 962 et 1 039 px, celle
+  // de la volée), l'appareil à 1,35 m (l'assise du Tolix et le plateau du mange-debout retombent juste), et alors :
+  //   - le mur vert est à 2,75 m au nord de l'appareil (ici 3,5) ; les cinq mange-debout à 0,85 m de lui (ici 0,45) ;
+  //   - la cloison dépolie, le premier mange-debout et la porte de la grande salle sont 2,6 à 2,9 m plus à l'OUEST (le
+  //     jambage ouest de la porte vers x 5,9 du repère de la pause, ici 8,85) ;
+  //   - vers l'est-sud-est (caps 100 à 140°), le sol est libre sur 6 à 8 m — ici, le retour sud et son affiche « 100 % »
+  //     barrent la vue à 0,6 m ; le mur du trombinoscope, de la tablette et de la porte sombre est à ≈ 6 m à l'est de
+  //     l'appareil (ici 10,4) et ces trois-là 5 à 7 m plus au SUD que la porte (ici 1,7 à 2,5 m).
+  // La pause réelle serait une salle d'environ 5,6 m d'est en ouest, longue vers le sud. Pas reprise ici : sans photo de
+  // son mur sud ni de son angle sud-est, le plan resterait à ± 1 m, et la grande salle (VO de 2021, sa porte) ne tient
+  // plus dans la parcelle si on la recale (x < 0). Les deux photos qui trancheraient : depuis la porte sombre vers le
+  // nord-ouest, et depuis l'angle du mur vert vers le sud.
   function meublerPause() {
     // LA PORTE GRISE G du mur sud de l'aile (vidéo officielle, q_0135, q_0137-q_0139 : à droite du trombinoscope de
     // 2021, oculus étroit cerclé de bois, ferme-porte côté salle) : fermée — ce qu'il y a derrière n'est pas vu
