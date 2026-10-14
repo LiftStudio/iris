@@ -1051,9 +1051,11 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
         p.position.set(v.s * x, y, -0.024); p.rotation.y = Math.PI; p.castShadow = false; v.g.add(p);
       }
     };
-    // (14/10 : une seule — celle du hall ; la porte du couloir n'existe pas, DY_P, js/ecole_amphi.js)
+    // (14/10 : une seule — celle du hall ; la porte du couloir n'existe pas, DY_P, js/ecole_amphi.js. Elle s'ouvre
+    // TOUJOURS VERS LE HALL : Haythem la tire à lui, v_054 à v_058 ; ouverte vers la pause, son vantail barrait la vue
+    // vers l'est-sud-est de v_059 à v_061)
     for (const [c, nom] of [[PORTE_HALL, 'hall -1 → pause']]) {
-      const P = ch.porte('y', X_MUR, c, { l: L_PORTE, h: 2.04, ep: EP_MUR, base: Y_SS, modele: 'grise', poignee: 'tirant', etat: 'auto', cote: 'E', libre: null, nom });
+      const P = ch.porte('y', X_MUR, c, { l: L_PORTE, h: 2.04, ep: EP_MUR, base: Y_SS, modele: 'grise', poignee: 'tirant', etat: 'auto', cote: 'E', libre: -1, nom });
       papiers(P, 2);
       // (par l'oculus, l'espace pause : v_043, v_055 — un verre clair)
       P.g.traverse((o) => { if (o.isMesh && o.material === M.vitreFente) o.material = M.verre; });
