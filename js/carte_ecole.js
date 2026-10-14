@@ -1238,7 +1238,10 @@ function construireMurs(ch) {
   ch.mur({ de: [4.715, 0], a: [4.715, 4.05], ep: 0.03, mats: { W: CR, E: B } });
   {
     const brun = new THREE.MeshStandardMaterial({ color: 0x3b3029, roughness: 0.7 }); brun.name = 'bâti de la grille, face intérieure (passage)';
-    for (const [a, b, h0] of [[1.75, 2.175, 0], [4.425, 4.7, 0], [2.175, 4.425, 2.45]]) ch.boite(a, 0, b, 0.006, h0, 2.595, brun, { ombre: false });
+    // (intégration v2.0 : l'ouverture monte maintenant à 2,57 — le linteau de la relecture de la rue, photo 10, où le
+    // plafond du passage se voit juste sous le linteau, de part et d'autre du boîtier. Pendue à 2,45, la bande du haut
+    // barrait l'ouverture vue de la rue : elle part de 2,57.)
+    for (const [a, b, h0] of [[1.75, 2.175, 0], [4.425, 4.7, 0], [2.175, 4.425, 2.57]]) ch.boite(a, 0, b, 0.006, h0, 2.595, brun, { ombre: false });
     for (const [a, b] of [[1.75, 2.175], [4.425, 4.7]]) ch.boite(a, 0, b, 0.018, 0, 0.1, brun, { ombre: false });   // (devant la plinthe de bois de la façade)
   }
   // (r03, 12/10 : le mur sud de la salle recule de 0,20 — DY_R03 — ; ce mur s'arrête à son nu, 4,675)
@@ -2243,10 +2246,12 @@ export function construireCarte(scene, renderer = null) {
       g.fillStyle = `rgb(${a.map((t, i) => s(t + (b[i] - t) * f)).join(',')})`; g.fillRect(0, j, w, 1);
     }
   }, null, false, 1);
-  // (intégration v2.0 : jusqu'au linteau de la rue, 2,57 — à 2,45, une bande de 12 cm du plafond restait claire)
+  // (intégration v2.0 : jusqu'au linteau de la rue, 2,57 — à 2,45, une bande de 12 cm du plafond restait claire ; et au nu
+  // EXTÉRIEUR de la façade, y −0,43 — derrière le seuil, le sol pris dans l'épaisseur du mur, y −0,44 à −0,13, restait
+  // clair : sur la photo 10, la bande claire n'est que le seuil, y −0,44 à −0,63, et le sol du passage commence sombre)
   const voilePassage = new THREE.Mesh(new THREE.PlaneGeometry(2.25, 2.57),
     new THREE.MeshBasicMaterial({ map: texVoile, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.DstColorFactor, blendDst: THREE.OneMinusSrcAlphaFactor, premultipliedAlpha: true, opacity: 0, transparent: true, depthWrite: false, toneMapped: false, fog: false }));
-  voilePassage.name = 'voile du passage (vu de la rue)'; voilePassage.position.set(3.3, 1.285, 0.13); voilePassage.renderOrder = 4;
+  voilePassage.name = 'voile du passage (vu de la rue)'; voilePassage.position.set(3.3, 1.285, 0.43); voilePassage.renderOrder = 4;
   voilePassage.castShadow = false; voilePassage.userData.horsAOSol = true; voilePassage.userData.sansNormales = true;
   nePasFusionner(voilePassage); scene.add(voilePassage);
   // LE PASSAGE VU DU HALL (14/10, photos 06 et 07 — l'inverse : du hall ouest, par la porte vitrée, le passage est en
