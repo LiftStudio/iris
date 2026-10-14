@@ -58,6 +58,12 @@
 // luminaires en 3 x 3 et pas de diffuseur à fentes, le vidéoprojecteur au sud du milieu du tableau, le caisson gris et
 // le meuble noir à 1,25 m, les stores de toute la hauteur, les embrasures brun-noir, la 6e fenêtre plus large et d'un
 // seul vantail, pas de convecteur ; dans la salle 2, des fenêtres d'un seul vantail et l'allège à 0,85.
+// LA RELECTURE DU 14/10 (chaque plan de la VO, q_0277-0361 et 25 i/s, rejoué au même point de vue, côte à côte et en fondu,
+// iris_C6/) : le couloir à 2,58 sous plafond et l'imposte de D1 à 2,45 (deux rapports pris dans un même plan) ; le rebond
+// du mur rouge peint sur le mur sud et le plafond ; la porte coupe-feu fermée vue du couloir (automatique), son oculus
+// dès 0,60 ; l'affiche du mur rouge étroite et blanche, celle du mur sud de 0,40 x 0,80 ; les chaises « ISO » ; le lino
+// plus rosé ; au palier, poussoir et prise blancs, plinthe grise, extincteur accroché ; dans la salle 1, les stores en
+// traits sombres à contre-jour, le cadre des fenêtres de 10 cm, l'extincteur accroché, la table contre le poteau.
 //
 // LES PIÈGES D'UN NIVEAU DE PLUS (ceux du 1er, js/ecole_etage1.js, et du sous-sol, js/ecole_soussol.js) :
 //   1. des SOLS (C.sol à 6,60) sous tout ce qu'on foule, la cage exceptée : sinon solEn rendrait le plancher du 1er ;
