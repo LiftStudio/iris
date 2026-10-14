@@ -67,7 +67,9 @@ const H_DALLE = 3.25;                       // le dessous de la dalle du 1er ét
 // (retour de Haythem du 12/10, r03 : la salle d'attente s'élargit — son mur sud, le mur nord de la Si 0.1, recule de
 // 0,20 vers la rue, ligne 4,6, js/carte_ecole.js DY_R03 — : la Si 0.1, imaginée, perd 0,20 m de profondeur)
 const DY_R03 = -0.20;
-const SA = { x0: 4.575, x1: 9.9, y0: 0, y1: 4.725 + DY_R03 };   // la Si 0.1, l'ex-salle A
+// (14/10, relecture du passage : son mur est recule — une cloison mince, nu 4,73 côté salle ; la Si 0.1 y perd 15,5 cm,
+// le poste de l'enseignant glisse d'autant vers l'est — js/carte_ecole.js construireParoiPassage)
+const SA = { x0: 4.73, x1: 9.9, y0: 0, y1: 4.725 + DY_R03 };   // la Si 0.1, l'ex-salle A
 // (retour de Haythem du 11/10, r02 : son angle nord-est, x 9,09-9,9 × y 3,0-4,725, est à l'antichambre — le mur sud de
 // la salle d'attente s'arrête en x 9,24 ; le retour x 9,165 porte sa porte, js/carte_ecole.js)
 const BB = { x0: 10.05, x1: 13.2, y0: 0, y1: 2.85 };        // le bureau B (jusqu'à son mur nord, la ligne y 2,925)
@@ -115,7 +117,8 @@ const ZONES = [
   // (r03, 12/10 : jusqu'à l'axe du mur sud de la salle d'attente, la ligne 4,6)
   // (r07, 14/10 : elle reprend l'angle x 9,165-9,975 jusqu'à l'axe du mur du redan, y 4,05 — sa porte est dans le mur
   // x 9,975, js/carte_ecole.js)
-  { ...zone('si01', SA, { x: 7.7, y: 1.6, z: -2.45 }), rects: [[4.5, -(4.8 + DY_R03), 9.165, -SA.y0, -1], [9.165, -4.05, 9.975, -SA.y0, -1]] },
+  // (relecture C1, 14/10 : elle commence à la cloison mince du passage, x 4,715)
+  { ...zone('si01', SA, { x: 7.7, y: 1.6, z: -2.45 }), rects: [[4.715, -(4.8 + DY_R03), 9.165, -SA.y0, -1], [9.165, -4.05, 9.975, -SA.y0, -1]] },
   // (10/10 : le bureau B a perdu son angle nord-est, le passage au sud-ouest de la pile du hall ; 11/10 : jusqu'aux axes de
   // ses murs — retour r02 : son mur nord est la ligne y 3,1, la ligne 2,925 à la relecture ; js/carte_ecole.js et
   // js/ecole_rdc_centre.js)
@@ -1056,13 +1059,15 @@ function salleA(ch, P) {
   // écran tourné vers lui ; derrière le fauteuil, l'allée ouest reste libre (0,75 m jusqu'au premier rang) ----
   // (r03 : contre le mur nord, qui recule de 0,20 — DY_R03)
   const yN = DY_R03;
-  table(ch, P, 4.63, 5.25, 4.1 + yN, 4.7 + yN, { voile: false });
-  ecranPC(ch, P, 4.94, 4.5 + yN, 0.745, 'S', P.ecrans[4]);
-  clavier(ch, P, 4.9, 4.24 + yN, 0.745, 'S');
-  const doc = groupe(ch, 5.14, 4.32 + yN, 'S', 0.745); B(doc, P.blancMat, 0.21, 0.02, 0.3, 0, 0.01, 0, { ombre: false }); doc.rotation.y += 0.25;
-  chaiseBureau(ch, P, 4.94, 3.72 + yN, 'N', { accoudoirs: true, nom: 'le fauteuil de l’enseignant', sortie: [0.55, -0.45] });
-  corbeille(ch, P, 4.76, 3.3 + yN);
-  C.ajouterCercle(4.76, -(3.3 + yN), 0.16, { y1: 0.4 });
+  // (14/10 : le mur ouest au nu 4,73 — la table suit le mur et perd 10 cm, x 4,785-5,30 ; son écran, son clavier, son
+  // fauteuil et la corbeille glissent de 10 à 15 cm ; il reste 0,70 m jusqu'aux tables des rangs, 0,81 avant)
+  table(ch, P, 4.785, 5.3, 4.1 + yN, 4.7 + yN, { voile: false });
+  ecranPC(ch, P, 5.04, 4.5 + yN, 0.745, 'S', P.ecrans[4]);
+  clavier(ch, P, 5.0, 4.24 + yN, 0.745, 'S');
+  const doc = groupe(ch, 5.18, 4.32 + yN, 'S', 0.745); B(doc, P.blancMat, 0.21, 0.02, 0.3, 0, 0.01, 0, { ombre: false }); doc.rotation.y += 0.25;
+  chaiseBureau(ch, P, 5.04, 3.72 + yN, 'N', { accoudoirs: true, nom: 'le fauteuil de l’enseignant', sortie: [0.55, -0.45] });
+  corbeille(ch, P, 4.915, 3.3 + yN);
+  C.ajouterCercle(4.915, -(3.3 + yN), 0.16, { y1: 0.4 });
   // ---- la toile de projection, descendue devant les jours dépolis, au droit des rangs ----
   // (r03 : plaquée contre le mur, son carter à 5 cm du nu, y 4,525 — y 4,42 et non 4,6 - 0,20)
   const tl = groupe(ch, 7.7, 4.42, 'S');
@@ -1275,7 +1280,8 @@ function couloirService(ch, P) {
   ch.mur({ de: [-0.15, 0], a: [-0.15, 5.0], ep: 0.3, mats: M.blanc, plinthes: ['E'] });
   ch.mur({ de: [-0.3, 14.0], a: [1.675, 14.0], mats: M.blanc });
   // les plinthes du mur du passage et du hall, côté couloir (la porte laissée libre)
-  for (const [a0, a1] of [[0, 1.15], [2.05, SV.y1]]) plinthe(ch, 'y', SV.x1, a0, a1, -1);
+  // (14/10 : la porte « Sortie » du passage, 30 cm plus près de la rue — js/carte_ecole.js construireMurs)
+  for (const [a0, a1] of [[0, 0.85], [1.75, SV.y1]]) plinthe(ch, 'y', SV.x1, a0, a1, -1);
   // le plafond de plâtre, les hublots, le bloc de sortie au-dessus de la porte de secours
   ch.plafond(SV.x0, SV.y0, SV.x1, SV.y1, 2.45, 'platre');
   for (const y of [1.0, 3.6]) ch.opale(0.8, y, 2.45, 'service', { r: 0.15 });

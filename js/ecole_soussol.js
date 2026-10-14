@@ -110,6 +110,11 @@ const Y_RET = 14.08 + DY_SS, ECH = 2.95;
 const rampant = (y) => ECH - (y - ESC.y0) * ESC.R / ESC.G;
 const Y_RAMP0 = ESC.y0 + (ECH - H_PALIER) * ESC.G / ESC.R;   // 6,65 : le rampant quitte le plafond du palier
 const Y_RAMP1 = Y_RET;                                        // 9,99 : ... et bute sur la face de la retombée
+// LA VOLÉE 2 DE L'ESCALIER PRINCIPAL passe au-dessus de la trémie (13/10, à sa vraie pente — photo 06, js/carte_ecole.js
+// construireEscalier : 16 contremarches de 0,175 sur des girons de 0,366, du palier à 0,70, pied en y 11,49, au 1er en
+// y 6,0, entre x 0,75 et 1,975) : la sous-face de son limon, 0,44 sous les nez — 3,06 en y 6,0, 2,75 au départ du
+// rampant, 1,03 au bout nord de la trémie ; partout 0,25 m au moins au-dessus du rampant
+const SOUS_V2 = (y) => 0.44 + (11.49 - y) * 0.175 / 0.366;
 // ---- le plan ----
 const X_MUR = 2.485, EP_MUR = 0.13;       // le mur entre couloir (et hall) et espace pause
 const PORTE_PAUSE = 12.15 + DY_SS, PORTE_HALL = 14.85 + DY_SS, L_PORTE = 1.0;      // 8,06 et 10,76
@@ -700,9 +705,14 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // jusqu'à la dalle, la cloison du sous-sol prend le relais en dessous) ; au nord, le dos de la réserve ouest (fermée)
     // (finitions du 11/10 : au nord de y 8,3, l'un et l'autre s'arrêtent à 1,55 — au-dessus du rampant, sous la volée 2 de
     // l'escalier principal, qui passe au-dessus de la trémie : js/carte_ecole.js construireEscalier)
-    B(1.35, ESC.y0, 1.6, 8.3, DALLE, 3.25, M.blanc, { ombre: false, collision: true });
-    B(1.35, 8.3, 1.6, 10.25, DALLE, 1.55, M.blanc, { ombre: false, collision: true });
-    B(0.2, 10.175, 1.35, 10.25, DALLE, 1.55, M.blanc, { ombre: false, collision: true });
+    // (13/10, la volée 2 à sa vraie pente — SOUS_V2, en tête : elle couvre la trémie de y 6,0, où elle arrive au 1er, à
+    // son bout nord ; le mur est monte par pans de 50 cm jusque sous son limon, au-dessus du rampant, et le dos de la
+    // réserve s'arrête à 1,0)
+    for (let ya = ESC.y0; ya < 10.25 - 1e-6; ya += 0.5) {
+      const yb = Math.min(10.25, ya + 0.5);
+      B(1.35, ya, 1.6, yb, DALLE, Math.min(3.25, SOUS_V2(yb) - 0.04), M.blanc, { ombre: false, collision: true });
+    }
+    B(0.2, 10.175, 1.35, 10.25, DALLE, SOUS_V2(10.25) - 0.04, M.blanc, { ombre: false, collision: true });
     // le SOL du palier : béton peint taupe (lumière et ombre cuites du rez-de-chaussée : uv1 sur RECT)
     const sol = new THREE.Mesh(geoSolNiveau([[0.0, Y_PAL, 1.6, ESC.y0]], 0, RECT), matPalier);
     sol.receiveShadow = true; sol.name = 'sol du palier'; nePasFusionner(sol); decor0.add(sol);
@@ -781,8 +791,11 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // du rez-de-chaussée : au palier, le joueur d'en haut ne passe pas)
     // (finitions du 11/10 : au nord de y 8,3, jusqu'à 1,55 seulement — au-dessus passe la volée 2 de l'escalier principal,
     // js/carte_ecole.js construireEscalier)
-    C.ajouterBoite(x1, -ESC.y0, 1.5, -8.3, { y0: Y_SS, y1: 3.25 });
-    C.ajouterBoite(x1, -8.3, 1.5, -ESC.yPied, { y0: Y_SS, y1: 1.55 });
+    // (13/10 : sous le limon de la volée 2 à sa vraie pente, par pans de 50 cm — SOUS_V2)
+    for (let ya = ESC.y0; ya < ESC.yPied - 1e-6; ya += 0.5) {
+      const yb = Math.min(ESC.yPied, ya + 0.5);
+      C.ajouterBoite(x1, -ya, 1.5, -yb, { y0: Y_SS, y1: Math.min(3.25, SOUS_V2(yb) - 0.04) });
+    }
     C.ajouterBoite(0.0, -ESC.y0, X_REB, -(14.3 + DY_SS), { y0: Y_SS, y1: 3.25 });
     // (la volée n'a que 85 cm : deux guides en biais, invisibles, au bord du palier — qui arrive de travers glisse
     // dans la volée au lieu de buter contre le ressaut ou le mur est)
@@ -815,7 +828,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     for (let k = 0; k < 16; k++) {
       const ya = Math.max(nez(k), Y_RAMP0), yb = Math.min(nez(k + 1), Y_RAMP1);
       if (yb <= ya) continue;
-      C.plafond(0.2, -yb, 1.35, -ya, rampant(yb), (ya < 8.3 ? 3.25 : 1.55) - rampant(yb));
+      // (13/10 : jusque sous le limon de la volée 2 de l'escalier principal, qui passe au-dessus — SOUS_V2)
+      C.plafond(0.2, -yb, 1.35, -ya, rampant(yb), Math.max(0.1, Math.min(3.25, SOUS_V2(yb) - 0.3) - rampant(yb)));
     }
     C.ajouterBoite(0.0, -Y_PAL, 1.6, -ESC.y0, { y0: Y_SS, y1: -0.02, joueur: false });
     // le panneau « -1 » au mur ouest du pied de l'escalier, le bloc de sortie au-dessus, son fourreau, deux étiquettes

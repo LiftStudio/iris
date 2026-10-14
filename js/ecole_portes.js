@@ -314,11 +314,20 @@ export class Portes {
   _vantailGris(w, h, s, { feu = false, oculus = true, poignee = 'bequille', notices = 0, mat = null } = {}) {
     const M = this.M, g = new THREE.Group(), e = 0.04;
     const cx = s * w / 2;
-    maille(boiteM(w - 0.012, h - 0.012, e), mat || M.porte, cx, h / 2, 0, 0, g);
+    // la fente : 0,12 x 0,85 à partir de 1 m, côté poignée ; cadre de noyer de 3 cm ('long' : 0,10 x 1,25 dès 0,6 m)
+    const D = { bas: 1.0, haut: 1.85, l: 0.12, bord: 0.24, cadre: 0.03 };
+    const O = !oculus ? null : oculus === true ? D : oculus === 'long' ? { ...D, bas: 0.6, l: 0.1 } : { ...D, ...oculus };
+    // (13/10, `clair` : la fente est un VRAI JOUR de verre clair — photos 06, 20, 04 : par celles des portes de l'escalier
+    // et de la porte grise du hall ouest, on voit la cage éclairée et le palier ; le vantail est alors fait de quatre pans
+    // autour d'elle. Sinon, un vitrage sombre posé sur un vantail plein.)
+    if (O && O.clair) {
+      const mv = mat || M.porte, xa = w - O.bord - O.l / 2, xb = w - O.bord + O.l / 2;
+      maille(boiteM(xa - 0.006, h - 0.012, e), mv, s * (0.006 + xa) / 2, h / 2, 0, 0, g);
+      maille(boiteM(w - 0.006 - xb, h - 0.012, e), mv, s * (xb + w - 0.006) / 2, h / 2, 0, 0, g);
+      maille(boiteM(O.l, O.bas - 0.006, e), mv, s * (w - O.bord), (O.bas + 0.006) / 2, 0, 0, g);
+      maille(boiteM(O.l, h - 0.006 - O.haut, e), mv, s * (w - O.bord), (O.haut + h - 0.006) / 2, 0, 0, g);
+    } else maille(boiteM(w - 0.012, h - 0.012, e), mat || M.porte, cx, h / 2, 0, 0, g);
     if (oculus) {
-      // la fente : 0,12 x 0,85 à partir de 1 m, côté poignée ; cadre de noyer de 3 cm ('long' : 0,10 x 1,25 dès 0,6 m)
-      const D = { bas: 1.0, haut: 1.85, l: 0.12, bord: 0.24, cadre: 0.03 };
-      const O = oculus === true ? D : oculus === 'long' ? { ...D, bas: 0.6, l: 0.1 } : { ...D, ...oculus };
       const ox = s * (w - O.bord), oy = (O.bas + O.haut) / 2, oh = O.haut - O.bas, ol = O.l, c = O.cadre;
       for (const z of [e / 2 + 0.004, -e / 2 - 0.004]) {
         maille(boiteM(ol + 2 * c, c, 0.01), M.noyer, ox, oy + oh / 2 + c / 2, z, 0, g, { ombre: false });
@@ -326,7 +335,8 @@ export class Portes {
         maille(boiteM(c, oh + 2 * c, 0.01), M.noyer, ox - ol / 2 - c / 2, oy, z, 0, g, { ombre: false });
         maille(boiteM(c, oh + 2 * c, 0.01), M.noyer, ox + ol / 2 + c / 2, oy, z, 0, g, { ombre: false });
       }
-      maille(boiteM(ol, oh, e + 0.004), M.vitreFente, ox, oy, 0, 0, g, { ombre: false });
+      if (O.clair) maille(boiteM(ol, oh, 0.006), M.verre, ox, oy, 0, 0, g, { ombre: false });
+      else maille(boiteM(ol, oh, e + 0.004), M.vitreFente, ox, oy, 0, 0, g, { ombre: false });
     }
     if (poignee === 'bequille') {
       for (const z of [1, -1]) {
@@ -356,8 +366,10 @@ export class Portes {
     return g;
   }
   // UN VANTAIL VITRÉ À CADRE D'ALUMINIUM (photos 07, 19, 03) : `blanc` (passage, bureau B) ou gris (entrée)
-  _vantailVitre(w, h, s, { blanc = true, tirant = 'long', autocollants = false } = {}) {
-    const M = this.M, g = new THREE.Group(), c = blanc ? 0.07 : 0.06, e = 0.05, mat = blanc ? M.alu : M.aluGris;
+  // (14/10, relecture : `cadre` — la largeur des montants et de la traverse basse, 7 cm sinon ; `plat` — [bas, haut] du
+  // méplat du tirant)
+  _vantailVitre(w, h, s, { blanc = true, tirant = 'long', autocollants = false, cadre = null, plat = null } = {}) {
+    const M = this.M, g = new THREE.Group(), c = cadre || (blanc ? 0.07 : 0.06), e = 0.05, mat = blanc ? M.alu : M.aluGris;
     const cx = s * w / 2;
     maille(boiteM(w - 0.01, c, e), mat, cx, c / 2, 0, 0, g);
     maille(boiteM(w - 0.01, c * (blanc ? 1.4 : 1), e), mat, cx, h - c * 0.7, 0, 0, g);
@@ -372,17 +384,35 @@ export class Portes {
         for (const dy of [-0.5, 0.5]) maille(boiteM(0.02, 0.02, 0.05), blanc ? M.alu : M.inox, tx, 1.05 + dy, z * 0.045, 0, g, { ombre: false });
       } else if (tirant === 'court') {
         maille(new THREE.CylinderGeometry(0.012, 0.012, 0.35, 10), M.inox, tx, 1.05, z * 0.06, 0, g, { ombre: false });
+      } else if (tirant === 'plat') {
+        // (14/10, le passage — photo 19 refaite à sa pose, agrandie, et photo 07 : ce n'est pas un tube mais un MÉPLAT
+        // laqué blanc de 6,5 cm, de 0,22 à 1,57, posé sur le montant de battement — son axe à 8,5 cm du chant —, décollé
+        // de 5 cm, ses deux bouts coudés vers le vantail ; dessous, à 0,945, l'entrée de clé ovale)
+        const xb = s * (w - 0.085), za = e / 2, zb = 0.075, [ya, yb] = plat || [0.22, 1.57], dy = 0.03;
+        maille(boiteM(0.065, yb - ya - 2 * dy, 0.018), M.alu, xb, (ya + yb) / 2, z * zb, 0, g, { ombre: false });
+        for (const k of [-1, 1]) {
+          const r = maille(boiteM(0.05, Math.hypot(dy, zb - za) + 0.008, 0.014), M.alu, xb, (ya + yb) / 2 + k * ((yb - ya) / 2 - dy / 2), z * (za + zb) / 2, 0, g, { ombre: false });
+          r.rotation.x = k * z * Math.atan2(zb - za, dy);
+        }
+        maille(boiteM(0.022, 0.042, 0.004), M.inox, s * (w - 0.032), plat ? ya + 0.775 : 0.945, z * (e / 2 + 0.002), 0, g, { ombre: false });
       }
     }
     if (autocollants) {
       // `true` : deux rangées de quatre (h 1,0 et 1,55) ; sinon la liste des rangées [[hauteur, nombre], …] (un seul
       // autocollant : au milieu du vantail). Lisibles côté +z (le passage), le dos noir de l'autre côté.
+      // (14/10, relecture — photo 07 agrandie : du hall, le dos n'est pas un rectangle NOIR opaque ; c'est l'adhésif vu
+      // par transparence, gris-brun sombre, où « iris » se lit À L'ENVERS, plus clair : la même image retournée, éteinte)
+      // (14/10, relecture C1, photo 07 rejouée : presque noir, (60, 50, 45) — il sortait gris moyen, (120, 110, 100))
       const A = this._matAutocollant();
+      const D = this._dosAutocollant || (this._dosAutocollant = new THREE.MeshStandardMaterial({ map: A.map, color: 0x4a453f, roughness: 0.6, transparent: true, opacity: 0.88, depthWrite: false }));
       const rangs = autocollants === true ? [[1.0, 4], [1.55, 4]] : autocollants;
-      for (const [y, nb] of rangs) for (let i = 0; i < nb; i++) {
-        const x = nb === 1 ? s * w / 2 : s * (c + 0.06 + i * (w - 2 * c - 0.12) / 3.2);
-        const p = plan(g, A, 0.11, 0.04, x, y, 0.004, 1);
-        const q = plan(g, M.noirMat, 0.11, 0.04, x, y, -0.004, -1);
+      // (13/10 : une rangée peut donner sa place — [hauteur, nombre, x0, pas] : le premier à x0 des gonds, puis au pas)
+      // (14/10 : et sa taille — [hauteur, nombre, x0, pas, largeur, hauteur de l'étiquette] ; 11 x 4 cm sinon)
+      for (const [y, nb, x0, pas, la = 0.11, ha = 0.04] of rangs) for (let i = 0; i < nb; i++) {
+        const x = nb === 1 ? s * w / 2 : x0 !== undefined ? s * (x0 + i * pas) : s * (c + 0.06 + i * (w - 2 * c - 0.12) / 3.2);
+        const p = plan(g, A, la, ha, x, y, 0.004, 1);
+        const q = plan(g, D, la, ha, x, y, -0.004, -1), uq = q.geometry.attributes.uv;
+        for (let k = 0; k < uq.count; k++) uq.setX(k, 1 - uq.getX(k));
         p.userData.vitre = q.userData.vitre = true;
       }
     }
@@ -459,7 +489,7 @@ export class Portes {
       if (o.modele === 'blanche') return this._vantailGris(w, h, s, { oculus: false, mat: M.alu, poignee: 'bequille' });
       if (o.modele === 'noire') return this._vantailGris(w, h, s, { oculus: false, mat: M.acierNoir, poignee: null });
       // (`autocollants` : une fonction du vantail, s => rangées, quand les deux vantaux n'en portent pas autant)
-      return this._vantailVitre(w, h, s, { blanc: o.blanc !== false, tirant: o.tirant || 'long', autocollants: typeof o.autocollants === 'function' ? o.autocollants(s) : !!o.autocollants });
+      return this._vantailVitre(w, h, s, { blanc: o.blanc !== false, tirant: o.tirant || 'long', autocollants: typeof o.autocollants === 'function' ? o.autocollants(s) : !!o.autocollants, cadre: o.cadre || null, plat: o.plat || null });
     };
     if (double) {
       const w = l / 2;
