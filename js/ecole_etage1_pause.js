@@ -225,29 +225,14 @@ function texLino() {
     for (let k = 0; k < 2600; k++) { const v = (r2() - 0.5) * 40; g.fillStyle = rgb(122 + v, 100 + v, 85 + v, 0.3); g.fillRect(r2() * w, r2() * h, 1, 1); }
   }, [1 / 2, 1 / 2], false, 8);
 }
-// LE DOSSIER DES CHAISES DE LA SALLE (VO q_0204-0212) : contreplaqué de hêtre moulé, ses trous en « visage » (les trous
-// sont transparents : alphaTest)
+// LE DOSSIER DES CHAISES DE LA SALLE (VO q_0204-0212) : contreplaqué de hêtre moulé, le fil horizontal (ses trous sont
+// percés dans la plaque elle-même : _geoDos, plus bas)
 function texDossierHetre() {
   return canvasTex(128, 96, (g, w, h) => {
     const r2 = graine(911), gr = g.createLinearGradient(0, 0, w, 0);
     gr.addColorStop(0, '#c99a68'); gr.addColorStop(0.5, '#dcb385'); gr.addColorStop(1, '#c99a68');
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
     for (let k = 0; k < 40; k++) { g.fillStyle = `rgba(120,78,40,${0.05 + r2() * 0.08})`; g.fillRect(0, r2() * h, w, 1); }
-  }, null, false, 4);
-}
-// (relecture du 14/10 : les trous ne se voyaient pas — « destination-out » efface d'autant que le remplissage est opaque,
-// et le dernier fillStyle était celui des veines, à 5-13 % : le trou gardait 241/255 d'alpha, l'alphaTest ne coupait
-// rien. VO q_0204, q_0206, q_0212 de près : deux YEUX, des fentes arrondies de 3 x 2,5 cm, et une BOUCHE, une fente en arc
-// renversé de 11 cm — le « visage » boudeur des chaises de collège ; pas un arc de cinq trous ronds. Les trous vont dans
-// une carte d'alpha à part : percés dans la couleur, leur noir bavait en traînées sur le hêtre, vu en biais)
-function texDossierTrous() {
-  return canvasTex(128, 96, (g, w, h) => {
-    g.fillStyle = '#fff'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#000'; g.strokeStyle = '#000';
-    const oeil = (x, y) => { g.beginPath(); g.ellipse(x, y, 5.5, 4.2, 0, 0, 7); g.fill(); };
-    oeil(w * 0.37, h * 0.3); oeil(w * 0.63, h * 0.3);
-    g.lineWidth = 5; g.lineCap = 'round';
-    g.beginPath(); g.arc(w / 2, h * 0.99, 30, Math.PI * 1.3, Math.PI * 1.7); g.stroke();
   }, null, false, 4);
 }
 // LE DISTRIBUTEUR DE BOISSONS CHAUDES (VO q_0186 : façade noire, le grand visuel de tasse en haut, la colonne de touches
@@ -447,7 +432,7 @@ export function poserPause1(ch, ctx) {
     // les luges des chaises sont d'un gris argent clair, plus claires que la moquette et que le piètement des tables)
     chrome: std({ color: 0xc6c9cc, roughness: 0.3, metalness: 0.4 }, 'tube chromé'),
     hetre: std({ color: 0xd2a676, roughness: 0.55 }, 'contreplaqué de hêtre'),
-    dossier: std({ map: texDossierHetre(), alphaMap: texDossierTrous(), roughness: 0.55, alphaTest: 0.5, side: THREE.DoubleSide }, 'dossier de hêtre percé'),
+    dossier: std({ map: texDossierHetre(), roughness: 0.55 }, 'dossier de hêtre percé'),
     laque: std({ color: 0x1b1b1b, roughness: 0.16, metalness: 0.2 }, 'laqué noir brillant'),
     noir: std({ color: 0x1d1d1c, roughness: 0.5, metalness: 0.15 }, 'acier noir des mange-debout'),
     miura: std({ color: 0x2a2826, roughness: 0.55 }, 'polypropylène noir (tabourets)'),
@@ -1129,10 +1114,37 @@ export function poserPause1(ch, ctx) {
     C.ajouterBoite(x0, -y0, x1, -y1, { y0: N1, y1: N1 + 0.77 });
   };
   const _geoAssise = (() => { const g = new THREE.BoxGeometry(0.42, 0.016, 0.4, 4, 1, 1); return g; })();
+  // (relecture du 14/10 : les trous ne se voyaient pas — « destination-out » efface d'autant que le remplissage est opaque,
+  // et le dernier fillStyle de la texture était celui des veines, à 5-13 % : le trou gardait 241/255 d'alpha, l'alphaTest
+  // ne coupait rien. VO q_0204, q_0206, q_0212 de près : deux YEUX, des fentes arrondies de 3,4 x 2,6 cm, et une BOUCHE,
+  // une fente en arc renversé de 11 cm — le « visage » boudeur des chaises de collège ; pas un arc de cinq trous ronds.
+  // Percés dans une plaque de 12 mm, et non découpés à l'alpha : l'occlusion de js/fx.js ne voit pas les découpes,
+  // elle peignait sur le dossier, en traînées, le sombre du dessous des tables)
   const _geoDos = (() => {
-    const g = new THREE.PlaneGeometry(0.4, 0.3, 8, 1), p = g.attributes.position;
-    for (let i = 0; i < p.count; i++) { const x = p.getX(i); p.setZ(i, x * x * 0.9); }
-    g.computeVertexNormals();
+    const W = 0.4, H = 0.3, r = 0.03, s = new THREE.Shape();
+    // (le contour, aux coins arrondis, recoupé le long des grands côtés pour que le cintrage le suive)
+    s.moveTo(-W / 2 + r, -H / 2);
+    for (let i = 1; i <= 8; i++) s.lineTo(-W / 2 + r + (W - 2 * r) * i / 8, -H / 2);
+    s.quadraticCurveTo(W / 2, -H / 2, W / 2, -H / 2 + r); s.lineTo(W / 2, H / 2 - r); s.quadraticCurveTo(W / 2, H / 2, W / 2 - r, H / 2);
+    for (let i = 1; i <= 8; i++) s.lineTo(W / 2 - r - (W - 2 * r) * i / 8, H / 2);
+    s.quadraticCurveTo(-W / 2, H / 2, -W / 2, H / 2 - r); s.lineTo(-W / 2, -H / 2 + r); s.quadraticCurveTo(-W / 2, -H / 2, -W / 2 + r, -H / 2);
+    for (const sx of [-1, 1]) { const o = new THREE.Path(); o.absellipse(sx * 0.052, 0.06, 0.017, 0.013, 0, Math.PI * 2, false); s.holes.push(o); }
+    const b = new THREE.Path(), cy = -0.147, R1 = 0.086, R2 = 0.102, a0 = Math.PI * 0.3, a1 = Math.PI * 0.7, rc = (R2 - R1) / 2, Rm = (R1 + R2) / 2;
+    b.absarc(0, cy, R2, a0, a1, false);
+    b.absarc(Rm * Math.cos(a1), cy + Rm * Math.sin(a1), rc, a1, a1 + Math.PI, false);
+    b.absarc(0, cy, R1, a1, a0, true);
+    b.absarc(Rm * Math.cos(a0), cy + Rm * Math.sin(a0), rc, a0 + Math.PI, a0 + Math.PI * 2, false);
+    s.holes.push(b);
+    const g = new THREE.ExtrudeGeometry(s, { depth: 0.012, bevelEnabled: false, curveSegments: 10 });
+    g.translate(0, 0, -0.006);
+    // (le cintrage z += 0,9 x² ; sur les deux faces, la normale exacte de la surface cintrée — recalculée triangle par
+    // triangle, les longs triangles de la face y traçaient des facettes)
+    const p = g.attributes.position, uv = g.attributes.uv, n = g.attributes.normal;
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), nz = n.getZ(i);
+      uv.setXY(i, x / W + 0.5, p.getY(i) / H + 0.5); p.setZ(i, p.getZ(i) + x * x * 0.9);
+      if (Math.abs(nz) > 0.9) { const k = Math.sign(nz) / Math.hypot(1.8 * x, 1); n.setXYZ(i, -1.8 * x * k, 0, k); }
+    }
     return g;
   })();
   const chaiseHetre = (x, y, dir, sortie) => {
