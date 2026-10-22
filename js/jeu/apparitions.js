@@ -39,13 +39,16 @@ export function piecesDe(zoneJeu) {
 }
 export function pointsDe(zoneJeu) { const P = piecesDe(zoneJeu); return POINTS_APPARITION.filter((p) => P.has(p.zone)); }
 
-// sorti des murs (le disque du joueur poussé par le monde solide) ; null s'il n'y tient pas
+// sorti des murs (le disque du joueur poussé par le monde solide) ; null s'il n'y tient pas, ou s'il tombe sur un autre
+// sol que celui du point (une volée d'escalier à côté d'un palier)
 function poser(x, y, z) {
   const C = Player.collisions;
   if (!C) return { x, y, z };
   const sol = C.solEn(x, z, y + 0.3), p = { x, z };
+  if (Math.abs(sol - y) > 0.3) return null;
   C.resoudre(p, 0.3, null, sol);
-  return C.libre(p.x, p.z, 0.3, sol) ? { x: p.x, y: C.solEn(p.x, p.z, sol + 0.3), z: p.z } : null;
+  const s2 = C.solEn(p.x, p.z, sol + 0.3);
+  return C.libre(p.x, p.z, 0.3, sol) && Math.abs(s2 - y) <= 0.3 ? { x: p.x, y: s2, z: p.z } : null;
 }
 const OFFSETS = [[0, 0], [1.5, 0], [-1.5, 0], [0, 1.5], [0, -1.5], [1.5, 1.5], [-1.5, -1.5], [1.5, -1.5], [-1.5, 1.5], [3, 0], [-3, 0], [0, 3], [0, -3]];
 

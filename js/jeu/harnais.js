@@ -397,23 +397,47 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
         if (s.rang) {
           const R = s.rang;
           u.pos.set(R.ax + R.ux * s.t, R.sol, R.az + R.uz * s.t); u.rang = { R, t: s.t, ox: 0, oz: 0 };
+          game.carte.maj?.(0, game);                                 // (la liste des sièges refiltrée pour son niveau)
         } else {
-          const fx = s.fx ?? 0, fz = s.fz ?? 1;
-          u.pos.set(s.x + fx * 0.6, 0, s.z + fz * 0.6); u.pos.y = C().solEn(u.pos.x, u.pos.z, (s.y ?? 0) + 0.3);
-          u.setFacing(-fx, -fz);
+          // DEVANT le siège : son point de sortie (là où l'on se relève), sinon à 0,6 m de lui dans l'une des quatre
+          // directions — le premier point libre d'où c'est LUI le siège proposé (le plus proche à moins de 1,1 m)
+          const fx = s.fx ?? 0, fz = s.fz ?? 1, cands = [];
+          if (s.sx !== undefined) cands.push([s.sx, s.sz === undefined ? s.z : s.sz]);
+          for (const [a, b] of [[fx, fz], [-fx, -fz], [fz, -fx], [-fz, fx]]) cands.push([s.x + a * 0.6, s.z + b * 0.6]);
+          // (un point libre d'abord ; une chaise d'établi n'en a pas — son point de sortie est dans le meuble, le pas suivant
+          // l'en sort, comme en jeu : alors le premier d'où elle est proposée)
+          let pose = false;
+          for (const exiger of [true, false]) {
+            for (const [x, z] of cands) {
+              const y = C().solEn(x, z, (s.sol || 0) + 0.3);           // (s.y : la hauteur de l'assise AU-DESSUS de son sol)
+              if (exiger && !C().libre(x, z, 0.3, y)) continue;
+              u.pos.set(x, y, z); game.carte.maj?.(0, game);
+              let best = null, bd = 1.1;
+              for (const q of game.sieges) { const d = Math.hypot(x - q.x, z - q.z); if (d < bd) { bd = d; best = q; } }
+              if (best === s) { pose = true; break; }
+            }
+            if (pose) break;
+          }
+          if (!pose) { const [x, z] = cands[0]; u.pos.set(x, C().solEn(x, z, (s.sol || 0) + 0.3), z); game.carte.maj?.(0, game); }
+          u.setFacing(s.x - u.pos.x, s.z - u.pos.z);
         }
         u.vel.set(0, 0, 0); u.memoriser(); u.presenter(1);
-        game.carte.maj?.(0, game);                                   // (la liste des sièges refiltrée pour son niveau)
         game._presSiege = null;
         inp.pressedSet.add(code); pas(); inp.pressedSet.delete(code);
         let k = 0;
         for (; k < 180 && !(u.assis && u.assis.k >= 1); k++) pas();
-        const ok = !!(u.assis && u.assis.k >= 1);
+        const ok = !!(u.assis && u.assis.k >= 1 && Math.hypot(u.assis.a.x - s.x, u.assis.a.z - s.z) < 1e-6);
         if (ok) {
           inp.pressedSet.add(code); pas(); inp.pressedSet.delete(code);
           for (let j = 0; j < 120 && u.assis; j++) pas();
+          // (relevé : 0,1 s debout — le pas suivant sort le disque des meubles où le point de sortie le pose, comme en jeu)
+          for (let j = 0; j < 12; j++) pas();
         }
-        const libre = C().libre(u.pos.x, u.pos.z, 0.3, u.pos.y);
+        // libre à sa place — ou, dans un rang serré, relevé SUR LA LIGNE du rang (le monde solide garde le rang en un bloc :
+        // la ligne ne vaut que pour qui s'y est faufilé, js/player.js _glisserRang)
+        const R = s.rang, G = u.rang;
+        const libre = R ? !!G && G.R === R && Math.hypot(u.pos.x - (R.ax + R.ux * G.t + G.ox), u.pos.z - (R.az + R.uz * G.t + G.oz)) < 0.05
+          : C().libre(u.pos.x, u.pos.z, 0.3, u.pos.y);
         if (ok && !u.assis && libre) assis++; else refus.push(i);
         u.assis = null; u.rang = null;
         if (i % 20 === 19) await attendre(0);

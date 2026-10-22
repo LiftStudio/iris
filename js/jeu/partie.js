@@ -344,7 +344,7 @@ export class Partie {
   fermerCalque(reprendre = false) {
     const el = document.getElementById('calque-clic');
     if (el) el.hidden = true;
-    if (this._calque && reprendre) { this.game.paused = false; this.game.input.purger(); }
+    if (this._calque && reprendre) { this.game.paused = false; this.game.input.purger(); }   // hors simulation (le calque, vu par Partie.image)
     this._calque = false;
   }
   get calqueOuvert() { return this._calque; }

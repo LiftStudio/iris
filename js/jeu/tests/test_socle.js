@@ -250,11 +250,22 @@ export default function (jeu) {
 
   // 8. TROIS CYCLES lancer / quitter ; programmes constants pendant 10 s de tir
   T('8 trois cycles : mémoire, enfants, instantané ; programmes constants', async () => {
-    const cycle = async () => { await jeu.lancer('essai', { graine: 8, mannequins: 3, bots: 2 }); await jeu.images(20); jeu.quitter('balade'); for (let i = 0; i < 120; i++) game.carte.maj(1 / 60, game); await jeu.images(2); };
+    // (un cycle : les corps libérés attendus — Player.dispose attend que leurs programmes en compilation soient prêts)
+    const cycle = async () => {
+      await jeu.lancer('essai', { graine: 8, mannequins: 3, bots: 2 }); await jeu.images(20);
+      const B = game.partie.acteurs.map((a) => a.joueur).filter((j) => j && j !== game.user);
+      jeu.quitter('balade'); await Promise.all(B.map((j) => j.liberation));
+      for (let i = 0; i < 120; i++) game.carte.maj(1 / 60, game);
+      await jeu.images(2);
+    };
     await cycle();                                        // (le 1er cycle crée l'affichage partagé et les suites du décor vues)
-    const m0 = jeu.memoire(), i0 = jeu.instantane();
+    // (les « suites » du décor coupé, js/ecole_visibilite.js : une géométrie chacune, créées À LA DEMANDE par ce que la caméra
+    // voit pour la première fois — comptées à part, elles ne sont pas une fuite de la partie)
+    const suites = () => { let n = 0; game.scene.traverse((o) => { if (o.userData.suite) n++; }); return n; };
+    const m0 = jeu.memoire(), i0 = jeu.instantane(), s0 = suites();
     for (let k = 0; k < 3; k++) await cycle();
-    const m1 = jeu.memoire(), i1 = jeu.instantane();
+    const m1 = jeu.memoire(), i1 = jeu.instantane(), s1 = suites();
+    m1.geometries -= s1 - s0;
     const pc = (a, b) => Math.abs(a - b) / Math.max(1, a);
     // programmes pendant 10 s de tir (images réelles, ou faites à la main sans rAF)
     await jeu.lancer('essai', { graine: 9, mannequins: 3 });
@@ -268,7 +279,7 @@ export default function (jeu) {
     jeu.quitter('balade');
     const ok = pc(m0.geometries, m1.geometries) <= 0.02 && pc(m0.textures, m1.textures) <= 0.02 && m0.enfants === m1.enfants && egal(i0, i1) && p0 === p1 && tirs > 20;
     return { ok, attendu: 'géométries et textures ± 2 %, enfants identiques, instantané identique, programmes constants pendant 10 s de tir',
-      obtenu: `géo ${m0.geometries}→${m1.geometries} · tex ${m0.textures}→${m1.textures} · enfants ${m0.enfants}→${m1.enfants} · instantané ${egal(i0, i1)} · programmes ${p0}→${p1} (${tirs} tirs)` };
+      obtenu: `géo ${m0.geometries}→${m1.geometries} (hors ${s1 - s0} suites neuves du décor) · tex ${m0.textures}→${m1.textures} · enfants ${m0.enfants}→${m1.enfants} · instantané ${egal(i0, i1)} · programmes ${p0}→${p1} (${tirs} tirs)` };
   }, { delai: 240 });
 
   // 9. L'ÉTAT ET LE DÉTERMINISME
@@ -437,7 +448,9 @@ export default function (jeu) {
       obtenu: `gardées ${garde} · ajoutés ${ajoute} · habillage ${J && J.habillage} · zone ${J && J.prop.zone}` };
   });
 
-  // 16. Light( absent de js/jeu/ hors viewmodel.js (le reste du point 16 : tools/verifier_proprietaires.py, en ligne de commande)
+  // 16. aucune lumière créée dans js/jeu/ hors viewmodel.js (le reste du point 16 : tools/verifier_proprietaires.py, en ligne de
+  // commande ; le motif cherché est fabriqué ici, pour que ce fichier-ci ne le contienne pas)
+  const LUMIERE = 'Light' + '(';
   T('16 aucune lumière dans js/jeu/ hors viewmodel.js', async () => {
     const fichiers = ['index', 'constantes', 'rng', 'commande', 'acteur', 'partie', 'partie_essai', 'harnais', 'armes', 'balistique', 'touches', 'grenade', 'mouvement',
       'entrees_jeu', 'vue_fps', 'camera_orbite', 'modeles_armes', 'anim_vue', 'avatars', 'teintes', 'pose_arme', 'accroupi', 'poupee', 'cadence_acteurs', 'nav', 'nav_cache',
@@ -446,10 +459,10 @@ export default function (jeu) {
     const fautes = [];
     for (const f of fichiers) {
       const t = await fetch(new URL('../' + f + '.js', import.meta.url), { cache: 'no-cache' }).then((r) => r.text());
-      if (t.includes('Light(')) fautes.push(f);
+      if (t.includes(LUMIERE)) fautes.push(f);
     }
     const vm = await fetch(new URL('../viewmodel.js', import.meta.url), { cache: 'no-cache' }).then((r) => r.text());
-    return { ok: fautes.length === 0 && vm.includes('Light('), attendu: '0 fichier (et les 3 lumières de viewmodel.js)', obtenu: fautes.length ? fautes.join(', ') : `0 sur ${fichiers.length}` };
+    return { ok: fautes.length === 0 && vm.includes(LUMIERE), attendu: '0 fichier (et les 3 lumières de viewmodel.js)', obtenu: fautes.length ? fautes.join(', ') : `0 sur ${fichiers.length}` };
   });
 
   // 17. L'AIDE DE LA BALADE, JAMAIS EN PARTIE
@@ -642,6 +655,7 @@ export default function (jeu) {
     try {
       for (let i = 0; i < 8000 && q.phase !== 'traque'; i++) q.pas(PAS);
       const props = q.acteurs.filter((a) => a.role === 'prop'), chas = q.acteurs.filter((a) => a.role === 'chasseur');
+      for (const a of props) { a.vie = a.vieMax = 1e9; }              // (les props tiennent : on compte des CHOIX, pas des morts)
       // de vrais meubles (fictifs) autour de chaque prop : trois chacun
       for (const a of props) for (let k = 0; k < 3; k++) {
         const an = (k / 3) * 2 * Math.PI, x = a.pos.x + Math.cos(an) * 0.9, z = a.pos.z + Math.sin(an) * 0.9;
@@ -652,8 +666,12 @@ export default function (jeu) {
       for (let k = 0; k < 60 && chas.reduce((n, h) => n + h.cerveau.journal.length, 0) < 40 && q.phase === 'traque'; k++) {
         chas.forEach((h, j) => {
           const a = props[(k + j) % props.length];
-          const x = a.pos.x + 4 * Math.cos(k + j), z = a.pos.z + 4 * Math.sin(k + j);
-          if (game.collisions.libre(x, z, 0.3, a.pos.y)) jeu.teleporter(h.id, x, a.pos.y, z, Math.atan2(-(a.pos.x - x), -(a.pos.z - z)));
+          for (let n = 0; n < 16; n++) {
+            const an = k + j + n * Math.PI / 8, x = a.pos.x + 4 * Math.cos(an), z = a.pos.z + 4 * Math.sin(an);
+            if (!game.collisions.libre(x, z, 0.3, a.pos.y) || !q.balistique.vue(x, a.pos.y + 1.62, z, a.pos.x, a.pos.y + 0.3, a.pos.z)) continue;
+            jeu.teleporter(h.id, x, a.pos.y, z, Math.atan2(-(a.pos.x - x), -(a.pos.z - z))); h.cerveau.prochainTest = q.t;
+            break;
+          }
         });
         for (let i = 0; i < 8 * 120; i++) q.pas(PAS);
       }
@@ -671,6 +689,14 @@ export default function (jeu) {
     return { ok: okA && okB && okC, attendu: '≥ 1 élimination en 2 min ; écart médian 1,9° ± 30 % ; 40 tirs de test, part des props = leur part ± 20 points',
       obtenu: `${elims} élim. · écart médian ${med.toFixed(2)}° sur ${ang.length} balles (vue ${vu}) · ${choix} tirs de test, props ${(obtenuPart * 100).toFixed(0)} % pour ${(attenduPart * 100).toFixed(0)} % des candidats` };
   }, { delai: 300 });
+
+  // 27 (§ 6.1). LA BALADE APRÈS TOUTES CES PARTIES : toujours au bit près (le retour d'une partie rend l'école de la balade)
+  T('27 balade rejouée au bit près après les parties', async () => {
+    await jeu.lancer('essai', { graine: 28, mannequins: 3, bots: 2 }); jeu.avancer(3); jeu.quitter('balade');
+    const r = await jeu.rejouerBalade();
+    return { ok: r.ok && r.identiques && r.fonctionsRendues, attendu: 'écart ≤ seuils après une partie (et toutes celles des tests d’avant)',
+      obtenu: `vue 3 ${r.vue3.pos} / ${r.vue3.cam} · vue 1 ${r.vue1.pos} / ${r.vue1.cam} · même onglet ${r.identiques}` };
+  });
 
   // 26. LES DOCUMENTS, LES AVATARS
   T('26 docs/jeu, assets/tel', async () => {

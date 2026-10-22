@@ -1173,15 +1173,16 @@ export class Player {
     if (this.telMesh && this.telMesh.parent) this.telMesh.parent.remove(this.telMesh);
     this.telMesh = null; this.tel = null;
     if (this.anim) { try { this.anim.mixer.stopAllAction(); this.anim.mixer.uncacheRoot(this.anim.mixer.getRoot()); } catch (e) { /* déjà coupé */ } }
-    const mats = new Set(), geos = new Set();
+    const mats = new Set(), geos = new Set(), squelettes = new Set();
     if (this.body) this.body.traverse((o) => { if (o.isMesh) { geos.add(o.geometry); mats.add(o.material); } });
-    if (this.avatarModel) this.avatarModel.traverse((o) => { if (o.isMesh && o.material && !Array.isArray(o.material)) mats.add(o.material); });
+    // (et les squelettes CLONÉS de l'avatar : chacun a sa texture d'os, 4 par avatar Avaturn)
+    if (this.avatarModel) this.avatarModel.traverse((o) => { if (o.isMesh && o.material && !Array.isArray(o.material)) mats.add(o.material); if (o.isSkinnedMesh && o.skeleton) squelettes.add(o.skeleton); });
     this.avatar = null; this.anim = null; this.avatarModel = null; this.eclairage = null; this.apresPose = null;
     // (un matériau dont le programme se compile encore — compileAsync, en parallèle : la préparation de l'avatar, le
     // préréglage de repli, la préchauffe — n'est rendu qu'une fois ce programme prêt, et 0,1 s plus tard : libéré avant,
     // une compilation en cours relit ses propriétés effacées — three les interroge toutes les 10 ms —, lève une erreur à
     // chaque essai et sa promesse ne se résout jamais ; 10 s au plus. `liberation` : la promesse de la libération faite)
-    const liberer = () => { for (const g of geos) g.dispose(); for (const m of mats) m.dispose(); };
+    const liberer = () => { for (const g of geos) g.dispose(); for (const m of mats) m.dispose(); for (const s of squelettes) s.dispose(); };
     const pret = Player.programmePret;
     if (!pret) { liberer(); this.liberation = Promise.resolve(); return; }
     const t0 = performance.now();

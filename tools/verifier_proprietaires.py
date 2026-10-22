@@ -75,6 +75,10 @@ def correspond(chemin, motifs):
 
 
 def main():
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')     # (la console de Windows : les accents)
+    except Exception:
+        pass
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     lot_r = '--lot-r' in sys.argv
     if not args:
