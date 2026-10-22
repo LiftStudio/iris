@@ -562,19 +562,19 @@ function texPlanEvac() {
   }, null, false, 4);
 }
 // L'AFFICHE A3 du mur ouest, au-dessus de la tablette (p_047, p_054) : une page de journal — titres bleus, photos, colonnes
+// (23/10, relecture : p_047, p_048 — À L'ITALIENNE, un collage de photos sombres sur fond blanc ; voir garnirPause)
 function texAfficheJournal() {
-  return canvasTex(180, 256, (g, w, h) => {
+  return canvasTex(256, 196, (g, w, h) => {
     const r2 = graine(4747);
     g.fillStyle = '#f6f6f2'; g.fillRect(0, 0, w, h);
-    g.fillStyle = '#1f3b8f'; g.fillRect(8, 8, w - 16, 22);
-    g.fillStyle = '#ffffff'; g.font = '700 13px "Segoe UI", sans-serif'; g.fillText('IRIS NEWS', 14, 24);
-    for (const [x, y, ww, hh] of [[8, 38, 80, 56], [96, 38, 76, 40], [8, 140, 60, 50], [100, 120, 72, 70]]) {
-      const gr = g.createLinearGradient(x, y, x + ww, y + hh); gr.addColorStop(0, '#5b6f8a'); gr.addColorStop(1, '#2b2f3a');
+    g.fillStyle = '#1f3b8f'; g.fillRect(8, 8, w - 16, 20);
+    g.fillStyle = '#ffffff'; g.font = '700 13px "Segoe UI", sans-serif'; g.fillText('IRIS NEWS', 14, 23);
+    for (const [x, y, ww, hh] of [[8, 34, 74, 60], [88, 34, 82, 44], [176, 34, 72, 70], [8, 102, 58, 50], [88, 86, 82, 66], [176, 112, 72, 40]]) {
+      const gr = g.createLinearGradient(x, y, x + ww, y + hh); gr.addColorStop(0, '#5b6577'); gr.addColorStop(1, '#22252c');
       g.fillStyle = gr; g.fillRect(x, y, ww, hh);
     }
     g.fillStyle = '#8b8f99';
-    for (let y = 100; y < h - 10; y += 6) { if (y > 138 && y < 192) continue; g.fillRect(8, y, 80 + r2() * 10, 2); g.fillRect(96, y + 1, 70 + r2() * 6, 2); }
-    g.fillStyle = '#1f3b8f'; g.fillRect(8, 198, w - 16, 3);
+    for (let y = 160; y < h - 8; y += 6) { g.fillRect(8, y, 100 + r2() * 20, 2); g.fillRect(136, y + 1, 90 + r2() * 20, 2); }
   }, null, false, 4);
 }
 // LA GRANDE AFFICHE du mur est (p_001, p_061, p_062 : un plan coloré — bleus, orange, vert — sous cadre d'aluminium)
@@ -1270,7 +1270,10 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // (22/10, suite : p_003 — le lecteur de badge à 1,45-1,58 m, sur la joue entre la niche et le passage)
     B(10.95, 5.45, 11.03, 5.465, Y_SS + 1.44, Y_SS + 1.56, X.noir, { ombre: false });
     // LA PORTE BLANCHE de l'angle nord-est (fermée ; à béquille, gonds au nord — p_062, p_063, p_065)
-    ch.porte('y', 10.525, Y_PBL, { l: 0.93, h: 2.04, ep: 0.15, base: Y_SS, modele: 'blanche', etat: 'fermee', cote: 'W', charniere: 'd', nom: 'pause → sas de l\'angle nord-est' });
+    // (23/10, relecture : p_062 à p_064 — un vantail BLANC froid, 171,179,182 ; l'aluminium laqué commun, un peu
+    // métallique, y prenait le vert et le beige de la salle, 182,183,159 : une peinture blanche mate)
+    const PBL = ch.porte('y', 10.525, Y_PBL, { l: 0.93, h: 2.04, ep: 0.15, base: Y_SS, modele: 'blanche', etat: 'fermee', cote: 'W', charniere: 'd', nom: 'pause → sas de l\'angle nord-est' });
+    { const m = nommer(std({ color: 0xe9edf1, roughness: 0.5 }), 'vantail blanc (pause, angle nord-est)'); PBL.g.traverse((o) => { if (o.isMesh && o.material === M.alu) o.material = m; }); }
     // ---- LE MUR VERT NORD : la cloison vitrée dépolie et sa porte (x 3,6-5,17), les deux affiches encadrées, l'affiche
     // bordeaux au QR ; la porte vitrée de l'est (x 8,85-10,25) est celle de la grande salle S -1.14 : js/ecole_amphi.js.
     // (v_063, v_064 rejouées à la pose tirée des deux cadres : la cloison, l'affiche bordeaux et la porte de la grande
@@ -1301,8 +1304,11 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // ---- LE MUR VERT OUEST (22/10, p_046-p_054 ; la VO de 2021 y voyait deux micro-ondes, des A4, une chaise : il n'en
     // reste rien) : l'affiche A3 « journal » au-dessus de la tablette et sa fiche ; au nord de la porte, le DÉCLENCHEUR
     // rouge (à 1,40 m, à 0,45 m du bâti) et le PLAN D'ÉVACUATION sous cadre d'aluminium ----
-    panneau(new THREE.MeshStandardMaterial({ map: texAfficheJournal(), roughness: 0.65 }), 0.3, 0.42, 2.555, 5.6, Y_SS + 1.78, 'E', 0.002);
-    panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3a3a3a', '#fbfbf8', 77), roughness: 0.7 }), 0.1, 0.13, 2.555, 5.55, Y_SS + 1.33, 'E', 0.002);
+    // (23/10, relecture : p_047 et p_048 rejouées — ramenée à la hauteur du mur, entre la plinthe et le plafond, l'affiche
+    // va de 1,72-1,89 à 2,06-2,33 m, et sa largeur, vue de biais, passe sa hauteur : une affiche à l'italienne de 0,55 x
+    // 0,42, centrée à 2,0 m, et non l'A3 debout centrée à 1,78 ; la fiche dessous, vers 1,62 m)
+    panneau(new THREE.MeshStandardMaterial({ map: texAfficheJournal(), roughness: 0.65 }), 0.55, 0.42, 2.555, 5.9, Y_SS + 2.0, 'E', 0.002);
+    panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#3a3a3a', '#fbfbf8', 77), roughness: 0.7 }), 0.1, 0.13, 2.555, 5.75, Y_SS + 1.62, 'E', 0.002);
     // (22/10, suite — p_049 à p_052 rejouées, la porte prise pour étalon : le déclencheur à 0,1 m du bâti, de 1,18 à
     // 1,29 m ; le plan d'évacuation SUR LE MUR QUI RECULE, au nord du ressaut, de 1,13 à 1,68 m)
     B(2.555, 8.71, 2.6, 8.81, Y_SS + 1.19, Y_SS + 1.29, X.rouge, { ombre: false });
@@ -1597,11 +1603,13 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     papierKraft: nommer(std({ color: 0x9a8662, roughness: 0.9, flatShading: true }), 'papier kraft froissé'),
     papierBlanc: nommer(std({ color: 0xe4e2dc, roughness: 0.85, flatShading: true }), 'papier blanc froissé'),
     papierOrange: nommer(std({ color: 0xd9874a, roughness: 0.7, flatShading: true }), 'sachet orange froissé'),
+    papierJaune: nommer(std({ color: 0xd8bc58, roughness: 0.75, flatShading: true }), 'papier jaune froissé'),
     sacLuisant: nommer(std({ color: 0x18191a, roughness: 0.28, metalness: 0.05, flatShading: true }), 'sac poubelle noir froissé'),
     grisPoubelle: nommer(std({ color: 0x6d7175, roughness: 0.55 }), 'poubelle grise'),
     caisseClaire: nommer(std({ color: 0xc9cbca, roughness: 0.4, metalness: 0.3 }), 'distributeur : caisse gris clair'),
     noirePoubelle: nommer(std({ color: 0x1c1d1e, roughness: 0.5 }), 'poubelle noire'),
-    bleuPoubelle: nommer(std({ color: 0x20307a, roughness: 0.45 }), 'poubelle bleue'),
+    // (23/10, relecture : un bleu roi moins vif, 43-51 / 45-54 / 93-107 sur p_061 et p_063 ; le jeu sortait 13,25,69)
+    bleuPoubelle: nommer(std({ color: 0x4a50a6, roughness: 0.5 }), 'poubelle bleue'),
   };
   // Les SIÈGES (on s'assoit : js/game.js) : le point d'assise au-dessus du siège, le regard (fx, fz) en monde, le point
   // où l'on se relève (repris plus bas s'il tombe sur un meuble)
@@ -1895,7 +1903,15 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     const g = meuble('poubelle-bleue', nom, x, y, 0), w = 0.36, d = 0.28, h = 0.62;
     for (const [pw, pd, px, pz] of [[w, 0.012, 0, d / 2], [w, 0.012, 0, -d / 2], [0.012, d, w / 2, 0], [0.012, d, -w / 2, 0]]) piece(g, pw, h, pd, XM.bleuPoubelle, px, h / 2, pz);
     piece(g, w - 0.02, 0.01, d - 0.02, XM.bleuPoubelle, 0, 0.005, 0, { ombre: false });
-    piece(g, w + 0.01, 0.06, d + 0.01, XM.sac, 0, h - 0.035, 0, { ombre: false });
+    // (23/10, relecture : p_061, p_063 de près — le sac noir rabattu fait une bande d'un cinquième de la hauteur, et des
+    // papiers kraft et jaunes dépassent du dessus)
+    piece(g, w + 0.012, 0.12, d + 0.012, XM.sacLuisant, 0, h - 0.06, 0, { ombre: false });
+    piece(g, w - 0.03, 0.01, d - 0.03, XM.sac, 0, h - 0.03, 0, { ombre: false });
+    const r4 = graine(4747);
+    for (let k = 0; k < 9; k++) {
+      const m = maille(_papier, k % 3 === 2 ? XM.papierJaune : k % 3 ? XM.papierKraft : XM.papierBlanc, (r4() - 0.5) * (d - 0.08), h - 0.01 + r4() * 0.03, (r4() - 0.5) * (w - 0.1), r4() * 6.3, g, { ombre: false });
+      const t = 0.03 + r4() * 0.025; m.scale.set(t * 1.4, t * 0.5, t);
+    }
     fBoite(g, x - d / 2, y - w / 2, x + d / 2, y + w / 2, 0, h);
     return g;
   };
@@ -1975,7 +1991,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     mdEmbase(9.22, 8.2, 'mange-debout du mur est 3');
     miura(8.8, 7.28, 2.15, 'tabouret Miura du mur est 1');
     miura(8.6, 8.07, 2.2, 'tabouret Miura du mur est 2');
-    tolix(10.03, 8.35, Math.PI * 0.45, true, 'tabouret Tolix vert du mur est');
+    // (23/10, relecture : p_001 et p_061 rejouées — ses pieds de devant tombent en (9,1-9,2 ; 8,5-8,8) : il est à 1,1 m du
+    // mur, au nord de la table à embase, et non contre le mur sous les affiches)
+    tolix(9.3, 8.65, Math.PI * 0.45, true, 'tabouret Tolix vert du mur est');
     // ---- AU COMPTOIR (p_008, p_019, p_025 : une table haute pliante devant, deux Tolix verts) ----
     tablePliante(9.15, 3.62, 'table haute pliante du comptoir', 0.2);
     tolix(9.15, 3.05, 0, true, 'tabouret Tolix vert du comptoir 1');
