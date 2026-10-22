@@ -1128,8 +1128,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // la plaque noire à son ouest, plus bas (p_015 : x 7,90-8,06, de 1,61 à 1,78)
     B(7.905, 2.41, 8.055, 2.418, Y_SS + 1.61, Y_SS + 1.78, X.noir, { ombre: false });
     panneau(new THREE.MeshStandardMaterial({ map: texPlaque(), roughness: 0.4 }), 0.14, 0.16, 7.98, 2.418, Y_SS + 1.695, 'N', 0.001);
-    // le coffre gris contre le mur ouest, au bout des distributeurs (VO q_0137 ; p_046, p_047 : un pan gris dans l'angle)
-    B(2.55, 2.41, 3.55, 3.21, Y_SS, Y_SS + 2.1, X.montant, { collision: true });
+    // le bout gris du coffre de 2021 entre le dernier distributeur et le mur vert (VO q_0137 ; 22/10 : p_046, p_047 — il
+    // n'en reste qu'un bas meuble gris de 0,9 m, contre le distributeur)
+    B(2.55, 2.41, 3.55, 3.21, Y_SS, Y_SS + 0.92, X.montant, { collision: true });
     // ---- LE MUR EST ----
     // les trois petits cadres au-dessus de la branche est du comptoir (p_008, p_019 : y 3,10-3,99 ; la carte noire A5,
     // l'écusson vert, la feuille beige à photo)
@@ -1262,21 +1263,18 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       B(x0, y0, x1, y1, H_RET, H_PAUSE + 0.01, M.platre, { ombre: false });
       C.plafond(x0, -y1, x1, -y0, H_RET, H_PAUSE - H_RET + 0.3);
     };
-    // les retombées : une bande parallèle au mur vert, à 1,15 m de lui (v_062 à v_064) ; une en travers de la salle (celle
-    // d'entre la salle et l'aile, prolongée jusqu'au mur ouest) ; une du nord au sud, au milieu ; le caisson au-dessus de la
-    // branche est du comptoir
+    // les retombées : une bande parallèle au mur vert, à 1,15 m de lui (v_062 à v_064) ; (22/10, la vidéo du 15/10) le
+    // long du mur est, un CAISSON de 1,1 m sous lequel courent le comptoir et la baie (p_003, p_004, p_008 : son arête à
+    // x 9,25-9,5, de l'angle sud-est à y 7,6 au moins). Plus de retombée en travers ni du nord au sud au milieu de la salle
+    // (p_008, p_010 : vus de la rangée du mur nord, les dalles filent jusqu'au mur sud, seules leurs ossatures blanches les
+    // rayent), plus de dalles manquantes
     ret(2.55, 10.26, 10.45, 10.56);
-    ret(2.55, 7.36, 10.45, 7.66);
-    ret(7.7, 2.41, 8.0, 7.36); ret(7.7, 7.66, 8.0, 10.26);
-    ret(9.95, 2.41, 10.45, 4.5);
-
-    // les deux dalles qui manquent (le noir du plénum : v_060, v_059 — près du fond, au-dessus du plafonnier du milieu ;
-    // v_067 — de part et d'autre de la retombée nord-sud) et le détecteur rond près du passage
-    for (const [x0, y0] of [[8.15, 3.75], [7.1, 4.4]]) B(x0, y0, x0 + 0.6, y0 + 0.6, H_PAUSE - 0.003, H_PAUSE + 0.2, std({ color: 0x0d0d0c, roughness: 1 }), { ombre: false });
-    maille(new THREE.CylinderGeometry(0.06, 0.07, 0.04, 18), X.blancMat, 9.4, H_PAUSE - 0.02, -6.4, 0, ch.decor, { ombre: false });
-    // les plafonniers ronds (v_060 en met deux en x 6,65 y 5,70 et x 7,26 y 3,81 de ce repère : la colonne du milieu)
-    for (const [x, y] of [[3.8, 11.11], [6.2, 11.11], [9.2, 11.11], [3.8, 8.91], [6.2, 8.91], [9.2, 8.91],
-      [4.2, 5.51], [6.7, 5.51], [9.2, 5.51], [4.2, 3.51], [6.7, 3.51], [9.2, 3.51]]) plafonnier(x, y, H_PAUSE, 'pauseSS');
+    ret(9.35, 2.41, 10.45, 10.26);
+    maille(new THREE.CylinderGeometry(0.06, 0.07, 0.04, 18), X.blancMat, 8.9, H_PAUSE - 0.02, -6.4, 0, ch.decor, { ombre: false });
+    // les plafonniers ronds (22/10 : relevés au plafond depuis l'appareil, p_004, p_008, p_010 — (7,1 ; 6,0), (5,55 ;
+    // 5,95), (7,65 ; 4,25), (6,0 ; 4,1), (7,7 ; 7,8), à 0,15 m près ; les autres sur la même trame, de part et d'autre)
+    for (const [x, y] of [[3.8, 11.11], [6.2, 11.11], [8.6, 11.11], [4.1, 7.8], [5.9, 7.8], [7.7, 7.8],
+      [3.95, 5.95], [5.55, 5.95], [7.1, 6.0], [4.4, 4.15], [6.0, 4.1], [7.65, 4.25]]) plafonnier(x, y, H_PAUSE, 'pauseSS');
     spot(11.7, 6.025, Y_SS + 2.2, 'pauseSS', { force: 0.8 });
     // LE SOL de l'espace pause (le seuil de sa porte compris : x 2,42-2,55) et du local éteint ; (22/10) la niche et le
     // passage en grès gris foncé (p_003, p_019 : le sol devant l'étagère et dans le passage est plus sombre que le beige)
@@ -1426,6 +1424,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     sac: nommer(std({ color: 0x141516, roughness: 0.35, metalness: 0.05 }), 'sac poubelle noir'),
     kraft: std({ color: 0xb59a6a, roughness: 0.85 }),
     grisPoubelle: nommer(std({ color: 0x6d7175, roughness: 0.55 }), 'poubelle grise'),
+    caisseClaire: nommer(std({ color: 0xc9cbca, roughness: 0.4, metalness: 0.3 }), 'distributeur : caisse gris clair'),
     noirePoubelle: nommer(std({ color: 0x1c1d1e, roughness: 0.5 }), 'poubelle noire'),
     bleuPoubelle: nommer(std({ color: 0x20307a, roughness: 0.45 }), 'poubelle bleue'),
   };
@@ -1607,14 +1606,21 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   };
   // UN DISTRIBUTEUR (0,85 x 0,80 x 1,83, dos au MUR SUD, la façade au nord — v_066, v_067 ; p_045, p_046 ; VO q_0136,
   // q_0137) : `x0`-`x1` sa largeur, `mat` le matériau de sa façade, `montant` le monnayeur à droite (à l'ouest)
-  const distributeur = (type, nom, x0, x1, mat, { vitre = true, montant = true } = {}) => {
+  // (22/10 : `blanc` — le troisième, contre le mur vert, a sa caisse gris clair, une porte vitrée cerclée de gris et, à
+  // droite, un panneau blanc à autocollants et voyant vert : p_045, p_046)
+  const distributeur = (type, nom, x0, x1, mat, { vitre = true, montant = true, blanc = false } = {}) => {
     const y0 = 2.41, y1 = y0 + 0.8, l = x1 - x0, h = 1.83, xm = (x0 + x1) / 2;
     const g = meuble(type, nom, xm, y0 + 0.4, 0);
-    piece(g, l, h - 0.06, 0.76, X.caisse, 0, 0.06 + (h - 0.06) / 2, 0.02);
+    piece(g, l, h - 0.06, 0.76, blanc ? XM.caisseClaire : X.caisse, 0, 0.06 + (h - 0.06) / 2, 0.02);
+    if (blanc) {
+      piece(g, 0.17, 1.62, 0.008, XM.blancMeuble, -l / 2 + 0.1, 1.0, -0.364, { ombre: false });
+      for (const [yy, c] of [[1.45, 0x3a8f4a], [1.25, 0x2f2f2f], [1.08, 0xe0b030], [0.9, 0x2a62b0]]) piece(g, 0.09, 0.07, 0.004, std({ color: c, roughness: 0.6 }), -l / 2 + 0.1, yy, -0.37, { ombre: false });
+      piece(g, 0.03, 0.03, 0.004, L_.voyant, -l / 2 + 0.06, 1.6, -0.37, { ombre: false });
+    }
     piece(g, l - 0.04, 0.06, 0.74, X.noir, 0, 0.03, 0.01, { ombre: false });
     // (le monnayeur à DROITE pour qui fait face à la machine, donc à l'ouest — p_010, p_045 : le clavier du distributeur de
     // friandises est sur son bord ouest ; le jeu le posait à l'est)
-    const lf = montant ? l - 0.24 : l - 0.08, xa = montant ? -l / 2 + 0.2 : -l / 2 + 0.04;
+    const lf = montant || blanc ? l - 0.24 : l - 0.08, xa = montant || blanc ? -l / 2 + 0.2 : -l / 2 + 0.04;
     const p = new THREE.Mesh(new THREE.PlaneGeometry(lf, vitre ? 1.5 : 1.6), mat);
     p.position.set(xa + lf / 2, vitre ? 0.95 : 1.0, -0.365); p.rotation.y = Math.PI; p.castShadow = false; g.add(p);
     if (montant) {
@@ -1702,7 +1708,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     miura(6.9, 7.68, -0.75, 'tabouret Miura du milieu 1');
     tablePliante(7.22, 7.11, 'table haute pliante du milieu', 0.5);
     miura(5.85, 6.4, -0.3, 'tabouret Miura du milieu 2');
-    tablePliante(5.0, 4.6, 'table haute pliante des distributeurs', 0.3);
+    tablePliante(5.56, 4.62, 'table haute pliante des distributeurs', 0.3);
     babyFoot(6.7, 5.55, 'baby-foot');
     // ---- PRÈS DU MUR EST (p_003, p_004) ----
     mdEmbase(9.41, 6.79, 'mange-debout du mur est 1');
@@ -1720,7 +1726,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // premier et le deuxième ----
     distributeur('distributeur-snacks', 'distributeur de friandises', 5.4, 6.25, L_.friandises);
     distributeur('distributeur-cafe', 'distributeur de boissons chaudes', 4.3, 5.1, L_.cafe, { vitre: false, montant: false });
-    distributeur('distributeur-boissons', 'distributeur de boissons fraîches', 3.55, 4.3, L_.frais);
+    distributeur('distributeur-boissons', 'distributeur de boissons fraîches', 3.55, 4.3, L_.frais, { montant: false, blanc: true });
     // ---- LES POUBELLES ----
     poubelleRonde('poubelle-noire', 'grosse poubelle noire', 2.92, 10.05, 0.29, 0.74, XM.noirePoubelle);
     poubelleRonde('poubelle-grise', 'poubelle grise de la niche', 10.86, 5.1, 0.21, 0.62, XM.grisPoubelle);
