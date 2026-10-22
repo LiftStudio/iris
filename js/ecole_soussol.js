@@ -2063,7 +2063,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       if (C.libre(s.sx, s.sz, 0.3, Y_SS)) continue;
       const a0 = Math.atan2(s.sz - s.z, s.sx - s.x);
       let mieux = null;
-      for (const r of [0.55, 0.65, 0.75, 0.9]) {
+      // (23/10, relecture de la pause : deux tabourets de la rangée du mur vert, coincés entre deux tables et le mur, ne
+      // trouvaient rien à 0,9 m — on se relevait DANS le mur ; on cherche jusqu'à 1,3 m, de l'autre côté de la table)
+      for (const r of [0.55, 0.65, 0.75, 0.9, 1.1, 1.3]) {
         for (let k = 0; k < 24 && !mieux; k++) {
           const a = a0 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * Math.PI / 12, x = s.x + Math.cos(a) * r, z = s.z + Math.sin(a) * r;
           if (C.libre(x, z, 0.3, Y_SS) && C.rayonLibre(s.x, Y_SS + 1.5, s.z, x, Y_SS + 1.5, z, 0.05) > 0.999) mieux = [x, z];
