@@ -27,6 +27,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { nePasFusionner, canvasTex } from './kit_decor.js';
 import { texAutocollantIris, texAffiche } from './ecole_matieres.js';
+import { fermerRegistre } from './registre_meubles.js';   // (22/10, socle du jeu : les meubles copiés avant la couture)
 
 // Une boîte dont les UV sont en MÈTRES (u le long de la face, v vers le haut)
 export function boiteM(w, h, d) {
@@ -63,6 +64,7 @@ const _inv = new THREE.Matrix4(), _m = new THREE.Matrix4();
 let _coupe = null;
 export function poserCoupe(f) { _coupe = f; }
 export function fusionnerLocal(g) {
+  fermerRegistre(g);
   g.updateMatrixWorld(true);
   _inv.copy(g.matrixWorld).invert();
   const parMat = new Map(), aRetirer = [];

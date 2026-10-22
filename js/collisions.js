@@ -210,8 +210,10 @@ export class Collisions {
   // Le disque (pos.x, pos.z, r) sorti de toutes les formes qui le touchent. `vel` (facultatif) perd ce qui rentre dans
   // les murs. `pieds` : la hauteur ABSOLUE des pieds (le sol sous le joueur — une marche, un palier — plus le saut).
   // Rend vrai s'il y a eu contact.
-  resoudre(pos, r, vel = null, pieds = 0) {
-    const yb = pieds + BAS_CORPS, yh = pieds + HAUT_CORPS;
+  // (22/10, socle du jeu : la BANDE du corps qui heurte, `haut` et `bas` au-dessus des pieds, se règle — un prop bas passe
+  // sous une table, un saut rentre la tête sous un linteau. Par défaut, celle d'aujourd'hui : la balade ne change pas.)
+  resoudre(pos, r, vel = null, pieds = 0, haut = HAUT_CORPS, bas = BAS_CORPS) {
+    const yb = pieds + bas, yh = pieds + haut;
     let touche = false;
     for (let passe = 0; passe < PASSES; passe++) {
       let bouge = false;
@@ -232,12 +234,12 @@ export class Collisions {
   }
 
   // Déplace le disque de (dx, dz) sans traverser : sous-pas d'au plus r/2, résolus un à un.
-  deplacer(pos, dx, dz, r, vel = null, pieds = 0) {
+  deplacer(pos, dx, dz, r, vel = null, pieds = 0, haut = HAUT_CORPS, bas = BAS_CORPS) {
     const L = Math.hypot(dx, dz), n = Math.max(1, Math.ceil(L / (r * 0.5)));
     let touche = false;
     for (let i = 0; i < n; i++) {
       pos.x += dx / n; pos.z += dz / n;
-      if (this.resoudre(pos, r, vel, pieds)) touche = true;
+      if (this.resoudre(pos, r, vel, pieds, haut, bas)) touche = true;
     }
     return touche;
   }
@@ -275,10 +277,10 @@ export class Collisions {
   }
 
   // Le disque est-il libre ici (sans le bouger) ? Pour poser le joueur au départ, ou vérifier une sortie de siège.
-  libre(x, z, r, pieds = 0) {
+  libre(x, z, r, pieds = 0, haut = HAUT_CORPS, bas = BAS_CORPS) {
     const p = { x, z };
     const avant = { x, z };
-    this.resoudre(p, r, null, pieds);
+    this.resoudre(p, r, null, pieds, haut, bas);
     return Math.hypot(p.x - avant.x, p.z - avant.z) < 1e-4;
   }
 

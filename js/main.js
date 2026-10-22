@@ -10,6 +10,8 @@ import { IS_TOUCH, VRAI_TACTILE, TouchControls, pleinEcran } from './touch.js';
 import { prechargerModele } from './player.js';
 import { roueEmotes } from './emotes.js';
 import { preparerJeu } from './demarrage.js';
+// LE JEU (22/10, socle du combat et du prop hunt) : menu principal, parties, harnais — tout est dans js/jeu/
+import { installerJeu } from './jeu/index.js';
 
 // L'ÉCRAN DE CHARGEMENT : les modules sont là ; on attend les fichiers lourds qu'il télécharge (les chargeurs du jeu
 // les trouveront dans le cache), puis on construit l'école sous sa barre (le libellé est peint avant la construction,
@@ -40,7 +42,7 @@ const options = buildOptions(settings, {
 game = new Game(audio, {
   onOptions: () => options.open(),
   onAide: () => options.open('controls'),
-  onPhone: () => { if (!game.paused && phone) phone.toggle(); },
+  onPhone: () => { if (!game.paused && !game.partie && phone) phone.toggle(); },
   onTick: (dt) => phone && phone.update(dt),        // messages du groupe qui arrivent en différé
 }, settings);
 audio.salle(game.scene.userData.interieur ? 0.2 : 0);   // à l'intérieur, les pas résonnent
@@ -63,6 +65,8 @@ if (IS_TOUCH) {
   game.enterLobby = (...a) => { const r = entrer(...a); touch.refresh(); return r; };
   window.__touch = touch;
 }
+// le jeu : menu principal, réglages, parties, affichage partagé, harnais (window.__jeu)
+const jeu = installerJeu(game, { options, phone, touch: window.__touch, audio, ch });
 // PWA : hors ligne après la première visite (pas en file://)
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   const enregistrer = () => navigator.serviceWorker.register('./sw.js').catch((e) => console.info('[pwa] pas de service worker :', e.message));
@@ -71,17 +75,19 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 // MANETTE (js/manette.js) : quand on passe du clavier à la manette ou l'inverse, les aides à l'écran changent de langue
 document.addEventListener('hoops-entree', () => {
   // (l'aide des touches revient quelques secondes, dans la langue de la nouvelle entrée)
-  if (game.mode === 'lobby') { game.hud.setLobby(); game._aideT = Math.max(game._aideT || 0, 8); game._aideMin = 0; game.majAide(); }
+  // (22/10 : pas en partie — l'aide des touches de la balade reviendrait au milieu de l'écran à chaque bascule)
+  if (game.mode === 'lobby' && !game.partie) { game.hud.setLobby(); game._aideT = Math.max(game._aideT || 0, 8); game._aideMin = 0; game.majAide(); }
 });
 // branchée / débranchée : l'onglet Commandes des options montre l'état et les bons boutons
 document.addEventListener('hoops-manette', () => options.rafraichir());
 
-window.__game = game; window.__settings = settings;   // accès console
+window.__game = game; window.__settings = settings;   // accès console (window.__jeu : le harnais, posé par js/jeu/index.js)
 
 // LE RIDEAU : Haythem et ses animations, les effets compilés, la première image — puis « APPUIE POUR COMMENCER ». Ce
-// geste allume le son, passe en plein écran au téléphone (les deux exigent un geste), et la balade commence.
+// geste allume le son, passe en plein écran au téléphone (les deux exigent un geste), et le jeu commence : le menu
+// principal (22/10), la balade directe (?partie=balade, ou le réglage « Démarrage : balade »), ou une partie (?partie=…).
 const _boot = document.getElementById('boot');
-const commencer = () => { audio.init(); plein?.demande(); game.enterLobby(); };
+const commencer = () => { audio.init(); plein?.demande(); jeu.demarrer(); };
 if (ch && _boot) {
   preparerJeu(game, ch, { avatar: prechargerModele(HAYTHEM.model) })
     .catch((e) => console.warn('[chargement] préparation :', e))
@@ -91,7 +97,7 @@ if (ch && _boot) {
     });
 } else {
   game.start();
-  game.enterLobby();
+  jeu.demarrer();
   // Sans écran de chargement : on le retire APRÈS la première image peinte (sinon un éclair blanc)
   const partir = () => _boot?.remove();
   requestAnimationFrame(() => requestAnimationFrame(partir));

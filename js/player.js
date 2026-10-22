@@ -53,10 +53,15 @@ const modelCache = {};
 // AVATARS DE TÉLÉPHONE (tools/avatars_tel.py) : assets/tel/<nom>.glb, textures en 512 (le visage reste en 1024) — trois
 // fois moins de mémoire graphique. Fichier absent : on retombe sur l'original.
 export const urlAvatar = (url) => (TELEPHONE && /^assets\/[a-z0-9_]+\.glb$/.test(url) ? url.replace('assets/', 'assets/tel/') : url);
-function loadModel(url) {
+// LE CHARGEUR DISCRET (22/10, socle du jeu) : les avatars des bots (`def.discret`) passent par un chargeur à son propre
+// LoadingManager — ils ne déclenchent pas DefaultLoadingManager.onLoad, qui recuirait l'ombre du sol, la carte
+// d'environnement et le cache d'ombre (js/kit_decor.js, dans les 30 s après la construction).
+let loaderDiscret = null;
+function loadModel(url, discret = false) {
   if (!modelCache[url]) {
     const tel = urlAvatar(url);
-    modelCache[url] = (tel === url ? loader.loadAsync(url) : loader.loadAsync(tel).catch(() => loader.loadAsync(url))).then(avecMipmaps);
+    const L = discret ? (loaderDiscret || (loaderDiscret = new GLTFLoader(new THREE.LoadingManager()))) : loader;
+    modelCache[url] = (tel === url ? L.loadAsync(url) : L.loadAsync(tel).catch(() => L.loadAsync(url))).then(avecMipmaps);
   }
   return modelCache[url];
 }
@@ -229,7 +234,7 @@ export class Player {
 
   // ---------- avatar 3D (GLB Avaturn / Mixamo) ----------
   _loadAvatar(url, modelHeight) {
-    loadModel(url).then((gltf) => {
+    loadModel(url, !!this.def.discret).then((gltf) => {
       if (this.disposed || this.avatarUrl !== url) return;
       const model = skeletonClone(gltf.scene);
       // SkeletonUtils.clone ne clone QUE le squelette : on clone les matériaux par avatar (les retoucher ne doit pas
@@ -679,21 +684,23 @@ export class Player {
     }
     const moving = dir.lengthSq() > 0.001;
     // DANS UN RANG SERRÉ (_glisserRang) : on n'y va que le long de sa ligne ; on y entre en poussant contre son bout
-    if (this.rang || (moving && !this.airborne && this._entrerRang(dir))) { this._glisserRang(dir, dt); return; }
+    // (22/10, socle du jeu : `sansRangs` — un bot ne se faufile jamais dans un rang ; `sprintMul` — le sprint tactique)
+    if (this.rang || (moving && !this.airborne && !this.sansRangs && this._entrerRang(dir))) { this._glisserRang(dir, dt); return; }
     // VITESSE (les réglages de LA CAGE) : 3,1 m/s + la vitesse de la fiche, sprint x1,32 qui use l'endurance
     let sp = (3.1 + (this.def.spd / 100) * 2.4) * this.speedMul;
     this.sprinting = false;
-    if (sprint && moving && this.stamina > 3) { sp *= 1.32; this.stamina = Math.max(0, this.stamina - 22 * dt * this.staminaMul); this.sprinting = true; }
+    if (sprint && moving && this.stamina > 3) { sp *= this.sprintMul ?? 1.32; this.stamina = Math.max(0, this.stamina - 22 * dt * this.staminaMul); this.sprinting = true; }
     else this.stamina = Math.min(100, this.stamina + 13 * dt);
     // MARCHER : le plafond est celui de la foulée du clip de marche (2,15 m/s), où le pied ne glisse pas
     if (this.marche && !this.sprinting) { sp = Math.min(sp, 2.15); this.stamina = Math.min(100, this.stamina + 5 * dt); }
     // drapeau de sprint LISSÉ : il s'allume tout de suite, il s'éteint en un quart de seconde
     if (this.sprinting) this.sprintVu = 0.25; else this.sprintVu = Math.max(0, this.sprintVu - dt);
     sp *= this.gasMul();                                     // jambes lourdes quand l'endurance tombe
-    if (this.airborne) sp *= 0.35;
+    // (en partie, `elanAir` : l'élan est gardé en l'air, la commande n'y tire qu'en 0,45 s)
+    if (this.airborne && !this.elanAir) sp *= 0.35;
     // Inertie : on pilote une VITESSE (~0,13 s pour lancer sa course, ~0,085 s pour s'arrêter)
     const cible = _v3.set(dir.x * sp, 0, dir.z * sp);
-    const k = moving && sp > 0 ? 1 - Math.exp(-dt / 0.13) : 1 - Math.exp(-dt / 0.085);
+    const k = this.airborne && this.elanAir ? 1 - Math.exp(-dt / 0.45) : moving && sp > 0 ? 1 - Math.exp(-dt / 0.13) : 1 - Math.exp(-dt / 0.085);
     this.vel.lerp(cible, Math.min(1, k));
     if (this.vel.lengthSq() < 1e-4) this.vel.set(0, 0, 0);
     // LES MURS (js/collisions.js) : le pas est découpé et chaque morceau sorti des murs ; la vitesse perd ce qui
@@ -701,7 +708,8 @@ export class Player {
     // (les pieds RÉELS : le sol sous le joueur — une marche, un palier — plus le saut)
     const C = Player.collisions, dx = this.vel.x * dt, dz = this.vel.z * dt;
     if (C) {
-      C.deplacer(this.pos, dx, dz, RAYON_JOUEUR, this.vel, this.pos.y + this.jumpY);
+      // (`rayon`, `hautCorps`, `basCorps` : posés en partie ; absents, les valeurs de la balade)
+      C.deplacer(this.pos, dx, dz, this.rayon ?? RAYON_JOUEUR, this.vel, this.pos.y + this.jumpY, this.hautCorps, this.basCorps);
       // LE SOL sous les pieds (js/collisions.js solEn) : les volées de l'escalier sont des rampes continues, les paliers
       // des dalles ; le joueur les suit (son saut reste compté au-dessus de ce sol)
       this.pos.y = C.solEn(this.pos.x, this.pos.z, this.pos.y);
@@ -718,13 +726,14 @@ export class Player {
       const lat = nx * -this.facing.z + nz * this.facing.x;
       this.lateral = Math.abs(lat); this.lateralDir = Math.sign(lat);
       this.backward = -(nx * this.facing.x + nz * this.facing.z);
-      if (!this.airborne) this.faceWant.set(nx, 0, nz);
+      if (!this.airborne && !this.capFixe) this.faceWant.set(nx, 0, nz);
     } else {
       this.lateral = 0; this.backward = 0; this.sensLoco = 'av'; this.sensT = 0;
       // poussé contre un mur, on ne bouge plus mais on se tourne vers où l'on veut aller
-      if (moving && !this.airborne) this.faceWant.set(dir.x, 0, dir.z);
+      if (moving && !this.airborne && !this.capFixe) this.faceWant.set(dir.x, 0, dir.z);
     }
-    this.turnTo(this.faceWant, dt);
+    // (`capFixe`, en partie : le cap vient de la commande — setFacing(−sin lacet, −cos lacet) —, pas de la course)
+    if (!this.capFixe) this.turnTo(this.faceWant, dt);
   }
 
   // ---------- les rangs serrés ----------
@@ -823,7 +832,7 @@ export class Player {
     this.pos.x = x; this.pos.z = z;
     this.vel.set(R.ux * v, 0, R.uz * v);
     const C = Player.collisions;
-    if (C) { C.resoudre(this.pos, RAYON_JOUEUR, this.vel, this.pos.y + this.jumpY); this.pos.y = C.solEn(this.pos.x, this.pos.z, this.pos.y); }
+    if (C) { C.resoudre(this.pos, this.rayon ?? RAYON_JOUEUR, this.vel, this.pos.y + this.jumpY, this.hautCorps, this.basCorps); this.pos.y = C.solEn(this.pos.x, this.pos.z, this.pos.y); }
   }
 
   // ROTATION AVEC ÉLAN : la vitesse de rotation monte et redescend avec une accélération bornée. 13 rad/s jusqu'à 3 m/s,
@@ -1065,10 +1074,16 @@ export class Player {
     }
   }
 
-  update(dt) {
-    // Les couches du pas précédent (regard, respiration...) sont retirées AVANT tout le reste : le mélangeur ne doit
-    // jamais les voir (voir AvatarRig.couchesAnnuler)
-    if (this.avatar) { this.avatar.couchesAnnuler(Couches.OS); this.avatar.surAnnuler(); }
+  // LE PAS, DÉCOUPÉ (22/10, socle du jeu) : SIMULER (ce qui bouge le corps : saut, minuteries, siège, cap) puis POSER (le
+  // squelette, les clips, les couches, le groupe). La balade fait les deux à chaque pas, dans l'ordre exact d'avant la
+  // découpe (rejoué au bit près par js/jeu/harnais.js rejouerBalade) ; en partie, les bots sont SIMULÉS à 120 Hz et POSÉS
+  // une fois par image au plus (js/jeu/partie.js image). (L'avance de l'horloge d'animation, animT et walkPhase, est passée
+  // du milieu de l'ancien update au début de la pose : rien de la simulation ne la lit.)
+  update(dt) { this._annulerCouches(); this.simuler(dt); this.poser(dt, false, true); }
+  // Les couches du pas précédent (regard, respiration...) sont retirées AVANT tout le reste : le mélangeur ne doit
+  // jamais les voir (voir AvatarRig.couchesAnnuler)
+  _annulerCouches() { if (this.avatar) { this.avatar.couchesAnnuler(Couches.OS); this.avatar.surAnnuler(); } }
+  simuler(dt) {
     if (this.airborne) {
       this.jumpVel -= G * dt; this.jumpY += this.jumpVel * dt;
       if (this.jumpY <= 0) { this.landT = Math.min(0.28, 0.07 + Math.abs(this.jumpVel) * 0.04); this.jumpVelSol = this.jumpVel; this.jumpY = 0; this.jumpVel = 0; this.airborne = false; }
@@ -1091,10 +1106,6 @@ export class Player {
       T.k = Math.max(0, Math.min(1, T.k + (T.sortir ? -dt / 0.35 : dt / 0.45)));
       if (T.sortir && T.k <= 0) this.tel = null;
     }
-
-    // ---- animation ----
-    this.animT += dt;
-    this.walkPhase += dt * (this.speedNow > 0.1 ? 3.0 + this.speedNow * 1.6 : 0);
     // ASSIS : le coefficient monte en une demi-seconde, redescend en quatre dixièmes pour se relever, et la position
     // suit la même courbe
     if (this.assis) {
@@ -1105,6 +1116,17 @@ export class Player {
       this.pos.z = S.de.z + (S.a.z - S.de.z) * e;
       if (S.sortir && S.k <= 0) this.assis = null;
     }
+    this.ang = Math.atan2(this.facing.x, this.facing.z);
+  }
+
+  // `affiche` : la pose d'une image de partie, faite APRÈS l'interpolation (Partie.image) — le groupe reste à la position
+  // et au cap AFFICHÉS (posAff, angAff), sinon le corps sauterait de pas en pas ; `dejaAnnule` : les couches déjà retirées
+  // (update). Finit par `apresPose` (en partie : accroupi, arme en main).
+  poser(dt, affiche = false, dejaAnnule = false) {
+    if (!dejaAnnule) this._annulerCouches();
+    // ---- animation ----
+    this.animT += dt;
+    this.walkPhase += dt * (this.speedNow > 0.1 ? 3.0 + this.speedNow * 1.6 : 0);
     const P = this._pose(), k = damp(16, dt), cur = this.cur;
     for (const key in P) cur[key] = lerp(cur[key], P[key], k);
     let clipDriven = false;
@@ -1122,17 +1144,41 @@ export class Player {
       this.avatar.fonduAppliquer(dt);
       this._clipAvant = clipDriven; this._yAffAvant = this.yAff;
     }
-    this.ang = Math.atan2(this.facing.x, this.facing.z);
     // le corps penche (virages, accélérations) : tangage et roulis du groupe entier, voir js/couches.js
     this.couches.dynamique(dt);
     this._poserSol(dt, clipDriven);
-    this.solAff = this.pos.y;
-    this.posAff.set(this.pos.x, this.pos.y + this.yAff, this.pos.z);
-    this.mesh.position.copy(this.posAff);
-    this.mesh.rotation.set(this.couches.tangage, this.ang, this.couches.roulis);
+    if (affiche) {
+      this.mesh.position.copy(this.posAff);
+      this.mesh.rotation.set(this.couches.tangage, this.angAff, this.couches.roulis);
+    } else {
+      this.solAff = this.pos.y;
+      this.posAff.set(this.pos.x, this.pos.y + this.yAff, this.pos.z);
+      this.mesh.position.copy(this.posAff);
+      this.mesh.rotation.set(this.couches.tangage, this.ang, this.couches.roulis);
+    }
     this.mesh.updateMatrixWorld(true);
     // regard, respiration, essoufflement, petits pas, appuis : par-dessus la pose du pas
     if (this.avatar) { this.avatar.surFin(); this.couches.os(dt); this.mesh.updateMatrixWorld(true); }
+    this.apresPose?.(this, dt);
+  }
+
+  // LIBÉRER UN CORPS (22/10, socle du jeu : les bots d'une partie, js/jeu/avatars.js libererCorps) : retiré de la scène,
+  // ses matériaux CLONÉS rendus (les géométries et les textures de l'avatar restent au cache du modèle, partagées), le
+  // mélangeur arrêté, et le bonhomme de secours que crée chaque Player (jamais dessiné : renderer.info ne voyait pas la
+  // fuite — 5 matériaux, 17 géométries).
+  dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
+    if (this.mesh && this.mesh.parent) this.mesh.parent.remove(this.mesh);
+    if (this.telMesh && this.telMesh.parent) this.telMesh.parent.remove(this.telMesh);
+    this.telMesh = null; this.tel = null;
+    if (this.anim) { try { this.anim.mixer.stopAllAction(); this.anim.mixer.uncacheRoot(this.anim.mixer.getRoot()); } catch (e) { /* déjà coupé */ } }
+    const mats = new Set(), geos = new Set();
+    if (this.body) this.body.traverse((o) => { if (o.isMesh) { geos.add(o.geometry); mats.add(o.material); } });
+    if (this.avatarModel) this.avatarModel.traverse((o) => { if (o.isMesh && o.material && !Array.isArray(o.material)) mats.add(o.material); });
+    for (const g of geos) g.dispose();
+    for (const m of mats) m.dispose();
+    this.avatar = null; this.anim = null; this.avatarModel = null; this.eclairage = null; this.apresPose = null;
   }
 
   // La pose procédurale du pas (avatar ou bonhomme en primitives), sans clip.

@@ -18,13 +18,15 @@ export class AudioFX {
   init() {
     if (!this.ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AC();
+      // (22/10, socle du jeu : sous ?test=1, le harnais pose `creerContexte` — un OfflineAudioContext, qui ne demande pas de
+      // geste : les tests lisent ce qui est PROGRAMMÉ, js/jeu/harnais.js journalAudio)
+      this.ctx = this.creerContexte ? this.creerContexte() : new AC();
       this.master = this.ctx.createGain();
       this.master.gain.value = this.vol.master;
       this.master.connect(this.ctx.destination);
       this._reverb();
     }
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.ctx.state === 'suspended' && !(typeof OfflineAudioContext !== 'undefined' && this.ctx instanceof OfflineAudioContext)) this.ctx.resume();
   }
 
   // La salle : `k` = la part de son réverbéré (0 dehors ; ~0,2 dans un couloir). Posé par le jeu d'après la carte.

@@ -22,6 +22,60 @@ export const ACTIONS = [
   { id: 'pause',   label: 'Pause / menu',               group: 'Système',     def: ['Escape', null], pad: ['Pad:Start', null] },
 ];
 
+// LES PROFILS DU JEU (22/10, socle du combat et du prop hunt ; spec § 4.8) : des tables COMPLÈTES, séparées de celle de la
+// balade (ACTIONS, inchangée) — un code ne sert qu'une action DANS un profil. Codes physiques (e.code), plus ceux de la
+// souris capturée (« Souris:0 » gauche, « Souris:2 » droit, « Souris:3/4 » les boutons de côté) et de la molette
+// (« Molette:haut/bas »), posés par js/input.js en partie seulement. JAMAIS Ctrl par défaut : en AZERTY, Ctrl + Z (le code
+// KeyW, « avancer ») ferme l'onglet. Le double appui sur Maj (sprint tactique) a sa 2e touche, SOURIS 5 : cinq Maj
+// d'affilée ouvrent les « touches rémanentes » de Windows.
+const DEPLACEMENT = [
+  { id: 'forward', label: 'Avancer',  group: 'Déplacement', def: ['KeyW', 'ArrowUp'],    stick: '↑' },
+  { id: 'back',    label: 'Reculer',  group: 'Déplacement', def: ['KeyS', 'ArrowDown'],  stick: '↓' },
+  { id: 'left',    label: 'Gauche',   group: 'Déplacement', def: ['KeyA', 'ArrowLeft'],  stick: '←' },
+  { id: 'right',   label: 'Droite',   group: 'Déplacement', def: ['KeyD', 'ArrowRight'], stick: '→' },
+];
+export const ACTIONS_COMBAT = [
+  ...DEPLACEMENT,
+  { id: 'sprint',     label: 'Sprint (double appui : tactique)', group: 'Déplacement', def: ['ShiftLeft', 'ShiftRight'], pad: ['Pad:L3', null] },
+  { id: 'sprintTact', label: 'Sprint tactique (un appui)',       group: 'Déplacement', def: ['Souris:4', null] },
+  { id: 'walk',       label: 'Marcher',                          group: 'Déplacement', def: ['AltLeft', null] },
+  { id: 'jump',       label: 'Sauter / franchir',                group: 'Déplacement', def: ['Space', null], pad: ['Pad:A', null] },
+  { id: 'accroupi',   label: 'Accroupi (en sprint : glissade)',  group: 'Déplacement', def: ['KeyC', null], pad: ['Pad:B', null] },
+  { id: 'tir',        label: 'Tirer',                            group: 'Armes',       def: ['Souris:0', null], pad: ['Pad:RT', null] },
+  { id: 'visee',      label: 'Viser',                            group: 'Armes',       def: ['Souris:2', null], pad: ['Pad:LT', null] },
+  { id: 'recharger',  label: 'Recharger',                        group: 'Armes',       def: ['KeyR', null], pad: ['Pad:X', null] },
+  { id: 'armeSuiv',   label: 'Arme suivante',                    group: 'Armes',       def: ['Molette:bas', null], pad: ['Pad:Y', null] },
+  { id: 'armePrec',   label: 'Arme précédente',                  group: 'Armes',       def: ['Molette:haut', null] },
+  { id: 'arme1',      label: 'Arme principale',                  group: 'Armes',       def: ['Digit1', null] },
+  { id: 'arme2',      label: 'Arme secondaire',                  group: 'Armes',       def: ['Digit2', null] },
+  { id: 'couteau',    label: 'Couteau',                          group: 'Armes',       def: ['KeyV', 'Souris:3'], pad: ['Pad:R3', null] },
+  { id: 'letale',     label: 'Grenade (tenir : cuire)',          group: 'Armes',       def: ['KeyG', null], pad: ['Pad:RB', null] },
+  { id: 'tactique',   label: 'Grenade flash',                    group: 'Armes',       def: ['KeyQ', null], pad: ['Pad:LB', null] },
+  { id: 'interagir',  label: 'Interagir (ramasser)',             group: 'Actions',     def: ['KeyF', null] },
+  { id: 'scanner',    label: 'Scanner (chasseur)',               group: 'Actions',     def: ['KeyX', null], pad: ['Pad:Down', null] },
+  { id: 'serie1',     label: 'Série 1',                          group: 'Actions',     def: ['Digit3', null], pad: ['Pad:Left', null] },
+  { id: 'serie2',     label: 'Série 2',                          group: 'Actions',     def: ['Digit4', null], pad: ['Pad:Up', null] },
+  { id: 'serie3',     label: 'Série 3',                          group: 'Actions',     def: ['Digit5', null], pad: ['Pad:Right', null] },
+  { id: 'scores',     label: 'Tableau des scores (tenir)',       group: 'Système',     def: ['Tab', null], pad: ['Pad:Back', null] },
+  { id: 'pause',      label: 'Pause / menu',                     group: 'Système',     def: ['Escape', null], pad: ['Pad:Start', null] },
+];
+export const ACTIONS_PROP = [
+  ...DEPLACEMENT,
+  { id: 'sprint',      label: 'Sprint',                            group: 'Déplacement', def: ['ShiftLeft', 'ShiftRight'], pad: ['Pad:L3', null] },
+  { id: 'walk',        label: 'Marcher (sans bruit)',              group: 'Déplacement', def: ['AltLeft', null] },
+  { id: 'jump',        label: 'Sauter',                            group: 'Déplacement', def: ['Space', null], pad: ['Pad:A', null] },
+  { id: 'deguiser',    label: 'Devenir le meuble visé',            group: 'Prop',        def: ['KeyE', 'Souris:0'], pad: ['Pad:X', null] },
+  { id: 'verrou',      label: 'Verrouiller le cap',                group: 'Prop',        def: ['KeyR', null], pad: ['Pad:Y', null] },
+  { id: 'figer',       label: 'Se figer',                          group: 'Prop',        def: ['KeyF', 'Souris:2'], pad: ['Pad:B', null] },
+  { id: 'provoquer',   label: 'Roue des provocations (tenir)',     group: 'Prop',        def: ['KeyT', null], pad: ['Pad:LB', null] },
+  { id: 'provocVite',  label: 'Provocation (la dernière)',         group: 'Prop',        def: ['KeyG', 'Molette:bas'], pad: ['Pad:RB', null] },
+  ...[1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({ id: 'provoc' + n, label: 'Provocation ' + n, group: 'Prop', def: ['Digit' + n, null] })),
+  { id: 'scores',      label: 'Tableau des scores (tenir)',        group: 'Système',     def: ['Tab', null], pad: ['Pad:Back', null] },
+  { id: 'pause',       label: 'Pause / menu',                      group: 'Système',     def: ['Escape', null], pad: ['Pad:Start', null] },
+];
+// le profil -> sa liste (la balade : ACTIONS)
+export const LISTES_ACTIONS = { balade: ACTIONS, combat: ACTIONS_COMBAT, prop: ACTIONS_PROP };
+
 export const WEATHERS_OPT = [['auto', 'Auto'], ['soleil', 'Soleil'], ['nuages', 'Couvert'], ['pluie', 'Pluie']];
 export const QUALITIES = [['auto', 'Auto'], ['low', 'Basse'], ['medium', 'Moyenne'], ['high', 'Haute'],
   ['ultra', 'Ultra'], ['extreme', 'Extrême']];
@@ -50,19 +104,32 @@ const DEFAULTS = {
   // coin (vide = places par défaut ; recopié à part dans load(), deepMerge ne garde que les clés connues).
   controls: { sensitivity: 1.0, invertY: false, bindings: defaultBindings(),
     pad: { bindings: defaultPadBindings(), deadzone: 0.15, sens: 1.0, invertY: false, vibrations: true },
-    tactile: { taille: 1, opacite: 0.8, stick: 'flottant', vibrations: true, places: {} } },
+    tactile: { taille: 1, opacite: 0.8, stick: 'flottant', vibrations: true, places: {} },
+    // (22/10, socle du jeu) les profils de touches du COMBAT et du PROP HUNT (touches et manette), et les réglages de la vue
+    // à la 1re personne : `sens` 0,45 = 5 585 px par tour (18 cm à 800 ppp), `champ` horizontal 16:9 en degrés (75-110)
+    combat: { bindings: defaultBindings(ACTIONS_COMBAT), pad: defaultPadBindings(ACTIONS_COMBAT) },
+    prop: { bindings: defaultBindings(ACTIONS_PROP), pad: defaultPadBindings(ACTIONS_PROP) },
+    fps: { sens: 0.45, sensVisee: 1.0, champ: 90, viseeMaintenue: true, accroupiMaintenu: false, sprintAuto: false, aideVisee: true,
+      tirAuto: TELEPHONE, reticule: '#ffffff', secousses: 1 } },
   // `vue` : la vue de la balade (3 = 3e personne, 2 = épaule, 1 = première personne, 4 = vue photo) ; `emotes` : les identifiants des
-  // emotes mises sur la roue (huit au plus, js/emotes.js ; vide = les huit de départ)
-  game: { vue: 3, emotes: [] },
+  // emotes mises sur la roue (huit au plus, js/emotes.js ; vide = les huit de départ) ; `demarrage` (22/10) : 'menu' (le menu
+  // principal après « APPUIE ») ou 'balade' (l'arrivée directe d'avant)
+  game: { vue: 3, emotes: [], demarrage: 'menu' },
+  // LES DERNIERS CHOIX DE PARTIE (22/10, socle du jeu ; spec § 2.2) ; `prop.zone: null` = calculée au lancement (§ 3.9) ;
+  // `habillage` : 'airsoft' (par défaut) ou 'militaire' ; `fluidite` : l'option « Priorité fluidité » (éteinte)
+  jeu: { combat: { mode: 'equipes', zone: 'ecole', allies: 3, ennemis: 4, difficulte: 'regulier', classe: 'assaut', avatars: [] },
+    prop: { zone: null, manches: 6, acteurs: 5, difficulte: 'facile', premierRole: 'prop', chasseurSeul: false,
+      aides: { discretion: true, oeil: true, voirSons: TELEPHONE } },
+    habillage: 'airsoft', fluidite: false },
 };
 const KEY = 'iris.settings.v1';
 
-export function defaultBindings() {
-  const b = {}; for (const a of ACTIONS) b[a.id] = [...a.def]; return b;
+export function defaultBindings(liste = ACTIONS) {
+  const b = {}; for (const a of liste) b[a.id] = [...a.def]; return b;
 }
 // Manette : deux emplacements par action aussi (la caméra en a deux par défaut : VUE et la croix vers le bas).
-export function defaultPadBindings() {
-  const b = {}; for (const a of ACTIONS) b[a.id] = a.pad ? [...a.pad] : [null, null]; return b;
+export function defaultPadBindings(liste = ACTIONS) {
+  const b = {}; for (const a of liste) b[a.id] = a.pad ? [...a.pad] : [null, null]; return b;
 }
 const estCodePad = (c) => c === null || (typeof c === 'string' && c.startsWith('Pad:'));
 
@@ -87,7 +154,14 @@ class Settings {
 
   load() {
     let brut = null;
-    try { const raw = localStorage.getItem(KEY); if (raw) { brut = JSON.parse(raw); this.data = deepMerge(DEFAULTS, brut); } }
+    try { const raw = localStorage.getItem(KEY); if (raw) brut = JSON.parse(raw); }
+    catch (e) { console.warn('[settings] lecture impossible, valeurs par défaut', e); brut = null; }
+    this.charger(brut);
+  }
+  // (22/10, socle du jeu) la lecture d'une sauvegarde `brut` (objet, ou null) SANS toucher au stockage : les tests y passent
+  // un ancien iris.settings.v1 (js/jeu/tests/test_socle.js) — chaque profil de touches est réparé contre SA liste.
+  charger(brut) {
+    try { this.data = brut ? deepMerge(DEFAULTS, brut) : clone(DEFAULTS); }
     catch (e) { console.warn('[settings] lecture impossible, valeurs par défaut', e); this.data = clone(DEFAULTS); brut = null; }
     // chaque action a toujours 2 emplacements
     for (const a of ACTIONS) { const b = this.bindings[a.id]; if (!Array.isArray(b) || b.length !== 2) this.bindings[a.id] = [...a.def]; }
@@ -98,6 +172,18 @@ class Settings {
     for (const a of ACTIONS) {
       const b = pad.bindings[a.id];
       if (!Array.isArray(b) || b.length !== 2 || !b.every(estCodePad)) pad.bindings[a.id] = a.pad ? [...a.pad] : [null, null];
+    }
+    // (les profils du jeu : deux emplacements par action, des codes de manette côté manette, contre leur propre liste)
+    for (const p of ['combat', 'prop']) {
+      const P = this.controls[p], L = LISTES_ACTIONS[p];
+      if (!P.bindings || typeof P.bindings !== 'object') P.bindings = defaultBindings(L);
+      if (!P.pad || typeof P.pad !== 'object') P.pad = defaultPadBindings(L);
+      for (const a of L) {
+        const b = P.bindings[a.id];
+        if (!Array.isArray(b) || b.length !== 2 || b.some((c) => estCodePad(c) && c !== null)) P.bindings[a.id] = [...a.def];
+        const q = P.pad[a.id];
+        if (!Array.isArray(q) || q.length !== 2 || !q.every(estCodePad)) P.pad[a.id] = a.pad ? [...a.pad] : [null, null];
+      }
     }
     const borne = (v, lo, hi, d) => (v !== null && v !== '' && Number.isFinite(+v) ? Math.max(lo, Math.min(hi, +v)) : d);
     pad.deadzone = borne(pad.deadzone, 0.03, 0.5, 0.15);
@@ -133,19 +219,24 @@ class Settings {
     o[ks[ks.length - 1]] = value; this.save();
   }
   get(path) { return path.split('.').reduce((o, k) => (o ? o[k] : undefined), this.data); }
-  // touche `code` sur l'action `id`, emplacement `slot` (0/1) ; retire ce code partout ailleurs (pas de doublon)
-  bind(id, slot, code) {
-    for (const a of ACTIONS) for (let s = 0; s < 2; s++) if (this.bindings[a.id][s] === code && !(a.id === id && s === slot)) this.bindings[a.id][s] = null;
-    this.bindings[id][slot] = code; this.save();
+  // touche `code` sur l'action `id`, emplacement `slot` (0/1) ; retire ce code partout ailleurs (pas de doublon) — DANS le
+  // profil (22/10 : 'balade', 'combat' ou 'prop' ; un code peut servir une action par profil)
+  bind(id, slot, code, profil = 'balade') {
+    const B = this.bindingsDe(profil);
+    for (const a of LISTES_ACTIONS[profil] || ACTIONS) for (let s = 0; s < 2; s++) if (B[a.id][s] === code && !(a.id === id && s === slot)) B[a.id][s] = null;
+    B[id][slot] = code; this.save();
   }
   unbind(id, slot) { this.bindings[id][slot] = null; this.save(); }
   // Même chose côté manette : un bouton ne sert qu'à une action, il est retiré de celle qui l'avait.
   get padBindings() { return this.data.controls.pad.bindings; }
-  bindPad(id, slot, code) {
-    const pb = this.padBindings;
-    for (const a of ACTIONS) for (let s = 0; s < 2; s++) if (pb[a.id][s] === code && !(a.id === id && s === slot)) pb[a.id][s] = null;
+  bindPad(id, slot, code, profil = 'balade') {
+    const pb = this.padBindingsDe(profil);
+    for (const a of LISTES_ACTIONS[profil] || ACTIONS) for (let s = 0; s < 2; s++) if (pb[a.id][s] === code && !(a.id === id && s === slot)) pb[a.id][s] = null;
     pb[id][slot] = code; this.save();
   }
+  // les touches et les boutons d'un profil ('balade' : ceux d'avant, à leur place)
+  bindingsDe(profil = 'balade') { return profil === 'combat' || profil === 'prop' ? this.data.controls[profil].bindings : this.bindings; }
+  padBindingsDe(profil = 'balade') { return profil === 'combat' || profil === 'prop' ? this.data.controls[profil].pad : this.padBindings; }
   unbindPad(id, slot) { this.padBindings[id][slot] = null; this.save(); }
   onChange(fn) { this._subs.add(fn); return () => this._subs.delete(fn); }
   _emit() { for (const fn of this._subs) { try { fn(this); } catch (e) { console.error(e); } } }
@@ -170,8 +261,12 @@ let layoutMap = null;
 if (navigator.keyboard && navigator.keyboard.getLayoutMap) {
   navigator.keyboard.getLayoutMap().then((m) => { layoutMap = m; document.dispatchEvent(new Event('hoops-keylayout')); }).catch(() => {});
 }
+// (22/10, socle du jeu) les boutons de la souris capturée et la molette (js/input.js, en partie)
+const SOURIS = { 'Souris:0': 'CLIC G', 'Souris:2': 'CLIC D', 'Souris:1': 'CLIC MOLETTE', 'Souris:3': 'SOURIS 4', 'Souris:4': 'SOURIS 5',
+  'Molette:haut': 'MOLETTE ↑', 'Molette:bas': 'MOLETTE ↓' };
 export function keyLabel(code) {
   if (!code) return '—';
+  if (SOURIS[code]) return SOURIS[code];
   if (NAMED[code]) return NAMED[code];
   if (layoutMap && layoutMap.has(code)) { const k = layoutMap.get(code); if (k && k.trim()) return k.length === 1 ? k.toUpperCase() : k.toUpperCase(); }
   if (AZERTY[code]) return AZERTY[code];
@@ -186,11 +281,12 @@ export function keyLabel(code) {
 // la manette, c'est son bouton qu'on nomme : toutes les aides du jeu passent par ici, elles basculent donc
 // d'elles-mêmes entre « ESPACE » et « X » (ou « CARRÉ » sur une manette PlayStation), et reviennent au clavier.
 // Au DOIGT, c'est le bouton à l'écran (js/touch.js pose `entree.tactile`) : « SAUT », pas « ESPACE ».
-export function actionKey(id) {
-  if (entree.manette) return padActionLabel(id);
+// (22/10 : `profil` — en partie, celui de la partie ; hors partie, la balade)
+export function actionKey(id, profil = (typeof window !== 'undefined' && window.__game && window.__game.partie ? window.__game.partie.profil : 'balade')) {
+  if (entree.manette) return padActionLabel(id, entree.type, profil);
   const t = entree.tactile && entree.tactile(id);
   if (t) return t;
-  const b = settings.bindings[id]; return keyLabel(b[0] || b[1]);
+  const b = settings.bindingsDe(profil)[id] || settings.bindings[id] || []; return keyLabel(b[0] || b[1]);
 }
 
 // ---------- MANETTE : codes et libellés ----------
@@ -239,9 +335,9 @@ export function padGlyph(code, type = entree.type) {
   return `<span class="pad-g${symb || txt.length === 1 ? ' rond' : ''}${coul ? ' c-' + coul : ''}" title="${txt}">${corps}</span>`;
 }
 // libellé manette d'une action : le stick gauche pour le déplacement, sinon le premier bouton affecté
-export function padActionLabel(id, type = entree.type) {
-  const a = ACTIONS.find((x) => x.id === id);
+export function padActionLabel(id, type = entree.type, profil = 'balade') {
+  const a = (LISTES_ACTIONS[profil] || ACTIONS).find((x) => x.id === id);
   if (a && a.stick) return `STICK G ${a.stick}`;
-  const b = settings.padBindings[id] || [];
+  const b = settings.padBindingsDe(profil)[id] || settings.padBindings[id] || [];
   return padLabel(b[0] || b[1], type);
 }

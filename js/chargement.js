@@ -574,7 +574,8 @@
           }
         }, 120);
       }
-      if (TRACE) go(null);              // relevé automatique : personne ne touche l'écran
+      // relevé automatique, ou tests du jeu (?test=1, js/jeu/harnais.js) : personne ne touche l'écran
+      if (TRACE || arg('test') === '1') go(null);
     });
   }
 

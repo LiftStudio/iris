@@ -171,7 +171,7 @@ export class Game {
     this.ombres = new OmbresContact(this.renderer, this.scene);   // taches douces sous le joueur et le mobilier
     this.fx.onDowngrade = (q) => {
       const noms = { extreme: 'EXTRÊME', ultra: 'ULTRA', high: 'HAUTE', medium: 'MOYENNE', low: 'BASSE' };
-      this.hud.feedback(`GRAPHISMES : ${noms[q] || q}`, 'warn');
+      this._dire(`GRAPHISMES : ${noms[q] || q}`, 'warn');
       if (this.settings) this.settings.set('graphics.quality', q);
     };
     this.input = new Input(settings ? settings.bindings : undefined);
@@ -214,6 +214,12 @@ export class Game {
     // ---- HAYTHEM ----
     this.user = new Player(HAYTHEM, this.scene);
     this.user.bounds = this.carte.bornes || this.user.bounds;
+    // ---- le jeu (22/10, socle du combat et du prop hunt : js/jeu/) ----
+    // `partie` : null = la balade ; sinon la partie en cours (js/jeu/partie.js), qui prend la simulation, la caméra, la
+    // carte vivante. `siegesTous` : TOUS les sièges (346), copiés avant que carte.maj ne refiltre la liste par niveau.
+    // `cameraMenu` / `carteMenu` : la caméra du menu principal et la carte vivante qui suit son corps fictif (js/jeu/index.js).
+    this.partie = null; this.siegesTous = this.sieges.slice();
+    this.cameraMenu = null; this.carteMenu = null; this.depsJeu = null;
 
     // ---- état ----
     this.mode = 'chargement';         // 'chargement' (sous l'écran de chargement), puis 'lobby' : la balade
@@ -235,18 +241,30 @@ export class Game {
       clearTimeout(this._resizeT);
       this._resizeT = setTimeout(() => this.fx.resize(window.innerWidth, window.innerHeight), 160);
     };
-    this._onClick = () => { if (this.mode === 'lobby' && !this.paused && !this.input.blocked && document.pointerLockElement !== canvas) { try { const r = canvas.requestPointerLock?.(); if (r && r.catch) r.catch(() => {}); } catch (e) { /* capture souris refusée (iframe, aperçu) */ } } };
-    this._onDown = () => { this.dragging = true; };
-    this._onUp = () => { this.dragging = false; };
+    // (22/10, socle du jeu : en partie, la capture passe par la partie — pointeur brut, réponse rendue — et le clic tire au
+    // lieu de faire glisser la caméra ; la souris capturée choisit dans la roue des provocations quand elle est ouverte)
+    this._onClick = () => {
+      if (this.partie) { if (!this.paused && !this.input.blocked && document.pointerLockElement !== canvas) this.partie.capturer(); return; }
+      if (this.mode === 'lobby' && !this.paused && !this.input.blocked && document.pointerLockElement !== canvas) { try { const r = canvas.requestPointerLock?.(); if (r && r.catch) r.catch(() => {}); } catch (e) { /* capture souris refusée (iframe, aperçu) */ } }
+    };
+    this._onDown = () => { if (!this.partie) this.dragging = true; };
+    this._onUp = () => { if (!this.partie) this.dragging = false; };
     this._onMove = (e) => {
+      if (this.partie?.roueOuverte?.()) { this.partie.mouvementSouris(e.movementX, e.movementY); return; }
       if (this.mode !== 'lobby' || this.paused || this.input.blocked) return;
       if (document.pointerLockElement === canvas || this.dragging) {
+        if (this.partie && Math.abs(e.movementX) > 400) return;           // (un pic de la souris capturée : ignoré)
         const c = this.settings ? this.settings.controls : { sensitivity: 1, invertY: false };
-        this.camYaw -= e.movementX * 0.0025 * c.sensitivity;
+        const [kx, ky] = this.partie ? this.partie.souris() : [0.0025 * c.sensitivity, 0.002 * c.sensitivity];
+        const [lo, hi] = this.bornesTangage();
+        // (en balade, le calcul d'avant, au bit près)
+        this.camYaw -= this.partie ? e.movementX * kx : e.movementX * 0.0025 * c.sensitivity;
         if (Math.abs(e.movementX) > 1) this.camManuT = performance.now();
-        this.camPitch = clamp(this.camPitch + e.movementY * 0.002 * c.sensitivity * (c.invertY ? -1 : 1), -0.1, 0.9);
+        this.camPitch = clamp(this.camPitch + (this.partie ? e.movementY * ky : e.movementY * 0.002 * c.sensitivity) * (c.invertY ? -1 : 1), lo, hi);
       }
     };
+    // (la capture du pointeur perdue en pleine partie — Échap, la fenêtre quittée — : la pause, dans la même image)
+    document.addEventListener('iris-pointeur', (e) => { if (this.partie && !e.detail.capture && !this.paused) this.togglePause(); });
     window.addEventListener('resize', this._onResize);
     canvas.addEventListener('click', this._onClick);
     canvas.addEventListener('mousedown', this._onDown);
@@ -263,12 +281,12 @@ export class Game {
     // Le rendu peut refuser ou abandonner un préréglage : on le DIT.
     const QNOM = { low: 'BASSE', medium: 'MOYENNE', high: 'HAUTE', ultra: 'ULTRA', extreme: 'EXTRÊME' };
     document.addEventListener('hoops-qualite-bridee', (e) => {
-      this.hud.feedback(`${QNOM[e.detail.demande] || e.detail.demande} impossible ici → ${QNOM[e.detail.applique] || e.detail.applique}`, 'bad');
+      this._dire(`${QNOM[e.detail.demande] || e.detail.demande} impossible ici → ${QNOM[e.detail.applique] || e.detail.applique}`, 'bad');
     });
-    document.addEventListener('hoops-qualite-baissee', (e) => { this.hud.feedback(`Trop lent : qualité → ${QNOM[e.detail.quality] || e.detail.quality}`, 'info'); });
-    document.addEventListener('hoops-qualite-remontee', (e) => { this.hud.feedback(`Ça respire : qualité → ${QNOM[e.detail.quality] || e.detail.quality}`, 'info'); });
+    document.addEventListener('hoops-qualite-baissee', (e) => { this._dire(`Trop lent : qualité → ${QNOM[e.detail.quality] || e.detail.quality}`, 'info'); });
+    document.addEventListener('hoops-qualite-remontee', (e) => { this._dire(`Ça respire : qualité → ${QNOM[e.detail.quality] || e.detail.quality}`, 'info'); });
     document.addEventListener('hoops-qualite-lourde', (e) => {
-      this.hud.feedback(`${QNOM[e.detail.quality] || e.detail.quality} : ${Math.round(1000 / e.detail.ms)} im/s ici — baisse d'un cran si ça gêne`, 'info');
+      this._dire(`${QNOM[e.detail.quality] || e.detail.quality} : ${Math.round(1000 / e.detail.ms)} im/s ici — baisse d'un cran si ça gêne`, 'info');
     });
     // L'IMAGE PERDUE : iOS et les téléphones à court de mémoire retirent son contexte WebGL à la page. On le dit, avec
     // RECHARGER ; si le navigateur rend le contexte (js/fx.js repart alors en moyenne), on peut aussi continuer.
@@ -290,6 +308,10 @@ export class Game {
     this.placerAuDepart();
   }
 
+  // UN MESSAGE DU JEU (22/10, socle) : en balade le bandeau d'aujourd'hui (hud.feedback) ; en partie, l'annonce de la partie
+  // — jamais hud.feedback, qui force une mise en page et fait vibrer la manette (spec § 4.1, règle 13)
+  _dire(texte, cls = 'info') { if (this.partie) this.partie.annonce(texte, cls); else this.hud.feedback(texte, cls); }
+
   // réglages du menu Options (appelé au démarrage et à chaque changement)
   applySettings() {
     const s = this.settings; if (!s) return;
@@ -299,9 +321,11 @@ export class Game {
     const cle = JSON.stringify(rendu);
     if (cle !== this._cleRendu) { this._cleRendu = cle; this.fx.applyGraphics(s.graphics); }
     if (this.weather && (weather || 'auto') !== this._modeMeteo) { this._modeMeteo = weather || 'auto'; this.weather.setMode(this._modeMeteo); }
-    this.input.setBindings(s.bindings);
+    // (22/10 : le profil de touches du moment — balade, combat ou prop hunt —, SANS purge : ce rappel tourne à chaque
+    // settings.set, y compris quand la qualité automatique change de préréglage en pleine manche)
+    this.appliquerProfil();
     this.hud.fps(s.graphics.fps);
-    if (this.mode === 'lobby') this.hud.setLobby();
+    if (this.mode === 'lobby' && !this.partie) this.hud.setLobby();
   }
 
   // Compile en parallèle (KHR_parallel_shader_compile) les programmes de `o` tels qu'ils serviront : pour la cible où la
@@ -375,15 +399,70 @@ export class Game {
   }
 
   // La balade commence (l'écran de chargement vient de se lever, js/main.js)
-  enterLobby() {
+  // (22/10, socle du jeu : `aide: false` à l'entrée d'une partie — ni le nom de la carte, ni l'aide des touches de la
+  // balade, qui resterait plantée au milieu de l'écran : seul update() la fait baisser, et en partie il rend la main)
+  enterLobby({ aide = true } = {}) {
     this.mode = 'lobby'; this.paused = false; hideOverlay(); this.wheel.close();
     this.fx.reAdapter();          // l'œil repart de la vue de balade (js/fx.js)
     this.hud.show(); this.hud.setLobby();
-    this.hud.feedback(this.carte.nom ? this.carte.nom.toUpperCase() : 'IRIS', 'info');
-    // L'AIDE DES TOUCHES au milieu de l'écran : le temps de la lire (14 s, dont 6 s au moins après le premier pas), puis
-    // elle s'efface — le rappel en bas à droite (.keys) reste, et Options › Commandes a tout.
-    this.hud.hint(this.lobbyHint()); this._aideT = 14; this._aideMin = 6;
+    if (aide) {
+      this.hud.feedback(this.carte.nom ? this.carte.nom.toUpperCase() : 'IRIS', 'info');
+      // L'AIDE DES TOUCHES au milieu de l'écran : le temps de la lire (14 s, dont 6 s au moins après le premier pas), puis
+      // elle s'efface — le rappel en bas à droite (.keys) reste, et Options › Commandes a tout.
+      this.hud.hint(this.lobbyHint()); this._aideT = 14; this._aideMin = 6;
+    } else { this.hud.hint(''); this._aideT = 0; this._aideMin = 0; }
     this.input.blocked = false;
+  }
+
+  // ---------- le jeu : menu principal et parties (22/10, socle ; js/jeu/) ----------
+  // Les bornes du tangage : celles de la balade (-0,1 ; 0,9), ou celles de la partie (± 1,48 ; un prop -0,7 ; 1,25)
+  bornesTangage() { return this.partie ? this.partie.bornesTangage() : [-0.1, 0.9]; }
+  // LE PROFIL DE TOUCHES du moment (balade, combat, prop hunt : js/settings.js) ; `purger` : à l'entrée et à la sortie d'une
+  // partie et au changement de rôle seulement (jamais depuis applySettings : on y perdrait un saut, une recharge)
+  appliquerProfil({ purger = false } = {}) {
+    const p = this.partie ? this.partie.profil : 'balade', s = this.settings;
+    if (s && s.bindingsDe) this.input.setBindings(s.bindingsDe(p), s.padBindingsDe(p));
+    else if (s) this.input.setBindings(s.bindings);
+    this.input.sourisJeu = p !== 'balade';
+    if (purger) this.input.purger();
+  }
+  // LE MENU PRINCIPAL : l'école vivante derrière lui (la caméra et la carte du menu : js/jeu/index.js), pas « en jeu » pour
+  // les quatorze lectures de `mode === 'lobby'` (tactile, roue, manette, caméra)
+  entrerMenu() {
+    if (this.partie) { this.quitterPartie('menu'); return; }
+    this.mode = 'menu'; this.paused = false; hideOverlay(); this.wheel.close();
+    this.hud.hint(''); this.hud.hide();
+    if (document.pointerLockElement) document.exitPointerLock?.();
+    this.input.purger();
+    document.dispatchEvent(new CustomEvent('iris-menu'));
+  }
+  // UNE PARTIE : préparée (écran PRÉPARATION : `progres(etape, f)`), puis entrée ; `Classe` vient de js/jeu/ (game.js n'en
+  // importe rien), ses dépendances d'affichage sont posées par js/jeu/index.js (`depsJeu`)
+  async lancerPartie(Classe, opts = {}, progres = null) {
+    if (this.partie) this.quitterPartie(null);
+    const p = new Classe(this, opts, this.depsJeu || {});
+    await p.preparer(progres || (() => {}));
+    this.partie = p;
+    p.entrer();
+    this.enterLobby({ aide: false });
+    this.appliquerProfil({ purger: true });
+    document.body.classList.add('combat');
+    document.dispatchEvent(new CustomEvent('iris-partie', { detail: { id: p.id, etat: 'entree' } }));
+    return p;
+  }
+  // QUITTER : l'école rendue telle qu'en balade (la partie le fait dans sortir : portes, ascenseur, bornes, corps), le profil
+  // de la balade, Haythem au départ ; puis le menu (`vers` 'menu'), la balade ('balade') ou rien (null : une autre partie suit)
+  quitterPartie(vers = 'menu') {
+    const p = this.partie;
+    if (!p) { if (vers === 'menu') this.entrerMenu(); else if (vers === 'balade') this.enterLobby(); return; }
+    try { p.sortir(); } finally { this.partie = null; }
+    this.appliquerProfil({ purger: true });
+    if (document.pointerLockElement) document.exitPointerLock?.();
+    this.paused = false; hideOverlay();
+    document.body.classList.remove('combat');
+    this.placerAuDepart();
+    document.dispatchEvent(new CustomEvent('iris-partie', { detail: { id: p.id, etat: 'sortie' } }));
+    if (vers === 'menu') this.entrerMenu(); else if (vers === 'balade') this.enterLobby();
   }
 
   // L'AIDE AU MILIEU DE L'ÉCRAN quand rien de particulier ne se passe : la proposition de siège s'il y en a une, sinon
@@ -407,7 +486,8 @@ export class Game {
   // pause a été « mangée » (elle referme la roue).
   updateEmoteInput(dt) {
     const inp = this.input, w = this.wheel;
-    if (this.paused || this.mode !== 'lobby' || inp.blocked) { if (w.isOpen) w.close(); return false; }
+    // (22/10 : jamais en partie — la roue des provocations est celle de la partie, js/jeu/partie_prop.js)
+    if (this.paused || this.mode !== 'lobby' || inp.blocked || this.partie) { if (w.isOpen) w.close(); return false; }
     if (inp.pressed('emote')) {
       if (w.isOpen) w.close();
       else if (this.canEmote()) { w.open(); this.wheelHold = 0; }
@@ -429,15 +509,29 @@ export class Game {
     if (u.startEmote(e)) { this.hud.streak(`${e.icon} ${e.label.toUpperCase()}`); this.hud.hint(`${e.label} · bouge pour arrêter`); this._aideEmote = true; }
   }
 
-  togglePause() {
+  // `parClic` : la reprise vient du bouton « Reprendre » (une activation : la capture du pointeur peut être redemandée) ;
+  // sinon Échap ou Start. (22/10, socle du jeu : à la reprise, les fronts tapés pendant la pause sont vidés ; en partie au
+  // clavier-souris, la capture est exigée — refusée, ou reprise par Échap, le calque « CLIQUE POUR JOUER » garde la
+  // partie gelée jusqu'au clic ; à la manette ou au doigt, la reprise est directe)
+  togglePause(parClic = false) {
     this.paused = !this.paused;
-    if (!this.paused) { hideOverlay(); return; }
+    if (!this.paused) {
+      hideOverlay(); this.input.purger();
+      const p = this.partie;
+      if (p && p.besoinCapture() && !document.pointerLockElement) {
+        this.paused = true;                              // (gelée le temps de la réponse, sans l'écran de pause)
+        if (parClic) p.capturer().then((ok) => { if (this.partie !== p) return; if (ok) this.paused = false; else p.attendreClic(); });
+        else p.attendreClic();
+      }
+      return;
+    }
     if (document.pointerLockElement) document.exitPointerLock?.();
-    showOverlay('PAUSE', this.carte.nom ? `IRIS · ${this.carte.nom}` : 'IRIS', [
-      { label: 'Reprendre', cls: 'btn-primary', onClick: () => this.togglePause() },
+    showOverlay('PAUSE', this.carte.nom ? `IRIS · ${this.carte.nom}` : 'IRIS', this.partie ? this.partie.boutonsPause() : [
+      { label: 'Reprendre', cls: 'btn-primary', onClick: () => this.togglePause(true) },
       { label: 'Options', cls: 'btn-secondary', onClick: () => this.cb.onOptions?.() },
       { label: 'Commandes', cls: 'btn-secondary', onClick: () => this.cb.onAide?.() },
       { label: 'Revenir au départ', cls: 'btn-secondary', onClick: () => { this.placerAuDepart(); this.togglePause(); } },
+      { label: 'Modes de jeu', cls: 'btn-secondary', onClick: () => this.entrerMenu() },
     ]);
   }
 
@@ -446,11 +540,11 @@ export class Game {
     const enJeu = this.mode === 'lobby';
     if (enJeu !== this._enJeu) { this._enJeu = enJeu; document.body.classList.toggle('en-jeu', enJeu); }
     this.input.scruter(this, dt);                    // manette : boutons -> codes « Pad:… », sticks, menus (js/manette.js)
-    this.audio.setListener(this.camera.position);
     const wheelAte = this.updateEmoteInput(dt);
     if (enJeu && !wheelAte && this.input.pressed('pause')) this.togglePause();
-    if (enJeu && this.input.pressed('phone')) this.cb.onPhone?.();
-    if (enJeu && this.input.pressed('camera')) {
+    // (22/10 : en partie, ni téléphone ni changement de vue — ces actions ne sont pas dans ses profils de touches)
+    if (enJeu && !this.partie && this.input.pressed('phone')) this.cb.onPhone?.();
+    if (enJeu && !this.partie && this.input.pressed('camera')) {
       // 3 -> épaule -> 1re personne -> vue photo -> 3
       this.vue = this.vue === 3 ? 2 : this.vue === 2 ? 1 : this.vue === 1 ? 4 : 3;
       if (this.settings) this.settings.set('game.vue', this.vue);
@@ -473,9 +567,15 @@ export class Game {
     // AVANT la caméra : elle suit la position AFFICHÉE, pas celle du dernier pas simulé
     this.interpoler();
     this.updateCamera(this.paused ? 0 : dt);
+    // l'auditeur suit la caméra DE CETTE image (22/10 : il avait une image de retard sur un virage sec ; l'orientation est
+    // dans la caméra passée en plus)
+    this.audio.setListener(this.camera.position, this.camera);
+    // la partie : poses des acteurs, HUD, effets, sons (js/jeu/partie.js image)
+    this.partie?.image(this.paused ? 0 : dt);
     // LA CARTE VIVANTE (js/carte_ecole.js maj) : les portes qui s'ouvrent devant Haythem, les lampes qui le suivent,
-    // la carte d'environnement reprise dans la pièce où il entre
-    this.carte.maj?.(this.paused ? 0 : dt, this);
+    // la carte d'environnement reprise dans la pièce où il entre — en partie, devant l'acteur que suit la caméra
+    // (`jeuCarte`) ; au menu, devant le corps fictif posé sous la caméra du plan (`carteMenu`)
+    this.carte.maj?.(this.paused ? 0 : dt, this.partie ? this.partie.jeuCarte : this.mode === 'menu' && this.carteMenu ? this.carteMenu : this);
     this.weather.update(dt, this.camera.position);
     this.cb.onTick?.(dt);
     this.scene.userData.animate?.(this.time);
@@ -484,7 +584,8 @@ export class Game {
       this._chaudT = (this._chaudT || 0) + dt;
       if (this._chaudT >= PRECHAUFFE[this._chaudN || 0]) { this._chaudN = (this._chaudN || 0) + 1; this.prechaufferScene(); }
     }
-    this.fx.calme = true;                            // (une balade : la qualité peut remonter quand la marge revient)
+    // (une balade : la qualité peut remonter quand la marge revient ; en manche, jamais — une remontée fige une image)
+    this.fx.calme = !this.partie || this.partie.calme();
     this.fx.render(dt);
     this.input.endFrame();
     this.fpsT += dt; this.fpsN++;
@@ -501,10 +602,13 @@ export class Game {
   // Une fois par image, après la boucle à pas fixe : la fraction de pas déjà écoulée à l'écran mais pas encore simulée
   interpoler() {
     const a = Math.max(0, Math.min(1, (this.acc || 0) / FIXED_DT));
-    this.user.presenter(a);
+    if (this.partie) this.partie.interpoler(a); else this.user.presenter(a);
   }
 
   update(dt) {
+    // (22/10, socle du jeu : en partie, TOUTE la simulation est celle de la partie — js/jeu/partie.js pas, l'ordre est
+    // un contrat)
+    if (this.partie) { this.partie.pas(dt); return; }
     this.user.memoriser();
     if (this.mode !== 'lobby') { this.user.move(ZERO, false, dt); this.user.update(dt); return; }
     const u = this.user, inp = this.input;
@@ -1004,6 +1108,9 @@ export class Game {
   // `poser` : la caméra posée d'emblée à sa place, sans lissage (le départ)
   updateCamera(dt, poser = false) {
     if (this.freeCam) return;   // débogage : caméra pilotée à la main (__game.freeCam = true)
+    // (22/10 : en partie, la caméra de la partie — vue à la 1re personne, orbite d'un prop, caméra de mort ; au menu, la
+    // caméra du menu)
+    if (this.partie ? this.partie.camera(dt, poser) : this.mode === 'menu' && this.cameraMenu?.(dt, poser)) return;
     const p = this.user, u = p.posAff, cp = Math.cos(this.camPitch), sp = Math.sin(this.camPitch);
     const yeux = p.h * 0.93 + p.jumpY + p.solAff;
     const bx = Math.sin(this.camYaw), bz = Math.cos(this.camYaw);

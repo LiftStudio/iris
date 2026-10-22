@@ -19,6 +19,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { sondeCiel } from './sonde_ciel.js';
 import { TELEPHONE } from './appareil.js';
+import { fermerRegistre } from './registre_meubles.js';   // (22/10, socle du jeu : les meubles copiés avant la couture)
 
 const MOBILE = TELEPHONE;     // (js/appareil.js : la même détection pour tout le jeu, `?tel=1` compris)
 export const rnd = (a, b) => a + Math.random() * (b - a);
@@ -537,6 +538,7 @@ function fusionnerDecor(scene) {
   return { candidats, fusionnes, crees };
 }
 export function optimiserDecor(scene) {
+  fermerRegistre(scene);
   const u = scene.userData;
   if (u.env && u.env.court) nePasFusionner(u.env.court);
   const d = dedupliquerMateriaux(scene);

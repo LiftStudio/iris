@@ -1,0 +1,33 @@
+/* =====================================================================
+   LE HUD DU JEU (combat et prop hunt) — socle S0 (22/10), rempli par le lot L-G
+   =====================================================================
+   En partie, `body.combat` (posée par Game.lancerPartie) cache ce qui n'appartient qu'à la balade : l'endurance, le rappel
+   des touches, le badge du téléphone, l'aide du milieu de l'écran et la petite ligne des emotes. Le calque « CLIQUE POUR
+   JOUER » (#calque-clic) : un voile à 40 % au-dessus de la scène, sous l'écran de pause. Le squelette du HUD : une ligne de
+   texte en haut à gauche (L-G : réticule, marqueurs, munitions, mini-carte, chevrons, #voile-flash…). */
+body.combat .stamina,
+body.combat #hud-keys,
+body.combat #phone-badge,
+body.combat #hud-hint,
+body.combat #hud-streak { display: none !important; }
+
+#calque-clic {
+  position: fixed; inset: 0; z-index: 25; display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.4); cursor: pointer; user-select: none;
+}
+#calque-clic[hidden] { display: none; }
+#calque-clic .calque-clic-texte {
+  font: 400 44px/1 'Bebas Neue', Oswald, system-ui, sans-serif; letter-spacing: 0.06em; color: #fff;
+  padding: 18px 34px; border: 2px solid rgba(255, 255, 255, 0.85); border-radius: 6px; background: rgba(0, 0, 0, 0.35);
+}
+
+.hud-jeu, .hud-prop {
+  position: absolute; left: 16px; top: 14px; max-width: calc(100vw - 32px);
+  font: 500 15px/1.3 Oswald, system-ui, sans-serif; color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); pointer-events: none;
+}
+.hud-prop { top: 38px; }
+.roue-provocations, .tableau-scores {
+  position: absolute; left: 50%; top: 22%; transform: translateX(-50%); max-width: 80vw; white-space: pre-line;
+  font: 500 14px/1.4 Oswald, system-ui, sans-serif; color: #fff; background: rgba(0, 0, 0, 0.55); padding: 10px 14px; border-radius: 6px; pointer-events: none;
+}
+.hud-jeu[hidden], .hud-prop[hidden], .roue-provocations[hidden], .tableau-scores[hidden] { display: none; }

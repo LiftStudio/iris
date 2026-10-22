@@ -443,6 +443,21 @@ function medianeFin(a, n) {
   return s[s.length >> 1];
 }
 
+// LA PASSE SUPERPOSÉE (22/10, socle du jeu) : chaque { scene, camera } de la liste dessiné dans l'image en cours (pas
+// d'échange de tampons), sans effacer la couleur, la profondeur effacée d'abord — l'arme de la vue à la 1re personne passe
+// devant tout. `enabled` suit la liste (PostFX.render).
+class PasseSuperposee extends Pass {
+  constructor(liste) { super(); this.liste = liste; this.needsSwap = false; this.clear = false; this.enabled = false; }
+  render(renderer, writeBuffer, readBuffer) {
+    const ac = renderer.autoClear;
+    renderer.autoClear = false;
+    renderer.setRenderTarget(this.renderToScreen ? null : readBuffer);
+    renderer.clearDepth();
+    for (const s of this.liste) renderer.render(s.scene, s.camera);
+    renderer.autoClear = ac;
+  }
+}
+
 const CLE_PLANTAGE = 'hoops.fx.contextePerdu';
 // verdicts de la sonde de gain de la résolution dynamique. (07/10/2026) « 2 » : la sonde juge désormais au temps de la
 // carte graphique (voir _majDynamique) ; les anciens verdicts, rendus sur des intervalles d'écran, sont oubliés — sur la
@@ -616,6 +631,13 @@ export class PostFX {
     this.composer.addPass(this.renderPass);
     this.composer.addPass(this.gtao);
     this.composer.addPass(this.oeil);        // mesure APRÈS l'occlusion, avant le bloom
+    // LES SUPERPOSITIONS (22/10, socle du jeu) : l'arme de la vue à la 1re personne (js/jeu/viewmodel.js), sa scène et sa
+    // caméra à elle, dessinée par-dessus la scène, profondeur effacée — APRÈS l'œil (l'arme noire ne fait pas éclaircir la
+    // scène par l'exposition automatique), avant le bloom, la sortie, le SMAA et l'étalonnage. Éteinte tant que la liste
+    // est vide (la balade) ; le chemin léger la traverse aussi, le rendu sans composer l'a dans render.
+    this.superpositions = [];
+    this.passeSuperposee = new PasseSuperposee(this.superpositions);
+    this.composer.addPass(this.passeSuperposee);
     this.composer.addPass(this.bloom);
     this.composer.addPass(this.output);
     // (la sortie de la BASSE, étalonnage compris, à la place de la précédente quand l'option le veut : _fxaaBasse ; elle
@@ -2059,7 +2081,17 @@ export class PostFX {
     let chrono = null;                                // (le coût de l'image à la carte graphique : voir _remonter)
     try {
       chrono = this._chronoDebut();                   // (dans le try : quoi qu'il arrive, ombreCache.apres() rend les ombres du décor)
-      if (this.enabled) this.composer.render(dt); else this.renderer.render(this.scene, this.camera);
+      this.passeSuperposee.enabled = this.superpositions.length > 0;
+      if (this.enabled) this.composer.render(dt);
+      else {
+        this.renderer.render(this.scene, this.camera);
+        // (sans composer : les superpositions juste après la scène, profondeur effacée)
+        if (this.superpositions.length) {
+          const r = this.renderer; r.autoClear = false; r.clearDepth();
+          for (const s of this.superpositions) r.render(s.scene, s.camera);
+          r.autoClear = true;
+        }
+      }
     } finally { this.ombreCache.apres(); this._chronoFin(chrono); }
     // le temps du processeur pour cette image : de Game.frame (debutImage) à la fin du rendu (voir _cout)
     if (bonne && this.auto && this._tDebut !== undefined) {

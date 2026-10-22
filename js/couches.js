@@ -121,7 +121,8 @@ export class Couches {
     // ou CONTRE elle (coupe, freinage brutal), lancé. Pas un démarrage : l'accélération va alors dans le sens
     // de la course, et chaque départ crissait. Rien en l'air, rien à vélo, rien chez un joueur distant (sa
     // vitesse arrive par à-coups, on entendrait crisser chaque paquet).
-    if (Couches.son && !p.airborne && (p.mesh.visible || p.vuePremiere) && this.derapeCd <= 0 && v > 1.8) {
+    // (22/10, socle du jeu : `audible` — en partie faux, les pas viennent de la simulation, événement `pas`)
+    if (Couches.son && !p.airborne && (p.audible ?? (p.mesh.visible || p.vuePremiere)) && this.derapeCd <= 0 && v > 1.8) {
       const ux = vx / v, uz = vz / v;
       const contre = -(this.ax * ux + this.az * uz), travers = Math.abs(this.ax * uz - this.az * ux);
       const a2 = Math.max(contre, travers);
@@ -187,6 +188,7 @@ export class Couches {
     if (!peut) this.veutSouffler = false;
     else if (!this.veutSouffler && p.stamina < 30 && this.immobileT > 0.5) this.veutSouffler = true;
     else if (this.veutSouffler && p.stamina > 72) this.veutSouffler = false;
+    if (p.sansSouffle) this.veutSouffler = false;            // (22/10 : un bot armé ne met pas les mains sur les genoux)
     this.souffle = clamp(this.souffle + (this.veutSouffler ? dt / 0.5 : -dt / 0.3), 0, 1);
     if (this.souffle > 0 && A.aJambe('Left') && A.aJambe('Right')) this._mainsSurGenoux(A, lisse(this.souffle), dt);
 
@@ -325,7 +327,7 @@ export class Couches {
   // claque plus fort.
   _appuis(A, dt) {
     const p = this.p;
-    if (!Couches.son || !(p.mesh.visible || p.vuePremiere)) { this.enAir = p.airborne; return; }
+    if (!Couches.son || !(p.audible ?? (p.mesh.visible || p.vuePremiere))) { this.enAir = p.airborne; return; }
     if (this.enAir && !p.airborne) Couches.son.reception(p.pos, clamp(0.5 + Math.abs(p.jumpVelSol || 3) / 8, 0.5, 1));
     this.enAir = p.airborne;
     if (p.airborne || p.assis) return;

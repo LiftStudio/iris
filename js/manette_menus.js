@@ -18,6 +18,18 @@ const RACINES = ['phone', 'options', 'overlay'];
 const RETOUR = { phone: '#phone-close', options: '#opt-close' };
 // où poser le focus en arrivant sur un écran (le premier qui existe) : l'action principale
 const DEFAUTS = ['#opt-panels button, #opt-panels [data-toggle], #opt-panels input', '.phone-q', '.back', '.btn-primary'];
+// LES ÉCRANS DU JEU (22/10, socle du combat et du prop hunt) s'inscrivent eux-mêmes : `id` de l'élément racine ; `retour`
+// (sélecteur du bouton de retour), `defaut` (sélecteur de l'élément focalisé en arrivant, essayé avant ceux d'aujourd'hui),
+// `avant` (l'id d'une racine déjà inscrite sous laquelle passer : sans lui, la nouvelle va en dessous de toutes). Une
+// racine qui porte `data-retour-action` « tape » cette action du jeu sur B (voir retour).
+export function ajouterRacine(id, { retour = null, defaut = null, avant = null } = {}) {
+  if (!RACINES.includes(id)) {
+    const i = avant ? RACINES.indexOf(avant) : -1;
+    if (i >= 0) RACINES.splice(i, 0, id); else RACINES.push(id);
+  }
+  if (retour) RETOUR[id] = retour;
+  if (defaut && !DEFAUTS.includes(defaut)) DEFAUTS.unshift(defaut);
+}
 // répétition quand on tient une direction : premier pas tout de suite, puis après 0,4 s, puis toutes les 0,1 s
 const REPET_1 = 0.4, REPET_N = 0.1;
 
@@ -342,6 +354,7 @@ export class NavMenus {
     const act = document.activeElement;
     if (act && racine.contains(act) && (act.tagName === 'INPUT' || act.tagName === 'TEXTAREA')) { act.blur(); return; }
     if (racine.id === 'overlay') { this.m.taperAction('pause'); return; }
+    if (racine.dataset && racine.dataset.retourAction) { this.m.taperAction(racine.dataset.retourAction); return; }
     const sel = RETOUR[racine.id];
     const el = sel && [...racine.querySelectorAll(sel)].find(estVisible);
     if (el) el.click();
