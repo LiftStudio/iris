@@ -1494,7 +1494,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   const XM = {
     laque: nommer(std({ color: 0x1b1b1a, roughness: 0.42, metalness: 0.25 }), 'acier laqué noir (mange-debout)'),
     plateau: nommer(std({ color: 0x1d1d1c, roughness: 0.5 }), 'plateau stratifié noir'),
-    fonte: nommer(std({ color: 0x1a1a19, roughness: 0.55, metalness: 0.3 }), 'embase de fonte noire'),
+    // (22/10, suite : mate — métallique, le disque reflétait la carte d'environnement en secteurs noirs et blancs)
+    fonte: nommer(std({ color: 0x1c1c1b, roughness: 0.62, metalness: 0.0 }), 'embase de fonte noire'),
     miura: nommer(std({ color: 0x232322, roughness: 0.66 }), 'polypropylène noir (Miura)'),
     tolixVert: nommer(std({ color: 0x5ea83a, roughness: 0.3, metalness: 0.35 }), 'Tolix vert pomme'),
     tolixNoir: nommer(std({ color: 0x151515, roughness: 0.25, metalness: 0.4 }), 'Tolix noir laqué'),
@@ -1525,7 +1526,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   const _plateau = (r) => new THREE.LatheGeometry([[0, -0.015], [r - 0.014, -0.015], [r - 0.004, -0.011], [r, -0.002], [r - 0.002, 0.008], [r - 0.012, 0.015], [0, 0.015]].map(([a, b]) => new THREE.Vector2(a, b)), 48);
   const PLATEAU60 = _plateau(0.30), PLATEAU80 = _plateau(0.40);
   // L'EMBASE de fonte (p_062-p_067 : un disque plat de 45 cm, son dôme au pied de la colonne)
-  const EMBASE = new THREE.LatheGeometry([[0, 0.05], [0.04, 0.048], [0.07, 0.03], [0.205, 0.012], [0.222, 0.006], [0.222, 0], [0, 0]].map(([a, b]) => new THREE.Vector2(a, b)), 48);
+  // (22/10, suite : le profil tracé du bas vers le haut — dans l'autre sens, ses faces regardaient vers l'intérieur et le
+  // disque, vu d'en haut, n'était plus qu'un liseré au sol : p_062)
+  const EMBASE = new THREE.LatheGeometry([[0, 0], [0.222, 0], [0.222, 0.006], [0.205, 0.012], [0.07, 0.03], [0.04, 0.048], [0, 0.05]].map(([a, b]) => new THREE.Vector2(a, b)), 48);
   // LE MANGE-DEBOUT À EMBASE RONDE (le long des murs — mur vert nord, p_062-p_067 ; mur est, p_003, p_004) : plateau rond
   // noir Ø 0,60 à 1,05 m, colonne noire Ø 6 cm, platine sous le plateau, embase ronde
   const mdEmbase = (x, y, nom, H = 1.05) => {
@@ -1577,7 +1580,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   // LE TABOURET MIURA (Plank ; p_008, p_010, p_015, p_019 de près, p_047 de profil, p_061 vu de dessus — 22/10, suite :
   // rejoué au point de vue de p_023, à 2,7 m, côte à côte avec le jeu). Un PORTE-À-FAUX de polypropylène noir mat :
   //   - l'assise, une plaque MINCE et PLATE (2 cm) en hexagone allongé, le bord de devant droit sur toute la largeur
-  //     (0,40), l'arrière étroit à pans coupés ; le bord de devant tombe d'1,5 cm — vue de devant, à hauteur d'œil assis,
+  //     (0,44), l'arrière étroit à pans coupés ; le bord de devant tombe d'1,5 cm — vue de devant, à hauteur d'œil assis,
   //     elle ne montre presque que sa tranche ;
   //   - elle ne tient que par ses deux coins DE DEVANT : deux montants minces et droits jusqu'au repose-pieds (0,30 m),
   //     une lame plate de 5 cm tendue entre eux ;
@@ -1587,7 +1590,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   const _assiseMiura = (() => {
     // (dans le repère final : +z vers l'avant ; la forme est tracée en (x, -z))
     const s = new THREE.Shape();
-    s.moveTo(-0.2, -0.07); s.lineTo(0.2, -0.07); s.lineTo(0.19, 0.17); s.lineTo(0.12, 0.26); s.lineTo(-0.12, 0.26); s.lineTo(-0.19, 0.17); s.closePath();
+    s.moveTo(-0.22, -0.07); s.lineTo(0.22, -0.07); s.lineTo(0.205, 0.17); s.lineTo(0.13, 0.26); s.lineTo(-0.13, 0.26); s.lineTo(-0.205, 0.17); s.closePath();
     const geo = new THREE.ExtrudeGeometry(s, { depth: 0.016, bevelEnabled: true, bevelThickness: 0.003, bevelSize: 0.004, bevelSegments: 2 });
     geo.rotateX(-Math.PI / 2);
     // (le bord de devant qui tombe, le milieu à peine creusé)
@@ -1601,12 +1604,12 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     maille(_assiseMiura, XM.miura, 0, H - 0.02, 0, 0, g);
     for (const s of [-1, 1]) {
       // le montant, du coin de devant de l'assise au repose-pieds
-      lame(g, XM.miura, [s * 0.185, H - 0.01, 0.055], [s * 0.18, 0.3, 0.06], 0.038, 0.026, [0, 0, 1]);
+      lame(g, XM.miura, [s * 0.205, H - 0.01, 0.055], [s * 0.195, 0.3, 0.06], 0.038, 0.026, [0, 0, 1]);
       // le repose-pieds, une lame plate à peine en V
-      lame(g, XM.miura, [s * 0.18, 0.31, 0.06], [0, 0.29, 0.055], 0.05, 0.022, [0, 1, 0]);
-      // sous lui : le pied mince vers l'avant, la lame vers l'arrière
-      lame(g, XM.miura, [s * 0.18, 0.3, 0.07], [s * 0.225, 0.0, 0.24], 0.024, 0.022, [0, 0, 1]);
-      lame(g, XM.miura, [s * 0.18, 0.3, 0.05], [s * 0.2, 0.0, -0.14], 0.042, 0.024, [0, 0, 1]);
+      lame(g, XM.miura, [s * 0.195, 0.31, 0.06], [0, 0.29, 0.055], 0.05, 0.022, [0, 1, 0]);
+      // sous lui : le pied mince vers l'avant et l'extérieur, la lame vers l'arrière (au sol : 0,52 de large — p_019)
+      lame(g, XM.miura, [s * 0.195, 0.3, 0.07], [s * 0.26, 0.0, 0.24], 0.024, 0.022, [0, 0, 1]);
+      lame(g, XM.miura, [s * 0.195, 0.3, 0.05], [s * 0.235, 0.0, -0.14], 0.042, 0.024, [0, 0, 1]);
     }
     fCercle(g, x, y, 0.21, 0, H + 0.02);
     assise(x, y, H + 0.01, cap, 'le tabouret');
@@ -1759,10 +1762,11 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       // dépassent du bord ; deux anses d'acier en U sur les flancs)
       maille(new THREE.CylinderGeometry(r * 0.93, r * 0.93, 0.01, 20), XM.sac, 0, h - 0.07, 0, 0, g, { ombre: false });
       const blanc = XM.blancMeuble, r3 = graine(9090), papier = new THREE.IcosahedronGeometry(1, 1);
-      for (let k = 0; k < 26; k++) {
-        const a = r3() * 6.283, d = r * 0.8 * Math.sqrt(r3()), t = 0.03 + r3() * 0.045;
-        const m = maille(papier, k % 3 ? XM.kraft : blanc, Math.cos(a) * d, h - 0.045 + r3() * 0.05, Math.sin(a) * d, r3() * 3, g, { ombre: false });
-        m.scale.set(t * (1 + r3()), t * (0.4 + r3() * 0.4), t * (0.8 + r3() * 0.8)); m.rotation.x = r3() * 3;
+      // (vus de face, p_051 : le sac noir ouvert déborde à gauche, les papiers s'entassent au fond et à droite)
+      for (let k = 0; k < 16; k++) {
+        const a = -0.6 + r3() * 2.6, d = r * (0.3 + 0.55 * r3()), t = 0.03 + r3() * 0.035;
+        const m = maille(papier, k % 3 ? XM.kraft : blanc, Math.cos(a) * d, h - 0.05 + r3() * 0.05, Math.sin(a) * d, r3() * 3, g, { ombre: false });
+        m.scale.set(t * (1.2 + r3()), t * (0.3 + r3() * 0.3), t * (0.8 + r3() * 0.8)); m.rotation.x = r3() * 3;
       }
       for (const sx of [-1, 1]) {
         const ax = sx * (r * 0.97 + 0.012);
@@ -1794,19 +1798,21 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   function meublerPause() {
     gMeubles = new THREE.Group(); gMeubles.name = 'espace pause : les meubles'; gMeubles.position.z = -dySol;
     groupe.add(gMeubles);
-    // ---- LA RANGÉE DU MUR VERT NORD (v_063, v_064 ; p_061-p_067) : des mange-debout à embase ronde et un à trépied,
+    // ---- LA RANGÉE DU MUR VERT NORD (v_063, v_064 ; p_061-p_067) : des mange-debout à embase ronde,
     // leurs tabourets entre eux (Miura, Tolix noir, Miura, Tolix vert, Miura) ; le Tolix noir de Haythem et un Miura
     // devant (p_001, p_061, p_062 : au premier plan, contre lui) ----
     mdEmbase(5.2, 10.85, 'mange-debout du mur vert 1');
-    mdTrepied(6.5, 10.85, 'mange-debout du mur vert 2', 0.4);
+    mdEmbase(6.5, 10.85, 'mange-debout du mur vert 2');
     mdEmbase(7.25, 10.85, 'mange-debout du mur vert 3');
     mdEmbase(7.9, 10.85, 'mange-debout du mur vert 4');
-    mdTrepied(8.55, 10.85, 'mange-debout du mur vert 5', 1.1);
-    miura(4.72, 10.5, Math.PI, 'tabouret Miura du mur vert 1');
-    tolix(5.85, 10.45, Math.PI, false, 'tabouret Tolix noir du mur vert');
-    miura(6.88, 10.5, Math.PI, 'tabouret Miura du mur vert 2');
-    tolix(7.58, 10.45, Math.PI, true, 'tabouret Tolix vert du mur vert');
-    miura(8.22, 10.5, Math.PI, 'tabouret Miura du mur vert 3');
+    mdEmbase(8.55, 10.85, 'mange-debout du mur vert 5');
+    // (22/10, suite : p_062, p_063 — vue le long de la rangée, toutes les tables sont à EMBASE, et rien côté salle : les
+    // tabourets sont rangés entre les tables et le mur, un Miura sous la deuxième)
+    miura(4.72, 11.36, Math.PI, 'tabouret Miura du mur vert 1');
+    tolix(5.85, 11.38, Math.PI, false, 'tabouret Tolix noir du mur vert');
+    miura(6.88, 11.36, Math.PI, 'tabouret Miura du mur vert 2');
+    tolix(7.58, 11.38, Math.PI, true, 'tabouret Tolix vert du mur vert');
+    miura(8.22, 11.36, Math.PI, 'tabouret Miura du mur vert 3');
     // (22/10, suite : p_001, au tout début, de la place de Haythem vers l'est — un Tolix noir à 1,4 m devant lui, un Miura
     // presque contre lui ; ce qu'on posait sous l'appareil bouchait le bas de p_025 à p_041)
     tolix(6.9, 9.6, Math.PI * 0.4, false, 'tabouret Tolix noir près de Haythem');
