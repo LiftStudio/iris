@@ -594,6 +594,22 @@ function texBandeEAS() {
     g.beginPath(); g.moveTo(488, 21); g.lineTo(488, 34); g.lineTo(500, 34); g.lineTo(504, 46); g.stroke();
   }, null, false, 4);
 }
+// LES DALLES DE L'ESPACE PAUSE (23/10, relecture — p_004, p_008, p_045 de près : des dalles de 60 x 60 d'un blanc neutre,
+// leur joint un SEUL filet gris fin, à peine marqué ; la feuillure sombre des deux côtés du T, celle des dalles du
+// rez-de-chaussée, y dessinait une grille de doubles traits foncés). Tuile de dessin : 1,2 x 1,2 m
+function texDallesPause() {
+  const W = TELEPHONE ? 256 : 512;
+  return canvasTex(W, W, (g, w, h) => {
+    const mm = w / 1200, r2 = graine(4343);
+    g.fillStyle = '#e8e8e5'; g.fillRect(0, 0, w, h);
+    for (let k = 0; k < w * h / 24; k++) { const v = 224 + (r2() - 0.5) * 26; g.fillStyle = rgb(v, v, v - 2, 0.3); g.fillRect(r2() * w, r2() * h, 1.2, 1.2); }
+    const T = Math.max(2, 12 * mm), f = Math.max(1, 3 * mm);
+    g.fillStyle = '#efefec';
+    for (let i = 0; i <= 2; i++) { g.fillRect(i * w / 2 - T / 2, 0, T, h); g.fillRect(0, i * h / 2 - T / 2, w, T); }
+    g.fillStyle = 'rgba(122,122,120,0.42)';
+    for (let i = 0; i <= 2; i++) { g.fillRect(i * w / 2 - f / 2, 0, f, h); g.fillRect(0, i * h / 2 - f / 2, w, f); }
+  }, [1 / 1.2, 1 / 1.2], false, 8);
+}
 // =====================================================================
 //  LES OUTILS DU SOUS-SOL
 // =====================================================================
@@ -747,6 +763,17 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   }
   // (les huisseries des portes du -1 sont peintes en blanc, v_041 à v_055 — celles du rez-de-chaussée, crème)
   { const c = M.huisserie.clone(); c.color.set(0xe2e5e5); c.name = 'huisserie blanche (sous-sol)'; plafondsSS.set(M.huisserie, c); }
+  // (23/10, relecture de la pause : la vidéo du 15/10 y montre des murs et un plafond d'un blanc NEUTRE — rouge sur bleu
+  // 1,04-1,06 aux murs, 1,00-1,05 au plafond, mesuré sur p_004, p_008, p_010, p_019, p_045 ; le jeu sortait 1,12-1,20, un
+  // blanc crème qui verdissait sous le rebond du vert anis et du carrelage. Des clones à elle, un cran plus froids, et le
+  // rebond du plafond d'un gris neutre au lieu du crème ; ses dalles, leur joint d'un seul filet gris : texDallesPause)
+  const NEUTRE = new THREE.Color(0.955, 0.99, 1.075), blancsPause = new Map();
+  for (const [m, nom, tex] of [[M.blanc, 'peinture blanche (pause)'], [M.platre, 'plafond en plâtre (pause)'], [M.dalles, 'plafond en dalles (pause)', texDallesPause()]]) {
+    const c = plafondsSS.get(m).clone(); c.color.multiply(NEUTRE); c.name = nom;
+    if (m !== M.blanc) c.emissive = new THREE.Color(0xd9dcdf);
+    if (tex) { c.map = tex; c.emissiveMap = tex; }
+    blancsPause.set(m, c);
+  }
 
   const lampes = [];                 // les lampes du -1 (cuites sur son sol)
   const sieges = [];
@@ -1297,7 +1324,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     {
       const g = new THREE.Group(); g.position.set(X_MUR + 0.09, Y_SS + 2.2, -(PORTE_HALL - 0.11)); g.rotation.y = ROT.E;
       maille(boiteM(0.34, 0.13, 0.05), X.blancMat, 0, 0, 0, 0, g, { ombre: false });
-      const vert = M.sortie.clone(); vert.color = new THREE.Color(0.82, 0.88, 0.82); vert.name = 'bloc de sortie (pause, éteint)';
+      // (23/10, relecture : p_049, p_052 de près — la face est d'un vert moyen terni, 114,141,90 avec son pictogramme ; le
+      // matériau commun, qui luit, la sortait vert vif à pictogramme blanc. Une face peinte, éclairée par la salle)
+      const vert = nommer(std({ map: M.sortie.map, color: 0xa9b39e, roughness: 0.6 }), 'bloc de sortie (pause, éteint)');
       const p = new THREE.Mesh(new THREE.PlaneGeometry(0.31, 0.1), vert); p.position.z = 0.026; g.add(p);
       maille(boiteM(0.26, 0.012, 0.01), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.9, 1.6, 0.5) }), 0, -0.058, 0.026, 0, g, { ombre: false });
       ch.decor.add(g);
@@ -1344,18 +1373,23 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     ret(2.55, 2.41, 9.35, 4.25, Y_SS + 2.38);
     for (const [y0, y1] of [[5.62, 5.80], [7.40, 7.58]]) ret(2.55, y0, 9.35, y1, Y_SS + 2.50);
     ret(4.95, 4.25, 5.20, 7.40, Y_SS + 2.50);
+    // (23/10, relecture : p_045 et p_046 de près — la grille est GRISE, 130 environ, un peu plus haute ; noire, elle
+    // faisait une barre sombre au-dessus des distributeurs)
     {
-      const grille = std({ color: 0x3b3d3e, roughness: 0.7 });
-      B(3.45, 4.247, 4.2, 4.25, Y_SS + 2.41, Y_SS + 2.51, X.blancMat, { ombre: false });
-      B(3.47, 4.252, 4.18, 4.255, Y_SS + 2.42, Y_SS + 2.50, grille, { ombre: false });
+      const grille = std({ color: 0x8b8d8c, roughness: 0.7 });
+      B(3.45, 4.247, 4.2, 4.25, Y_SS + 2.39, Y_SS + 2.53, X.blancMat, { ombre: false });
+      B(3.47, 4.252, 4.18, 4.255, Y_SS + 2.40, Y_SS + 2.52, grille, { ombre: false });
+      for (let k = 1; k < 6; k++) B(3.47, 4.255, 4.18, 4.257, Y_SS + 2.40 + k * 0.02 - 0.003, Y_SS + 2.40 + k * 0.02, X.noir, { ombre: false });
       const a = P3(4.12, Y_SS + 2.42, 4.26), m = P3(4.3, Y_SS + 2.12, 3.75), b = P3(4.41, Y_SS + 1.89, 3.2);
       tube(ch.decor, X.noir, a, m, 0.006, 6, false); tube(ch.decor, X.noir, m, b, 0.006, 6, false);
     }
     maille(new THREE.CylinderGeometry(0.06, 0.07, 0.04, 18), X.blancMat, 8.9, H_PAUSE - 0.02, -6.4, 0, ch.decor, { ombre: false });
     // les plafonniers ronds (22/10 : relevés au plafond depuis l'appareil, p_004, p_008, p_010 — (7,1 ; 6,0), (5,6 ; 6,0),
     // (7,65 ; 4,4), (6,05 ; 4,4), (7,7 ; 7,8), à 0,15 m près ; les autres sur la même trame, de part et d'autre)
+    // (23/10, relecture : p_045, p_046 — au-dessus de la vitrine réfrigérée, PAS de plafonnier : rien que la dalle et, plus
+    // bas, la grille grise du soffite ; celui qu'on y mettait, en (4,4 ; 4,44), brillait seul dans le coin)
     for (const [x, y] of [[3.8, 11.11], [6.2, 11.11], [8.6, 11.11], [4.1, 7.8], [5.9, 7.8], [7.7, 7.8],
-      [3.95, 6.0], [5.6, 6.0], [7.1, 6.0], [4.4, 4.44], [6.05, 4.44], [7.65, 4.44]]) plafonnier(x, y, H_PAUSE, 'pauseSS');
+      [3.95, 6.0], [5.6, 6.0], [7.1, 6.0], [6.05, 4.44], [7.65, 4.44]]) plafonnier(x, y, H_PAUSE, 'pauseSS');
     spot(11.7, 6.025, Y_SS + 2.2, 'pauseSS', { force: 0.8 });
     // (22/10, suite : p_003, p_004 — un plafonnier rond allumé sous le plâtre de la baie, devant l'entrée du passage)
     plafonnier(10.75, 5.9, Y_SS + 2.2, 'pauseSS');
@@ -1402,7 +1436,12 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
         const plaque = (mat, l, h, x, y) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(l, h), mat); m.position.set(v.s * x, y, 0.0245); m.castShadow = false; v.g.add(m); };
         plaque(new THREE.MeshStandardMaterial({ map: texBandeEAS(), roughness: 0.5 }), w - 0.05, 0.13, w / 2, 1.875);
         plaque(new THREE.MeshStandardMaterial({ color: 0xc8302c, roughness: 0.5 }), 0.16, 0.05, 0.71, 1.975);
-        plaque(new THREE.MeshStandardMaterial({ map: texAffichePorte(), roughness: 0.6 }), 0.3, 0.4, 0.29, 1.42); }
+        plaque(new THREE.MeshStandardMaterial({ map: texAffichePorte(), roughness: 0.6 }), 0.3, 0.4, 0.29, 1.42);
+        // (23/10, relecture : p_049 à p_051 — vue de la pause, la fente est BLANCHE, 214,219,215 : le hall éclairé derrière
+        // le verre. Le hall ne s'allume que pour qui y est ; on voyait par elle un fond sombre, 97,94,73. Un fond clair, une
+        // face tournée vers la pause seule : du hall, elle est invisible et le verre reste un jour)
+        const fond = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 1.14), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.86, 0.88, 0.86) }));
+        fond.position.set(v.s * (w - 0.3), (0.61 + 1.75) / 2, 0.0215); fond.castShadow = false; v.g.add(fond); }
       // (par l'oculus, l'espace pause : v_043, v_055 — un verre clair)
       P.g.traverse((o) => { if (o.isMesh && o.material === M.vitreFente) o.material = M.verre; });
       // le ferme-porte à glissière, côté couloir : le rail et le boîtier, en haut de l'huisserie
@@ -1511,6 +1550,10 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     faceMO: nommer(std({ map: texMicroOndes(), roughness: 0.3 }), 'micro-ondes : façade'),
     sac: nommer(std({ color: 0x141516, roughness: 0.35, metalness: 0.05 }), 'sac poubelle noir'),
     kraft: std({ color: 0xb59a6a, roughness: 0.85 }),
+    // (23/10 : les papiers froissés et le sac qui déborde de la grosse poubelle, à facettes)
+    papierKraft: nommer(std({ color: 0x9a8662, roughness: 0.9, flatShading: true }), 'papier kraft froissé'),
+    papierBlanc: nommer(std({ color: 0xe4e2dc, roughness: 0.85, flatShading: true }), 'papier blanc froissé'),
+    sacLuisant: nommer(std({ color: 0x18191a, roughness: 0.28, metalness: 0.05, flatShading: true }), 'sac poubelle noir froissé'),
     grisPoubelle: nommer(std({ color: 0x6d7175, roughness: 0.55 }), 'poubelle grise'),
     caisseClaire: nommer(std({ color: 0xc9cbca, roughness: 0.4, metalness: 0.3 }), 'distributeur : caisse gris clair'),
     noirePoubelle: nommer(std({ color: 0x1c1d1e, roughness: 0.5 }), 'poubelle noire'),
@@ -1746,6 +1789,17 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     fBoite(g, x0, y0, x1, y1 - 0.02, 0, h);
     return g;
   };
+  // UN FROISSÉ (papier, sac) : un icosaèdre dont chaque sommet est poussé ou rentré selon sa place (les faces voisines
+  // restent soudées), à facettes vives
+  const _papier = (() => {
+    const geo = new THREE.IcosahedronGeometry(1, 1), p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const x = p.getX(i), y = p.getY(i), z = p.getZ(i), n = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453, k = 0.62 + 0.7 * (n - Math.floor(n));
+      p.setXYZ(i, x * k, y * k, z * k);
+    }
+    geo.computeVertexNormals();
+    return geo;
+  })();
   // LES POUBELLES : la grosse ronde noire à anses (p_051, p_052), la grise de la niche (p_003, p_019), la bleue
   // rectangulaire du mur est (p_001, p_062) ; leur sac noir qui déborde
   const poubelleRonde = (type, nom, x, y, r, h, mat, pleine = false) => {
@@ -1762,12 +1816,19 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       // (22/10, p_051, p_052 : la grosse poubelle noire PLEINE — le sac ouvert, des papiers froissés, kraft et blancs, qui
       // dépassent du bord ; deux anses d'acier en U sur les flancs)
       maille(new THREE.CylinderGeometry(r * 0.93, r * 0.93, 0.01, 20), XM.sac, 0, h - 0.07, 0, 0, g, { ombre: false });
-      const blanc = XM.blancMeuble, r3 = graine(9090), papier = new THREE.IcosahedronGeometry(1, 1);
+      const r3 = graine(9090);
       // (vus de face, p_051 : le sac noir ouvert déborde à gauche, les papiers s'entassent au fond et à droite)
-      for (let k = 0; k < 16; k++) {
-        const a = -0.6 + r3() * 2.6, d = r * (0.3 + 0.55 * r3()), t = 0.03 + r3() * 0.035;
-        const m = maille(papier, k % 3 ? XM.kraft : blanc, Math.cos(a) * d, h - 0.05 + r3() * 0.05, Math.sin(a) * d, r3() * 3, g, { ombre: false });
-        m.scale.set(t * (1.2 + r3()), t * (0.3 + r3() * 0.3), t * (0.8 + r3() * 0.8)); m.rotation.x = r3() * 3;
+      // (23/10, relecture : p_051, p_052 de près — des sacs de papier kraft et des feuilles blanches FROISSÉS, à arêtes
+      // vives, petits, tassés au ras du bord ; à gauche le sac noir, luisant et gonflé, passe par-dessus. Les galets lisses
+      // d'avant, gros de 10 cm, y faisaient un tas de pommes de terre)
+      for (let k = 0; k < 44; k++) {
+        const a = -0.7 + r3() * 2.9, d = r * (0.12 + 0.75 * r3()), t = 0.016 + r3() * 0.024;
+        const m = maille(_papier, k % 3 ? XM.papierKraft : XM.papierBlanc, Math.cos(a) * d, h - 0.045 + r3() * 0.05, Math.sin(a) * d, r3() * 6.3, g, { ombre: false });
+        m.scale.set(t * (1.3 + r3()), t * (0.35 + r3() * 0.5), t * (0.9 + r3() * 0.9)); m.rotation.x = r3() * 3; m.rotation.z = r3() * 3;
+      }
+      for (const [a, s] of [[3.5, 1], [4.3, 0.8], [2.8, 0.7]]) {
+        const m = maille(_papier, XM.sacLuisant, Math.cos(a) * r * 0.62, h - 0.01, Math.sin(a) * r * 0.62, a, g, { ombre: false });
+        m.scale.set(r * 0.42 * s, 0.07 * s, r * 0.3 * s);
       }
       for (const sx of [-1, 1]) {
         const ax = sx * (r * 0.97 + 0.012);
@@ -1897,7 +1958,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   // =====================================================================
   construirePalier();                                        // (au niveau 0 : le décor du rez-de-chaussée)
   ch.decor = fixe; ch.portes.decor = groupe;
-  let amphi = null;
+  let amphi = null, fixePause = [];
   try {
     construireEscalier();
     construireMurs();
@@ -1908,9 +1969,11 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // L'ESPACE PAUSE ET LA GRANDE SALLE S -1.14 derrière son mur vert (js/ecole_amphi.js, d'après la vidéo officielle de
     // 2021 ; 10/10), dans le repère de la pause, DY_P plus au nord (14/10)
     decaler(DY_P, () => {
+      const n0 = ch.decor.children.length;
       mursPause();
       garnirPause();
       plafondsPause();
+      fixePause = ch.decor.children.slice(n0);
       meublerPause();
       amphi = poserAmphi(ch, { Y_SS, DALLE, H_RET, B, mur, plinthe, panneau, siege, solNiveau, lampes, X });
     });
@@ -1966,8 +2029,20 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   }
   // LA FUSION : le décor fixe cousu en un maillage par matériau ; le groupe hors de l'optimisation du décor (sa
   // visibilité et ses ombres changent avec le niveau de Haythem)
+  for (const o of fixePause) o.traverse((m) => { if (m.isMesh && blancsPause.has(m.material)) m.material = blancsPause.get(m.material); });
   groupe.traverse((o) => { if (o.isMesh && plafondsSS.has(o.material)) o.material = plafondsSS.get(o.material); });
   fusionnerLocal(fixe);
+  // (23/10, relecture : la couture rend l'ombre reçue à tout ce qu'elle coud — le « sans ombre reçue » des poutres s'y
+  // perdait —, et les faces minces des poutres, du soffite et du caisson se couvraient de créneaux sombres, p_004, p_008.
+  // Les plafonds de la pause, plâtre et dalles, ne reçoivent pas d'ombre. Les créneaux venaient en fait de l'OCCLUSION
+  // AMBIANTE (js/fx.js : calculée à demi-définition, elle se perd sur une arête de 5 cm vue de loin et la rend en
+  // dents de peigne) : les retombées de plâtre, poutres, soffite et caisson, sont tenues hors de sa passe de normales,
+  // comme les filets des paniers — vue sans elle, p_004 rejouée, la poutre redevient une arête nette)
+  const sansOmbre = new Set([blancsPause.get(M.platre), blancsPause.get(M.dalles)]);
+  fixe.traverse((o) => {
+    if (!o.isMesh || !sansOmbre.has(o.material)) return;
+    o.receiveShadow = false; if (o.material === blancsPause.get(M.platre)) o.userData.sansNormales = true;
+  });
   // (22/10 : chaque meuble de l'espace pause cousu SEUL, dans son repère — il reste un objet à lui, son groupe et son
   // userData.meuble, hors du bloc du décor fixe)
   for (const g of _meubles) fusionnerLocal(g);
