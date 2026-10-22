@@ -1557,6 +1557,12 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   // CHAQUE MEUBLE EST UN OBJET À LUI (pour le jeu de tir et le cache-cache des accessoires à venir) : un THREE.Group nommé,
   // userData.meuble = { type, nom, formes } — ses formes au monde solide —, rangé hors du décor fixe (qu'on coud d'un bloc)
   // et cousu SEUL, par matériau, dans son propre repère (fusionnerLocal : deux ou trois appels de dessin par meuble).
+// (23/10, RELECTURE : les plans rejoués à nouveau, poses refaites — joints du carrelage, puis points et arêtes connus pour
+// les plans debout —, vidéo | jeu et fondu, et chaque teinte mesurée sur de grandes plages : le trépied du milieu recalé
+// sur ses trois pieds, la poubelle grise au bord de la niche, le Tolix vert du mur est sorti du mur, les trois cadres du
+// mur est et l'affiche du mur vert à leur taille ; et les teintes — blancs neutres, carrelage gris, vert franc, noirs
+// froids, distributeurs bleutés, local sombre gris ardoise —, le plafonnier en trop, la grille, le bloc de sortie, la
+// fente blanche, les papiers froissés, les créneaux de l'occlusion sur les poutres)
   const _meubles = [];
   let gMeubles = null;
   const meuble = (type, nom, x, y, rotY = 0) => {
