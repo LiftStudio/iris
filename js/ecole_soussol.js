@@ -247,9 +247,9 @@ function texCarrelagePause(base, joint, graineN, cote = 0.45) {
       g.fillStyle = rgb(...B); g.fillRect(0, 0, c, c);
       // les grands nuages (plus clairs et plus sombres), puis les moyens
       for (let k = 0; k < 10; k++) {
-        const R = c * (0.25 + r2() * 0.45), x = r2() * c, y = r2() * c, d = (r2() < 0.6 ? -1 : 1) * (6 + r2() * 10);
+        const R = c * (0.25 + r2() * 0.45), x = r2() * c, y = r2() * c, d = (r2() < 0.6 ? -1 : 1) * (8 + r2() * 12);
         const gr = g.createRadialGradient(x, y, 0, x, y, R);
-        gr.addColorStop(0, rgb(B[0] + d, B[1] + d, B[2] + d * 0.95, 0.55)); gr.addColorStop(1, rgb(B[0] + d, B[1] + d, B[2] + d, 0));
+        gr.addColorStop(0, rgb(B[0] + d, B[1] + d, B[2] + d * 0.95, 0.6)); gr.addColorStop(1, rgb(B[0] + d, B[1] + d, B[2] + d, 0));
         g.fillStyle = gr; g.fillRect(x - R, y - R, 2 * R, 2 * R);
       }
       nuees(g, c, c, r2, 30, B, 8, 0.35, c * 0.03, c * 0.14);
