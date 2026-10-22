@@ -323,7 +323,7 @@ function texFriandises() {
     const r2 = graine(77);
     // (le fond éclairé par la réglette : p_045 de face, la vitrine est CLAIRE — 137,145,160 en moyenne —, les paquets
     // serrés devant un fond gris bleuté)
-    const fond = g.createLinearGradient(0, 0, w, 0); fond.addColorStop(0, '#9aa2b0'); fond.addColorStop(0.5, '#5d6470'); fond.addColorStop(1, '#3a3f48');
+    const fond = g.createLinearGradient(0, 0, w, 0); fond.addColorStop(0, '#d4dbe8'); fond.addColorStop(0.5, '#98a1b2'); fond.addColorStop(1, '#6b7380');
     g.fillStyle = fond; g.fillRect(0, 0, w, h);
     const couleurs = ['#a8453b', '#c9973f', '#d8d3c6', '#5e4330', '#3f5a8c', '#7c3d63', '#b9763c', '#2e2e30', '#8e9a4a', '#c4b8a0'];
     const n = 6, H = (h - 10) / n;
@@ -495,7 +495,8 @@ function texPlaque() {
 function texChene() {
   return canvasTex(512, 128, (g, w, h) => {
     const r2 = graine(5150);
-    g.fillStyle = '#cfba90'; g.fillRect(0, 0, w, h);
+    // (22/10, suite : p_015, p_057 — un chêne blanchi, presque gris-beige : le #cfba90 sortait trop jaune, 130,114,69)
+    g.fillStyle = '#d6cbb0'; g.fillRect(0, 0, w, h);
     for (let k = 0; k < 160; k++) {
       const y = r2() * h, a = 0.05 + r2() * 0.12, t = r2() < 0.5 ? 150 : 220;
       g.strokeStyle = rgb(t, t * 0.86, t * 0.62, a); g.lineWidth = 0.6 + r2() * 1.6;
@@ -699,7 +700,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     plafonnier: nommer(new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff4e4).multiplyScalar(4.2) }), 'plafonnier rond allumé'),
     voyant: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.2, 2.2, 0.5) }),
     bloc: new THREE.MeshBasicMaterial({ color: new THREE.Color(0xf4f8fa).multiplyScalar(2.4) }),
-    friandises: new THREE.MeshBasicMaterial({ map: texFriandises(), color: new THREE.Color(1.2, 1.2, 1.25) }),
+    friandises: new THREE.MeshBasicMaterial({ map: texFriandises(), color: new THREE.Color(1.25, 1.28, 1.35) }),
     fraisClair: new THREE.MeshBasicMaterial({ map: texFraisClair(404), color: new THREE.Color(1.05, 1.05, 1.08) }),
     fraisGris: new THREE.MeshBasicMaterial({ map: texFraisClair(505, true), color: new THREE.Color(0.95, 0.95, 0.95) }),
     ecranVert: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.75, 1.25, 0.8) }),
@@ -722,7 +723,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // v_063, le jeu sortait 164,151,121)
     // (22/10, la vidéo du 15/10 rejouée à la pose de l'appareil : 171,167,152 au sol sur p_015, 162,156,141 sur p_008 —
     // le jeu sortait 174,166,147 et 169,161,142, d'un beige plus jaune ; un gris plus froid, mat)
-    pause: nommer(std({ map: texCarrelagePause([136, 136, 124], '#5c5a55', 512, 0.45), roughness: 0.52 }), 'carrelage gris-beige 45x45'),
+    pause: nommer(std({ map: texCarrelagePause([133, 133, 121], '#5c5a55', 512, 0.45), roughness: 0.52 }), 'carrelage gris-beige 45x45'),
   };
   // (22/10 : la PHASE des joints — la vidéo du 15/10, p_004-p_041, les joints relevés à 1 cm près autour de l'appareil :
   // les nord-sud en x ≡ 0,40, les est-ouest en y ≡ 0,295 (mod 0,45) du repère de la pause, comme du plan, DY_P valant six
@@ -1181,10 +1182,13 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // la GRILLE de ventilation, LARGE (0,85), son bord sud au jambage nord de la baie (p_002-p_004, v_060)
     // (22/10, suite : p_004 rejouée — la grille fait 0,74 sur 0,50, y 6,30-7,04, son haut au ras du caisson)
     panneau(new THREE.MeshStandardMaterial({ map: texPersiennes(), roughness: 0.55 }), 0.74, 0.5, 10.45, 6.67, Y_SS + 2.03, 'W', 0.01);
-    // l'A4 bleue, la grande affiche sous cadre d'aluminium (p_001, p_002, p_061), au-dessus de la poubelle bleue
-    panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#fbfbf8', 154), roughness: 0.7 }), 0.21, 0.297, 10.45, 8.05, Y_SS + 1.6, 'W');
-    B(10.435, 8.6, 10.45, 9.14, Y_SS + 1.32, Y_SS + 2.06, X.montant, { ombre: false });
-    panneau(new THREE.MeshStandardMaterial({ map: texAfficheA2(), roughness: 0.6 }), 0.5, 0.7, 10.435, 8.87, Y_SS + 1.69, 'W', 0.002);
+    // l'affiche bleue sous pochette et son étiquette blanche au-dessus, la grande affiche sous cadre d'aluminium (22/10,
+    // suite : p_001 et p_003 rejouées de la place de l'appareil — la bleue en y 7,49-7,81, de 1,44 à 1,76 m ; la grande en
+    // y 8,32-8,88, de 1,37 à 2,06 m, 0,27 m plus au sud qu'on ne la mettait)
+    panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#fbfbf8', 154), roughness: 0.7 }), 0.28, 0.32, 10.45, 7.65, Y_SS + 1.6, 'W');
+    B(10.443, 7.51, 10.45, 7.80, Y_SS + 1.86, Y_SS + 1.9, X.blancMat, { ombre: false });
+    B(10.435, 8.32, 10.45, 8.88, Y_SS + 1.37, Y_SS + 2.06, X.montant, { ombre: false });
+    panneau(new THREE.MeshStandardMaterial({ map: texAfficheA2(), roughness: 0.6 }), 0.52, 0.66, 10.435, 8.6, Y_SS + 1.715, 'W', 0.002);
     // LE PASSAGE : deux portes crème à plaque rouge sur son mur sud (fermées), la seconde au lecteur de badge (p_003 : le
     // boîtier noir à l'entrée du passage, sur sa joue sud) ----
     const porteWC = (x, y, face) => {
@@ -1197,7 +1201,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // (22/10, suite : de la rangée du mur nord, p_004, on voit le mur sud du passage jusqu'à x 11,8 — blanc, le lecteur
     // de badge seul ; la porte est plus loin. v_060, de la porte du hall, en montre deux — doute : la seconde, plus loin, est laissée au passage sombre)
     porteWC(12.35, 5.45, 'N');
-    B(11.07, 5.45, 11.15, 5.47, Y_SS + 1.2, Y_SS + 1.32, X.noir, { ombre: false });
+    // (22/10, suite : p_003 — le lecteur de badge à 1,45-1,58 m, sur la joue entre la niche et le passage)
+    B(10.95, 5.45, 11.03, 5.465, Y_SS + 1.44, Y_SS + 1.56, X.noir, { ombre: false });
     // LA PORTE BLANCHE de l'angle nord-est (fermée ; à béquille, gonds au nord — p_062, p_063, p_065)
     ch.porte('y', 10.525, Y_PBL, { l: 0.93, h: 2.04, ep: 0.15, base: Y_SS, modele: 'blanche', etat: 'fermee', cote: 'W', charniere: 'd', nom: 'pause → sas de l\'angle nord-est' });
     // ---- LE MUR VERT NORD : la cloison vitrée dépolie et sa porte (x 3,6-5,17), les deux affiches encadrées, l'affiche
@@ -1351,6 +1356,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     for (const [x, y] of [[3.8, 11.11], [6.2, 11.11], [8.6, 11.11], [4.1, 7.8], [5.9, 7.8], [7.7, 7.8],
       [3.95, 6.0], [5.6, 6.0], [7.1, 6.0], [4.4, 4.44], [6.05, 4.44], [7.65, 4.44]]) plafonnier(x, y, H_PAUSE, 'pauseSS');
     spot(11.7, 6.025, Y_SS + 2.2, 'pauseSS', { force: 0.8 });
+    // (22/10, suite : p_003, p_004 — un plafonnier rond allumé sous le plâtre de la baie, devant l'entrée du passage)
+    plafonnier(10.75, 5.9, Y_SS + 2.2, 'pauseSS');
     // LE SOL de l'espace pause (le seuil de sa porte compris : x 2,42-2,55) et du local éteint ; (22/10) la niche et le
     // passage en grès gris foncé (p_003, p_019 : le sol devant l'étagère et dans le passage est plus sombre que le beige)
     solNiveau([[2.42, PORTE_PAUSE - 0.5, 2.55, PORTE_PAUSE + 0.5], [2.55, 2.41, 10.45, 11.71], [X_RESSAUT, Y_RESSAUT, 2.55, 11.71], [X_SOMBRE - 0.45, 2.26, X_SOMBRE + 0.45, 2.41], [X_SOMBRE - 1.0, 1.2, X_SOMBRE + 1.0, 2.26]], SOL.pause, 'sol de l\'espace pause');
@@ -1800,10 +1807,10 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     miura(6.88, 10.5, Math.PI, 'tabouret Miura du mur vert 2');
     tolix(7.58, 10.45, Math.PI, true, 'tabouret Tolix vert du mur vert');
     miura(8.22, 10.5, Math.PI, 'tabouret Miura du mur vert 3');
-    // (22/10, suite : le Tolix de Haythem est DERRIÈRE l'appareil — il tient son téléphone devant lui, à 1,15 m ; posé
-    // sous l'appareil, son assise noire bouchait le bas de p_025 à p_041. Debout, il le laisse derrière lui : p_060-p_062)
-    tolix(4.86, 10.3, Math.PI * 0.85, false, 'tabouret Tolix noir (Haythem)');
-    miura(5.62, 10.25, Math.PI * 0.6, 'tabouret Miura près de Haythem');
+    // (22/10, suite : p_001, au tout début, de la place de Haythem vers l'est — un Tolix noir à 1,4 m devant lui, un Miura
+    // presque contre lui ; ce qu'on posait sous l'appareil bouchait le bas de p_025 à p_041)
+    tolix(6.9, 9.6, Math.PI * 0.4, false, 'tabouret Tolix noir près de Haythem');
+    miura(5.9, 9.75, Math.PI * 0.55, 'tabouret Miura près de Haythem');
     // ---- LE COMPTOIR EN ÉQUERRE de l'angle sud-est (v_060, v_066 ; p_003-p_025) : une tablette d'acier gris mince à
     // 1,08 m, 0,40 de profondeur, sur des pieds tubes gris ; sa branche sud s'arrête sous le bord ouest de l'affiche
     // « 0101 » (p_010 : x 8,10), sa branche est sous les trois cadres, jusqu'à la niche (y 4,5) ----
@@ -1816,6 +1823,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
         maille(new THREE.CylinderGeometry(0.02, 0.02, H - 0.07, 12), XM.piedGris, x - 10.45, (H - 0.07) / 2, -(y - 2.41), 0, g);
       }
       fBoite(g, 8.1, 2.41, 10.45, 2.81, H - 0.08, H); fBoite(g, 10.05, 2.81, 10.45, 4.5, H - 0.08, H);
+      // (22/10, suite : p_004 à p_057 — un sac de papier kraft posé sur la branche est, en y 3,4)
+      const sac = piece(g, 0.26, 0.13, 0.16, XM.kraft, 10.22 - 10.45, H + 0.065, -(3.4 - 2.41), { ombre: false }); sac.rotation.y = 0.35;
+      maille(new THREE.IcosahedronGeometry(0.07, 1), XM.kraft, 10.24 - 10.45, H + 0.13, -(3.38 - 2.41), 0, g, { ombre: false }).scale.set(1.4, 0.5, 1);
     }
     // ---- LA TABLETTE-BAR DU MUR VERT OUEST (p_046-p_049, p_054 ; VO q_0090) : la même tablette d'acier, 0,30 de
     // profondeur, du coffre des distributeurs à 0,3 m du bâti de la porte du hall, sur quatre pieds tubes à l'avant ----
@@ -1838,12 +1848,15 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     miura(4.92, 7.38, 0.2, 'tabouret Miura sous la table du sud');
     babyFoot(6.7, 5.55, 'baby-foot');
     // ---- PRÈS DU MUR EST (p_003, p_004) ----
-    mdEmbase(9.41, 6.79, 'mange-debout du mur est 1');
-    // (22/10, suite : p_004 rejouée de près — le trépied 0,3 m plus au sud-ouest, ses pieds au sol en (8,5-9,2 ; 7,55) ; les
-    // deux Miura DEVANT les tables, côté salle, et non contre l'étagère : il n'y a rien entre la table à embase et la niche)
-    mdTrepied(9.03, 7.62, 'mange-debout du mur est 2', 0.9);
-    miura(8.85, 7.15, 2.15, 'tabouret Miura du mur est 1');
-    miura(8.6, 7.95, 2.2, 'tabouret Miura du mur est 2');
+    // (22/10, suite : p_003 et p_004 rejouées de près — TROIS mange-debout le long du mur est, du sud au nord : à embase,
+    // à trépied, à embase (le troisième, hors du champ de p_004, manquait) ; les deux Miura DEVANT, côté salle, et rien
+    // entre la table à embase et la niche ; un Tolix vert contre le mur, sous les affiches (p_001, p_061))
+    mdEmbase(9.36, 6.85, 'mange-debout du mur est 1');
+    mdTrepied(8.95, 7.6, 'mange-debout du mur est 2', 0.9);
+    mdEmbase(9.22, 8.2, 'mange-debout du mur est 3');
+    miura(8.8, 7.28, 2.15, 'tabouret Miura du mur est 1');
+    miura(8.6, 8.07, 2.2, 'tabouret Miura du mur est 2');
+    tolix(10.03, 8.35, Math.PI * 0.45, true, 'tabouret Tolix vert du mur est');
     // ---- AU COMPTOIR (p_008, p_019, p_025 : une table haute pliante devant, deux Tolix verts) ----
     tablePliante(9.15, 3.62, 'table haute pliante du comptoir', 0.2);
     tolix(9.15, 3.05, 0, true, 'tabouret Tolix vert du comptoir 1');
@@ -1860,7 +1873,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // ---- LES POUBELLES ----
     poubelleRonde('poubelle-noire', 'grosse poubelle noire', 2.72, 9.55, 0.29, 0.74, XM.noirePoubelle, true);
     poubelleRonde('poubelle-grise', 'poubelle grise de la niche', 10.86, 5.1, 0.21, 0.62, XM.grisPoubelle);
-    poubelleBleue(10.25, 9.4, 'poubelle bleue');
+    poubelleBleue(10.27, 9.3, 'poubelle bleue');
     // ---- LA NICHE DU MUR EST : l'étagère blanche et ses CINQ MICRO-ONDES (2 + 2 + 1 dessus) ----
     {
       const g = meuble('etagere', 'étagère des micro-ondes', 10.86, 5.005, 0);
