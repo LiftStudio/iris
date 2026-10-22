@@ -249,7 +249,7 @@ export default function (jeu) {
   });
 
   // 8. TROIS CYCLES lancer / quitter ; programmes constants pendant 10 s de tir
-  T('8 trois cycles : mémoire, enfants, instantané ; programmes constants', async () => {
+  T('8 trois cycles : mémoire, enfants, instantané ; programmes constants', async (t) => {
     // (un cycle : les corps libérés attendus — Player.dispose attend que leurs programmes en compilation soient prêts)
     const cycle = async () => {
       await jeu.lancer('essai', { graine: 8, mannequins: 3, bots: 2 }); await jeu.images(20);
@@ -258,7 +258,12 @@ export default function (jeu) {
       for (let i = 0; i < 120; i++) game.carte.maj(1 / 60, game);
       await jeu.images(2);
     };
-    await cycle();                                        // (le 1er cycle crée l'affichage partagé et les suites du décor vues)
+    // (d'abord, les préchauffes du décor qui restent — js/game.js PRECHAUFFE, à 1,5 … 22 s de temps de JEU : dans un onglet
+    // frais où les tests font peu d'images, elles tombaient en plein milieu des cycles et envoyaient ≈ 100 géométries du décor
+    // à la carte graphique ; puis deux cycles : l'affichage partagé créé, les suites du décor vues)
+    for (let k = game._chaudN || 0; k < 5; k++) { game._chaudN = k + 1; game.prechaufferScene(); }
+    await t.attendre(1.5); await jeu.images(5);
+    await cycle(); await cycle();
     // (les « suites » du décor coupé, js/ecole_visibilite.js : une géométrie chacune, créées À LA DEMANDE par ce que la caméra
     // voit pour la première fois — comptées à part, elles ne sont pas une fuite de la partie)
     const suites = () => { let n = 0; game.scene.traverse((o) => { if (o.userData.suite) n++; }); return n; };
