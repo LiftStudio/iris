@@ -323,20 +323,28 @@ function texFriandises() {
     const r2 = graine(77);
     // (le fond éclairé par la réglette : p_045 de face, la vitrine est CLAIRE — 137,145,160 en moyenne —, les paquets
     // serrés devant un fond gris bleuté)
-    const fond = g.createLinearGradient(0, 0, w, 0); fond.addColorStop(0, '#d4dbe8'); fond.addColorStop(0.5, '#98a1b2'); fond.addColorStop(1, '#6b7380');
+    // (23/10, relecture : p_010 de près, un fond nettement BLEUTÉ sous la réglette — le bleu tient au fond et à la lumière,
+    // pas aux paquets : multiplié sur toute la vitre, il rosissait les rouges)
+    const fond = g.createLinearGradient(0, 0, w, 0); fond.addColorStop(0, '#d2e0fa'); fond.addColorStop(0.5, '#93a3c4'); fond.addColorStop(1, '#5f6c88');
     g.fillStyle = fond; g.fillRect(0, 0, w, h);
-    const couleurs = ['#a8453b', '#c9973f', '#d8d3c6', '#5e4330', '#3f5a8c', '#7c3d63', '#b9763c', '#2e2e30', '#8e9a4a', '#c4b8a0'];
+    const bas = g.createLinearGradient(0, 0, 0, h); bas.addColorStop(0.35, 'rgba(18,24,40,0)'); bas.addColorStop(1, 'rgba(18,24,40,0.45)');
+    g.fillStyle = bas; g.fillRect(0, 0, w, h);
+    const couleurs = ['#b8443a', '#d9b442', '#e4e2da', '#3f6fb4', '#4f8a46', '#7a96c8', '#c8803c', '#2e3038', '#a8bc56', '#d6d8de'];
     const n = 6, H = (h - 10) / n;
     for (let r = 0; r < n; r++) {
-      const y = 6 + r * H, k = 1 - r * 0.07;                                         // (le bas un peu moins éclairé)
+      const y = 6 + r * H, k = 1 - r * 0.11;                                         // (le bas moins éclairé : p_010)
       let x = 14;
+      // (23/10, relecture : p_010 de près — en haut, de GROS sachets serrés qui emplissent la vitre ; dans les deux rangs
+      // du bas, sous un étage noir, des canettes et des bouteilles étroites)
+      const canettes = r >= 4;
+      if (r === 4) { g.fillStyle = '#20232a'; g.fillRect(0, y - 4, w, 7); }
       while (x < w - 8) {
-        const lw = 9 + r2() * 9, lh = H * (0.42 + r2() * 0.3), col = couleurs[Math.floor(r2() * couleurs.length)];
+        const lw = canettes ? 7 + r2() * 4 : 13 + r2() * 11, lh = H * (canettes ? 0.55 + r2() * 0.2 : 0.6 + r2() * 0.3), col = couleurs[Math.floor(r2() * couleurs.length)];
         g.globalAlpha = 0.9 * k; g.fillStyle = col; g.fillRect(x, y + H - 9 - lh, lw, lh);
         g.globalAlpha = 0.35 * k; g.fillStyle = '#ffffff'; g.fillRect(x + 1, y + H - 9 - lh + 2, lw * 0.35, lh * 0.6);
         g.globalAlpha = 0.5; g.strokeStyle = '#8c8f94'; g.lineWidth = 0.8;            // la spirale devant
         for (let s = 0; s < 3; s++) { g.beginPath(); g.ellipse(x + lw / 2, y + H - 14 - s * lh / 3, lw / 2 + 1, 2, 0, 0, Math.PI); g.stroke(); }
-        x += lw + 2 + r2() * 3;
+        x += lw + 1 + r2() * 2;
       }
       g.globalAlpha = 1;
       g.fillStyle = '#5b5e63'; g.fillRect(8, y + H - 8, w - 8, 4);                   // le nez de l'étage, ses étiquettes
@@ -415,15 +423,31 @@ function texPersiennes() {
   }, null, false, 4);
 }
 // LES PETITS CADRES au-dessus de la tablette (v_065) : la plaque noire, l'écusson, la photo de promo
+// (23/10, relecture : p_015 et p_019 de près, rejouées à la pose de l'appareil — la PLAQUE NOIRE est une A4 à
+// l'italienne, du texte blanc à gauche et une bande blanche à QR à droite ; l'ÉCUSSON, un grand blason gris-vert sombre à
+// rayures blanches, sans cadre, une étiquette blanche sous sa pointe ; la FEUILLE, presque carrée, une photo sombre en haut
+// sur un fond beige pâle)
 function texCadre(sorte) {
-  return canvasTex(128, 96, (g, w, h) => {
-    if (sorte === 0) { g.fillStyle = '#151515'; g.fillRect(0, 0, w, h); g.fillStyle = '#d8c48a'; g.font = '600 13px "Segoe UI", sans-serif'; g.textAlign = 'center'; g.fillText('PROMOTION', w / 2, 40); g.fillText('2025', w / 2, 60); return; }
-    // (22/10, p_008 de près : l'écusson VERT SOMBRE à lettres blanches ; la feuille BEIGE, une photo en haut, du texte)
-    if (sorte === 1) { g.fillStyle = '#eef0ea'; g.fillRect(0, 0, w, h); g.fillStyle = '#2f4f3a'; g.beginPath(); g.moveTo(30, 8); g.lineTo(98, 8); g.lineTo(98, 50); g.quadraticCurveTo(98, 80, 64, 90); g.quadraticCurveTo(30, 80, 30, 50); g.closePath(); g.fill(); g.fillStyle = '#f2f2ee'; g.fillRect(42, 26, 44, 5); g.fillRect(46, 38, 36, 4); g.fillRect(50, 48, 28, 4); return; }
-    g.fillStyle = '#e8dcc0'; g.fillRect(0, 0, w, h);
-    const d = g.createLinearGradient(0, 8, 0, 44); d.addColorStop(0, '#6a6f74'); d.addColorStop(1, '#3a332c'); g.fillStyle = d; g.fillRect(10, 8, w - 20, 36);
-    g.fillStyle = '#9c8c6c'; for (let y = 52; y < h - 6; y += 7) g.fillRect(12, y, w - 30 - (y % 3) * 6, 2);
-  }, null, false, 2);
+  return canvasTex(128, 128, (g, w, h) => {
+    if (sorte === 0) {
+      g.fillStyle = '#17181c'; g.fillRect(0, 0, w, h);
+      g.fillStyle = '#e8e8e2'; for (const [y, l] of [[22, 52], [34, 64], [52, 44], [62, 58], [72, 50], [90, 40]]) g.fillRect(10, y, l, y === 22 ? 6 : 3);
+      g.fillStyle = '#f2f2ee'; g.fillRect(84, 10, 34, 108);
+      g.fillStyle = '#202020'; for (let k = 0; k < 40; k++) g.fillRect(89 + (k * 7) % 24, 40 + Math.floor(k / 4) * 5 % 40, 3, 3);
+      return;
+    }
+    if (sorte === 1) {
+      g.clearRect(0, 0, w, h);
+      g.fillStyle = '#3d4943'; g.beginPath(); g.moveTo(10, 4); g.lineTo(118, 4); g.lineTo(118, 62); g.quadraticCurveTo(116, 100, 64, 124); g.quadraticCurveTo(12, 100, 10, 62); g.closePath(); g.fill();
+      g.strokeStyle = '#eef0ec'; g.lineWidth = 6;
+      for (const x of [30, 52, 74]) { g.beginPath(); g.moveTo(x, 14); g.lineTo(x + 22, 40); g.stroke(); }
+      g.fillStyle = '#eef0ec'; g.fillRect(38, 56, 52, 6); g.fillRect(46, 70, 36, 5);
+      return;
+    }
+    g.fillStyle = '#ebe3cf'; g.fillRect(0, 0, w, h);
+    const d = g.createLinearGradient(0, 4, w, 44); d.addColorStop(0, '#45403f'); d.addColorStop(0.5, '#7a3b36'); d.addColorStop(1, '#2f2c2c'); g.fillStyle = d; g.fillRect(0, 0, w, 45);
+    g.fillStyle = '#d8d2c2'; for (let y = 58; y < h - 10; y += 9) g.fillRect(12, y, w - 30 - (y % 3) * 8, 2);
+  }, null, sorte === 1, 2);
 }
 // L'AFFICHE BORDEAUX AU QR à côté de la cloison vitrée (v_063)
 function texBordeaux() {
@@ -699,8 +723,12 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     porteCreme: std({ color: 0xe6dfcc, roughness: 0.45 }),
     // le verre DÉPOLI des cloisons du mur vert : on n'y voit rien, il luit à peine de la lumière d'à côté
     depoli: nommer(std({ map: texDepoli(), roughness: 0.2, metalness: 0.1, emissive: 0xdde7e2, emissiveIntensity: 0.12, envMapIntensity: 1.2 }), 'verre dépoli (opaque)'),
-    sombre: std({ color: 0x2b2a26, roughness: 0.85 }),
-    caisse: std({ color: 0x1d1d1c, roughness: 0.4, metalness: 0.3 }),
+    // (23/10, relecture : par la porte sombre, p_008, p_010, le local est d'un gris ardoise, 61,63,68 — on y devine un
+    // mur et une porte ; le jeu y mettait un noir chaud, 20,20,12. Aucune lampe n'y entre : une lueur propre)
+    sombre: std({ color: 0x4a4d55, roughness: 0.85, emissive: 0x30333a, emissiveIntensity: 1 }),
+    // (23/10, relecture : les caisses des distributeurs sont d'un gris-noir bleuté, 38,40,48 au bas de celui des
+    // friandises, p_010 ; leur colonne de monnayeur, plus claire, 84,92,113 — le jeu les sortait noires, 15,16,9 et 28,30,26)
+    caisse: std({ color: 0x353942, roughness: 0.42, metalness: 0.15 }),
     montant: std({ color: 0x9a9a96, roughness: 0.4, metalness: 0.5 }),
     rouge: std({ color: 0xb8322c, roughness: 0.45 }),
     rougePlaque: std({ color: 0xc0282c, roughness: 0.45 }),
@@ -709,16 +737,19 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     bleuJoueur: std({ color: 0x2a62b0, roughness: 0.4 }),
     rougeJoueur: std({ color: 0xc8262c, roughness: 0.4 }),
     microOndes: std({ color: 0xe9e9e6, roughness: 0.35 }),
-    vitreNoire: std({ color: 0x151719, roughness: 0.1, metalness: 0.4 }),
+    vitreNoire: std({ color: 0x66708a, roughness: 0.3, metalness: 0.08 }),
   };
   // (ce qui ÉCLAIRE : au-delà de 1, le bloom les fait briller)
   const L_ = {
     plafonnier: nommer(new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff4e4).multiplyScalar(4.2) }), 'plafonnier rond allumé'),
     voyant: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.2, 2.2, 0.5) }),
     bloc: new THREE.MeshBasicMaterial({ color: new THREE.Color(0xf4f8fa).multiplyScalar(2.4) }),
-    friandises: new THREE.MeshBasicMaterial({ map: texFriandises(), color: new THREE.Color(1.25, 1.28, 1.35) }),
+    // (23/10, relecture : p_010 et p_008 de près — la vitrine des friandises est BLEUTÉE, rouge sur bleu 0,70-0,83,
+    // 170,179,205 en haut et 122,140,174 en bas ; le jeu la sortait neutre et rosée, 178,172,177 ; la vitrine réfrigérée,
+    // p_045, grise et plus sombre, 109,114,109 pour 153,157,158)
+    friandises: new THREE.MeshBasicMaterial({ map: texFriandises(), color: new THREE.Color(1.12, 1.2, 1.38) }),
     fraisClair: new THREE.MeshBasicMaterial({ map: texFraisClair(404), color: new THREE.Color(1.05, 1.05, 1.08) }),
-    fraisGris: new THREE.MeshBasicMaterial({ map: texFraisClair(505, true), color: new THREE.Color(0.95, 0.95, 0.95) }),
+    fraisGris: new THREE.MeshBasicMaterial({ map: texFraisClair(505, true), color: new THREE.Color(0.68, 0.71, 0.7) }),
     ecranVert: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.75, 1.25, 0.8) }),
     clavier: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.95, 0.96, 1.0) }),
   };
@@ -1176,7 +1207,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     {
       const OUV = 125 * Math.PI / 180, piv = new THREE.Group();
       piv.position.set(xl0 + 0.01, Y_SS, -(2.43 + 0.02)); piv.rotation.y = OUV; ch.decor.add(piv);
-      const v = ch.portes._vantailGris(0.9, 2.14, 1, { oculus: { bas: 0.45, haut: 1.85, l: 0.13, bord: 0.26, cadre: 0.04 }, poignee: 'bequille' });
+      // (23/10, relecture : un gris plus clair, 137,134,128 sur p_008 et p_010 — le vantail commun sortait 111,108,99)
+      const v = ch.portes._vantailGris(0.9, 2.14, 1, { oculus: { bas: 0.45, haut: 1.85, l: 0.13, bord: 0.26, cadre: 0.04 }, poignee: 'bequille',
+        mat: nommer(std({ color: 0xb2b3b3, roughness: 0.45 }), 'vantail gris clair (porte sombre)') });
       v.position.x = 0.0; piv.add(v);
       const dx = Math.cos(OUV), dz = -Math.sin(OUV);
       C.ajouterBoiteOrientee(xl0 + 0.01 + 0.45 * dx, -(2.45) + 0.45 * dz, 0.45, 0.03, -OUV, { y0: Y_SS, y1: Y_SS + 2.14 });
@@ -1202,10 +1235,16 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // ---- LE MUR EST ----
     // les trois petits cadres au-dessus de la branche est du comptoir (p_008, p_019 : y 3,10-3,99 ; la carte noire A5,
     // l'écusson vert, la feuille beige à photo)
-    [[3.88, 0.15, 0.21, 0], [3.58, 0.13, 0.18, 1], [3.27, 0.16, 0.22, 2]].forEach(([y, w, h, i]) => {
-      B(10.44, y - w / 2 - 0.006, 10.45, y + w / 2 + 0.006, Y_SS + 1.72 - h / 2 - 0.006, Y_SS + 1.72 + h / 2 + 0.006, X.noir, { ombre: false });
-      panneau(new THREE.MeshStandardMaterial({ map: texCadre(i), roughness: 0.5 }), w, h, 10.44, y, Y_SS + 1.72, 'W', 0.001);
+    // (23/10, relecture : p_015 et p_019, les deux à moins de 3 cm — la plaque noire y 3,60-3,90 × 1,69-1,90 m ;
+    // l'écusson y 3,355-3,565 × 1,78-2,00 ; la feuille y 2,99-3,29 × 1,67-1,965 : plus grands, plus hauts et plus au sud
+    // qu'on ne les mettait, 0,15 x 0,21 à 1,72 m)
+    [[3.75, 0.30, 0.21, 1.795, 0], [3.46, 0.21, 0.22, 1.89, 1], [3.14, 0.30, 0.295, 1.815, 2]].forEach(([y, w, h, hc, i]) => {
+      if (i !== 1) B(10.443, y - w / 2 - 0.004, 10.45, y + w / 2 + 0.004, Y_SS + hc - h / 2 - 0.004, Y_SS + hc + h / 2 + 0.004, X.noir, { ombre: false });
+      const m = new THREE.MeshStandardMaterial({ map: texCadre(i), roughness: 0.5, alphaTest: i === 1 ? 0.5 : 0 });
+      panneau(m, w, h, 10.443, y, Y_SS + hc, 'W', 0.001);
     });
+    // (l'étiquette blanche sous la pointe de l'écusson)
+    B(10.446, 3.42, 10.45, 3.50, Y_SS + 1.745, Y_SS + 1.775, X.blancMat, { ombre: false });
     // la GRILLE de ventilation, LARGE (0,85), son bord sud au jambage nord de la baie (p_002-p_004, v_060)
     // (22/10, suite : p_004 rejouée — la grille fait 0,74 sur 0,50, y 6,30-7,04, son haut au ras du caisson)
     panneau(new THREE.MeshStandardMaterial({ map: texPersiennes(), roughness: 0.55 }), 0.74, 0.5, 10.45, 6.67, Y_SS + 2.03, 'W', 0.01);
@@ -1532,16 +1571,20 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   };
   // LES MATIÈRES DU MOBILIER (vidéo du 15/10 : des noirs mats, satinés pour l'acier laqué ; le vert des Tolix, laqué brillant)
   const XM = {
-    laque: nommer(std({ color: 0x1b1b1a, roughness: 0.42, metalness: 0.25 }), 'acier laqué noir (mange-debout)'),
-    plateau: nommer(std({ color: 0x1d1d1c, roughness: 0.5 }), 'plateau stratifié noir'),
+    // (23/10, relecture : sur la vidéo, les noirs sont froids — rouge sur bleu 0,86-0,95 aux plateaux, aux pieds, aux
+    // Miura ; le jeu les sortait chauds, 1,12-1,22 : un noir à peine bleuté)
+    laque: nommer(std({ color: 0x1c1e22, roughness: 0.4, metalness: 0.25 }), 'acier laqué noir (mange-debout)'),
+    plateau: nommer(std({ color: 0x1c1e22, roughness: 0.5 }), 'plateau stratifié noir'),
     // (22/10, suite : mate — métallique, le disque reflétait la carte d'environnement en secteurs noirs et blancs)
-    fonte: nommer(std({ color: 0x1c1c1b, roughness: 0.62, metalness: 0.0 }), 'embase de fonte noire'),
-    miura: nommer(std({ color: 0x232322, roughness: 0.66 }), 'polypropylène noir (Miura)'),
+    fonte: nommer(std({ color: 0x1c1d20, roughness: 0.62, metalness: 0.0 }), 'embase de fonte noire'),
+    miura: nommer(std({ color: 0x212327, roughness: 0.66 }), 'polypropylène noir (Miura)'),
     tolixVert: nommer(std({ color: 0x5ea83a, roughness: 0.3, metalness: 0.35 }), 'Tolix vert pomme'),
     tolixNoir: nommer(std({ color: 0x151515, roughness: 0.25, metalness: 0.4 }), 'Tolix noir laqué'),
     tablette: nommer(std({ color: 0x8f918f, roughness: 0.36, metalness: 0.55 }), 'tablette d\'acier gris'),
     piedGris: nommer(std({ color: 0xa6a8a6, roughness: 0.32, metalness: 0.6 }), 'pied tube gris'),
-    chene: nommer(std({ map: texChene(), roughness: 0.55 }), 'baby-foot : stratifié chêne clair'),
+    // (23/10, relecture : le flanc mesure 152-156 / 145-148 / 108-112 sur p_010, p_015, p_019 ; le jeu sortait 158-173 /
+    // 149-163 / 107-117, d'un cran plus clair et plus jaune)
+    chene: nommer(std({ map: texChene(), color: 0xe4e2ea, roughness: 0.55 }), 'baby-foot : stratifié chêne clair'),
     liseré: nommer(std({ color: 0xc2401f, roughness: 0.45 }), 'baby-foot : liseré rouge'),
     pied: nommer(std({ color: 0x141414, roughness: 0.5, metalness: 0.2 }), 'baby-foot : pieds d\'acier noir'),
     poignee: std({ color: 0x111111, roughness: 0.45 }),
@@ -1553,6 +1596,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // (23/10 : les papiers froissés et le sac qui déborde de la grosse poubelle, à facettes)
     papierKraft: nommer(std({ color: 0x9a8662, roughness: 0.9, flatShading: true }), 'papier kraft froissé'),
     papierBlanc: nommer(std({ color: 0xe4e2dc, roughness: 0.85, flatShading: true }), 'papier blanc froissé'),
+    papierOrange: nommer(std({ color: 0xd9874a, roughness: 0.7, flatShading: true }), 'sachet orange froissé'),
     sacLuisant: nommer(std({ color: 0x18191a, roughness: 0.28, metalness: 0.05, flatShading: true }), 'sac poubelle noir froissé'),
     grisPoubelle: nommer(std({ color: 0x6d7175, roughness: 0.55 }), 'poubelle grise'),
     caisseClaire: nommer(std({ color: 0xc9cbca, roughness: 0.4, metalness: 0.3 }), 'distributeur : caisse gris clair'),
@@ -1586,16 +1630,19 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   };
   // LE MANGE-DEBOUT À TRÉPIED (au milieu — p_008 à p_041, de près : plateau rond Ø 0,60 à 1,06 m, colonne noire Ø 4,5 cm,
   // une bague à 0,40 m d'où partent TROIS PIEDS de tube écartés, embouts ronds ; le pied de devant le plus long à l'image)
+  // (23/10, relecture : p_008 et p_015 rejouées, les trois pieds au sol à 2 cm près des deux côtés — (6,10 ; 7,84),
+  // (5,57 ; 8,02), (5,68 ; 7,47) : le centre en (5,78 ; 7,78), 0,325 de rayon, le premier pied à 10,6° ; la BAGUE
+  // moletée de 0,32 à 0,39 m, d'où partent les pieds — on la mettait à 0,40-0,43 —, des tubes plus gros, Ø 3,3 cm)
   const mdTrepied = (x, y, nom, a0 = 0, H = 1.06) => {
-    const g = meuble('mange-debout-trepied', nom, x, y, a0);
+    const g = meuble('mange-debout-trepied', nom, x, y, a0), R = 0.325;
     maille(PLATEAU60, XM.plateau, 0, H - 0.015, 0, 0, g);
     maille(new THREE.CylinderGeometry(0.06, 0.06, 0.012, 20), XM.laque, 0, H - 0.036, 0, 0, g, { ombre: false });
-    maille(new THREE.CylinderGeometry(0.0225, 0.0225, H - 0.45, 14), XM.laque, 0, 0.42 + (H - 0.45) / 2, 0, 0, g);
-    maille(new THREE.CylinderGeometry(0.028, 0.028, 0.06, 14), XM.laque, 0, 0.40, 0, 0, g);
+    maille(new THREE.CylinderGeometry(0.019, 0.019, H - 0.38, 14), XM.laque, 0, 0.36 + (H - 0.38) / 2, 0, 0, g);
+    maille(new THREE.CylinderGeometry(0.024, 0.024, 0.07, 14), XM.laque, 0, 0.355, 0, 0, g);
     for (let k = 0; k < 3; k++) {
-      const a = k * Math.PI * 2 / 3, px = Math.cos(a) * 0.34, pz = Math.sin(a) * 0.34;
-      tige(g, XM.laque, [0, 0.41, 0], [px, 0.012, pz], 0.0145, 10);
-      maille(new THREE.SphereGeometry(0.017, 10, 6), XM.laque, px, 0.012, pz, 0, g, { ombre: false });
+      const a = k * Math.PI * 2 / 3, px = Math.cos(a) * R, pz = Math.sin(a) * R;
+      tige(g, XM.laque, [0, 0.33, 0], [px, 0.014, pz], 0.0165, 10);
+      maille(new THREE.SphereGeometry(0.018, 10, 6), XM.laque, px, 0.014, pz, 0, g, { ombre: false });
     }
     fCercle(g, x, y, 0.3, H - 0.1, H + 0.02); fCercle(g, x, y, 0.08, 0, H + 0.02);
     return g;
@@ -1761,7 +1808,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       const p = new THREE.Mesh(new THREE.PlaneGeometry(b - a, ht - hb), mat);
       p.position.set((a + b) / 2, (hb + ht) / 2, z); p.rotation.y = Math.PI; p.castShadow = false; g.add(p);
     };
-    const gris = std({ color: 0x3b3d40, roughness: 0.45, metalness: 0.3 });
+    const gris = std({ color: 0x4b4f58, roughness: 0.45, metalness: 0.15 });
     if (sorte === 'snacks') {
       vitre(-l / 2 + 0.25, l / 2 - 0.03, 0.62, 1.82, L_.friandises);
       piece(g, l - 0.3, 0.34, 0.008, gris, 0.11, 0.33, zd, { ombre: false });
@@ -1810,8 +1857,12 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // le sac retourné sur le bord et ce qui dépasse
     maille(new THREE.CylinderGeometry(r * 1.03, r * 1.01, 0.09, 24, 1, true), XM.sac, 0, h - 0.05, 0, 0, g, { ombre: false }).material.side = THREE.DoubleSide;
     if (!pleine) {
-      maille(new THREE.SphereGeometry(r * 0.95, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), XM.sac, 0, h - 0.03, 0, 0, g, { ombre: false }).scale.y = 0.45;
-      maille(new THREE.BoxGeometry(r * 0.8, 0.12, r * 0.5), XM.kraft, r * 0.15, h + 0.04, -r * 0.1, 0.4, g, { ombre: false });
+      // (23/10, relecture : p_004 et p_019 rejouées — le sac noir gonflé monte à 0,60 au-dessus du bord, et par-dessus, un
+      // sachet froissé orange et kraft jusqu'à 0,78)
+      maille(new THREE.SphereGeometry(r * 0.97, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), XM.sacLuisant, 0, h - 0.03, 0, 0, g, { ombre: false }).scale.y = 0.9;
+      for (const [x, y, z, s, mat] of [[0.02, 0.2, -0.02, 1, XM.papierOrange], [-0.05, 0.16, 0.05, 0.75, XM.papierKraft], [0.07, 0.15, 0.06, 0.6, XM.papierBlanc]]) {
+        const m = maille(_papier, mat, x, h + y, z, x * 20, g, { ombre: false }); m.scale.set(0.1 * s, 0.075 * s, 0.08 * s);
+      }
     } else {
       // (22/10, p_051, p_052 : la grosse poubelle noire PLEINE — le sac ouvert, des papiers froissés, kraft et blancs, qui
       // dépassent du bord ; deux anses d'acier en U sur les flancs)
@@ -1905,7 +1956,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       fBoite(g, 2.55, 3.3, 2.85, 7.25, H - 0.08, H);
     }
     // ---- LE MILIEU (relevés au sol de p_004, p_008, p_019, p_025) ----
-    mdTrepied(5.72, 7.84, 'mange-debout à trépied du milieu', 0.25);
+    mdTrepied(5.78, 7.78, 'mange-debout à trépied du milieu', 0.185);
     miura(6.9, 7.68, -0.75, 'tabouret Miura du milieu 1');
     tablePliante(7.22, 7.11, 'table haute pliante du milieu', 0.5);
     miura(5.85, 6.4, -0.3, 'tabouret Miura du milieu 2');
@@ -1940,7 +1991,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     distributeur('distributeur-frais', 'vitrine réfrigérée', 3.56, 4.42, 'frais');
     // ---- LES POUBELLES ----
     poubelleRonde('poubelle-noire', 'grosse poubelle noire', 2.72, 9.55, 0.29, 0.74, XM.noirePoubelle, true);
-    poubelleRonde('poubelle-grise', 'poubelle grise de la niche', 10.86, 5.1, 0.21, 0.62, XM.grisPoubelle);
+    // (23/10, relecture : p_004 et p_019 rejouées, son pied à 2 cm près des deux côtés — elle est au BORD de la niche,
+    // (10,65 ; 4,80), plus basse, le bord à 0,45 m — 10,86 ; 5,10 et 0,62 la mettaient au fond, 0,35 m trop au nord-est)
+    poubelleRonde('poubelle-grise', 'poubelle grise de la niche', 10.65, 4.80, 0.2, 0.45, XM.grisPoubelle);
     poubelleBleue(10.27, 9.3, 'poubelle bleue');
     // ---- LA NICHE DU MUR EST : l'étagère blanche et ses CINQ MICRO-ONDES (2 + 2 + 1 dessus) ----
     {
@@ -2046,6 +2099,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   // (22/10 : chaque meuble de l'espace pause cousu SEUL, dans son repère — il reste un objet à lui, son groupe et son
   // userData.meuble, hors du bloc du décor fixe)
   for (const g of _meubles) fusionnerLocal(g);
+  // (23/10, relecture : p_008, p_015 — l'occlusion ambiante posait au-dessus des tablettes d'acier, le long du mur, une
+  // bande de taches sombres que la vidéo n'a pas : les tablettes, 3 cm contre le mur, restent hors de sa passe de normales)
+  for (const g of _meubles) g.traverse((o) => { if (o.isMesh && o.material === XM.tablette) o.userData.sansNormales = true; });
   nePasFusionner(groupe);
   groupe.traverse((o) => { o.userData.horsAOSol = true; if (o.isMesh && o.castShadow) ombrants.push(o); });
   for (const o of ombrants) o.castShadow = false;
