@@ -229,23 +229,38 @@ function texResine() {
     for (let k = 0; k < 2500; k++) { const v = 120 + (r2() - 0.5) * 30; g.fillStyle = rgb(v, v, v - 2, 0.18); g.fillRect(r2() * w, r2() * h, 1.5, 1.5); }
   }, [0.5, 0.5], false, 8);
 }
-// UN CARRELAGE CARRÉ de 60 x 60 (tuile de dessin 1,2 m : quatre carreaux, chacun son ton) : `base` sa teinte, `joint` ;
-// `cote` : le côté d'un carreau (14/10 : 0,45 pour l'espace pause)
-function texCarreaux(base, joint, graineN, nuee = 8, cote = 0.6) {
-  const W = TELEPHONE ? 256 : 512;
+// LE CARRELAGE DE L'ESPACE PAUSE, 45 x 45 (22/10, la vidéo du 15/10 de près — p_015, p_035, p_041 : un grès « effet
+// béton » GRIS-BEIGE FROID, mat, chaque carreau NUAGÉ de plages plus claires et plus sombres et PIQUETÉ de petits points
+// sombres, les joints de 2 mm d'un gris foncé, AU RAS du carreau — sans le liseré clair d'un relief ; d'un carreau à
+// l'autre, le ton bouge à peine. L'ancien dessin — quatre carreaux de crème lisse, l'un sur deux plus sombre — faisait un
+// damier répété tous les 0,9 m). Tuile de dessin : seize carreaux (1,8 m), chacun ses nuages
+function texCarrelagePause(base, joint, graineN, cote = 0.45) {
+  const W = TELEPHONE ? 512 : 1024, N = 4;
   return canvasTex(W, W, (g, w, h) => {
-    const r2 = graine(graineN), c = w / 2, j = Math.max(1.2, w * 0.0035);
-    for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) {
-      const t = (r2() - 0.5) * nuee;
-      g.fillStyle = rgb(base[0] + t, base[1] + t, base[2] + t); g.fillRect(a * c, b * c, c, c);
-      g.save(); g.beginPath(); g.rect(a * c, b * c, c, c); g.clip();
-      nuees(g, w, h, r2, 26, [base[0] + t, base[1] + t, base[2] + t], nuee * 0.8, 0.45, 8, c * 0.35);
+    const r2 = graine(graineN), c = w / N, j = Math.max(1.3, w * 0.0016);
+    for (let a = 0; a < N; a++) for (let b = 0; b < N; b++) {
+      const t = (r2() - 0.5) * 7, B = [base[0] + t, base[1] + t, base[2] + t * 0.9];
+      g.save(); g.beginPath(); g.rect(a * c, b * c, c, c); g.clip(); g.translate(a * c, b * c);
+      g.fillStyle = rgb(...B); g.fillRect(0, 0, c, c);
+      // les grands nuages (plus clairs et plus sombres), puis les moyens
+      for (let k = 0; k < 10; k++) {
+        const R = c * (0.25 + r2() * 0.45), x = r2() * c, y = r2() * c, d = (r2() < 0.6 ? -1 : 1) * (6 + r2() * 10);
+        const gr = g.createRadialGradient(x, y, 0, x, y, R);
+        gr.addColorStop(0, rgb(B[0] + d, B[1] + d, B[2] + d * 0.95, 0.55)); gr.addColorStop(1, rgb(B[0] + d, B[1] + d, B[2] + d, 0));
+        g.fillStyle = gr; g.fillRect(x - R, y - R, 2 * R, 2 * R);
+      }
+      nuees(g, c, c, r2, 30, B, 8, 0.35, c * 0.03, c * 0.14);
+      // le grain fin, et le piqueté : des points sombres TRÈS petits, serrés par plages (p_035 de près)
+      for (let k = 0; k < c * c / 12; k++) { const v = (r2() - 0.5) * 24; g.fillStyle = rgb(B[0] + v, B[1] + v, B[2] + v, 0.22); g.fillRect(r2() * c, r2() * c, 1, 1); }
+      for (let p = 0; p < 4; p++) {
+        const cx = r2() * c, cy = r2() * c, R = c * (0.15 + r2() * 0.3);
+        for (let k = 0; k < 90; k++) { const a = r2() * 6.283, d = R * Math.sqrt(r2()), v = 70 + r2() * 40; g.fillStyle = rgb(v, v, v - 3, 0.3 + r2() * 0.25); g.fillRect(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 0.9, 0.9); }
+      }
       g.restore();
     }
-    for (let k = 0; k < w * h / 60; k++) { const v = (r2() - 0.5) * 18; g.fillStyle = rgb(base[0] + v, base[1] + v, base[2] + v, 0.25); g.fillRect(r2() * w, r2() * h, 1.3, 1.3); }
     g.fillStyle = joint;
-    for (let i = 0; i <= 2; i++) { g.fillRect(i * c - j / 2, 0, j, h); g.fillRect(0, i * c - j / 2, w, j); }
-  }, [1 / (2 * cote), 1 / (2 * cote)], false, 8);
+    for (let i = 0; i <= N; i++) { g.fillRect(i * c - j / 2, 0, j, h); g.fillRect(0, i * c - j / 2, w, j); }
+  }, [1 / (N * cote), 1 / (N * cote)], false, 8);
 }
 // LE GRÈS GRIS FONCÉ du couloir (plan V2, soussol.md § 2.3 ; v_047 à v_051) : de grands carreaux de 1,2 m, #56544e, SANS
 // JOINT LONGITUDINAL — un carreau couvre toute la largeur du couloir —, des joints transversaux à peine visibles. Tuile
@@ -272,13 +287,6 @@ function normalesGres() {
     for (let b = 0; b < 2; b++) g.fillRect(0, b * h / 2 + 0.8, w, h / 2 - 1.6);
   }, 0.8, 0.8));
 }
-let _normCarreaux = null;
-function normalesCarreaux() {
-  return _normCarreaux || (_normCarreaux = normalesDepuisGrille(256, 256, (g, w, h) => {
-    const c = w / 2;
-    for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) g.fillRect(a * c + 1.2, b * c + 1.2, c - 2.4, c - 2.4);
-  }, 1.2, 1.0));
-}
 // UN PANNEAU D'ÉTAGE (v_004, v_012, v_013 ; « -1 » sur l'image 4K à 11 s) : carré jaune, le chiffre blanc arrondi
 function texPanneauNiveau(txt) {
   return canvasTex(128, 128, (g, w, h) => {
@@ -303,59 +311,54 @@ function texPanneauMoins1() {
     g.save(); g.translate(w / 2, h / 2 + 2); g.scale(0.8, 1.2); g.fillText('-1', 0, 0); g.restore();
   }, null, false, 4);
 }
-// LES TROIS DISTRIBUTEURS (v_065 à v_067). ① friandises : vitrine éclairée, six rangées de spirales et leurs paquets
+// LES TROIS DISTRIBUTEURS (22/10, la vidéo du 15/10 : p_008, p_010 de près, p_045, p_046 de face). ① friandises : une
+// VITRINE SOMBRE — le fond noir, six étages de petits paquets serrés aux couleurs éteintes devant leurs spirales, la
+// réglette de LED blanche le long du bord gauche, les étiquettes de prix sur le nez des étages (le jeu y mettait de
+// grands aplats de couleurs vives sur fond blanc). Tuile : la vitre (0,56 x 1,20)
 function texFriandises() {
-  return canvasTex(256, 512, (g, w, h) => {
+  return canvasTex(192, 412, (g, w, h) => {
     const r2 = graine(77);
-    g.fillStyle = '#f3f5f6'; g.fillRect(0, 0, w, h);
-    const couleurs = ['#d62c2c', '#f2b705', '#2a62b0', '#3e9b6b', '#7b2a6e', '#f08a24', '#5a3a22', '#e8e6e0'];
-    for (let r = 0; r < 6; r++) {
-      const y = 14 + r * 82;
-      g.fillStyle = '#c9cdd0'; g.fillRect(0, y + 64, w, 8);                         // l'étagère
-      for (let c = 0; c < 5; c++) {
-        const x = 8 + c * 49, col = couleurs[Math.floor(r2() * couleurs.length)];
-        g.fillStyle = col; g.fillRect(x, y + 6, 40, 56);
-        g.fillStyle = 'rgba(255,255,255,0.35)'; g.fillRect(x + 4, y + 10, 32, 8);
-        g.strokeStyle = 'rgba(80,80,80,0.6)'; g.lineWidth = 1.5;                   // la spirale devant
-        for (let s = 0; s < 4; s++) { g.beginPath(); g.ellipse(x + 20, y + 30 + s * 9, 21, 4, 0, 0, Math.PI); g.stroke(); }
-        g.fillStyle = '#ffffff'; g.fillRect(x + 10, y + 66, 20, 5);
+    g.fillStyle = '#16171a'; g.fillRect(0, 0, w, h);
+    const couleurs = ['#a8453b', '#c9973f', '#d8d3c6', '#5e4330', '#3f5a8c', '#7c3d63', '#b9763c', '#2e2e30', '#8e9a4a', '#c4b8a0'];
+    const n = 6, H = (h - 10) / n;
+    for (let r = 0; r < n; r++) {
+      const y = 6 + r * H, k = 1 - r * 0.07;                                         // (le bas un peu moins éclairé)
+      let x = 14;
+      while (x < w - 8) {
+        const lw = 9 + r2() * 9, lh = H * (0.42 + r2() * 0.3), col = couleurs[Math.floor(r2() * couleurs.length)];
+        g.globalAlpha = 0.9 * k; g.fillStyle = col; g.fillRect(x, y + H - 9 - lh, lw, lh);
+        g.globalAlpha = 0.35 * k; g.fillStyle = '#ffffff'; g.fillRect(x + 1, y + H - 9 - lh + 2, lw * 0.35, lh * 0.6);
+        g.globalAlpha = 0.5; g.strokeStyle = '#8c8f94'; g.lineWidth = 0.8;            // la spirale devant
+        for (let s = 0; s < 3; s++) { g.beginPath(); g.ellipse(x + lw / 2, y + H - 14 - s * lh / 3, lw / 2 + 1, 2, 0, 0, Math.PI); g.stroke(); }
+        x += lw + 2 + r2() * 3;
       }
+      g.globalAlpha = 1;
+      g.fillStyle = '#5b5e63'; g.fillRect(8, y + H - 8, w - 8, 4);                   // le nez de l'étage, ses étiquettes
+      for (let x2 = 16; x2 < w - 10; x2 += 22) { g.fillStyle = '#dcdcd6'; g.fillRect(x2, y + H - 7, 9, 3); }
     }
+    const led = g.createLinearGradient(0, 0, 14, 0); led.addColorStop(0, '#ffffff'); led.addColorStop(0.5, '#e8eefc'); led.addColorStop(1, 'rgba(200,210,235,0)');
+    g.fillStyle = led; g.fillRect(0, 0, 14, h);
+    const ref = g.createLinearGradient(0, 0, w, h); ref.addColorStop(0, 'rgba(255,255,255,0.10)'); ref.addColorStop(0.5, 'rgba(255,255,255,0)'); ref.addColorStop(1, 'rgba(255,255,255,0.05)');
+    g.fillStyle = ref; g.fillRect(0, 0, w, h);
   }, null, false, 4);
 }
-// ② boissons chaudes : caisse noire, grand écran (une tasse et le logo), la niche à gobelet
-function texCafe() {
-  return canvasTex(256, 512, (g, w, h) => {
-    g.fillStyle = '#1b1c1d'; g.fillRect(0, 0, w, h);
-    const e = g.createLinearGradient(0, 40, 0, 290); e.addColorStop(0, '#5a3a22'); e.addColorStop(1, '#1e120b');
-    g.fillStyle = e; g.fillRect(24, 40, w - 48, 250);
-    g.fillStyle = '#f4efe6'; g.beginPath(); g.ellipse(w / 2, 200, 48, 14, 0, 0, 7); g.fill();
-    g.fillRect(w / 2 - 44, 150, 88, 52); g.fillStyle = '#6b3e1f'; g.beginPath(); g.ellipse(w / 2, 150, 44, 12, 0, 0, 7); g.fill();
-    g.strokeStyle = 'rgba(255,255,255,0.5)'; g.lineWidth = 3;
-    for (const dx of [-16, 0, 16]) { g.beginPath(); g.moveTo(w / 2 + dx, 130); g.bezierCurveTo(w / 2 + dx - 10, 115, w / 2 + dx + 10, 100, w / 2 + dx, 85); g.stroke(); }
-    g.fillStyle = '#ffffff'; g.font = '600 24px "Segoe UI", sans-serif'; g.textAlign = 'center'; g.fillText('Café · Thé · Chocolat', w / 2, 270);
-    g.fillStyle = '#2b2c2e'; g.fillRect(24, 310, w - 48, 60);
-    for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#3a3c3f' : '#45484c'; g.fillRect(32 + (i % 4) * 50, 318 + Math.floor(i / 4) * 26, 42, 20); }
-    g.fillStyle = '#0c0c0c'; g.fillRect(70, 395, 116, 90);                              // la niche
-    g.fillStyle = '#8a8d90'; g.fillRect(70, 478, 116, 7);
-  }, null, false, 4);
-}
-// ③ boissons fraîches : vitrine éclairée de vert, les bouteilles et les canettes sur leurs rails
-function texFrais() {
-  return canvasTex(256, 512, (g, w, h) => {
-    const r2 = graine(303);
-    const f = g.createLinearGradient(0, 0, w, 0); f.addColorStop(0, '#7fd08a'); f.addColorStop(0.5, '#b6f0b8'); f.addColorStop(1, '#7fd08a');
+// ② boissons fraîches : la vitre claire (p_045, p_046 : un intérieur très éclairé, blanc bleuté, des rangées de
+// bouteilles pâles)
+function texFraisClair(graineN = 404, sombre = false) {
+  return canvasTex(128, 400, (g, w, h) => {
+    const r2 = graine(graineN);
+    const f = g.createLinearGradient(0, 0, 0, h);
+    f.addColorStop(0, sombre ? '#c3c8cc' : '#eef3f8'); f.addColorStop(1, sombre ? '#9fa5aa' : '#d4dce4');
     g.fillStyle = f; g.fillRect(0, 0, w, h);
-    const cols = ['#d62c2c', '#2a62b0', '#f2b705', '#e8e6e0', '#1a1a1a', '#3e9b6b', '#f08a24'];
-    for (let r = 0; r < 6; r++) {
-      const y = 20 + r * 80;
-      g.fillStyle = 'rgba(40,60,40,0.45)'; g.fillRect(0, y + 66, w, 6);
-      for (let c = 0; c < 7; c++) {
-        const x = 12 + c * 34, col = cols[Math.floor(r2() * cols.length)], haute = r2() < 0.5;
-        g.fillStyle = col; g.fillRect(x, y + (haute ? 8 : 26), 22, haute ? 58 : 40);
-        if (haute) g.fillRect(x + 7, y, 8, 10);
-        g.fillStyle = 'rgba(255,255,255,0.4)'; g.fillRect(x + 3, y + (haute ? 12 : 30), 4, haute ? 46 : 30);
+    const cols = sombre ? ['#e4e1d8', '#c9b48e', '#a9b6a0', '#d8d8d2', '#8a8f96'] : ['#c0d2e6', '#e7c9c2', '#cfe3cc', '#f1ecdc', '#9fb7d4', '#e3d39a'];
+    for (let r = 0; r < 5; r++) {
+      const y = 8 + r * (h - 16) / 5, H = (h - 16) / 5;
+      for (let x = 6; x < w - 8;) {
+        const lw = 9 + r2() * 6, lh = H * (0.45 + r2() * 0.35);
+        g.fillStyle = cols[Math.floor(r2() * cols.length)]; g.globalAlpha = 0.85; g.fillRect(x, y + H - 6 - lh, lw, lh);
+        x += lw + 3;
       }
+      g.globalAlpha = 1; g.fillStyle = sombre ? '#7d8287' : '#aeb7c0'; g.fillRect(0, y + H - 5, w, 3);
     }
   }, null, false, 4);
 }
@@ -391,13 +394,19 @@ function texBabyTerrain() {
     g.strokeRect(4, h / 2 - 22, 22, 44); g.strokeRect(w - 26, h / 2 - 22, 22, 44);
   }, null, false, 4);
 }
-// LA GRILLE DE VENTILATION à persiennes du coin nord-est (v_064, v_065) : gris-vert
+// LA GRILLE DE VENTILATION à persiennes du mur est (22/10, p_004 et p_061 de près : un large cadre BLANC cassé, des
+// lames gris clair légèrement bleutées sur des fentes gris moyen, un meneau au milieu — le jeu la peignait vert olive)
 function texPersiennes() {
-  return canvasTex(128, 80, (g, w, h) => {
-    g.fillStyle = '#9da397'; g.fillRect(0, 0, w, h);
-    for (let y = 8; y < h - 6; y += 6) { g.fillStyle = '#5f6559'; g.fillRect(6, y, w - 12, 2.5); g.fillStyle = '#c4c9bd'; g.fillRect(6, y + 2.5, w - 12, 1); }
-    g.strokeStyle = '#7d8377'; g.lineWidth = 4; g.strokeRect(2, 2, w - 4, h - 4);
-  }, null, false, 2);
+  return canvasTex(256, 128, (g, w, h) => {
+    g.fillStyle = '#d9dbd9'; g.fillRect(0, 0, w, h);
+    const m = 14; g.fillStyle = '#6f757c'; g.fillRect(m, m, w - 2 * m, h - 2 * m);
+    for (let y = m + 2; y < h - m - 3; y += 6.5) {
+      g.fillStyle = '#b6bcc3'; g.fillRect(m, y, w - 2 * m, 3.4);
+      g.fillStyle = '#d0d4d8'; g.fillRect(m, y, w - 2 * m, 1);
+    }
+    g.fillStyle = '#c9ccce'; g.fillRect(w * 0.53 - 2, m, 4, h - 2 * m);
+    g.strokeStyle = 'rgba(120,124,128,0.6)'; g.lineWidth = 1.5; g.strokeRect(m - 1, m - 1, w - 2 * m + 2, h - 2 * m + 2);
+  }, null, false, 4);
 }
 // LES PETITS CADRES au-dessus de la tablette (v_065) : la plaque noire, l'écusson, la photo de promo
 function texCadre(sorte) {
@@ -449,14 +458,15 @@ function texAffiche0101() {
   return canvasTex(256, 350, (g, w, h) => {
     g.fillStyle = '#121212'; g.fillRect(0, 0, w, h);
     g.fillStyle = '#f4f3ee'; g.fillRect(3, 3, w - 6, h - 6);
-    const m = 12; g.fillStyle = '#e3bd62'; g.fillRect(m, m, w - 2 * m, h - 2 * m);
+    // (22/10, suite : un moutarde PÂLE et éteint — 188,167,117 sur p_008 et p_015 ; le #e3bd62 sortait 180,145,45)
+    const m = 12; g.fillStyle = '#e5d0aa'; g.fillRect(m, m, w - 2 * m, h - 2 * m);
     const rangs = ['101010', '010101', '101010', '010001'];
     g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '700 70px "Segoe UI", Arial, sans-serif';
     g.save(); g.beginPath(); g.rect(m, m, w - 2 * m, h - 2 * m); g.clip();
     rangs.forEach((r, j) => [...r].forEach((c, i) => {
       const x = m + 22 + i * 44, y = m + 48 + j * 78;
       g.save(); g.translate(x, y); g.scale(0.82, 1.12);
-      g.fillStyle = '#8e7c55'; g.fillText(c, 4, 3);
+      g.fillStyle = '#a99a7c'; g.fillText(c, 4, 3);
       g.fillStyle = '#f7f4ec'; g.fillText(c, 0, 0);
       if (c === '0') { g.fillStyle = '#6f6556'; g.beginPath(); g.ellipse(1, 0, 7, 19, 0, 0, 7); g.fill(); }
       g.restore();
@@ -681,9 +691,11 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     plafonnier: nommer(new THREE.MeshBasicMaterial({ color: new THREE.Color(0xfff4e4).multiplyScalar(4.2) }), 'plafonnier rond allumé'),
     voyant: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.2, 2.2, 0.5) }),
     bloc: new THREE.MeshBasicMaterial({ color: new THREE.Color(0xf4f8fa).multiplyScalar(2.4) }),
-    friandises: new THREE.MeshBasicMaterial({ map: texFriandises(), color: new THREE.Color(1.15, 1.15, 1.15) }),
-    cafe: new THREE.MeshBasicMaterial({ map: texCafe(), color: new THREE.Color(1.05, 1.05, 1.05) }),
-    frais: new THREE.MeshBasicMaterial({ map: texFrais(), color: new THREE.Color(1.1, 1.1, 1.1) }),
+    friandises: new THREE.MeshBasicMaterial({ map: texFriandises(), color: new THREE.Color(1.0, 1.0, 1.0) }),
+    fraisClair: new THREE.MeshBasicMaterial({ map: texFraisClair(404), color: new THREE.Color(1.05, 1.05, 1.08) }),
+    fraisGris: new THREE.MeshBasicMaterial({ map: texFraisClair(505, true), color: new THREE.Color(0.95, 0.95, 0.95) }),
+    ecranVert: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.75, 1.25, 0.8) }),
+    clavier: new THREE.MeshBasicMaterial({ color: new THREE.Color(0.95, 0.96, 1.0) }),
   };
   // LES SOLS du -1 : chacun sa matière, une même lumière cuite et une même ombre douce (uv1 sur R_SS) ; des rugosités
   // à elles (l'optimisation du décor ne doit les confondre avec rien)
@@ -700,13 +712,14 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // le plateau du mange-debout, 1,05, retombent à leur place —, les joints au pas de 0,45 m, à 1 cm près ; la même
     // mesure sur l'image du jeu au même point de vue rend ses 0,60. Et d'un beige plus gris : 160,156,135 sur v_060 et
     // v_063, le jeu sortait 164,151,121)
-    pause: nommer(std({ map: texCarreaux([146, 143, 129], '#87837a', 512, 14, 0.45), roughness: 0.33 }), 'carrelage beige 45x45'),
+    // (22/10, la vidéo du 15/10 rejouée à la pose de l'appareil : 171,167,152 au sol sur p_015, 162,156,141 sur p_008 —
+    // le jeu sortait 174,166,147 et 169,161,142, d'un beige plus jaune ; un gris plus froid, mat)
+    pause: nommer(std({ map: texCarrelagePause([143, 145, 138], '#5f5d58', 512, 0.45), roughness: 0.52 }), 'carrelage gris-beige 45x45'),
   };
   // (22/10 : la PHASE des joints — la vidéo du 15/10, p_004-p_041, les joints relevés à 1 cm près autour de l'appareil :
   // les nord-sud en x ≡ 0,40, les est-ouest en y ≡ 0,295 (mod 0,45) du repère de la pause, comme du plan, DY_P valant six
-  // carreaux)
-  SOL.pause.map.offset.set(0.5 - 0.40 / 0.9, 0.5 - 0.295 / 0.9);
-  avecRelief(SOL.pause, normalesCarreaux(), 0.35);
+  // carreaux ; la tuile de dessin fait quatre carreaux)
+  SOL.pause.map.offset.set(1 - 0.40 / 1.8, 1 - 0.295 / 1.8);
   avecRelief(SOL.couloir, normalesGres(), 0.3);
   const solsSS = Object.values(SOL);
   // le sol du PALIER (niveau 0) : béton peint taupe, avec la lumière et l'ombre cuites du rez-de-chaussée (js/carte_ecole.js)
@@ -1128,9 +1141,14 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // la plaque noire à son ouest, plus bas (p_015 : x 7,90-8,06, de 1,61 à 1,78)
     B(7.905, 2.41, 8.055, 2.418, Y_SS + 1.61, Y_SS + 1.78, X.noir, { ombre: false });
     panneau(new THREE.MeshStandardMaterial({ map: texPlaque(), roughness: 0.4 }), 0.14, 0.16, 7.98, 2.418, Y_SS + 1.695, 'N', 0.001);
-    // le bout gris du coffre de 2021 entre le dernier distributeur et le mur vert (VO q_0137 ; 22/10 : p_046, p_047 — il
-    // n'en reste qu'un bas meuble gris de 0,9 m, contre le distributeur)
-    B(2.55, 2.41, 3.55, 3.21, Y_SS, Y_SS + 0.92, X.montant, { collision: true });
+    // LE RESSAUT DE L'ANGLE SUD-OUEST (22/10, suite — p_045 à p_047 rejouées : vu de la rangée du mur nord, le vert
+    // commence à 0,24 m du troisième distributeur, en x 3,32, sur TOUTE la hauteur ; p_046, p_047, une face claire dans
+    // l'ombre entre lui et le vert. Le mur vert fait donc un retour : un massif plein, x 2,55-3,32 × y 2,41-3,21, jusqu'au
+    // soffite, sa face nord peinte en vert comme le mur, sa face est en blanc — l'ancien « coffre » gris de la VO de 2021
+    // l'habillait ; le bas meuble gris qu'on y mettait n'existe pas)
+    B(2.55, 2.41, 3.32, 3.21, Y_SS, Y_SS + 2.38, M.blanc, { ombre: false, collision: true });
+    B(2.55, 3.21, 3.32, 3.215, Y_SS + 0.1, Y_SS + 2.38, X.vert, { ombre: false });
+    plinthe('x', 3.215, 2.55, 3.32, 1, Y_SS, X.plintheSalle); plinthe('y', 3.32, 2.41, 3.215, 1, Y_SS, X.plintheSalle);
     // ---- LE MUR EST ----
     // les trois petits cadres au-dessus de la branche est du comptoir (p_008, p_019 : y 3,10-3,99 ; la carte noire A5,
     // l'écusson vert, la feuille beige à photo)
@@ -1139,7 +1157,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       panneau(new THREE.MeshStandardMaterial({ map: texCadre(i), roughness: 0.5 }), w, h, 10.44, y, Y_SS + 1.72, 'W', 0.001);
     });
     // la GRILLE de ventilation, LARGE (0,85), son bord sud au jambage nord de la baie (p_002-p_004, v_060)
-    panneau(new THREE.MeshStandardMaterial({ map: texPersiennes(), roughness: 0.55 }), 0.85, 0.4, 10.45, 6.76, Y_SS + 2.08, 'W', 0.01);
+    // (22/10, suite : p_004 rejouée — la grille fait 0,74 sur 0,50, y 6,30-7,04, son haut au ras du caisson)
+    panneau(new THREE.MeshStandardMaterial({ map: texPersiennes(), roughness: 0.55 }), 0.74, 0.5, 10.45, 6.67, Y_SS + 2.03, 'W', 0.01);
     // l'A4 bleue, la grande affiche sous cadre d'aluminium (p_001, p_002, p_061), au-dessus de la poubelle bleue
     panneau(new THREE.MeshStandardMaterial({ map: texAffiche('#2f6fb0', '#fbfbf8', 154), roughness: 0.7 }), 0.21, 0.297, 10.45, 8.05, Y_SS + 1.6, 'W');
     B(10.435, 8.6, 10.45, 9.14, Y_SS + 1.32, Y_SS + 2.06, X.montant, { ombre: false });
@@ -1153,7 +1172,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
       maille(boiteM(0.12, 0.12, 0.006), X.rougePlaque, 0, 1.72, 0.04, 0, g, { ombre: false });
       maille(boiteM(0.12, 0.02, 0.02), M.inox, 0.3, 1.02, 0.05, 0, g, { ombre: false });
     };
-    porteWC(11.55, 5.45, 'N'); porteWC(12.5, 5.45, 'N');
+    // (22/10, suite : de la rangée du mur nord, p_004, on voit le mur sud du passage jusqu'à x 11,8 — blanc, le lecteur
+    // de badge seul ; la porte est plus loin. v_060, de la porte du hall, en montre deux — doute : la seconde, plus loin, est laissée au passage sombre)
+    porteWC(12.35, 5.45, 'N');
     B(11.07, 5.45, 11.15, 5.47, Y_SS + 1.2, Y_SS + 1.32, X.noir, { ombre: false });
     // LA PORTE BLANCHE de l'angle nord-est (fermée ; à béquille, gonds au nord — p_062, p_063, p_065)
     ch.porte('y', 10.525, Y_PBL, { l: 0.93, h: 2.04, ep: 0.15, base: Y_SS, modele: 'blanche', etat: 'fermee', cote: 'W', charniere: 'd', nom: 'pause → sas de l\'angle nord-est' });
@@ -1259,22 +1280,42 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // (22/10 : la baie du mur est, la niche et l'entrée du passage sous un même plafond de plâtre à 2,20, et son linteau)
     ch.plafond(10.45, 4.55, 11.05, 6.3, Y_SS + 2.2, 'platre', { retombees: false });
     B(10.45, 4.55, 10.6, 6.3, Y_SS + 2.2, H_PAUSE + 0.01, M.platre, { ombre: false });
-    const ret = (x0, y0, x1, y1) => {
-      B(x0, y0, x1, y1, H_RET, H_PAUSE + 0.01, M.platre, { ombre: false });
-      C.plafond(x0, -y1, x1, -y0, H_RET, H_PAUSE - H_RET + 0.3);
+    const ret = (x0, y0, x1, y1, hb = H_RET) => {
+      B(x0, y0, x1, y1, hb, H_PAUSE + 0.01, M.platre, { ombre: false });
+      C.plafond(x0, -y1, x1, -y0, hb, H_PAUSE - hb + 0.3);
     };
     // les retombées : une bande parallèle au mur vert, à 1,15 m de lui (v_062 à v_064) ; (22/10, la vidéo du 15/10) le
     // long du mur est, un CAISSON de 1,1 m sous lequel courent le comptoir et la baie (p_003, p_004, p_008 : son arête à
-    // x 9,25-9,5, de l'angle sud-est à y 7,6 au moins). Plus de retombée en travers ni du nord au sud au milieu de la salle
-    // (p_008, p_010 : vus de la rangée du mur nord, les dalles filent jusqu'au mur sud, seules leurs ossatures blanches les
-    // rayent), plus de dalles manquantes
+    // x 9,25-9,5, de l'angle sud-est à y 7,6 au moins)
     ret(2.55, 10.26, 10.45, 10.56);
     ret(9.35, 2.41, 10.45, 10.26);
+    // (22/10, suite : le plafond de la vidéo du 15/10 rejoué de près — p_004, p_008, p_045, p_057 — et v_059 depuis la porte
+    // du hall : les dalles ne filent PAS jusqu'au mur sud. Chaque rangée de plafonniers bute, au sud, sur une poutre :
+    //   - le long du mur sud, un SOFFITE de 1,84 m (y 2,41-4,25), dessous à 2,38 : de la rangée du mur nord, sa face nord
+    //     fait la bande blanche sous les deux plafonniers les plus au sud (p_008 : lignes 358-397), et sa sous-face descend
+    //     jusqu'au haut de l'affiche « 0101 » ; vu de face, p_045, la même bande au-dessus des distributeurs ;
+    //   - deux POUTRES minces est-ouest, de 18 cm, 5 cm sous les dalles : y 5,62-5,80 (p_008 : lignes 211-245) et y 7,40-7,58
+    //     (p_004 : l'arête à 7,55 sur toute sa longueur) — v_059, de la porte, les retrouve à 5,4-5,7 et à 7,3 ;
+    //   - une poutre nord-sud entre elles, x 4,95-5,20 (p_045 : la bande qui file droit vers le fond, au-dessus de
+    //     l'appareil) ;
+    //   - dans la face nord du soffite, au-dessus des distributeurs, une grille sombre, et un câble noir qui en descend
+    //     jusqu'au haut du troisième (p_045 à p_047)
+    // Les plafonniers de ces rangées sont poussés contre la face nord de leur poutre, comme sur les images)
+    ret(2.55, 2.41, 9.35, 4.25, Y_SS + 2.38);
+    for (const [y0, y1] of [[5.62, 5.80], [7.40, 7.58]]) ret(2.55, y0, 9.35, y1, Y_SS + 2.50);
+    ret(4.95, 4.25, 5.20, 7.40, Y_SS + 2.50);
+    {
+      const grille = std({ color: 0x3b3d3e, roughness: 0.7 });
+      B(3.45, 4.247, 4.2, 4.25, Y_SS + 2.41, Y_SS + 2.51, X.blancMat, { ombre: false });
+      B(3.47, 4.252, 4.18, 4.255, Y_SS + 2.42, Y_SS + 2.50, grille, { ombre: false });
+      const a = P3(4.12, Y_SS + 2.42, 4.26), m = P3(4.3, Y_SS + 2.12, 3.75), b = P3(4.41, Y_SS + 1.89, 3.2);
+      tube(ch.decor, X.noir, a, m, 0.006, 6, false); tube(ch.decor, X.noir, m, b, 0.006, 6, false);
+    }
     maille(new THREE.CylinderGeometry(0.06, 0.07, 0.04, 18), X.blancMat, 8.9, H_PAUSE - 0.02, -6.4, 0, ch.decor, { ombre: false });
-    // les plafonniers ronds (22/10 : relevés au plafond depuis l'appareil, p_004, p_008, p_010 — (7,1 ; 6,0), (5,55 ;
-    // 5,95), (7,65 ; 4,25), (6,0 ; 4,1), (7,7 ; 7,8), à 0,15 m près ; les autres sur la même trame, de part et d'autre)
+    // les plafonniers ronds (22/10 : relevés au plafond depuis l'appareil, p_004, p_008, p_010 — (7,1 ; 6,0), (5,6 ; 6,0),
+    // (7,65 ; 4,4), (6,05 ; 4,4), (7,7 ; 7,8), à 0,15 m près ; les autres sur la même trame, de part et d'autre)
     for (const [x, y] of [[3.8, 11.11], [6.2, 11.11], [8.6, 11.11], [4.1, 7.8], [5.9, 7.8], [7.7, 7.8],
-      [3.95, 5.95], [5.55, 5.95], [7.1, 6.0], [4.4, 4.15], [6.0, 4.1], [7.65, 4.25]]) plafonnier(x, y, H_PAUSE, 'pauseSS');
+      [3.95, 6.0], [5.6, 6.0], [7.1, 6.0], [4.4, 4.44], [6.05, 4.44], [7.65, 4.44]]) plafonnier(x, y, H_PAUSE, 'pauseSS');
     spot(11.7, 6.025, Y_SS + 2.2, 'pauseSS', { force: 0.8 });
     // LE SOL de l'espace pause (le seuil de sa porte compris : x 2,42-2,55) et du local éteint ; (22/10) la niche et le
     // passage en grès gris foncé (p_003, p_019 : le sol devant l'étagère et dans le passage est plus sombre que le beige)
@@ -1488,34 +1529,45 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     fCercle(g, x, y, 0.4, H - 0.1, H + 0.02); fOrientee(g, x, y, 0.34, 0.24, rotY, 0, H);
     return g;
   };
-  // LE TABOURET MIURA (Plank ; p_019, p_023 de près) : un PORTE-À-FAUX de polypropylène noir — l'assise mince (0,42 x 0,36
-  // à 0,78 m, le dos à peine relevé) ne tient que par ses deux coins DE DEVANT, d'où descendent deux montants plats qui
-  // s'élargissent jusqu'à la barre repose-pieds (0,30 m) ; sous elle, de chaque côté, un pied de devant presque droit
-  // (une lame en coin) et un pied de derrière, mince, en biais (au sol : 0,45 x 0,34). `cap` : où regarde qui s'assoit
+  // LE TABOURET MIURA (Plank ; p_008, p_010, p_015, p_019, p_023 de près, p_047 de profil, p_061 vu de dessus — 22/10,
+  // suite : le modèle d'avant, une assise en dalle rectangulaire sur quatre montants droits, sortait comme un tabouret de
+  // cuisine). Un PORTE-À-FAUX de polypropylène noir mat :
+  //   - l'assise, une plaque MINCE (2 cm) en hexagone allongé — le bord de devant droit sur toute la largeur (0,42), les
+  //     flancs qui rentrent, l'arrière étroit à pans coupés, relevé de 2,5 cm — à 0,78 m ;
+  //   - de ses deux coins de devant, deux montants plats qui descendent jusqu'au repose-pieds (0,30 m), une lame plate
+  //     en V peu profond tendue entre eux ;
+  //   - sous lui, de chaque côté, une lame presque droite et un pied mince qui part en biais vers l'avant et l'extérieur
+  //     (c023 : vu de face, deux pieds par côté, en A) ;
+  //   - sous l'arrière de l'assise, deux lames larges qui filent vers le sol derrière (p_008 : la large ombre noire entre
+  //     les montants). `cap` : où regarde qui s'assoit
   const _assiseMiura = (() => {
-    const s = new THREE.Shape(), L = 0.21, P0 = -0.22, P1 = 0.14, r = 0.07;
-    s.moveTo(-L, P1); s.lineTo(L, P1); s.lineTo(L, P0 + r); s.quadraticCurveTo(L, P0, L - r, P0); s.lineTo(-L + r, P0); s.quadraticCurveTo(-L, P0, -L, P0 + r); s.lineTo(-L, P1);
-    const geo = new THREE.ExtrudeGeometry(s, { depth: 0.02, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 2, curveSegments: 6 });
+    // (dans le repère final : +z vers l'avant ; la forme est tracée en (x, -z))
+    const s = new THREE.Shape();
+    s.moveTo(-0.21, -0.15); s.lineTo(0.21, -0.15); s.lineTo(0.2, 0.04); s.lineTo(0.12, 0.19); s.lineTo(-0.12, 0.19); s.lineTo(-0.2, 0.04); s.closePath();
+    const geo = new THREE.ExtrudeGeometry(s, { depth: 0.016, bevelEnabled: true, bevelThickness: 0.003, bevelSize: 0.004, bevelSegments: 2 });
     geo.rotateX(-Math.PI / 2);
-    // (le dos relevé de 2,5 cm, le milieu creusé d'un centimètre)
+    // (l'arrière relevé de 5 cm — vue de devant, à hauteur d'œil assis, l'assise ne montre presque que sa tranche : p_015,
+    // p_023 —, le milieu creusé d'un centimètre)
     const p = geo.attributes.position;
-    for (let i = 0; i < p.count; i++) { const z = p.getZ(i), x = Math.abs(p.getX(i)); p.setY(i, p.getY(i) + (z > 0.1 ? 0.025 * ((z - 0.1) / 0.12) ** 2 : 0) - 0.01 * Math.max(0, 1 - x / 0.16) * Math.max(0, 1 - Math.abs(z + 0.04) / 0.16)); }
+    for (let i = 0; i < p.count; i++) { const z = p.getZ(i), x = Math.abs(p.getX(i)); p.setY(i, p.getY(i) + (z < -0.04 ? 0.05 * ((-z - 0.04) / 0.15) ** 2 : 0) - 0.01 * Math.max(0, 1 - x / 0.16) * Math.max(0, 1 - Math.abs(z - 0.02) / 0.15)); }
     geo.computeVertexNormals();
     return geo;
   })();
   const miura = (x, y, cap, nom) => {
-    // (le repère du tabouret : +z vers l'avant — là où regarde qui s'assoit —, l'assise de z -0,14 à +0,22)
     const g = meuble('tabouret-miura', nom, x, y, Math.PI - cap), H = 0.78;
-    const a = maille(_assiseMiura, XM.miura, 0, H - 0.022, 0, 0, g); a.rotation.y = Math.PI;
+    maille(_assiseMiura, XM.miura, 0, H - 0.02, 0, 0, g);
     for (const s of [-1, 1]) {
-      // le montant : du coin de devant de l'assise (large de 6 cm) jusqu'à la barre (8 cm de large en bas)
-      lame(g, XM.miura, [s * 0.195, H - 0.01, 0.115], [s * 0.175, 0.31, 0.12], 0.06, 0.022, [0, 0, 1]);
-      // sous la barre : le pied de devant, une lame en coin presque droite ; le pied de derrière, mince et en biais
-      lame(g, XM.miura, [s * 0.175, 0.31, 0.13], [s * 0.19, 0.0, 0.15], 0.05, 0.02, [0, 0, 1]);
-      lame(g, XM.miura, [s * 0.17, 0.32, 0.1], [s * 0.225, 0.0, -0.19], 0.022, 0.02, [1, 0, 0]);
+      // le montant plat, du coin de devant de l'assise au repose-pieds
+      lame(g, XM.miura, [s * 0.185, H - 0.012, 0.13], [s * 0.165, 0.3, 0.125], 0.07, 0.026, [0, 0, 1]);
+      // le repose-pieds en V (une lame couchée, de 5 cm)
+      lame(g, XM.miura, [s * 0.17, 0.3, 0.125], [0, 0.275, 0.115], 0.06, 0.03, [0, 0, 1]);
+      // sous lui : une lame presque droite, qui rentre un peu vers l'arrière ; un pied mince en biais, vers l'avant et
+      // l'extérieur (p_015 : les lames finissent plus haut à l'image que les pieds minces — plus loin)
+      lame(g, XM.miura, [s * 0.165, 0.3, 0.12], [s * 0.18, 0.0, 0.02], 0.05, 0.022, [0, 0, 1]);
+      lame(g, XM.miura, [s * 0.17, 0.3, 0.13], [s * 0.25, 0.0, 0.25], 0.024, 0.02, [0, 0, 1]);
+      // la lame large de derrière, sous l'arrière de l'assise
+      lame(g, XM.miura, [s * 0.07, H - 0.03, -0.02], [s * 0.17, 0.0, -0.27], 0.045, 0.02, [1, 0, 0]);
     }
-    // la barre repose-pieds, plate, entre les deux montants
-    lame(g, XM.miura, [-0.18, 0.305, 0.115], [0.18, 0.305, 0.115], 0.045, 0.02, [0, 0, 1]);
     fCercle(g, x, y, 0.21, 0, H + 0.02);
     assise(x, y, H + 0.01, cap, 'le tabouret');
     return g;
@@ -1604,31 +1656,49 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     fOrientee(g, x, y, L + 0.02, W + 0.13, rotY, 0, B + H + 0.02);
     return g;
   };
-  // UN DISTRIBUTEUR (0,85 x 0,80 x 1,83, dos au MUR SUD, la façade au nord — v_066, v_067 ; p_045, p_046 ; VO q_0136,
-  // q_0137) : `x0`-`x1` sa largeur, `mat` le matériau de sa façade, `montant` le monnayeur à droite (à l'ouest)
-  // (22/10 : `blanc` — le troisième, contre le mur vert, a sa caisse gris clair, une porte vitrée cerclée de gris et, à
-  // droite, un panneau blanc à autocollants et voyant vert : p_045, p_046)
-  const distributeur = (type, nom, x0, x1, mat, { vitre = true, montant = true, blanc = false } = {}) => {
-    const y0 = 2.41, y1 = y0 + 0.8, l = x1 - x0, h = 1.83, xm = (x0 + x1) / 2;
+  // UN DISTRIBUTEUR (dos au MUR SUD, la façade au nord, 0,80 de fond, 1,88 de haut — 22/10, p_045 rejouée de face : les
+  // trois caisses à 1,85-1,89 m, et non 1,83 ; p_010 de près, la vitre du premier de 0,62 à 1,82 m) : `x0`-`x1` sa largeur
+  // (l'est est à gauche pour qui lui fait face), `sorte` :
+  //   'snacks'   la vitrine sombre (texFriandises), la colonne du monnayeur À DROITE — à l'ouest — noire et brillante,
+  //              son petit écran vert et son clavier blanc, la trappe de sortie grise en bas ;
+  //   'boissons' (le deuxième, 0,64 de large) la vitre claire très éclairée, une colonne noire étroite et son écran ;
+  //   'frais'    (le troisième, contre le ressaut) une caisse noire à porte vitrée — l'intérieur gris clair, des étagères —
+  //              et, à droite, le panneau gris clair à autocollants et voyant vert (p_045 : 0,29 de large, toute la hauteur)
+  const distributeur = (type, nom, x0, x1, sorte) => {
+    const y0 = 2.41, y1 = y0 + 0.8, l = x1 - x0, h = 1.88, xm = (x0 + x1) / 2, zd = -0.37;
     const g = meuble(type, nom, xm, y0 + 0.4, 0);
-    piece(g, l, h - 0.06, 0.76, blanc ? XM.caisseClaire : X.caisse, 0, 0.06 + (h - 0.06) / 2, 0.02);
-    if (blanc) {
-      piece(g, 0.17, 1.62, 0.008, XM.blancMeuble, -l / 2 + 0.1, 1.0, -0.364, { ombre: false });
-      for (const [yy, c] of [[1.45, 0x3a8f4a], [1.25, 0x2f2f2f], [1.08, 0xe0b030], [0.9, 0x2a62b0]]) piece(g, 0.09, 0.07, 0.004, std({ color: c, roughness: 0.6 }), -l / 2 + 0.1, yy, -0.37, { ombre: false });
-      piece(g, 0.03, 0.03, 0.004, L_.voyant, -l / 2 + 0.06, 1.6, -0.37, { ombre: false });
+    piece(g, l, h - 0.05, 0.76, X.caisse, 0, 0.05 + (h - 0.05) / 2, 0.02);
+    piece(g, l - 0.04, 0.05, 0.72, X.noir, 0, 0.025, 0.02, { ombre: false });
+    // une vitre de a à b (repère du meuble : +x à l'est), de hb à ht
+    const vitre = (a, b, hb, ht, mat, z = -0.366) => {
+      const p = new THREE.Mesh(new THREE.PlaneGeometry(b - a, ht - hb), mat);
+      p.position.set((a + b) / 2, (hb + ht) / 2, z); p.rotation.y = Math.PI; p.castShadow = false; g.add(p);
+    };
+    const gris = std({ color: 0x3b3d40, roughness: 0.45, metalness: 0.3 });
+    if (sorte === 'snacks') {
+      vitre(-l / 2 + 0.25, l / 2 - 0.03, 0.62, 1.82, L_.friandises);
+      piece(g, l - 0.3, 0.34, 0.008, gris, 0.11, 0.33, zd, { ombre: false });
+      piece(g, l - 0.36, 0.025, 0.012, XM.piedGris, 0.11, 0.47, zd - 0.004, { ombre: false });
+      const xc = -l / 2 + 0.135;
+      piece(g, 0.2, 1.25, 0.006, X.vitreNoire, xc, 1.2, zd, { ombre: false });
+      piece(g, 0.1, 0.055, 0.004, L_.ecranVert, xc, 1.55, zd - 0.004, { ombre: false });
+      for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) piece(g, 0.026, 0.02, 0.004, L_.clavier, xc - 0.034 + j * 0.034, 1.17 - i * 0.032, zd - 0.004, { ombre: false });
+      piece(g, 0.05, 0.08, 0.006, M.inox, xc, 0.93, zd - 0.003, { ombre: false });
+    } else if (sorte === 'boissons') {
+      vitre(-l / 2 + 0.2, l / 2 - 0.03, 0.55, 1.8, L_.fraisClair);
+      const xc = -l / 2 + 0.105;
+      piece(g, 0.15, 1.2, 0.006, X.vitreNoire, xc, 1.2, zd, { ombre: false });
+      piece(g, 0.08, 0.05, 0.004, L_.ecranVert, xc, 1.45, zd - 0.004, { ombre: false });
+      piece(g, l - 0.25, 0.3, 0.008, gris, 0.085, 0.3, zd, { ombre: false });
+    } else {
+      // le panneau gris clair (à l'ouest), ses autocollants et le voyant vert
+      piece(g, 0.29, h - 0.07, 0.01, XM.caisseClaire, -l / 2 + 0.145, 0.06 + (h - 0.07) / 2, zd, { ombre: false });
+      for (const [yy, c] of [[1.72, 0xf0f0ea], [1.55, 0x3a8f4a], [1.38, 0x2f2f2f], [1.2, 0xe0b030]]) piece(g, 0.08, 0.06, 0.004, std({ color: c, roughness: 0.6 }), -l / 2 + 0.11, yy, zd - 0.006, { ombre: false });
+      piece(g, 0.03, 0.03, 0.004, L_.voyant, -l / 2 + 0.2, 1.6, zd - 0.006, { ombre: false });
+      // la porte vitrée et son cadre gris
+      piece(g, l - 0.36, 1.45, 0.01, gris, 0.145, 1.06, zd, { ombre: false });
+      vitre(-l / 2 + 0.36, l / 2 - 0.07, 0.4, 1.7, L_.fraisGris, zd - 0.008);
     }
-    piece(g, l - 0.04, 0.06, 0.74, X.noir, 0, 0.03, 0.01, { ombre: false });
-    // (le monnayeur à DROITE pour qui fait face à la machine, donc à l'ouest — p_010, p_045 : le clavier du distributeur de
-    // friandises est sur son bord ouest ; le jeu le posait à l'est)
-    const lf = montant || blanc ? l - 0.24 : l - 0.08, xa = montant || blanc ? -l / 2 + 0.2 : -l / 2 + 0.04;
-    const p = new THREE.Mesh(new THREE.PlaneGeometry(lf, vitre ? 1.5 : 1.6), mat);
-    p.position.set(xa + lf / 2, vitre ? 0.95 : 1.0, -0.365); p.rotation.y = Math.PI; p.castShadow = false; g.add(p);
-    if (montant) {
-      piece(g, 0.16, 1.45, 0.01, X.montant, -l / 2 + 0.12, 0.975, -0.365, { ombre: false });
-      piece(g, 0.1, 0.25, 0.006, X.vitreNoire, -l / 2 + 0.12, 1.225, -0.372, { ombre: false });
-      piece(g, 0.06, 0.05, 0.006, M.inox, -l / 2 + 0.12, 0.975, -0.372, { ombre: false });
-    }
-    piece(g, lf, 0.1, 0.01, X.vitreNoire, xa + lf / 2, 0.13, -0.365, { ombre: false });
     fBoite(g, x0, y0, x1, y1 - 0.02, 0, h);
     return g;
   };
@@ -1679,7 +1749,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     miura(6.88, 10.5, Math.PI, 'tabouret Miura du mur vert 2');
     tolix(7.58, 10.45, Math.PI, true, 'tabouret Tolix vert du mur vert');
     miura(8.22, 10.5, Math.PI, 'tabouret Miura du mur vert 3');
-    tolix(5.05, 9.85, Math.PI * 0.85, false, 'tabouret Tolix noir (Haythem)');
+    // (22/10, suite : le Tolix de Haythem est DERRIÈRE l'appareil — il tient son téléphone devant lui, à 1,15 m ; posé
+    // sous l'appareil, son assise noire bouchait le bas de p_025 à p_041. Debout, il le laisse derrière lui : p_060-p_062)
+    tolix(4.86, 10.3, Math.PI * 0.85, false, 'tabouret Tolix noir (Haythem)');
     miura(5.62, 10.25, Math.PI * 0.6, 'tabouret Miura près de Haythem');
     // ---- LE COMPTOIR EN ÉQUERRE de l'angle sud-est (v_060, v_066 ; p_003-p_025) : une tablette d'acier gris mince à
     // 1,08 m, 0,40 de profondeur, sur des pieds tubes gris ; sa branche sud s'arrête sous le bord ouest de l'affiche
@@ -1712,9 +1784,11 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     babyFoot(6.7, 5.55, 'baby-foot');
     // ---- PRÈS DU MUR EST (p_003, p_004) ----
     mdEmbase(9.41, 6.79, 'mange-debout du mur est 1');
-    mdTrepied(9.3, 7.75, 'mange-debout du mur est 2', 0.9);
-    miura(8.95, 6.55, Math.PI * 0.5, 'tabouret Miura du mur est 1');
-    miura(9.0, 7.35, Math.PI * 0.6, 'tabouret Miura du mur est 2');
+    // (22/10, suite : p_004 rejouée de près — le trépied 0,3 m plus au sud-ouest, ses pieds au sol en (8,5-9,2 ; 7,55) ; les
+    // deux Miura DEVANT les tables, côté salle, et non contre l'étagère : il n'y a rien entre la table à embase et la niche)
+    mdTrepied(9.03, 7.62, 'mange-debout du mur est 2', 0.9);
+    miura(8.85, 7.15, 2.15, 'tabouret Miura du mur est 1');
+    miura(8.6, 7.95, 2.2, 'tabouret Miura du mur est 2');
     // ---- AU COMPTOIR (p_008, p_019, p_025 : une table haute pliante devant, deux Tolix verts) ----
     tablePliante(9.15, 3.62, 'table haute pliante du comptoir', 0.2);
     tolix(9.15, 3.05, 0, true, 'tabouret Tolix vert du comptoir 1');
@@ -1722,11 +1796,12 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // ---- LE LONG DE LA TABLETTE DU MUR VERT OUEST (p_046, p_047, p_054) ----
     miura(3.15, 4.6, -Math.PI / 2, 'tabouret Miura de la tablette 1');
     miura(3.15, 6.05, -Math.PI / 2, 'tabouret Miura de la tablette 2');
-    // ---- LES DISTRIBUTEURS (p_010, p_045, p_046 ; v_067) : snacks, café, boissons fraîches ; un jour de 0,3 m entre le
-    // premier et le deuxième ----
-    distributeur('distributeur-snacks', 'distributeur de friandises', 5.4, 6.25, L_.friandises);
-    distributeur('distributeur-cafe', 'distributeur de boissons chaudes', 4.3, 5.1, L_.cafe, { vitre: false, montant: false });
-    distributeur('distributeur-boissons', 'distributeur de boissons fraîches', 3.55, 4.3, L_.frais, { montant: false, blanc: true });
+    // ---- LES DISTRIBUTEURS (p_010, p_045, p_046 ; v_067) : friandises, boissons fraîches, vitrine réfrigérée ; un jour de
+    // 0,34 m entre le premier et le deuxième (22/10, p_045 rejouée de face : x 5,40-6,20, 4,42-5,06 et 3,56-4,42 — pas de
+    // machine à café : la deuxième est une vitre claire à colonne étroite) ----
+    distributeur('distributeur-snacks', 'distributeur de friandises', 5.4, 6.2, 'snacks');
+    distributeur('distributeur-boissons', 'distributeur de boissons fraîches', 4.42, 5.06, 'boissons');
+    distributeur('distributeur-frais', 'vitrine réfrigérée', 3.56, 4.42, 'frais');
     // ---- LES POUBELLES ----
     poubelleRonde('poubelle-noire', 'grosse poubelle noire', 2.92, 10.05, 0.29, 0.74, XM.noirePoubelle);
     poubelleRonde('poubelle-grise', 'poubelle grise de la niche', 10.86, 5.1, 0.21, 0.62, XM.grisPoubelle);
@@ -1734,7 +1809,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // ---- LA NICHE DU MUR EST : l'étagère blanche et ses CINQ MICRO-ONDES (2 + 2 + 1 dessus) ----
     {
       const g = meuble('etagere', 'étagère des micro-ondes', 10.86, 5.005, 0);
-      for (const s of [-1, 1]) piece(g, 0.38, 1.62, 0.018, XM.blancMeuble, 0, 0.81, s * 0.416);
+      // (22/10, suite : p_004, p_059 — une étagère suspendue : ses joues ne descendent pas au sol, la poubelle est dessous)
+      for (const s of [-1, 1]) piece(g, 0.38, 0.66, 0.018, XM.blancMeuble, 0, 1.31, s * 0.416);
       for (const h of [1.01, 1.32, 1.61]) piece(g, 0.38, 0.02, 0.83, XM.blancMeuble, 0, h, 0);
       fBoite(g, 10.67, 4.58, 11.05, 5.43, 0.95, 1.63);
       [[1.02, 5.21], [1.02, 4.8], [1.33, 5.21], [1.33, 4.8], [1.62, 5.19]].forEach(([h, y], i) => microOndes(10.87, y, h, 'micro-ondes ' + (i + 1)));
