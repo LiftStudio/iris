@@ -1320,7 +1320,8 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     ch.plafond(10.45, 4.55, 11.05, 6.3, Y_SS + 2.2, 'platre', { retombees: false });
     B(10.45, 4.55, 10.6, 6.3, Y_SS + 2.2, H_PAUSE + 0.01, M.platre, { ombre: false });
     const ret = (x0, y0, x1, y1, hb = H_RET) => {
-      B(x0, y0, x1, y1, hb, H_PAUSE + 0.01, M.platre, { ombre: false });
+      // (sans ombre reçue : sur ces faces minces, la carte d'ombre dessinait des marches d'escalier — p_004, p_008)
+      B(x0, y0, x1, y1, hb, H_PAUSE + 0.01, M.platre, { ombre: false }).receiveShadow = false;
       C.plafond(x0, -y1, x1, -y0, hb, H_PAUSE - hb + 0.3);
     };
     // les retombées : une bande parallèle au mur vert, à 1,15 m de lui (v_062 à v_064) ; (22/10, la vidéo du 15/10) le
