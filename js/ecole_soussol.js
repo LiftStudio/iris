@@ -328,7 +328,7 @@ function texFriandises() {
     // pas aux paquets : multiplié sur toute la vitre, il rosissait les rouges)
     const fond = g.createLinearGradient(0, 0, w, 0); fond.addColorStop(0, '#d2e0fa'); fond.addColorStop(0.5, '#93a3c4'); fond.addColorStop(1, '#5f6c88');
     g.fillStyle = fond; g.fillRect(0, 0, w, h);
-    const bas = g.createLinearGradient(0, 0, 0, h); bas.addColorStop(0.35, 'rgba(18,24,40,0)'); bas.addColorStop(1, 'rgba(18,24,40,0.45)');
+    const bas = g.createLinearGradient(0, 0, 0, h); bas.addColorStop(0.35, 'rgba(18,24,40,0)'); bas.addColorStop(1, 'rgba(18,24,40,0.28)');
     g.fillStyle = bas; g.fillRect(0, 0, w, h);
     const couleurs = ['#b8443a', '#d9b442', '#e4e2da', '#3f6fb4', '#4f8a46', '#7a96c8', '#c8803c', '#2e3038', '#a8bc56', '#d6d8de'];
     const n = 6, H = (h - 10) / n;
@@ -709,7 +709,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     plintheSalle: std({ color: 0x6e6f6a, roughness: 0.55 }),
     // (22/10, la vidéo du 15/10 rejouée : 180,198,93 sur le mur ouest — p_049, p_051 ; le 0xa8c34a sortait 150,161,41, plus
     // sombre et plus cru : un vert anis PÂLE, jaune)
-    vert: nommer(std({ color: 0xc4e88a, roughness: 0.82 }), 'peinture vert anis'),
+    // (23/10, relecture : sur p_047 à p_051, le vert mesure 159-175 / 179-194 / 67-91 ; le jeu sortait 145-168 / 162-187 /
+    // 84-100 — plus terne et plus bleu : un vert anis plus franc)
+    vert: nommer(std({ color: 0xcdf073, roughness: 0.82 }), 'peinture vert anis'),
     noir: nommer(std({ color: 0x1c1c1a, roughness: 0.62 }), 'mobilier noir mat'),
     plateauNoir: std({ color: 0x1e1e1c, roughness: 0.38 }),
     tolix: nommer(std({ color: 0x3f7f3a, roughness: 0.3, metalness: 0.45 }), 'tabouret Tolix vert'),
@@ -738,7 +740,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     bleuJoueur: std({ color: 0x2a62b0, roughness: 0.4 }),
     rougeJoueur: std({ color: 0xc8262c, roughness: 0.4 }),
     microOndes: std({ color: 0xe9e9e6, roughness: 0.35 }),
-    vitreNoire: std({ color: 0x66708a, roughness: 0.3, metalness: 0.08 }),
+    vitreNoire: std({ color: 0x7c88aa, roughness: 0.3, metalness: 0.05 }),
   };
   // (ce qui ÉCLAIRE : au-delà de 1, le bloom les fait briller)
   const L_ = {
@@ -1490,7 +1492,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
         // (23/10, relecture : p_049 à p_051 — vue de la pause, la fente est BLANCHE, 214,219,215 : le hall éclairé derrière
         // le verre. Le hall ne s'allume que pour qui y est ; on voyait par elle un fond sombre, 97,94,73. Un fond clair, une
         // face tournée vers la pause seule : du hall, elle est invisible et le verre reste un jour)
-        const fond = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 1.14), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.86, 0.88, 0.86) }));
+        const fond = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 1.14), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.93, 0.95, 0.93) }));
         fond.position.set(v.s * (w - 0.3), (0.61 + 1.75) / 2, 0.0215); fond.castShadow = false; v.g.add(fond); }
       // (par l'oculus, l'espace pause : v_043, v_055 — un verre clair)
       P.g.traverse((o) => { if (o.isMesh && o.material === M.vitreFente) o.material = M.verre; });
@@ -1607,7 +1609,7 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // (23/10 : les papiers froissés et le sac qui déborde de la grosse poubelle, à facettes)
     papierKraft: nommer(std({ color: 0x9a8662, roughness: 0.9, flatShading: true }), 'papier kraft froissé'),
     papierBlanc: nommer(std({ color: 0xe4e2dc, roughness: 0.85, flatShading: true }), 'papier blanc froissé'),
-    papierOrange: nommer(std({ color: 0xd9874a, roughness: 0.7, flatShading: true }), 'sachet orange froissé'),
+    papierOrange: nommer(std({ color: 0xc98a58, roughness: 0.7, flatShading: true }), 'sachet orange froissé'),
     papierJaune: nommer(std({ color: 0xd8bc58, roughness: 0.75, flatShading: true }), 'papier jaune froissé'),
     sacLuisant: nommer(std({ color: 0x18191a, roughness: 0.28, metalness: 0.05, flatShading: true }), 'sac poubelle noir froissé'),
     grisPoubelle: nommer(std({ color: 0x6d7175, roughness: 0.55 }), 'poubelle grise'),
