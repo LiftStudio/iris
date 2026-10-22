@@ -90,8 +90,9 @@ export class Partie {
     A.minicarte?.preparer?.(this.nav);
     if (A.effets?.preparer) await A.effets.preparer(pr);
     A.sons?.preparer?.(); A.hud?.preparer?.(); A.hudProp?.preparer?.();
+    // (la scène compilée et ses programmes attendus — 8 s au plus : une compilation qui ne répond pas ne bloque pas la partie)
     const c = g._compilerAsync?.(g.scene);
-    if (c) await c;
+    if (c) await Promise.race([c, new Promise((r) => setTimeout(r, 8000))]);
     pr('Armes et effets', 1);
   }
   // les acteurs de la partie (la sous-classe) — appelé par entrer, le monde déjà en état de partie

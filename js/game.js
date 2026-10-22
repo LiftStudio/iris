@@ -210,6 +210,9 @@ export class Game {
       return pret;
     };
     this.fx.compilerTout = (o) => this._compilerTout(o);
+    // (22/10, socle du jeu : un corps de bot libéré attend que ses programmes en cours de compilation soient prêts —
+    // js/player.js dispose)
+    Player.programmePret = (m) => { try { const p = this.renderer.properties.get(m).currentProgram; return !p || p.isReady(); } catch (e) { return true; } };
 
     // ---- HAYTHEM ----
     this.user = new Player(HAYTHEM, this.scene);

@@ -44,7 +44,7 @@ export class Viewmodel {
     const vis = this.racine.visible;
     this.racine.visible = true;
     for (const a of Object.values(this.armes)) a.visible = true;
-    try { await (this.game._compilerAsync?.(this.scene, this.scene, undefined, this.camera) || null); }
+    try { await Promise.race([this.game._compilerAsync?.(this.scene, this.scene, undefined, this.camera) || null, new Promise((r) => setTimeout(r, 8000))]); }
     finally { for (const a of Object.values(this.armes)) a.visible = a === this.courante; this.racine.visible = vis; }
   }
   get superposition() { return this._sup; }

@@ -1176,9 +1176,23 @@ export class Player {
     const mats = new Set(), geos = new Set();
     if (this.body) this.body.traverse((o) => { if (o.isMesh) { geos.add(o.geometry); mats.add(o.material); } });
     if (this.avatarModel) this.avatarModel.traverse((o) => { if (o.isMesh && o.material && !Array.isArray(o.material)) mats.add(o.material); });
-    for (const g of geos) g.dispose();
-    for (const m of mats) m.dispose();
     this.avatar = null; this.anim = null; this.avatarModel = null; this.eclairage = null; this.apresPose = null;
+    // (un matériau dont le programme se compile encore — compileAsync, en parallèle : la préparation de l'avatar, le
+    // préréglage de repli, la préchauffe — n'est rendu qu'une fois ce programme prêt, et 0,1 s plus tard : libéré avant,
+    // une compilation en cours relit ses propriétés effacées — three les interroge toutes les 10 ms —, lève une erreur à
+    // chaque essai et sa promesse ne se résout jamais ; 10 s au plus. `liberation` : la promesse de la libération faite)
+    const liberer = () => { for (const g of geos) g.dispose(); for (const m of mats) m.dispose(); };
+    const pret = Player.programmePret;
+    if (!pret) { liberer(); this.liberation = Promise.resolve(); return; }
+    const t0 = performance.now();
+    this.liberation = new Promise((fin) => {
+      const essai = () => {
+        let ok = true;
+        for (const m of mats) if (!pret(m)) { ok = false; break; }
+        if (ok || performance.now() - t0 > 10000) setTimeout(() => { liberer(); fin(); }, 100); else setTimeout(essai, 50);
+      };
+      essai();
+    });
   }
 
   // La pose procédurale du pas (avatar ou bonhomme en primitives), sans clip.
@@ -1203,3 +1217,5 @@ Player.rangs = [];
 Player.poseVisible = true;
 // Prépare le rendu d'un avatar qui arrive (programmes compilés en parallèle) : posé par js/game.js.
 Player.preparerRendu = null;
+// (22/10) Le programme d'un matériau est-il prêt (ou absent) ? Posé par js/game.js ; Player.dispose l'attend.
+Player.programmePret = null;

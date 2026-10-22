@@ -16,6 +16,7 @@ import { hacher } from './rng.js';
 import { MEUBLES } from '../registre_meubles.js';
 import { pointsDe } from './apparitions.js';
 import { BORNES_NAV } from './nav.js';
+import { entree } from '../settings.js';
 import { ASC } from '../ecole_ascenseur.js';
 
 // LES FICHIERS DE TESTS, par lot, dans cet ordre (`&rapport=1` sans `&lot=` : tous) ; un fichier absent = pas de tests
@@ -106,6 +107,21 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
     PAS,
     async pret() {
       for (let i = 0; i < 1200 && !(game.mode === 'menu' || game.mode === 'lobby'); i++) await attendre(0.1);
+      // (une partie demandée par l'adresse : on l'attend)
+      const P = ARGS.get('partie');
+      if (P && P !== 'balade' && api.MODES && api.MODES[P]) for (let i = 0; i < 300 && !game.partie; i++) await attendre(0.1);
+      if (!J.demarrage) {
+        // L'ÉTAT DU DÉMARRAGE, relevé une fois, avant tout test (point 12) : le mode, la partie, le menu et le focus manette
+        const menu = document.getElementById('menu-jeu'), nav = game.input.manette && game.input.manette.nav;
+        let focus = null;
+        if (nav && menu && !menu.hidden) {
+          const avant = entree.manette;
+          entree.manette = true;
+          try { const r = nav.racine(); if (r) { nav.verifier(r); focus = nav.cur && nav.cur.dataset ? nav.cur.dataset.act || nav.cur.textContent : null; } }
+          finally { nav.poser(null); nav.cle = null; entree.manette = avant; }
+        }
+        J.demarrage = { mode: game.mode, partie: game.partie ? game.partie.id : null, menu: !!(menu && !menu.hidden), focus };
+      }
       await chargerRejeu();
       rejeu.poseC0(game);
       return true;
@@ -200,14 +216,26 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
             appels.push(inf.render.calls); tri.push(inf.render.triangles);
           }
         } else {
-          const frame = game.frame;
-          let k = 0;
+          // (un seul relais posé sur game.frame, une fois : des mesures qui se chevauchent ne s'empilent pas)
+          if (!H.relais) {
+            H.relais = new Set();
+            const frame = game.frame.bind(game);
+            game.frame = (dt) => {
+              if (!H.relais.size) { frame(dt); return; }
+              inf.reset(); const t0 = performance.now(); frame(dt);
+              const m = { ms: performance.now() - t0, calls: inf.render.calls, tri: inf.render.triangles };
+              for (const f of [...H.relais]) f(m);
+            };
+          }
           await new Promise((fin) => {
-            game.frame = function (dt) { inf.reset(); const t0 = performance.now(); frame.call(game, dt); ms.push(performance.now() - t0); appels.push(inf.render.calls); tri.push(inf.render.triangles); if (++k >= n) { game.frame = frame; fin(); } };
-            setTimeout(() => { if (game.frame !== frame) { game.frame = frame; fin(); } }, 4000 + n * 100);
+            let k = 0, fini = false;
+            const f = (m) => { ms.push(m.ms); appels.push(m.calls); tri.push(m.tri); if (++k >= n) finir(); };
+            const finir = () => { if (fini) return; fini = true; H.relais.delete(f); clearTimeout(to); fin(); };
+            const to = setTimeout(finir, 4000 + n * 100);
+            H.relais.add(f);
           });
         }
-      } finally { inf.autoReset = auto; inf.reset(); }
+      } finally { if (!H.relais || !H.relais.size) { inf.autoReset = true; inf.reset(); } }   // (three : vrai par défaut)
       return { medMs: mediane(ms), p95Ms: centile(ms, 0.95), maxMs: Math.max(0, ...ms), appels: Math.round(mediane(appels)), triangles: Math.round(mediane(tri)),
         programmes: r.info.programs ? r.info.programs.length : 0, gels: ms.filter((x) => x > 100).length, valable: !sansRaf, n: ms.length };
     },
@@ -436,11 +464,13 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
     // ---- LES TESTS ----
     _tests: [],
     ajouterTest(lot, nom, fn, opts = {}) { J._tests.push({ lot, nom, fn, delai: opts.delai ?? 120, apresFusion: !!opts.apresFusion }); },
-    async tests(lot = null) {
+    // (`filtre` : ne lancer que les tests dont le nom commence par lui — la mise au point d'un test)
+    async tests(lot = null, filtre = null) {
       const t0 = performance.now(), R = { lot, ok: true, total: 0, echecs: [], signales: [], mesures: {}, ms: 0 };
       const fusion = ARGS.get('fusion') === '1', calme = ARGS.get('calme') === '1';
       for (const T of J._tests) {
         if (lot && T.lot !== lot) continue;
+        if (filtre && !T.nom.startsWith(filtre)) continue;
         if (T.apresFusion && !fusion) continue;
         R.total++;
         // un état propre : la balade, Haythem au départ, l'entrée vidée, les réglages en mémoire, le journal vidé
