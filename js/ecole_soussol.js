@@ -242,14 +242,15 @@ function texCarrelagePause(base, joint, graineN, cote = 0.45) {
   return canvasTex(W, W, (g, w, h) => {
     const r2 = graine(graineN), c = w / N, j = Math.max(1.3, w * 0.0016);
     for (let a = 0; a < N; a++) for (let b = 0; b < N; b++) {
-      const t = (r2() - 0.5) * 7, B = [base[0] + t, base[1] + t, base[2] + t * 0.9];
+      // (23/10, relecture : p_025, p_035, p_040 de près — les nuages sont plus marqués, d'un carreau à l'autre aussi)
+      const t = (r2() - 0.5) * 10, B = [base[0] + t, base[1] + t, base[2] + t * 0.95];
       g.save(); g.beginPath(); g.rect(a * c, b * c, c, c); g.clip(); g.translate(a * c, b * c);
       g.fillStyle = rgb(...B); g.fillRect(0, 0, c, c);
       // les grands nuages (plus clairs et plus sombres), puis les moyens
       for (let k = 0; k < 10; k++) {
-        const R = c * (0.25 + r2() * 0.45), x = r2() * c, y = r2() * c, d = (r2() < 0.6 ? -1 : 1) * (8 + r2() * 12);
+        const R = c * (0.25 + r2() * 0.45), x = r2() * c, y = r2() * c, d = (r2() < 0.6 ? -1 : 1) * (11 + r2() * 15);
         const gr = g.createRadialGradient(x, y, 0, x, y, R);
-        gr.addColorStop(0, rgb(B[0] + d, B[1] + d, B[2] + d * 0.95, 0.6)); gr.addColorStop(1, rgb(B[0] + d, B[1] + d, B[2] + d, 0));
+        gr.addColorStop(0, rgb(B[0] + d, B[1] + d, B[2] + d * 0.95, 0.7)); gr.addColorStop(1, rgb(B[0] + d, B[1] + d, B[2] + d, 0));
         g.fillStyle = gr; g.fillRect(x - R, y - R, 2 * R, 2 * R);
       }
       nuees(g, c, c, r2, 30, B, 8, 0.35, c * 0.03, c * 0.14);
@@ -770,7 +771,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
     // v_063, le jeu sortait 164,151,121)
     // (22/10, la vidéo du 15/10 rejouée à la pose de l'appareil : 171,167,152 au sol sur p_015, 162,156,141 sur p_008 —
     // le jeu sortait 174,166,147 et 169,161,142, d'un beige plus jaune ; un gris plus froid, mat)
-    pause: nommer(std({ map: texCarrelagePause([133, 133, 121], '#5c5a55', 512, 0.45), roughness: 0.52 }), 'carrelage gris-beige 45x45'),
+    // (23/10, relecture : sur les grandes plages de sol de p_025, p_035, p_040, le carrelage mesure 166-174 / 165-172 /
+    // 155-159, rouge sur bleu 1,06-1,09 ; le jeu sortait 164-181 / 159-175 / 142-155, 1,15-1,17 : encore trop beige)
+    pause: nommer(std({ map: texCarrelagePause([129, 132, 127], '#5a5a57', 512, 0.45), roughness: 0.52 }), 'carrelage gris-beige 45x45'),
   };
   // (22/10 : la PHASE des joints — la vidéo du 15/10, p_004-p_041, les joints relevés à 1 cm près autour de l'appareil :
   // les nord-sud en x ≡ 0,40, les est-ouest en y ≡ 0,295 (mod 0,45) du repère de la pause, comme du plan, DY_P valant six
@@ -800,7 +803,9 @@ export function poserSousSol(ch, renderer = null, { RECT = { x0: -0.6, x1: 20.4,
   // rebond du plafond d'un gris neutre au lieu du crème ; ses dalles, leur joint d'un seul filet gris : texDallesPause)
   const NEUTRE = new THREE.Color(0.955, 0.99, 1.075), blancsPause = new Map();
   for (const [m, nom, tex] of [[M.blanc, 'peinture blanche (pause)'], [M.platre, 'plafond en plâtre (pause)'], [M.dalles, 'plafond en dalles (pause)', texDallesPause()]]) {
-    const c = plafondsSS.get(m).clone(); c.color.multiply(NEUTRE); c.name = nom;
+    // (les murs un cran plus clairs : sur dix plages mesurées, le jeu sortait en moyenne 0,91 de la vidéo — jusqu'à 0,72
+    // au-dessus de la porte sombre, 0,82 au bord de la niche ; les plafonds, eux, tombent juste)
+    const c = plafondsSS.get(m).clone(); c.color.multiply(NEUTRE); c.name = nom; if (m === M.blanc) c.color.multiplyScalar(1.1);
     if (m !== M.blanc) c.emissive = new THREE.Color(0xd9dcdf);
     if (tex) { c.map = tex; c.emissiveMap = tex; }
     blancsPause.set(m, c);
