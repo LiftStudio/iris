@@ -230,10 +230,11 @@ export class PartieProp extends Partie {
     const s2 = C.solEn(p.x, p.z, sol + 0.3);
     return C.libre(p.x, p.z, 0.3, sol) && Math.abs(s2 - y) <= 0.3 ? { x: p.x, y: s2, z: p.z } : null;
   }
-  // un point dans un passage d'une pièce à l'autre (à moins de 1,3 m de son centre, à son niveau) : un meuble posé là
-  // boucherait la porte (les 46 passages de carte_monde § 7 : `PASSAGES` du squelette de js/jeu/pilotage.js, lu s'il y est
+  // un point dans un passage d'une pièce à l'autre (à moins de 0,75 m de son centre, à son niveau : une porte fait 0,75 à
+  // 0,9 m) : un meuble posé là boucherait la porte
+  // (les 46 passages de carte_monde § 7 : `PASSAGES` du squelette de js/jeu/pilotage.js, lu s'il y est
   // encore — L-D remplace l'errant par le graphe)
-  _dansUnPassage(q) { return (Pilotage.PASSAGES || []).some((P) => Math.hypot(P.x - q.x, P.z - q.z) < 1.3 && Math.abs(P.y - q.y) < 1.5); }
+  _dansUnPassage(q) { return (Pilotage.PASSAGES || []).some((P) => Math.hypot(P.x - q.x, P.z - q.z) < 0.75 && Math.abs(P.y - q.y) < 1.5); }
   // LES DÉPARTS DES PROPS : les lieux de la zone hors de la pièce des chasseurs, à tour de rôle d'une manche à l'autre,
   // espacés de 1,5 m (Haythem prend le premier : l'espace pause au −1, la pause orange au 1er)
   _lieuxProps(n) {
