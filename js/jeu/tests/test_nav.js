@@ -654,11 +654,15 @@ export default function (jeu) {
     return { ok: essais === 50 && ok >= 48 && coinces === 0, attendu: '≥ 48 / 50, 0 coincé', obtenu: `${ok}/${essais}, coincés ${coinces}` };
   }, { delai: 200, apresFusion: true });
   T('F2 · cachettes de L-K atteignables sur le graphe des props (e1)', async () => {
-    const { cachettes } = await import('../deguisements.js');
+    // (F2 : le registre préparé d'abord — sans lui MEUBLES.collisions est nul et le générateur ne rend rien — ; la liste
+    // COMPLÈTE est la valeur rendue par le générateur, ses lots n'en sont que des morceaux)
+    const { cachettes, preparerCatalogue } = await import('../deguisements.js');
+    await preparerCatalogue(game);
     const P = await Nav.obtenir(game, { rayon: 0.2, franchir: false }), avant = Nav.derniere;
     P.restreindre(P.masquePieces(piecesDe('e1')));
     try {
-      let R = []; for (const lot of cachettes('e1', P)) if (Array.isArray(lot) && lot.length) R = lot;
+      const it = cachettes('e1', P); let s; while (!(s = it.next()).done) { /* les lots */ }
+      const R = s.value || [];
       const hors = R.filter((c) => P.noeudPres(c.x, c.y, c.z, 0.6) < 0).length;
       return { ok: R.length > 0 && hors === 0, attendu: '> 0 cachettes, 0 sans nœud à ≤ 0,6 m', obtenu: `${R.length} cachettes, ${hors} hors du graphe` };
     } finally { P.restreindre(null); Nav.derniere = avant; }
