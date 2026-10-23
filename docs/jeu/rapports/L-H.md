@@ -4,32 +4,30 @@ Branche `lot/L-H` (depuis `socle` = `socle-ok` e06258f), arbre `C:/Users/hgami/D
 
 ## Où j'en suis
 
-**EN COURS.** Tout le code du lot est ÉCRIT et commité, PAS ENCORE JOUÉ dans le navigateur (les trois jetons étaient pris
-par d'autres lots ; un script les guette toutes les 30 s) :
-- `js/audio.js` (auditeur orienté, bruits précalculés, sortie spatialisée, buzzer / sifflet / refus de LA CAGE) ;
-- `js/fx.js` (`budgetImage` et « Priorité fluidité » ; relevé des découpes de l'occlusion quand les pools entrent) ;
-- `js/jeu/sons_jeu.js` (SonsJeu complet), `js/jeu/effets.js` (Effets complet), `js/jeu/tests/test_effets.js` (14 + 3).
-- `python -I tools/verifier_proprietaires.py lot/L-H` → OK.
+**EN COURS — essais.** Tout le lot est écrit, joué et commité ; jeton 3 du navigateur pris à 05:21 (rafraîchi).
+- `&rapport=1&lot=S0` sur la branche : **29/29 sur PC** (76 s, 0 signalé ; balade au bit près 0 / 0 avant et après).
+- `&rapport=1&lot=L-H` : 13/14 au dernier passage complet (le 9 attend la mesure de `a8b22dd`), puis une boucle sans borne
+  d'un test a figé l'onglet (corrigée : ffe36bc) — à rejouer.
+- Reste : `L-H` vert sur PC et sous `?tel=1`, `S0` sous `?tel=1`, la mesure des sons de la balade sur `a8b22dd`
+  (archive dans le dossier de session `…/scratchpad/lh/ref_a8b22dd`, servie sur 8142 à `localhost`, script
+  `…/scratchpad/lh/compter_a8b22dd.js` = `compterSonsBalade` du test) pour poser `PAS_A8B22DD` dans `test_effets.js`.
 
-Prochaine étape, dès qu'un jeton est pris : `python serve.py 8142` dans l'arbre, `http://127.0.0.1:8142/?test=1&rapport=1&lot=L-H`,
-corriger jusqu'au vert, jouer pour de vrai (essai, équipes, stand, domination fabriquée), `&lot=S0`, puis `?tel=1` ; et la
-mesure des sons de la balade sur `a8b22dd` (archive dans le dossier de session, servie sur 8142 à `localhost`, script
-`compter_a8b22dd.js` = `compterSonsBalade` du test) pour poser `PAS_A8B22DD` dans `test_effets.js`.
-
-Un repreneur : `git log` de `lot/L-H`, puis ce rapport (sections « Ce qui est construit », « Ce qui reste »).
+Un repreneur : `git log` de `lot/L-H`, puis ce rapport. Le serveur de la session (`…/scratchpad/lh/serve_lh.py <racine>
+<port> <photos>`) est `serve.py` plus un POST `/__photo/<nom>` : les photos d'un onglet qui n'est pas devant (les autres
+agents prennent le devant du panneau) arrivent en JPEG dans le dossier de session.
 
 ## Ce qui est construit
 
-(à compléter après les essais)
+(à compléter à la fin)
 
 ## Écarts au document
 
-(au fil de l'eau)
+(à compléter à la fin)
 
 ## Demandes
 
-(au fil de l'eau)
+(à compléter à la fin)
 
 ## Ce qui reste
 
-- jouer et tester (voir « Où j'en suis ») ; S0 sur la branche ; `?tel=1` ; rapport final.
+- voir « Où j'en suis ».
