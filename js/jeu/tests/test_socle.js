@@ -158,13 +158,13 @@ export default function (jeu) {
       obtenu: `profil ${r.profil} · vue 3 ${r.vue3.pos} / ${r.vue3.cam} · vue 1 ${r.vue1.pos} / ${r.vue1.cam} · même onglet ${r.identiques} · rendues ${r.fonctionsRendues}` };
   }, { delai: 120 });
 
-  // 2. LES 346 SIÈGES
-  T('2 sièges : 346, empreinte, tous assis', async () => {
-    const ref = jeu.reference;
+  // 2. LES SIÈGES (346 sur a8b22dd ; 345 depuis la fusion du lot R, F2 — le nombre et l'empreinte sont ceux de la référence)
+  T('2 sièges : tous, empreinte, tous assis', async () => {
+    const ref = jeu.reference[profil()], n = ref.sieges.n;
     const emp = window.__rejeuBalade.empreinteSieges(game.siegesTous);
     const v = await jeu.verifierSieges();
-    const ok = game.siegesTous.length === 346 && emp === ref.sieges.empreinte && v.assis === 346 && v.refus.length === 0;
-    return { ok, attendu: '346 · ' + ref.sieges.empreinte + ' · 346 assis, 0 refus', obtenu: `${game.siegesTous.length} · ${emp} · ${v.assis} assis sur ${v.total}, refus [${v.refus.slice(0, 12)}] · ${Math.round(v.ms)} ms` };
+    const ok = game.siegesTous.length === n && emp === ref.sieges.empreinte && v.assis === n && v.refus.length === 0;
+    return { ok, attendu: `${n} · ${ref.sieges.empreinte} · ${n} assis, 0 refus`, obtenu: `${game.siegesTous.length} · ${emp} · ${v.assis} assis sur ${v.total}, refus [${v.refus.slice(0, 12)}] · ${Math.round(v.ms)} ms` };
   }, { delai: 600 });
 
   // 3. L'ASCENSEUR

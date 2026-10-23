@@ -1,5 +1,5 @@
 {
- "_commentaire": "Référence de la balade, enregistrée par le socle S0 le 22/10/2026 sur a8b22dd (arbre de travail j-socle avant toute prise, port 8331) par js/jeu/tests/enregistrer_balade.js, deux onglets frais par profil (pc : fenêtre du panneau ; tel : ?tel=1 et émulation mobile 375 x 812, tactile actif). Auto-contrôle : les deux passes de chaque profil sont identiques au bit près (ecartAuto), les seuils restent ceux de la spec.",
+ "_commentaire": "Référence de la balade, enregistrée par le socle S0 le 22/10/2026 sur a8b22dd (arbre de travail j-socle avant toute prise, port 8331) par js/jeu/tests/enregistrer_balade.js, deux onglets frais par profil (pc : fenêtre du panneau ; tel : ?tel=1 et émulation mobile 375 x 812, tactile actif). Auto-contrôle : les deux passes de chaque profil sont identiques au bit près (ecartAuto), les seuils restent ceux de la spec. F2, 23/10/2026 : la fusion du lot R (p-pause-1015-ok, js/ecole_soussol.js : l'espace pause du −1 refait) change le DÉCOR du −1, pas la balade — les trajectoires restent celles de a8b22dd (rejouées au bit près sur vague2) ; relevés sur vague2 et réécrits ici : la ligne [optim] (pc 124 remplacés, 868 distincts ; tel 122, 868 ; mêmes 232 blocs), les sièges 345 (un de moins), empreinte 79f8f18b, et instantane.sieges.",
  "version": 1,
  "base": "a8b22dd",
  "date": "2026-10-22",
@@ -126,7 +126,7 @@
     "assis": true
    }
   },
-  "optim": "[optim] matériaux : 122 remplacés, 835 distincts · géométries : 4198 maillages cousus en 232 blocs (sur 4466 candidats)",
+  "optim": "[optim] matériaux : 124 remplacés, 868 distincts · géométries : 4198 maillages cousus en 232 blocs (sur 4466 candidats)",
   "programmes": 136,
   "lumieres": 8,
   "instantane": {
@@ -227,7 +227,7 @@
    "profil": "balade",
    "sourisJeu": false,
    "vue": 3,
-   "sieges": 346,
+   "sieges": 345,
    "enfants": 305,
    "lumieres": 8,
    "decalCmd": 0,
@@ -242,8 +242,8 @@
   "hud": "426bda93",
   "tactile": null,
   "sieges": {
-   "n": 346,
-   "empreinte": "07b94414"
+   "n": 345,
+   "empreinte": "79f8f18b"
   }
  },
  "tel": {
@@ -343,7 +343,7 @@
     "assis": true
    }
   },
-  "optim": "[optim] matériaux : 120 remplacés, 835 distincts · géométries : 4198 maillages cousus en 232 blocs (sur 4466 candidats)",
+  "optim": "[optim] matériaux : 122 remplacés, 868 distincts · géométries : 4198 maillages cousus en 232 blocs (sur 4466 candidats)",
   "programmes": 76,
   "lumieres": 6,
   "instantane": {
@@ -444,7 +444,7 @@
    "profil": "balade",
    "sourisJeu": false,
    "vue": 3,
-   "sieges": 346,
+   "sieges": 345,
    "enfants": 299,
    "lumieres": 6,
    "decalCmd": 0,
@@ -483,13 +483,13 @@
    "stick": true
   },
   "sieges": {
-   "n": 346,
-   "empreinte": "07b94414"
+   "n": 345,
+   "empreinte": "79f8f18b"
   }
  },
  "sieges": {
-  "n": 346,
-  "empreinte": "07b94414"
+  "n": 345,
+  "empreinte": "79f8f18b"
  },
  "tactile": {
   "v": {
@@ -516,7 +516,7 @@
   },
   "stick": true
  },
- "optim": "[optim] matériaux : 122 remplacés, 835 distincts · géométries : 4198 maillages cousus en 232 blocs (sur 4466 candidats)",
+ "optim": "[optim] matériaux : 124 remplacés, 868 distincts · géométries : 4198 maillages cousus en 232 blocs (sur 4466 candidats)",
  "programmes": 136,
  "lumieres": 8,
  "instantane": {
@@ -617,7 +617,7 @@
   "profil": "balade",
   "sourisJeu": false,
   "vue": 3,
-  "sieges": 346,
+  "sieges": 345,
   "enfants": 305,
   "lumieres": 8,
   "decalCmd": 0,

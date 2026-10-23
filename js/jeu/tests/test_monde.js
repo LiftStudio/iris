@@ -581,11 +581,13 @@ export default function (jeu) {
     } finally { jeu.figerQualite(false); }
   });
 
-  // 11. LA BALADE AU BIT PRÈS (L-M touche quatre fichiers de carte), après toutes ces parties ; les 346 sièges
-  T('11 balade au bit près, 346 sièges', async () => {
+  // 11. LA BALADE AU BIT PRÈS (L-M touche quatre fichiers de carte), après toutes ces parties ; tous les sièges (346 sur
+  // a8b22dd, 345 depuis la fusion du lot R : F2, le nombre de la référence)
+  T('11 balade au bit près, tous les sièges', async () => {
     const r = await jeu.rejouerBalade(), s = await jeu.verifierSieges();
-    const ok = r.ok && s.total === 346 && s.assis === 346 && !s.refus.length;
-    return { ok, attendu: 'écarts ≤ seuils, vue 3 et vue 1 ; 346 assis sur 346',
+    const R = jeu.reference[window.__chargement && window.__chargement.telephone ? 'tel' : 'pc'], n = R.sieges.n;
+    const ok = r.ok && s.total === n && s.assis === n && !s.refus.length;
+    return { ok, attendu: `écarts ≤ seuils, vue 3 et vue 1 ; ${n} assis sur ${n}`,
       obtenu: `vue 3 ${r.vue3.pos.toExponential(1)} / ${r.vue3.cam.toExponential(1)} · vue 1 ${r.vue1.pos.toExponential(1)} / ${r.vue1.cam.toExponential(1)} · même onglet ${r.identiques} · sièges ${s.assis}/${s.total} (refus ${s.refus})` };
   }, { delai: 180 });
 
