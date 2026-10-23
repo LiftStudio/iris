@@ -46,7 +46,7 @@ import { prechargerModele } from '../player.js';
 import { HAYTHEM } from '../game.js';
 import { creerArme, REPERES } from './modeles_armes.js';
 import { ARMES } from './armes.js';
-import { POSES_VUE, CHRONOS, VOIES, VOIES_MAIN, evaluer } from './anim_vue.js';
+import { POSES_VUE, POSES_ARMES, CHRONOS, VOIES, VOIES_MAIN, evaluer } from './anim_vue.js';
 
 const DEG = Math.PI / 180;
 // la caméra de l'arme (spec § 4.5.9) ; en visée, son champ se resserre (CoD § 6.4 : 52° → 44°, l'arme « vient à l'œil »)
@@ -348,7 +348,7 @@ export class Viewmodel {
     const ks = geste ? 0.35 : 1;
     let wS = P.sprint * ks, wT = P.sprintTact * ks, wG = P.glisse, wF = P.franchit;
     const somme = wS + wT + wG + wF; if (somme > 1) { wS /= somme; wT /= somme; wG /= somme; wF /= somme; }
-    const H = POSES_VUE.hanche, kv = lisse(e.visee) * (1 - wF);
+    const H = (POSES_ARMES[id] && POSES_ARMES[id].hanche) || POSES_VUE.hanche, kv = lisse(e.visee) * (1 - wF);
     const vis = REPERES[id] && REPERES[id].visee ? REPERES[id].visee : [0, 0.06, 0];
     for (let i = 0; i < 3; i++) {
       let p = H.p[i] + wS * (POSES_VUE.sprint.p[i] - H.p[i]) + wT * (POSES_VUE.sprintTact.p[i] - H.p[i]) + wG * (POSES_VUE.glisse.p[i] - H.p[i]) + wF * (POSES_VUE.franchit.p[i] - H.p[i]);

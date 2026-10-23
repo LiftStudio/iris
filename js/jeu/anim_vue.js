@@ -28,6 +28,11 @@ export const POSES_VUE = {
   glisse: { p: [0.115, -0.155, -0.32], r: [0, 0.035, -0.25], bal: 0.3 },
   franchit: { p: [0.12, -0.22, -0.22], r: [-0.3, 0.4, 0.45], bal: 0.5 },
 };
+// LES POSES PROPRES À UNE ARME (un ajout au § 4.5.9, réglé sur les photos) : le pistolet se tient plus haut, plus près de
+// l'axe et plus loin de l'œil qu'un fusil (à la pose du fusil, la main droite et la glissière ne se voyaient plus)
+export const POSES_ARMES = {
+  p17: { hanche: { p: [0.095, -0.075, -0.40], r: [0.04, 0.07, 0], bal: 1 } },
+};
 
 // ---------------------------------------------------------------- les pistes
 // LES VOIES d'une piste d'ARME (recharges, changement, culasse, pompe, inspection) — 0 partout = l'arme à sa pose :
@@ -140,10 +145,10 @@ function clesChargeur(R, vide) {
 }
 // le geste de l'arme pendant sa recharge, par arme (le pistolet se cabre plus, roule moins ; la lunette, moins)
 const GESTES = {
-  fa24: { rx: 15 * DEG, ry: 4 * DEG, rz: -25 * DEG, x: -0.025, y: 0.02, z: 0.01 },
-  pm9: { rx: 14 * DEG, ry: 5 * DEG, rz: -28 * DEG, x: -0.03, y: 0.02, z: 0.01 },
-  tp50: { rx: 10 * DEG, ry: 3 * DEG, rz: -20 * DEG, x: -0.02, y: 0.015, z: 0.0 },
-  p17: { rx: 24 * DEG, ry: 8 * DEG, rz: -18 * DEG, x: -0.035, y: 0.03, z: 0.04 },
+  fa24: { rx: 15 * DEG, ry: 10 * DEG, rz: -25 * DEG, x: -0.04, y: 0.035, z: -0.03 },          // (CoD § 6.4 : roulée de 25°, cabrée de 15°)
+  pm9: { rx: 14 * DEG, ry: 10 * DEG, rz: -28 * DEG, x: -0.04, y: 0.035, z: -0.02 },
+  tp50: { rx: 10 * DEG, ry: 8 * DEG, rz: -22 * DEG, x: -0.035, y: 0.03, z: -0.03 },
+  p17: { rx: 22 * DEG, ry: 14 * DEG, rz: -22 * DEG, x: -0.05, y: 0.04, z: 0.0 },
 };
 // les ancres de la FA-24 écrite (début, chargeur parti, balles entrées, fin [, fin de la vide]) portées sur la fiche `f`
 function rechargeArme(id) {
@@ -215,8 +220,8 @@ const COUTEAU = piste(0.60, [
   { t: 0, vis: 1, dx: 0.20, dy: -0.30, dz: -0.30, drx: -0.3, dry: -0.6, drz: 1.2 },
   { t: 0.03, x: 0.06, y: -0.12, rx: -0.5, rz: 0.3, dk: 1, ov: 1, dx: 0.26, dy: -0.14, dz: -0.34, drx: 0.1, dry: -0.9, drz: 1.4 },
   { t: 0.06, x: 0.10, y: -0.30, rx: -0.9, rz: 0.5, vis: 0, gl: 1, gfx: -0.10, gfy: -0.46, gfz: -0.34 },
-  { t: 0.12, dx: 0.02, dy: -0.10, dz: -0.46, drx: 0.05, dry: 0.1, drz: 1.5 },
-  { t: 0.21, dx: -0.22, dy: -0.18, dz: -0.36, drx: -0.1, dry: 0.9, drz: 1.6 },
+  { t: 0.12, dx: 0.02, dy: -0.10, dz: -0.46, drx: 0.05, dry: -0.35, drz: 1.45 },
+  { t: 0.21, dx: -0.22, dy: -0.18, dz: -0.36, drx: -0.1, dry: 0.3, drz: 1.6 },
   { t: 0.28, dx: -0.20, dy: -0.30, dz: -0.30, drx: -0.3, dry: 0.8, drz: 1.4 },
   { t: 0.38, dx: 0.10, dy: -0.40, dz: -0.24, drx: -0.5, dry: 0, drz: 0.8, ov: 0, vis: 0 },
   { t: 0.42, vis: 1, dk: 1 },
