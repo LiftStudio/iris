@@ -217,6 +217,11 @@ export class TouchControls {
       e.preventDefault(); e.stopPropagation();
       this.auDoigt = true; p.fermerCalque(true);
     }, true);
+    // (23/10) le toucher du terrain, en partie, ne demande JAMAIS la capture du pointeur (js/game.js _onClick la demande à
+    // chaque clic du canevas ; au doigt, le clic qui suit un toucher la demanderait — refusée au téléphone, et inutile)
+    window.addEventListener('click', (e) => {
+      if (e.target === canvas && this.game.partie && e.pointerType === 'touch') e.stopPropagation();
+    }, true);
     // (23/10) une partie qui commence ou finit : ses vibrations sous le doigt, ses emplacements, la course et les bascules rendues
     document.addEventListener('iris-partie', () => this._ecouter());
 

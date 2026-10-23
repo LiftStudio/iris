@@ -563,6 +563,8 @@ export default function (jeu) {
       for (let i = 0; i < 40; i++) { jeu.viser(0, e.id); game.frame(1 / 60); }
       d.leve(); off(); game.frame(1 / 60);
       res.push(['un bot touché', touches > 0, touches + ' touches']);
+      // le clic qu'un toucher du terrain donne : il ne demande pas la capture (js/game.js _onClick)
+      cv.dispatchEvent(new PointerEvent('click', { pointerType: 'touch', bubbles: true, cancelable: true }));
       // II : la pause
       taper(tc, 'pause'); game.frame(1 / 60);
       res.push(['II : pause', game.paused && !document.getElementById('overlay').hidden]);
