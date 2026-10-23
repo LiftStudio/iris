@@ -481,7 +481,7 @@ export default function (jeu) {
       } else if (quoi === 'mur') {
         // un mur entre les deux (le rayon arrêté à plus de 0,3 m avant le meuble)
         const f = Cc.rayonLibre(tmp.o.x, tmp.o.y, tmp.o.z, tmp.o.x + u[0] * L, tmp.o.y + u[1] * L, tmp.o.z + u[2] * L, 0);
-        if (f * L > L - 0.3 || Math.hypot(x - P.cx, z - P.cz) >= 2.9) continue;
+        if (f * L > L - 0.3 || Math.hypot(x - P.cx, z - P.cz) >= 2.9 || !premiere || premiere.pose !== P) continue;
         res.mur++; if (tmp.v) fautes.push(`derrière un mur, ${P.cle} trouvé`);
       } else {
         if (!libre) continue;
