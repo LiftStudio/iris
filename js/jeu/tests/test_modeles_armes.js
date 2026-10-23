@@ -316,7 +316,19 @@ export default function (jeu) {
     if (!vm) { jeu.quitter('balade'); jeu.figerQualite(false); return { ok: false, attendu: 'un viewmodel', obtenu: 'aucun' }; }
     await t.images(6);
     const ids = Object.keys(vm.armes), modeles = ids.filter((id) => vm.armes[id].userData.arme === id && vm.armes[id].userData.reperes && mailles(vm.armes[id]).every((m) => m.isSkinnedMesh)).length;
-    const a = vm.courante, appels = rendreCible(game, vm.scene).appels;
+    // (les appels de l'ARME seule : la scène de l'arme rendue avec tout le reste caché le temps du rendu — mêmes lumières, même
+    // environnement, donc aucun programme neuf ; avec les bras de L-V, la scène en a 2 de plus, et ce test, rejoué par F2, aurait
+    // échoué — relecture)
+    const a = vm.courante, caches = [];
+    let appels = 0;
+    if (a) {
+      vm.scene.traverse((o) => {
+        if (!(o.isMesh || o.isLine || o.isPoints || o.isSprite) || !o.visible) return;
+        let sous = false; o.traverseAncestors((x) => { if (x === a) sous = true; });
+        if (!sous) { o.visible = false; caches.push(o); }
+      });
+      try { appels = rendreCible(game, vm.scene).appels; } finally { for (const o of caches) o.visible = true; }
+    }
     const prog0 = game.renderer.info.programs.length, tir0 = jeu.compteurs().tirs;
     jeu.commande(0, { tir: true }, 3); let t0 = performance.now(); while (performance.now() - t0 < 3000) await t.images(10);
     jeu.commande(0, { tir: false, recharger: true }, 0.1); t0 = performance.now(); while (performance.now() - t0 < 3000) await t.images(10);
@@ -355,21 +367,29 @@ export default function (jeu) {
   });
 
   // ---- À F2 (apresFusion : le VRAI module de l'autre lot) ----
-  // L-V : la main droite sur `mainD`, la gauche sur `mainG` (ou la prise de l'animation) à ≤ 1 cm — L-V expose les poignets de
-  // ses bras (`vm.mains() → { D, G }`, positions monde), sinon F2 branche le test sur ce qu'il expose
+  // L-V : les mains sur les repères (§ 5.5.3 « À F2 » : ≤ 1 cm). L'arme de vue de L-V (lue sur sa branche) pose chaque POIGNET
+  // à `o + p` de sa prise, `o` = le point tenu dans le repère de l'arme, et mesure l'erreur de son IK dans `vm.diag.erreurD/G` :
+  // les points tenus de ses PRISES doivent être les repères de L-W (± 1 mm) et les poignets sur leurs prises (≤ 1 cm), en
+  // hanche, dans la vraie partie, chaque arme à feu en main (la classe de l'essai ; le P-17 par l'arme suivante). (Le test du
+  // constructeur attendait un `vm.mains()` que L-V n'expose pas, et comparait le poignet au repère, à 10 cm l'un de l'autre
+  // par construction — relecture.)
   jeu.ajouterTest('L-W', 'F2 · mains de L-V sur les repères', async (t) => {
-    await jeu.lancer('essai', { graine: 42 });
-    const vm = game.partie && game.partie.aff.viewmodel; await t.images(6);
-    const fautes = [], L = [];
-    for (const id of ARMES_FEU) {
-      vm.montrer(id); vm.maj(0, { arme: id, etatArme: 'pret', tEtat: 1, visee: 0 }); vm.scene.updateMatrixWorld(true);
-      const M = typeof vm.mains === 'function' ? vm.mains() : null, R = vm.armes[id].userData.reperes;
-      if (!M) { fautes.push('vm.mains() absent'); break; }
-      const dD = M.D.distanceTo(R.mainD.getWorldPosition(new THREE.Vector3())), dG = M.G.distanceTo(R.mainG.getWorldPosition(new THREE.Vector3()));
-      L.push(`${NOMS[id]} ${r3(dD * 100)}/${r3(dG * 100)} cm`); if (dD > 0.01 || dG > 0.01) fautes.push(`${id} ${r3(dD * 100)}/${r3(dG * 100)} cm`);
+    const P = (await import('../viewmodel.js')).PRISES, fautes = [], L = [];
+    const d3 = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+    for (const [classe, id, suivante] of [['assaut', 'fa24'], ['infiltration', 'pm9'], ['defense', 'fp12'], ['tireur', 'tp50'], ['assaut', 'p17', true]]) {
+      if (!P || !P[id]) { fautes.push(`PRISES.${id} absent`); continue; }
+      const dO = Math.max(d3(P[id].d.o, REPERES[id].mainD), d3(P[id].g.o, REPERES[id].mainG));
+      await jeu.lancer('essai', { graine: 42, classe, mannequins: 0 });
+      if (suivante) jeu.commande(0, { armeSuiv: true }, 1 / 60);
+      await t.images(90);
+      const vm = game.partie && game.partie.aff.viewmodel, a = vm && vm.courante, D = (vm && vm.diag) || {};
+      const ok = !!(a && a.userData.arme === id && vm.bras) && dO <= 0.001 && D.erreurD <= 0.01 && D.erreurG <= 0.01;
+      L.push(`${NOMS[id]} prises ${r3(dO * 1000)} mm · poignets ${r3((D.erreurD || 0) * 100)} / ${r3((D.erreurG || 0) * 100)} cm${a ? '' : ' (aucune arme)'}${vm && vm.bras ? '' : ' (sans bras)'}`);
+      if (!ok) fautes.push(L[L.length - 1]);
+      jeu.quitter('balade');
     }
-    jeu.quitter('balade');
-    return { ok: fautes.length === 0, attendu: 'mains à ≤ 1 cm de mainD / mainG en hanche', obtenu: fautes.length ? fautes.join(' · ') : L.join(' · ') };
+    return { ok: fautes.length === 0, attendu: 'PRISES de L-V : points tenus = mainD / mainG ± 1 mm ; poignets sur leurs prises ≤ 1 cm en hanche (vm.diag)',
+      obtenu: fautes.length ? fautes.join(' · ') : L.join(' · ') };
   }, { apresFusion: true });
   // L-C : les armes des bots sont les modèles 3e personne (racines de scène, `dynamique`, ≤ 3 appels, la bouche suivie)
   jeu.ajouterTest('L-W', 'F2 · armes des bots (L-C)', async (t) => {
