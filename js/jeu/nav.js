@@ -67,6 +67,13 @@ let _refaitCetteSession = new Set();
 // `off` des formes ni mobiles ni vantaux : celles que la génération lit telles quelles), les sols, les plafonds, les
 // rectangles des 47 zones, puis le pas, le rayon, les bornes et la version. Les barrières (`limite`) n'y entrent pas : elles
 // sont éteintes pendant la génération (le graphe ne change pas d'une zone de jeu à l'autre : `restreindre`).
+// (F2, raccord L-D / L-M : les boîtes des vantaux ouverts du combat sont rangées HORS du monde solide par L-M hors partie —
+// l'école de la balade au bit près — ; elles y sont remises le temps — synchrone — de l'empreinte et de la génération, par
+// game.mondePartie.avecVantaux : le graphe les contourne, son empreinte les compte. Sans monde des parties : tel quel.)
+function avecVantaux(game) {
+  const M = game && game.mondePartie;
+  return (fn) => (M && M.avecVantaux ? M.avecVantaux(fn) : fn());
+}
 function empreinteDe(C, Lu, { pas, rayon, franchir, bornes }) {
   let h = 0x811c9dc5, n = 0;
   const m = (v) => { const k = Number.isFinite(v) ? Math.round(v * 1000) : 2147483647; h = Math.imul(h ^ (k & 0xffff), 0x01000193) >>> 0; h = Math.imul(h ^ ((k >>> 16) & 0xffff), 0x01000193) >>> 0; };
@@ -398,8 +405,8 @@ export class Nav {
     const C = game.collisions, Lu = game.carte && game.carte.lumieres;
     const n = new Nav();
     if (!C) { n.pas = pas; n.rayon = rayon; n.franchir = franchir; n.bornes = bornes; return n; }
-    const opts = { pas, rayon, franchir: !!franchir && rayon >= 0.25, bornes };
-    const emp = empreinteDe(C, Lu, opts);
+    const opts = { pas, rayon, franchir: !!franchir && rayon >= 0.25, bornes }, V = avecVantaux(game);
+    const emp = V(() => empreinteDe(C, Lu, opts));
     const forcer = refaire || (argNav() === 'refaire' && !_refaitCetteSession.has(emp));
     pr('Plan de l’école', 0.05);
     let D = forcer ? null : MEMOIRE.get(emp) || null, cache = !!D;
@@ -415,7 +422,7 @@ export class Nav {
       const dep = game.carte && game.carte.depart;
       if (dep) graines.push([dep.x, C.solEn(dep.x, dep.z, dep.y || 0), dep.z]);
       for (const g of GRAINES) graines.push(g);
-      D = generer(C, Lu, { ...opts, graines, chrono });
+      D = V(() => generer(C, Lu, { ...opts, graines, chrono }));
       D.empreinte = emp;
       _refaitCetteSession.add(emp);
       // (l'écriture n'est pas attendue : sur une machine chargée, IndexedDB a mis 1,4 s à écrire le Mo du graphe ; une
@@ -436,13 +443,13 @@ export class Nav {
     const { pas = 0.25, rayon = 0.3, franchir = true, bornes = BORNES_NAV } = o || {};
     const C = game.collisions, Lu = game.carte && game.carte.lumieres, opts = { pas, rayon, franchir: !!franchir && rayon >= 0.25, bornes };
     const dep = game.carte && game.carte.depart, graines = dep ? [[dep.x, C.solEn(dep.x, dep.z, dep.y || 0), dep.z], ...GRAINES] : GRAINES;
-    const D = generer(C, Lu, { ...opts, graines }); D.empreinte = empreinteDe(C, Lu, opts);
+    const V = avecVantaux(game), D = V(() => generer(C, Lu, { ...opts, graines })); D.empreinte = V(() => empreinteDe(C, Lu, opts));
     const n = new Nav(); n._charger(D, C); return n;
   }
   // l'empreinte qu'aurait le graphe de ces options, sans le générer (les tests ; `o` comme `obtenir`)
   static empreinteDe(game, o) {
     const { pas = 0.25, rayon = 0.3, franchir = true, bornes = BORNES_NAV } = o || {};
-    return empreinteDe(game.collisions, game.carte && game.carte.lumieres, { pas, rayon, franchir: !!franchir && rayon >= 0.25, bornes });
+    return avecVantaux(game)(() => empreinteDe(game.collisions, game.carte && game.carte.lumieres, { pas, rayon, franchir: !!franchir && rayon >= 0.25, bornes }));
   }
   // (`pas`, `rayon`, `franchir`, `bornes` : les options du graphe ; `depuisCache` : relu d'un cache plutôt que généré — lus
   // par js/jeu/harnais.js verifierNav)

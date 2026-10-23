@@ -596,9 +596,10 @@ export default function (jeu) {
   T('F2 · graphe restreint : aucun nœud dans une pièce fermée, vantaux contournés', async () => {
     const nav = await Nav.obtenir(game, {});
     if (!game.mondePartie) { await essai({ zone: 'ecole' }); jeu.quitter('balade'); }
-    const M = game.mondePartie, out = M.noeudsAutorises(nav, 'ecole', 'equipes'), Zs = Lu().zones, F = new Set(['wcF', 'wcH', 'pmr', 'local', 'service']);
+    const M = game.mondePartie, out = M.noeudsAutorises(nav, 'ecole', 'equipes'), F = new Set(['wcF', 'wcH', 'pmr', 'local', 'service']);
     let fautes = 0;
-    for (let i = 0; i < nav.nb; i++) if (out[i] && nav.zone[i] !== 255 && F.has(Zs[nav.zone[i]].id)) fautes++;
+    // (F2 : nav.zone[i] est un indice dans PIECES — nav.pieceDe —, demande de L-D)
+    for (let i = 0; i < nav.nb; i++) if (out[i] && nav.zone[i] !== 255 && F.has(nav.pieceDe(i))) fautes++;
     // aucun nœud du graphe DANS une boîte de vantail ouvert
     let dansVantail = 0;
     M.avecVantaux(() => { for (let i = 0; i < nav.nb; i++) if (!C().libre(nav.px[i], nav.pz[i], 0.25, nav.ph[i])) dansVantail++; });

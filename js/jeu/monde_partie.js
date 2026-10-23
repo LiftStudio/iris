@@ -573,10 +573,12 @@ export class MondePartie {
     if (!n) return out;
     const permis = this.piecesPermises(zoneJeu, mode), Lu = this.carte.lumieres;
     if (!permis) return out.fill(1);
-    const Zs = (Lu && Lu.zones) || [], sans = [];
+    const sans = [];
     for (let i = 0; i < n; i++) {
       const zi = nav.zone ? nav.zone[i] : 255;
-      let id = zi !== 255 && zi < Zs.length ? Zs[zi].id : zi !== 255 ? PIECES[zi] : null;
+      // (F2, demande de L-D : nav.zone[i] est un indice dans PIECES — celui de nav.pieceDe —, pas dans lumieres.zones : les
+      // deux listes ont le même ordre aujourd'hui, 47 = 47, rien ne le garantit après une fusion de carte)
+      let id = zi !== 255 ? PIECES[zi] || null : null;
       if (!id && Lu && nav.px) { const R = Lu.zoneEn(nav.px[i], nav.pz[i], (nav.ph ? nav.ph[i] : 0) + 0.1); id = R ? R.id : null; }
       if (id) out[i] = permis.has(id) ? 1 : 0; else sans.push(i);
     }
