@@ -354,8 +354,9 @@ class Atelier {
     this.pieces.push({ geo: g, mat, os: (this.vue && o.os) || null });
     return g;
   }
-  // (en 3e personne la boîte est nue : à 10 m un chanfrein de 4 mm ne se voit pas, et il coûte 32 triangles)
-  boite(mat, p, [l, h, pr], o = {}) { if ((o.vue && !this.vue) || (o.trois && this.vue)) return null; return this._poser(chanfrein(l, h, pr, this.vue ? o.c || 0 : 0), mat, { ...o, p }); }
+  // (en 3e personne la boîte est nue : à 10 m un chanfrein de 4 mm ne se voit pas, et il coûte 32 triangles — sauf `c3`, le
+  // chanfrein gardé des pièces qui font la silhouette : garde-mains octogonaux, pompe)
+  boite(mat, p, [l, h, pr], o = {}) { if ((o.vue && !this.vue) || (o.trois && this.vue)) return null; return this._poser(chanfrein(l, h, pr, this.vue ? o.c || 0 : o.c3 || 0), mat, { ...o, p }); }
   cyl(mat, p, r, long, o = {}) { if ((o.vue && !this.vue) || (o.trois && this.vue)) return null; return this._poser(cylindreZ(r, o.r2 ?? r, long, this.s(o.seg || 16), !!o.ouvert), mat, { ...o, p }); }
   // un cylindre d'un point à un autre (tiges, leviers)
   barre(mat, a, b, r, o = {}) {
@@ -491,7 +492,7 @@ const PLANS = {
     for (const s of [0.150, 0.163, 0.176]) { const c = arcChargeur(-0.105, -0.005, R, s); A.boite('polymere', [0, c.y, c.z], [0.0256, 0.0025, 0.0575], { c: 0.0007, r: [c.f, 0, 0], os: 'chargeur', vue: true }); }
     A.boite('polymere', [0, fin.y - 0.003 * Math.cos(fin.f), fin.z - 0.003 * Math.sin(fin.f)], [0.028, 0.010, 0.064], { c: 0.003, r: [fin.f, 0, 0], os: 'chargeur' });
     // le garde-main à rails (octogonal : gros chanfrein), ses ouïes (vue), son rail du dessus, le rail du dessous et l'arrêt de main
-    A.boite('teinte', [0, 0.027, -0.325], [0.056, 0.060, 0.262], { c: 0.012 });         // y −0,003-0,057, z −0,194-−0,456
+    A.boite('teinte', [0, 0.027, -0.325], [0.056, 0.060, 0.262], { c: 0.012, c3: 0.012 });         // y −0,003-0,057, z −0,194-−0,456
     A.rail(0.057, -0.196, -0.452, 0.022);
     for (const sx of [-1, 1]) for (let i = 0; i < 4; i++) A.boite('polymere', [sx * 0.0284, 0.030, -0.245 - i * 0.045], [0.0012, 0.011, 0.032], { vue: true });
     A.boite('acier', [0, -0.0055, -0.400], [0.020, 0.005, 0.080], { c: 0.001 });
@@ -532,7 +533,7 @@ const PLANS = {
     A.cyl('acier', [0, -0.006, -0.105], 0.0026, 0.0415, { r: [0, Math.PI / 2, 0], seg: 10, vue: true });
     A.boite('acier', [-0.0212, -0.006, 0.000], [0.003, 0.005, 0.016], { c: 0.0008, r: [0.3, 0, 0], vue: true });
     // le garde-main court et ses nervures
-    A.boite('polymere', [0, 0.027, -0.250], [0.044, 0.042, 0.160], { c: 0.010 });       // y 0,006-0,048, z −0,17-−0,33
+    A.boite('polymere', [0, 0.027, -0.250], [0.044, 0.042, 0.160], { c: 0.010, c3: 0.010 });       // y 0,006-0,048, z −0,17-−0,33
     for (const sx of [-1, 1]) for (const y of [0.020, 0.034]) A.boite('teinte', [sx * 0.0222, y, -0.255], [0.0012, 0.0035, 0.115], { vue: true });
     // le canon, le compensateur et ses évents
     A.cyl('acier', [0, Y, -0.357], 0.0085, 0.056, { seg: 14 });
@@ -579,7 +580,7 @@ const PLANS = {
     A.tour('acier', [0, 0.0065, 0], [[0, -0.678], [0.0085, -0.678], [0.0115, -0.674], [0.0115, -0.660], [0, -0.660]], { seg: 16 });
     A.boite('acier', [0, 0.017, -0.635], [0.024, 0.038, 0.014], { c: 0.004 });
     // la pompe (os) et ses stries, ses barres d'action (dans le boîtier au repos)
-    A.boite('teinte', [0, 0.0015, -0.420], [0.046, 0.032, 0.180], { c: 0.009, os: 'pompe' });       // y −0,0145-0,0175 (sous le canon), z −0,33-−0,51
+    A.boite('teinte', [0, 0.0015, -0.420], [0.046, 0.032, 0.180], { c: 0.009, c3: 0.009, os: 'pompe' });       // y −0,0145-0,0175 (sous le canon), z −0,33-−0,51
     for (let i = 0; i < 7; i++) A.boite('polymere', [0, 0.0015, -0.360 - i * 0.020], [0.0482, 0.0342, 0.0055], { c: 0.008, os: 'pompe', vue: true });
     for (const sx of [-1, 1]) A.boite('acier', [sx * 0.0125, 0.012, -0.280], [0.002, 0.005, 0.100], { os: 'pompe', vue: true });
     // la crosse à poignée intégrée (15°), trou de pouce ; la plaque de couche
