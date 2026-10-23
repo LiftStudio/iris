@@ -76,7 +76,9 @@ export class CerveauBase {
     const l = a.cmd.lacet, fx = -Math.sin(l), fz = -Math.cos(l), cosCone = Math.cos(60 * DEG);
     for (const b of P.acteurs) {
       // (un corps qui n'est pas humain — un meuble — n'est pas une cible qu'on « voit » : un cerveau ne lit jamais `prop`)
-      if (b === a || !b.vivant || !b.corps || !P.ennemis(a, b) || b.corps !== b.joueur) continue;
+      // (F2 : celui qu'on ne regarde plus — mort, devenu meuble — n'est plus « vu » : son `vu` restait vrai depuis sa dernière
+      // perception, 103 sur 707 relevés en 25 s de 4 c. 4, test 6 bis de test_fusion.js)
+      if (b === a || !b.vivant || !b.corps || !P.ennemis(a, b) || b.corps !== b.joueur) { const V0 = this.vus.get(b.id); if (V0) V0.vu = false; continue; }
       let V = this.vus.get(b.id);
       if (!V) { V = { jauge: 0, vu: false, repereT: -1 }; this.vus.set(b.id, V); }
       const bx = b.pos.x, by = b.pos.y + 1.27 * b.h / 1.73, bz = b.pos.z;

@@ -56,7 +56,9 @@ export default function (jeu) {
       await jeu.lancer('stand', { graine: 120 });
       const p = P(), m = p.mannequin, h = p.local, A = p.aff, inp = game.input, J = jeu.journalAudio;
       await jeu.images(40);                                       // (l'arme sortie, le calque absent sous ?test=1)
-      // (a) la chaîne, image par image
+      // (a) la chaîne, image par image — en VISÉE (clic droit tenu, 0,4 s : la dispersion de la hanche, 2,2° à 10 m, perdait
+      // une balle sur deux ; 4 balles au torse font 132 PV, 3 n'en font que 99)
+      inp.presser('Souris:2'); await jeu.images(24);
       jeu.viser(0, { x: m.pos.x, y: m.pos.y + 1.27, z: m.pos.z });
       const T0 = [], tirs = [];
       p.sur('touche', (e) => { if (e.cible === m.id) T0.push({ t: p.t, d: e.degats, zone: e.zone }); });
@@ -74,7 +76,7 @@ export default function (jeu) {
         }
         for (let i = nT; i < T0.length; i++) { cumul += T0[i].d; if (cumul >= 100 && tMort === null) tMort = T0[i].t; }
       }
-      inp.relacher('Souris:0'); await jeu.images(2);
+      inp.relacher('Souris:0'); inp.relacher('Souris:2'); await jeu.images(2);
       res.push([`1re touche : marqueur ${image1 ? image1.mo : '-'}, ${image1 ? image1.starts : 0} sons programmés, arme de vue reculée ${image1 ? r3(image1.piston) : '-'} m — dans la même image`,
         !!image1 && image1.mo === 1 && image1.starts > 0 && image1.piston > 0]);
       const ttk = tMort === null ? null : (tMort - t0) * 1000, zones = T0.slice(0, 4).map((x) => x.zone).join(',');
@@ -86,10 +88,12 @@ export default function (jeu) {
       inp.presser('Souris:0');
       for (let k = 0; k < 120 && h.arsenal.tirSeq - seq0 < 12; k++) await jeu.images(1);
       inp.relacher('Souris:0');
+      // (le recul du 12e coup est pris par lireCommande au pas SUIVANT : une image de plus, la détente relâchée)
+      await jeu.images(1);
       const d = game.camPitch - pitch0, n = h.arsenal.tirSeq - seq0;
       res.push([`${n} balles : camPitch ${r3(d)} rad (${r2(-d * 180 / Math.PI)}°)`, n === 12 && Math.abs(d + 0.118) <= 0.006]);
       jeu.quitter('balade');
-    } finally { game.input.relacher('Souris:0'); jeu.figerQualite(false); }
+    } finally { game.input.relacher('Souris:0'); game.input.relacher('Souris:2'); jeu.figerQualite(false); }
     return bilan(res, 'marqueur + son programmé + recul de l’arme de vue dans l’image de la touche ; 100 PV à 240 ± 8,3 ms ; 12 balles → −0,118 ± 0,006 rad');
   }, { delai: 120, apresFusion: true });
 
@@ -226,7 +230,8 @@ export default function (jeu) {
       const f0 = c.percevoir.bind(c);
       c.percevoir = function () {
         f0();
-        const eo = a.oeil({ x: 0, y: 0, z: 0, set(x, y, z) { this.x = x; this.y = y; this.z = z; return this; } });
+        // (l'œil de la perception même — `_eo` —, pas un second appel à oeil())
+        const eo = this._eo || a.oeil({ x: 0, y: 0, z: 0, set(x, y, z) { this.x = x; this.y = y; this.z = z; return this; } });
         for (const [id, V] of this.vus) {
           n++; if (!V.vu) continue; vus++;
           const b = p.acteurParId(id); if (!b) continue;
