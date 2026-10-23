@@ -163,3 +163,21 @@ Relu : le diff complet `socle...lot/L-I` (7 fichiers), contre §§ 3.2, 3.6, 4.1
    plus rien, le réticule posé sur l'ennemi (au téléphone, l'arme de poing devenait inutilisable). Le tir auto bat
    maintenant la gâchette d'une semi-automatique un pas sur deux (la cadence de l'arme reste la seule limite) ; le doigt
    qui tient TIR garde la main. Test 3 (f) : P-17, 4 balles en 0,62 s à 400 coups/min (1 avant).
+2. **Le sprint verrouillé partait dès le BORD du joystick** (`js/touch.js` `_sprintJeu`) : `m ≥ 0,96` (la poussée plafonnée
+   à 1) verrouillait le sprint ET demandait le sprint tactique — courir à fond vers l'avant, le geste le plus courant,
+   brûlait le sprint tactique (arme baissée, 0,15 s avant de pouvoir tirer) et verrouillait la course à chaque fois. Lu
+   au pied de la lettre (§ 3.2 « AU-DELÀ de son bord », § 4.8 « sprint : bord du joystick ») : AU BORD vers l'avant
+   (< 44°), le SPRINT tenu, comme en balade (jamais de côté ni en arrière) ; AU-DELÀ du bord — la poussée BRUTE ≥ 1,25
+   course, là où le socle flottant se met à suivre le pouce, le bord du rond qu'on voit — le VERROU et le sprint tactique.
+   `TACTILE_JEU.verrou` : `{ avant 0,72, bord 0,6, auDela 1,25, garde 0,3, lache 0,12 }`. Test 4 : au bord, le sprint sans
+   verrou ni tactique ; revenu à 70 %, plus rien ; au-delà, verrou + front `sprintTact` ; au-delà sur le côté, rien.
+3. **Code mort et coût** (`js/jeu/assistance_visee.js`) : l'état `cible` écrit à chaque pas et jamais lu, retiré ; un
+   ennemi plus loin que la portée (± 1 m, en x ou en z) n'est plus mesuré (capsules et objets neufs évités : trois
+   recherches par pas à 120 Hz, plus une par image et par geste).
+
+### Demandes ajoutées par la relecture
+
+- **L-B** (`lireCommande` / `appliquerCommande`) : le tactile envoie le SPRINT TENU au bord du joystick (comme Maj tenu au
+  clavier) ; « tirer ou viser coupe le sprint » doit donc être tranché dans la lecture de la commande, pour TOUTES les
+  entrées (aujourd'hui le squelette laisse `cmd.sprint` et `cmd.tir` vrais ensemble). Seul le sprint VERROUILLÉ, état du
+  tactile, est rendu par `js/touch.js` (TIR, VISER, ACCROUPI, le tir auto).
