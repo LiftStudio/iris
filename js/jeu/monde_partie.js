@@ -224,6 +224,7 @@ export class MondePartie {
     finally { this.portes.forEach((P, i) => { if (P.forme) P.forme.off = ouvertes[i]; }); }
     for (const Q of this.passages) {
       Q.porte = this._porteDu(Q);
+      if (Q.porte) this._parLaPorte(Q, Q.porte);
       if (Q.ok) Q.forme = horsMonde(C, () => C.ajouterBoiteOrientee(Q.cx, Q.cz, Q.hl + 0.1, 0.05, Math.atan2(Q.tz, Q.tx),
         { y0: Q.sol - 0.35, y1: Q.sol + 1.95, camera: false, balle: false, limite: Q.cle, partie: true }));
     }
@@ -316,6 +317,14 @@ export class MondePartie {
       if (d < bd) { bd = d; best = P; }
     }
     return best;
+  }
+  // UN PASSAGE PAR UNE PORTE : la barrière dans la baie même (son centre, sa largeur, sa normale de `a` vers `b`) — la limite
+  // des rectangles de pièces, au ras d'un mur, déborde parfois d'une baie sur la pièce voisine (celle de l'escalier principal
+  // mordait de 30 cm sur l'entrée du C05)
+  _parLaPorte(Q, P) {
+    const C = this.game.collisions, [, cb] = cotesPorte(P), sg = cb === Q.b ? 1 : -1;
+    const nx = P.nx * sg, nz = P.nz * sg, bx = P.wx ?? P.cx, bz = P.wz ?? P.cz, l = P.l || 0.9;
+    Object.assign(Q, { ok: true, nx, nz, tx: -nz, tz: nx, bx, bz, sol: C.solEn(bx, bz, (P.base || 0) + 0.3), s0: -l / 2, s1: l / 2, cx: bx, cz: bz, hl: l / 2, parPorte: true });
   }
   // le côté où s'ouvre une porte forcée ou au départ d'une partie : son côté libre, sinon celui de sa face
   _sens(P) { return P.libre || P.cote || 1; }

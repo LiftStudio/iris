@@ -217,16 +217,21 @@ export default function (jeu) {
             pose = { x, y, z: zz, cible: { x: Q.bx - Q.nx * sgn * e + Q.tx * s2, y: Q.sol, z: Q.bz - Q.nz * sgn * e + Q.tz * s2 }, Q, sgn };
           }
           if (!pose) continue;
-          jeu.teleporter(m.a.id, pose.x, pose.y, pose.z); m.cible = pose.cible; m.Q = pose.Q; m.sgn = pose.sgn; m.sorti = false; m.franchi = false; departs++;
+          jeu.teleporter(m.a.id, pose.x, pose.y, pose.z); m.cible = pose.cible; m.Q = pose.Q; m.sgn = pose.sgn; m.sorti = false; m.franchi = false; m.pp = null; departs++;
         }
         for (let i = 0; i < 4 * 120; i++) {
           p.pas(PAS);
           if (i % 12 === 0) for (const m of marcheurs) { const q = m.a.pos, id = dehors(Pz, q.x, q.y, q.z); if (id) { m.sorti = true; sorties.add(m.Q.cle + '→' + id + '@' + q.x.toFixed(2) + ',' + q.y.toFixed(2) + ',' + q.z.toFixed(2)); } }
-          // (et la barrière elle-même : le corps passé de plus de 30 cm de l'autre côté de sa limite, en face d'elle, à son niveau)
+          // (et la barrière elle-même : le pas qui fait passer le corps d'un côté à l'autre de sa ligne, EN FACE d'elle, à son
+          // niveau — la contourner par un bout n'est pas la franchir)
           for (const m of marcheurs) {
             if (!m.cible) continue;
-            const Q = m.Q, q = m.a.pos, dx = q.x - Q.bx, dz = q.z - Q.bz, perp = (dx * Q.nx + dz * Q.nz) * m.sgn, along = dx * Q.tx + dz * Q.tz;
-            if (perp < -0.3 && along > Q.s0 - 0.1 && along < Q.s1 + 0.1 && Math.abs(q.y - Q.sol) < 1.2) m.franchi = true;
+            const Q = m.Q, q = m.a.pos, dx = q.x - Q.bx, dz = q.z - Q.bz, perp = dx * Q.nx + dz * Q.nz, along = dx * Q.tx + dz * Q.tz;
+            if (m.pp && Math.sign(perp) !== Math.sign(m.pp.perp) && m.pp.perp !== 0 && Math.abs(q.y - Q.sol) < 1.2) {
+              const w = m.pp.perp / (m.pp.perp - perp), at = m.pp.along + w * (along - m.pp.along);
+              if (at > Q.s0 && at < Q.s1) m.franchi = true;
+            }
+            m.pp = { perp, along };
           }
         }
         for (const m of marcheurs) { if (m.cible) { trajets++; if (m.sorti) nDehors++; if (m.franchi) franchies++; } m.cible = null; }
@@ -340,15 +345,18 @@ export default function (jeu) {
     };
     const poser = ([x, y, z]) => { cam.position.set(x, y, z); cam.lookAt(cible.x, 1.2, cible.z); };
     const mesurer = (avecTri) => {
-      const sup = game.fx.superpositions.splice(0);
+      // (les passes de l'image dépendent de `fx.calme` — l'occlusion refaite à chaque image hors du calme — : le même pour les deux)
+      const sup = game.fx.superpositions.splice(0), calme = game.fx.calme;
+      game.fx.calme = true;
       try {
         return poses.map((q) => {
-          poser(q); V.actif = true; rendre(); const appels = rendre(); const a = pixels();
+          // (trois rendus de chauffe — la carte d'ombre gardée en cache se refait après un changement de portes —, puis le moindre de deux)
+          poser(q); V.actif = true; rendre(); rendre(); rendre(); const appels = Math.min(rendre(), rendre()); const a = pixels();
           let diff = 0;
           if (avecTri) { V.actif = false; rendre(); rendre(); const b = pixels(); for (let i = 0; i < a.length; i += 4) if (Math.max(Math.abs(a[i] - b[i]), Math.abs(a[i + 1] - b[i + 1]), Math.abs(a[i + 2] - b[i + 2])) > 48) diff++; V.actif = true; }
           return { appels, diff: diff / (a.length / 4) };
         });
-      } finally { game.fx.superpositions.push(...sup); V.actif = true; }
+      } finally { game.fx.superpositions.push(...sup); V.actif = true; game.fx.calme = calme; }
     };
     try {
       await essai({ zone: 'ecole', humain: false });
