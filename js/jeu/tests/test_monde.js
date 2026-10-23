@@ -301,6 +301,12 @@ export default function (jeu) {
     // etat / appliquer : portes à mi-course
     jeu.teleporter(2, xd, 0, zd); for (let i = 0; i < 20; i++) p.pas(PAS);
     const e1 = M.etat();
+    // (relecture : un verrou posé, puis l'état d'avant lui appliqué — le verrou levé, la porte pilotée à sa place, l'état rendu)
+    const iP = M.portes.indexOf(P), ordre = M.pilotees.map((q) => q.nom).join('|');
+    M.verrouiller('Si 0.1', true);
+    const sV = M.etat()[iP], verrou = !!(sV && sV.v === 1 && sV.k === 0 && !M.pilotees.includes(P));
+    M.appliquer(JSON.parse(JSON.stringify(e1)));
+    const leve = egal(M.etat(), e1) && !M.verrous.has('Si 0.1') && M.pilotees.map((q) => q.nom).join('|') === ordre;
     jeu.quitter('balade');
     await essai({ zone: 'rdc', prop: true, mannequins: [{ x: 13.4, y: 0, z: -5.6 }], bots: 1 });
     game.partie.monde.appliquer(JSON.parse(JSON.stringify(e1)));
@@ -319,9 +325,9 @@ export default function (jeu) {
     };
     const A = await course(), B = await course();
     const ouvre = (r) => r.k0 === 0 && r.k1 === 1 && r.off1 && r.k2 === 0 && !r.off2;
-    const ok = pilotee && ouvre(local) && ouvre(mannequin) && ouvre(bot) && mort.k1 === 0 && haut.k1 === 0 && egal(e1, e2) && offE && A.e === B.e && A.bouge > 0;
-    return { ok, attendu: 'pilotée ; Haythem (prop), un mannequin, un bot l’ouvrent et elle se referme ; ni un mort, ni un vivant au 1er ; etat = appliquer ; même graine → même empreinte, portes en mouvement',
-      obtenu: `pilotée ${pilotee} · Haythem ${JSON.stringify(local)} · mannequin ${JSON.stringify(mannequin)} · bot ${JSON.stringify(bot)} · mort ${mort.k1} · au 1er ${haut.k1} · état ${egal(e1, e2)} (off ${offE}) · ${A.e} / ${B.e}, ${A.bouge} relevés de portes à mi-course` };
+    const ok = pilotee && ouvre(local) && ouvre(mannequin) && ouvre(bot) && mort.k1 === 0 && haut.k1 === 0 && egal(e1, e2) && offE && verrou && leve && A.e === B.e && A.bouge > 0;
+    return { ok, attendu: 'pilotée ; Haythem (prop), un mannequin, un bot l’ouvrent et elle se referme ; ni un mort, ni un vivant au 1er ; etat = appliquer (verrou compris, dans les deux sens) ; même graine → même empreinte, portes en mouvement',
+      obtenu: `pilotée ${pilotee} · Haythem ${JSON.stringify(local)} · mannequin ${JSON.stringify(mannequin)} · bot ${JSON.stringify(bot)} · mort ${mort.k1} · au 1er ${haut.k1} · état ${egal(e1, e2)} (off ${offE}) · verrou posé ${verrou}, levé par l’état d’avant ${leve} · ${A.e} / ${B.e}, ${A.bouge} relevés de portes à mi-course` };
   }, { delai: 180 });
 
   // 7. LA VISIBILITÉ : six vues par la porte ouverte de la David Clark (pièce fermée du RDC) ; rien n'y manque (rendu avec et

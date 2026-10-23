@@ -381,6 +381,8 @@ export class MondePartie {
     const Mi = carte.miroirAccueil, vis = carte.visibilite;
     this._balade = { portes: Po && Po.instantane ? Po.instantane() : null, ascenseur: instantaneAscenseur(carte.chantier),
       miroir: Mi ? Mi.coupe : null, bornes: u.bounds, forcees: vis ? vis.forcees : null };
+    // (dedans dès que la balade est gardée : une exception plus bas laisse à sortir() de quoi tout rendre)
+    this._dedans = true;
     // LES PORTES
     this.inconnues = []; this.ecarts = []; this.regles.clear(); this.pilotees = []; this.verrous.clear();
     const F = [];
@@ -420,7 +422,6 @@ export class MondePartie {
     // LA RUBALISE
     this._poserRubans(0);
     if (this.rubalise && this.rubalise.count > 0) g.scene.add(this.rubalise);
-    this._dedans = true;
   }
 
   // ================================================================ LA SORTIE : l'état EXACT de la balade
@@ -489,10 +490,10 @@ export class MondePartie {
     const C = this.game.collisions, Po = this.carte.portes, avant = this.regles.get(P.nom), V = this.vantaux.get(P) || [];
     if (avant === 'ouverte' && r !== 'ouverte') { retirer(C, V); this._dansMonde = this._dansMonde.filter((f) => !V.includes(f)); }
     if (r === 'ouverte' && avant !== 'ouverte') { this._neuves.push(...ranger(C, V)); this._dansMonde.push(...V); }
-    const i = this.pilotees.indexOf(P);
-    if (r === 'auto' && i < 0) this.pilotees.push(P);
-    if (r !== 'auto' && i >= 0) this.pilotees.splice(i, 1);
     this.regles.set(P.nom, r);
+    // (les portes pilotées toujours dans l'ordre de la carte : un verrou levé ne met pas la porte en queue — l'ordre des
+    // événements 'porte' d'un pas reste celui d'une partie rejouée depuis son état)
+    this.pilotees = this.portes.filter((q) => this.regles.get(q.nom) === 'auto');
     if (r === 'ouverte') { P.sens = this._sens(P); Po.forcer(P, 1); } else if (r === 'fermee') Po.forcer(P, 0);
   }
 
@@ -561,7 +562,9 @@ export class MondePartie {
       }
     }
     R.count = n;
-    R.instanceMatrix.needsUpdate = true;
+    // (n'envoyer que les segments posés : les 1 024 matrices font 64 Ko à chaque image)
+    const A = R.instanceMatrix;
+    A.clearUpdateRanges(); A.addUpdateRange(0, n * 16); A.needsUpdate = true;
   }
 
   // ================================================================ L'ÉTAT (§ 4.7) : { i, k, sens } des portes automatiques
@@ -572,7 +575,9 @@ export class MondePartie {
     const L = this.portes;
     for (const s of e || []) {
       const P = L[s.i]; if (!P) continue;
-      if (s.v && !this.verrous.has(P.nom)) this.verrouiller(P.nom, true);
+      // (le verrou dans les deux sens : un état sans verrou lève celui d'aujourd'hui — sinon appliquer un état d'avant le
+      // verrou laissait la porte fermée, et etat() ne rendait plus l'état appliqué)
+      if (!!s.v !== this.verrous.has(P.nom)) this.verrouiller(P.nom, !!s.v);
       P.sens = s.sens; P.k = s.k;
       if (P.forme) P.forme.off = s.k > 0.02;
       P._kVu = -1;
