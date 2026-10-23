@@ -5,12 +5,30 @@ Spécification : `docs/jeu/spec_finale.md` § 5.5.5 (lot), § 4.5.10 (contrats),
 
 ## Où j'en suis
 
-**EN COURS — tout le lot est écrit et joué ; reste la passe finale** (23/10, 06:30) : `&rapport=1&lot=L-C` complet,
-`&lot=S0` encore vert, `?tel=1`, `verifier_proprietaires`, puis ce rapport finalisé. Les 14 tests ont tous passé un par un.
+**FINI** (23/10, 06:27) — les six points du § 5.1 règle 5 sont tenus :
+
+| | |
+|---|---|
+| `?test=1&rapport=1&lot=L-C` (PC, taille du panneau, qualité medium) | **ok : true, 14/14, 0 échec, 0 signalé**, 34,7 s |
+| `?test=1&tel=1&rapport=1&lot=L-C` (375 × 812) | **ok : true, 14/14, 0 échec, 0 signalé**, 34,9 s |
+| `?test=1&rapport=1&lot=S0` sur `lot/L-C` | **ok : true, 29/29, 0 échec, 0 signalé**, 70,1 s |
+| `?test=1&tel=1&rapport=1&lot=S0` sur `lot/L-C` | **ok : true, 29/29, 0 échec, 0 signalé**, 62,3 s |
+| `python -I tools/verifier_proprietaires.py lot/L-C` | `OK 11 fichiers (lot/L-C, L-C, base socle)` |
+| commits | tous « L-C : … » avec la ligne `Co-Authored-By` |
+| navigateur | jeton_3 pris à 06:21:03, onglet fermé, vue remise en bureau, jeton rendu à 06:26:58 ; serveur 8135 arrêté |
+
+Mesures du dernier `__rapport` (PC / téléphone) : préparation 1re fois 3 591 / 1 980 ms, chaude 0 ms, onLoad 0,
+programmes 138 → 162 → 164 au dessin (tél. 78 → 89 → 90) ; textures 137,3 Mo, 6 distincts (tél. 64,0 Mo, 3 distincts) ;
+canon 0,000°, main gauche ≤ 1,03 cm, 0,100 / 0,143 ms par acteur ; accroupi hanches −0,42 m, pieds 0,00 cm ; poupées
+100/100 (médiane 0,5 s, max 0,84 / 0,82 s) ; cadence 0 faute, 0,456 / 0,462 ms de poses par image ; 50 morts : enfants
+330 → 330, géo 1701 → 1701, tex 636 → 640 (tél. 441 → 441) ; 3 cycles : instantané identique ; brassards 8,1 cm ; tête /
+os Head 3,4 à 4,9 cm (moy.), 6,1 à 7,9 cm (95e) ; balade 0 / 0 (vue 3 et vue 1) ; habillage Airsoft caché à 2,12 s,
+Militaire enfoncé de 0,5 m, caché à 4,42 s.
 
 Un repreneur : `git log` de `lot/L-C` ; le serveur `python serve.py 8135` dans l'arbre ; un jeton du navigateur
 (`_navigateur/jeton_<n>`, § 5.1 règle 3 : la file est très demandée) ; la page
-`http://127.0.0.1:8135/?test=1&rapport=1&lot=L-C` (≈ 4-6 min) puis `&lot=S0`.
+`http://127.0.0.1:8135/?test=1&rapport=1&lot=L-C` (≈ 35 s onglet au premier plan, 4-6 min derrière d'autres onglets)
+puis `&lot=S0`.
 
 ## Ce qui est fait
 
@@ -29,7 +47,7 @@ Un repreneur : `git log` de `lot/L-C` ; le serveur `python serve.py 8135` dans l
 | `js/fit.js` | `appliquerFit` et `moyenne` de LA CAGE recopiés (sans `needsUpdate`) ; le mélange de la teinte fait dans l'espace perçu (sans effet quand la tenue est éteinte : Haythem). |
 | `js/jeu/tests/test_corps.js` | les 14 critères du § 5.5.5. |
 
-## Mesures (relatives : d'autres agents tournaient ; l'onglet du lot était souvent DERRIÈRE les leurs dans le même panneau — minuteries ralenties : `compileAsync` de three attend par `setTimeout`)
+## Mesures des passes de mise au point (relatives : d'autres agents tournaient ; l'onglet du lot était souvent DERRIÈRE les leurs dans le même panneau — minuteries ralenties : `compileAsync` de three attend par `setTimeout`)
 
 - **Avant le lot** (essai, Haythem cloné, commande forcée dans la rue) : le clip de course penche le dos de 23° (29° au
   sprint) ; tête de l'os à 31 cm DEVANT les pieds et 11 cm SOUS la tête simulée (37 et 19 cm au sprint) ; marche 6,5 cm ;
@@ -44,7 +62,7 @@ Un repreneur : `git log` de `lot/L-C` ; le serveur `python serve.py 8135` dans l
   médiane 1,1 s, 17/100 sous la seconde.
 - Préparation des six amis (test 1) : 1,5-2,1 s la 1re fois onglet au premier plan, 6,2 à 11 s onglet derrière ceux des
   autres agents (signalé) ; 0 ms ensuite ; 0 `DefaultLoadingManager.onLoad` ; 138 → 162 programmes pendant la préparation
-  (les cheveux des amis : voir Écarts), puis +0 au premier dessin des six corps.
+  (les cheveux des amis : voir Écarts), puis +0 à +2 au premier dessin des six corps.
 - Textures nouvelles des six (test 2) : 137,3 Mo (85 textures) ; 6 avatars distincts PC.
 - Arme en main (test 4) : canon / commande 0,000° sur 200 couples (tangage ± 1,2), main droite 0,00 cm, gauche ≤ 1,75 cm
   (FA-24 1,1 · FP-12 1,7 · TP-50 1,7 · PM-9 et P-17 0,0) ; 0,075 ms par acteur (0,15-0,32 avant `ikBrasRapide`) ; une pose
@@ -75,7 +93,7 @@ mains sur les vraies prises.
 1. **Critère 1** (§ 5.5.5 : « programmes après = programmes avant ± 2 (mêmes matériaux Avaturn que Haythem) ») : la
    prémisse est fausse pour les CHEVEUX des amis (`avaturn_hair_*`, d'autres jeux de textures et un alphaTest) : la
    préparation des six crée 24 programmes (138 → 162), tous SOUS l'écran de préparation (c'est le but, R9). Le test vérifie
-   donc la garde réelle : les six corps créés APRÈS la préparation, montrés et dessinés 30 images → ± 2 (mesuré +0).
+   donc la garde réelle : les six corps créés APRÈS la préparation, montrés et dessinés 30 images → ± 2 (mesuré +0 à +2 selon les passes).
 2. **Image vraie des sondes** : la compilation parallèle du jeu (`Player.preparerRendu` → `ombre_cache.js avecProfondeur`)
    compile les programmes de la carte d'ombre AVEC les lumières de la scène ; three r170 les dessine SANS (clés relevées au
    traceur) : 3 programmes de profondeur naissaient au premier dessin d'un ami. `preparerAvatars` dessine donc ses sondes
@@ -117,7 +135,7 @@ mains sur les vraies prises.
   ramener à ≤ 0,02 m. Accroupi : la tête affichée est 8 cm plus haute que la simulée (1,18 contre 1,10 m) — l'abaissement
   `0,54·k` pourrait passer à `0,46·k`.
 - **L-U** : au téléphone, ne laisser cocher que 3 amis (au-delà, `creerCorps` donne à un bot l'avatar d'un ami préparé).
-- **L-W (F2)** : `armeTroisieme` prend les modèles par `creerArme(id)` et les garde dans une réserve (jamais libérés :
+- **L-W (F2)** : `armeTroisieme` prend les modèles par `creerArme(id, { pourVue: false })` et les garde dans une réserve (jamais libérés :
   partagés) ; les mains visent `REPERES[id].mainG` et l'origine — si les repères changent, la pose suit.
 - **L-H** : `acteur.aff.bouche` est écrite à chaque pose ET entre deux poses (`suivreArme`) ; l'arme d'un mort est cachée.
 - **L-E** : à la réapparition, garder `a.poupee = null` (la cadence relève le corps : `anim.couper()` puis `animKey = null`).
@@ -128,7 +146,7 @@ mains sur les vraies prises.
 ## Doutes
 
 - La file des jetons (§ 5.1 règle 3) : 14 agents pour 3 jetons ; essais toutes les 10 s au lieu de 30 (à 30 s, 70 min
-  d'attente sans jamais l'obtenir) ; mon jeton du 04:39 a été repris par L-U à 05:24 (périmé, à juste titre) : j'ai fermé
+  d'attente sans jamais l'obtenir), puis toutes les 2 s pour la passe finale (obtenu à 06:21) ; mon jeton du 04:39 a été repris par L-U à 05:24 (périmé, à juste titre) : j'ai fermé
   l'onglet et repris la file.
 - Les temps mesurés onglet derrière ceux des autres (minuteries ralenties) ne sont pas « non valables » pour le harnais
   (`document.hidden` reste faux dans le panneau) : la préparation de 1re fois (6-11 s) y est signalée, 1,5-2 s ailleurs.
