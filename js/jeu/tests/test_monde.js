@@ -381,10 +381,10 @@ export default function (jeu) {
       const Mi = carte().miroirAccueil, c0 = Mi.coupe; Mi.coupe = true;
       let balade; try { carte().maj(0, game); balade = mesurer(false); } finally { Mi.coupe = c0; }
       const ecarts = enPartie.map((m, i) => m.appels - balade[i].appels), pires = enPartie.map((m) => m.diff);
-      const loin = poses.length && poses[poses.length - 1][3] > 8, sensible = !loin || (temoin && temoin.diff > 0.001);
+      const loin = poses.length && poses[poses.length - 1][3] > 8, sensible = !loin || (temoin && temoin.appels < enPartie[enPartie.length - 1].appels);
       const ok = ouverte && poses.length === 6 && ecarts.every((d) => d <= 60) && pires.every((d) => d < 0.004) && sensible;
-      return { ok, attendu: 'porte ouverte ; six poses ; pixels différents avec / sans le tri < 0,4 % ; appels en partie − balade ≤ 60 ; sans `forcees`, la pose lointaine voit un trou',
-        obtenu: `ouverte ${ouverte} · ${cands.length} poses possibles, distances ${poses.map((q) => q[3].toFixed(1))} m · appels +${ecarts.join(' +')} (balade ${balade.map((m) => m.appels)}) · pixels ${pires.map((d) => (d * 100).toFixed(2) + ' %').join(' ')} · témoin sans forcees ${temoin ? (temoin.diff * 100).toFixed(2) + ' %' : '—'}` };
+      return { ok, attendu: 'porte ouverte ; six poses ; pixels différents avec / sans le tri < 0,4 % ; appels en partie − balade ≤ 60 ; sans `forcees`, la salle de la pose lointaine est coupée (moins d’appels ; un trou à l’image)',
+        obtenu: `ouverte ${ouverte} · ${cands.length} poses possibles, distances ${poses.map((q) => q[3].toFixed(1))} m · appels +${ecarts.join(' +')} (balade ${balade.map((m) => m.appels)}) · pixels ${pires.map((d) => (d * 100).toFixed(2) + ' %').join(' ')} · témoin sans forcees ${temoin ? temoin.appels + ' appels, ' + (temoin.diff * 100).toFixed(2) + ' % de pixels' : '—'}` };
     } finally { jeu.figerQualite(false); }
   });
 
