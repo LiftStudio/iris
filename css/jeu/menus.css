@@ -26,7 +26,7 @@ body.en-jeu #menu-fondu { display: none; }
 .mj-xp { margin-top: 14px; }
 .mj-liste { margin: auto 0; padding: 3vh 0; display: flex; flex-direction: column; gap: 1px; align-items: flex-start; }
 .mj-b { position: relative; background: transparent; border: 0; border-radius: 4px; padding: 5px 26px 5px 18px; cursor: pointer; text-align: left;
-  color: rgba(242, 244, 248, 0.74); font: 400 clamp(26px, 5.4vh, 48px)/1.04 var(--head); letter-spacing: 0.07em;
+  color: rgba(242, 244, 248, 0.74); font: 400 clamp(26px, 5.4vh, 48px)/1.04 var(--head); letter-spacing: 0.07em; white-space: nowrap;
   transition: color 0.15s, transform 0.2s cubic-bezier(0.2, 0.9, 0.25, 1), text-shadow 0.2s;
   animation: mjEntree 0.5s cubic-bezier(0.2, 0.9, 0.25, 1) both; animation-delay: calc(var(--i, 0) * 45ms + 140ms); }
 .mj-b::before { content: ""; position: absolute; left: 0; top: 16%; bottom: 16%; width: 4px; border-radius: 2px; background: var(--accent);

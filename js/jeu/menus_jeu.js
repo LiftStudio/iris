@@ -82,12 +82,16 @@ const STAND_CLE = 'iris.stand.v1';
 
 // LA CAMÉRA DU MENU : trois plans de 12 s, un fondu au noir de 1,2 s à chaque coupe (0,6 s de chaque côté). Chaque plan
 // glisse de `de` à `a` (position de la caméra et point visé), lissé aux deux bouts. Positions relevées dans l'école le
-// 23/10 (jamais dans une forme, sous le plafond : test 3 de js/jeu/tests/test_menus.js).
+// 23/10 et regardées en 1280 × 720 (le sujet dans la moitié droite : la colonne du menu couvre la gauche) ; jamais dans
+// une forme, au moins 0,5 m au-dessus du sol, sous le plafond (360 positions : test 3 de js/jeu/tests/test_menus.js).
 export const DUREE_PLAN = 12, FONDU = 1.2;
 export const PLANS = [
-  { nom: 'le hall, vers la pile « iris »', de: { cam: [13.2, 1.62, -0.55], vise: [15.3, 1.35, -6.2] }, a: { cam: [14.45, 1.72, -1.85], vise: [15.05, 1.5, -6.2] } },
-  { nom: 'l’escalier principal', de: { cam: [5.6, 1.7, -6.2], vise: [1.8, 2.2, -9.4] }, a: { cam: [4.4, 1.95, -7.2], vise: [1.6, 2.9, -9.6] } },
-  { nom: 'la pause orange du 1er', de: { cam: [10.1, 5.05, -5.7], vise: [13.6, 4.15, -9.2] }, a: { cam: [11.3, 4.95, -6.2], vise: [13.9, 4.2, -9.3] } },
+  // le hall vers la pile « iris » : la pile et Haythem (au départ) à droite de l'image, le mur d'entrée sous le menu
+  { nom: 'le hall, vers la pile « iris »', de: { cam: [15.2, 1.7, -1.35], vise: [12.9, 1.45, -6.5] }, a: { cam: [14.15, 1.66, -1.55], vise: [12.7, 1.4, -6.4] } },
+  // le hall ouest : on s'approche des deux battants ouverts sur l'escalier principal
+  { nom: 'l’escalier principal', de: { cam: [6.0, 1.6, -6.4], vise: [2.6, 1.45, -9.5] }, a: { cam: [4.9, 1.6, -7.3], vise: [2.5, 1.55, -9.9] } },
+  // la pause orange du 1er, vue de l'est : le mur orange à droite, les distributeurs, les mange-debout
+  { nom: 'la pause orange du 1er', de: { cam: [13.0, 5.05, -5.7], vise: [9.0, 4.3, -9.3] }, a: { cam: [12.3, 4.95, -6.5], vise: [9.4, 4.25, -9.8] } },
 ];
 
 // les ASTUCES de l'écran PRÉPARATION (les touches du profil, d'après les réglages : actionKey)
