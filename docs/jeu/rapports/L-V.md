@@ -4,10 +4,12 @@ Branche `lot/L-V` (depuis `socle` = `socle-ok`, e06258f), arbre `C:/Users/hgami/
 
 ## Où j'en suis
 
-**EN COURS — étape 0 : lecture faite** (spec §§ 0-4, § 5.1, § 5.2, § 5.5.4 mot pour mot ; S0.md ; squelettes de
-`viewmodel.js`, `anim_vue.js`, `vue_fps.js`, `modeles_armes.js`, `armes.js` ; `banc/bras_fps.js`, `banc/armer.js` ;
-CoD § 6). Prochaine étape : `anim_vue.js` (pistes, Hermite), puis `viewmodel.js` (bras, IK, poses, ressorts), puis
-`tests/test_viewmodel.js`, puis le jeu en vrai dans le navigateur (jeton).
+**EN COURS — étape 2 : l'arme de vue tourne, `&rapport=1&lot=L-V` donne 15/15** (c8ca105, PC 1280 × 720, onglet en
+arrière-plan : images faites à la main). Reste : passe de réglage du RESSENTI (cadrage de la recharge, sprint, mains, couteau,
+pistolet) sur photos et en jouant ; `?tel=1` ; `&rapport=1&lot=S0` sur la branche ; `verifier_proprietaires` ; photos du
+rapport ; rapport final.
+Outils de session (non commités) : `…/scratchpad/lv/recepteur.py` (port 8234 : reçoit les photos du navigateur), la
+maquette des armes est DANS `js/jeu/tests/test_viewmodel.js` (`maquette`, `poserMaquettes`).
 
 ## Ce qui est fait
 
