@@ -157,6 +157,10 @@ export default function (jeu) {
     try {
       await lancer({ graine: 5, premierRole: 'chasseur' });
       const p = P(), loc = p.local, SP = p.aff.sonsProp, jL = SP.n;
+      // (relecture) au départ, Haythem chasseur regarde vers la porte de sa pièce : 2,5 m libres devant son œil (au 1er, il
+      // fixait le mur du palier à 1 m)
+      const eo = loc.oeil(new THREE.Vector3()), l0 = game.camYaw;
+      const libre = p.balistique.vue(eo.x, eo.y, eo.z, eo.x - Math.sin(l0) * 2.5, eo.y, eo.z - Math.cos(l0) * 2.5) && Math.abs(angle(l0 - loc.cmd.lacet)) < 1e-9;
       const E = ev(['tir']);
       jusqua('cachette');
       const ch = p.acteurs.filter((a) => a.role === 'chasseur'), pos0 = ch.map((a) => a.pos.clone());
@@ -187,7 +191,8 @@ export default function (jeu) {
       jeu.avancer(1.6);
       const temoin = SP.journal.filter((j) => j.n > j0).filter((j) => j.nom === 'frottement').length;
       E.fin();
-      res.push([`chasseurs déplacés ${bouges.join(', ')} m`, bouges.every((d) => d === 0)], [`${tirs} tir de chasseur`, tirs === 0],
+      res.push([`regard libre sur 2,5 m au départ ${libre}`, libre],
+        [`chasseurs déplacés ${bouges.join(', ')} m`, bouges.every((d) => d === 0)], [`${tirs} tir de chasseur`, tirs === 0],
         [`caméra ${dq.toExponential(1)} rad`, dq < 1e-6], [`panneau ${C1 ? 'chrono ' + r2(C1.chrono) + ', ' + C1.roles.length + ' rôles' : 'absent'}`, !!C1 && C1.chrono > 0 && C1.roles.length === 5],
         [`astuces ${C1 ? C1.astuces.length : 0} qui changent`, !!C1 && C1.astuces.length >= 2 && !!C2 && a1 !== a2],
         [`${recus} sons de props reçus par un cerveau de chasseur`, recus === 0], [`sons tus ${frottes}, joués ${joues}`, frottes > 0 && joues === 0],

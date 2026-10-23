@@ -281,12 +281,7 @@ export class PartieProp extends Partie {
     const C = [], P = [];
     for (const a of this.acteurs) ((a.local ? roleH === 'chasseur' : chasse.has(a)) ? C : P).push(a);
     const dC = departs(this.zone, 'chasseurs', Math.max(1, C.length), this.rng), dP = this._lieuxProps(P.length);
-    // (les chasseurs tournés vers le cœur de la zone — les lieux d'où partent les props —, pas vers le mur du palier)
-    const L = pointsDe(this.zone);
-    if (L.length) {
-      const cx = L.reduce((s, q) => s + q.x, 0) / L.length, cz = L.reduce((s, q) => s + q.z, 0) / L.length;
-      for (const d of dC) if (Math.hypot(cx - d.x, cz - d.z) > 0.5) d.lacet = Math.atan2(-(cx - d.x), -(cz - d.z));
-    }
+    for (const d of dC) this._regardDepart(d);
     C.forEach((a, k) => this._poserRole(a, 'chasseur', dC[k], { coequipier: !!loc && roleH === 'chasseur' && !a.local }));
     P.forEach((a, k) => this._poserRole(a, 'prop', dP[k]));
     // Haythem : le regard posé à son départ (sa vue et ses touches suivent son rôle à l'image suivante : _suivreRole)
@@ -301,6 +296,37 @@ export class PartieProp extends Partie {
     this._majGeles();
     const n = `MANCHE ${this.manche} / ${this.nManches}`;
     this.annonce(!loc ? n : roleH === 'prop' ? `${n} · TU ES PROP — CACHE-TOI !` : `${n} · TU ES CHASSEUR — ILS SE CACHENT`, 'info');
+  }
+  // LE REGARD D'UN CHASSEUR AU DÉPART : vers la porte qui mène de sa pièce dans la zone (au 1er, celle de la pause orange,
+  // à 3 m du palier est), à défaut vers le cœur de la zone (le milieu des lieux d'où partent les props) ; puis, à moins de
+  // 90° de là, le cap qui voit le plus loin à hauteur d'œil (6 m au plus ; à égalité, le plus près de la porte) — au 1er,
+  // la porte est au bout d'un coude et le chasseur lâché fixait le mur du palier à 1 m (vu en jouant, à la relecture)
+  _regardDepart(d) {
+    const c = this._cibleDepart(d); if (!c || Math.hypot(c.x - d.x, c.z - d.z) <= 0.5) return;
+    const B = this.balistique, y = d.y + 1.6, l0 = Math.atan2(-(c.x - d.x), -(c.z - d.z));
+    let best = l0, bv = -1;
+    for (const k of [0, 1, -1, 2, -2, 3, -3, 4, -4]) {
+      const l = l0 + k * Math.PI / 8, fx = -Math.sin(l), fz = -Math.cos(l);
+      let v = 0; while (v < 6 && B.vue(d.x, y, d.z, d.x + fx * (v + 0.5), y, d.z + fz * (v + 0.5))) v += 0.5;
+      if (v > bv + 1e-9) { bv = v; best = l; }
+    }
+    d.lacet = angle(best);
+  }
+  // (la porte de sa pièce vers une pièce de la zone, la plus proche ; sinon le cœur de la zone)
+  _cibleDepart(d) {
+    const Lu = this.game.carte && this.game.carte.lumieres, Z = Lu && Lu.zoneEn ? Lu.zoneEn(d.x, d.z, d.y + 0.1) : null, ici = Z ? Z.id : null;
+    const pieces = piecesDe(this.zone);
+    let c = null, bd = Infinity;
+    for (const P of Pilotage.PASSAGES || []) {
+      if (!ici || (P.a !== ici && P.b !== ici) || Math.abs(P.y - d.y) > 1.5 || !pieces.has(P.a === ici ? P.b : P.a)) continue;
+      const k = Math.hypot(P.x - d.x, P.z - d.z);
+      if (k > 0.5 && k < bd) { bd = k; c = P; }
+    }
+    if (!c) {
+      const L = pointsDe(this.zone);
+      if (L.length) c = { x: L.reduce((s, q) => s + q.x, 0) / L.length, z: L.reduce((s, q) => s + q.z, 0) / L.length };
+    }
+    return c;
   }
   // une durée de phase écoulée (comptée en pas : phaseT est une somme de pas de 1/120 s)
   _fini() { return Math.round(this.phaseT / PAS) >= Math.round(this.phaseDuree / PAS); }
