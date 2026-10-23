@@ -123,10 +123,13 @@ export function retirerTeinte(player) {
 
 // À LA PRÉPARATION (js/jeu/avatars.js preparerAvatars) : les matériaux des brassards de toutes les équipes, compilés
 // (un programme partagé : aucune compilation au premier corps teint)
-export async function preparerTeintes(game) {
+let _teintesPretes = null;
+export function preparerTeintes(game) { return _teintesPretes || (_teintesPretes = compilerTeintes(game)); }
+async function compilerTeintes(game) {
   const g = new THREE.Group();
   for (const eq of Object.keys(EQUIPES)) {
     const m = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.08, 6), matBrassard(eq));
+    m.receiveShadow = true; m.castShadow = false;               // (comme les vrais : receiveShadow entre dans le programme)
     g.add(m);
   }
   try { if (game && game._compilerAsync) await Promise.race([game._compilerAsync(g), new Promise((r) => setTimeout(r, 4000))]); }

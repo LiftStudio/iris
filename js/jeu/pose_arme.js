@@ -27,7 +27,7 @@ import { ARMES } from './armes.js';
 export const POSE_3E = {
   dos: { droit: 0.05, droitSprint: 0.14, penche: 0.25 },       // le dos (rad vers l'avant), le penché du groupe gardé
   tangage: { part: [0.10, 0.15, 0.25], max: 0.6 },                // part du tangage prise par Spine / Spine1 / Spine2
-  troisQuarts: { fusil: 0.42, pistolet: 0.08 },                   // le buste tourné vers la droite (rad)
+  troisQuarts: { fusil: 0.55, pistolet: 0.08 },                   // le buste tourné vers la droite (rad)
   creux: 0.30,                                                    // le creux de l'épaule : de RightArm vers le milieu
   pistolet: { devant: 0.36, bas: 0.10, droite: 0.0 },             // la poignée du pistolet depuis le milieu des épaules (× e)
   prise: { doigts: 0.55, paume: 0.022 },                          // le creux de la paume : part de la main, hors de la paume (m × e)
@@ -91,8 +91,9 @@ function armePour(acteur, id) {
 const scene = (acteur) => (acteur.partie && acteur.partie.game ? acteur.partie.game.scene : acteur.joueur.scene);
 
 // À LA PRÉPARATION (js/jeu/avatars.js) : un modèle de chaque arme créé et ses programmes compilés, ombres comprises
-export async function preparerArmes3e(game) {
-  if (!game) return;
+let _armesPretes = null;
+export function preparerArmes3e(game) { return game ? _armesPretes || (_armesPretes = compilerArmes3e(game)) : Promise.resolve(); }
+async function compilerArmes3e(game) {
   const g = new THREE.Group(), pris = [];
   for (const id of ARMES_3E) { const a = prendre(id); a.matrixAutoUpdate = true; a.position.set(0, -50, 0); g.add(a); pris.push(a); }
   g.updateMatrixWorld(true);
@@ -117,17 +118,18 @@ function etatPose(acteur) {
 }
 
 // le creux de la paume d'une main (monde) : la mesure des « mains sur les prises »
+const _hw = new THREE.Vector3(), _hm = new THREE.Vector3(), _hf = new THREE.Vector3(), _hn = new THREE.Vector3();
 export function priseMain(A, cote, e, out) {
   const B = A.bones;
-  B[cote + 'Hand'].getWorldPosition(_w);
-  A.repereMain(cote, _w, _x, _n);
-  const L = _w.distanceTo(B[cote + 'HandMiddle1'].getWorldPosition(_y));
-  return out.copy(_w).addScaledVector(_x, POSE_3E.prise.doigts * L).addScaledVector(_n, POSE_3E.prise.paume * e);
+  B[cote + 'Hand'].getWorldPosition(_hw);
+  A.repereMain(cote, _hw, _hf, _hn);
+  const L = _hw.distanceTo(B[cote + 'HandMiddle1'].getWorldPosition(_hm));
+  return out.copy(_hw).addScaledVector(_hf, POSE_3E.prise.doigts * L).addScaledVector(_hn, POSE_3E.prise.paume * e);
 }
 // la main sur une prise : le poignet visé pour que le creux de la paume y tombe, doigts `fd`, paume `nd`, coude vers `pole`
 function mainSur(A, cote, prise, fd, nd, pole, plis, k, e) {
   const B = A.bones;
-  const L = B[cote + 'Hand'].getWorldPosition(_w).distanceTo(B[cote + 'HandMiddle1'].getWorldPosition(_y));
+  const L = B[cote + 'Hand'].getWorldPosition(_hw).distanceTo(B[cote + 'HandMiddle1'].getWorldPosition(_hm));
   _fd.copy(fd).normalize(); _nd.copy(nd).addScaledVector(_fd, -nd.dot(_fd)).normalize();
   _E.copy(prise).addScaledVector(_fd, -POSE_3E.prise.doigts * L).addScaledVector(_nd, -POSE_3E.prise.paume * e);
   A.ikBras(cote, _E, _fd, _nd, pole, k);
@@ -251,6 +253,28 @@ export function poserArme(acteur, dt) {
     _G.addScaledVector(_u, -0.20 * k * e).addScaledVector(_f, -0.06 * k * e);
     _q2.setFromEuler(_eu.set(-0.85 * k, 0.25 * k, 0.2 * k)); _q.multiply(_q2);
   }
+  // À PORTÉE DE BRAS : visée très basse ou très haute, un fusil épaulé met son garde-main à 0,6 m de l'épaule gauche (le
+  // bras en fait 0,48) ; on fait alors glisser l'arme vers soi le long de son axe (la crosse quitte l'épaule : sous
+  // l'aisselle en visant haut, au-dessus en visant bas, comme on le fait), juste assez pour que chaque main tienne sa prise
+  _z.set(0, 0, -1).applyQuaternion(_q);
+  const glisse = (epaule, cible, portee) => {
+    _D.subVectors(cible, epaule);
+    const dz = _D.dot(_z), d2 = _D.lengthSq(), r = portee;
+    if (d2 <= r * r) return 0;
+    const disc = dz * dz - d2 + r * r;
+    return Math.max(0, disc >= 0 ? dz - Math.sqrt(disc) : dz);
+  };
+  const portee = (c) => { const L = S.portees || (S.portees = {}); if (!(L[c] > 0) || L._A !== A) { L._A = A; L[c] = B[c + 'Arm'].getWorldPosition(_w).distanceTo(B[c + 'ForeArm'].getWorldPosition(_hm)) + _hm.distanceTo(B[c + 'Hand'].getWorldPosition(_hw)); } return L[c] * 0.97; };
+  {
+    const mgL = R.mainG || [0, 0, 0];
+    // (le poignet gauche visé : la prise, moins la main — 8 cm de marge comptés pour elle)
+    _P.set(mgL[0], mgL[1], mgL[2]).multiplyScalar(e).applyQuaternion(_q).add(_G);
+    B.LeftArm.getWorldPosition(_a);
+    const sG = glisse(_a, _P, portee('Left') + 0.06 * e), sD = glisse(_b, _G, portee('Right') + 0.06 * e);
+    const sl = Math.max(sG, sD);
+    if (sl > 0) _G.addScaledVector(_z, -sl);
+    S.glisse = sl;
+  }
   _s.setScalar(e);
   arme.matrix.compose(_G, _q, _s);
   arme.matrixWorld.copy(arme.matrix); arme.matrixWorldNeedsUpdate = false;
@@ -315,6 +339,9 @@ export function suivreArme(acteur, visible) {
   g.matrix.multiplyMatrices(acteur.joueur.mesh.matrixWorld, S.rel);
   g.matrixWorld.copy(g.matrix);
   for (const c of g.children) c.updateMatrixWorld(true);
+  // (la bouche suit aussi : les éclairs d'un bot lointain partent de son arme, pas d'où elle était à sa dernière pose)
+  const R = REPERES[g.userData.arme3e], o = acteur.aff.bouche;
+  if (R && R.bouche && o) { _P.set(R.bouche[0], R.bouche[1], R.bouche[2]).applyMatrix4(g.matrix); o.x = _P.x; o.y = _P.y; o.z = _P.z; }
 }
 // l'ombre de l'arme (celle du corps : même niveau que la caméra)
 export function ombreArme3e(acteur, oui) { const g = acteur.aff && acteur.aff.arme3e; if (g) ombreArme(g, !!oui); }

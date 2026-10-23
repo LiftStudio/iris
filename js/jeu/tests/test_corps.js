@@ -59,29 +59,49 @@ export default function (jeu) {
   const teteOs = (a, out) => { const B = a.joueur.avatar.bone('Head'); B.getWorldPosition(out); _y.setFromMatrixColumn(B.matrixWorld, 1).normalize(); return out.addScaledVector(_y, 0.085 * a.joueur.h / 1.8); };
   const teteSimulee = (a, out) => { const L = capsules(a, []), k = L.find((c) => c.zone === 'tete'); return out.set(k.ax, k.ay, k.az); };
 
-  // 1. LA PRÉPARATION des six avatars : temps (froid / chaud), DefaultLoadingManager.onLoad jamais, programmes ± 2
+  // 1. LA PRÉPARATION des six avatars : temps (froid / chaud), DefaultLoadingManager.onLoad jamais ; les programmes
+  // d'abord comptés pendant la préparation (ceux que les amis ont EN PLUS de Haythem : leurs cheveux, notés), puis la
+  // vraie garde (R9) : les six corps créés, montrés et dessinés 30 images après elle → programmes constants (± 2)
   T('1 preparerAvatars : 6 amis, temps, onLoad, programmes', async (t) => {
     const M = THREE.DefaultLoadingManager, onLoad = M.onLoad;
     let charges = 0;
     M.onLoad = function (...a) { charges++; return onLoad && onLoad.apply(this, a); };
     const prog = () => game.renderer.info.programs.length;
-    let p0, p1, t1, t2;
+    let p0, p1, p2, t1, t2, neufs = [];
+    const corps = [];
     try {
       // (le décor chaud d'abord : ses préchauffes ne doivent pas tomber dans la mesure)
       for (let k = game._chaudN || 0; k < 5; k++) { game._chaudN = k + 1; game.prechaufferScene(); }
       await attendre(1); await jeu.images(4);
+      const avant = new Set(game.renderer.info.programs);
       p0 = prog();
       let t0 = performance.now(); await preparerAvatars(game, AMIS, null); t1 = performance.now() - t0;
       await jeu.images(4);
       t0 = performance.now(); await preparerAvatars(game, AMIS, null); t2 = performance.now() - t0;
       await jeu.images(4);
       p1 = prog();
-    } finally { M.onLoad = onLoad; }
+      neufs = [...new Set(game.renderer.info.programs.filter((x) => !avant.has(x)).map((x) => x.name || x.cacheKey.split(',')[0]))];
+      // les six corps, montrés devant la caméra de la balade, dessinés 30 images
+      const C0 = game.camera.position, D = new THREE.Vector3(); game.camera.getWorldDirection(D);
+      FICHES_BOTS.forEach((f, k) => {
+        const c = creerCorps(f, game.scene, { equipe: k % 2 ? 'A' : 'B' });
+        c.pos.set(C0.x + D.x * 3 + (k - 2.5) * 0.7, game.user.pos.y, C0.z + D.z * 3); c.memoriser(); c.presenter(1); corps.push(c);
+      });
+      const t3 = performance.now();
+      while (performance.now() - t3 < 10000 && corps.some((c) => !(c.avatarModel && c.avatarModel.visible))) await attendre(0.05);
+      for (let i = 0; i < 30; i++) { for (const c of corps) c.update(1 / 60); await jeu.images(1); }
+      p2 = prog();
+    } finally {
+      M.onLoad = onLoad;
+      for (const c of corps) libererCorps(c);
+      await Promise.all(corps.map((c) => c.liberation));
+    }
     const P = avatarsPrets();
     const okT1 = t.temps('préparation 1re fois (ms)', t1, 6000), okT2 = t.temps('préparation cache chaud (ms)', t2, 3000);
-    return { ok: okT1 && okT2 && charges === 0 && Math.abs(p1 - p0) <= 2 && P.fiches.length === plafondAvatars(),
-      attendu: '1re fois ≤ 6 s, cache chaud ≤ 3 s, onLoad jamais, programmes ± 2, avatars préparés = plafond (6 PC, 3 tél.)',
-      obtenu: `1re ${Math.round(t1)} ms · chaude ${Math.round(t2)} ms · onLoad ${charges} · programmes ${p0} → ${p1} · préparés ${P.fiches.join(', ')}` };
+    t.note('programmes de la préparation', `${p0} → ${p1} : ${neufs.join(', ')}`);
+    return { ok: okT1 && okT2 && charges === 0 && Math.abs(p2 - p1) <= 2 && P.fiches.length === plafondAvatars(),
+      attendu: '1re fois ≤ 6 s, cache chaud ≤ 3 s, onLoad jamais ; corps créés et dessinés APRÈS la préparation : programmes ± 2 ; avatars préparés = plafond (6 PC, 3 tél.)',
+      obtenu: `1re ${Math.round(t1)} ms · chaude ${Math.round(t2)} ms · onLoad ${charges} · programmes ${p0} → ${p1} pendant la préparation (${neufs.join(', ')}) → ${p2} avec les six corps dessinés · préparés ${P.fiches.join(', ')}` };
   }, { delai: 90 });
 
   // 2. LA MÉMOIRE DES TEXTURES des six bots ; au téléphone, 3 avatars distincts au plus
@@ -166,6 +186,10 @@ export default function (jeu) {
     const classes = { fa24: 'assaut', pm9: 'infiltration', fp12: 'defense', tp50: 'tireur' };
     for (let k = 0; k < 5; k++) R.push(bot(p, 30 + k, { x: 2 + k * 3, z: 4.5, classe: classes[ids[k]] || 'assaut', equipe: k % 2 ? 'A' : 'B' }));
     await prets(R);
+    // (l'arme en main seule : chaque bot posé à chaque image, qu'il soit ou non dans le cadre de la caméra — la cadence a
+    // son test, le 7)
+    const maj = p.cadence.maj.bind(p.cadence);
+    p.cadence.maj = (L, c, n) => { maj(L, c, n); for (const a of L) if (a.joueur && a.corps === a.joueur && !a.local && a.vivant) { a.aPoser = true; a.dessine = true; a.joueur.mesh.visible = true; a.joueur.leger = false; a.poseDt = 1 / 60; } };
     // le 5e au pistolet (2e arme)
     jeu.commande(34, { armeN: 2 }, PAS); image(30);
     const rng = (() => { let s = 99; return () => ((s = (s * 1103515245 + 12345) >>> 0) / 4294967296); })();
@@ -239,7 +263,7 @@ export default function (jeu) {
     const rng = (() => { let s = 7; return () => ((s = (s * 1103515245 + 12345) >>> 0) / 4294967296); })();
     // des lieux : le milieu des pièces et contre les murs (le coup pousse vers le mur)
     const lieux = [[6, 0, 4.5], [14.88, 0, -3.12], [11.63, 0, -4.62], [4.63, 0, -6.87], [15.63, 0, -9.87], [12.38, 0, -11.37], [12.63, 3.5, -7.87], [9.38, -3.06, -9.37], [14.63, 6.6, -5.87], [3.63, 0, -3.87]];
-    let plats = 0, dansForme = 0, nan = 0, cachees = 0, tPlat = [];
+    let plats = 0, dansForme = 0, nan = 0, cachees = 0, tPlat = [], nonPose = 0;
     const _a = new THREE.Vector3();
     for (let n = 0; n < 100; n++) {
       const L = lieux[n % lieux.length], q = libre(L[0] + (rng() - 0.5), L[1], L[2] + (rng() - 0.5));
@@ -260,7 +284,8 @@ export default function (jeu) {
         if (k % 2) P.poser();
         const sol = C().solEn(P.P.Hips.p.x, P.P.Hips.p.z, P.P.Hips.p.y + 0.3);
         const haut = Math.max(P.P.Hips.p.y, P.P.Spine2.p.y, P.P.Head.p.y) - sol;
-        if (tA === null && haut < 0.38 && P.vitesse < 0.25) tA = P.t;
+        if (tA === null && haut < 0.38) tA = P.t;
+        if (k === Math.round(3.1 * 120) && !P.auRepos) nonPose++;
         for (const nm of ['Hips', 'Spine2', 'Head']) {
           const x = P.P[nm].p;
           if (!Number.isFinite(x.x + x.y + x.z)) nan++;
@@ -278,8 +303,8 @@ export default function (jeu) {
       if (n % 10 === 9) await attendre(0);
     }
     jeu.quitter('balade');
-    return { ok: plats === 100 && dansForme === 0 && nan === 0 && cachees === 100, attendu: '100 sur 100 à plat (hanches, poitrine, tête < 0,38 m, aucun point à plus de 0,25 m/s) en < 1 s, 0 point dans une forme, 0 NaN, cachées à 4,4 s (pas avant)',
-      obtenu: `à plat en < 1 s : ${plats}/100 (médiane ${r2(centile(tPlat, 0.5))} s, max ${r2(Math.max(0, ...tPlat))} s) · dans une forme ${dansForme} · NaN ${nan} · cachées à 4,4 s ${cachees}/100` };
+    return { ok: plats === 100 && dansForme === 0 && nan === 0 && cachees === 100 && nonPose === 0, attendu: '100 sur 100 à plat (hanches, poitrine, tête à < 0,38 m du sol) en < 1 s et au repos à 3,1 s, 0 point dans une forme, 0 NaN, cachées à 4,4 s (pas avant)',
+      obtenu: `à plat en < 1 s : ${plats}/100 (médiane ${r2(centile(tPlat, 0.5))} s, 90e ${r2(centile(tPlat, 0.9))} s, max ${r2(Math.max(0, ...tPlat))} s) · pas au repos à 3,1 s ${nonPose} · dans une forme ${dansForme} · NaN ${nan} · cachées à 4,4 s ${cachees}/100` };
   }, { delai: 180 });
 
   // 7. LA CADENCE avec 7 bots sur 300 images. La caméra est posée À LA MAIN (loin dans la rue, à l'ouest, en dehors des

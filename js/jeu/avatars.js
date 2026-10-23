@@ -10,7 +10,8 @@
 // pleine taille, carte des personnages § 4.6) ; Haythem cloné (aucun ami coché) porte SON modèle, déjà chargé : zéro octet.
 //
 // LA PRÉPARATION (écran PRÉPARATION, Partie.preparer) : un corps SONDE par avatar, jamais montré, qui charge le GLB,
-// recible les clips et compile ses programmes (Player.preparerRendu), puis est rendu. Un avatar PAR GABARIT D'ABORD (le
+// recible les clips et compile ses programmes (Player.preparerRendu), puis est gardé hors de la scène pour la session
+// (ses matériaux tiennent ces programmes en vie ; une partie suivante n'a plus rien à préparer). Un avatar PAR GABARIT D'ABORD (le
 // 1er d'un gabarit recible les 24 clips, ≈ 300 ms ; les suivants les copient du cache de js/anim.js, 4 ms : lancés
 // ensemble, deux avatars d'un même gabarit les recibleraient deux fois), les autres ensuite. Au plus 6 avatars distincts,
 // 3 au téléphone (LIMITES) : un bot dont l'ami n'est pas préparé porte un des avatars préparés. Ensuite, 28 ms par corps
@@ -51,22 +52,30 @@ function definition(f) {
   return { ...HAYTHEM, id: f.id, name: f.nom, height: f.height, modelHeight: f.modelHeight, spd: f.spd, model: f.model,
     color1: f.color1, color2: f.color2, skin: f.skin, discret: true };
 }
-// un corps SONDE : chargé, reciblé, compilé, jamais montré, rendu ensuite (sa variante transparente compilée avec)
-async function sonder(game, f) {
+// LES SONDES : un corps par avatar, chargé, reciblé, compilé (sa variante transparente avec), puis RETIRÉ DE LA SCÈNE mais
+// GARDÉ pour la session — jamais montré. Ses matériaux tiennent ainsi leurs programmes en vie : three détruit un programme
+// quand plus aucun matériau ne s'en sert (WebGLPrograms.releaseProgram) ; une sonde rendue aurait emporté la variante
+// transparente (Haythem ne l'a que s'il a frôlé la caméra en balade, js/game.js _fantome) et tout programme propre à un
+// avatar d'ami, recompilés ensuite à la première poupée qui s'efface. Une préparation suivante ne refait rien (≈ 0 ms).
+const SONDES = new Map();                                      // modèle → Player sonde (hors de la scène)
+function sonder(game, f) {
+  if (!SONDES.has(f.model)) SONDES.set(f.model, preparerSonde(game, f));
+  return SONDES.get(f.model);
+}
+async function preparerSonde(game, f) {
   const p = new Player(definition(f), game.scene);
   p.mesh.visible = false;                                      // (jamais à l'image : seuls ses programmes comptent)
-  try {
-    for (let i = 0; i < 300 && !p._pretAvatar && !p.body.visible; i++) await attendre(0.02);   // le GLB lu (6 s au plus)
-    if (p._pretAvatar) await Promise.race([p._pretAvatar, attendre(8)]);
-    for (let i = 0; i < 100 && p.avatarModel && !p.anim; i++) await attendre(0.02);              // les clips reciblés
-    // la variante transparente (l'effacement Airsoft) : compilée une fois, rendue opaque aussitôt (sinon elle se compilerait
-    // à la première poupée qui s'efface — une image figée en pleine manche)
-    if (p.avatarModel && game._compilerAsync) {
-      p.avatarModel.visible = true;
-      opaciteCorps(p, 0.5);
-      try { await Promise.race([game._compilerAsync(p.avatarModel), attendre(8)]); } finally { opaciteCorps(p, 1); }
-    }
-  } finally { libererCorps(p); }
+  for (let i = 0; i < 300 && !p._pretAvatar && !p.body.visible; i++) await attendre(0.02);   // le GLB lu (6 s au plus)
+  if (p._pretAvatar) await Promise.race([p._pretAvatar, attendre(8)]);
+  for (let i = 0; i < 100 && p.avatarModel && !p.anim; i++) await attendre(0.02);              // les clips reciblés
+  // la variante transparente (l'effacement Airsoft) : compilée une fois, la sonde rendue opaque aussitôt
+  if (p.avatarModel && game._compilerAsync) {
+    p.avatarModel.visible = true;
+    opaciteCorps(p, 0.5);
+    try { await Promise.race([game._compilerAsync(p.avatarModel), attendre(8)]); } finally { opaciteCorps(p, 1); }
+  }
+  if (p.mesh.parent) p.mesh.parent.remove(p.mesh);
+  return p;
 }
 
 // LES AVATARS D'UNE PARTIE, prêts avant l'entrée (écran PRÉPARATION) : `ids`, les amis cochés (FICHES_BOTS), dans l'ordre ;
