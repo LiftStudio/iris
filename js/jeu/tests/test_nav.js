@@ -174,7 +174,12 @@ export default function (jeu) {
 
   // ---------------------------------------------------------------- 6. verifierBots
   T('6 verifierBots 180 s, 8 errants, portes ouvertes : 0 hors monde / sous le sol / dans un mur / traversée, ≤ 1 coincé et ≤ 1 secours par 10 min-bot, toutes les pièces', async (t) => {
-    const N = await humains(), atteintes = new Set(); for (let i = 0; i < N.nb; i++) if (N.zone[i] !== 255) atteintes.add(N.zone[i]);
+    // (F2 : avec L-M, une partie restreint le graphe aux pièces PERMISES de sa zone et de son mode — l'essai suit la table du
+    // combat : les toilettes, le PMR, le local et le service, portes fermées, n'y sont plus — : les pièces attendues sont celles
+    // des nœuds permis du graphe de l'essai, 39 de 44)
+    await jeu.lancer('essai', { graine: 3, mannequins: [], bots: 0, humain: false });
+    const N = game.partie.nav, atteintes = new Set(); for (let i = 0; i < N.nb; i++) if (N.zone[i] !== 255 && N.permis(i)) atteintes.add(N.zone[i]);
+    jeu.quitter('balade');
     const ouvre = (e) => { if (e.detail.etat === 'entree' && game.partie) ouvrirPortes(game.partie); };
     document.addEventListener('iris-partie', ouvre);
     let r;
@@ -184,7 +189,7 @@ export default function (jeu) {
     const ok = !r.horsMonde.length && !r.sousLeSol.length && !r.dansUnMur.length && !r.traverseMurs.length && r.coinces.length <= max && r.teleportsSecours <= max &&
       r.zonesVisitees >= atteintes.size;
     t.note('L-D verifierBots ms', Math.round(performance.now() - t0));
-    return { ok, attendu: `0 / 0 / 0 / 0, coincés ≤ ${Math.floor(max)}, secours ≤ ${Math.floor(max)}, ${atteintes.size} pièces atteignables visitées (47 moins e1bureau, e103, e104 : derrière des portes fermées)`,
+    return { ok, attendu: `0 / 0 / 0 / 0, coincés ≤ ${Math.floor(max)}, secours ≤ ${Math.floor(max)}, ${atteintes.size} pièces permises visitées (47 moins e1bureau, e103, e104 derrière des portes fermées, et les cinq pièces fermées de la table du combat)`,
       obtenu: `hors monde ${r.horsMonde.length}, sous le sol ${r.sousLeSol.length}, mur ${r.dansUnMur.length}, traversées ${r.traverseMurs.length}, coincés ${r.coinces.length}, secours ${r.teleportsSecours}, pièces ${r.zonesVisitees}` };
   }, { delai: 300 });
 
