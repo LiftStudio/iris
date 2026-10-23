@@ -357,7 +357,9 @@ export class Effets {
     mAnn.name = 'effets : anneaux';
     const mFum = instancier(new THREE.MeshBasicMaterial({ map: tFum, transparent: true, depthWrite: false, fog: false, side: THREE.DoubleSide, forceSinglePass: true }), 0.5);
     mFum.name = 'effets : fumées';
-    const mMet = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.85, roughness: 0.38 }); mMet.name = 'effets : laiton et grenades';
+    // (métal à demi : vu au navigateur le 23/10, à 0,85 les douilles ne prenaient que le reflet du décor et passaient pour des
+    // bâtonnets de bois brun ; à 0,5 le laiton garde sa couleur à la lumière de la pièce)
+    const mMet = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.5, roughness: 0.32 }); mMet.name = 'effets : laiton et grenades';
     const mCib = new THREE.MeshStandardMaterial({ map: tCib, side: THREE.DoubleSide, roughness: 0.95, metalness: 0 }); mCib.name = 'effets : cibles du stand';
     const plan = () => new THREE.PlaneGeometry(1, 1);
     const P = {
