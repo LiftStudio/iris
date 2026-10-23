@@ -639,6 +639,9 @@ export class MenuJeu {
     });
     f.querySelector('.fj-chiffres').innerHTML = B.chiffres.map(([n, v]) => `<div><b>${esc(v)}</b><span>${esc(n)}</span></div>`).join('');
     f.hidden = false;
+    // (la partie finie, GELÉE sous son écran : le pointeur que js/jeu/index.js rend à la fin déclencherait sinon la pause
+    // par-dessus — game.js met en pause sur « iris-pointeur » sans capture —, et rien n'a plus à avancer)
+    if (p) this.game.paused = true;
     clearTimeout(this._tFin);
     if (resultat && resultat.immediat) this._montrerBilan();
     else this._tFin = setTimeout(() => this._montrerBilan(), 2500);

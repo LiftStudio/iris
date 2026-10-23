@@ -310,7 +310,7 @@ export default function (jeu) {
     // ÉCHAP sur l'écran de fin : pas de pause par-dessus
     window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', bubbles: true })); window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape', bubbles: true }));
     game.frame(1 / 60);
-    res.push(['ÉCHAP : pas de pause', !game.paused && !vu($('#overlay'))]);
+    res.push(['ÉCHAP : pas de pause par-dessus (la partie gelée sous l’écran de fin)', !vu($('#overlay')) && game.paused && vu(F)]);
     // REJOUER
     const o1 = { ...p.opts };
     $('[data-act="rejouer"]', F).click();
