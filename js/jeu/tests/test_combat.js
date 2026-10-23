@@ -544,10 +544,13 @@ export default function (jeu) {
     }
     let err = null;
     try { jeu.avancer(10); await jeu.images(10); } catch (e) { err = String(e); }
+    // (relecture : sa propre frag aux pieds ne tue pas Haythem — il n'y a pas de réapparition au stand)
+    const h = p.local; p.grenades.lancer(h, 'frag', 0.05); jeu.avancer(0.3);
+    const vivant = h.vivant && h.vie === h.vieMax;
     const nC = p.cibles.length;
     jeu.quitter('balade');
-    return { ok: !F.length && !err && nC === STAND.cibles.length && nC === 6, attendu: '6 cibles, chaque ligne libre (balle() et toutes les formes) ; 10 s sans exception',
-      obtenu: F.length ? F.join(' · ') : `${nC} cibles, ${STAND.cibles.length * 2} lignes libres · ${err || '10 s sans exception'}` };
+    return { ok: !F.length && !err && vivant && nC === STAND.cibles.length && nC === 6, attendu: '6 cibles, chaque ligne libre (balle() et toutes les formes) ; 10 s sans exception ; sa frag ne tue pas Haythem',
+      obtenu: F.length ? F.join(' · ') : `${nC} cibles, ${STAND.cibles.length * 2} lignes libres · ${err || '10 s sans exception'} · frag aux pieds : ${vivant ? 'vivant' : 'MORT'}` };
   });
 
   // 15. LES MUNITIONS : 0 en réserve + 1 élimination → 30 ; à 90 → 90 ; 60 éliminations d'affilée → jamais au-delà de 90

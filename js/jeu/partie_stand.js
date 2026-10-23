@@ -215,6 +215,9 @@ export class PartieStand extends Partie {
     if (c === this.mannequin) return this._toucherMannequin(c, e);
     return super.appliquerEffet(e);
   }
+  // AU STAND, HAYTHEM NE PREND AUCUN DÉGÂT : il y est seul, sans réapparition — sa propre frag (Grenades.pas l'inflige tout
+  // de suite, sans passer par appliquerEffet) le laissait mort pour de bon, la caméra sur le mannequin
+  infliger(cible, degats, o) { return cible === this.local ? 0 : super.infliger(cible, degats, o); }
   // (Partie.infliger émet la touche — « tic », « ding » — ; la vie reste pleine : jamais d'élimination)
   _infliger(c, e) {
     const d = this.infliger(c, e.degats, e);

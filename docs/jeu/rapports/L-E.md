@@ -215,4 +215,7 @@ rayon 3 cm ; regardé à l'écran depuis la ligne (boîtes posées à la main pu
 5. **Chacun pour soi, départs à vue** — § 2.4 « au point le plus éloigné […] vu de personne » : `_placerMelee` ne regardait
    que la distance. Chacun prend maintenant le lieu le plus loin des placés PARMI ceux qu'aucun placé ne voit (œil → tête ou
    buste ; à défaut le plus loin) ; contrôle ajouté au test 9 (toute l'école : 0 paire à vue ; le −1 noté).
+6. **Stand : Haythem tué par sa propre frag, pour de bon** — la grenade inflige ses dégâts par `Partie.infliger` (étape 7,
+   sans `appliquerEffet`) et le stand n'a pas de réapparition : une frag aux pieds laissait Haythem mort jusqu'à la sortie,
+   la caméra en orbite sur le mannequin. `PartieStand.infliger` : 0 dégât à Haythem (seul au stand). Contrôle au test 14.
 
