@@ -118,6 +118,14 @@ export function degatsDe(fiche, distance, zone) {
   return d * k;
 }
 
+// L'ÉCART d'une balle dans le cône de demi-angle `s` (rad) : un point uniforme du disque, r = s·√u, θ = 2πv (le tirage du
+// § 3.4, exporté pour les tests : 10 000 tirages, 100 % dans le disque, rayon moyen 2/3 de s)
+export function tirage(rng, s, out) {
+  out = out || { r: 0, th: 0 };
+  out.r = s * Math.sqrt(rng.next()); out.th = 2 * Math.PI * rng.next();
+  return out;
+}
+const _t = { r: 0, th: 0 };
 const _o = new THREE.Vector3(), _d = new THREE.Vector3(), _p = new THREE.Vector3();
 const _pos = { x: 0, z: 0 };
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
@@ -370,7 +378,7 @@ export class Arsenal {
         if (p < G.centre) { r = R.next() * G.tremble; th = 2 * Math.PI * R.next(); }
         else { r = G.rayon * cone + (2 * R.next() - 1) * G.tremble; th = phi0 + 2 * Math.PI * (p - G.centre) / G.couronne + (2 * R.next() - 1) * 0.05; }
         r *= DEG;
-      } else { r = s * Math.sqrt(R.next()); th = 2 * Math.PI * R.next(); }
+      } else { tirage(R, s, _t); r = _t.r; th = _t.th; }
       const cr = Math.cos(r), sr = Math.sin(r), ct = Math.cos(th), st = Math.sin(th);
       let dx = cr * _d.x + sr * (ct * rx + st * hx), dy = cr * _d.y + sr * (st * hy), dz = cr * _d.z + sr * (ct * rz + st * hz);
       const k = 1 / Math.hypot(dx, dy, dz); dx *= k; dy *= k; dz *= k;
