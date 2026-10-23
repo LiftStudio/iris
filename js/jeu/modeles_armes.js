@@ -114,7 +114,7 @@ export const OS_ARMES = {
   pm9: { chargeur: V(0, -0.015, -0.085), culasse: V(-0.022, 0.034, -0.130), detente: V(0, -0.016, -0.036) },
   fp12: { pompe: V(0, 0.0015, -0.42), detente: V(0, -0.016, -0.050) },
   tp50: { culasse: V(0, 0.03, 0.05), chargeur: V(0, -0.025, -0.10), detente: V(0, -0.028, -0.038) },
-  p17: { glissiere: V(0, 0.0375, -0.04), chargeur: V(0, 0.004, 0.0), detente: V(0, 0.0, -0.028) },
+  p17: { glissiere: V(0, 0.0375, -0.04), chargeur: V(0, 0.004, 0.0), detente: V(0, 0.004, -0.028) },
   couteau: {}, frag: { goupille: V(0.02, 0.05, 0) }, flash: { goupille: V(0.02, 0.06, 0) },
 };
 export const COURSES_OS = {
@@ -482,7 +482,7 @@ const PLANS = {
     A.boite('polymere', [0, 0.007, 0.1965], [0.042, 0.116, 0.007], { c: 0.002 });
     // la poignée (18°), le pontet, la détente (os)
     A.poignee('polymere', -0.008, 18, 0.030, -0.021, 0.019, -0.112);
-    A.boite('teinte', [0, -0.036, -0.046], [0.012, 0.004, 0.056], { c: 0.0012 });
+    A.boite('teinte', [0, -0.036, -0.041], [0.012, 0.004, 0.066], { c: 0.0012 });          // (jusque dans la poignée)
     A.boite('teinte', [0, -0.026, -0.072], [0.012, 0.024, 0.005], { c: 0.0012 });
     A.detente(-0.040, -0.012, 0.021);
     // le chargeur courbe (os) : son corps, ses nervures du bas (vue), sa semelle
@@ -540,7 +540,7 @@ const PLANS = {
     for (let i = 0; i < 3; i++) A.boite('polymere', [0, Y + 0.0117, -0.398 - i * 0.0085], [0.007, 0.0015, 0.0045], { vue: true });
     // la poignée (15°), le pontet, la détente
     A.poignee('polymere', -0.014, 15, 0.029, -0.020, 0.019, -0.112);
-    A.boite('polymere', [0, -0.040, -0.040], [0.011, 0.004, 0.050], { c: 0.0012 });
+    A.boite('polymere', [0, -0.040, -0.0355], [0.011, 0.004, 0.059], { c: 0.0012 });
     A.boite('polymere', [0, -0.030, -0.0645], [0.011, 0.022, 0.005], { c: 0.0012 });
     A.detente(-0.036, -0.016, 0.021);
     // le chargeur droit (os), ses trous témoins à gauche (vue), sa semelle
@@ -584,14 +584,14 @@ const PLANS = {
     for (const sx of [-1, 1]) A.boite('acier', [sx * 0.0125, 0.012, -0.280], [0.002, 0.005, 0.100], { os: 'pompe', vue: true });
     // la crosse à poignée intégrée (15°), trou de pouce ; la plaque de couche
     const k = Math.tan(15 * DEG), gz = (z, y) => [z + (-0.015 - y) * k, y];
-    A.cote('teinte', [0, 0, 0], [[-0.025, 0.046], [0.060, 0.044], [0.190, 0.037], [0.200, 0.036], [0.200, -0.104], [0.188, -0.108], [0.120, -0.082], [0.075, -0.068],
+    A.cote('teinte', [0, 0, 0], [[-0.025, 0.046], [0.030, 0.045], [0.075, 0.030], [0.120, 0.034], [0.190, 0.040], [0.200, 0.039], [0.200, -0.104], [0.188, -0.108], [0.120, -0.080], [0.075, -0.068],
       [0.044, -0.066], gz(0.020, -0.090), gz(0.022, -0.110), gz(0.020, -0.114), gz(-0.020, -0.114), gz(-0.022, -0.100), gz(-0.018, -0.080), gz(-0.022, -0.062),
-      gz(-0.018, -0.045), gz(-0.020, -0.030), [-0.014, -0.018], [-0.025, -0.018]], 0.040, { biseau: 0.005, trous: [ellipse(0.085, -0.035, 0.032, 0.016, A.s(16, 10))] });
-    A.boite('polymere', [0, -0.034, 0.2075], [0.042, 0.142, 0.015], { c: 0.004 });
+      gz(-0.018, -0.045), gz(-0.020, -0.030), [-0.014, -0.018], [-0.025, -0.018]], 0.040, { biseau: 0.005, trous: [ellipse(0.090, -0.034, 0.036, 0.019, A.s(16, 10))] });
+    A.boite('polymere', [0, -0.0325, 0.2075], [0.042, 0.145, 0.015], { c: 0.004 });
     // le bloc de détente, le pontet, la sûreté transversale, la détente
     A.boite('polymere', [0, -0.021, -0.060], [0.030, 0.020, 0.075], { c: 0.003 });
-    A.boite('polymere', [0, -0.046, -0.040], [0.010, 0.004, 0.050], { c: 0.0012 });
-    A.boite('polymere', [0, -0.039, -0.064], [0.010, 0.016, 0.004], { c: 0.0012 });
+    A.boite('polymere', [0, -0.046, -0.0365], [0.010, 0.004, 0.057], { c: 0.0012 });
+    A.boite('polymere', [0, -0.039, -0.064], [0.010, 0.019, 0.004], { c: 0.0012 });
     A.cyl('acier', [0, -0.016, -0.022], 0.004, 0.034, { r: [0, Math.PI / 2, 0], seg: 10, vue: true });
     A.detente(-0.050, -0.016, 0.024);
     // le porte-cartouches à gauche (vue) : quatre cartouches debout, culot poli en haut
@@ -647,15 +647,15 @@ const PLANS = {
     A.boite('acier', [0, -0.045, -0.100], [0.024, 0.050, 0.075], { c: 0.003, os: 'chargeur' });
     A.boite('polymere', [0, -0.073, -0.100], [0.028, 0.008, 0.080], { c: 0.002, os: 'chargeur' });
     A.boite('acier', [0, -0.050, -0.035], [0.012, 0.004, 0.060], { c: 0.0012 });
-    A.boite('acier', [0, -0.041, -0.064], [0.012, 0.022, 0.004], { c: 0.0012 });
+    A.boite('acier', [0, -0.040, -0.064], [0.012, 0.025, 0.004], { c: 0.0012 });
     A.detente(-0.038, -0.028, 0.018);
     // le bipied replié : embase, charnière, deux jambes vers l'avant (rallonges en vue), patins
     A.boite('acier', [0, -0.012, -0.455], [0.030, 0.012, 0.030], { c: 0.003 });
     A.cyl('acier', [0, -0.016, -0.462], 0.005, 0.036, { r: [0, Math.PI / 2, 0], seg: 12 });
     for (const sx of [-1, 1]) {
-      A.cyl('acier', [sx * 0.011, -0.012, -0.5725], 0.0055, 0.215, { seg: 10 });
-      A.cyl('poli', [sx * 0.011, -0.012, -0.640], 0.0040, 0.080, { seg: 8, vue: true });
-      A.boite('polymere', [sx * 0.011, -0.012, -0.686], [0.012, 0.012, 0.016], { c: 0.003 });
+      A.cyl('acier', [sx * 0.011, -0.012, -0.540], 0.0060, 0.150, { seg: 10 });
+      A.cyl('poli', [sx * 0.011, -0.012, -0.600], 0.0042, 0.060, { seg: 8, vue: true });
+      A.boite('polymere', [sx * 0.011, -0.012, -0.632], [0.013, 0.013, 0.016], { c: 0.003 });
     }
   },
 
@@ -688,9 +688,9 @@ const PLANS = {
     // la poignée (15°) et ses plaquettes, le pontet carré, la détente, l'arrêtoir et le levier de démontage (à gauche)
     A.poignee('teinte', 0.006, 15, 0.030, -0.021, 0.023, -0.098);
     for (const sx of [-1, 1]) A.boite('polymere', [sx * 0.0156, -0.048, 0.015], [0.0012, 0.064, 0.032], { r: [-15 * DEG, 0, 0], vue: true });
-    A.boite('teinte', [0, -0.026, -0.040], [0.010, 0.0045, 0.050], { c: 0.0012 });
-    A.boite('teinte', [0, -0.0125, -0.0625], [0.010, 0.026, 0.005], { c: 0.0012 });
-    A.detente(-0.028, 0.000, 0.020);
+    A.boite('teinte', [0, -0.026, -0.0355], [0.010, 0.0045, 0.059], { c: 0.0012 });
+    A.boite('teinte', [0, -0.0105, -0.0625], [0.010, 0.032, 0.005], { c: 0.0012 });
+    A.detente(-0.028, 0.004, 0.024);
     A.boite('acier', [-0.0145, 0.016, -0.035], [0.003, 0.005, 0.016], { c: 0.0008, vue: true });
     A.boite('acier', [-0.0140, 0.012, -0.060], [0.003, 0.004, 0.006], { c: 0.0008, vue: true });
     // le chargeur (os) : le corps, caché dans la poignée au repos, la semelle dessous
