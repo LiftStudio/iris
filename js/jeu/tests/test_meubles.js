@@ -106,7 +106,7 @@ export default function (jeu) {
   T('1c coût du registre à la construction ≤ 30 ms (rejoué sur une réplique)', async (t) => {
     await preparer();
     // LA RÉPLIQUE : chaque pose, une copie de son prototype à sa place, avec son étiquette ; autant de maillages non étiquetés
-    // que la construction en a lus (des maillages de la scène, géométries clonées, boîtes à recalculer)
+    // que la construction en a croisés (des maillages de la scène, géométrie partagée : le registre n'en lit que deux sommets)
     const S = MEUBLES.stats, rep = new THREE.Group();
     for (const P of MEUBLES.poses) {
       const T0 = MEUBLES.types.get(P.cle), c = copieMeuble(P.cle); if (!c) continue;
@@ -117,19 +117,18 @@ export default function (jeu) {
     game.scene.traverse((o) => { if (o.isMesh && !o.userData.dynamique && o.geometry && o.geometry.attributes.position && o.geometry.attributes.position.count >= 8 && o.geometry.attributes.position.count <= 40000) sources.push(o); });
     const libres = new THREE.Group();
     let n = 0, s = 0;
-    for (let i = 0; n < S.libres && sources.length && i < S.libres * 4; i++) {
-      const o = sources[i % sources.length], g = o.geometry.clone(); g.boundingBox = null;
-      const m = new THREE.Mesh(g, o.material); o.matrixWorld.decompose(m.position, m.quaternion, m.scale); libres.add(m); n++; s += g.attributes.position.count;
-      if (s > S.sommets * 1.2) break;
+    const vus = S.vus || S.libres;
+    for (let i = 0; n < vus && sources.length; i++) {
+      const o = sources[i % sources.length], m = new THREE.Mesh(o.geometry, o.material);
+      o.matrixWorld.decompose(m.position, m.quaternion, m.scale); libres.add(m); n++; s += o.geometry.attributes.position.count;
     }
     rep.add(libres);
     const t0 = performance.now();
     const r = _bacASable((M) => { fermerRegistre(rep); rattraperRegistre(null); zonerRegistre(game.carte.lumieres, game.collisions); return { types: M.types.size, poses: M.poses.length }; });
     const ms = performance.now() - t0;
-    for (const m of libres.children) m.geometry.dispose();
     const ok = t.temps('registre (ms, rejoué)', ms, 30) && r.poses === MEUBLES.poses.length;
     return { ok, attendu: '≤ 30 ms · ' + MEUBLES.poses.length + ' poses retrouvées',
-      obtenu: `${ms.toFixed(1)} ms pour ${r.poses} poses, ${r.types} types, ${n} maillages libres (${s} sommets ; la construction : ${S.libres} maillages, ${S.sommets} sommets lus, ${S.coutures} coutures)` };
+      obtenu: `${ms.toFixed(1)} ms pour ${r.poses} poses, ${r.types} types, ${n} maillages libres (${s} sommets ; la construction : ${vus} maillages non étiquetés croisés, ${S.libres} retenus, ${S.coutures} coutures)` };
   }, { delai: 120 });
 
   // 2. LE REGISTRE HORS DU −1 : types, poses, tailles, oubliés

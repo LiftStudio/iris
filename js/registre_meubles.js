@@ -37,7 +37,7 @@ import { NIVEAUX } from './jeu/constantes.js';
 export const MEUBLES = {
   types: new Map(), poses: [], parZone: new Map(), grille: new Map(), parForme: new Map(), nonEtiquetes: [], horsTolerance: [],
   // (ce que la construction a lu : le test L-K 1 en rejoue autant pour en mesurer le coût)
-  stats: { coutures: 0, etiquetes: 0, clones: 0, references: 0, parties: 0, libres: 0, sommets: 0, rattrapes: 0, recales: 0 },
+  stats: { coutures: 0, etiquetes: 0, clones: 0, references: 0, parties: 0, vus: 0, libres: 0, sommets: 0, rattrapes: 0, recales: 0 },
   collisions: null,                 // le monde solide (posé par preparerCatalogue, js/jeu/deguisements.js) : sols, formes
 };
 // LES TYPES QU'ON NE PREND PAS (le lot R n'écrit pas `deguisable`) : trop grands pour un disque de 0,5 m, plats, accrochés
@@ -89,6 +89,9 @@ const nouvelEtat = () => ({
   instances: [],                     // { objet, P } : les poses dont la racine reste dans la scène (recalées au rattrapage)
   sigs: new Map(),                   // type (+ variante) → [{ sig, cle }] : les variantes déjà vues
   cousus: new Map(),                 // signature géométrique → { plat, b0 } : les variantes de couleur partagent leur géométrie cousue
+  // les matériaux des meubles étiquetés (un maillage non étiqueté d'un autre matériau — à son contenu — n'est pas un meuble
+  // oublié) : ceux de la couture en cours, puis tous, leurs clés rapides (la couleur) et leurs signatures
+  matsNeufs: new Set(), matsMeubles: new Set(), clesMeubles: new Set(), sigsMeubles: new Set(),
 });
 let _E = nouvelEtat();
 const _sigMat = new WeakMap();       // matériau → signature (à son CONTENU : les jumeaux dédupliqués plus tard ont la même)
@@ -125,6 +128,9 @@ function sigMat(m) {
   _sigMat.set(m, s);
   return s;
 }
+// (la clé rapide d'un matériau : sa texture même s'il en a une — deux jumeaux ont la même, la signature compare son
+// identifiant —, sinon sa couleur au millième)
+const cleRapide = (m) => m.map || (m.color ? (Math.round(m.color.r * 1000) * 1024 + Math.round(m.color.g * 1000)) * 1024 + Math.round(m.color.b * 1000) : -1);
 const nSommets = (g) => (g && g.attributes && g.attributes.position ? g.attributes.position.count : 0);
 const nIndices = (g) => (g && g.index ? g.index.count : 0);
 // LES EMPREINTES NUMÉRIQUES (deux FNV-1a de 32 bits mêlés d'entiers : une signature sans chaîne à bâtir — la construction lit
@@ -172,17 +178,23 @@ const maillagesDe = (o) => { const L = []; o.traverse((m) => { if (m.isMesh) L.p
 // géométrie cousue
 function signatureMeuble(racine, maillages) {
   const H = new Hache(), G = new Hache(), ordre = new Map();
-  for (const v of [racine.rotation.x, racine.rotation.z, racine.scale.x, racine.scale.y, racine.scale.z]) { H.n(r3(v)); G.n(r3(v)); }
-  for (const o of maillages) {
-    _m.identity();
-    for (let n = o; n && n !== racine; n = n.parent) _m.premultiply(n.matrix);
-    const m = Array.isArray(o.material) ? o.material[0] : o.material;
+  const rx = r3(racine.rotation.x), rz = r3(racine.rotation.z), sx = r3(racine.scale.x), sy = r3(racine.scale.y), sz = r3(racine.scale.z);
+  H.n(rx).n(rz).n(sx).n(sy).n(sz); G.n(rx).n(rz).n(sx).n(sy).n(sz);
+  for (let i = 0; i < maillages.length; i++) {
+    const o = maillages[i];
+    // (la matrice relative à la racine : la locale d'un enfant direct, sinon le produit du chemin — les 12 premiers
+    // nombres, la dernière ligne vaut toujours 0 0 0 1)
+    let e;
+    if (o.parent === racine) e = o.matrix.elements;
+    else { _m.identity(); for (let n = o; n && n !== racine; n = n.parent) _m.premultiply(n.matrix); e = _m.elements; }
+    const m = Array.isArray(o.material) ? o.material[0] : o.material, g = o.geometry, ns = g.attributes.position ? g.attributes.position.count : 0, ni = g.index ? g.index.count : 0;
     let f = ordre.get(m); if (f === undefined) ordre.set(m, f = ordre.size);
-    H.n(nSommets(o.geometry)).n(nIndices(o.geometry)).n(idMat(m)); G.n(nSommets(o.geometry)).n(nIndices(o.geometry)).n(f).n(structureMat(m));
-    for (const v of _m.elements) { const k = r3(v); H.n(k); G.n(k); }
+    H.n(ns).n(ni).n(idMat(m)); G.n(ns).n(ni).n(f).n(structureMat(m));
+    for (const j of ELEMENTS) { const k = r3(e[j]); H.n(k); G.n(k); }
   }
   return { sig: H.valeur, geo: G.valeur };
 }
+const ELEMENTS = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14];
 // la structure d'un matériau (ce qui décide des attributs gardés et de l'ordre de rendu, pas sa couleur)
 const structureMat = (m) => (m ? (m.transparent ? 1 : 0) + (m.map ? 2 : 0) + (m.normalMap ? 4 : 0) + (m.aoMap || m.lightMap ? 8 : 0) + (m.vertexColors ? 16 : 0) + (m.alphaTest > 0 ? 32 : 0) : 0);
 // (un meuble posé à plat, fait de pièces dans le repère du niveau : leurs matrices monde, rapportées à son repère)
@@ -398,6 +410,7 @@ function noter(racines, E) {
     Mbase = new THREE.Matrix4().makeRotationY(E.cap || 0).setPosition((B.min.x + B.max.x) / 2, B.min.y, (B.min.z + B.max.z) / 2);
   }
   const maillages = racines.flatMap((r) => (r.isMesh ? [r] : maillagesDe(r)));
+  for (let i = 0; i < maillages.length; i++) { const m = maillages[i].material; _E.matsNeufs.add(Array.isArray(m) ? m[0] : m); }
   const S = racines.length === 1 && !E.partie ? signatureMeuble(R0, maillages) : signaturePieces(maillages, Mbase), sig = S.sig;
   const k = cleDe(E, sig);
   let T = MEUBLES.types.get(k.cle);
@@ -414,7 +427,7 @@ function noter(racines, E) {
 // les originaux ont été notés à sa propre couture, et dont les blocs ne sont pas des meubles)
 function parcourir(racine, parties) {
   // (une pile plutôt qu'une récursion : 13 000 objets à la construction de l'école, la plupart des maillages du décor)
-  const pile = [racine], libresPile = [true], L = _E.libres;
+  const pile = [racine], libresPile = [true], cands = [];
   while (pile.length) {
     const o = pile.pop();
     let libres = libresPile.pop();
@@ -429,23 +442,30 @@ function parcourir(racine, parties) {
       continue;
     }
     if (libres && o !== racine && u.nofuse) libres = false;
-    // (un maillage non étiqueté : rien de calculé ici — ses comptes de sommets et d'indices, son matériau, deux sommets lus
-    // tels quels, sa position LOCALE et son parent ; la signature n'est bâtie, à la préparation, que pour les rares qui ont
-    // les comptes de la grosse pièce d'un prototype, et le monde ne se lit que pour eux ; la couture recalcule toutes les
-    // matrices juste après. Un maillage vu deux fois — un vantail cousu seul puis revu depuis la scène — n'est qu'en double.)
-    if (libres && o.isMesh && !u.dynamique && !u.suite) {
-      const g = o.geometry, A = g && g.attributes.position;
-      const n = A ? A.count : 0;
-      if (n >= 8 && n <= 40000) {
-        const T = A.array, inter = A.isInterleavedBufferAttribute, k = inter ? A.offset : 0, km = k + (n >> 1) * (inter ? A.data.stride : 3);
-        L.push({ n, idx: g.index ? g.index.count : 0, mat: Array.isArray(o.material) ? o.material[0] : o.material, a0: T[k], a1: T[k + 1], a2: T[k + 2], a3: T[km], a4: T[km + 1], a5: T[km + 2],
-          parent: o.parent, lx: o.position.x, ly: o.position.y, lz: o.position.z });
-      }
-    }
+    // (un maillage non étiqueté : retenu tel quel, trié après le parcours — voir plus bas)
+    if (libres && o.isMesh && !u.dynamique && !u.suite) cands.push(o);
     const C = o.children;
     for (let k = C.length - 1; k >= 0; k--) { pile.push(C[k]); libresPile.push(libres); }
   }
-  MEUBLES.stats.libres = L.length;
+  // LES MAILLAGES NON ÉTIQUETÉS : on ne garde que ceux d'un matériau de meuble (vu sur un étiqueté, ici ou à une couture
+  // d'avant) ou qui se dit extincteur — rien de calculé : comptes, matériau, deux sommets lus tels quels, position LOCALE et
+  // parent ; la signature n'est bâtie, à la préparation, que pour ceux qui ont les comptes de la grosse pièce d'un prototype
+  // (et le monde ne se lit que pour eux). Un maillage vu deux fois — un vantail cousu seul, revu depuis la scène — l'est en double.
+  // (le même matériau, puis une couleur de meuble, et seulement alors la signature : le décor a des milliers de matériaux,
+  // la signature de chacun coûtait 17 ms)
+  const L = _E.libres, M = _E.matsMeubles, K = _E.clesMeubles, S = _E.sigsMeubles;
+  for (const m of _E.matsNeufs) if (m && !M.has(m)) { M.add(m); K.add(cleRapide(m)); S.add(sigMat(m)); }
+  _E.matsNeufs.clear();
+  for (let i = 0; i < cands.length; i++) {
+    const o = cands[i], mat = Array.isArray(o.material) ? o.material[0] : o.material;
+    const g = o.geometry, A = g && g.attributes.position, n = A ? A.count : 0;
+    if (!mat || n < 8 || n > 40000) continue;
+    if (!M.has(mat) && !(K.has(cleRapide(mat)) && S.has(sigMat(mat))) && !(mat.name && /extincteur/i.test(mat.name))) continue;
+    const T = A.array, inter = A.isInterleavedBufferAttribute, k = inter ? A.offset : 0, km = k + (n >> 1) * (inter ? A.data.stride : 3);
+    L.push({ n, idx: g.index ? g.index.count : 0, mat, a0: T[k], a1: T[k + 1], a2: T[k + 2], a3: T[km], a4: T[km + 1], a5: T[km + 2],
+      parent: o.parent, lx: o.position.x, ly: o.position.y, lz: o.position.z });
+  }
+  MEUBLES.stats.libres = L.length; MEUBLES.stats.vus += cands.length;
 }
 
 // AVANT CHAQUE COUTURE (racine comprise) : fusionnerLocal et optimiserDecor l'appellent en première ligne
@@ -585,6 +605,6 @@ export function _bacASable(fn) {
     nonEtiquetes: MEUBLES.nonEtiquetes, horsTolerance: MEUBLES.horsTolerance, stats: MEUBLES.stats };
   _E = nouvelEtat();
   Object.assign(MEUBLES, { types: new Map(), poses: [], parZone: new Map(), grille: new Map(), parForme: new Map(), nonEtiquetes: [], horsTolerance: [],
-    stats: { coutures: 0, etiquetes: 0, clones: 0, references: 0, parties: 0, libres: 0, sommets: 0, rattrapes: 0, recales: 0 } });
+    stats: { coutures: 0, etiquetes: 0, clones: 0, references: 0, parties: 0, vus: 0, libres: 0, sommets: 0, rattrapes: 0, recales: 0 } });
   try { return fn(MEUBLES); } finally { _E = E0; Object.assign(MEUBLES, M0); }
 }

@@ -108,7 +108,7 @@ export function deguisableDans(T, zoneJeu) {
 }
 
 // LE CATALOGUE (écran PRÉPARATION) : les meubles cousus seuls rattrapés, les poses rangées par pièce, les formes du monde
-// solide rattachées à leur meuble, les prototypes, le voile et la surbrillance compilés (une fois par session)
+// solide rattachées à leur meuble, les prototypes achevés (au rattrapage) et leurs textures envoyées à la carte (une fois par session)
 const _prepares = new WeakSet();
 export async function preparerCatalogue(game, progres) {
   const pr = progres || (() => {});
