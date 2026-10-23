@@ -4,7 +4,8 @@
 // Lancés par le harnais sous `?test=1&rapport=1&lot=L-E` (window.__rapport), PC puis `?tel=1`. Ils jouent CONTRE LES
 // SQUELETTES du socle (armes sans dispersion, navigation à vol d'oiseau, apparitions au plus loin, cerveau minimal) : les
 // parties de bots se jouent au −1 (`ss`, compact : le cerveau minimal y trouve ses ennemis), le reste par
-// `__jeu.teleporter`, `commande`, `tirer` et des appels directs à `Partie.infliger` — jamais un clic à l'écran. Ce qui exige
+// `__jeu.teleporter`, `commande`, `tirer` et des appels directs à `Partie.infliger` — jamais un clic à l'écran. Les tests de
+// RÈGLES jouent les effectifs du PC (`appareil: 'pc'`, même sous ?tel=1 : 4 c. 4, 1 + 5) ; le test 10 ceux du téléphone. Ce qui exige
 // les vrais modules des autres lots (apparitions à pied, portes de L-M, duels de bots armés pour de vrai) est en
 // `apresFusion: true` : F2 le rejoue avec `&fusion=1`. Un test rend { ok, attendu, obtenu }.
 import * as THREE from 'three';
@@ -111,7 +112,7 @@ export default function (jeu) {
 
   // 2. CHACUN POUR SOI, 6 bots au −1, 10 min simulées : la fin, les comptes, le classement
   T('2 chacun pour soi : fin, Σ élim. = Σ morts − suicides, classement, fin émise', async () => {
-    await jeu.lancer('melee', { graine: 102, zone: 'ss', ennemis: 6, humain: false });
+    await jeu.lancer('melee', { graine: 102, zone: 'ss', ennemis: 6, humain: false, appareil: 'pc' });
     const p = game.partie; let fin = null, nFin = 0;
     p.sur('fin', (e) => { fin = e; nFin++; });
     jeu.avancer(615, { vitesse: 8 });
@@ -130,7 +131,7 @@ export default function (jeu) {
     // (a) le score cible par défaut, sur chaque appareil
     const cPc = new PartieFPS(game, { mode: 'equipes', appareil: 'pc' }, {}).scoreCible, cTel = new PartieFPS(game, { mode: 'equipes', appareil: 'tel' }, {}).scoreCible;
     // (b) 4 c. 4 de bots au −1 : chaque élimination +1 à l'équipe du tireur ; fin au score (ici 8, pour que le score finisse)
-    await jeu.lancer('equipes', { graine: 103, zone: 'ss', allies: 4, ennemis: 4, humain: false, scoreCible: 8 });
+    await jeu.lancer('equipes', { graine: 103, zone: 'ss', allies: 4, ennemis: 4, humain: false, scoreCible: 8, appareil: 'pc' });
     let p = game.partie, faux = 0, nElim = 0, finTick = -1, elimTick = -1;
     p.sur('elim', (e) => {
       const t = p.acteurParId(e.par), c = p.acteurParId(e.cible);
@@ -259,7 +260,7 @@ export default function (jeu) {
   //    mi-temps à 75 ou 5:00 (camps échangés) ; fin à 150 ou 10:00 ; hud.points à jour
   T('6 domination : captures, points, mi-temps, fin', async () => {
     const res = [];
-    await jeu.lancer('domination', { graine: 106, allies: 3, ennemis: 3, humain: false });
+    await jeu.lancer('domination', { graine: 106, allies: 3, ennemis: 3, humain: false, appareil: 'pc' });
     let p = game.partie; versManche(p);
     const A = p.acteurs.filter((a) => a.equipe === 'A'), Bq = p.acteurs.filter((a) => a.equipe === 'B');
     for (const a of p.acteurs) figer(a);
@@ -336,7 +337,7 @@ export default function (jeu) {
     return r;
   };
   T('7 apparitions : jamais vues, ≤ 2 % de morts dans les 2 s', async () => {
-    const r = await apparitionsSures({ graine: 107, zone: 'ecole', ennemis: 6, humain: false, scoreCible: 1000 });
+    const r = await apparitionsSures({ graine: 107, zone: 'ecole', ennemis: 6, humain: false, scoreCible: 1000, appareil: 'pc' });
     const ok = r.n >= 20 && r.vues === 0 && r.morts <= 0.02 * r.tot;
     return { ok, attendu: '0 apparition vue d’un ennemi ; morts < 2 s après l’apparition ≤ 2 % des morts',
       obtenu: `${r.n} apparitions, ${r.vues} vues (${r.replis} replis) · ${r.morts} morts rapides sur ${r.tot} (${r2(100 * r.morts / Math.max(1, r.tot))} %)` };
@@ -477,10 +478,10 @@ export default function (jeu) {
 
   // 12. LE DÉTERMINISME (4 c. 4 de bots, 60 s) ; L'ÉTAT en manche, à la mi-temps, à la fin (et au stand)
   T('12 déterminisme 4 c. 4 ; état en manche, mi-temps, fin', async () => {
-    const d = await jeu.verifierDeterminisme(42, 60, { mode: 'equipes', zone: 'ss', allies: 4, ennemis: 4, humain: false });
+    const d = await jeu.verifierDeterminisme(42, 60, { mode: 'equipes', zone: 'ss', allies: 4, ennemis: 4, humain: false, appareil: 'pc' });
     const phases = [];
     const etat = async (o) => { const v = await jeu.verifierEtat(o); phases.push((jeu._dernierEtat ? jeu._dernierEtat.e1.phase : '?') + ' ' + v); return v; };
-    const e1 = await etat({ mode: 'equipes', zone: 'ss', allies: 4, ennemis: 4, humain: false, secondes: 30 });
+    const e1 = await etat({ mode: 'equipes', zone: 'ss', allies: 4, ennemis: 4, humain: false, appareil: 'pc', secondes: 30 });
     const e2 = await etat({ mode: 'domination', allies: 3, ennemis: 3, humain: false, duree: 20, secondes: 18 });
     const e3 = await etat({ mode: 'melee', zone: 'ss', ennemis: 4, humain: false, duree: 5, secondes: 15 });
     const e4 = await etat({ mode: 'stand', defi: 'vingt', secondes: 8 });
