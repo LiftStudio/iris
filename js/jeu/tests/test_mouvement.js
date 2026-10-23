@@ -560,7 +560,7 @@ export default function (jeu) {
     jeu.quitter('balade');
     const dans = (R, ref) => R.d.length >= 3 && R.d.every((x) => pc(x, ref) <= 0.05);
     const ok = dans(r.course, 0.7) && dans(r.sprint, 0.7) && dans(r.marche, 0.45) && r.acc.n > 0 && r.acc.allures.join() === 'accroupi' && lent && lent.v > 0.3 && lent.v < 1.3 && lent.pas === 0;
-    const moy = (R) => (R.d.length ? r3(R.d.reduce((s, x) => s + x, 0) / R.d.length) : '-');
+    const moy = (R) => (R.d.length ? `${r3(R.d.reduce((s, x) => s + x, 0) / R.d.length)} [${r3(Math.min(...R.d))}-${r3(Math.max(...R.d))}]` : '-');
     return { ok, attendu: 'course 0,7 m ± 5 % · sprint 0,7 · marche 0,45 · accroupi à 2,3 m/s : des pas « accroupi » · accroupi sous 1,3 m/s : aucun',
       obtenu: `course ${moy(r.course)} (${r.course.d.length}) · sprint ${moy(r.sprint)} · marche ${moy(r.marche)} (${r.marche.d.length}) · accroupi ${r.acc.n} pas ${r.acc.allures} · lent ${lent ? JSON.stringify(lent) : 'pas de mur'}` };
   });
@@ -604,7 +604,8 @@ export default function (jeu) {
     const contre = (rayon) => {
       const pr = p.ajouterActeur({ id: 40, nom: 'Prop', equipe: 'B', x: LOIN.x, y: 0, z: LOIN.z, lacet: 0, cerveau: null, corps: 'prop' });
       pr.corps.rayon = rayon;
-      const C0 = Player.collisions; Player.collisions = null;
+      // (en terrain libre : sans le monde solide du joueur, sans les bornes de la rue — le prop et l'humain y seraient ramenés)
+      const C0 = Player.collisions, h0 = B[1].joueur.bounds; Player.collisions = null; pr.corps.bounds = SANS_BORNES; B[1].joueur.bounds = SANS_BORNES;
       try {
         jeu.teleporter(40, LOIN.x, 0, LOIN.z - 30, 0);
         const h = B[1]; jeu.teleporter(h.id, LOIN.x, 0, LOIN.z - 27, 0);
@@ -613,7 +614,7 @@ export default function (jeu) {
         const d = Math.hypot(h.pos.x - pr.pos.x, h.pos.z - pr.pos.z), bouge = Math.hypot(pr.pos.x - LOIN.x, pr.pos.z - (LOIN.z - 30));
         lacher(h); jeu.teleporter(h.id, LOIN.x + 50, 0, LOIN.z, 0);
         return { d, bouge };
-      } finally { Player.collisions = C0; p.retirerActeur(pr); }
+      } finally { Player.collisions = C0; B[1].joueur.bounds = h0; p.retirerActeur(pr); }
     };
     const pb = contre(0.15), bf = contre(0.5);
     jeu.quitter('balade');
@@ -880,7 +881,7 @@ export default function (jeu) {
     for (const f of FICHIERS) {
       let src = '';
       try { src = await fetch(new URL('../' + f + '.js', import.meta.url), { cache: 'no-cache' }).then((r) => (r.ok ? r.text() : '')); } catch (e) { continue; }
-      src.split('\n').forEach((ligne, i) => {
+      src.split(/\r?\n/).forEach((ligne, i) => {                     // (les fichiers sont en CRLF : « . » ne prend pas le \r)
         if (ligne.includes('// hors simulation')) return;
         const code = ligne.replace(/\/\/.*$/, '');
         if (LECTURE.test(code)) lecteurs.push(`${f}.js:${i + 1}`);
@@ -907,10 +908,10 @@ export default function (jeu) {
       inp.presser('ShiftLeft');
       let n = 0, tact = 0;
       for (let i = 0; i < 700; i++) { p.pas(PAS); if (a.allure === 'tact') tact++; if (a.allure === 'sprint') n++; else if (n > 0) break; }
-      const apres = mesurerV(a, 0.4);
-      // Maj tenue : pas de sprint de nouveau avant 20 d'endurance
+      pas(60); const apres = mesurerV(a, 0.4);                           // (0,5 s après : l'inertie passée, la course seule)
+      // Maj tenue : pas de sprint de nouveau avant 20 d'endurance (lue AVANT le pas où il repart : ce pas en reprend 25/120)
       let reprise = null;
-      for (let i = 0; i < 400; i++) { p.pas(PAS); if (a.allure === 'sprint') { reprise = a.endurance; break; } }
+      for (let i = 0; i < 400; i++) { const e0 = a.endurance; p.pas(PAS); if (a.allure === 'sprint') { reprise = e0; break; } }
       // un relâcher puis le double Maj et SOURIS 5 : sans effet (jamais 'tact', jamais plus de 6,6)
       inp.relacher('ShiftLeft'); pas(30); a.endurance = 100;
       inp.presser('ShiftLeft'); pas(12); inp.relacher('ShiftLeft'); pas(6); inp.presser('ShiftLeft'); pas(12); inp.presser('Souris:4'); pas(60);
@@ -977,13 +978,13 @@ export default function (jeu) {
     const p = await essai({ graine: 24 }), h = p.local;
     const pr = p.ajouterActeur({ id: 40, nom: 'Prop', equipe: 'B', x: LOIN.x, y: 0, z: LOIN.z - 30, lacet: 0, cerveau: null, corps: 'prop' });
     deguiser(p, pr, 'carton');
-    const C0 = Player.collisions; Player.collisions = null;
+    const C0 = Player.collisions, h0 = h.joueur.bounds; Player.collisions = null; h.joueur.bounds = SANS_BORNES; pr.corps.bounds = SANS_BORNES;
     try {
       jeu.teleporter(40, LOIN.x, 0, LOIN.z - 30, 0); jeu.teleporter(0, LOIN.x, 0, LOIN.z - 27, 0);
       jeu.commande(0, { ay: 1, lacet: 0 }, 1.5); jeu.avancer(1.5);
       const d = Math.hypot(h.pos.x - pr.pos.x, h.pos.z - pr.pos.z), att = 0.3 + pr.corps.rayon;
       return { ok: Math.abs(d - att) <= 0.01, attendu: `arrêté à ${r3(att)} m`, obtenu: `${r3(d)} m` };
-    } finally { Player.collisions = C0; jeu.quitter('balade'); }
+    } finally { Player.collisions = C0; h.joueur.bounds = h0; jeu.quitter('balade'); }
   }, { apresFusion: true });
 
   // ---- LA PASSE DE MESURE du franchissement (à la main, console : `await __jeu.mesuresFranchir()`) : les obstacles où
@@ -1047,43 +1048,46 @@ export default function (jeu) {
     }
     return L;
   }
-  // les PORTES : les linteaux (formes du joueur dont le bas est à 2,0-2,15 m au-dessus du sol, minces, de la largeur d'une porte)
-  // avec le passage libre dessous et 3 m d'élan libres de chaque côté
+  // les PORTES : les portes automatiques de la carte (leur vantail s'ouvre à l'approche, à 2,1 m) et les passages sous un linteau
+  // (formes du joueur dont le bas est à 2,0-2,15 m au-dessus du sol, minces, de la largeur d'une porte), le passage libre et
+  // 2,2 m d'élan libres et plats de chaque côté
   function chercherPortes(c, n) {
-    const L = [];
-    // (les vantaux des portes automatiques, fermés à l'entrée d'une partie d'essai, s'ouvrent à l'approche — à 2,1 m, au pas :
-    // on les éteint le temps de chercher les passages, rendus ensuite)
-    const V = ((game.carte && game.carte.portes && game.carte.portes.auto) || []).map((P) => P.forme).filter((f) => f && !f.off);
+    const L = [], auto = (game.carte && game.carte.portes && game.carte.portes.auto) || [];
+    // (les vantaux, fermés à l'entrée d'une partie d'essai, éteints le temps de chercher les passages, rendus ensuite)
+    const V = auto.map((P) => P.forme).filter((f) => f && !f.off);
     for (const f of V) f.off = true;
-    try { chercher(); } finally { for (const f of V) f.off = false; }
-    return L;
-    function chercher() {
-    for (const f of c.formes) {
-      if (!f.joueur || f.off || f.vantail) continue;
-      let cx, cz, lx, lz, ux, uz;
-      if (f.t === 'b') { cx = (f.x0 + f.x1) / 2; cz = (f.z0 + f.z1) / 2; lx = f.x1 - f.x0; lz = f.z1 - f.z0; }
-      else if (f.t === 'o') { cx = f.cx; cz = f.cz; lx = 2 * f.hx; lz = 2 * f.hz; }
-      else continue;
-      const larg = Math.max(lx, lz), ep = Math.min(lx, lz);
-      if (larg < 0.75 || larg > 1.8 || ep > 0.4) continue;
-      // la normale du passage : perpendiculaire au grand côté
-      if (f.t === 'b') { if (lx > lz) { ux = 0; uz = 1; } else { ux = 1; uz = 0; } }
-      else { const c0 = f.c, s0 = f.s; if (f.hx > f.hz) { ux = -s0; uz = c0; } else { ux = c0; uz = s0; } }
-      const y = c.solEn(cx, cz, f.y0 - 1.9);
-      const hl = f.y0 - y;
-      if (hl < 2.0 || hl > 2.15 || !c.libre(cx, cz, 0.3, y)) continue;
-      let ok = true;
-      for (const sg of [1, -1]) for (let s = 0.3; s <= 2.4 && ok; s += 0.3) {
-        const px = cx + ux * s * sg, pz = cz + uz * s * sg;
-        if (!c.libre(px, pz, 0.32, y) || Math.abs(c.solEn(px, pz, y + 0.3) - y) > 0.02) ok = false;
+    try {
+      const cands = [];
+      for (const P of auto) cands.push({ cx: P.cx, cz: P.cz, ux: P.nx, uz: P.nz, y: P.base ?? c.solEn(P.cx, P.cz, 0.3), hl: P.h ?? 2.04 });
+      for (const f of c.formes) {
+        if (!f.joueur || f.off || f.vantail) continue;
+        let cx, cz, lx, lz, ux, uz;
+        if (f.t === 'b') { cx = (f.x0 + f.x1) / 2; cz = (f.z0 + f.z1) / 2; lx = f.x1 - f.x0; lz = f.z1 - f.z0; }
+        else if (f.t === 'o') { cx = f.cx; cz = f.cz; lx = 2 * f.hx; lz = 2 * f.hz; }
+        else continue;
+        const larg = Math.max(lx, lz), ep = Math.min(lx, lz);
+        if (larg < 0.75 || larg > 1.8 || ep > 0.4) continue;
+        // (la normale du passage : perpendiculaire au grand côté)
+        if (f.t === 'b') { if (lx > lz) { ux = 0; uz = 1; } else { ux = 1; uz = 0; } }
+        else { const c0 = f.c, s0 = f.s; if (f.hx > f.hz) { ux = -s0; uz = c0; } else { ux = c0; uz = s0; } }
+        const y = c.solEn(cx, cz, f.y0 - 1.9), hl = f.y0 - y;
+        if (hl >= 2.0 && hl <= 2.15) cands.push({ cx, cz, ux, uz, y, hl });
       }
-      if (!ok || L.some((D) => Math.hypot(D.x - cx, D.z - cz) < 1)) continue;
-      // (le départ à 2,4 m, le saut à 1,6 m du plan de la porte : à 6,6 m/s, la tête y passe à 0,47 m de saut — le linteau la
-      // rabat ; l'apogée est 0,5 m au-delà)
-      L.push({ x: cx, y, z: cz, nx: ux, nz: uz, linteau: r2(hl), avant: 2.4, elan: 1.6 });
-      if (L.length >= n) break;
-    }
-    }
+      for (const D of cands) {
+        if (!c.libre(D.cx, D.cz, 0.3, D.y) || L.some((E) => Math.hypot(E.x - D.cx, E.z - D.cz) < 1)) continue;
+        let ok = true;
+        for (const sg of [1, -1]) for (let s = 0.2; s <= 2.2 + 1e-9 && ok; s += 0.2) {
+          const px = D.cx + D.ux * s * sg, pz = D.cz + D.uz * s * sg;
+          if (!c.libre(px, pz, 0.32, D.y) || Math.abs(c.solEn(px, pz, D.y + 0.3) - D.y) > 0.02) ok = false;
+        }
+        if (!ok) continue;
+        // (le départ à 2,2 m, le saut à 1,5 m du plan de la porte : à 6,6 m/s, la tête y passe à 0,46 m de saut — le linteau la
+        // rabat ; l'apogée est 0,6 m au-delà)
+        L.push({ x: D.cx, y: D.y, z: D.cz, nx: D.ux, nz: D.uz, linteau: r2(D.hl), avant: 2.2, elan: 1.5 });
+        if (L.length >= n) break;
+      }
+    } finally { for (const f of V) f.off = false; }
+    return L;
   }
   // une BORDURE de la rue : là où le sol saute de 0,12 m sur 5 cm, avec 3 m libres de chaque côté
   function chercherBordure(c) {
