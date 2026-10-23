@@ -24,7 +24,7 @@
 // (l'appoint de l'étalonnage : l'aveuglement visible est le calque #voile-flash du HUD, L-G, piloté par partie.hud.aveugle).
 import * as THREE from 'three';
 import { PAS } from './constantes.js';
-import { etatEntrees } from './entrees_jeu.js';
+import { etatEntrees, ENTREES } from './entrees_jeu.js';
 
 const DEG = Math.PI / 180, CHAMP_H_MAX = 108;
 export const VUE = {
@@ -48,10 +48,10 @@ const vCreux = (() => { const { omega: w, zeta: z, creux } = VUE.reception, wd =
 
 export class VueFPS {
   constructor(game) {
-    this.game = game; this.acteur = null; this._sup = null; this._des = []; this._mort = null; this._champ = 0;
+    this.game = game; this.acteur = null; this._sup = null; this._des = []; this._mort = null;
     this._champV = 0; this._champH = 0; this._roulis = 0; this._balA = 0; this._balPhi = 0; this._bob = { y: 0, lat: 0, roulis: 0 };
     this._creux = { x: 0, v: 0 }; this._imp = []; this._sec = null; this._tAff = 0; this._tirs = 0; this._tirFront = false;
-    this._l = NaN; this._p = NaN; this._lV = 0; this._pV = 0; this._zoom = 1; this._viseeE = 0;
+    this._l = NaN; this._p = NaN; this._lV = 0; this._pV = 0;
   }
   // le champ VERTICAL (degrés) pour un champ horizontal `champ` en 16:9, plafonné à 108° d'horizontal sur un écran large
   champVPour(champ, aspect) {
@@ -153,16 +153,16 @@ export class VueFPS {
     // (la vitesse angulaire du regard : l'inertie de l'arme de vue)
     if (d > 0 && Number.isFinite(this._l)) { this._lV = angle(l - this._l) / d; this._pV = (t - this._p) / d; } else if (poser) { this._lV = 0; this._pV = 0; }
     this._l = l; this._p = t;
-    // la lunette du TP-50 : le balancement en huit de la commande (à l'heure affichée)
+    // la lunette du TP-50 : le balancement en huit de la commande, à l'heure affichée (celle de Game.interpoler : du pas d'avant,
+    // fraction 0, au dernier pas, fraction 1 — où il vaut exactement celui de la commande, d'où partent les balles)
     const E = etatEntrees(P);
     if (E.lunette > 0) {
-      const tt = P.t + clamp((g.acc || 0) / PAS, 0, 1) * PAS, w = 2 * Math.PI * 0.5, amp = 0.25 * DEG * E.mult * E.lunette;
+      const tt = P.t + (clamp((g.acc || 0) / PAS, 0, 1) - 1) * PAS, L = ENTREES.lunette, w = 2 * Math.PI * L.freq, amp = L.ampDeg * DEG * E.mult * E.lunette;
       l += amp * Math.sin(w * tt); t += amp * 0.5 * Math.sin(2 * w * tt);
     }
     // ---- l'allure : balancement, roulis, champ ----
     const al = a.allure || 'arret', v = Math.hypot(c.vel.x, c.vel.z);
     const { zoom, e } = this._zoomDe(a);
-    this._viseeE = e; this._zoom = zoom;
     const B = VUE.balancement;
     const sprint = al === 'sprint' || al === 'tact';
     const cibleA = sprint ? B.sprint : al === 'course' || al === 'marche' || al === 'accroupi' ? B.course * Math.min(1, v / B.vCourse) : 0;

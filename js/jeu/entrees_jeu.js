@@ -6,7 +6,8 @@
 // consommés (un pas les lit une fois ; une image sans pas les garde, js/input.js endFrame les vieillit). Tenus par down(),
 // fronts par pressed(), l'axe et son amplitude. Ce qu'il y met en plus du squelette :
 //   - les BASCULES (`controls.fps`) : la visée maintenue (défaut) ou basculée, l'accroupi basculé (défaut : `accroupiMaintenu`
-//     faux, comme Call of Duty au clavier) ou maintenu ; le sprint ôte l'accroupi basculé et la visée basculée, le saut
+//     faux, comme Call of Duty au clavier) ou maintenu ; le sprint ôte l'accroupi basculé et la visée basculée (sauf lunette à
+//     l'œil : Maj y retient le souffle), le saut
 //     relève d'un accroupi basculé (sauf en glissade : on saute de la glissade) ;
 //   - le SPRINT : tenu au clavier (Maj) ; VERROUILLÉ à la manette (L3, comme Call of Duty : un appui, et il dure tant qu'on
 //     pousse vers l'avant), sur la 2e touche `sprintTact` (SOURIS 5 : un appui = sprint tactique, puis sprint) et au doigt (le
@@ -86,7 +87,9 @@ export function lireCommande(input, game, cmd, profil, partie) {
     E.doigtSprint = doigt;
     const tir = inp.down('tir');
     let visee = viseeMaintenue ? inp.down('visee') : E.visee;
-    if (frontSprint || tact) { if (E.accroupi) E.accroupi = false; if (!viseeMaintenue) { E.visee = false; visee = false; } }
+    // (la visée basculée n'est ôtée que par un sprint qui part — vers l'avant — et jamais lunette à l'œil : Maj y retient le
+    // souffle ; 23/10, relecture : en visée basculée, Maj sortait de la lunette du TP-50 et le souffle était impossible)
+    if (frontSprint || tact) { if (E.accroupi) E.accroupi = false; if (!viseeMaintenue && avant && !(E.lunette > 0)) { E.visee = false; visee = false; } }
     if (E.verrou && (!avant || amp < ENTREES.verrouAmp || visee || tir || (accMaintenu ? inp.down('accroupi') : E.accroupi))) E.verrou = false;
     const auto = !!F.sprintAuto && avant && cmd.ay >= ENTREES.sprintAuto && amp >= ENTREES.sprintAuto;
     const veutSprint = inp.down('sprint') || doigt || E.verrou || auto;

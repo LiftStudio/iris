@@ -22,14 +22,15 @@
 //   - les PAS (événements de la simulation : les sons et l'ouïe des bots les lisent, même d'un bot caché ou posé à 4 Hz) ;
 //   - l'ŒIL LISSÉ de l'acteur local (escaliers, bordures) : la moyenne du sol sous une FENÊTRE carrée de 2 m autour des
 //     pieds — une volée ne fait plus de cassure à son pied ni à son palier (la dérivée seconde de l'œil reste sous 1 cm par
-//     image à 60 im/s, critère 8), et au milieu d'une volée l'œil suit la pente exacte.
+//     image à 60 im/s, critère 8), et au milieu d'une volée l'œil suit la pente exacte ; c'est l'œil de la caméra ET celui d'où
+//     partent les balles (hauteurOeil le porte : acteur.oeil()).
 // `separer` (les contacts entre corps) passe par le monde solide ; `franchissable` est ÉCRITE EN ENTIER par le socle (L-B et
 // L-D l'appellent ; personne ne la change sans F2). PURETÉ (spec § 4.1 règle 4) : ni hasard, ni horloge du navigateur, ni
 // entrées — le temps est `partie.t`, les entrées la commande.
 // CE QUE CE MODULE ÉCRIT SUR L'ACTEUR (lu par l'arsenal, l'arme de vue, la vue) : `accroupi`, `glisse`, `jaugeTact`,
 // `endurance` (état, § 4.7) ; `allure` ('arret' | 'marche' | 'course' | 'sprint' | 'tact' | 'accroupi' | 'glisse' | 'air' |
 // 'franchit'), `franchit` (le franchissement en cours ou null) et `sprintTactique` (lus par l'arsenal, L-A), et `mvt` (son état de mouvement : `sprintFinT` — l'heure de la fin du dernier sprint, pour le délai sprint → tir
-// de l'arsenal —, `franchit` — le franchissement en cours, `k` de 0 à 1 —, `viseeBloquee`, l'œil lissé `yOeil` / `yOeilPrec`).
+// de l'arsenal —, `franchit` — le franchissement en cours, `k` de 0 à 1 —, `viseeBloquee`, l'œil lissé `yOeil` / `yOeilPrec` et son écart aux pieds `decalOeil`).
 import * as THREE from 'three';
 import { OEIL } from './constantes.js';
 import { G } from '../config.js';
@@ -75,8 +76,8 @@ function etatMvt(a) {
   let M = a.mvt;
   if (!M) {
     M = a.mvt = { tact: false, tactArme: -Infinity, epuise: false, sprintT: 0, sprintFinT: -Infinity, sprinte: false, glisse: null, glisseFin: -Infinity,
-      accAvant: false, viseeBloquee: false, viseeLibreT: -Infinity, receptionFin: -Infinity, hautVol: 0, enAir: false, sprintAir: false,
-      franchit: null, contreT: 0, essaiT: -Infinity, pasD: 0, vit: 0, yOeil: NaN, yOeilPrec: NaN, tickOeil: -1, solOeil: NaN,
+      accAvant: false, viseeBloquee: false, viseeLibreT: -Infinity, receptionFin: -Infinity, hautVol: 0, sprintAir: false,
+      franchit: null, contreT: 0, essaiT: -Infinity, pasD: 0, yOeil: NaN, yOeilPrec: NaN, tickOeil: -1, decalOeil: 0,
       mortT: a.mortT, px: a.corps ? a.corps.pos.x : 0, pz: a.corps ? a.corps.pos.z : 0 };
   }
   return M;
@@ -112,8 +113,10 @@ export function appliquerCommande(acteur, cmd, dt, partie) {
   const M = etatMvt(acteur), t = partie.t, C = partie.game && partie.game.collisions;
   const s = (p.h || OEIL.taille) / OEIL.taille;
   const x0 = p.pos.x, z0 = p.pos.z;
-  // (une mort, une réapparition, une téléportation : la glissade, le franchissement, le sprint tactique et l'œil repartent)
+  // (une mort, une réapparition, une téléportation : la glissade, le franchissement, le sprint tactique et l'œil repartent ; on
+  // réapparaît la jauge du sprint tactique et l'endurance pleines, comme dans Call of Duty)
   if (M.mortT !== acteur.mortT || Math.hypot(x0 - M.px, z0 - M.pz) > 1) {
+    if (M.mortT !== acteur.mortT) { acteur.jaugeTact = 1; acteur.endurance = ENDURANCE.max; M.epuise = false; }
     M.mortT = acteur.mortT; M.glisse = null; M.franchit = null; M.tact = false; M.sprintT = 0; M.sprinte = false; M.contreT = 0;
     M.receptionFin = -Infinity; M.viseeLibreT = -Infinity; M.hautVol = 0; M.tickOeil = -1;
   }
@@ -263,7 +266,6 @@ function finPas(acteur, p, M, C, t, x0, z0, dt, partie, sprint) {
   if (M.viseeBloquee) cmd.visee = false;
   if (M.franchit) cmd.tir = false;
   const d = Math.hypot(p.pos.x - x0, p.pos.z - z0), vit = d / dt;
-  M.vit = vit;
   acteur.allure = M.franchit ? 'franchit' : M.glisse ? 'glisse' : p.airborne ? 'air' : vit < 0.3 ? 'arret' : sprint ? (M.tact ? 'tact' : 'sprint')
     : acteur.accroupi > 0.5 ? 'accroupi' : p.marche || vit < 2.3 ? 'marche' : 'course';
   // (les deux drapeaux que lit l'arsenal de L-A : le franchissement en cours — rien en main —, le sprint tactique — sa sortie
@@ -283,15 +285,20 @@ function finPas(acteur, p, M, C, t, x0, z0, dt, partie, sprint) {
       partie.evt('pas', { a: acteur.id, x: p.pos.x - (p.pos.x - x0) * k, y: p.pos.y, z: p.pos.z - (p.pos.z - z0) * k, f: Math.min(1, vit / ALLURES.sprint), allure, tact: !!M.tact });
     }
   } else if (vit < 0.3) M.pasD = PAS_ACTEUR.course / 2;                  // (le premier pas vient vite au départ)
-  // L'ŒIL LISSÉ (l'acteur local : sa caméra) — la valeur d'avant gardée pour l'interpolation de l'image
+  // L'ŒIL LISSÉ (l'acteur local : sa caméra ET l'origine de ses tirs) — l'écart du sol lissé aux pieds, `decalOeil`, entre dans
+  // hauteurOeil, donc dans acteur.oeil(), d'où partent ses balles : la caméra et le canon voient du même point (23/10, relecture :
+  // l'œil lissé de la caméra seule était jusqu'à 15 cm sous l'œil du tir en haut d'une volée — la tête visée au réticule, la
+  // balle 15 cm au-dessus) ; la valeur d'avant gardée pour l'interpolation de l'image
   if (acteur.local && C) {
     // (en franchissant, les pieds sont soulevés : le sol lissé est celui d'en dessous, soulevé d'autant)
     const lev = M.franchit ? M.franchit.leve : 0;
     const sol = solLisse(C, p.pos.x, p.pos.y - lev, p.pos.z) + lev;
-    M.solOeil = Math.abs(sol - p.pos.y) > OEIL_LISSE.ecartMax ? p.pos.y : sol;
-    const y = M.solOeil + hauteurOeil(acteur) + (p.jumpY || 0);
-    M.yOeilPrec = M.tickOeil === partie.tick - 1 && Number.isFinite(M.yOeil) ? M.yOeil : y;
-    M.yOeil = y; M.tickOeil = partie.tick;
+    M.decalOeil = Math.abs(sol - p.pos.y) > OEIL_LISSE.ecartMax ? 0 : sol - p.pos.y;
+    const prec = M.tickOeil === partie.tick - 1 && Number.isFinite(M.yOeil) ? M.yOeil : NaN;
+    M.tickOeil = partie.tick;
+    const y = p.pos.y + hauteurOeil(acteur) + (p.jumpY || 0);
+    M.yOeilPrec = Number.isFinite(prec) ? prec : y;
+    M.yOeil = y;
   }
 }
 
@@ -389,15 +396,17 @@ function franchir(acteur, p, M, cmd, t, dt, partie) {
 
 // la hauteur de l'œil au-dessus des pieds, sans le saut (× h / 1,73) : debout 1,62, accroupi 1,08, en glissade 0,85 (la glissade
 // prend le pas sur l'accroupi) ; en franchissant, les pieds sont soulevés au-dessus de l'obstacle et l'œil ne fait qu'un arc
-// de +0,35 m au-dessus de sa hauteur debout
+// de +0,35 m au-dessus de sa hauteur debout ; l'acteur local y ajoute l'écart de son sol lissé (finPas : volées, bordures),
+// tant qu'il est frais (calculé à ce pas ou au précédent — un mort, une téléportation le perdent)
 export function hauteurOeil(acteur) {
   const h = (acteur.joueur && acteur.joueur.h) || (acteur.fiche && acteur.fiche.height) || OEIL.taille;
   const k = acteur.accroupi || 0, g = acteur.glisse || 0;
   let o = OEIL.debout + (OEIL.accroupi - OEIL.debout) * k;
   o += (OEIL.glisse - o) * g;
   o *= h / OEIL.taille;
-  const F = acteur.mvt && acteur.mvt.franchit;
+  const M = acteur.mvt, F = M && M.franchit;
   if (F) o += FRANCHIR.arc * Math.sin(Math.PI * F.k) - F.leve;
+  if (M && M.decalOeil && acteur.partie && M.tickOeil >= acteur.partie.tick - 1) o += M.decalOeil;
   return o;
 }
 
@@ -419,9 +428,10 @@ export function vitesseSaut(acteur) {
 // LES CONTACTS ENTRE CORPS (§ 3.1) : deux corps de rayons ra et rb ne se recouvrent pas (séparation à ra + rb), poussée
 // PAR LE MONDE SOLIDE (C.deplacer, la bande de chaque corps : une poussée directe traverserait une cloison de 15 cm), 0,05 m
 // au plus par pas ; deux centres confondus s'écartent selon un angle déterministe tiré de leurs ids. Le partage : moitié
-// moitié entre deux humains ou deux props ; un PROP déguisé ne se pousse pas (on s'y cogne comme au vrai meuble : un chasseur
-// qui bousculerait un meuble saurait), ni une cible du stand ; et le corps poussé perd la vitesse qui rentrait dans l'autre
-// (comme contre un mur : on s'arrête au contact au lieu de s'y enfoncer d'un pas de sprint à chaque pas).
+// moitié entre deux humains ou deux props ; entre un PROP et un humain, celui qui entre dans l'autre (on se cogne à un prop
+// comme au vrai meuble : un chasseur qui bousculerait un meuble saurait ; et un prop ne bouscule pas un chasseur) ; une cible
+// du stand ne se pousse pas ; et le corps poussé perd la vitesse qui rentrait dans l'autre (comme contre un mur : on s'arrête
+// au contact au lieu de s'y enfoncer d'un pas de sprint à chaque pas).
 const _p = { x: 0, z: 0 };
 const genre = (a) => (a.corps.fixe ? 0 : a.corps !== a.joueur ? 1 : 2);   // 0 cible / corps fixe · 1 prop · 2 humain
 export function separer(acteurs, collisions) {
@@ -446,8 +456,14 @@ export function separer(acteurs, collisions) {
       } else { dx /= d; dz /= d; }
       const ga = genre(a), gb = genre(b);
       let wa = ga === 0 ? 0 : 1, wb = gb === 0 ? 0 : 1;
-      if (ga === 1 && gb === 2) wa = 0;
-      if (gb === 1 && ga === 2) wb = 0;
+      if (wa && wb && ga !== gb) {
+        // un prop contre un humain : celui qui ENTRE dans l'autre prend la correction, au prorata de sa vitesse entrante — un
+        // humain s'arrête sur un prop comme sur le vrai meuble, un prop qui fonce sur un humain s'y arrête comme contre un mur
+        // (23/10, relecture : le prop jamais poussé poussait l'humain à sa propre vitesse, jusqu'à 6 m/s) ; immobiles tous deux :
+        // l'humain s'écarte
+        const ea = A.vel ? Math.max(0, A.vel.x * dx + A.vel.z * dz) : 0, eb = B.vel ? Math.max(0, -(B.vel.x * dx + B.vel.z * dz)) : 0;
+        if (ea + eb > 1e-6) { wa = ea; wb = eb; } else if (ga === 1) wa = 0; else wb = 0;
+      }
       if (wa + wb === 0) continue;
       const pen = R - d;
       for (const [X, sgn, w] of [[A, -1, wa], [B, 1, wb]]) {

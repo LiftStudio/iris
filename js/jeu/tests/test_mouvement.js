@@ -214,7 +214,6 @@ export default function (jeu) {
         pas(Math.round(0.8 / PAS));
         const vS = mesurerV(a, 0.3);
         inp.relacher('ShiftLeft'); inp.relacher('KeyW'); inp.purger(); pas(60);
-        const m = w === 'pm9' || w === 'p17' ? 1.06 : 1;
         return { w, duree: n * PAS, vT, vS, mob: ARMES[w].mobilite };
       };
       for (const w of ['fa24', 'pm9', 'p17']) res.push(course(w));
@@ -454,8 +453,8 @@ export default function (jeu) {
   //    les bordures de 0,12 m adoucies
   T('8 escaliers : dérivée seconde de l\'œil, pente ; bordures', async () => {
     const p = await essai({ graine: 8 }), a = p.local, vue = p.vue, c = C();
-    const V = volees(c), lignes = [];
-    let pire2 = 0, pireEcart = 0, nImages = 0, nMilieu = 0, plafondFautes = 0;
+    const V = volees(c), lignes = [], vO = new THREE.Vector3();
+    let pire2 = 0, pireEcart = 0, nImages = 0, nMilieu = 0, plafondFautes = 0, ecartTir = 0, decalMax = 0;
     // (la mesure s'arrête quand la course est cassée — la vitesse retombe sous 85 % de sa plus haute : le mur du palier, ou le bout
     // du palier — : un arrêt net à 6,6 m/s arrête aussi net la montée de l'œil, comme le reste du corps ; ce n'est plus l'escalier)
     const parcours = (x, y, z, l, sprint, secondes, fin) => {
@@ -467,6 +466,8 @@ export default function (jeu) {
       for (let i = 0; i < Math.round(secondes * 60); i++) {
         const y0 = image(vue);
         ys.push(y0);
+        // (relecture du 23/10) l'œil d'où partent les balles (acteur.oeil, lu par l'arsenal) est celui de la caméra, lissé compris
+        ecartTir = Math.max(ecartTir, Math.abs(a.oeil(vO).y - y0)); decalMax = Math.max(decalMax, Math.abs(a.mvt.decalOeil || 0));
         const vv = vitesse(a); vMax = Math.max(vMax, vv);
         if (vMax > 3 && vv < 0.85 * vMax) { ys.pop(); break; }
         const j = a.corps, d = dirDe(l), L = 1.1;
@@ -510,9 +511,10 @@ export default function (jeu) {
       return { m2, dh: r3(dh), duree: i5 >= 0 && i95 >= 0 ? r3((i95 - i5) / 60) : null };
     }
     jeu.quitter('balade');
-    const ok = V.length >= 6 && pire2 <= 0.01 && pireEcart <= 0.01 && nMilieu > 0 && bord && bord.monte.duree >= 0.06 && bord.descend.duree >= 0.05 && plafondFautes === 0;
-    return { ok, attendu: '≥ 6 volées, montée et descente, course et sprint : |Δ²y| ≤ 1 cm par image, écart à la pente ≤ 1 cm au milieu des volées · bordures adoucies (≥ 0,06 s) · œil sous le plafond',
-      obtenu: `${V.length} volées · pire Δ² ${r3(pire2 * 100)} cm · pire écart ${r3(pireEcart * 100)} cm (${nMilieu} images au milieu sur ${nImages}) · plafond ${plafondFautes} · bordure ${bord ? JSON.stringify(bord) : 'aucune'} · ${lignes.join(' ; ')}` };
+    const ok = V.length >= 6 && pire2 <= 0.01 && pireEcart <= 0.01 && nMilieu > 0 && bord && bord.monte.duree >= 0.06 && bord.descend.duree >= 0.05 && plafondFautes === 0
+      && ecartTir < 1e-9 && decalMax > 0.02;
+    return { ok, attendu: '≥ 6 volées, montée et descente, course et sprint : |Δ²y| ≤ 1 cm par image, écart à la pente ≤ 1 cm au milieu des volées · bordures adoucies (≥ 0,06 s) · œil sous le plafond · l\'œil du tir = l\'œil de la caméra',
+      obtenu: `${V.length} volées · pire Δ² ${r3(pire2 * 100)} cm · pire écart ${r3(pireEcart * 100)} cm (${nMilieu} images au milieu sur ${nImages}) · plafond ${plafondFautes} · œil du tir − caméra ${ecartTir.toExponential(1)} m (sol lissé jusqu'à ${r3(decalMax * 100)} cm des pieds) · bordure ${bord ? JSON.stringify(bord) : 'aucune'} · ${lignes.join(' ; ')}` };
   }, { delai: 180 });
 
   // 9. LES PAS : tous les 0,7 m ± 5 % en course, 0,45 m en marche, aucun accroupi sous 1,3 m/s
@@ -597,11 +599,27 @@ export default function (jeu) {
         return { d, bouge };
       } finally { Player.collisions = C0; B[1].joueur.bounds = h0; p.retirerActeur(pr); }
     };
-    const pb = contre(0.15), bf = contre(0.5);
+    // (relecture du 23/10) un prop qui fonce au sprint sur un humain immobile : il s'y arrête à ra + rb, l'humain ne bouge pas (le
+    // prop ne bouscule pas un chasseur)
+    const fonce = () => {
+      const pr = p.ajouterActeur({ id: 41, nom: 'Prop', equipe: 'B', x: LOIN.x, y: 0, z: LOIN.z, lacet: 0, cerveau: null, corps: 'prop' });
+      const C0 = Player.collisions, h0 = B[1].joueur.bounds; Player.collisions = null; pr.corps.bounds = SANS_BORNES; B[1].joueur.bounds = SANS_BORNES;
+      try {
+        const h = B[1];
+        jeu.teleporter(h.id, LOIN.x, 0, LOIN.z - 30, 0); jeu.teleporter(41, LOIN.x, 0, LOIN.z - 26, 0);
+        forcer(h, { ay: 0, lacet: 0 }); forcer(pr, { ay: 1, sprint: true, lacet: 0 });   // (vers −z : droit sur l'humain)
+        pas(180);
+        const d = Math.hypot(h.pos.x - pr.pos.x, h.pos.z - pr.pos.z), bouge = Math.hypot(h.pos.x - LOIN.x, h.pos.z - (LOIN.z - 30));
+        lacher(h); lacher(pr); jeu.teleporter(h.id, LOIN.x + 50, 0, LOIN.z, 0);
+        return { d, bouge };
+      } finally { Player.collisions = C0; B[1].joueur.bounds = h0; p.retirerActeur(pr); }
+    };
+    const pb = contre(0.15), bf = contre(0.5), fo = fonce();
     jeu.quitter('balade');
-    const ok = dMin >= 0.59 && dedans === 0 && traverse === 0 && cloison && cloison.traverse === 0 && Math.abs(pb.d - 0.45) <= 0.01 && Math.abs(bf.d - 0.8) <= 0.01 && pb.bouge < 1e-6 && bf.bouge < 1e-6;
-    return { ok, attendu: '8 au même point : paires ≥ 0,59 m en 24 pas, 0 dans une forme, 0 traversée · cloison : 0 traversée · arrêté à 0,45 m (± 1 cm) d\'une poubelle-prop, 0,8 m d\'un baby-foot-prop, le prop immobile',
-      obtenu: `paire la plus proche ${r3(dMin)} m · dedans ${dedans} · traversées ${traverse} · cloison ${cloison ? JSON.stringify(cloison) : 'aucune trouvée'} · poubelle ${r3(pb.d)} (prop bougé ${r4(pb.bouge)}) · baby-foot ${r3(bf.d)} (${r4(bf.bouge)})` };
+    const ok = dMin >= 0.59 && dedans === 0 && traverse === 0 && cloison && cloison.traverse === 0 && Math.abs(pb.d - 0.45) <= 0.01 && Math.abs(bf.d - 0.8) <= 0.01 && pb.bouge < 1e-6 && bf.bouge < 1e-6
+      && Math.abs(fo.d - 0.6) <= 0.01 && fo.bouge < 1e-6;
+    return { ok, attendu: '8 au même point : paires ≥ 0,59 m en 24 pas, 0 dans une forme, 0 traversée · cloison : 0 traversée · arrêté à 0,45 m (± 1 cm) d\'une poubelle-prop, 0,8 m d\'un baby-foot-prop, le prop immobile · un prop qui fonce sur un humain : arrêté à 0,6 m, l\'humain immobile',
+      obtenu: `paire la plus proche ${r3(dMin)} m · dedans ${dedans} · traversées ${traverse} · cloison ${cloison ? JSON.stringify(cloison) : 'aucune trouvée'} · poubelle ${r3(pb.d)} (prop bougé ${r4(pb.bouge)}) · baby-foot ${r3(bf.d)} (${r4(bf.bouge)}) · prop lancé ${r3(fo.d)} (humain bougé ${r4(fo.bouge)})` };
   });
 
   // 11. LA CAMÉRA : posée à l'image n avec le regard de l'image n (quaternion à 1e-9, aucun lissage) ; tangage ± 1,48 (prop
@@ -904,12 +922,55 @@ export default function (jeu) {
       inp.presser('KeyW'); pas(30); inp.presser('Souris:4'); pas(3); inp.relacher('Souris:4'); pas(80);
       const vTact = mesurerV(a, 0.3), alT = a.allure;
       inp.relacher('KeyW'); inp.purger();
-      return { duree: n * PAS, apres, reprise, tact, vMax, vTact, alT };
+      // (relecture du 23/10) on réapparaît la jauge du sprint tactique et l'endurance pleines
+      a.sprintLimite = true; a.jaugeTact = 0.1; a.endurance = 5;
+      a.mourir(p.t); pas(12); a.reapparaitre(LOIN.x, 0, LOIN.z, 0, p.t); p.pas(PAS);
+      const respawn = { jauge: a.jaugeTact, endurance: a.endurance };
+      a.sprintLimite = false;
+      return { duree: n * PAS, apres, reprise, tact, vMax, vTact, alT, respawn };
     });
     jeu.quitter('balade');
-    const ok = Math.abs(r.duree - 4.0) <= PAS * 1.5 && pc(r.apres, 5.0) <= 0.01 && r.reprise !== null && r.reprise >= 20 && r.reprise < 21 && r.tact === 0 && r.vMax <= 6.6 * 1.005 && pc(r.vTact, 7.8) <= 0.01 && r.alT === 'tact';
-    return { ok, attendu: 'sprint 4,0 s ± 1 pas puis 5,00 · reprise à 20 d\'endurance · jamais de tactique (≤ 6,60) · combattant : SOURIS 5 → 7,80',
-      obtenu: `${r3(r.duree)} s puis ${r3(r.apres)} m/s · reprise à ${r.reprise === null ? '-' : r2(r.reprise)} · tactique ${r.tact} pas · max ${r3(r.vMax)} · combattant ${r3(r.vTact)} (${r.alT})` };
+    const ok = Math.abs(r.duree - 4.0) <= PAS * 1.5 && pc(r.apres, 5.0) <= 0.01 && r.reprise !== null && r.reprise >= 20 && r.reprise < 21 && r.tact === 0 && r.vMax <= 6.6 * 1.005 && pc(r.vTact, 7.8) <= 0.01 && r.alT === 'tact'
+      && r.respawn.jauge === 1 && r.respawn.endurance === 100;
+    return { ok, attendu: 'sprint 4,0 s ± 1 pas puis 5,00 · reprise à 20 d\'endurance · jamais de tactique (≤ 6,60) · combattant : SOURIS 5 → 7,80 · réapparition : jauge et endurance pleines',
+      obtenu: `${r3(r.duree)} s puis ${r3(r.apres)} m/s · reprise à ${r.reprise === null ? '-' : r2(r.reprise)} · tactique ${r.tact} pas · max ${r3(r.vMax)} · combattant ${r3(r.vTact)} (${r.alT}) · réapparition ${JSON.stringify(r.respawn)}` };
+  });
+
+  // 20. (relecture du 23/10) LA LUNETTE DU TP-50 (§ 3.2) : le balancement en huit de 0,25° à 0,5 Hz dans le regard de la commande
+  //     (d'où partent les balles) et le même à la caméra ; Maj en visée = souffle retenu (× 0,1 pendant 4 s, puis × 1,5 pendant
+  //     2 s) — en visée maintenue ET basculée (Maj n'y sort pas de la lunette)
+  T('20 lunette du TP-50 : huit, souffle, visée basculée', async () => {
+    const p = await essai({ graine: 20 }), a = p.local, inp = game.input, F = game.settings.controls.fps, vm0 = F.viseeMaintenue;
+    a.arsenal = new Arsenal(a, { principale: 'tp50', secondaire: null, letale: null, tactique: null, couteau: true });
+    const E = etatEntrees(p), res = [];
+    // l'écart du regard de la commande à celui de la souris (degrés), le plus grand sur `s` secondes (une crête de |sin| par seconde)
+    const huit = (s) => { let m = 0; for (let i = 0; i < Math.round(s / PAS); i++) { p.pas(PAS); m = Math.max(m, Math.abs(a.cmd.lacet - game.camYaw)); } return m / DEG; };
+    const basculer = () => { inp.presser('Souris:2'); pas(2); inp.relacher('Souris:2'); pas(1); };
+    let camera = 0;
+    try {
+      for (const maintenue of [true, false]) {
+        F.viseeMaintenue = maintenue; inp.purger(); game.camYaw = 0; game.camPitch = 0;
+        if (maintenue) inp.presser('Souris:2'); else basculer();
+        pas(Math.round(0.6 / PAS));
+        const libreD = huit(1.2);
+        // la caméra à la dernière image simulée (fraction 1) : le même décalage que la commande
+        game.acc = PAS; game.interpoler(); p.camera(1 / 60, false);
+        camera = Math.max(camera, Math.abs(angleCam().lacet - a.cmd.lacet));
+        inp.presser('ShiftLeft'); pas(Math.round(1.0 / PAS));           // (le lissage de 0,15 s passé : 0,1 à 0,1 % près)
+        const tenu = E.souffle.tenu, vise = a.arsenal.visee > 0.99, retenu = huit(1.2);
+        pas(Math.round(1.9 / PAS));                                       // (4,1 s après l'appui : le souffle lâché, la pénalité)
+        const penalite = !E.souffle.tenu && p.t < E.souffle.finPenalite;
+        pas(Math.round(0.4 / PAS)); const essouffle = huit(1.0);
+        inp.relacher('ShiftLeft');
+        res.push({ maintenue, libre: r3(libreD), tenu, vise, retenu: r3(retenu), penalite, essouffle: r3(essouffle) });
+        if (maintenue) inp.relacher('Souris:2'); else basculer();
+        inp.purger(); pas(Math.round(2.5 / PAS));
+      }
+    } finally { F.viseeMaintenue = vm0; inp.purger(); jeu.quitter('balade'); }
+    const ok = res.length === 2 && res.every((R) => pc(R.libre, 0.25) <= 0.05 && R.tenu && R.vise && pc(R.retenu, 0.025) <= 0.1 && R.penalite && pc(R.essouffle, 0.375) <= 0.05)
+      && camera < 1e-9;
+    return { ok, attendu: 'huit 0,25° · Maj : souffle tenu, la lunette gardée, × 0,1 (0,025°) · après 4 s : pénalité × 1,5 (0,375°) — en visée maintenue et basculée · la caméra au même regard que la commande',
+      obtenu: res.map((R) => `${R.maintenue ? 'maintenue' : 'basculée'} : ${R.libre}° · souffle ${R.tenu}, lunette ${R.vise}, ${R.retenu}° · pénalité ${R.penalite}, ${R.essouffle}°`).join(' · ') + ` · caméra − commande ${camera.toExponential(1)} rad` };
   });
 
   // =====================================================================

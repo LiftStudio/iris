@@ -5,7 +5,12 @@ Branche `lot/L-B` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-B`), partie de `s
 
 ## Où j'en suis
 
-**FINI (23/10, 04:58)** — les 19 critères passent au navigateur (`&rapport=1&lot=L-B` : `ok`, 19/19, aussi en profil
+**RELECTURE EN COURS (23/10, 06:10, relecteur sévère)** — spec (§§ 3.1-3.2, 4.5.7, 5.5.2) et diff `socle...lot/L-B` relus ;
+corrections écrites (voir « Relecture » en bas), pas encore rejouées au navigateur : en attente d'un jeton (les trois pris par
+L-E, L-M, L-H). Ensuite : `&rapport=1&lot=L-B`, `&lot=S0`, jeu à la main (essai, combat, prop hunt, `?tel=1`), console,
+cadence ; puis section « Relecture » complétée et rapport final.
+
+**Construction FINIE (23/10, 04:58)** — les 19 critères passent au navigateur (`&rapport=1&lot=L-B` : `ok`, 19/19, aussi en profil
 téléphone `&tel=1`), `&rapport=1&lot=S0` passe ENCORE sur la branche (29/29), `verifier_proprietaires` passe ; onglet et
 serveur fermés, jeton rendu. Rejoué après le dernier changement de test (754a71d) : `&rapport=1&lot=L-B` → `ok`, 19/19,
 20 708 ms. Restent les 5 tests « À F2 » (`apresFusion`, sous `&fusion=1` à l'intégration ; sur la branche, celui des 20
@@ -178,3 +183,36 @@ courante droite, pas de marche qui saute), `lb_orbite_prop.jpg` (l'orbite du pro
 - Les 5 tests « À F2 » (`apresFusion`) : 12 balles de FA-24 → camPitch −0,118 rad (L-A), visée au zoom de chaque arme
   (L-A / L-V), pose « franchit » de l'arme de vue (L-V), `separer` avec les vrais `CorpsProp` (L-C / L-F), 40 sauts à
   travers 20 portes (L-M). Rien d'autre pour le lot.
+
+## Relecture (23/10, relecteur sévère)
+
+Relu : la spec (§§ 3.1-3.2, 4.3.2, 4.5.4-4.5.7, 4.6-4.8, 5.1, 5.5.2), le diff complet `git diff socle...lot/L-B` (6 fichiers,
+tous du lot), `franchissable` identique au socle au caractère près, les signatures du § 4.5.7 (inchangées ; ajouts seulement),
+la pureté (`verifier_proprietaires` : OK 6 fichiers), aucun TODO ni bouchon.
+
+### Défauts trouvés et corrigés
+
+1. **L'œil de la caméra n'était pas l'œil du tir** (`mouvement.js`). L'œil lissé (écart 1) ne servait qu'à la caméra ;
+   l'arsenal tire depuis `acteur.oeil()` (pieds + `hauteurOeil`, `armes.js:184`). En haut ou au pied d'une volée, arrêté ou
+   lent, la caméra était jusqu'à ≈ 15 cm sous l'œil du tir (5 cm près d'une bordure) : le réticule sur une tête, la balle
+   15 cm au-dessus — le joueur de Call of Duty qui tient le haut d'un escalier rate ses têtes. Corrigé : l'écart du sol lissé
+   aux pieds (`mvt.decalOeil`, calculé par `finPas`, frais à ce pas ou au précédent) entre dans `hauteurOeil` de l'acteur
+   local, donc dans `acteur.oeil()`, d'où partent ses balles et ses grenades (et `__jeu.viser`). Test 8 : l'œil du tir = l'œil
+   de la caméra à chaque image des 9 volées.
+2. **Un prop poussait un humain à sa propre vitesse** (`separer`). « Le prop n'est jamais poussé » (écart 5) laissait au prop
+   qui fonce sur un chasseur toute sa vitesse : le chasseur était bousculé à 5,5 m/s (0,05 m par pas). Corrigé : entre un
+   prop et un humain, celui qui ENTRE dans l'autre prend la correction (au prorata des vitesses entrantes ; immobiles tous deux :
+   l'humain) ; un humain s'arrête toujours sur un prop comme sur le meuble. Test 10 : un prop lancé au sprint sur un humain
+   immobile s'arrête à 0,6 m, l'humain ne bouge pas.
+3. **Visée basculée : Maj sortait de la lunette** (`entrees_jeu.js`). Avec `viseeMaintenue = false`, le front de Maj ôtait
+   la visée basculée même arrêté et lunette à l'œil : le souffle retenu du TP-50 était impossible. Corrigé : la visée
+   basculée n'est ôtée que par un sprint qui part (vers l'avant) et jamais lunette à l'œil. Nouveau test 20.
+4. **La lunette en avance d'un pas à la caméra** (`vue_fps.js`) : le huit de la caméra était pris à `t + fraction·PAS` au
+   lieu de l'heure affichée `t − (1 − fraction)·PAS` (celle de `Game.interpoler`) ; à la fraction 1, il vaut maintenant
+   exactement le regard de la commande (test 20) ; les chiffres du huit lus dans `ENTREES.lunette` (ils y étaient en double).
+5. **La réapparition** (`mouvement.js`) : la jauge du sprint tactique et l'endurance repartaient de leur valeur à la mort ;
+   on réapparaît pleins, comme dans Call of Duty (test 19).
+6. **Ce qui manquait aux tests** : le souffle retenu et le huit du TP-50 (§ 3.2) n'étaient testés nulle part → test 20
+   (visée maintenue ET basculée).
+7. Code mort retiré : `mvt.vit`, `mvt.enAir`, `mvt.solOeil` (devenu `decalOeil`), `VueFPS._champ`, `_zoom`, `_viseeE`, une
+   variable du test 2.
