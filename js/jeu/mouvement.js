@@ -100,9 +100,12 @@ export function penteEn(C, x, z, y) {
   return p;
 }
 // la mobilité de l'arme en main (§ 3.1) : 1 sans arsenal
+// (F2 : un chasseur du prop hunt — `sprintLimite` — court aux allures de la table, 5,00 et 6,60, quelle que soit son arme :
+// avec la PM-9 il courait à 5,30 / 7,00 et la poursuite du § 5.5.9 point 16 ne tenait plus — 7,3 m repris en 4 s au lieu
+// de 5,7, l'écart refermé ensuite à 0,9 m/s au lieu de 0,5)
 export function mobilite(acteur) {
   const A = acteur.arsenal, f = A && A.arme;
-  if (!f) return 1;
+  if (!f || acteur.sprintLimite) return 1;
   if (f.id === 'couteau') return MOBILITE_COUTEAU;
   return f.mobilite || 1;
 }
