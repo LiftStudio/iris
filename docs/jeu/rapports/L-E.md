@@ -199,6 +199,29 @@ rayon 3 cm ; regardé à l'écran depuis la ligne (boîtes posées à la main pu
 
 ## Relecture (relecteur sévère, 23/10)
 
+### Contrats relus point par point (diff `socle...lot/L-E`, 4 fichiers, vérificateur `OK 4 fichiers`)
+
+- **§ 4.5.12** : `PartieFPS extends Partie`, opts `{ mode, zone, allies, ennemis, difficulte, duree, scoreCible, classe, avatars,
+  graine, humain }` tous lus (+ `campHumain`, `appareil`, `presentation`, `decompte`, ajouts) ; `regles(dt)` seul surchargé du
+  pas (l'ordre du § 4.3.2 intact : les règles à l'étape 8, le barème sur `elim` émis par `infliger` à l'étape 6b ou 7) ;
+  `PartieStand` opts `{ defi }`, cibles `role: 'cible'` sur `CorpsFixe`, records `iris.stand.v1` sous `try/catch` ; `STAND =
+  { ligne: { x, y, z, lacet }, couloirs: [{ x, z }], cibles: [{ x, y, z, cap, distance }] }` (+ `couloir`, `mannequin`, `bornes`) ;
+  anneaux par `ramenerPoint` à la préparation ; `ajouterChargeur()` à chaque élimination. Aucune signature du socle changée.
+- **§ 4.6** : `phase`, `annonce`, `score { equipe, valeur, id, points, raison }`, `capture { point, equipe, etat }` (`neutre` |
+  `prise` | `neutralise`), `apparition { a, x, y, z }`, `fin { gagnant, scores }` — tous en nombres et chaînes.
+- **§ 4.5.15** : `chrono`, `scores`, `classement` (champs du contrat + ajouts), `mort { tueur, arme, zone, distance, vieTueur, t }`,
+  `reapparitionT`, `annonce`, `points [{ id, x, y, z, r, possesseur, capture: { equipe, k } }]`, `cibles [{ id, x, y, z, cap, k,
+  touchee }]`, `allies` (base, vide en chacun pour soi).
+- **§ 4.7 / pureté** : ni `Math.random`, ni horloge, ni `Input`, ni caméra dans ce qu'appelle le pas (la caméra de la
+  présentation et les records sont dans `camera` / `image`, affichage) ; hasard = `partie.rng` ou `Rng(melanger(graine, id, …))` ;
+  l'état des règles dans `etat()` (blocs `fps` / `stand`), rendu par `appliquer`.
+- **§ 3** : présentation 3 s, décompte 3 s, mi-temps 5 s ; 40 (tél. 20) / 20 / 150 · 10:00 ; réapparition 3,0 / 2,0 / 3,0 ;
+  régénération 4,0 s puis 35 PV/s ; protection 1,2 s (Acteur) finie au 1er tir ; assistance ≥ 30 dégâts en 5 s (Partie) ;
+  barème 100 / +25 / +25 / +50 au-delà de 30 m / 50 / 150 / 75 / 50 ; anneaux A (14,88 ; 0 ; −3,12) r 2,5, B (9,38 ; −3,06 ;
+  −9,37) r 3, C (12,63 ; 3,5 ; −7,87) r 3, 8 s (×1,5, ×2), 4 s + 8 s, 1 pt / 3 s, mi-temps 75 ou 5:00 ; classes 40/30/20/10 ;
+  Mixte ; effectifs 4 c. 4 / 1 + 5 (tél. 2 c. 2 / 1 + 3), 9 bots (5), avertissement > 7 (> 3) ; stand 8 / 15 / 25 m, levée 0,15 s,
+  réflexes 0,8 s — tous écrits tels quels dans `REGLES_FPS`, `DOMINATION`, `DEFIS`, `REGLES_STAND`.
+
 ### Corrections (fichiers du lot)
 
 1. **Stand, entraînement libre : pas de « CLIQUE POUR JOUER »** — le libre part en `manche` sans décompte, donc sans le
