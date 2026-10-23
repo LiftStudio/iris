@@ -275,10 +275,14 @@ export class Arsenal {
       this._recharge(partie, t, sprinte, veutTirer, peut);
       if (this.et === 'recharge') return;
     }
-    // 6. LE SPRINT : arme baissée ; en sortir coûte `sprintTir` (sprint tactique : `sprintTactTir`)
+    // 6. LE SPRINT : arme baissée ; en sortir — un tir, la visée, une recharge demandée, l'arrêt — coûte `sprintTir` (sprint
+    // tactique : `sprintTactTir`)
+    const ch = this.ch[this.i], res = this.res[this.i];
+    const capMax = f.chargeur + (f.recharge.parCartouche || ch === 0 ? 0 : 1);
+    const veutRecharger = !!cmd.recharger && res > 0 && ch < capMax;
     const tact = this._tactique(a, v);
     if (this.et === 'sprint') {
-      if (!sprinte || veutTirer || cmd.visee) {
+      if (!sprinte || veutTirer || cmd.visee || veutRecharger) {
         this._etat('pret', t, 0);
         this.tA = Math.max(this.tA, t + (this.spTac ? f.sprintTactTir : f.sprintTir)); this.sT = this.tA;
         if (veutTirer && !f.auto) this.tampon = this.tA;    // (le clic qui a fait sortir du sprint part au bout de la sortie)
@@ -288,9 +292,7 @@ export class Arsenal {
       return;
     }
     // 7. RECHARGER : sur le front, ou d'office à vide (la cadence du dernier tir finie)
-    const ch = this.ch[this.i], res = this.res[this.i];
-    const capMax = f.chargeur + (f.recharge.parCartouche || ch === 0 ? 0 : 1);
-    if (res > 0 && ((cmd.recharger && ch < capMax) || (ch === 0 && (this.et !== 'tir' || t + 1e-9 >= this.prochain)))) {
+    if (veutRecharger || (res > 0 && ch === 0 && (this.et !== 'tir' || t + 1e-9 >= this.prochain))) {
       if (this.et === 'pret' || this.et === 'tir') { this._recharger(f, t, partie); return; }
     }
     // 8. TIRER
@@ -353,10 +355,11 @@ export class Arsenal {
     // (balles entrées : le sprint ou la fin du geste rendent l'arme)
     if (t + 1e-9 >= this.fin || (this.entre && sprinte)) { this._etat('pret', t, 0); partie.evt('recharge', { a: a.id, phase: 'fin', tactique: this.tact }); }
   }
-  // un geste qui coupe la recharge : avant l'entrée des balles, rien n'a changé ; le FP-12 garde ses cartouches entrées
+  // un geste qui coupe la recharge : avant l'entrée des balles, rien n'a changé ; le FP-12 garde ses cartouches entrées.
+  // Chaque 'debut' est fermé par UN 'fin' | 'annulee' | 'interrompue' (balles déjà entrées : 'fin', le geste est fait)
   _annulerRecharge(partie) {
     if (this.et !== 'recharge') return;
-    if (!this.entre || this.nC > 0) partie.evt('recharge', { a: this.acteur.id, phase: 'annulee', tactique: this.tact });
+    partie.evt('recharge', { a: this.acteur.id, phase: this.entre && this.nC === 0 ? 'fin' : 'annulee', tactique: this.tact });
     this.nC = 0; this.pp = false;
   }
 
@@ -384,7 +387,7 @@ export class Arsenal {
       const cr = Math.cos(r), sr = Math.sin(r), ct = Math.cos(th), st = Math.sin(th);
       let dx = cr * _d.x + sr * (ct * rx + st * hx), dy = cr * _d.y + sr * (st * hy), dz = cr * _d.z + sr * (ct * rz + st * hz);
       const k = 1 / Math.hypot(dx, dy, dz); dx *= k; dy *= k; dz *= k;
-      const res = B.tirer(partie, a, _o.x, _o.y, _o.z, dx, dy, dz, f.portee || 100, this._res[p] || (this._res[p] = {}));
+      const res = B.tirer(partie, a, _o.x, _o.y, _o.z, dx, dy, dz, f.portee || 100, this._res[p] || (this._res[p] = {}), p);
       partie.resoudreTir(a, f, _o.x, _o.y, _o.z, dx, dy, dz, res, p);
       partie.evt('trajet', { a: a.id, plomb: p, ox: _o.x, oy: _o.y, oz: _o.z, x: res.x, y: res.y, z: res.z, mat: res.mat });
     }
@@ -467,7 +470,8 @@ export class Arsenal {
       const q = b.corps.pos, dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz);
       if (d > portee + 1e-6 || Math.abs(q.y - p.y) > 1.0) continue;
       if (d > 0.35 && (dx * fx + dz * fz) / d < cosC) continue;
-      if (!partie.balistique.vue(_o.x, _o.y, _o.z, q.x, q.y + 1.2 * b.h / 1.73, q.z)) continue;
+      // (la LIGNE LIBRE d'un objet, pas la vue : une vitre claire laisse voir, pas passer la lame — relecture du 23/10)
+      if (!partie.balistique.libre(_o.x, _o.y, _o.z, q.x, q.y + 1.2 * b.h / 1.73, q.z)) continue;
       if (d < bd) { bd = d; best = b; }
     }
     this._dCouteau = bd;
