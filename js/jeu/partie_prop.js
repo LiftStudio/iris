@@ -14,10 +14,11 @@ import { ZONES_JEU } from './constantes.js';
 import { DOTATION_CHASSEUR } from './armes.js';
 import { departs, pointsDe } from './apparitions.js';
 import { CerveauChasseur, CerveauCacheur } from './cerveau_prop.js';
-import { typesDeguisables, viserMeuble, deguiser } from './deguisements.js';
+import { typesDeguisables, viserMeuble, deguiser, retirerProp } from './deguisements.js';
 import { CorpsProp } from './corps_prop.js';
 import { FICHES_BOTS, FICHE_HAYTHEM } from './avatars.js';
 import { PROVOCATIONS } from './sons_prop.js';
+import { TABLE_PORTES_PROP } from './monde_partie.js';
 
 const cbrt = Math.cbrt, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // § 3.9 : toutes les constantes du mode
@@ -51,11 +52,16 @@ export class PartieProp extends Partie {
     this.roue = { ouverte: false, ax: 0, ay: 0, choix: -1 };
     this.gagnant = null; this.nManches = this.opts.manches || REGLAGES_PROP.manches;
   }
+  // la zone par défaut, calculée au lancement : le −1 s'il a 6 types déguisables, sinon le 1er (§ 3.9) — le compte des types
+  // demande le catalogue, prêt APRÈS la navigation (Partie.preparer) : les deux graphes sont alors restreints à la zone
+  // choisie (restreints plus tôt à une zone nulle, ils ne l'étaient à rien)
   async preparer(progres) {
-    // la zone par défaut, calculée au lancement : le −1 s'il a 6 types déguisables, sinon le 1er (§ 3.9)
     await super.preparer(progres);
-    if (!this.zone) this.zone = typesDeguisables('ss').length >= REGLAGES_PROP.typesMin ? 'ss' : REGLAGES_PROP.zoneRepli;
+    if (this.zone) return;
+    this.zone = typesDeguisables('ss').length >= REGLAGES_PROP.typesMin ? 'ss' : REGLAGES_PROP.zoneRepli;
+    for (const n of [this.nav, this.navProps]) if (n) n.restreindre(this.monde.noeudsAutorises(n, this.zone, this.id));
   }
+  tablePortes() { return TABLE_PORTES_PROP; }
   _fiche(k) { const ids = this.opts.avatars || []; const F = ids.length ? FICHES_BOTS.filter((f) => ids.includes(f.id)) : []; return F.length ? F[k % F.length] : FICHE_HAYTHEM; }
   peupler() {
     const o = this.opts, humain = o.humain !== false, N = clamp(o.acteurs || REGLAGES_PROP.acteurs, REGLAGES_PROP.acteursMin, REGLAGES_PROP.acteursMax);
@@ -152,6 +158,16 @@ export class PartieProp extends Partie {
         this.evt('provocation', { a: a.id, id: PROVOCATIONS[id] ? PROVOCATIONS[id].id : id, x: a.pos.x, y: a.pos.y, z: a.pos.z, forcee: false });
       }
     }
+  }
+  // L'ÉTAT RENDU (§ 4.7) : les déguisements d'abord — le corps de meuble posé, à la forme de l'état ; un prop redevenu
+  // humain retrouve son Player —, puis le reste (Partie.appliquer : Acteur.appliquer n'en rend que les champs)
+  appliquer(e) {
+    for (const s of e.acteurs || []) {
+      const a = this.acteurParId(s.id); if (!a) continue;
+      if (s.prop && (!a.prop || a.prop.cle !== s.prop.cle)) { a.corps.pos.set(s.x, s.y, s.z); this._deguiser(a, s.prop.cle); }
+      else if (!s.prop && a.prop) { retirerProp(this, a); if (a.joueur) a.changerCorps(a.joueur); }
+    }
+    super.appliquer(e);
   }
   // ---------------------------------------------------------------- LA ROUE DES PROVOCATIONS (saisie hors simulation)
   roueOuverte() { return this.roue.ouverte; }

@@ -12,7 +12,10 @@
 // les maillages non étiquetés, `parForme`, la grille.)
 import * as THREE from 'three';
 
-export const MEUBLES = { types: new Map(), poses: [], parZone: new Map(), grille: new Map(), parForme: new Map() };
+// (`nonEtiquetes` : les maillages à la géométrie d'un prototype qu'aucune étiquette ne couvre, [{ type, zone, x, y, z }] ;
+// `horsTolerance` : les types dont la taille sort de la table de carte_props § 2 — L-K les remplit, js/jeu/harnais.js
+// verifierMeubles les rend)
+export const MEUBLES = { types: new Map(), poses: [], parZone: new Map(), grille: new Map(), parForme: new Map(), nonEtiquetes: [], horsTolerance: [] };
 // les types non déguisables d'office (comptoir, table longue… : L-K remplit) ; et tout disque de plus de 0,5 m
 export const DEGUISABLE_PAR_TYPE = {};
 
@@ -26,14 +29,15 @@ const etiquette = (o) => {
   return typeof m === 'string' ? { type: m } : m;
 };
 
-// LA COPIE d'un meuble : un type (prototype partagé) et une pose (où il est, sa boîte orientée en monde)
-function noter(o, copie) {
+// LA COPIE d'un meuble : un type (prototype partagé, cloné au premier exemplaire de son type — avant la couture quand
+// fermerRegistre l'appelle) et une pose (où il est, sa boîte orientée en monde)
+function noter(o) {
   const E = etiquette(o); if (!E) return null;
   o.updateMatrixWorld(true);
   const cle = E.type + (E.variante ? ':' + E.variante : '');
   let T = MEUBLES.types.get(cle);
   if (!T) {
-    const proto = copie || o.clone(true);
+    const proto = o.clone(true);
     proto.position.set(0, 0, 0); proto.rotation.set(0, 0, 0); proto.scale.copy(o.getWorldScale(_v));
     proto.updateMatrixWorld(true);
     const boite = new THREE.Box3().setFromObject(proto, true);
@@ -67,14 +71,14 @@ export function fermerRegistre(racine) {
     if (!o.userData || !o.userData.meuble || _vus.has(o)) return;
     _vus.add(o);
     if (o === racine) _references.push(o);
-    else noter(o, o.clone(true));
+    else noter(o);
   });
 }
 
 // À LA PRÉPARATION d'une partie : les références gardées, et les étiquetés qu'aucune couture n'a vus (groupes `nofuse`)
 export function rattraperRegistre(scene) {
-  for (const o of _references.splice(0)) noter(o, null);
-  if (scene && scene.traverse) scene.traverse((o) => { if (o.userData && o.userData.meuble && !_vus.has(o)) { _vus.add(o); noter(o, null); } });
+  for (const o of _references.splice(0)) noter(o);
+  if (scene && scene.traverse) scene.traverse((o) => { if (o.userData && o.userData.meuble && !_vus.has(o)) { _vus.add(o); noter(o); } });
   return MEUBLES;
 }
 

@@ -14,6 +14,7 @@
 import { Errant, Pilote } from './pilotage.js';
 import { Rng, melanger } from './rng.js';
 import { ZONES_JEU } from './constantes.js';
+import { viderFronts } from './commande.js';
 
 const DEG = Math.PI / 180;
 // § 3.7 : tRepérage ET réaction (deux délais qui s'ajoutent), erreur σ0 → σ∞ (°) et son resserrage τ, part des visées à
@@ -135,13 +136,13 @@ export class CerveauBase {
   // LA COMMANDE, à chaque pas : TOUS les champs
   commande(dt, cmd) {
     const a = this.acteur, P = this.partie, id = a.id;
+    viderFronts(cmd);                              // (les fronts ne vivent qu'un pas, comme ceux du clavier)
     if (!a.vivant) { cmd.ax = 0; cmd.ay = 0; cmd.tir = false; cmd.visee = false; return; }
     if ((P.tick + 7 * id) % (P.degrade ? 24 : 12) === 0) this.percevoir();
     if ((P.tick + 3 * id) % (P.degrade ? 12 : 6) === 0) this.penser();
     // le recul accumulé : compensé selon la difficulté, le reste dérange la visée
     if (a.arsenal) { a.arsenal.prendreRecul(this._r); this.aim.t -= this._r.v * (1 - this.diff.compensation); this.aim.l -= this._r.h * (1 - this.diff.compensation); }
-    cmd.saut = false; cmd.recharger = false; cmd.armeSuiv = false; cmd.armePrec = false; cmd.armeN = 0;
-    cmd.couteau = false; cmd.tactique = false; cmd.letale = false; cmd.marche = false; cmd.accroupi = false; cmd.interagir = false;
+    cmd.letale = false; cmd.marche = false; cmd.accroupi = false; cmd.interagir = false;
     const c = this.cible;
     if (!c || !c.vivant) {
       // PATROUILLE : l'errant tient le lacet (le regard dans la marche)

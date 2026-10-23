@@ -41,7 +41,7 @@ const BOITES = { fa24: [0.84, 0.05, 0.12, 0.20], pm9: [0.62, 0.05, 0.11, 0.18], 
 const _geos = {};
 
 export function creerArme(id, { pourVue = false } = {}) {
-  const B = BOITES[id] || BOITES.fa24, M = mats();
+  const B = BOITES[id] || BOITES.fa24;
   const g = new THREE.Group(); g.name = 'arme ' + id;
   const geo = _geos[id] || (_geos[id] = new THREE.BoxGeometry(B[1], B[2], B[0]).translate(0, 0, B[3] - B[0] / 2));
   const m = new THREE.Mesh(geo, MATERIAUX_ARMES.teinte(id));
@@ -55,6 +55,5 @@ export function creerArme(id, { pourVue = false } = {}) {
   g.userData.reperes = reperes;
   g.userData.os = pourVue ? { chargeur: null, culasse: null, glissiere: null, pompe: null, detente: null, goupille: null } : null;
   g.userData.arme = id;
-  if (M.verre && id === 'fa24' && pourVue) { /* (le point rouge : L-W) */ }
   return g;
 }

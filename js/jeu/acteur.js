@@ -101,6 +101,8 @@ export class Acteur {
     this.vie = e.vie; this.armure = e.ar; this.vivant = e.viv; this.reapparitionT = e.rT; this.protegeT = e.pT;
     this.mortT = e.mT || 0; this.gele = !!e.gel;
     if (this.arsenal && e.arme) this.arsenal.appliquer(e.arme);
+    // (le déguisement : ses champs seulement — le corps de meuble et sa racine, la partie qui sait les poser les rend,
+    // js/jeu/partie_prop.js appliquer)
     if (this.prop && e.prop) Object.assign(this.prop, { cle: e.prop.cle, cap: e.prop.cap, fige: e.prop.fige, verrou: e.prop.verrou, pv: e.prop.pv, changements: e.prop.chg, provocT: e.prop.pT });
     Object.assign(this.stats, { elims: e.st.e, morts: e.st.m, assists: e.st.a, score: e.st.s });
   }

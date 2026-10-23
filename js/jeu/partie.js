@@ -97,13 +97,17 @@ export class Partie {
   }
   // les acteurs de la partie (la sous-classe) — appelé par entrer, le monde déjà en état de partie
   peupler() { }
+  // la table des portes que `monde.entrer` applique (js/jeu/monde_partie.js : TABLE_PORTES_FPS au combat, TABLE_PORTES_PROP
+  // au prop hunt — la sous-classe la rend) ; null : les portes de la balade, sans règle de partie
+  tablePortes() { return null; }
   entrer() {
     const g = this.game;
-    this.monde.entrer(this.zone, this.tablePortes ? this.tablePortes() : null);
+    this.monde.entrer(this.zone, this.tablePortes());
     // le corps de Haythem : ses drapeaux de balade gardés, rendus à la sortie
     this._drapeaux = {};
     for (const k of DRAPEAUX) this._drapeaux[k] = Object.prototype.hasOwnProperty.call(g.user, k) ? g.user[k] : undefined;
     this.peupler();
+    this.sur('elim', (e) => this._elimVue(e));
     this.suivi = this.local || this.acteurs[0] || null;
     if (this.local && this.local.humain && this.local.role !== 'prop' && !this.local.prop && this.local.corps === this.local.joueur) {
       this.vue.entrer(this.local);
@@ -238,8 +242,15 @@ export class Partie {
 
   // ---------------------------------------------------------------- LA CAMÉRA (§ 4.3.4)
   camera(dt, poser) {
-    const a = this.local;
-    if (this._cachetteFixe && this._cachetteFixe()) return this.vue.poser(dt, poser);
+    const a = this.local, g = this.game;
+    // le chasseur pendant la cachette : la caméra FIXE à son œil, le regard tenu où il était au début de la cachette (le
+    // panneau de cachette masque la scène, L-G)
+    if (a && a.role === 'chasseur' && this.phase === 'cachette' && a.corps === a.joueur) {
+      if (!this._regardFixe) this._regardFixe = { l: g.camYaw, t: g.camPitch };
+      g.camYaw = this._regardFixe.l; g.camPitch = this._regardFixe.t;
+      return this.vue.poser(dt, poser);
+    }
+    this._regardFixe = null;
     if (a && a.vivant && a.humain && !a.prop && a.corps === a.joueur) return this.vue.poser(dt, poser);
     if (a && a.vivant && a.prop) { this.orbite.viser(a.corps, { distance: 2.4, hauteur: 1.0, tangage: this.bornesTangage() }); return this.orbite.poser(dt, poser); }
     if (a && !a.vivant && a.corps === a.joueur && this.t - a.mortT < 3) return this.vue.poser(dt, poser);
@@ -305,19 +316,23 @@ export class Partie {
     if (a && a.equipe) {
       for (const b of this.acteurs) {
         if (b === a || b.equipe !== a.equipe || !b.vivant || !b.corps || H.allies.length >= 4) continue;
-        H.allies.push({ id: b.id, nom: b.nom, x: b.corps.posAff.x, y: (b.corps.solAff ?? b.corps.pos.y) + 1.635 * b.h / 1.73 + 0.35, z: b.corps.posAff.z });
+        // (la tête SIMULÉE — celle des capsules, js/jeu/touches.js : 1,635 m, abaissée de 0,54 m accroupi, + saut — à la
+        // position affichée, + 0,35)
+        const c = b.corps, y = (c.solAff ?? c.pos.y) + (c.jumpY || 0) + (1.635 - 0.54 * (b.accroupi || 0)) * b.h / 1.73 + 0.35;
+        H.allies.push({ id: b.id, nom: b.nom, x: c.posAff.x, y, z: c.posAff.z });
       }
     }
   }
   calme() { return !(this.phase === 'manche' || this.phase === 'traque'); }
 
   // ---------------------------------------------------------------- les entrées et le pointeur
+  // (rad/px, les mêmes sur les deux axes ; l'inversion du tangage, `controls.invertY`, reste à js/game.js _onMove, qui
+  // l'applique après — la rendre ici l'annulait. En visée, la sensibilité suit la focale : L-B ; le squelette, sensVisee)
   souris() {
     const s = this.game.settings, f = (s && s.controls && s.controls.fps) || {};
     const sens = f.sens ?? 0.45, a = this.local && this.local.arsenal;
-    // en visée, la sensibilité suit la focale (L-B) ; le squelette : la même
     const k = 0.0025 * sens * (a && a.visee > 0 ? (f.sensVisee ?? 1) : 1);
-    return [k, k * ((s && s.controls && s.controls.invertY) ? -1 : 1) * 1];
+    return [k, k];
   }
   bornesTangage() { return this.local && this.local.prop ? [-0.7, 1.25] : [-TANGAGE_MAX, TANGAGE_MAX]; }
   // la capture du pointeur (VueFPS) ; sous ?test=1, la réponse simulée par le harnais
@@ -379,7 +394,8 @@ export class Partie {
   // la résolution d'un tir : ÉMET 'impact' / 'frole', DIFFÈRE ses dégâts (jamais une vie touchée ici)
   resoudreTir(tireur, fiche, ox, oy, oz, dx, dy, dz, res, plomb) {
     if (res.acteur) {
-      const d = res.t, deg = degatsDe(fiche, d, res.zone);
+      // (§ 3.5 : × 0,8 quand la balle a traversé une vitre, claire ou dépolie — `traverse`, posé par la balistique)
+      const d = res.t, deg = degatsDe(fiche, d, res.zone) * (res.traverse ? 0.8 : 1);
       this.differer({ genre: 'degats', cible: res.acteur.id, degats: deg, par: tireur.id, arme: fiche.id, zone: res.zone,
         x: res.x, y: res.y, z: res.z, dx, dy, dz, plomb });
     } else if (res.mat !== 'rien') {
@@ -435,11 +451,21 @@ export class Partie {
       cible.mourir(this.t); cible.stats.morts++;
       if (tireur && tireur !== cible) { tireur.stats.elims++; if (tete) tireur.stats.tetes++; }
       for (const id of assists) { const b = this.acteurParId(id); if (b) b.stats.assists++; }
-      this.evt('elim', { par, cible: cible.id, arme, tete, x: cible.pos.x, y: cible.pos.y, z: cible.pos.z, ix: dx, iy: dy, iz: dz, assists });
-      if (cible.joueur && cible.corps === cible.joueur && !cible.local) cible.poupee = new Poupee(cible.joueur, null, null, this.game.collisions);
-      if (cible.local) this.vue.mort(par);
+      // (px, py, pz : le point du coup fatal, en plus des champs du § 4.6 — la poupée de chiffon part de là)
+      this.evt('elim', { par, cible: cible.id, arme, tete, x: cible.pos.x, y: cible.pos.y, z: cible.pos.z, ix: dx, iy: dy, iz: dz, assists, px: x, py: y, pz: z });
     }
     return d;
+  }
+  // L'ÉLIMINATION VUE (affichage, abonné à 'elim' par entrer : la simulation n'appelle jamais l'affichage, § 4.1 règle 5) :
+  // la caméra de mort de Haythem ; pour un bot, la poupée de chiffon lancée dans l'axe du coup à 2,5 m/s (§ 3.6), depuis le
+  // point du coup (`tete` : le coup sec de la tête, L-C)
+  _elimVue(e) {
+    const c = this.acteurParId(e.cible); if (!c) return;
+    if (c.local) { this.vue.mort(e.par); return; }
+    if (!c.joueur || c.corps !== c.joueur) return;
+    const n = Math.hypot(e.ix, e.iy, e.iz) || 1;
+    c.poupee = new Poupee(c.joueur, new THREE.Vector3(e.ix / n * 2.5, e.iy / n * 2.5, e.iz / n * 2.5), { x: e.px, y: e.py, z: e.pz, tete: !!e.tete },
+      this.game.collisions);
   }
   soigner(cible, pv, cause) {
     if (!cible.vivant) return 0;

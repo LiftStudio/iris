@@ -99,9 +99,10 @@ export function separer(acteurs, collisions) {
       } else { dx /= d; dz /= d; }
       const pousse = Math.min(0.05, (R - d) / 2);
       for (const [X, s] of [[A, -1], [B, 1]]) {
-        if (X.fixe || X === undefined) continue;
+        if (X.fixe) continue;
         _p.x = X.pos.x; _p.z = X.pos.z;
-        if (C) C.deplacer(_p, dx * pousse * s, dz * pousse * s, X.rayon ?? 0.3, null, X.pos.y + (X.jumpY || 0), X.hautCorps, X.basCorps);
+        // (la bande du corps, celle de son propre déplacement : hautCorps / basCorps d'un Player, haut / bas d'un CorpsProp)
+        if (C) C.deplacer(_p, dx * pousse * s, dz * pousse * s, X.rayon ?? 0.3, null, X.pos.y + (X.jumpY || 0), X.hautCorps ?? X.haut, X.basCorps ?? X.bas);
         else { _p.x += dx * pousse * s; _p.z += dz * pousse * s; }
         X.pos.x = _p.x; X.pos.z = _p.z;
       }

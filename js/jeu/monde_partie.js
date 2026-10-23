@@ -22,7 +22,7 @@ export const TABLE_DEPOLIS = [];         // [{ x, y, z }] : les vitres dépolies
 export function regleParDefaut(porte, zoneJeu, mode) { return mode === 'prop' || mode === 'prophunt' ? 'auto' : 'ouverte'; }
 
 export class MondePartie {
-  constructor(game) { this.game = game; this.pret = false; this.bornes = null; this._bornesUser = null; this.inconnues = []; this.zone = null; }
+  constructor(game) { this.game = game; this.pret = false; this.bornes = null; this._bornesUser = null; this._portesBalade = null; this.inconnues = []; this.zone = null; }
   // une fois par session : barrières, rubalise, vantaux solides, dépolis (L-M)
   preparerSession() { this.pret = true; }
   get portes() { const P = this.game.carte && this.game.carte.portes; return (P && P.auto) || []; }
@@ -38,13 +38,16 @@ export class MondePartie {
     this.bornes = Z.rue ? BORNES_JEU : null;
     this._bornesUser = u.bounds;
     if (this.bornes) u.bounds = this.bornes;
+    // (les portes de la balade gardées telles quelles — la porte 6 est ouverte au départ de Haythem —, rendues à la sortie)
+    this._portesBalade = this.portes.map((P) => ({ P, k: P.k, sens: P.sens }));
     for (const P of this.portes) { P.sens = 1; this._poser(P, 0); }
   }
   // l'état EXACT de la balade
   sortir() {
     const u = this.game.user;
     if (this._bornesUser) u.bounds = this._bornesUser;
-    this._bornesUser = null; this.bornes = null; this.zone = null;
+    for (const { P, k, sens } of this._portesBalade || []) { P.sens = sens; this._poser(P, k); }
+    this._bornesUser = null; this._portesBalade = null; this.bornes = null; this.zone = null;
   }
   // (dans Partie.pas, étape 5 : déterministe)
   majPortes(dt, acteurs) {

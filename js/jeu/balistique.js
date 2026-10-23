@@ -42,11 +42,16 @@ export class Balistique {
     out.mat = t < portee ? 'mur' : 'rien'; out.forme = null; out.vitre = false;
     return out;
   }
-  // UN TIR : le monde puis les acteurs (le plus proche) ; `out` = { acteur, zone, t, x, y, z, nx, ny, nz, mat, forme, traverse }
+  // UN TIR : le monde puis les acteurs (le plus proche) ; `out` = { acteur, zone, t, x, y, z, nx, ny, nz, mat, forme, traverse }.
+  // Les balles TRAVERSENT les alliés (§ 3.5 : tir allié désactivé — la balle continue jusqu'à l'ennemi derrière) : seuls
+  // les ennemis du tireur sont des cibles (partie.ennemis)
   tirer(partie, tireur, ox, oy, oz, dx, dy, dz, portee, out) {
     out = out || {};
     const m = this.balle(ox, oy, oz, dx, dy, dz, portee, this._m || (this._m = {}));
-    const h = rayonActeurs(partie.acteurs, ox, oy, oz, dx, dy, dz, m.t, tireur, this._h || (this._h = { acteur: null, zone: null, t: 0 }));
+    const cibles = this._cibles || (this._cibles = []);
+    cibles.length = 0;
+    for (const b of partie.acteurs) if (b !== tireur && partie.ennemis(tireur, b)) cibles.push(b);
+    const h = rayonActeurs(cibles, ox, oy, oz, dx, dy, dz, m.t, tireur, this._h || (this._h = { acteur: null, zone: null, t: 0 }));
     if (h) {
       out.acteur = h.acteur; out.zone = h.zone; out.t = h.t;
       out.x = ox + dx * h.t; out.y = oy + dy * h.t; out.z = oz + dz * h.t;

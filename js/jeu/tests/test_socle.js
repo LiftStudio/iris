@@ -1,13 +1,13 @@
 // =====================================================================
-//  LES TESTS DU SOCLE (S0, 22/10 ; spec § 5.4, acceptation, points 1 à 26)
+//  LES TESTS DU SOCLE (S0, 22/10 ; spec § 5.4, acceptation, points 1 à 26 ; § 6, la balade : 27 à 29)
 // =====================================================================
 // Lancés par le harnais sous `?test=1&rapport=1&lot=S0` (window.__rapport), PC puis `?tel=1`. Rejoués par TOUS les lots
 // avant de finir (§ 5.1, règle 5b) : la balade au bit près, les entrées, les cycles de partie. Les tests ne cliquent jamais
 // à l'écran : tout passe par window.__jeu. Un test rend { ok, attendu, obtenu }.
 import * as THREE from 'three';
-import { Rng } from '../rng.js';
+import { Rng, hacher } from '../rng.js';
 import { PAS } from '../constantes.js';
-import { settings, entree } from '../../settings.js';
+import { settings, entree, ACTIONS } from '../../settings.js';
 import { Player } from '../../player.js';
 import { creerCorps, libererCorps, FICHE_HAYTHEM } from '../avatars.js';
 import { MEUBLES } from '../../registre_meubles.js';
@@ -716,4 +716,91 @@ export default function (jeu) {
     }
     return { ok: manque.length === 0, attendu: '15 documents, 6 avatars aux tailles de LA CAGE (le dossier des jetons : vérifié en ligne de commande)', obtenu: manque.length ? manque.join(', ') : 'tout là' };
   });
+
+  // 28 (§ 6.1, « balade fonctionnelle »). Les vues (C : 3 → 2 → 1 → 4 → 3), une emote, le téléphone (l'entrée bloquée puis
+  // rendue), un rang serré où l'on se faufile, les pas des couches PROGRAMMÉS au journal audio, l'endurance au sprint
+  // (− 22/s), l'aide des touches à l'arrivée en balade. (Les rangs serrés sont ceux de la S −1.14, de la S 1.3 et de la
+  // salle 2 du 2e : la David Clark n'en a pas — le premier rang ouvert de Player.rangs.)
+  T('28 balade fonctionnelle : vues, emote, téléphone, rang, pas, endurance, aide', async () => {
+    const u = game.user, inp = game.input, res = [];
+    const code = (id) => (inp.bind[id] || []).find((c) => c && !c.startsWith('Tactile:'));
+    const tenir = (id, oui) => { const c = code(id); if (oui) inp.downSet.add(c); else inp.downSet.delete(c); };
+    // les vues
+    const SUIV = { 3: 2, 2: 1, 1: 4, 4: 3 }, vues = [], attendu = [];
+    let v = game.vue;
+    for (let i = 0; i < 4; i++) {
+      v = SUIV[v]; attendu.push(v);
+      inp.presser(code('camera')); game.frame(1 / 60); inp.relacher(code('camera')); game.frame(1 / 60); vues.push(game.vue);
+    }
+    res.push(['vues ' + vues.join('→'), egal(vues, attendu)]);
+    // une emote
+    game.doEmote(0); res.push(['emote', !!u.emote]); u.stopEmote();
+    // le téléphone (P) : l'entrée bloquée tant qu'il est ouvert
+    const ph = window.__phone;
+    if (ph) {
+      inp.presser(code('phone')); game.frame(1 / 60); inp.relacher(code('phone'));
+      const ouvert = !!ph.open && inp.blocked;
+      ph.toggle(); game.frame(1 / 60);
+      res.push(['téléphone', ouvert && !ph.open && !inp.blocked]);
+    }
+    // un rang serré : poussé contre son bout ouvert, Haythem s'y faufile
+    const R = Player.rangs.find((r) => r.ouvA);
+    if (R) {
+      game.placerAuDepart();
+      u.pos.set(R.ax - R.ux * 0.05, R.sol, R.az - R.uz * 0.05); u.vel.set(0, 0, 0); game.carte.maj(0, game);
+      game.camYaw = Math.atan2(-R.ux, -R.uz); tenir('forward', true);
+      for (let i = 0; i < 24 && !u.rang; i++) game.update(PAS);
+      tenir('forward', false);
+      res.push(['rang (' + R.nom + ')', !!u.rang && u.rang.R === R]);
+      u.rang = null;
+    }
+    // l'endurance au sprint, puis les pas (course vers la salle d'attente)
+    game.placerAuDepart(); u.stamina = 100;
+    const J = jeu.journalAudio, cible = { x: 9.6, z: -6.755 };
+    const viser = () => { game.camYaw = Math.atan2(-(cible.x - u.pos.x), -(cible.z - u.pos.z)); };
+    tenir('forward', true); tenir('sprint', true);
+    for (let i = 0; i < 60; i++) { viser(); game.update(PAS); }
+    const perte = 100 - u.stamina;
+    tenir('sprint', false); J.vider();
+    for (let i = 0; i < 240; i++) { viser(); game.update(PAS); if (i % 2) { game.carte.maj(1 / 60, game); game.updateCamera(1 / 60); } }
+    tenir('forward', false);
+    const starts = J.entrees.filter((e) => e.methode === 'start').length;
+    res.push([`endurance − ${r2(perte)} en 0,5 s`, Math.abs(perte - 11) <= 0.5]);
+    res.push([`pas programmés : ${starts}`, starts >= 6]);
+    // l'aide des touches, à l'arrivée en balade (enterLobby sans argument)
+    game.placerAuDepart(); game.enterLobby();
+    const hint = document.getElementById('hud-hint');
+    res.push(['aide des touches', !!hint && !!hint.textContent.trim()]);
+    game.placerAuDepart();
+    const ko = res.filter((r) => !r[1]).map((r) => r[0]);
+    return { ok: ko.length === 0, attendu: 'vues, emote, téléphone, rang, endurance − 11 ± 0,5 en 0,5 s, ≥ 6 pas programmés, aide affichée',
+      obtenu: ko.length ? 'faux : ' + ko.join(', ') : res.map((r) => r[0]).join(' · ') };
+  });
+
+  // 29 (§§ 6.1, 6.2). CE QUE LA BALADE MONTRE ET GARDE : le HUD (empreinte = référence de a8b22dd, sans body.combat,
+  // l'endurance visible), le tactile (`__touch._contexte()` = référence), les touches par défaut (ACTIONS de a8b22dd), les
+  // boutons de la pause (ceux d'aujourd'hui, plus « Modes de jeu ») ; et le menu ne change rien à la balade (menu →
+  // BALADE LIBRE → rejeu au bit près)
+  const ACTIONS_A8B22DD = '7f1f1f5d';           // (hacher des [id, def, pad] d'ACTIONS sur a8b22dd)
+  T('29 balade : HUD, tactile, touches, pause, menu = référence', async () => {
+    const ref = jeu.reference[profil()], res = [];
+    for (let i = 0; i < 3; i++) game.frame(1 / 60);
+    res.push(['HUD', window.__rejeuBalade.empreinteHud() === ref.hud]);
+    const st = document.querySelector('.stamina');
+    res.push(['sans body.combat, endurance visible', !document.body.classList.contains('combat') && !!st && getComputedStyle(st).display !== 'none']);
+    const tact = window.__touch && window.__touch._contexte ? window.__touch._contexte() : null;
+    res.push(['tactile', egal(tact, ref.tactile)]);
+    res.push(['touches', hacher(ACTIONS.map((a) => [a.id, a.def, a.pad || null])) === ACTIONS_A8B22DD]);
+    game.togglePause();
+    const B = [...document.querySelectorAll('#overlay-buttons button')].map((b) => b.textContent.trim());
+    game.togglePause();
+    res.push(['pause', egal(B, ['Reprendre', 'Options', 'Commandes', 'Revenir au départ', 'Modes de jeu']) && !game.paused]);
+    jeu.quitter('menu'); for (let i = 0; i < 30; i++) game.frame(1 / 60);
+    const menu = game.mode === 'menu';
+    jeu.quitter('balade');
+    const r = await jeu.rejouerBalade();
+    res.push(['menu, puis la balade au bit près', menu && r.ok && r.identiques]);
+    const ko = res.filter((x) => !x[1]).map((x) => x[0]);
+    return { ok: ko.length === 0, attendu: res.map((x) => x[0]).join(', '), obtenu: ko.length ? 'faux : ' + ko.join(', ') + ' (pause : ' + B.join(' / ') + ')' : 'tout vrai' };
+  }, { delai: 120 });
 }

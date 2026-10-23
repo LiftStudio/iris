@@ -24,7 +24,10 @@ export class Nav {
     n.empreinte = 'vol-d-oiseau:' + rayon + ':' + (franchir ? 1 : 0) + ':v' + VERSION_NAV;
     return n;
   }
+  // (`pas`, `rayon`, `franchir`, `bornes` : les options du graphe ; `depuisCache` : relu d'IndexedDB plutôt que généré — lus
+  // par js/jeu/harnais.js verifierNav)
   constructor() {
+    this.pas = 0.25; this.rayon = 0.3; this.franchir = true; this.bornes = BORNES_NAV; this.depuisCache = false;
     this.nb = 0;
     this.px = new Float32Array(0); this.pz = new Float32Array(0); this.ph = new Float32Array(0);
     this.zone = new Uint8Array(0); this.niveau = new Int8Array(0); this.degage = new Float32Array(0);

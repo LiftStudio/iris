@@ -62,7 +62,13 @@ export function installerJeu(game, deps) {
   const calque = document.createElement('div');
   calque.id = 'calque-clic'; calque.hidden = true;
   calque.innerHTML = '<div class="calque-clic-texte">CLIQUE POUR JOUER</div>';
-  calque.addEventListener('click', (e) => { e.stopPropagation(); game.partie?.capturer(); });
+  // (le clic capture le pointeur et relance ; venu du doigt — ou la dernière entrée étant la manette —, il relance SANS
+  // capture : un téléphone n'en a pas, la demande serait refusée et le calque resterait)
+  calque.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const p = game.partie; if (!p) return;
+    if (e.pointerType === 'touch' || !p.besoinCapture()) p.fermerCalque(true); else p.capturer();
+  });
   document.body.appendChild(calque);
 
   const api = {};

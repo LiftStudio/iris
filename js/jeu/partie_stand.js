@@ -8,6 +8,7 @@
 // mesure (la ligne de tir voit chaque cible sans un vélo, une jardinière ni une voiture entre les deux).
 //   opts : { defi: 'vingt'|'tetes'|'recul'|'reflexes' }
 import { Partie } from './partie.js';
+import { TABLE_PORTES_FPS } from './monde_partie.js';
 
 // (squelette : la ligne à x ≈ −1 face à l'est, les couloirs à z 2,6 et 4,4 ; L-E mesure)
 export const STAND = {
@@ -22,6 +23,7 @@ export const STAND = {
 
 export class PartieStand extends Partie {
   constructor(game, opts, deps) { super(game, opts, deps); this.id = 'stand'; this.zone = 'ecole'; }
+  tablePortes() { return TABLE_PORTES_FPS; }
   peupler() {
     const L = STAND.ligne, C = this.game.collisions;
     this.ajouterActeur({ id: 0, nom: 'Haythem', equipe: 'A', local: true, humain: true, x: L.x, y: C ? C.solEn(L.x, L.z, 0) : L.y, z: L.z, lacet: L.lacet,

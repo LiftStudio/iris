@@ -8,7 +8,7 @@
     "L-J": "vague2", "L-O": "vague2", "L-P": "vague2", "L-Q": "vague2",
     "INT": "vague2"
   },
-  "branches": { "socle": "S0", "j-socle": "S0", "vague2": "F2", "integration": "INT" },
+  "branches": { "socle": "S0", "j-socle": "S0", "j-socle-ok": "S0", "vague2": "F2", "integration": "INT" },
   "fichiers": {
     "S0": ["js/jeu/**", "js/registre_meubles.js", "css/jeu/**", "tools/proprietaires.json", "tools/verifier_proprietaires.py", "docs/jeu/**", "assets/tel/*.glb",
       "js/game.js", "js/player.js", "js/couches.js", "js/input.js", "js/settings.js", "js/main.js", "js/chargement.js", "js/audio.js", "js/collisions.js",

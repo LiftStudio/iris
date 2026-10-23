@@ -43,7 +43,8 @@ export class Input {
     // LA SOURIS EN PARTIE : un bouton n'est un code que pointeur CAPTURÉ au moment de l'appui, et 150 ms après la capture
     // (le clic qui capture le pointeur ne tire jamais) ; le menu contextuel et les boutons « page précédente / suivante »
     // (4 et 5) sont coupés sur l'image du jeu
-    const permise = () => this.sourisJeu && !this.blocked && !!document.pointerLockElement && performance.now() - this.tCapture > 150;
+    const permise = () => this.sourisJeu && !this.blocked && !!document.pointerLockElement && document.pointerLockElement.tagName === 'CANVAS'
+      && performance.now() - this.tCapture > 150;
     this._md = (e) => {
       if (!permise()) return;
       const c = 'Souris:' + e.button;

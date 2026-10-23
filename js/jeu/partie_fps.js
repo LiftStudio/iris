@@ -10,6 +10,7 @@ import { Partie } from './partie.js';
 import { departs, choisirApparition, pointsDe } from './apparitions.js';
 import { EQUIPES, ZONES_JEU } from './constantes.js';
 import { FICHES_BOTS, FICHE_HAYTHEM } from './avatars.js';
+import { TABLE_PORTES_FPS } from './monde_partie.js';
 import { TELEPHONE } from '../appareil.js';
 
 const PRESENTATION = 3, DECOMPTE = 3;
@@ -30,6 +31,7 @@ export class PartieFPS extends Partie {
     this.scores = this.mode === 'equipes' ? { A: 0, B: 0 } : null;
     this.gagnant = null;
   }
+  tablePortes() { return TABLE_PORTES_FPS; }
   _classeBot() { let u = this.rng.next(); for (const [c, p] of BOTS_CLASSES) { if (u < p) return c; u -= p; } return 'assaut'; }
   _fiche(k) {
     const ids = this.opts.avatars || [];

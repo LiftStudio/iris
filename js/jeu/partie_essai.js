@@ -7,6 +7,7 @@
 //   opts : { graine, mannequins: [{ x, y, z }] | n, bots: n (2 au plus utiles), difficulte, classe ('assaut'), prop, humain = vrai }
 import { Partie } from './partie.js';
 import { POINTS_APPARITION } from './apparitions.js';
+import { TABLE_PORTES_FPS, TABLE_PORTES_PROP } from './monde_partie.js';
 import { Player } from '../player.js';
 
 // les mannequins par défaut : la salle d'attente, devant le départ (trois points libres, vérifiés au monde solide)
@@ -25,6 +26,8 @@ export class PartieEssai extends Partie {
     this.id = 'essai';
     this.zone = this.opts.zone || 'ecole';
   }
+  // (le banc du combat : les portes du combat ; Haythem en meuble, celles du prop hunt)
+  tablePortes() { return this.opts.prop ? TABLE_PORTES_PROP : TABLE_PORTES_FPS; }
   peupler() {
     const g = this.game, o = this.opts, D = g.carte.depart;
     const lacet0 = Math.atan2(-D.fx, -D.fz);

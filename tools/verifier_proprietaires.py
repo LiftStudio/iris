@@ -1,10 +1,12 @@
 """LES PROPRIÉTAIRES ET LA PURETÉ (socle S0 du jeu, 22/10 ; spec §§ 4.1 règles 2 et 4, 5.2).
 
-python -I tools/verifier_proprietaires.py <branche> [clé]
+python -I tools/verifier_proprietaires.py <branche> [clé] [--base=<réf>] [--lot-r]
 
 1. Les fichiers que la branche change depuis sa base (git diff --name-only <base>...<branche>) sont-ils tous à elle ?
-   La clé du lot se lit dans le nom de la branche (lot/L-A → L-A ; socle, j-socle → S0 ; vague2 → F2 ; integration → INT)
-   ou se donne en 2e argument ; sa liste est dans tools/proprietaires.json (motifs glob), plus son rapport
+   La clé du lot se lit dans le nom de la branche (lot/L-A → L-A ; socle, j-socle, j-socle-ok → S0 ; vague2 → F2 ;
+   integration → INT ; sinon la première clé L-x qu'il contient) ou se donne en 2e argument. La base est celle de
+   tools/proprietaires.json ; une base absente du dépôt est cherchée sous ses autres noms (socle → socle-ok, j-socle-ok,
+   j-socle ; vague2 → vague2-ok…), ou se donne par --base=<réf>. Sa liste est dans tools/proprietaires.json (motifs glob), plus son rapport
    docs/jeu/rapports/<clé>.md. F2 et INT : tout, sauf js/ecole_soussol.js et js/ecole_amphi.js (le lot R) — sauf avec
    --lot-r (la fusion du lot R).
 2. La PURETÉ des fichiers « simulation » (dans l'arbre de la branche) : ni Math.random, ni performance.now, ni Date.now,
@@ -81,16 +83,28 @@ def main():
         pass
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     lot_r = '--lot-r' in sys.argv
+    base_donnee = next((a.split('=', 1)[1] for a in sys.argv[1:] if a.startswith('--base=')), None)
     if not args:
         print(__doc__)
         return 2
     branche = args[0]
     P = json.load(open(os.path.join(RACINE, 'tools', 'proprietaires.json'), encoding='utf-8'))
     cle = args[1] if len(args) > 1 else (branche.split('/', 1)[1] if branche.startswith('lot/') else P.get('branches', {}).get(branche))
+    if not cle:
+        m = re.search(r'\b(L-[A-Z])\b', branche)
+        cle = m.group(1) if m else None
     if not cle or cle not in P['fichiers']:
         print('clé de lot inconnue pour la branche', branche, '(donne-la en 2e argument)')
         return 2
-    base = P['base'][cle]
+    base = base_donnee
+    if not base:
+        for b in [P['base'][cle], P['base'][cle] + '-ok', 'j-' + P['base'][cle] + '-ok', 'j-' + P['base'][cle]]:
+            if subprocess.run(['git', '-C', RACINE, 'rev-parse', '--verify', '--quiet', b + '^{commit}'], capture_output=True).returncode == 0:
+                base = b
+                break
+    if not base:
+        print('base introuvable pour', cle, ':', P['base'][cle], '(donne-la par --base=<réf>)')
+        return 2
     fautes = []
     try:
         fichiers = [f for f in git('diff', '--name-only', f'{base}...{branche}').splitlines() if f]

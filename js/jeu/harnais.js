@@ -13,9 +13,9 @@ import * as THREE from 'three';
 import { Player } from '../player.js';
 import { PAS, BORNES_JEU, ZONES_JEU } from './constantes.js';
 import { hacher } from './rng.js';
-import { MEUBLES } from '../registre_meubles.js';
-import { pointsDe } from './apparitions.js';
-import { BORNES_NAV } from './nav.js';
+import { MEUBLES, rattraperRegistre, zonerRegistre } from '../registre_meubles.js';
+import { pointsDe, POINTS_APPARITION } from './apparitions.js';
+import { BORNES_NAV, Nav } from './nav.js';
 import { entree } from '../settings.js';
 import { ASC } from '../ecole_ascenseur.js';
 
@@ -72,7 +72,7 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
     if (s) { s.save = function () { this._emit(); }; H.reglages = JSON.parse(JSON.stringify(s.data)); }
   }
   // les compteurs (tous les événements de la partie en cours) et le chronomètre de Partie.pas / Partie.image
-  const N = { tirs: 0, touches: 0, tetes: 0, elims: 0, impacts: 0, sons: 0, voix: 0, chemins: 0, aStarMs: 0, coinces: 0, teleportsSecours: 0, horsMonde: 0, pasMs: 0, imageMs: 0 };
+  const N = { tirs: 0, touches: 0, tetes: 0, elims: 0, impacts: 0, sons: 0, chemins: 0, aStarMs: 0 };
   const T = { pas: [], image: [] };
   document.addEventListener('iris-partie', (e) => {
     const p = game.partie;
@@ -81,6 +81,18 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
     const pas = p.pas.bind(p), image = p.image.bind(p);
     p.pas = (dt) => { const t0 = performance.now(); pas(dt); const d = performance.now() - t0; T.pas.push(d); if (T.pas.length > 4000) T.pas.shift(); };
     p.image = (dt) => { const t0 = performance.now(); image(dt); const d = performance.now() - t0; T.image.push(d); if (T.image.length > 1000) T.image.shift(); };
+    // les chemins demandés et le temps de l'A* (la file : `demander` empile, `pasFile` calcule), sur chaque graphe une fois ;
+    // les sons joués (l'affichage est partagé d'une partie à l'autre : enveloppé une fois)
+    for (const n of [p.nav, p.navProps]) {
+      if (!n || n.__chrono) continue;
+      n.__chrono = true;
+      const dem = n.demander.bind(n), file = n.pasFile.bind(n), ch = n.chemin.bind(n);
+      n.demander = (...a) => { N.chemins++; return dem(...a); };
+      n.pasFile = () => { const t0 = performance.now(); const r = file(); N.aStarMs += performance.now() - t0; return r; };
+      n.chemin = (...a) => { const t0 = performance.now(); const r = ch(...a); N.aStarMs += performance.now() - t0; return r; };
+    }
+    const S = p.aff && p.aff.sons;
+    if (S && !S.__chrono) { S.__chrono = true; const j3 = S.jouer3d.bind(S); S.jouer3d = (...a) => { N.sons++; return j3(...a); }; }
     p.sur('*', (ev) => {
       if (ev.type === 'tir') N.tirs++; else if (ev.type === 'touche') { N.touches++; if (ev.tete) N.tetes++; } else if (ev.type === 'elim') N.elims++;
       else if (ev.type === 'impact') N.impacts++;
@@ -121,6 +133,8 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
           finally { nav.poser(null); nav.cle = null; entree.manette = avant; }
         }
         J.demarrage = { mode: game.mode, partie: game.partie ? game.partie.id : null, menu: !!(menu && !menu.hidden), focus };
+        // (&qualite=basse|moyenne|haute|ultra|auto : le préréglage des mesures, posé en mémoire avant tout test)
+        if (ARGS.get('qualite')) { const q = await J.qualite(ARGS.get('qualite')); if (H.reglages) H.reglages.graphics.quality = q; }
       }
       await chargerRejeu();
       rejeu.poseC0(game);
@@ -143,6 +157,7 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
       const c = a.corps;
       c.pos.set(x, y, z); c.vel.set(0, 0, 0); if (c.posPrec) c.posPrec.copy(c.pos); if (c.posAff) c.posAff.copy(c.pos); c.solAff = y;
       if (lacet !== undefined) { a.cmd.lacet = lacet; if (c.setFacing) c.setFacing(-Math.sin(lacet), -Math.cos(lacet)); if (a.local) game.camYaw = lacet; }
+      if (H.surveillance) H.surveillance.dernier.delete(id);      // (la surveillance ne la compte pas comme un secours)
       return true;
     },
     teleporterZone(id, zone) { const L = pointsDe(zone); if (!L.length) return false; const p = L[0]; return J.teleporter(id, p.x, p.y, p.z); },
@@ -191,7 +206,9 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
       des();
       return c;
     },
-    // LA SIMULATION SEULE : Partie.pas en boucle, sans image (l'horloge des sons avance avec)
+    // LA SIMULATION SEULE : Partie.pas en boucle, sans image (l'horloge des sons avance avec), aussi vite que la machine le
+    // permet, dans cette tâche — `vitesse` (le facteur du temps réel visé, § 4.10) est donc toujours atteint ; `rendu` : une
+    // image d'affichage tous les deux pas (poses, HUD, rendu)
     avancer(secondes, { rendu = false, vitesse = 1 } = {}) {
       const p = game.partie; if (!p) return { ms: 0, pas: 0 };
       const n = Math.max(0, Math.round(secondes / PAS)), t0 = performance.now(), S = p.aff && p.aff.sons;
@@ -239,15 +256,40 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
       return { medMs: mediane(ms), p95Ms: centile(ms, 0.95), maxMs: Math.max(0, ...ms), appels: Math.round(mediane(appels)), triangles: Math.round(mediane(tri)),
         programmes: r.info.programs ? r.info.programs.length : 0, gels: ms.filter((x) => x > 100).length, valable: !sansRaf, n: ms.length };
     },
-    compteurs() { return { ...N, pasMs: T.pas.length ? T.pas.reduce((s, v) => s + v, 0) / T.pas.length : 0, imageMs: T.image.length ? T.image.reduce((s, v) => s + v, 0) / T.image.length : 0,
-      voix: game.partie && game.partie.aff.sons ? game.partie.aff.sons.voix.length : 0 }; },
+    // (coinces, horsMonde, teleportsSecours : ceux de la surveillance en cours, ou de la dernière — verifierBots, surveiller)
+    compteurs() {
+      const S = H.surveillance || H.derniereSurveillance;
+      return { ...N, pasMs: T.pas.length ? T.pas.reduce((s, v) => s + v, 0) / T.pas.length : 0, imageMs: T.image.length ? T.image.reduce((s, v) => s + v, 0) / T.image.length : 0,
+        voix: game.partie && game.partie.aff.sons ? game.partie.aff.sons.voix.length : 0,
+        coinces: S ? S.coinces.size : 0, horsMonde: S ? S.horsMonde.size : 0, teleportsSecours: S ? S.teleports : 0 };
+    },
     viderChrono() { T.pas.length = 0; T.image.length = 0; },
     chrono: T,
-    verifierNav() {
-      const p = game.partie, nav = p && p.nav;
-      return { noeuds: nav ? nav.nb : 0, liens: nav ? nav.liens.length : 0, composantes: 0, parNiveau: {}, zonesAtteintes: 0, apparitions: 0, cabine: 0, ms: 0, cache: false, volDOiseau: !nav || nav.nb === 0 };
+    // LE GRAPHE (§ 4.10), lu sur le CONTRAT de js/jeu/nav.js — nb, px / pz, niveau, zone (255 : hors zone), debut / liens
+    // (CSR), noeudPres, depuisCache — : obtenu comme une partie l'obtient (le cache, sinon la génération), chronométré.
+    // `o` : les options de Nav.obtenir (le graphe des props : { rayon: 0.2, franchir: false }).
+    async verifierNav(o = {}) {
+      const t0 = performance.now(), nav = await Nav.obtenir(game, o), ms = performance.now() - t0, n = nav.nb, pas = nav.pas || 0.25;
+      const comp = new Int32Array(n).fill(-1); let composantes = 0;
+      for (let s = 0; s < n; s++) {
+        if (comp[s] >= 0) continue;
+        const file = [s]; comp[s] = composantes;
+        for (let i = 0; i < file.length; i++) {
+          const u = file[i];
+          for (let j = nav.debut[u]; j < nav.debut[u + 1]; j++) { const v = nav.liens[j]; if (comp[v] < 0) { comp[v] = composantes; file.push(v); } }
+        }
+        composantes++;
+      }
+      const parNiveau = {}, zones = new Set();
+      for (let i = 0; i < n; i++) { const k = nav.niveau[i]; parNiveau[k] = (parNiveau[k] || 0) + pas * pas; if (nav.zone[i] !== 255) zones.add(nav.zone[i]); }
+      for (const k in parNiveau) parNiveau[k] = Math.round(parNiveau[k] * 100) / 100;
+      let apparitions = 0, cabine = 0;
+      for (const q of POINTS_APPARITION) if (nav.noeudPres(q.x, q.y, q.z) >= 0) apparitions++;
+      // (la cabine de l'ascenseur : plan x > 17,95, y de 7,7 à 9,05 — en monde, z = −y)
+      for (let i = 0; i < n; i++) if (nav.px[i] > 17.95 && nav.pz[i] < -7.7 && nav.pz[i] > -9.05) cabine++;
+      return { noeuds: n, liens: nav.liens.length, composantes, parNiveau, zonesAtteintes: zones.size, apparitions, cabine, ms, cache: !!nav.depuisCache, empreinte: nav.empreinte };
     },
-    // les bots qui errent : la surveillance du harnais (étape 10 de Partie.pas)
+    // les bots qui errent, surveillés à chaque pas (étape 10 de Partie.pas)
     async verifierBots({ duree = 120, bots = 8, cerveau = 'errant' } = {}) {
       await api.lancer('essai', { graine: 3, mannequins: [], bots: 0, humain: false });
       const p = game.partie;
@@ -255,12 +297,24 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
         const L = pointsDe('ecole'), q = L[k % L.length];
         p.ajouterActeur({ id: 100 + k, nom: 'Errant ' + k, equipe: null, x: q.x, y: q.y, z: q.z, lacet: 0, cerveau });
       }
-      H.surveillance = { horsMonde: new Set(), sousLeSol: new Set(), dansUnMur: new Map(), murs: new Set(), traverseMurs: new Set(), coinces: new Set(), zones: new Set(), immobile: new Map() };
+      J.surveiller(true);
       J.avancer(duree);
-      const S = H.surveillance; H.surveillance = null;
-      const r = { coinces: [...S.coinces], horsMonde: [...S.horsMonde], sousLeSol: [...S.sousLeSol], dansUnMur: [...S.murs], traverseMurs: [...S.traverseMurs], zonesVisitees: S.zones.size };
+      const S = J.surveiller(false);
+      const r = { coinces: [...S.coinces], horsMonde: [...S.horsMonde], sousLeSol: [...S.sousLeSol], dansUnMur: [...S.murs], traverseMurs: [...S.traverseMurs],
+        zonesVisitees: S.zones.size, teleportsSecours: S.teleports };
       api.quitter('balade');
       return r;
+    },
+    // LA SURVEILLANCE des acteurs (§ 4.10), allumée (vrai) ou éteinte (faux : elle rend ce qu'elle a vu) — verifierBots
+    // l'allume ; un test peut l'allumer autour d'un trajet (elle coûte un rayon par acteur et par pas : hors des mesures)
+    surveiller(oui) {
+      if (oui) {
+        H.surveillance = { horsMonde: new Set(), sousLeSol: new Set(), dansUnMur: new Map(), murs: new Set(), traverseMurs: new Set(), coinces: new Set(),
+          zones: new Set(), immobile: new Map(), dernier: new Map(), teleports: 0 };
+        return H.surveillance;
+      }
+      const S = H.surveillance; H.surveillance = null; if (S) H.derniereSurveillance = S;
+      return S;
     },
     // MÊME GRAINE → MÊME PARTIE : deux essais (2 bots au cerveau minimal, armés), `secondes` simulées chacun
     async verifierDeterminisme(graine = 42, secondes = 30, opts = {}) {
@@ -345,11 +399,14 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
     },
     simulerCapture(etat) { H.captureSimulee = etat === 'accordee' || etat === 'refusee' ? etat : null; },
     forcerImagesManuelles(v) { H.manuel = !!v; },
+    // LE REGISTRE (§ 4.10) : rattrapé et rangé par pièce comme à la préparation d'un prop hunt, puis lu — `horsTolerance` et
+    // `nonEtiquetes` sont ceux que le registre a notés (js/registre_meubles.js MEUBLES, L-K)
     verifierMeubles() {
       const t0 = performance.now(), parZone = {};
+      rattraperRegistre(game.scene); zonerRegistre(game.carte && game.carte.lumieres);
       for (const [z, L] of MEUBLES.parZone) parZone[z] = L.length;
       return { types: MEUBLES.types.size, poses: MEUBLES.poses.length, deguisables: [...MEUBLES.types.values()].filter((T) => T.deguisable).length,
-        parZone, horsTolerance: [], nonEtiquetes: [], ms: performance.now() - t0 };
+        parZone, horsTolerance: [...(MEUBLES.horsTolerance || [])], nonEtiquetes: [...(MEUBLES.nonEtiquetes || [])], ms: performance.now() - t0 };
     },
     // LA BALADE AU BIT PRÈS (§ 4.10.1) : le rejeu, contre la référence de a8b22dd
     async rejouerBalade() {
@@ -374,8 +431,9 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
       const r = game.renderer;
       return { ...r.info.memory, programmes: r.info.programs ? r.info.programs.length : 0, enfants: game.scene.children.length };
     },
-    // une PHOTO, juste après un rendu (fait ici, à la main : l'image est encore dans le tampon)
-    photo(nom = 'photo') { game.frame(1 / 60); return game.renderer.domElement.toDataURL('image/jpeg', 0.88); },
+    // une PHOTO, juste après un rendu (fait ici, à la main, de la scène telle que la dernière image l'a posée : l'image est
+    // encore dans le tampon, et ni la simulation ni la caméra n'avancent)
+    photo(nom = 'photo') { game.fx.render(1 / 60); return game.renderer.domElement.toDataURL('image/jpeg', 0.88); },
     mesurer(fn, n = 50) { const L = []; for (let i = 0; i < n; i++) { const t0 = performance.now(); fn(i); L.push(performance.now() - t0); } return { med: mediane(L), p95: centile(L, 0.95) }; },
     async qualite(nom) {
       const s = game.settings, q = QUALITES[nom] || nom;
@@ -505,8 +563,11 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
         } catch (e) { /* (un état propre au mieux) */ }
         const ctx = {
           graine: 1, mesurer: J.mesurer, attendre, images: J.images,
-          temps(nom, mesure, seuil) {
+          // (`valable` : faux pour une mesure faite onglet caché — des images faites à la main, `images(n).valable` — : notée
+          // « non valable », elle ne fait jamais échouer… sauf sous &calme=1, où l'onglet doit être devant)
+          temps(nom, mesure, seuil, valable = !document.hidden) {
             R.mesures[nom] = mesure;
+            if (!valable) { R.signales.push({ nom, mesure, seuil, nonValable: true }); return !calme; }
             if (mesure <= seuil) return true;
             if (!calme && mesure <= seuil * 1.5) { R.signales.push({ nom, mesure, seuil }); return true; }
             return false;
@@ -532,24 +593,36 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
       }
     },
   };
-  // la surveillance des acteurs (étape 10 de Partie.pas), seulement pendant verifierBots
+  // LA SURVEILLANCE des acteurs (étape 10 de Partie.pas, quand elle est allumée : J.surveiller) — chaque pas : hors du monde
+  // (y < −3,6 ou hors des bornes de la navigation), sous le sol (0,6 m perdus d'un pas, sans saut), À TRAVERS un mur (le
+  // segment du pas, à 1 m au-dessus des pieds, coupe une forme : rayonLibre, les formes où il part étant ignorées),
+  // TÉLÉPORTÉ (plus de 1 m en un pas : le secours d'un bot coincé, compté) ; toutes les 0,1 s : dans un mur plus de 0,2 s,
+  // la zone visitée, coincé (moins de 0,6 m en 5 s alors que sa commande veut avancer). La position d'avant est la sienne :
+  // posPrec, qu'un déplacement peut reposer, ne compte pas.
   H.surveiller = (p) => {
     const S = H.surveillance; if (!S) return;
     const c = C(), Lu = game.carte.lumieres;
     for (const a of p.acteurs) {
-      if (!a.vivant || !a.corps) continue;
-      const q = a.corps.pos, pr = a.corps.posPrec;
+      // (un mort oublie sa position : sa réapparition n'est pas une téléportation)
+      if (!a.vivant || !a.corps || a.role === 'cible') { S.dernier.delete(a.id); continue; }
+      const q = a.corps.pos, pr = S.dernier.get(a.id), h = 1 + (a.corps.jumpY || 0);
       if (q.y < -3.6 || q.x < BORNES_NAV.xMin - 1 || q.x > BORNES_NAV.xMax + 1 || q.z < BORNES_NAV.zMin - 1 || q.z > BORNES_NAV.zMax + 1) S.horsMonde.add(a.id);
-      if (pr && pr.y - q.y > 0.6 && !a.corps.airborne) S.sousLeSol.add(a.id);
+      if (pr) {
+        const d = Math.hypot(q.x - pr.x, q.z - pr.z);
+        if (d > 1) S.teleports++;
+        else if (d > 1e-4 && c.rayonLibre(pr.x, pr.y + h, pr.z, q.x, q.y + h, q.z, 0) < 1 - 1e-6) S.traverseMurs.add(a.id);
+        if (pr.y - q.y > 0.6 && !a.corps.airborne) S.sousLeSol.add(a.id);
+      }
+      S.dernier.set(a.id, { x: q.x, y: q.y, z: q.z });
       if (p.tick % 12 === 0) {
         const m = !c.libre(q.x, q.z, 0.25, q.y);
         const t = S.dansUnMur.get(a.id) || 0;
         S.dansUnMur.set(a.id, m ? t + 0.1 : 0);
         if (m && t + 0.1 > 0.2) S.murs.add(a.id);
         const Z = Lu && Lu.zoneEn ? Lu.zoneEn(q.x, q.z, q.y + 0.1) : null; if (Z) S.zones.add(Z.id);
-        const I = S.immobile.get(a.id) || { x: q.x, z: q.z, t: p.t };
-        if (Math.hypot(q.x - I.x, q.z - I.z) > 0.6) S.immobile.set(a.id, { x: q.x, z: q.z, t: p.t });
-        else { S.immobile.set(a.id, I); if (p.t - I.t > 5) S.coinces.add(a.id); }
+        const veut = !!(a.cmd.ax || a.cmd.ay), I = S.immobile.get(a.id);
+        if (!veut || !I || Math.hypot(q.x - I.x, q.z - I.z) > 0.6) S.immobile.set(a.id, { x: q.x, z: q.z, t: p.t });
+        else if (p.t - I.t > 5) S.coinces.add(a.id);
       }
     }
   };
