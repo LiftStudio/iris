@@ -15,7 +15,7 @@
 // que s'il change). La variante « ZONE ENTIÈRE, SANS ACTEURS » (`dessinerZone`) sert au panneau de cachette du prop hunt
 // (js/jeu/hud_prop.js) : la silhouette des niveaux de la zone, ses pièces, ses portes, aucun acteur.
 import { BORNES_JEU, NIVEAUX, niveauDe, ZONES_JEU, PIECES } from './constantes.js';
-import { texte, cacher, classe, elt } from './hud_jeu.js';
+import { texte, cacher, classe, elt, tailleCarte, ECRAN } from './hud_jeu.js';
 
 export const CARTE = { taille: 200, tailleTactile: 160, largeurM: 24, pxParM: 8, pingDuree: 2, murHaut: 1.8 };
 // les noms à l'écran (niveaux, pièces)
@@ -30,7 +30,7 @@ export const NOMS_PIECES = {
   e104: 'SALLE 104', e1est: 'PALIER EST', e2couloir: 'COULOIR ROUGE', e2s1: 'SALLE 1', e2s2: 'SALLE 2', e2palier: 'PALIER', e2sas: 'SAS',
 };
 const B = BORNES_JEU, PX = CARTE.pxParM, W = Math.round((B.xMax - B.xMin) * PX), HH = Math.round((B.zMax - B.zMin) * PX);
-const COUL = { sol: 'rgba(206,216,232,0.30)', bord: 'rgba(235,242,255,0.55)', piece: 'rgba(206,216,232,0.20)', mur: 'rgba(8,11,18,0.85)',
+const COUL = { sol: 'rgba(196,208,228,0.22)', bord: 'rgba(235,242,255,0.6)', piece: 'rgba(206,216,232,0.20)', mur: 'rgba(8,11,18,0.85)',
   zone: 'rgba(240,164,23,0.22)', zoneBord: 'rgba(250,190,70,0.75)', porte: '#ffc845', moi: '#ffffff', allie: '#3d8bff', ennemi: '#ff3b30',
   A: '#3d8bff', B: '#ff8a1f', neutre: '#d8dde6' };
 // le niveau d'une zone de la carte vivante : celui de son point de prise de vue (env.y, à ≈ 1,5 m au-dessus de son sol)
@@ -139,7 +139,7 @@ export class MiniCarte {
     this.t += dt || 0;
     if (!this.niveaux) this.preparer(P.nav);
     const tactile = document.body.classList.contains('touch');
-    const T = tactile ? CARTE.tailleTactile : CARTE.taille;
+    const T = tailleCarte(ECRAN.w, ECRAN.h, tactile);
     const dpr = Math.min(2, window.devicePixelRatio || 1), cv = this.cv;
     if (cv.__T !== T || cv.__dpr !== dpr) { cv.__T = T; cv.__dpr = dpr; cv.width = Math.round(T * dpr); cv.height = Math.round(T * dpr); cv.style.width = cv.style.height = T + 'px'; }
     this.taille = T;

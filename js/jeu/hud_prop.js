@@ -109,7 +109,8 @@ export class HudProp {
     });
     S('faux', (e) => { const L = partie.local; if (L && e.a === L.id) this._faux = { t0: this.t, pv: e.pv }; });
     this.cadre.oublier();
-    cacher(this.el, false);
+    // (hors du prop hunt, il dort : rien n'est dessiné ni écrit — sauf un état fabriqué qui porte `prop`, voir maj)
+    cacher(this.el, partie.id !== 'prophunt');
   }
   debrancher(garder = false) {
     for (const d of this._des) d(); this._des = [];
@@ -124,8 +125,12 @@ export class HudProp {
   }
 
   maj(dt, hud) {
-    if (!this.el || this.el.__h) return;
+    if (!this.el) return;
     const H = hud || {}, Pr = H.prop || null, P = this.partie, g = this.game, cam = g.camera;
+    // (au combat, le HUD du prop hunt dort ; il se réveille dès que l'état porte `prop`)
+    const actif = !!P && (P.id === 'prophunt' || !!Pr);
+    cacher(this.el, !actif);
+    if (!actif) { if (this.roue) this.roue.maj(null, PROVOCATIONS); cacher(this.eVoile, true); return; }
     this.t += dt || 0;
     const L = P ? P.local : null, C = this.cadre; C.debut();
     const role = Pr ? Pr.role : L ? L.role : null, phase = H.phase || (P && P.phase) || '';

@@ -136,6 +136,14 @@ export function angleEcran(lacet, dx, dz) {
   const fx = -Math.sin(lacet), fz = -Math.cos(lacet), rx = Math.cos(lacet), rz = -Math.sin(lacet);
   return Math.atan2(dx * rx + dz * rz, dx * fx + dz * fz) / DEG;
 }
+// LA TAILLE DE LA MINI-CARTE (px CSS) : 200 (160 au doigt), réduite sur un petit écran (≤ 36 % de la hauteur, 30 % de la
+// largeur, jamais sous 96 px) — la vie se pose au-dessus d'elle
+export function tailleCarte(w = ECRAN.w, h = ECRAN.h, tactile = false) {
+  const base = tactile ? 160 : 200;
+  return Math.round(Math.max(96, Math.min(base, h * 0.36, w * 0.3)));
+}
+// l'échelle des arcs de dégâts (et de la grenade proche) : 1 dès que l'écran fait 320 px de haut et de large
+export function echelleArcs(w = ECRAN.w, h = ECRAN.h) { return Math.min(1, Math.min(w, h) / 320); }
 export function habillage(game) { const s = game && game.settings, j = s && s.data && s.data.jeu; return j && j.habillage === 'militaire' ? 'militaire' : 'airsoft'; }
 
 export class HudJeu {
@@ -334,7 +342,7 @@ export class HudJeu {
     const cachette = !!(H.prop && H.prop.cachette);
     this._majScore(H, P, L);
     this._majDomination(H, P, L, cam, C);
-    this._majMunitions(H, fps && !cachette);
+    this._majMunitions(H, fps && !cachette && phase !== 'presentation');
     this._majVie(H, L, C, vivant);
     this._majViseur(H, P, L, cam, C, fps && !cachette && phase !== 'presentation');
     this._majMarques(C, fps);
@@ -456,6 +464,7 @@ export class HudJeu {
     if (abimee) this._vieT = this.t;
     const o = abimee ? 1 : this._vieT !== undefined ? clamp(1 - (this.t - this._vieT - 1.2) / 0.5, 0, 1) : 0;
     C.v('pvk', r2(k)); C.v('pvo', r2(o));
+    C.v('cartT', tailleCarte(ECRAN.w, ECRAN.h, document.body.classList.contains('touch')));
     texte(this.eVie.lastChild, this._soins && this.t - this._soins.t0 < 1.2 ? `+${Math.round(this._soins.pv)}` : '');
     classe(this.eVie, 'basse', k < 0.3);
   }
@@ -548,6 +557,8 @@ export class HudJeu {
   _majArcs(C, lacet, vivant) {
     const A = this._arcs, R = REGLAGES_HUD.degats;
     for (let i = A.length - 1; i >= 0; i--) if (this.t - A[i].t0 > R.duree) A.splice(i, 1);
+    // (120 px du centre ; sur un tout petit écran, ramené pour rester dedans)
+    C.v('dk', r2(echelleArcs()));
     for (let s = 0; s < R.slots; s++) {
       const a = vivant ? A[s] : null;
       if (!a) { C.v('d' + s + 'o', 0); C.v('d' + s + 'r', 0); continue; }
