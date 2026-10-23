@@ -317,7 +317,8 @@ export class Game {
 
   // UN MESSAGE DU JEU (22/10, socle) : en balade le bandeau d'aujourd'hui (hud.feedback) ; en partie, l'annonce de la partie
   // — jamais hud.feedback, qui force une mise en page et fait vibrer la manette (spec § 4.1, règle 13)
-  _dire(texte, cls = 'info') { if (this.partie) this.partie.annonce(texte, cls); else this.hud.feedback(texte, cls); }
+  // (F2 : en partie, une annonce TECHNIQUE — hors de l'anneau des événements, donc de l'état ; demande de L-E)
+  _dire(texte, cls = 'info') { if (this.partie) this.partie.annonce(texte, cls, true); else this.hud.feedback(texte, cls); }
 
   // réglages du menu Options (appelé au démarrage et à chaque changement)
   applySettings() {

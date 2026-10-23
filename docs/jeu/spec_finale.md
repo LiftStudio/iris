@@ -1046,7 +1046,7 @@ export class Partie {
   soigner(cible, pv, cause)
   signaler(equipe, idCible, x, y, z) ; signalements(equipe) → [{ id, x, y, z, t }]   // mémoire d'équipe des bots (et drone, vague 3)
   phaseVers(phase, duree)        // emet 'phase'
-  annonce(texte, cls)            // emet 'annonce'
+  annonce(texte, cls, technique = false)   // emet 'annonce' ; (F2) technique : à ses abonnés seulement, hors de l'anneau (état)
   ajouterActeur(def) → Acteur ; retirerActeur(a)
   evt(type, data)                // pousse { t, type, ...data } dans un anneau de 256, appelle les abonnés
   sur(type, fn) → desabonner     // '*' pour tout

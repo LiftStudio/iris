@@ -506,7 +506,15 @@ export class Partie {
 
   // ---------------------------------------------------------------- phases, annonces, événements
   phaseVers(phase, duree) { this.phase = phase; this.phaseT = 0; this.phaseDuree = duree || 0; this.evt('phase', { phase, duree: duree || 0 }); }
-  annonce(texte, cls) { this.hud.annonce = { texte, cls: cls || 'info', t: this.t }; this.evt('annonce', { texte, cls: cls || 'info' }); }
+  // (F2, demande de L-E : une annonce TECHNIQUE — la qualité automatique, js/game.js _dire — va à ses abonnés mais pas dans
+  // l'anneau des événements : ni dans etat(), ni dans une empreinte ; le HUD la met à sa ligne d'alerte)
+  annonce(texte, cls, technique = false) {
+    this.hud.annonce = { texte, cls: cls || 'info', t: this.t };
+    if (!technique) { this.evt('annonce', { texte, cls: cls || 'info' }); return; }
+    const e = { t: this.t, texte, cls: cls || 'info', technique: true, type: 'annonce' }, L = this._abonnes.get('annonce'), T = this._abonnes.get('*');
+    if (L) for (const f of [...L]) f(e);
+    if (T) for (const f of [...T]) f(e);
+  }
   // (F2, demandes de L-A et L-H : le nom de l'événement est posé APRÈS les données — un champ `type` des données l'écrasait ;
   // le genre d'une grenade voyage sous `arme`, § 4.6)
   evt(type, data) {
