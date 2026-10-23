@@ -1629,8 +1629,11 @@ autres fichiers sont étiquetés par L-K (§ 5.3).
 | `recharge` | a, phase ('debut'\|'insere'\|'fin'), tactique | Arsenal | viewmodel (rien de règle), sons |
 | `arme` | a, id | Arsenal | viewmodel, HUD, sons |
 | `vide` | a | Arsenal | sons |
-| `grenade` | a, type, x, y, z, vx, vy, vz | Grenades | effets, sons, cerveaux |
-| `explosion` | x, y, z, r, type | Grenades | effets, sons, vue (secousse), cerveaux |
+| `grenade` | a, arme ('frag'\|'flash' — F2 : `type` est le nom de l'événement), x, y, z, vx, vy, vz, meche, id | Grenades | effets, sons, cerveaux |
+| `rebond` | a, arme, x, y, z, v, id (F2 : ajout de L-A) | Grenades | sons |
+| `explosion` | x, y, z, r, arme, a, id | Grenades | effets, sons, vue (secousse), cerveaux |
+| `trajet`, `couteau` | (F2 : ajouts de L-A — le trajet d'une balle pour le traceur ; le coup de couteau) | Arsenal | effets, sons |
+| `porte` | nom, x, y, z, ouvre, a (F2 : ajout de L-M) | MondePartie.majPortes | sons |
 | `flash` | cible, duree | Grenades | Partie.majHud (`hud.aveugle` → `#voile-flash`), vue (fx.flash en appoint), sons, cerveaux |
 | `frole` | a, x, y, z | Partie.resoudreTir | sons |
 | `pas` | a, x, y, z, f (force 0..1), allure | mouvement | sons, cerveaux |

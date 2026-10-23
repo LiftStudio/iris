@@ -493,8 +493,10 @@ export class Partie {
   // ---------------------------------------------------------------- phases, annonces, événements
   phaseVers(phase, duree) { this.phase = phase; this.phaseT = 0; this.phaseDuree = duree || 0; this.evt('phase', { phase, duree: duree || 0 }); }
   annonce(texte, cls) { this.hud.annonce = { texte, cls: cls || 'info', t: this.t }; this.evt('annonce', { texte, cls: cls || 'info' }); }
+  // (F2, demandes de L-A et L-H : le nom de l'événement est posé APRÈS les données — un champ `type` des données l'écrasait ;
+  // le genre d'une grenade voyage sous `arme`, § 4.6)
   evt(type, data) {
-    const e = { t: this.t, type, ...data };
+    const e = { t: this.t, ...data, type };
     this._anneau.push(e); if (this._anneau.length > ANNEAU) this._anneau.shift();
     if (type === 'flash' && this.local && e.cible === this.local.id) this._aveugle = { t0: this.t, t: 0, duree: e.duree };
     const L = this._abonnes.get(type), T = this._abonnes.get('*');
