@@ -106,9 +106,20 @@ export default function (jeu) {
   };
   const visibles = (m) => { const a = m.instanceMatrix.array; let n = 0; for (let i = 0; i < m.count; i++) { const o = i * 16; if (a[o] || a[o + 1] || a[o + 2] || a[o + 4] || a[o + 5] || a[o + 6]) n++; } return n; };
   // les appels de dessin d'un objet pendant une image rendue
+  // (relecture : seuls comptent les appels de la VUE — la caméra du jeu. Une image peut aussi redessiner la scène par une
+  // AUTRE caméra : la glace de l'accueil quand la caméra a bougé de 25 cm — une image sur deux, tant que L-M ne la peint pas
+  // en partie —, l'image à blanc d'un objet neuf de la qualité automatique ; le test 11 en échouait une fois sur deux.
+  // `n.autres` les dit)
   const appelsDe = (objets) => {
     const r = game.renderer, f = r.renderBufferDirect, n = new Map(objets.map((o) => [o, 0]));
-    r.renderBufferDirect = function (cam, scene, geo, mat, obj, grp) { if (n.has(obj)) n.set(obj, n.get(obj) + 1); return f.call(this, cam, scene, geo, mat, obj, grp); };
+    n.autres = [];
+    r.renderBufferDirect = function (cam, scene, geo, mat, obj, grp) {
+      if (n.has(obj)) {
+        if (cam === game.camera) n.set(obj, n.get(obj) + 1);
+        else { const c = r.getRenderTarget(); n.autres.push(`${obj.name.slice(9, 16)} → ${c ? (c.texture && c.texture.name) || 'cible ' + c.width : 'écran'}`); }
+      }
+      return f.call(this, cam, scene, geo, mat, obj, grp);
+    };
     try { game.frame(1 / 60); } finally { r.renderBufferDirect = f; }
     return n;
   };
@@ -510,7 +521,7 @@ export default function (jeu) {
       for (let i = 0; i < 30; i++) image(p);
       const A = E.pools.anneaux, Cb = E.pools.cibles, n = appelsDe([A, Cb]);
       res.push([`anneaux : ${visibles(A)} instances (3 anneaux, 1 capture, 3 lettres), ${n.get(A)} appel`, visibles(A) === 7 && n.get(A) === 1]);
-      res.push([`cibles : ${visibles(Cb)} instances, ${n.get(Cb)} appel`, visibles(Cb) === 12 && n.get(Cb) === 1]);
+      res.push([`cibles : ${visibles(Cb)} instances, ${n.get(Cb)} appel${n.autres.length ? ' (et par une autre caméra : ' + n.autres.join(', ') + ')' : ''}`, visibles(Cb) === 12 && n.get(Cb) === 1]);
       // une cible touchée est couchée (sa tête à moins de 0,3 m du sol), les autres debout
       const m = new THREE.Matrix4(), up = new THREE.Vector3();
       let couchees = 0, debout = 0;
