@@ -211,8 +211,9 @@ export class PartieProp extends Partie {
   // le cerveau d'un chasseur bot, SOURD aux props avant la traque (règle d'équité : il ne suit pas les frottements à
   // l'oreille pendant que les props se cachent)
   _cerveauChasseur(a, diff) {
-    const c = new CerveauChasseur(a, this, diff);
-    c.entendre = (e) => { if (this.sourd(e)) return; return CerveauChasseur.prototype.entendre.call(c, e); };
+    // (l'oreille du cerveau telle qu'il l'a — la sienne ou celle d'une sous-classe de L-O —, enveloppée)
+    const c = new CerveauChasseur(a, this, diff), oreille = c.entendre;
+    c.entendre = (e) => (this.sourd(e) ? undefined : oreille.call(c, e));
     return c;
   }
   // un événement qu'un chasseur n'entend pas : tout ce qui vient d'un prop, hors de la traque
