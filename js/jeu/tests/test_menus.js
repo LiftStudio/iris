@@ -68,16 +68,24 @@ export default function (jeu) {
     await avecManette(async () => {
       const f0 = focus();
       res.push(['focus sur BALADE', !!f0 && f0.dataset.act === 'balade']);
-      const vus = [f0 && f0.dataset.act];
-      for (let k = 1; k < ACCUEIL.length; k++) { const c = pad('Down'); vus.push(c && c.dataset.act); }
-      res.push([`croix ↓ : ${vus.join(' → ')}`, egal(vus, ACCUEIL.map((a) => a.act))]);
-      for (let k = 1; k < ACCUEIL.length; k++) pad('Up');
+      // (chaque porte atteinte à la croix depuis BALADE : une colonne sur un écran ordinaire, deux sur un écran bas — un
+      // téléphone couché —, où ↓ saute une porte ; on parcourt donc les quatre directions depuis chaque porte atteinte)
+      const N = nav(), atteintes = new Map([[f0, 'balade']]), file = f0 ? [f0] : [];
+      while (file.length) {
+        const el = file.shift();
+        for (const dir of ['Down', 'Right', 'Up', 'Left']) {
+          N.poser(el); const c = pad(dir);
+          if (c && c.dataset.act && !atteintes.has(c)) { atteintes.set(c, c.dataset.act); file.push(c); }
+        }
+      }
+      const vus = [...atteintes.values()];
+      res.push([`croix depuis BALADE : ${vus.join(', ')}`, ACCUEIL.every((a) => vus.includes(a.act)) && vus.length === ACCUEIL.length]);
+      N.poser(null); N.cle = null; focus();
       // chaque sous-écran, ouvert par A et refermé par B
       const ecrans = [['combat', '#reglage-jeu'], ['prophunt', '#reglage-jeu'], ['stand', '#reglage-jeu'], ['options', '#options'], ['credits', '#credits-jeu']];
       for (const [act, sel] of ecrans) {
         const N = nav(); N.poser(null); N.cle = null; focus();
-        let c = N.cur, n = 0;
-        while (c && c.dataset.act !== act && n++ < 8) c = pad('Down');
+        N.poser($(`#menu-jeu [data-act="${act}"]`));      // (atteinte à la croix : vérifié au-dessus)
         pad('A');
         const ouvert = vu($(sel)) && (sel !== '#reglage-jeu' || $('#reglage-jeu').dataset.screen === (act === 'prophunt' ? 'prop' : act));
         // (dans un sous-écran, le focus se pose sur son action principale ; B revient)
@@ -321,12 +329,14 @@ export default function (jeu) {
     // LA PRÉCISION du bilan : deux tirs de FP-12 (huit plombs chacun) à 2,5 m — les statistiques de l'acteur comptent un
     // tir et jusqu'à huit touches par coup ; le bilan compte des touches sur des plombs : jamais plus de 100 %
     const pf = await combatCourt({ classe: 'defense' }), H = pf.local, E = pf.acteurs.find((a) => a.equipe === 'B'), C = game.collisions;
+    // (deux places libres du −1 à 2,5 m l'une de l'autre, qui se voient : cherchées, le lot R refait le −1 ; rayonLibre rend
+    // la part libre du segment, 1 = rien entre les deux)
     let place = null;
-    for (let k = 0; k < 16 && !place; k++) {
-      const a = k * Math.PI / 8, x = H.pos.x + 2.5 * Math.sin(a), z = H.pos.z + 2.5 * Math.cos(a), y = C.solEn(x, z, H.pos.y + 0.5);
-      if (Math.abs(y - H.pos.y) < 0.2 && C.libre(x, z, 0.35, y) && C.rayonLibre(H.pos.x, H.pos.y + 1.4, H.pos.z, x, y + 1.3, z, 0.05)) place = { x, y, z };
+    for (let cx = 1; cx <= 16 && !place; cx++) for (let cz = -12; cz <= -7 && !place; cz++) {
+      const y = C.solEn(cx, cz, -2.5), y2 = C.solEn(cx + 2.5, cz, -2.5);
+      if (Math.abs(y - y2) < 0.05 && C.libre(cx, cz, 0.4, y) && C.libre(cx + 2.5, cz, 0.4, y2) && C.rayonLibre(cx, y + 1.4, cz, cx + 2.5, y2 + 1.3, cz, 0.1) >= 0.999) place = [cx, y, cz, y2];
     }
-    if (place) { jeu.teleporter(E.id, place.x, place.y, place.z); jeu.tirer(H.id, { n: 2, cible: E.id }); }
+    if (place) { jeu.teleporter(H.id, place[0], place[1], place[2]); jeu.teleporter(E.id, place[0] + 2.5, place[3], place[2]); jeu.tirer(H.id, { n: 2, cible: E.id }); }
     const precF = +((menu().bilan(pf).chiffres.find(([n]) => n === 'précision') || [])[1] || '').replace(/\D/g, '');
     res.push([`précision au FP-12 : ${precF} % (${H.stats.touches} touches pour ${H.stats.tirs} tirs)`, !!place && H.stats.touches > H.stats.tirs && precF > 0 && precF <= 100]);
     let p = await combatCourt();
@@ -522,13 +532,18 @@ export default function (jeu) {
     res.push(['sans image : l’initiale sur un dégradé', v.tagName === 'SPAN' && v.classList.contains('portrait-initiale') && v.textContent === 'Z']);
     // le premier Tab d'une manche (le tableau des scores, avec ses portraits)
     const p = await combatCourt({ allies: 2, ennemis: 3, avatars: ['gabriel', 'imad'] });
+    // (30 images SANS Tab d'abord : si elles passent déjà 50 ms — la machine chargée par les autres agents —, la mesure
+    // du Tab ne dit rien de lui et elle est notée « non valable », comme onglet caché)
     await jeu.images(10);
+    const libre = await jeu.images(30);
     game.input.presser('Tab');
     const im = await jeu.images(30);
     game.input.relacher('Tab');
     jeu.quitter('balade');
-    const okTab = t.temps('premier Tab : image la plus longue (ms)', im.maxMs, 50, im.valable);
-    res.push([`premier Tab : ${Math.round(im.maxMs)} ms au plus${im.valable ? '' : ' (onglet caché : non valable)'}`, okTab]);
+    const charge = libre.maxMs > 50, valable = im.valable && !charge;
+    const okTab = t.temps('premier Tab : image la plus longue (ms)', im.maxMs, 50, valable);
+    t.note('sans Tab : image la plus longue (ms)', Math.round(libre.maxMs));
+    res.push([`premier Tab : ${Math.round(im.maxMs)} ms au plus${!im.valable ? ' (onglet caché : non valable)' : charge ? ` (déjà ${Math.round(libre.maxMs)} ms sans Tab : non valable)` : ''}`, okTab]);
     // un stockage qui lève (navigation privée, quota) : les menus marchent encore
     const gi = Storage.prototype.getItem, si = Storage.prototype.setItem;
     let err = null;
@@ -563,8 +578,8 @@ export default function (jeu) {
     const res = [];
     await auMenu();
     await avecManette(async () => {
-      let c = focus(); let n = 0;
-      while (c && c.dataset.act !== 'combat' && n++ < 8) c = pad('Down');
+      focus(); nav().poser($('#menu-jeu [data-act="combat"]'));     // (la croix y mène : test 1)
+      let c = null, n = 0;
       pad('A'); focus();
       res.push(['réglages du combat, focus sur LANCER', vu($('#reglage-jeu')) && nav().cur && nav().cur.dataset.act === 'lancer']);
       pad('A');
