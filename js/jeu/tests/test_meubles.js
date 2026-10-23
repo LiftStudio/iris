@@ -28,17 +28,19 @@ export const ENDROITS = [
 // (relevé sur socle-ok e06258f le 23/10, la même fonction, PC : [appels, triangles] par endroit — la qualité POSÉE par
 // fx.setQuality, l'automatique coupée : `__jeu.qualite()` ne change que le réglage, et l'automatique avait pu redescendre
 // le préréglage en route, d'où des relevés « haute » au nombre d'appels de la moyenne)
+// (F2, 23/10 : le −1 refait par le lot R — fusionné dans vague2 — change trois endroits, relevés sur vague2 dans les mêmes
+// conditions : le hall ouest, qui voit la descente vers le −1, la pause du −1 et la S −1.14 ; les huit autres sont ceux de socle-ok)
 export const REFERENCE_ENDROITS = {
   pc: {
-    haute: [[636, 456276], [785, 524376], [722, 552290], [1692, 565264], [256, 153675], [123, 116679], [606, 506380], [510, 396056], [167, 214364], [194, 265062], [220, 387368]],
-    moyenne: [[348, 260734], [426, 293046], [389, 306973], [935, 315946], [141, 98410], [62, 79137], [325, 283682], [264, 228486], [83, 127894], [100, 162977], [112, 219642]],
+    haute: [[636, 456276], [785, 524376], [834, 559944], [1692, 565264], [370, 156381], [119, 115751], [606, 506380], [510, 396056], [167, 214364], [194, 265062], [220, 387368]],
+    moyenne: [[348, 260734], [426, 293046], [446, 310845], [935, 315946], [198, 99806], [60, 78673], [325, 283682], [264, 228486], [83, 127894], [100, 162977], [112, 219642]],
   },
   // (relecture L-K du 23/10 : relevé sur socle-ok e06258f sous `?tel=1`, dans les conditions de la suite — après 1a, images
   // faites à la main ; sur une page fraîche, la salle d'attente et la salle 1 du 2e donnent d'autres comptes, sur les deux
   // arbres pareillement : la balade de 1a y laisse des portes et des suites du décor)
   tel: {
-    haute: [[636, 448948], [785, 517048], [722, 544962], [1692, 557936], [255, 153506], [122, 116510], [606, 499052], [510, 388728], [167, 214364], [194, 257734], [220, 380412]],
-    moyenne: [[348, 255406], [426, 287718], [389, 301645], [935, 310618], [140, 98241], [61, 78968], [325, 278354], [264, 223158], [83, 127894], [100, 157649], [112, 214686]],
+    haute: [[636, 448948], [785, 517048], [834, 552616], [1692, 557936], [369, 156212], [118, 115582], [606, 499052], [510, 388728], [167, 214364], [194, 257734], [220, 380412]],
+    moyenne: [[348, 255406], [426, 287718], [446, 305517], [935, 310618], [197, 99637], [59, 78504], [325, 278354], [264, 223158], [83, 127894], [100, 157649], [112, 214686]],
   },
 };
 // le relevé aux onze endroits, en balade, caméra libre (game.freeCam), préréglage posé (`high` | `medium`), automatique coupée :
