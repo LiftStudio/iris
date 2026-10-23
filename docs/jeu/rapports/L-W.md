@@ -37,6 +37,14 @@ Jeton du navigateur : en attente depuis 06:00 (les trois pris par L-E, L-M, L-H)
 7. **Test 10 (ajout) : les pièces mobiles en bout de course** — chaque os au bout de `COURSES_OS` (culasse du TP-50 levée de
    60° ET reculée ; chargeurs à 40 %, à la sortie du puits), en vue du tireur et de flanc : `window.__plancheCourses`, à
    regarder (ce que les points 1 et 2 ont manqué).
+8. **Repères sous les os** (contrat § 4.5.8 « `userData.reperes` = REPERES[id] (Object3D posés) ») : le constructeur avait mis
+   les repères d'une pièce mobile SOUS son os, leur `position` relative au pivot (la `mainG` du FP-12 à 42 cm de la table
+   pour qui lit `position`). Le squelette du socle les posait tous enfants directs du groupe, et L-V a codé contre lui (règle
+   4) : son test `F2 vraies armes` compare `reperes[n].position` à la table — il aurait échoué à F2. Remis comme au socle
+   (tous enfants directs, `position` = la table, vérifié par le test 2), et les repères qui suivent une pièce ont un JUMEAU
+   enfant de l'os, sous `userData.reperesMobiles` (ajout ; `null` en 3e personne).
+
+## Constructeur (avant la relecture)
 
 Branche `lot/L-W` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-W`), partie de `socle` (`e06258f`, tag `socle-ok`),
 port 8133 ; 23/10/2026.
@@ -102,7 +110,8 @@ Ajouts au contrat (règle 3 : ajouts seulement, signatures inchangées — le po
 matériaux `lentille`, `blanc`, `poli`, `tous` ; repères `mainD` des armes à feu, `saisieChargeur`, `saisieLevier`,
 `saisieGlissiere` ; `userData.squelette`, `appels`, `triangles`, `sommetsParOs`. En vue, les repères portés par une pièce
 mobile sont enfants de son os (`mainG` du FP-12 sur la pompe, les saisies, l'anneau des grenades) ; `visee` ne l'est
-jamais (la glissière du P-17 recule, la visée de L-V ne doit pas la suivre).
+jamais (la glissière du P-17 recule, la visée de L-V ne doit pas la suivre). **(Relecture : les repères sont redevenus
+enfants directs du groupe ; ce sont leurs jumeaux de `userData.reperesMobiles` qui suivent les os — point 8 plus haut.)**
 
 `js/jeu/tests/test_modeles_armes.js` — 9 tests (les 7 points du § 5.5.3, la géométrie saine, l'arme de vue du socle en
 essai) et 2 pour F2 (`apresFusion`).
