@@ -689,11 +689,37 @@ export default function (jeu) {
       p.retirerActeur(a); p.retirerActeur(b); return r;
     };
     const pres = coup(1.6, 0), fente = coup(2.4, 10), cote = coup(2.0, 40), loin = coup(3.0, 0);
+    // (relecture : une VITRE CLAIRE entre les deux, à 1,5 m l'un de l'autre — on se voit, la lame ne passe pas, la fente
+    // non plus)
+    const vitre = (() => {
+      const C0 = C(), B = p.balistique;
+      for (const s of C0.formes) {
+        if (!s.vitre || s.off || s.t === 'c' || !(s.y0 < 1.3 && s.y1 > 1.65)) continue;
+        let cx, cz, nx, nz;
+        if (s.t === 'b') { cx = (s.x0 + s.x1) / 2; cz = (s.z0 + s.z1) / 2; if (s.x1 - s.x0 < s.z1 - s.z0) { nx = 1; nz = 0; } else { nx = 0; nz = 1; } }
+        else { cx = s.cx; cz = s.cz; if (s.hx < s.hz) { nx = s.c; nz = s.s; } else { nx = -s.s; nz = s.c; } }
+        const ax = cx - nx * 0.75, az = cz - nz * 0.75, bx = cx + nx * 0.75, bz = cz + nz * 0.75;
+        const ya = C0.solEn(ax, az, s.y0 + 0.3), yb = C0.solEn(bx, bz, s.y0 + 0.3);
+        if (Math.abs(ya - yb) > 0.05 || Math.abs(ya - s.y0) > 1.0 || !C0.libre(ax, az, 0.3, ya) || !C0.libre(bx, bz, 0.3, yb)) continue;
+        if (!B.vue(ax, ya + 1.62, az, bx, yb + 1.2, bz) || B.libre(ax, ya + 1.62, az, bx, yb + 1.2, bz)) continue;
+        const l = Math.atan2(-(bx - ax), -(bz - az));
+        const [a, sa] = tireur(p, ax, ya, az, 'assaut', id++, l), b = cible(p, bx, yb, bz, id++, 100);
+        sa.vise = null; sa.c.lacet = l; sa.c.tangage = 0.1;
+        avancer(p, 0.3);
+        const E = []; const d = p.sur('elim', (e) => { if (e.cible === b.id) E.push(e); });
+        sa.fronts = { couteau: true }; avancer(p, 0.7); d();
+        const r = { tue: E.length > 0, passe: (a.pos.x - cx) * nx + (a.pos.z - cz) * nz > 0 };
+        p.retirerActeur(a); p.retirerActeur(b);
+        return r;
+      }
+      return null;
+    })();
     jeu.quitter('balade');
     const P1 = PAS + 1e-6;
-    const ok = pres.tue && Math.abs(pres.touche - 0.12) <= P1 && fente.tue && fente.fente > 0.3 && !cote.tue && !loin.tue && pres.n === 2 && pres.ecart >= 0.60 - P1;
-    return { ok, attendu: 'tue à 1,6 m (touche à 0,12 s) ; fente à 2,4 m dans le cône ; rien à 40° ni à 3 m ; 2e coup après 0,60 s',
-      obtenu: `1,6 m : ${pres.tue} (touche ${pres.touche.toFixed(4)} s, ${pres.n} coups, écart ${pres.ecart.toFixed(3)} s) · 2,4 m : ${fente.tue} (fente ${fente.fente.toFixed(2)} m) · 40° : ${cote.tue} · 3 m : ${loin.tue}` };
+    const ok = pres.tue && Math.abs(pres.touche - 0.12) <= P1 && fente.tue && fente.fente > 0.3 && !cote.tue && !loin.tue && pres.n === 2 && pres.ecart >= 0.60 - P1
+      && !!vitre && !vitre.tue && !vitre.passe;
+    return { ok, attendu: 'tue à 1,6 m (touche à 0,12 s) ; fente à 2,4 m dans le cône ; rien à 40° ni à 3 m ; 2e coup après 0,60 s ; rien à travers une vitre claire',
+      obtenu: `1,6 m : ${pres.tue} (touche ${pres.touche.toFixed(4)} s, ${pres.n} coups, écart ${pres.ecart.toFixed(3)} s) · 2,4 m : ${fente.tue} (fente ${fente.fente.toFixed(2)} m) · 40° : ${cote.tue} · 3 m : ${loin.tue} · vitre : ${vitre ? (vitre.tue ? 'TUE' : 'rien') + (vitre.passe ? ', PASSÉE' : '') : 'aucune trouvée'}` };
   });
 
   // 14. LES GRENADES : 50 lancers qui finissent hors des formes et sur un sol ; dégâts 160 / 92,5 / 25 / 0 derrière un mur ;
@@ -753,11 +779,17 @@ export default function (jeu) {
     const enMain = X.length ? X[0] - tg : -1, soi = D.reduce((x, v) => x + v, 0);
     p.retirerActeur(c);
     // (e) la flash à 7 m : de face 0,8 + 3,2 × (1 − 7/14) = 2,4 s ; de dos 0,8 s ; derrière un mur, rien
-    const flash = (x, y, z, b) => { p.grenades._liste.push({ id: 950 + rng.int(99999), a: 999, type: 'flash', x, y, z, vx: 0, vy: 0, vz: 0, t: PAS, posee: true, rb: 0 }); let v = -1; const dd = p.sur('flash', (e) => { if (e.cible === b.id) v = e.duree; }); p.pas(PAS); p.pas(PAS); dd(); return v; };
+    const flash = (x, y, z, b, par = 999) => { p.grenades._liste.push({ id: 950 + rng.int(99999), a: par, type: 'flash', x, y, z, vx: 0, vy: 0, vz: 0, t: PAS, posee: true, rb: 0 }); let v = -1; const dd = p.sur('flash', (e) => { if (e.cible === b.id) v = e.duree; }); p.pas(PAS); p.pas(PAS); dd(); return v; };
     const b = cible(p, o.x + 7, o.y, o.z, 400, 1e9);
     b.cmd.lacet = Math.PI / 2; b.cmd.tangage = 0;                  // (il regarde vers −x : la grenade, posée à 7 m, à hauteur d'œil)
     const face = flash(o.x, b.oeil(new THREE.Vector3()).y, o.z, b);
     b.cmd.lacet = -Math.PI / 2; const dos = flash(o.x, b.oeil(new THREE.Vector3()).y, o.z, b);
+    // (relecture : la flash d'un ALLIÉ n'aveugle pas — tir allié désactivé, § 3.5 —, celle d'un ennemi si)
+    const [L] = tireur(p, o.x - 1.5, o.y, o.z, 'assaut', 410);
+    b.cmd.lacet = Math.PI / 2;
+    b.equipe = L.equipe; const allie = flash(o.x, b.oeil(new THREE.Vector3()).y, o.z, b, L.id);
+    b.equipe = 'B'; const ennemi = flash(o.x, b.oeil(new THREE.Vector3()).y, o.z, b, L.id);
+    p.retirerActeur(L);
     let flashMur = -2;
     for (const q of P) {
       for (let k = 0; k < 8; k++) {
@@ -771,10 +803,11 @@ export default function (jeu) {
     }
     jeu.quitter('balade');
     const okA = n >= 50 && horsFormes === n && surSol === n, okB = Math.abs(deg['1,5'] - 160) < 1e-6 && Math.abs(deg['4,25'] - 92.5) <= 0.5 && Math.abs(deg['6,5'] - 25) < 1e-6;
-    const okC = mur === 0, okD = Math.abs(enMain - 3.5) <= PAS + 1e-6 && soi > 0, okE = Math.abs(face - 2.4) <= 0.05 && Math.abs(dos - 0.8) <= 0.05 && flashMur === -1;
+    const okC = mur === 0, okD = Math.abs(enMain - 3.5) <= PAS + 1e-6 && soi > 0, okE = Math.abs(face - 2.4) <= 0.05 && Math.abs(dos - 0.8) <= 0.05 && flashMur === -1
+      && allie === -1 && Math.abs(ennemi - 2.4) <= 0.05;
     return { ok: okA && okB && okC && okD && okE,
-      attendu: '50 lancers : 0 dans une forme, 0 sous un sol · 160 / 92,5 / 25 · 0 derrière un mur · en main à 3,5 s · flash 2,4 s de face, 0,8 s de dos, rien derrière un mur',
-      obtenu: `${horsFormes}/${n} hors des formes, ${surSol}/${n} sur un sol${fautes.length ? ' (' + fautes.join(' ; ') + ')' : ''} · ${r3(deg['1,5'])} / ${r3(deg['4,25'])} / ${r3(deg['6,5'])} · mur ${mur} · en main ${enMain.toFixed(4)} s (${r3(soi)} à soi) · flash ${r3(face)} / ${r3(dos)} / mur ${flashMur}` };
+      attendu: '50 lancers : 0 dans une forme, 0 sous un sol · 160 / 92,5 / 25 · 0 derrière un mur · en main à 3,5 s · flash 2,4 s de face, 0,8 s de dos, rien derrière un mur, rien pour un allié du lanceur',
+      obtenu: `${horsFormes}/${n} hors des formes, ${surSol}/${n} sur un sol${fautes.length ? ' (' + fautes.join(' ; ') + ')' : ''} · ${r3(deg['1,5'])} / ${r3(deg['4,25'])} / ${r3(deg['6,5'])} · mur ${mur} · en main ${enMain.toFixed(4)} s (${r3(soi)} à soi) · flash ${r3(face)} / ${r3(dos)} / mur ${flashMur} · allié ${r3(allie)}, ennemi ${r3(ennemi)}` };
   }, { delai: 180 });
 
   // 15. LES CAPSULES contre l'os de la tête : un errant qui court 10 s, images faites à la main (les poses) — mesuré et
@@ -837,8 +870,24 @@ export default function (jeu) {
     const e2 = p.etat();
     jeu.quitter('balade');
     const egal = hacher(e1, 1e-9) === hacher(e2, 1e-9);
-    return { ok: D.egal && egal && recharge2 && enVol && enRecharge, attendu: 'verifierDeterminisme(42, 30) égal avec 4 bots ; etat → appliquer → etat identique, recharge en cours et grenade en vol',
-      obtenu: `déterminisme ${D.a} / ${D.b} · état ${egal} (recharge ${recharge2}, grenade en vol ${enVol})` };
+    // (relecture : LA SUITE rejouée depuis l'état — une frag lancée et explosée, l'état pris, puis la même flash lancée
+    // dans la partie d'origine et dans une partie neuve où l'état est appliqué : mêmes identifiants, même empreinte ; un
+    // compteur de grenades hors de l'état repartait de zéro)
+    const suite = async (e) => {
+      const q = await essaiVide(162), [b, sb] = tireur(q, 12.0, 0, -4.4, 'assaut', 77, Math.PI);
+      b.vie = b.vieMax = 1e9; sb.vise = null; sb.c.lacet = Math.PI / 2; sb.c.tangage = -0.4;
+      if (!e) { sb.c.letale = true; avancer(q, 0.3); sb.c.letale = false; avancer(q, 4.0); }
+      else q.appliquer(JSON.parse(JSON.stringify(e)));
+      const e0 = q.etat();
+      sb.fronts = { tactique: true }; avancer(q, 0.6);
+      const r = { e0, ids: q.grenades.liste.map((g) => g.id), h: hacher(q.etat(), 1e-9) };
+      jeu.quitter('balade');
+      return r;
+    };
+    const S1 = await suite(null), S2 = await suite(S1.e0);
+    const suiteEgale = S1.h === S2.h && S1.ids.length === 1 && S2.ids.length === 1 && S1.ids[0] === S2.ids[0];
+    return { ok: D.egal && egal && recharge2 && enVol && enRecharge && suiteEgale, attendu: 'verifierDeterminisme(42, 30) égal avec 4 bots ; etat → appliquer → etat identique, recharge en cours et grenade en vol ; la suite rejouée depuis l’état identique',
+      obtenu: `déterminisme ${D.a} / ${D.b} · état ${egal} (recharge ${recharge2}, grenade en vol ${enVol}) · suite ${S1.h} / ${S2.h} (grenades ${S1.ids.join(',')} / ${S2.ids.join(',')})` };
   }, { delai: 240 });
 
   // 17. LES ÉVÉNEMENTS portent les champs du § 4.6 ; la PURETÉ des quatre fichiers (le vérificateur, lu ici)
