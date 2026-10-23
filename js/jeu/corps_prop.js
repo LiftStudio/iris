@@ -31,7 +31,7 @@ const angle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 export const ALLURES_PROP = {
   vitesse: 4.6, marche: 1.4, sprint: 1.2, endurance: { perte: 33, regain: 15, seuil: 20 }, saut: 1.8,
   tauDepart: 0.13, tauArret: 0.085, capLibre: 6, capAimant: 4, aimant: 20 * Math.PI / 180,
-  frottement: { vitesse: 1.2, pas: 0.4 }, plaquage: { sonde: 0.45, ecart: 0.015 }, ampMarche: 0.58,
+  frottement: { vitesse: 1.2, pas: 0.4 }, plaquage: { sonde: 0.45, ecart: 0.015, pasEventail: 5 * Math.PI / 180, equerre: 3 * Math.PI / 180 }, ampMarche: 0.58,
 };
 
 export class CorpsProp {
@@ -116,6 +116,21 @@ export class CorpsProp {
       if (!best || ecart < best.ecart) best = { dx, dz, ecart, mur: f * L };
     }
     if (!best) return false;
+    // LA NORMALE DU MUR : la sonde la plus proche ne la donne que si le meuble est déjà d'équerre (l'aimant, à moins de 20°) ;
+    // tourné de 30°, il se plaquait de travers (relecture L-K du 23/10). Un éventail de rayons autour d'elle (± 45°, de 5° en
+    // 5°, puis à 1° près) : le plus court est perpendiculaire à un mur plan ; à moins de 3° d'un des quatre axes du monde (les
+    // murs de l'école sont d'équerre), l'axe
+    const Lr = best.mur + 0.4, rayon = (a) => {
+      const dx = Math.sin(a), dz = Math.cos(a), f = C.rayonLibre(this.pos.x, y, this.pos.z, this.pos.x + dx * Lr, y, this.pos.z + dz * Lr, 0);
+      return f < 1 ? f * Lr : Infinity;
+    };
+    let am = Math.atan2(best.dx, best.dz), dm = best.mur;
+    const a0 = am;
+    for (let k = -9; k <= 9; k++) { if (!k) continue; const a = a0 + k * A.pasEventail, d = rayon(a); if (d < dm) { dm = d; am = a; } }
+    const a1 = am;
+    for (const k of [-4, -3, -2, -1, 1, 2, 3, 4]) { const a = a1 + k * A.pasEventail / 5, d = rayon(a); if (d < dm) { dm = d; am = a; } }
+    for (const ax of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) { if (Math.abs(angle(am - ax)) >= A.equerre) continue; const d = rayon(ax); if (d < Infinity) { am = ax; dm = d; } break; }
+    best.dx = Math.sin(am); best.dz = Math.cos(am); best.mur = dm;
     // le dos (−z local) vers le mur : (−sin a, −cos a) = (dx, dz)
     this.ang = Math.atan2(-best.dx, -best.dz);
     const dos = Math.max(0.02, -b.min.z), voulu = dos + A.ecart, tenu = Math.max(voulu, this.rayon + 0.005);

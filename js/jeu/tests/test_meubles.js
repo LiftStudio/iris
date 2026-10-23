@@ -559,8 +559,9 @@ export default function (jeu) {
   });
 
   // (chaque type d'extincteur qui PEND au mur, au RDC : le prop posé à 0,5-0,8 m d'un vrai, le long de son mur, tourné de 17°
-  // de trop ; verrouillé 1 s, il doit s'être plaqué au même mur, au cap du vrai — la façade, `face`, de l'étiquette —, à sa
-  // hauteur d'accroche : la racine affichée ET la boîte de touche (js/jeu/touches.js capsules) ; et sans voile au sol)
+  // de trop — l'aimant le redresse — puis de 34° — l'aimant n'y peut rien, la normale du mur si ; verrouillé 1 s, il doit
+  // s'être plaqué au même mur, au cap du vrai — la façade, `face`, de l'étiquette —, à sa hauteur d'accroche : la racine
+  // affichée ET la boîte de touche (js/jeu/touches.js capsules) ; et sans voile au sol)
   async function extincteursAccroches(p, a) {
     const Cc = C(), fautes = [], vus = [];
     const L = MEUBLES.poses.filter((P) => P.zone && piecesDe('rdc').has(P.zone) && MEUBLES.types.get(P.cle).type === 'extincteur' && MEUBLES.types.get(P.cle).accroche > 0.1);
@@ -573,24 +574,26 @@ export default function (jeu) {
         if (!pt && Math.abs(Cc.solEn(x, z, P.y + 0.3) - P.y) < 0.05 && Cc.libre(x, z, T0.rayon, P.y, T0.bande.haut, T0.bande.bas) && coinsLibres(Cc, T0, x, P.y, z, P.cap)) pt = { x, z };
       }
       if (!pt) { fautes.push(cle + ' : pas de place à côté'); continue; }
-      if (a.prop && a.prop.verrou) { a.prop.verrou = false; jeu.avancer(0.05); }
-      placer(a, pt.x, P.y, pt.z, P.cap + 0.3);
-      if (!deguiser(p, a, cle)) { fautes.push(cle + ' refusé'); continue; }
-      placer(a, pt.x, P.y, pt.z, P.cap + 0.3);
-      a.prop.verrou = true; jeu.avancer(1);
-      await jeu.images(2);
-      const c = a.corps, R = a.prop.racine, e = Math.abs(Math.atan2(Math.sin(c.ang - P.cap), Math.cos(c.ang - P.cap)));
-      const V = capsules(a, [])[0], vo = R && R.userData.voile;
-      const ry0 = R.position.y, bas = V ? V.cy - V.hy : NaN;
-      vus.push(`${cle} cap ${(e * 180 / Math.PI).toFixed(1)}° · pendu à ${r3(c.jumpY)} (vrai ${r3(P.y0 - P.y)}) · touche dès ${r3(bas - P.y)}`);
-      if (!c.plaque) fautes.push(cle + ' pas plaqué');
-      if (e > 0.05) fautes.push(`${cle} tourné de ${(e * 180 / Math.PI).toFixed(1)}° par rapport au vrai`);
-      if (Math.abs(ry0 - P.y0) > 0.05 || Math.abs(c.jumpY - T0.accroche) > 1e-6) fautes.push(`${cle} affiché à ${r3(ry0)} au lieu de ${r3(P.y0)}`);
-      if (!V || Math.abs(bas - ry0) > 0.02) fautes.push(`${cle} : la boîte de touche commence à ${r3(bas)}, le meuble à ${r3(ry0)}`);
-      if (vo && vo.visible) fautes.push(cle + ' : un voile sous un meuble pendu');
+      for (const de of [0.3, 0.6]) {
+        if (a.prop && a.prop.verrou) { a.prop.verrou = false; jeu.avancer(0.05); }
+        placer(a, pt.x, P.y, pt.z, P.cap + de);
+        if (!deguiser(p, a, cle)) { fautes.push(cle + ' refusé'); continue; }
+        placer(a, pt.x, P.y, pt.z, P.cap + de);
+        a.prop.verrou = true; jeu.avancer(1);
+        await jeu.images(2);
+        const c = a.corps, R = a.prop.racine, e = Math.abs(Math.atan2(Math.sin(c.ang - P.cap), Math.cos(c.ang - P.cap)));
+        const V = capsules(a, [])[0], vo = R && R.userData.voile;
+        const ry0 = R.position.y, bas = V ? V.cy - V.hy : NaN;
+        vus.push(`${cle} (tourné de ${Math.round(de * 180 / Math.PI)}°) cap ${(e * 180 / Math.PI).toFixed(1)}° · pendu à ${r3(c.jumpY)} (vrai ${r3(P.y0 - P.y)}) · touche dès ${r3(bas - P.y)}`);
+        if (!c.plaque) fautes.push(cle + ' pas plaqué');
+        if (e > 0.05) fautes.push(`${cle} tourné de ${(e * 180 / Math.PI).toFixed(1)}° par rapport au vrai`);
+        if (Math.abs(ry0 - P.y0) > 0.05 || Math.abs(c.jumpY - T0.accroche) > 1e-6) fautes.push(`${cle} affiché à ${r3(ry0)} au lieu de ${r3(P.y0)}`);
+        if (!V || Math.abs(bas - ry0) > 0.02) fautes.push(`${cle} : la boîte de touche commence à ${r3(bas)}, le meuble à ${r3(ry0)}`);
+        if (vo && vo.visible) fautes.push(cle + ' : un voile sous un meuble pendu');
+      }
     }
     if (a.prop) a.prop.verrou = false;
-    return { ok: fautes.length === 0 && vus.length >= 2, texte: (vus.join(' ; ') || 'aucun extincteur pendu') + (fautes.length ? ' · FAUTES ' + fautes.join(', ') : '') };
+    return { ok: fautes.length === 0 && vus.length >= 4, texte: (vus.join(' ; ') || 'aucun extincteur pendu') + (fautes.length ? ' · FAUTES ' + fautes.join(', ') : '') };
   }
 
   // 12. VISER UN MEUBLE : 20 cas (à 2,5 m → trouvé ; derrière un mur → null ; à 3,5 m → null)
