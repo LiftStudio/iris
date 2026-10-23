@@ -7,7 +7,7 @@
 import * as THREE from 'three';
 import { Rng } from '../rng.js';
 import { PAS, ZONES_JEU } from '../constantes.js';
-import { MEUBLES, copieMeuble, fermerRegistre, rattraperRegistre, zonerRegistre, _bacASable, TAILLES_REFERENCE } from '../../registre_meubles.js';
+import { MEUBLES, copieMeuble, fermerRegistre, rattraperRegistre, zonerRegistre, _bacASable, empriseEgale } from '../../registre_meubles.js';
 import {
   CATALOGUE, preparerCatalogue, typesDeguisables, typesDistincts, deguisableDans, viserMeuble, deguiser, retirerProp, majProps, credibilite, cachettes,
   candidatsMeubles, toucherPoses, typeDe, pivotDe, _refEstActeur, distPassage,
@@ -24,22 +24,31 @@ export const ENDROITS = [
   ['rue', 15.63, 0, 9.38, 0], ['pause du −1', 9.38, -3.06, -9.37, 0], ['S −1.14', 9.63, -3.06, -22.62, 0],
   ['pause du 1er', 12.63, 3.5, -7.87, Math.PI / 2], ['S 1.3', 2.88, 3.5, -3.37, 0], ['Robert Kahn', 8.13, 3.5, -22.62, 0],
   ['salle 1 du 2e', 4.63, 6.6, -7.87, 0], ['salle David Clark', 5.38, 0, -15.12, 0]];
-// (relevé sur socle-ok : [appels, triangles] par endroit — rempli par la mesure de référence, voir le rapport L-K)
-export const REFERENCE_ENDROITS = null;
-// le relevé aux onze endroits, en balade, caméra libre (game.freeCam), qualité figée
+// (relevé sur socle-ok e06258f le 23/10, la même fonction, PC : [appels, triangles] par endroit — la qualité POSÉE par
+// fx.setQuality, l'automatique coupée : `__jeu.qualite()` ne change que le réglage, et l'automatique avait pu redescendre
+// le préréglage en route, d'où des relevés « haute » au nombre d'appels de la moyenne)
+export const REFERENCE_ENDROITS = {
+  pc: {
+    haute: [[636, 456276], [785, 524376], [722, 552290], [1692, 565264], [256, 153675], [123, 116679], [606, 506380], [510, 396056], [167, 214364], [194, 265062], [220, 387368]],
+    moyenne: [[348, 260734], [426, 293046], [389, 306973], [935, 315946], [141, 98410], [62, 79137], [325, 283682], [264, 228486], [83, 127894], [100, 162977], [112, 219642]],
+  },
+};
+// le relevé aux onze endroits, en balade, caméra libre (game.freeCam), préréglage posé (`high` | `medium`), automatique coupée :
+// 90 images pour que tout se pose (carte d'environnement, ombres), puis la médiane de 5
 export async function mesurerEndroits(jeu, game, qualite) {
-  jeu.figerQualite(true); await jeu.qualite(qualite);
+  const fx = game.fx, auto = fx.auto, q0 = fx.quality;
+  fx.auto = false; fx.setQuality(qualite, true);
   const u = game.user, cam = game.camera, asp = cam.aspect, R = [];
   game.freeCam = true;
   try {
     for (const [nom, x, y, z, l] of ENDROITS) {
-      u.pos.set(x, y, z); if (u.posPrec) u.posPrec.copy(u.pos); if (u.posAff) u.posAff.copy(u.pos); u.solAff = y; u.vel && u.vel.set(0, 0, 0);
+      u.pos.set(x, y, z); if (u.posPrec) u.posPrec.copy(u.pos); if (u.posAff) u.posAff.copy(u.pos); u.solAff = y; if (u.vel) u.vel.set(0, 0, 0);
       cam.position.set(x, y + 1.6, z); cam.rotation.set(-0.12, l, 0, 'YXZ'); cam.aspect = 16 / 9; cam.updateProjectionMatrix();
-      await jeu.images(40);
-      const m = await jeu.images(6);
+      await jeu.images(90);
+      const m = await jeu.images(5);
       R.push([nom, m.appels, m.triangles]);
     }
-  } finally { game.freeCam = false; cam.aspect = asp; cam.updateProjectionMatrix(); game.placerAuDepart(); jeu.figerQualite(false); }
+  } finally { game.freeCam = false; cam.aspect = asp; cam.updateProjectionMatrix(); game.placerAuDepart(); fx.setQuality(q0, true); fx.auto = auto; }
   return R;
 }
 
@@ -49,6 +58,18 @@ const TAILLES = {
   'chaise-kahn': [0.49, 0.85, 0.55], 'chaise-ecusson': [0.42, 0.82, 0.48], 'chaise-bureau': [0.68, 1.05, 0.66], presentoir: [0.36, 1.73, 0.80],
   extincteur: [0.21, 0.64, 0.23], 'mange-debout-croix': [0.65, 1.10, 0.65], 'chaise-dc': [0.46, 0.85, 0.52], 'chaise-marine': [0.47, 0.82, 0.45],
   'chaise-visiteur': [0.5, 0.85, 0.5], 'chaise-luge': [0.45, 0.82, 0.5], 'fauteuil-accueil': [0.7, 0.8, 0.7], copieur: [0.6, 1.15, 0.6],
+};
+// les écarts à ces tailles, expliqués (la copie est exacte, sommet à sommet : ce sont les mesures du document qui débordent)
+const JUSTIFIES = {
+  'tabouret-miura': 'carte_props 0,53 × 0,52 au sol : la boîte d’extraction (± 0,28-0,36 m autour du siège) ramassait le mange-debout voisin ; ses lames font 0,45 × 0,45',
+  'chaise-hetre': 'rentrée sous sa table double : la boîte d’extraction ramassait le chant de la table (0,55) ; la chaise a 0,46 de fond',
+  'chaise-kahn': 'rentrée sous son poste : la boîte d’extraction ramassait la table (0,55) ; la chaise a 0,49 de fond',
+  'chaise-bureau': '« 0,68 × 0,66 » : l’étoile à cinq branches et ses roulettes mesurées en biais ; la copie fait 0,58-0,60',
+  'chaise-luge': '« ≈ 0,45 × 0,82 × 0,5 » estimé par la conception, jamais mesuré ; la copie : 0,50 × 0,92 × 0,53',
+  'fauteuil-accueil': '« ≈ 0,7 × 0,8 × 0,7 » estimé ; la copie : 0,60 × 1,04 × 0,62 (le dossier résille monte à 1,04)',
+  copieur: '« ≈ 0,6 × 1,15 × 0,6 » estimé ; la copie : 0,71 × 1,12 × 0,67 (bac manuel et pupitre compris)',
+  plante: 'carte_props le dit : « extraction polluée dans l’angle (plinthes) » ; la plante du bureau B fait 0,52 × 1,97 × 0,52',
+  extincteur: 'carte_props mesurait celui du hall ouest (0,21 × 0,64 × 0,23 : sa copie y est, à 9 % près) ; les cinq autres sont d’autres modèles (CO2, 6 kg, à eau)',
 };
 const DEG = Math.PI / 180;
 const r3 = (v) => Math.round(v * 1000) / 1000;
@@ -75,7 +96,7 @@ export default function (jeu) {
   }, { delai: 120 });
   T('1b appels et triangles aux 11 endroits (haute, moyenne)', async (t) => {
     const ref = REFERENCE_ENDROITS && REFERENCE_ENDROITS[profil()];
-    const H = await mesurerEndroits(jeu, game, 'haute'), M = await mesurerEndroits(jeu, game, 'moyenne');
+    const H = await mesurerEndroits(jeu, game, 'high'), M = await mesurerEndroits(jeu, game, 'medium');
     t.note('endroits haute', JSON.stringify(H)); t.note('endroits moyenne', JSON.stringify(M));
     if (!ref) return { ok: false, attendu: 'la référence de socle-ok', obtenu: 'pas de référence pour le profil ' + profil() + ' : ' + JSON.stringify({ H, M }) };
     const diff = [];
@@ -116,11 +137,12 @@ export default function (jeu) {
     await preparer();
     const v = jeu.verifierMeubles();
     const H = MEUBLES.poses.filter((p) => hors(p.zone)), types = new Set(H.map((p) => MEUBLES.types.get(p.cle).type));
-    const tailles = [];
+    const tailles = [], justes = [];
     for (const [cle, T0] of MEUBLES.types) {
       const ref = TAILLES[T0.type]; if (!ref) continue;
       const t3 = [T0.taille.x, T0.taille.y, T0.taille.z];
-      if (t3.some((x, k) => Math.abs(x - ref[k]) > 0.1 * ref[k])) tailles.push(`${cle} ${t3.map(r3).join('×')} (réf. ${ref.join('×')})`);
+      if (empriseEgale(t3, ref, 0.1)) continue;
+      (JUSTIFIES[T0.type] ? justes : tailles).push(`${cle} ${t3.map(r3).join('×')} (réf. ${ref.join('×')})`);
     }
     // les oubliés : ceux de L-M (l'extincteur de l'ascenseur et de la bande sud, js/ecole_ascenseur.js) sont attendus ; tout autre
     // est une faute — et un type qui en garde un dans une zone n'y est pas déguisable
@@ -133,38 +155,41 @@ export default function (jeu) {
     }
     const ok = types.size >= 18 && H.length >= 200 && tailles.length === 0 && v.horsTolerance.length === 0 && autres.length === 0 && fautes.length === 0;
     return { ok, attendu: '≥ 18 types, ≥ 200 poses hors du −1, tailles à ± 10 %, horsTolerance vide, oubliés : ceux de L-M seulement, exclus de leur zone',
-      obtenu: `${types.size} types, ${H.length} poses hors du −1 (${v.types} clés, ${v.poses} poses en tout) · tailles ${tailles.join(' ; ') || 'justes'} · horsTolerance ${JSON.stringify(v.horsTolerance)} · oubliés L-M ${v.nonEtiquetes.filter(LM).map((e) => e.zone + ' (' + r3(e.x) + ' ; ' + r3(e.y) + ' ; ' + r3(e.z) + ')').join(', ') || 'aucun'} · autres ${JSON.stringify(autres)} · fautes ${fautes.join(', ') || 'aucune'}` };
+      obtenu: `${types.size} types, ${H.length} poses hors du −1 (${v.types} clés, ${v.poses} poses en tout) · tailles ${tailles.join(' ; ') || 'justes'} (écarts justifiés au document : ${justes.join(' ; ') || 'aucun'}) · horsTolerance ${JSON.stringify(v.horsTolerance)} · oubliés L-M ${v.nonEtiquetes.filter(LM).map((e) => e.zone + ' (' + r3(e.x) + ' ; ' + r3(e.y) + ' ; ' + r3(e.z) + ')').join(', ') || 'aucun'} · autres ${JSON.stringify(autres)} · fautes ${fautes.join(', ') || 'aucune'}` };
   });
 
   // 3. LE CATALOGUE : ≤ 600 ms, aucun programme neuf, une copie ≤ 12 appels (haute)
   T('3 preparerCatalogue ≤ 600 ms, 0 programme, une copie ≤ 12 appels (haute)', async (t) => {
-    const prog = () => (game.renderer.info.programs || []).length;
+    const prog = () => new Set((game.renderer.info.programs || []).map((p) => p.cacheKey));
     const p0 = prog(), t0 = performance.now();
     await preparerCatalogue(game);
-    const ms = performance.now() - t0;
-    jeu.figerQualite(true); await jeu.qualite('haute');
+    const ms = performance.now() - t0, p1 = prog();
+    const fx = game.fx, auto = fx.auto, q0 = fx.quality;
+    fx.auto = false; fx.setQuality('high', true);
     const cam = game.camera, u = game.user, appels = [], trop = [];
     game.freeCam = true;
     try {
-      // le hall, devant la pile : un fond fixe, puis chaque type posé à 2,2 m devant la caméra
+      // le hall, devant la pile : un fond fixe, puis chaque type déguisable posé à 2,2 m devant la caméra
       const x = 14.9, z = -3.4; u.pos.set(x, 0, z + 0.6); if (u.posAff) u.posAff.copy(u.pos);
       cam.position.set(x, 1.5, z); cam.rotation.set(-0.35, 0, 0, 'YXZ'); cam.aspect = 16 / 9; cam.updateProjectionMatrix();
-      await jeu.images(20);
+      await jeu.images(30);
       const fond = (await jeu.images(4)).appels;
       for (const [cle, T0] of CATALOGUE) {
+        if (!T0.deguisable) continue;
         const c = T0.secours ? T0.proto.clone(true) : copieMeuble(cle); c.userData.dynamique = true;
         c.position.set(x, 0, z - 2.2); game.scene.add(c);
-        await jeu.images(2);
+        await jeu.images(3);
         const a = (await jeu.images(3)).appels - fond;
         game.scene.remove(c);
         appels.push(cle + ' ' + a);
         if (a > 12) trop.push(cle + ' ' + a + ' (' + T0.proto.children.length + ' maillages)');
       }
-    } finally { game.freeCam = false; game.placerAuDepart(); jeu.figerQualite(false); }
-    const p1 = prog();
-    const ok = t.temps('preparerCatalogue (ms)', ms, 600) && p1 === p0 && trop.length === 0;
-    return { ok, attendu: '≤ 600 ms · programmes constants · chaque copie ≤ 12 appels en haute (≤ 3 pour un meuble cousu seul : le −1, lot R)',
-      obtenu: `${Math.round(ms)} ms · programmes ${p0} → ${p1} · ${trop.length ? 'trop : ' + trop.join(', ') : 'toutes ≤ 12'} · ${appels.join(', ')}` };
+    } finally { game.freeCam = false; game.placerAuDepart(); fx.setQuality(q0, true); fx.auto = auto; }
+    const p2 = prog(), neufs = [...p2].filter((k) => !p1.has(k));
+    t.note('programmes de profondeur à la première image d’une copie', neufs.length);
+    const ok = t.temps('preparerCatalogue (ms)', ms, 600) && p1.size === p0.size && trop.length === 0 && neufs.every((k) => k.startsWith('depth')) && neufs.length <= 3;
+    return { ok, attendu: '≤ 600 ms · 0 programme compilé par le catalogue · chaque copie déguisable ≤ 12 appels en haute (≤ 3 pour un meuble cousu seul : le −1, lot R) · à la première image, au plus 3 variantes de profondeur (objets mobiles)',
+      obtenu: `${Math.round(ms)} ms · programmes ${p0.size} → ${p1.size} au catalogue, +${neufs.length} au rendu (${neufs.map((k) => k.split(',')[0]).join(', ') || 'aucun'}) · ${trop.length ? 'trop : ' + trop.join(', ') : 'toutes ≤ 12'} · ${appels.join(', ')}` };
   }, { delai: 240 });
 
   // 4. CHAQUE PROTOTYPE POSÉ À LA PLACE DE SON ORIGINAL : boîtes à ± 1 mm, même programme

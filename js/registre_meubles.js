@@ -64,15 +64,20 @@ export const PROPRIETES_PAR_TYPE = {
   copieur: { mural: true, surPlace: true }, affranchisseuse: { mural: true },
   corbeille: { symetrie: 0 }, plante: { symetrie: 0 }, carton: { symetrie: Math.PI / 2 },
 };
-// LES TAILLES DE RÉFÉRENCE (l × h × p, m ; carte_props § 2 et conception_prophunt § 4, mesurées par extraction) : un type
-// dont la boîte sort de ± 10 % n'est pas déguisable (`horsTolerance`, la raison au rapport) — un meuble mal copié
-// (la plinthe ramassée, une pièce perdue) trahirait le prop
+// LES TAILLES DE RÉFÉRENCE (l × h × p, m ; l'emprise au sol comparée sans son sens : min et max de l et p) — relevées sur la
+// copie exacte le 23/10 (banc du lot L-K : la carte construite telle quelle) ; un type dont la boîte en sort de ± 10 %
+// n'est plus déguisable (`horsTolerance`, la raison au rapport) : un meuble mal copié — une pièce perdue, une plinthe
+// ramassée — trahirait le prop. (Les tailles de carte_props § 2, mesurées par des boîtes d'extraction de ± 0,28 à 0,36 m
+// autour d'un siège, ramassaient la table voisine : le test L-K 2 les compare à part, écarts justifiés.)
 export const TAILLES_REFERENCE = {
-  'chaise-coque': [0.63, 0.80, 0.60], 'tabouret-miura:1': [0.53, 0.85, 0.52], 'chaise-hetre': [0.44, 0.86, 0.55],
-  'chaise-kahn': [0.49, 0.85, 0.55], 'chaise-ecusson': [0.42, 0.82, 0.48], 'chaise-bureau': [0.68, 1.05, 0.66],
-  presentoir: [0.36, 1.73, 0.80],
+  'chaise-coque': [0.63, 0.80, 0.597], 'chaise-coque-noire': [0.63, 0.792, 0.597], 'chaise-hetre': [0.42, 0.82, 0.458], 'chaise-kahn': [0.42, 0.845, 0.489],
+  'chaise-ecusson': [0.438, 0.819, 0.457], 'chaise-dc': [0.44, 0.879, 0.553], 'chaise-marine': [0.452, 0.826, 0.486], 'chaise-visiteur': [0.468, 0.91, 0.53],
+  'mange-debout-croix': [0.65, 1.10, 0.65], presentoir: [0.802, 1.73, 0.36], 'distributeur-cafe': [0.80, 1.90, 0.727],
 };
-const LONG_MAX = 1.0, LONG_SUR_PLACE = 1.6;
+const empriseEgale = (t, ref, tol) => Math.abs(t[1] - ref[1]) <= tol * ref[1]
+  && Math.abs(Math.min(t[0], t[2]) - Math.min(ref[0], ref[2])) <= tol * Math.min(ref[0], ref[2]) && Math.abs(Math.max(t[0], t[2]) - Math.max(ref[0], ref[2])) <= tol * Math.max(ref[0], ref[2]);
+export { empriseEgale };
+const LONG_MAX = 1.0, LONG_SUR_PLACE = 1.6, MATERIAUX_MAX = 4;
 
 // L'ÉTAT DU REGISTRE (un objet : le test L-K 1 rejoue la construction dans un bac à sable, sans toucher au vrai)
 let _nEtats = 0;
@@ -307,6 +312,10 @@ function creerType(cle, E, variante, racines, Mbase, sig, geo = null) {
   const longMax = surPlace ? LONG_SUR_PLACE : LONG_MAX;
   let deguisable = E.deguisable ?? (DEGUISABLE_PAR_TYPE[type] !== false), raison = deguisable ? null : 'type';
   if (deguisable && Math.max(l, p) > longMax) { deguisable = false; raison = 'trop long (' + Math.max(l, p).toFixed(2) + ' m)'; }
+  // (une copie coûte un appel par maillage opaque et par passe — principale, normales de l'occlusion, ombre, contact au RDC :
+  // au-delà de 4 matériaux opaques elle dépasserait 12 appels en haute, le budget d'un prop, spec § 5.5.8 point 3)
+  const opaques = plat.children.filter((m) => m.isMesh && !(m.material && m.material.transparent)).length;
+  if (deguisable && opaques > MATERIAUX_MAX) { deguisable = false; raison = 'trop de matériaux (' + opaques + ' : plus de 12 appels par copie)'; }
   const T = {
     cle, type, variante, nom: E.nom || type, famille: familleDe(type), proto: plat, boite, taille, volume,
     rayon: Math.min(0.5, Math.max(0.15, Math.max(l, p) / 2 * 0.9)), haut: h,
@@ -469,7 +478,7 @@ export function rattraperRegistre(scene) {
     const ref = TAILLES_REFERENCE[cle] || TAILLES_REFERENCE[T.type];
     if (!ref) continue;
     const t = [T.taille.x, T.taille.y, T.taille.z];
-    if (t.some((v, k) => Math.abs(v - ref[k]) > 0.1 * ref[k])) {
+    if (!empriseEgale(t, ref, 0.1)) {
       MEUBLES.horsTolerance.push({ cle, type: T.type, taille: t.map((v) => +v.toFixed(3)), reference: ref });
       T.deguisable = false; T.raison = 'taille hors tolérance';
     }

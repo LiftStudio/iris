@@ -33,7 +33,6 @@ import { CorpsProp, coinsLibres, A_LA_SORTIE } from './corps_prop.js';
 import { niveauDe } from './constantes.js';
 import { melanger } from './rng.js';
 import { Balistique } from './balistique.js';
-import { Player } from '../player.js';
 import { zoneDe as zoneVue, zonesCachees, DEHORS } from '../ecole_visibilite.js';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -125,22 +124,25 @@ export async function preparerCatalogue(game, progres) {
   CATALOGUE.set(CARTON, typeCarton());
   _nExclus = -1;
   pr('Meubles', 0.3);
-  // les programmes et les textures (Player.preparerRendu : ceux des jumeaux du décor existent déjà — rien ne se compile —,
-  // mais le carton, le voile et la surbrillance sont neufs), une fois par session
-  const prep = Player.preparerRendu, L = [];
-  if (prep) {
-    const extras = new THREE.Group();
-    const v = new THREE.Mesh(geoVoile(), matVoile(0)); extras.add(v);
-    const s = new THREE.Mesh(geoVoile(), matSurbrillance()); extras.add(s);
-    for (const o of [extras, ...[...CATALOGUE.values()].map((T) => T.proto)]) {
-      if (_prepares.has(o)) continue;
-      _prepares.add(o);
-      try { const p = prep(o); if (p) L.push(p); } catch (e) { /* (un prototype qui ne se compile pas n'empêche pas la partie) */ }
-    }
+  // LES PROGRAMMES : rien à compiler — les matériaux des prototypes sont les jumeaux de ceux du décor (même signature, même
+  // programme, mêmes textures, déjà sur la carte). (Mesuré le 23/10 : Player.preparerRendu en compilait onze — les variantes
+  // du cran de repli —, les passes annexes de game._compilerTout sept, pour une cible qui n'est pas celle du rendu ; les
+  // seules variantes qu'un prop demande en jeu sont deux ou trois programmes de PROFONDEUR des objets mobiles non animés —
+  // ombre portée, ombre de contact —, compilés à sa première image : voir le rapport L-K, demande à L-H.) Les textures sont
+  // envoyées à la carte (déjà là : celles du décor), une fois par session.
+  for (const T of CATALOGUE.values()) {
+    if (_prepares.has(T.proto)) continue;
+    _prepares.add(T.proto);
+    for (const t of texturesDe(T.proto)) try { game.renderer && game.renderer.initTexture(t); } catch (e) { /* */ }
   }
-  if (L.length) await Promise.race([Promise.all(L).catch(() => {}), new Promise((r) => setTimeout(r, 8000))]);
   pr('Meubles', 1);
   return CATALOGUE;
+}
+// les textures des matériaux d'un objet (envoyées à la carte sous la préparation : elles y sont déjà, ce sont celles du décor)
+function texturesDe(o) {
+  const L = new Set();
+  o.traverse((m) => { if (!m.isMesh || !m.material) return; for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap', 'alphaMap']) if (m.material[k]) L.add(m.material[k]); });
+  return L;
 }
 // les formes du monde solide qui sont CELLES d'un meuble (leur centre dans sa boîte, leur taille à la sienne : la boîte
 // d'une rangée de cinq chaises ne l'est d'aucune) : MEUBLES.parForme — une balle sur elles touche ce meuble-là, sans boîte
