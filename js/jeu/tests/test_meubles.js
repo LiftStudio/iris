@@ -143,16 +143,25 @@ export default function (jeu) {
     rep.add(libres);
     // (la construction ne paie que `fermerRegistre` — ce que les coutures appellent ; le rattrapage, qui achève les prototypes,
     // et les zones sont de l'écran PRÉPARATION : chronométrés à part, ils vérifient que la réplique rend toutes ses poses)
-    let ms = 0, msPrep = 0;
-    const r = _bacASable((M) => {
-      const t0 = performance.now(); fermerRegistre(rep); ms = performance.now() - t0;
-      const t1 = performance.now(); rattraperRegistre(null); zonerRegistre(game.carte.lumieres, game.collisions); msPrep = performance.now() - t1;
-      return { types: M.types.size, poses: M.poses.length };
-    });
+    // (relecture L-K du 23/10 : la réplique vient d'allouer 12 000 objets — le ramasse-miettes qui les suit tombait dans la
+    // mesure, une seule, de 15 à 49 ms selon la charge ; deux images pour qu'il passe, puis TROIS rejeux, jugé sur la médiane,
+    // le premier noté)
+    await jeu.images(2);
+    let msPrep = 0, r = null;
+    const L = [];
+    for (let k = 0; k < 3; k++) {
+      r = _bacASable((M) => {
+        const t0 = performance.now(); fermerRegistre(rep); L.push(performance.now() - t0);
+        const t1 = performance.now(); rattraperRegistre(null); zonerRegistre(game.carte.lumieres, game.collisions); msPrep = performance.now() - t1;
+        return { types: M.types.size, poses: M.poses.length };
+      });
+    }
+    const ms = [...L].sort((a, b) => a - b)[1];
     t.note('registre, rattrapage et zones de la réplique (ms, préparation)', msPrep);
+    t.note('registre, les trois rejeux (ms)', L.map((v) => +v.toFixed(1)).join(' / '));
     const ok = t.temps('registre (ms, rejoué)', ms, 30) && r.poses === MEUBLES.poses.length;
-    return { ok, attendu: '≤ 30 ms · ' + MEUBLES.poses.length + ' poses retrouvées',
-      obtenu: `${ms.toFixed(1)} ms à la construction (+ ${msPrep.toFixed(1)} ms à la préparation) pour ${r.poses} poses (${pieces} maillages étiquetés), ${r.types} types, ${n} maillages libres (${s} sommets ; la construction : ${vus} maillages non étiquetés croisés, ${S.libres} retenus, ${S.coutures} coutures)` };
+    return { ok, attendu: '≤ 30 ms (médiane de trois rejeux) · ' + MEUBLES.poses.length + ' poses retrouvées',
+      obtenu: `${ms.toFixed(1)} ms à la construction (rejeux ${L.map((v) => v.toFixed(1)).join(' / ')} ; + ${msPrep.toFixed(1)} ms à la préparation) pour ${r.poses} poses (${pieces} maillages étiquetés), ${r.types} types, ${n} maillages libres (${s} sommets ; la construction : ${vus} maillages non étiquetés croisés, ${S.libres} retenus, ${S.coutures} coutures)` };
   }, { delai: 120 });
 
   // 2. LE REGISTRE HORS DU −1 : types, poses, tailles, oubliés
