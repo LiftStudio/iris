@@ -205,7 +205,20 @@ export default function (jeu) {
       // (et un chemin vers un nœud hors de la zone : refusé)
       const dehors = N.noeudPres(14.88, 0, -3.12, 1.5);
       const refus = !N.chemin(auHasard(N, rng), dehors, []);
-      return { ok: sorties === 0 && trouves === 200 && refus, attendu: '200 chemins, 0 sortie, le hall refusé', obtenu: `${trouves} chemins (${n} nœuds), ${sorties} sorties, hall ${refus ? 'refusé' : 'atteint'}` };
+      // (relecture : une demande à moitié faite quand la zone change est REPRISE sous le nouveau masque — elle rappelle —, et
+      // une demande vers un nœud devenu interdit rappelle null)
+      N.restreindre(null);
+      const u0 = N.noeudPres(9.63, -3.06, -22.62), v0 = N.noeudPres(17.13, 6.6, -2.37), w0 = N.noeudPres(15.63, -3.06, -9.62);
+      const rendus = [];
+      N.demander('r1', u0, v0, (L) => rendus.push(['r1', L ? L.length : null]));
+      N.demander('r2', u0, w0, (L) => rendus.push(['r2', L ? L.length : null]));
+      N.pasFile();                                             // (r1 entamée : 1 500 nœuds ouverts)
+      N.restreindre(M);
+      for (let k = 0; k < 400 && N.enFile; k++) N.pasFile();
+      const r1 = rendus.find((r) => r[0] === 'r1'), r2 = rendus.find((r) => r[0] === 'r2');
+      const repris = !!r1 && r1[1] === null && !!r2 && r2[1] > 0;
+      return { ok: sorties === 0 && trouves === 200 && refus && repris, attendu: '200 chemins, 0 sortie, le hall refusé ; file reprise (hors zone : null, dans la zone : un chemin)',
+        obtenu: `${trouves} chemins (${n} nœuds), ${sorties} sorties, hall ${refus ? 'refusé' : 'atteint'} ; file ${JSON.stringify(rendus)}` };
     } finally { N.restreindre(null); Nav.derniere = avant; }
   });
 
@@ -226,8 +239,26 @@ export default function (jeu) {
       if (a.cerveau.pilote.arrive) { arrives++; rapports.push(tt / aPied); if (tt <= aPied * 1.5 + 0.3) dans++; else if (lents.length < 4) lents.push(r2(tt / aPied)); }
       else if (lents.length < 4) lents.push('raté ' + [N.px[u], N.ph[u], N.pz[u]].map(r2).join(',') + ' → ' + [N.px[v], N.ph[v], N.pz[v]].map(r2).join(','));
     }
+    // (relecture : 20 cibles DANS un meuble ou un mur — pas de corps qui y tienne, un nœud à ≤ 1,5 m sur ce sol — : arrivé au
+    // dernier nœud, sans secours ni coincement, au lieu de pousser le meuble jusqu'à la téléportation)
+    const c = C(); let bouchees = 0, bArr = 0, bSec = 0;
+    for (let k = 0; k < 4000 && bouchees < 20; k++) {
+      const v = auHasard(N, rng, (w) => N.niveau[w] >= -1 && N.niveau[w] <= 2 && N.degage[w] < 0.5);
+      const ang = rng.next() * 2 * Math.PI, x = N.px[v] + Math.cos(ang) * 0.6, z = N.pz[v] + Math.sin(ang) * 0.6, y = N.ph[v];
+      if (c.libre(x, z, 0.3, y) || Math.abs(c.solEn(x, z, y + 0.3) - y) > 0.3 || N.noeudPres(x, y, z, 0.3) >= 0) continue;
+      const u = auHasard(N, rng, (w) => N.niveau[w] === N.niveau[v] && N.degage[w] >= 0.75 && Math.hypot(N.px[w] - x, N.pz[w] - z) > 4 && Math.hypot(N.px[w] - x, N.pz[w] - z) < 12);
+      const L = []; if (u < 0 || !N.chemin(u, v, L)) continue;
+      bouchees++;
+      placer(a, N.px[u], N.ph[u], N.pz[u], 0);
+      const Pi = a.cerveau.pilote; Pi.stop(); Pi.secours = 0; Pi.coincements = 0; a.cerveau.cible = { x, y, z, arret: 0.4 };
+      let co = 0;
+      for (let tt = 0; tt < N.longueur(L) / 5 * 2 + 3; tt += PAS) { jeu.avancer(PAS); co = Math.max(co, Pi.coincements); if (Pi.arrive) break; }
+      if (Pi.arrive) bArr++;
+      bSec += Pi.secours + co;
+    }
     jeu.quitter('balade');
-    return { ok: dans >= 98, attendu: '≥ 98 / 100 arrivés en ≤ 1,5 × (+ 0,3 s d\'élan)', obtenu: `${arrives} arrivés, ${dans} dans le temps ; rapport médian ${r2(mediane(rapports))}, p95 ${r2(centile(rapports, 0.95))}${lents.length ? ' · ' + lents.join(' ; ') : ''}` };
+    return { ok: dans >= 98 && bouchees === 20 && bArr === 20 && bSec === 0, attendu: '≥ 98 / 100 arrivés en ≤ 1,5 × (+ 0,3 s d\'élan) ; 20/20 cibles bouchées atteintes au dernier nœud, 0 secours, 0 coincement',
+      obtenu: `${arrives} arrivés, ${dans} dans le temps ; rapport médian ${r2(mediane(rapports))}, p95 ${r2(centile(rapports, 0.95))}${lents.length ? ' · ' + lents.join(' ; ') : ''} ; bouchées ${bArr}/${bouchees}, secours + coincements ${bSec}` };
   }, { delai: 200 });
 
   // ---------------------------------------------------------------- 9. les départs
@@ -255,9 +286,16 @@ export default function (jeu) {
           return pris.length;
         };
         const D = ZONES_JEU[z].departs, pA = possible(D.A[0], D.B[0]), pB = possible(D.B[0], D.A[0]), faisable = pA >= 5 && pB >= 5;
-        const bon = A.length === 5 && B.length === 5 && esp >= 1.5 - 1e-6 && (faisable ? deg >= 0.75 : deg >= 0.3 - 1e-6) && hors === 0 && dAB >= 15;
+        // (relecture : deux appels de tailles différentes — 3 pour l'un, 9 pour l'autre, le cache oublié par un masque neuf —
+        // rendent des camps qui se tiennent : les 3 sont les 3 premiers des 5, et les 9 restent à ≥ 15 m à pied des 3)
+        N.restreindre(N.masque ? N.masque.slice() : N.masquePieces(piecesDe(z)));
+        const A3 = departs(z, 'A', 3, rng, N), B9 = departs(z, 'B', 9, rng, N);
+        const F3 = N.champMulti(A3.map((q) => ({ x: q.x, y: q.y, z: q.z })), Infinity);
+        let d39 = Infinity; for (const q of B9) { const v = N.noeudPres(q.x, q.y, q.z, 0.05); if (v >= 0) d39 = Math.min(d39, F3[v]); }
+        const prefixe = A3.every((q, i) => Math.hypot(q.x - A[i].x, q.z - A[i].z) < 1e-6) && B9.slice(0, 5).every((q, i) => Math.hypot(q.x - B[i].x, q.z - B[i].z) < 1e-6);
+        const bon = A.length === 5 && B.length === 5 && esp >= 1.5 - 1e-6 && (faisable ? deg >= 0.75 : deg >= 0.3 - 1e-6) && hors === 0 && dAB >= 15 && d39 >= 15 && prefixe;
         ok = ok && bon;
-        lignes.push(`${z} esp ${r2(esp)} dég ${r2(deg)} à pied ${r2(dAB)} m${faisable ? '' : ` (0,75 m impossible : ${pA} / ${pB} nœuds dégagés à 15 m de l'autre base)`}${hors ? ' hors ' + hors : ''}${bon ? '' : ' ✗'}`);
+        lignes.push(`${z} esp ${r2(esp)} dég ${r2(deg)} à pied ${r2(dAB)} m (3 c. 9 : ${r2(d39)} m${prefixe ? '' : ', préfixe ≠'})${faisable ? '' : ` (0,75 m impossible : ${pA} / ${pB} nœuds dégagés à 15 m de l'autre base)`}${hors ? ' hors ' + hors : ''}${bon ? '' : ' ✗'}`);
       }
     } finally { N.restreindre(null); Nav.derniere = avant; }
     return { ok, attendu: '4 zones × 2 camps : 5 points, ≥ 1,5 m, ≥ 0,75 m, ≥ 15 m à pied', obtenu: lignes.join(' · ') };
@@ -491,6 +529,9 @@ export default function (jeu) {
     for (let k = 0; k < 6; k++) { const q = L[(k * 3) % L.length]; p.ajouterActeur({ id: 100 + k, nom: 'E' + k, equipe: null, x: q.x, y: q.y, z: q.z, lacet: 0, cerveau: 'errant' }); }
     const vites = [], rot = [], prec = new Map(); let demiTours = 0;
     for (let i = 0; i < 120 * 40; i++) {
+      // (relecture : toutes les 5 s, le lacet du premier errant tourné de 2 rad par un autre — un combat, une réapparition — :
+      // l'errant repart de là, sans revenir d'un coup à son ancien regard)
+      if (i % 600 === 300) { const a0 = p.acteurs[0]; a0.cmd.lacet = angle(a0.cmd.lacet + 2); const P0 = prec.get(a0.id); if (P0) { P0.l = a0.cmd.lacet; P0.ax = undefined; } }
       jeu.avancer(PAS);
       for (const a of p.acteurs) {
         const P = prec.get(a.id), c = a.corps;
