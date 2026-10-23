@@ -131,13 +131,76 @@ export function priseMain(A, cote, e, out) {
   return out.copy(_hw).addScaledVector(_hf, POSE_3E.prise.doigts * L).addScaledVector(_hn, POSE_3E.prise.paume * e);
 }
 // la main sur une prise : le poignet visé pour que le creux de la paume y tombe, doigts `fd`, paume `nd`, coude vers `pole`
+// (les matrices du haut du corps sont à jour : Spine.updateMatrixWorld(true) vient d'être fait, et ikBrasRapide tient à jour
+// celles qu'elle change — les positions se lisent donc dans matrixWorld, sans remonter la chaîne à chaque lecture)
 function mainSur(A, cote, prise, fd, nd, pole, plis, k, e) {
   const B = A.bones;
-  const L = B[cote + 'Hand'].getWorldPosition(_hw).distanceTo(B[cote + 'HandMiddle1'].getWorldPosition(_hm));
+  const L = _hw.setFromMatrixPosition(B[cote + 'Hand'].matrixWorld).distanceTo(_hm.setFromMatrixPosition(B[cote + 'HandMiddle1'].matrixWorld));
   _fd.copy(fd).normalize(); _nd.copy(nd).addScaledVector(_fd, -nd.dot(_fd)).normalize();
   _E.copy(prise).addScaledVector(_fd, -POSE_3E.prise.doigts * L).addScaledVector(_nd, -POSE_3E.prise.paume * e);
-  A.ikBras(cote, _E, _fd, _nd, pole, k);
+  ikBrasRapide(A, cote, _E, _fd, _nd, pole);
   if (plis) A.plierDoigts(cote, plis, k);
+}
+
+// LA CINÉMATIQUE INVERSE DU BRAS, une pose par image (AvatarRig.ikBras, js/avatar.js : les mêmes calculs, à k = 1). L'original
+// remet à jour trois sous-arbres entiers (bras, avant-bras, main : doigts compris, une cinquantaine de matrices) et remonte
+// la chaîne des parents à chaque lecture — 41 µs par bras mesurés le 23/10 ; ici seules les matrices dont la suite a besoin
+// sont refaites (bras, avant-bras, main, les trois jointures de la paume) : les doigts suivent au rendu
+// (scene.updateMatrixWorld). Jamais de NaN écrit dans un os.
+const _iS = new THREE.Vector3(), _iE = new THREE.Vector3(), _iW = new THREE.Vector3(), _iT = new THREE.Vector3(), _iD = new THREE.Vector3();
+const _iP = new THREE.Vector3(), _ie2 = new THREE.Vector3(), _iA = new THREE.Vector3(), _iB = new THREE.Vector3(), _iF = new THREE.Vector3();
+const _iN = new THREE.Vector3(), _iC = new THREE.Vector3(), _iM = new THREE.Vector3(), _iI = new THREE.Vector3(), _iK = new THREE.Vector3();
+const _iq = new THREE.Quaternion(), _iqa = new THREE.Quaternion(), _iqb = new THREE.Quaternion(), _iqp = new THREE.Quaternion();
+const _im1 = new THREE.Matrix4(), _im2 = new THREE.Matrix4(), _iv = new THREE.Vector3(), _isc = new THREE.Vector3();
+const qMonde = (o, q) => { o.matrixWorld.decompose(_iv, q, _isc); return q; };
+// tourne l'os (monde) d'une rotation `qr`, puis refait sa matrice et celles de `suite` (ses descendants utiles, dans l'ordre)
+function tourner(os, qr, suite) {
+  qMonde(os, _iqb).premultiply(qr);
+  qMonde(os.parent, _iqp).invert().multiply(_iqb);
+  if (!Number.isFinite(_iqp.x + _iqp.y + _iqp.z + _iqp.w)) return false;
+  os.quaternion.copy(_iqp); os.updateMatrix(); os.matrixWorld.multiplyMatrices(os.parent.matrixWorld, os.matrix);
+  for (const o of suite) o.matrixWorld.multiplyMatrices(o.parent.matrixWorld, o.matrix);
+  return true;
+}
+function viserRapide(os, de, vers, suite) {
+  if (!(de.lengthSq() > 1e-10) || !(vers.lengthSq() > 1e-10)) return;
+  _iq.setFromUnitVectors(de, vers);
+  tourner(os, _iq, suite);
+}
+function ikBrasRapide(A, cote, cible, fDes, nDes, pole) {
+  if (!A.aMains(cote)) return false;
+  if (!Number.isFinite(cible.x + cible.y + cible.z + pole.x + pole.y + pole.z + fDes.x + fDes.y + fDes.z + nDes.x + nDes.y + nDes.z)) return false;
+  const B = A.bones, bras = B[cote + 'Arm'], avant = B[cote + 'ForeArm'], main = B[cote + 'Hand'];
+  const M = B[cote + 'HandMiddle1'], I = B[cote + 'HandIndex1'], K = B[cote + 'HandPinky1'];
+  const doigts = [M, I, K];
+  _iS.setFromMatrixPosition(bras.matrixWorld); _iE.setFromMatrixPosition(avant.matrixWorld); _iW.setFromMatrixPosition(main.matrixWorld);
+  const a = _iS.distanceTo(_iE), b = _iE.distanceTo(_iW);
+  _iT.copy(cible); _iD.subVectors(_iT, _iS);
+  const d = Math.min(a + b - 1e-3, Math.max(Math.abs(a - b) + 1e-3, _iD.length()));
+  _iD.normalize(); _iT.copy(_iS).addScaledVector(_iD, d);
+  const cos = (a * a + d * d - b * b) / (2 * a * d), sin = Math.sqrt(Math.max(0, 1 - cos * cos));
+  _iP.subVectors(pole, _iS); _iP.addScaledVector(_iD, -_iP.dot(_iD));
+  if (_iP.lengthSq() < 1e-8) _iP.set(0, -1, 0); _iP.normalize();
+  _ie2.copy(_iS).addScaledVector(_iD, cos * a).addScaledVector(_iP, sin * a);
+  // (avant-bras, main et jointures suivent le bras : leurs matrices locales sont à jour, seules les monde changent)
+  viserRapide(bras, _iA.subVectors(_iE, _iS).normalize(), _iB.subVectors(_ie2, _iS).normalize(), [avant, main, ...doigts]);
+  _iE.setFromMatrixPosition(avant.matrixWorld); _iW.setFromMatrixPosition(main.matrixWorld);
+  viserRapide(avant, _iA.subVectors(_iW, _iE).normalize(), _iB.subVectors(_iT, _iE).normalize(), [main, ...doigts]);
+  // la main : son repère (doigts, paume) amené sur celui qui est demandé (AvatarRig.repereMain)
+  _iW.setFromMatrixPosition(main.matrixWorld);
+  _iM.setFromMatrixPosition(M.matrixWorld); _iI.setFromMatrixPosition(I.matrixWorld); _iK.setFromMatrixPosition(K.matrixWorld);
+  _iF.subVectors(_iM, _iW).normalize();
+  _iC.subVectors(_iI, _iK);
+  if (cote === 'Right') _iN.crossVectors(_iC, _iF); else _iN.crossVectors(_iF, _iC);
+  _iN.addScaledVector(_iF, -_iN.dot(_iF)).normalize();
+  _iC.crossVectors(_iF, _iN); _im1.makeBasis(_iF, _iN, _iC);
+  _iN.copy(nDes).addScaledVector(fDes, -nDes.dot(fDes));
+  if (!(_iN.lengthSq() > 1e-8) || !(fDes.lengthSq() > 1e-8)) return true;
+  _iN.normalize();
+  _iC.crossVectors(fDes, _iN); _im2.makeBasis(fDes, _iN, _iC);
+  _iqa.setFromRotationMatrix(_im2); _iq.setFromRotationMatrix(_im1).invert(); _iqa.multiply(_iq);
+  tourner(main, _iqa, doigts);
+  return true;
 }
 
 // ---------------------------------------------------------------- LA POSE
@@ -221,7 +284,7 @@ export function poserArme(acteur, dt) {
   _r.crossVectors(_f, _up); if (_r.lengthSq() < 1e-8) _r.set(Math.cos(l), 0, -Math.sin(l)); _r.normalize();   // la droite
   _u.crossVectors(_r, _f).normalize();
   const B = A.bones;
-  B.LeftArm.getWorldPosition(_a); B.RightArm.getWorldPosition(_b);
+  _a.setFromMatrixPosition(B.LeftArm.matrixWorld); _b.setFromMatrixPosition(B.RightArm.matrixWorld);
   _M.addVectors(_a, _b).multiplyScalar(0.5);                         // le milieu des épaules
   const R = REPERES[id] || REPERES.fa24;
   if (fusil) {
@@ -271,12 +334,12 @@ export function poserArme(acteur, dt) {
     const disc = dz * dz - d2 + r * r;
     return Math.max(0, disc >= 0 ? dz - Math.sqrt(disc) : dz);
   };
-  const portee = (c) => { const L = S.portees || (S.portees = {}); if (!(L[c] > 0) || L._A !== A) { L._A = A; L[c] = B[c + 'Arm'].getWorldPosition(_w).distanceTo(B[c + 'ForeArm'].getWorldPosition(_hm)) + _hm.distanceTo(B[c + 'Hand'].getWorldPosition(_hw)); } return L[c] * 0.97; };
+  const portee = (c) => { const L = S.portees || (S.portees = {}); if (!(L[c] > 0) || L._A !== A) { L._A = A; L[c] = B[c + 'Arm'].getWorldPosition(_w).distanceTo(B[c + 'ForeArm'].getWorldPosition(_hm)) + _hm.distanceTo(B[c + 'Hand'].getWorldPosition(_hw)); } return L[c] * 0.955; };
   {
     const mgL = R.mainG || [0, 0, 0];
     // (le poignet gauche visé : la prise, moins la main — 8 cm de marge comptés pour elle)
     _P.set(mgL[0], mgL[1], mgL[2]).multiplyScalar(e).applyQuaternion(_q).add(_G);
-    B.LeftArm.getWorldPosition(_a);
+    _a.setFromMatrixPosition(B.LeftArm.matrixWorld);
     const sG = glisse(_a, _P, portee('Left') + 0.06 * e), sD = glisse(_b, _G, portee('Right') + 0.06 * e);
     const sl = Math.max(sG, sD);
     if (sl > 0) _G.addScaledVector(_z, -sl);
@@ -299,7 +362,7 @@ export function poserArme(acteur, dt) {
   const recharge = S.recharge > 0 ? lisse(S.recharge) : 0;
   mainSur(A, 'Right', _a, _fd, _nd.clone(), _pole, [0.9, 1.1, 0.8], 1, e);
   // main gauche : le garde-main (fusils) ou la main droite (pistolet) ; à la recharge, le chargeur puis la ceinture
-  B.LeftArm.getWorldPosition(_b);
+  _b.setFromMatrixPosition(B.LeftArm.matrixWorld);
   const mg = rep('mainG', _mg) || _mg.copy(_G);
   if (fusil) {
     _fd.copy(_z).multiplyScalar(0.6).addScaledVector(_x, 0.75);
