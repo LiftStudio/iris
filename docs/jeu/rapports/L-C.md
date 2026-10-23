@@ -5,9 +5,34 @@ Spécification : `docs/jeu/spec_finale.md` § 5.5.5 (lot), § 4.5.10 (contrats),
 
 ## Où j'en suis
 
-**RELECTURE EN COURS** (23/10, depuis 06:35, relecteur sévère, commits « L-C relecture : … ») — spec et diff relus,
-propriétaires OK ; en attente d'un jeton du navigateur pour rejouer les 14 critères et jouer. Voir la section
-« Relecture » en fin de rapport (constats, corrections, ce qui reste). Le constructeur avait conclu :
+**FINI ET RELU** (23/10, 08:30 ; relecture de 06:35 à 08:30, commits « L-C relecture : … », détail dans la section
+« Relecture » en fin de rapport) — six défauts corrigés (tête accroupie hors de la boîte de touche, 13,7 cm → 0,4 cm ;
+six photos de lisibilité sur dix sans les corps ; poupée réglée sur la graine du test, tombée au téléphone ; poupée d'un
+corps caché partie de sa dernière pose ; test 5 au téléphone ; en-têtes faux), les six points du § 5.1 règle 5 tenus :
+
+| | |
+|---|---|
+| `?test=1&rapport=1&lot=L-C` (PC, taille du panneau) | **ok : true, 14/14, 0 échec**, 1 signalé (préparation 1re fois 6,3 s pour 6, onglet partagé avec les tests des autres lots : 3,6 à 4,8 s aux passes précédentes), 56,4 s |
+| `?test=1&tel=1&rapport=1&lot=L-C` (375 × 812) | **ok : true, 14/14, 0 échec, 0 signalé**, 35,5 s |
+| `?test=1&rapport=1&lot=S0` sur `lot/L-C` | **ok : true, 29/29, 0 échec, 0 signalé** |
+| `?test=1&tel=1&rapport=1&lot=S0` sur `lot/L-C` | **ok : true, 29/29, 0 échec**, 1 note « non valable » (entrée en essai mesurée onglet caché), 124 s |
+| `python -I tools/verifier_proprietaires.py lot/L-C` | `OK 11 fichiers (lot/L-C, L-C, base socle)` |
+| commits | tous « L-C : … » ou « L-C relecture : … », avec la ligne `Co-Authored-By` |
+| navigateur | relecture : jeton_1 pris à 06:58:31, onglet fermé, vue remise en bureau, jeton rendu ; serveur 8135 et récepteur 8199 arrêtés |
+
+Mesures des derniers `__rapport` (PC / téléphone) : préparation 1re fois 6 338 / 1 929 ms (signalé PC, relatif), chaude
+0 ms, onLoad 0, programmes 138 → 162 → 164 au dessin (tél. 78 → 89 → 90) ; textures 137,3 Mo, 6 distincts (tél. 64,0 Mo,
+3) ; canon 0,000°, main gauche ≤ 1,02 cm, 0,088 / 0,175 ms par acteur ; accroupi hanches −0,42 m, pieds 0,00 cm, **tête
+affichée / simulée 0,4 cm au plus** (arrêt, marche, pas chassés, visée ± 0,4, armé et sans arme) ; poupées 100/100
+(médiane 0,43 s, max 0,73 / 0,82 s) ; cadence 0 faute, 0,60 / 0,35 ms de poses par image ; 50 morts : enfants, géométries,
+textures constants ; 3 cycles : instantané identique ; brassards 8,1 cm ; tête / os Head en course 3,3 à 4,7 cm (moy.),
+6,2 à 8,1 cm (95e) ; balade 0 / 0 (vue 3 et vue 1) ; **10 photos sur 10 avec les deux corps vus** ; habillage Airsoft
+caché à 2,12 s, Militaire enfoncé de 0,5 m, caché à 4,42 s.
+
+Un repreneur : `git log` de `lot/L-C` ; le serveur `python serve.py 8135` dans l'arbre ; un jeton du navigateur
+(`_navigateur/jeton_<n>`, § 5.1 règle 3) ; `http://127.0.0.1:8135/?test=1&rapport=1&lot=L-C` puis `&lot=S0`, et `&tel=1`.
+
+### Ce que le constructeur avait conclu (06:27, avant la relecture)
 
 **FINI** (23/10, 06:27) — les six points du § 5.1 règle 5 sont tenus :
 
@@ -159,12 +184,87 @@ mains sur les vraies prises.
 
 ## Relecture (23/10, relecteur sévère)
 
+Commits `L-C relecture : …` (43ee761 → fin), sur `lot/L-C`, dans le même arbre. Jeton du navigateur : jeton_1, pris à
+06:58:31 (essais toutes les 3 s : à 30 s, la file passait aux autres — L-U a eu jeton_3 entre deux essais), rendu à la fin.
+
 ### Où en est la relecture
 
-1. Spec relue (§ 5.5.5, § 4.5.10, §§ 3.6, 3.10, 4.3, 5.1) et diff `socle...lot/L-C` lu en entier (11 fichiers) : fait.
-2. `python -I tools/verifier_proprietaires.py lot/L-C` : `OK 11 fichiers` ; fins de ligne CRLF partout, comme les voisins.
-3. Rejeu des critères et partie jouée : en attente d'un jeton.
+Spec relue (§ 5.5.5, § 4.5.10, §§ 3.1, 3.6, 3.10, 4.1, 4.3, 5.1), diff `socle...lot/L-C` lu en entier (11 fichiers), les 14
+critères rejoués (PC et `?tel=1`), une partie d'équipes 3 c. 4 aux six amis JOUÉE et regardée (caméra libre, 1280 × 720,
+`__jeu.photo`), six défauts trouvés et corrigés (ci-dessous), S0 rejoué. Voir « Fini » en fin de section.
 
-### Constats de lecture
+### Ce que la relecture a trouvé, et ce qui est fait
 
-(au fil de l'eau)
+1. **Accroupi, la tête affichée hors de la tête simulée — un vrai bug de jeu.** Mesuré sur Haythem armé : 13,7 cm d'écart
+   (9 cm plus haut, 7 devant, 8 de côté : un dos penché qu'on tourne de trois quarts emporte la tête de côté), pour une
+   sphère de touche de 11,5 cm : une balle visée au MILIEU de la tête vue d'un bot accroupi passait à côté (au mieux un
+   cou). Le critère 11 ne mesurait que la course ; le test 5 notait l'écart vertical sans l'exiger. Corrigé dans
+   `js/jeu/accroupi.js` : garde basse plus penchée (recul 0,16 m, dos 0,32 / 0,18 rad, cou −0,25, tête −0,15 ; hanches
+   toujours −0,42) et `centrerTete(player, k)`, appelée par `poserArme` le buste tourné et avant l'arme (et pour un corps
+   sans arme) : la hauteur par le dos (l'angle qui mène à la tête simulée, deux passes, le regard gardé), l'aplomb par le
+   bassin (glissé à l'horizontale, les pieds gardés par `ikJambe`) ; le sursaut passe après, qu'elle n'efface pas.
+   Résultat sur les 7 fiches (arrêt, marche, pas chassés, visée ± 0,15 et 0,4) : 0,1-0,3 cm en moyenne, 0,8 cm au plus ;
+   debout inchangé (2,2-2,8 cm). Mains : 0,0 cm accroupi. Le test 5 l'EXIGE désormais (≤ 6 cm, corps armé et sans arme) :
+   0,4 cm au plus, PC et téléphone. La demande du constructeur à L-A sur l'accroupi (0,54·k → 0,46·k) est RETIRÉE : c'est
+   l'affichage qui suit la simulation (§ 3 inchangé : œil 1,08 accroupi).
+2. **Test 13 : six photos sur dix sans les corps** (et non deux) : hall à 10 et 20 m (un mur, un pilier), −1 à 10 et 15 m
+   (derrière la porte du hall −1), couloir est à 10 et 15 m (face à un mur) — photos `avant_04` à `avant_09`. Les plans
+   sont désormais cherchés au monde solide (tous les 0,5 m, 16 caps, deux corps à ± 0,4 m vus de l'œil — buste, hanches,
+   tête — dans des zones vues) : la plus longue vue intérieure est de 8 m au hall (vers la salle d'attente), 8 m au −1 (la
+   pause, meublée), 10 m dans le couloir rouge du 2e ; 20 et 30 m n'existent que dans la rue. Chaque photo VÉRIFIE que les
+   deux corps sont dessinés (la cadence) et vus de l'œil : 10/10 (PC et téléphone). Écart au § 5.5.5 point 13 : 10, 20 et
+   30 m dans la rue seulement ; hall 5 / 8 m, −1 5 / 8 m, 2e 6 / 10 m, rue 5 m.
+3. **La poupée réglée sur la graine du test.** Sur 500 morts tirées (cinq graines), le réglage du constructeur laissait
+   1 à 2 % des corps assis plus d'une seconde, jusqu'à 2,4 s adossés au mur du couloir est ; au téléphone, le test 6 est
+   TOMBÉ (99/100, 1,13 s) au premier rejeu. Corrigé (`js/jeu/poupee.js`) : bascule plus tôt et plus franche (0,15 s,
+   0,25 m, 25 m/s²), affaissement renforcé (0,2 s, × 9, au-dessus de 0,25 m), et un corps COINCÉ (un coin, un couloir de
+   1,2 m) bascule, une fois, du côté où son buste a la place de s'allonger, le plus près du côté où penche sa tête (jamais
+   par-dessus ses jambes). 497/500 à plat en moins d'une seconde (médiane 0,42 s, 95e 0,62 s), les trois autres en 1,04 à
+   1,21 s, dans le couloir est ; 0 point dans une forme, 0 NaN. Graine du test : 100/100 (max 0,82 s au téléphone).
+4. **La poupée d'un corps que la cadence ne dessine pas** partait de la place de sa DERNIÈRE pose (`leger` : le groupe
+   n'est pas déplacé, jusqu'à 0,25 s plus tôt, 1,6 m au sprint) : un bot tué hors du cadre tombait à côté de l'endroit de
+   sa mort. Elle part de la position et du cap affichés.
+5. **Test 5 au téléphone** : l'écran en hauteur laissait le second corps hors du cadre (posé à 4 Hz, une pose vieille de
+   0,25 s mesurée : 52 cm) — les corps du test sont posés à chaque image, comme au test 4.
+6. Petits : l'en-tête de `teintes.js` disait 11 cm et « + 6 mm » (le code : 12 cm, 93e centile + 5 mm) et que
+   `retirerTeinte` rendait la tenue (c'est `teinteEquipe(p, null)`) ; un champ mort (`PRETS.mesures.onLoad`) ; deux
+   `Vector3.clone()` par pose (`mainSur`, vecteur dédié).
+7. Vérifié sans faute : signatures du § 4.5.10 exactes, `Player.apresPose` une pose par image (22 ajouts constants),
+   `poserArme` n'écrit que l'affichage (`acteur.aff`, jamais l'état sérialisable), aucun `Math.random` ni horloge dans un
+   fichier « simulation » (`verifier_proprietaires` : OK 11 fichiers), aucune lumière, aucun matériau partagé touché
+   (empreinte du test 10), brassards et armes `dynamique`, rejeu de la balade au bit près, fins de ligne CRLF partout.
+
+### Joué (partie d'équipes, gabriel, imad, marc-antoine, koji, djafar, ethan ; regardée en caméra libre)
+
+Les équipes se lisent : une tenue sombre prend la couleur pleine (Gabriel en orange franc), une chemise blanche (Koji,
+Ethan) reste pastel (bleu ciel, pêche) — les brassards, nets à 5-20 m, font la différence ; chevrons de L-G attendus à F2.
+Course arme levée, buste droit : crédible ; accroupi (après correction) : une garde basse de tireur ; morts : à plat, sans
+membre dans les murs, l'effacement Airsoft propre. Armes en boîtes (squelette de L-W). Ce qui reste visible et n'est pas à
+L-C : l'arme d'un bot traverse le mur quand il longe un coin (pas de collision de l'arme à la 3e personne : CoD fait de
+même) ; la caméra de spectateur (`CameraOrbite`) est entrée dans le corps suivi contre un mur (photo `jeu_combat_0`) ; un
+bot est resté planté 60 s devant la porte de la rue (« patrouille », vitesse 0 : le pilotage minimal). Console : seule
+l'erreur connue du service worker. Coût en partie (7 bots, onglet chargé par d'autres agents, relatif) : poses 0,70 ms par
+image pour 1,9 poses (0,36 ms la pose, mélangeur et couches compris), cadence 0,06 ms, interpolation 0,11 ms.
+
+Photos (durables, hors dépôt) : `C:/Users/hgami/Downloads/IRIS_lots/_photos/L-C/` — `avant_*` (le test 13 du
+constructeur), `lisibilite_*` (le test 13 corrigé), `accr_*` et `accr2_*` (l'accroupi avant / après), `jeu_*` (la partie),
+`plan_*` (les plans essayés), `rapport_LC_tel.txt` (le `__rapport` du téléphone).
+
+### Demandes (relecture)
+
+- **L-B** : la caméra de spectateur (`CameraOrbite`) entre dans le corps suivi quand un mur la rapproche : cacher (ou
+  rendre transparent) le corps suivi sous 0,5 m, comme `game._fantome` en balade.
+- **L-D / L-J** : un bot du cerveau minimal reste planté devant la porte de la rue (5,9 ; 0 ; 1,9), « patrouille », 60 s.
+- **F2 / INT (`partie.js`, S0)** : `DRAPEAUX` ne rend pas, à la sortie, ce que L-C écrit sur un `Player` (`droit`,
+  `penche`, `sansRegard`, `leger`, `surAvatar`, `equipe`, `brassards`) : aucun module ne pose aujourd'hui le corps de
+  Haythem en partie, mais une killcam ou une vue à la 3e personne qui le ferait laisserait ces drapeaux à la balade
+  (rejeu au bit près) — les ajouter à `DRAPEAUX`.
+- **L-A (F2)** : la demande sur l'accroupi est retirée (point 1) ; celle sur l'avance de la tête debout demeure.
+- **INT (optimisation)** : `Player.presenter` refait toutes les matrices d'un bot dessiné à chaque image, et `poser` les
+  refait pour un bot posé (piège 4 de la carte des personnages) : une mise à jour de l'arbre par bot et par image évitable.
+
+### Fini (§ 5.1 règle 5), relu
+
+(a) `&rapport=1&lot=L-C` et (b) `&rapport=1&lot=S0` sur la branche : voir le tableau en tête ; (c)
+`python -I tools/verifier_proprietaires.py lot/L-C` : OK ; (d) commits `L-C relecture : …` attribués ; (e) ce rapport ;
+(f) onglet fermé, serveur et récepteur arrêtés, jeton rendu.
