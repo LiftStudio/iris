@@ -77,3 +77,74 @@ onglet en arrière-plan) : **ok, 14/14, 16,7 s, 1 signalé (non valable : onglet
 | 12 | les quatre onglets d'aujourd'hui rendus, la qualité écrite puis rendue, le volume écrit |
 | 13 | 7 fichiers 192 × 192, fond transparent, ≤ 30 Ko ; `portrait()` 1e-4 ms l'appel ; l'initiale sans image ; premier Tab 100 ms au plus (onglet caché : **non valable**, signalé) ; stockage qui lève : rien ne casse |
 | 14 | « Modes de jeu » → menu, pas en pause, fronts purgés, accueil visible |
+
+## Écarts au document
+
+1. **Habillage EN TÊTE des réglages du combat** (§ 2.2, l. 162, le liste en dernier avant LANCER) : l'arbitrage 35 (l. 124)
+   et R33 (l. 3252) disent « proposée en tête des réglages du COMBAT », « Militaire à un clic en tête » — suivis.
+2. **Clés hors des DEFAULTS de `js/settings.js`** (§ 2.2 : « les derniers choix sont gardés (`settings.jeu`) ») : la limite
+   et le temps par mode (`jeu.combat.limites`), les adversaires du chacun pour soi (`jeu.combat.adversaires` : 5, 3 au
+   téléphone — `jeu.combat.ennemis` sert aux équipes, 4 par défaut, alors que le § 3.10 veut 5 en chacun pour soi) et
+   les choix du stand (`jeu.stand`) n'ont pas de place dans `DEFAULTS` : ils sont gardés EN MÉMOIRE pour la session,
+   `deepMerge` les oublie au rechargement (settings.js est à INT) → DEMANDE 1.
+3. **Zone du prop hunt : un choix AUTO** en tête (`prop.zone: null`, le défaut « calculé au lancement » du § 3.9, montré
+   « AUTO : Le 1er ») ; une zone explicite grisée n'est pas jouée (AUTO au lancement) mais reste gardée, et revient
+   dès qu'elle a ses 6 types (« gardé tant que la zone n'est pas grisée », l. 597).
+4. **Avatars au prop hunt** : le § 2.2 ne les liste pas pour le PROP HUNT ; `PartieProp` lit `opts.avatars` (les
+   chasseurs « avatars des amis », § 2.7) — la ligne y est, partagée avec le combat (`jeu.combat.avatars`).
+5. **Stand** : un défi « LIBRE » (`defi: null`, le mannequin à 10 m et les cibles sans chrono) en plus des quatre, et la
+   classe (`PartieStand` lit `opts.classe`).
+6. **« Fondu de 1,2 s »** : un fondu au NOIR (0,6 s de chaque côté de la coupe, `#menu-fondu`), pas un fondu enchaîné
+   (deux rendus de l'école par image : non).
+7. **La partie gelée sous l'écran de fin** (`game.paused = true` dans `MenuJeu.fin`) : `js/jeu/index.js` rend le pointeur
+   à la fin, et `game.js` (l. 270) met en pause sur « iris-pointeur » sans capture → l'écran de PAUSE s'ouvrait
+   par-dessus l'écran de fin, à la souris (pas sous `?test=1`, où rien n'est capturé). Gelée, la partie n'a plus rien
+   qui avance (phase 'fin', acteurs figés) ; ÉCHAP sur l'écran de fin ne rouvre pas la pause (écouté en capture, avant
+   `input.js`) ; REJOUER, CHANGER DE MODE, MENU PRINCIPAL, BALADE remettent `paused` à faux (`lancerPartie`,
+   `quitterPartie`) → DEMANDE 2.
+8. **Le registre rangé au menu** : à la 1re ouverture des réglages du PROP HUNT, `rattraperRegistre(scene)` +
+   `zonerRegistre(lumieres)` (sans quoi `typesDeguisables` rend 0 partout avant la 1re préparation d'un prop hunt, et
+   les meubles cousus seuls du lot R ne compteraient pas) : du calcul seulement, ni GPU, ni réseau ; idempotent.
+9. **« Les 4 étapes nommées »** (test 7, l. 2736) : `Partie.preparer` n'en a que TROIS au combat (« Meubles » est au prop
+   hunt) et leur ordre réel est Plan · Élèves · **Meubles** · Armes (le § 2.2, l. 168, met « Meubles » en dernier) :
+   l'écran montre les étapes de la partie lancée, dans l'ordre où elles arrivent ; le test vérifie les 3 du combat et
+   les 4 du prop hunt.
+10. **Onglet COMBAT** : un groupe DÉMARRAGE en plus (`game.demarrage` : menu ou balade — le « réglage Démarrage : balade »
+    du § 2.1, l. 154, n'avait pas d'écran) ; le réticule ne propose jamais le rouge (celui d'un ennemi visé, § 4.5.15).
+11. **Cadrage des portraits** plus serré que LA CAGE (1,0 m devant la tête, le regard 5 cm au-dessus de l'os de la tête,
+    au lieu de 1,28 m et 6 cm dessous) : à 1,28 la tête ne faisait qu'un quart de l'image, illisible en 32 px (planche
+    regardée, `tools/portraits/planche.webp`). Les portraits sont donc des BUSTES : le bas de l'image est opaque
+    (épaules), les coins du haut transparents (test 13).
+12. **`ecrire.py`** a deux entrées : le JSON de la spec (`ecrire.py portraits.json assets/portraits/`) ET `--ecouter
+    <port>` : la page de l'outil (`?envoyer=<port>`) poste ses images à un petit serveur local — sans quoi il fallait
+    recopier 30 Ko de base64 par l'outil JavaScript du navigateur.
+13. **REJOUER** relance avec les mêmes réglages et une graine NEUVE (la même graine rejouerait la même partie).
+14. **`MENUS.courant`** (export de `menus_jeu.js`) : le menu de la session, pour les tests et pour L-P ; `vignette(fiche,
+    cls)` exportée aussi (l'image, ou l'initiale sur un dégradé), réutilisable par le tableau des scores (L-G).
+15. **Jeton du navigateur** : après 2 h d'attente (les trois jetons pris et repris), `jeton_1` a été repris PÉRIMÉ à 05:24
+    (`qui.txt` de L-C daté 04:39:20 ; une note est laissée, `_navigateur/NOTE_L-U_jeton1.txt` ; l'onglet de L-C, 8135,
+    était encore ouvert : je n'y ai pas touché). Mon attente a sondé toutes les 30 s, puis toutes les 10 s.
+16. **Les tests tapent les touches sur `document.body`** (test 8) : à la cible `window`, Chromium sert d'abord les
+    écouteurs posés avant (ceux de `input.js`), quel que soit le drapeau de capture ; une vraie touche part du corps de
+    la page, où l'écoute en capture du menu passe la première.
+
+## Demandes
+
+1. **INT (`js/settings.js` DEFAULTS)** : ajouter `jeu.combat.adversaires: TELEPHONE ? 3 : 5`, `jeu.combat.limites: {
+   equipes: { score: TELEPHONE ? 20 : 40, duree: 600 }, melee: { score: 20, duree: 600 }, domination: { score: 150, duree:
+   600 } }` et `jeu.stand: { defi: null, classe: 'assaut' }` — les menus les lisent déjà ; sinon ils ne passent pas un
+   rechargement.
+2. **INT ou F2 (`js/game.js` l. 270)** : ne pas mettre en pause sur « iris-pointeur » quand `partie.phase === 'fin'` ;
+   alors `MenuJeu.fin` pourra laisser `game.paused` (écart 7).
+3. **F2 (`js/settings.js`)** : `unbind(id, slot)` et `unbindPad(id, slot)` n'ont pas de paramètre `profil` (ils vident la
+   balade) ; `ui.js` passe par `bind(id, slot, null, profil)` pour les profils du jeu. Un `profil` à la fin des deux
+   serait plus net.
+4. **L-E** : le menu lit les records du stand dans `iris.stand.v1` sous la forme `{ <défi>: nombre | { score, temps,
+   precision } }` (au mieux, jamais exigé) ; dire le format retenu à F2.
+5. **L-G** : le tableau des scores peut montrer les portraits par `portrait(fiche)` (`js/jeu/portraits.js`) — ou
+   `vignette(fiche, cls)` de `menus_jeu.js`, qui retombe sur l'initiale quand une fiche n'a pas d'image.
+6. **L-P (vague 3)** : `ACCUEIL` (menus_jeu.js) est la table des portes de l'accueil — y ajouter ARMURERIE et PROFIL ;
+   `.mj-xp` (sous le titre, caché) attend la barre d'XP.
+7. **F2** : le point 8 du socle (« programmes constants ») tombe parfois quand la qualité AUTOMATIQUE change de préréglage
+   pendant la mesure (onglet en arrière-plan, plusieurs agents) — vu ici comme chez L-E ; rejoué avec `&qualite=haute`,
+   vert. Le figer dans le test (`figerQualite`) éviterait le faux échec.
