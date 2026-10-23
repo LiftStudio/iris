@@ -306,14 +306,19 @@ export default function (jeu) {
     const essai = () => { P0.cle = loc.prop && loc.prop.cle === A.cle ? B.cle : A.cle; game.camYaw = l; front(0, { deguiser: true }); };
     for (let k = 0; k < 6; k++) { essai(); jeu.avancer(0.3); }
     const enCachette = E.L.filter((e) => e.type === 'deguise' && e.a === 0).length, chgC = loc.prop ? loc.prop.changements : -1;
+    // (relecture) figé, il le reste sous sa nouvelle forme ; puis F le défige en 0,25 s
+    front(0, { figer: true }); const f0 = !!(loc.prop && loc.prop.fige);
+    essai(); const f1 = !!(loc.prop && loc.prop.fige), cle1 = loc.prop ? loc.prop.cle : null;
+    front(0, { figer: true }); jeu.avancer(0.3); const f2 = !!(loc.prop && loc.prop.fige);
+    const okFige = f0 && f1 && !f2 && cle1 === P0.cle;
     jusqua('traque');
     const t0 = p.t + 0.5, ok = [];
     const a = (dt) => { jusquA(t0 + dt - PAS); const n0 = E.L.length; essai(); return E.L.slice(n0).some((e) => e.type === 'deguise' && e.a === 0); };
     ok.push(a(0), a(4.9), a(5.0), a(10.0), a(15.0));
     E.fin(); jeu.quitter('balade');
     const attendu = [true, false, true, true, false];
-    return { ok: enCachette === 6 && chgC === 0 && ok.join() === attendu.join(), attendu: '6 changements en cachette (compteur 0) ; traque : oui, non à 4,9 s, oui à 5 s, oui, non (le 4e)',
-      obtenu: `${enCachette} en cachette (compteur ${chgC}) ; traque ${ok.map((x) => (x ? 'oui' : 'non')).join(', ')}` };
+    return { ok: enCachette === 6 && chgC === 0 && okFige && ok.join() === attendu.join(), attendu: '6 changements en cachette (compteur 0) ; figé gardé au changement ; traque : oui, non à 4,9 s, oui à 5 s, oui, non (le 4e)',
+      obtenu: `${enCachette} en cachette (compteur ${chgC}) ; figé ${f0} → changé en ${cle1} : figé ${f1}, puis défigé ${!f2} ; traque ${ok.map((x) => (x ? 'oui' : 'non')).join(', ')}` };
   }), { delai: 90 });
 
   // 9. LES PROVOCATIONS : forcées toutes les 40 s (départ décalé de 0 à 15 s), 20 s dans la dernière minute, 25 s pour le
@@ -377,7 +382,11 @@ export default function (jeu) {
     const res = [];
     const scan = async (graine) => {
       await lancer({ graine, premierRole: 'chasseur', chasseurSeul: true, acteurs: 6 });
-      const p = P(), loc = p.local; jusqua('traque');
+      const p = P(), loc = p.local;
+      // (relecture) X pendant la cachette : refusé, avec sa raison, et rien de scanné
+      jusqua('cachette'); const E0 = ev(['scanner', 'refus']); front(0, { scanner: true }); E0.fin();
+      const avant = E0.L.map((e) => e.type + (e.raison ? ' « ' + e.raison + ' »' : '')).join(', '), scans0 = E0.L.filter((e) => e.type === 'scanner').length;
+      jusqua('traque');
       // Haythem au milieu de la pause orange ; cinq props à 3, 6, 10, 13 m (même niveau) et un au RDC juste en dessous
       const c = { x: 12.63, y: 3.5, z: -7.87 }; jeu.teleporter(0, c.x, c.y, c.z, 0); p.pas(PAS);
       const pr = p.acteurs.filter((a) => a.role === 'prop'), D = [3, 6, 10, 13], vrais = [];
@@ -392,7 +401,13 @@ export default function (jeu) {
       const n = E.L.filter((e) => e.type === 'scanner').length, charges = loc.pp.scanCharges;
       jusquA(p.t + 8.05); front(0, { scanner: true }); const vide = E.L.filter((e) => e.type === 'refus').pop();
       E.fin();
-      return { s1, vrais, r1, n, charges, vide, autres: vrais.length };
+      // (relecture) « Voir les sons » : ce qu'il entendrait — une provocation à 5 m, une au RDC juste en dessous (3,5 m, à
+      // travers la dalle), une à 30 m (hors de ses 18 m) ; jamais celles de Haythem
+      p.opts.aides.voirSons = true;
+      const coucou = (id, x, y, z) => p.evt('provocation', { a: id, id: 'coucou', n: 0, x, y, z, forcee: false, rayon: 18, duree: 0.6, points: 0 });
+      coucou(pr[0].id, c.x + 5, c.y, c.z); coucou(pr[1].id, c.x, 0, c.z); coucou(pr[2].id, c.x + 30, c.y, c.z); coucou(0, c.x + 1, c.y, c.z);
+      p.majHud(); const sons = (p.hud.prop.sons || []).map((s) => `${r2(Math.hypot(s.x - c.x, s.y - c.y, s.z - c.z))} m${s.dalle ? ' (dalle)' : ''}`).sort();
+      return { s1, vrais, r1, n, charges, vide, autres: vrais.length, avant, scans0, sons };
     };
     const A = await scan(37), B = await scan(37);
     const S1 = A.s1 ? A.s1.resultats : [];
@@ -401,7 +416,9 @@ export default function (jeu) {
     const arcs = S1.every((r) => A.vrais.some((v) => v.d < 12 && (v.d < 4 ? 0 : v.d < 8 ? 1 : 2) === r.bande && Math.abs(angle(r.dir - v.az)) <= 20 * DEG + 1e-9));
     const seme = !!B.s1 && JSON.stringify(B.s1.resultats) === JSON.stringify(S1);
     res.push([`1er scan : bandes ${bandes} (attendu ${attendu}, ${A.autres} props posés)`, bandes === attendu && S1.length === 3], [`arcs ± 20° ${arcs}`, arcs], [`semé ${seme}`, seme],
-      [`recharge : refusé à 1 s (${A.r1}), ${A.n} scans, charges ${A.charges}, puis « ${A.vide ? A.vide.raison : '-'} »`, A.r1 === 1 && A.n === 3 && A.charges === 0 && !!A.vide && /vide/i.test(A.vide.raison)]);
+      [`recharge : refusé à 1 s (${A.r1}), ${A.n} scans, charges ${A.charges}, puis « ${A.vide ? A.vide.raison : '-'} »`, A.r1 === 1 && A.n === 3 && A.charges === 0 && !!A.vide && /vide/i.test(A.vide.raison)],
+      [`en cachette : ${A.avant || 'rien'}`, /^refus « [^»]*traque »$/.test(A.avant) && A.scans0 === 0],
+      [`voir les sons : ${A.sons.join(', ') || 'rien'}`, A.sons.join() === '3.5 m (dalle),5 m']);
     // le bip : Haythem prop, un chasseur bot qui scanne à 8 m (entendu), puis à 14 m (pas entendu)
     await lancer({ graine: 41, premierRole: 'prop' }); const p = P(), loc = p.local; jusqua('traque');
     const SP = p.aff.sonsProp, h = p.acteurs.find((a) => a.role === 'chasseur');
