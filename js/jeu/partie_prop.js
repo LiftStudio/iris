@@ -97,8 +97,9 @@ export class PartieProp extends Partie {
   constructor(game, opts, deps) {
     super(game, opts, deps);
     this.id = 'prophunt';
-    // les champs absents : les derniers choix du menu (settings.jeu.prop), puis les défauts du § 3.9
-    const o = this.opts, S = (game.settings && game.settings.data && game.settings.data.jeu && game.settings.data.jeu.prop) || {};
+    // les champs absents : les derniers choix du menu (settings.jeu.prop), puis les défauts du § 3.9 (sur une COPIE des
+    // options : celles de l'appelant — le menu, « Recommencer », un test — ne sont pas réécrites)
+    const o = this.opts = { ...this.opts }, S = (game.settings && game.settings.data && game.settings.data.jeu && game.settings.data.jeu.prop) || {};
     for (const k of ['manches', 'acteurs', 'difficulte', 'premierRole', 'chasseurSeul']) if (o[k] === undefined && S[k] !== undefined && S[k] !== null) o[k] = S[k];
     o.aides = { discretion: true, oeil: true, voirSons: false, ...(S.aides || {}), ...(o.aides || {}) };
     const z = o.zone !== undefined && o.zone !== null ? o.zone : S.zone;
@@ -179,7 +180,9 @@ export class PartieProp extends Partie {
     // (les points d'élimination et d'aide, les fins de manche)
     this.sur('touche', (e) => this._surTouche(e));
     this.sur('elim', (e) => this._surElim(e));
-    this._debutManche(true);
+    this._debutManche();
+    // (le rôle de la 1re manche est déjà vu : Partie.entrer pose la vue du chasseur, Game.lancerPartie ses touches)
+    this._roleVu = this.local ? this.local.role : null;
   }
   // LE RÔLE d'un acteur pour la manche, posé à son départ `p` : son corps (Player d'élève pour un chasseur ; CorpsProp pour
   // un prop — Haythem commence la manche en humain), son arsenal, son cerveau, ses compteurs de manche
@@ -209,6 +212,9 @@ export class PartieProp extends Partie {
     if (j && avaitPoupee && j !== this.game.user && j.anim && j.anim.couper) { j.anim.couper(); j.animKey = null; }
     if (j && j.mesh) j.mesh.visible = a.corps === j;
     a.reapparaitre(p.x, p.y, p.z, p.lacet || 0, this.t); a.protegeT = 0; a.vie = a.vieMax; a.gele = true;
+    // (une manche neuve, le souffle neuf : l'endurance du sprint limité — L-B — et celle du meuble — L-K —, que
+    // reapparaitre ne remet pas)
+    a.endurance = 100; a.jaugeTact = 1; if (a._corpsProp) a._corpsProp.endurance = 100;
     a.pp = { provocRef: this.t, provocVolT: JAMAIS, derniere: a.pp ? a.pp.derniere : 0, chgT: JAMAIS, defigeT: JAMAIS,
       scanCharges: R.scanner.charges, scanT: this.t, deg: {} };
   }
@@ -261,7 +267,7 @@ export class PartieProp extends Partie {
   }
 
   // ---------------------------------------------------------------- LA MANCHE
-  _debutManche(premiere = false) {
+  _debutManche() {
     const g = this.game, m = this.manche - 1, loc = this.local;
     const roleH = loc ? (m % 2 === 0 ? this.roleH0 : this.roleH0 === 'prop' ? 'chasseur' : 'prop') : null;
     this.roleH = roleH;
@@ -283,20 +289,16 @@ export class PartieProp extends Partie {
     }
     C.forEach((a, k) => this._poserRole(a, 'chasseur', dC[k], { coequipier: !!loc && roleH === 'chasseur' && !a.local }));
     P.forEach((a, k) => this._poserRole(a, 'prop', dP[k]));
-    // Haythem : la vue de son rôle (à la 1re manche, Partie.entrer la pose), le regard, ses touches (profil changé : purgé)
+    // Haythem : le regard posé à son départ (sa vue et ses touches suivent son rôle à l'image suivante : _suivreRole)
     if (loc) {
       const d = roleH === 'chasseur' ? dC[C.indexOf(loc)] : dP[P.indexOf(loc)];
       g.camYaw = d.lacet || 0; g.camPitch = roleH === 'prop' ? 0.3 : 0;
-      if (!premiere) {
-        if (roleH === 'chasseur') { this.vue.entrer(loc); this.aff.viewmodel?.montrer?.(loc.arsenal && loc.arsenal.arme ? loc.arsenal.arme.id : 'pm9'); }
-        else { this.vue.sortir(); this.aff.viewmodel?.cacher?.(); }
-        g.appliquerProfil?.({ purger: true });
-      }
       this.suivi = loc;
     }
     this._regardFixe = null; this.gagnantManche = null; this.chrono = 0;
     this.roue.ouverte = false; this.roue.choix = -1;
     this.phaseVers('presentation', REGLAGES_PROP.presentation);
+    this._majGeles();
     const n = `MANCHE ${this.manche} / ${this.nManches}`;
     this.annonce(!loc ? n : roleH === 'prop' ? `${n} · TU ES PROP — CACHE-TOI !` : `${n} · TU ES CHASSEUR — ILS SE CACHENT`, 'info');
   }
@@ -667,6 +669,9 @@ export class PartieProp extends Partie {
       a.pp = copiePP(q); a.coequipier = !!q.coeq;
       Object.assign(a.stats, { survie: q.sv || 0, provocs: q.pr || 0, rates: q.ra || 0 });
     }
+    // (les armes bloquées hors de la traque : `bloque` n'est pas dans l'état de l'arsenal, il se déduit de la phase — sans
+    // quoi le premier pas après l'état rendu tirerait, ou non, autrement que la partie d'origine)
+    this._majGeles();
   }
   _detruire(a) {
     super._detruire(a);
@@ -801,6 +806,7 @@ export class PartieProp extends Partie {
   // clamp(1,4 + 1,6 × max(l, h, p), 2,0, 3,6)) ; Haythem éliminé qui suit un prop, de même (après la caméra de mort d'un
   // chasseur : pas à 1,4 m au-dessus d'un carton de 35 cm) ; le chasseur pendant la cachette : caméra fixe (Partie.camera)
   camera(dt, poser) {
+    this._suivreRole();
     const a = this.local, s = this.suivi;
     let b = a && a.vivant && a.role === 'prop' ? a : null;
     if (!b && a && !a.vivant && s && s !== a && s.vivant && s.prop && s.corps && !(a.corps === a.joueur && this.t - a.mortT < 3)) b = s;
@@ -811,6 +817,17 @@ export class PartieProp extends Partie {
       return this.orbite.poser(dt, poser);
     }
     return super.camera(dt, poser);
+  }
+  // LE RÔLE DE HAYTHEM VU (affichage, à chaque image avant la caméra — jamais depuis la simulation, § 4.1 règle 5) : à
+  // chaque changement — une manche neuve, un état rendu —, sa vue (VueFPS et arme de vue pour le chasseur ; l'orbite pour
+  // le prop) et ses touches (profil changé ET purgé, § 4.8)
+  _suivreRole() {
+    const a = this.local;
+    if (!a || a.role === this._roleVu) return;
+    this._roleVu = a.role;
+    if (a.role === 'chasseur') { this.vue.entrer(a); this.aff.viewmodel?.montrer?.(a.arsenal && a.arsenal.arme ? a.arsenal.arme.id : 'pm9'); }
+    else { this.vue.sortir(); this.aff.viewmodel?.cacher?.(); }
+    this.game.appliquerProfil?.({ purger: true });
   }
   bornesTangage() { return this.local && this.local.role === 'prop' ? [-0.7, 1.25] : super.bornesTangage(); }
   get profil() { return this.local && this.local.role === 'prop' ? 'prop' : 'combat'; }

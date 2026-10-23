@@ -150,11 +150,13 @@ export default function (jeu) {
   T('3 cachette : chasseurs figés, 0 tir, caméra fixe, panneau, sourds aux props', async () => {
     const res = [], proto = CerveauChasseur.prototype, avant = Object.getOwnPropertyDescriptor(proto, 'entendre'), base = proto.entendre;
     let recus = 0, recusTraque = 0;
-    await lancer({ graine: 5, premierRole: 'chasseur' });
-    const p = P(), loc = p.local, SP = p.aff.sonsProp, jL = SP.n;
-    const dePropOuSon = (e) => ['provocation', 'frottement', 'deguise', 'defige'].includes(e.type) || (e.a !== undefined && (p.acteurParId(e.a) || {}).role === 'prop');
-    proto.entendre = function (e) { if (dePropOuSon(e)) { if (p.phase === 'traque') recusTraque++; else recus++; } return base.call(this, e); };
+    // (l'espion posé AVANT la partie : PartieProp enveloppe l'oreille que le cerveau a à sa création — on compte ce qui passe
+    // le filtre de la partie, pas ce qui y arrive)
+    const dePropOuSon = (q, e) => ['provocation', 'frottement', 'deguise', 'defige'].includes(e.type) || (e.a !== undefined && (q.acteurParId(e.a) || {}).role === 'prop');
+    proto.entendre = function (e) { const q = this.partie; if (dePropOuSon(q, e)) { if (q.phase === 'traque') recusTraque++; else recus++; } return base.call(this, e); };
     try {
+      await lancer({ graine: 5, premierRole: 'chasseur' });
+      const p = P(), loc = p.local, SP = p.aff.sonsProp, jL = SP.n;
       const E = ev(['tir']);
       jusqua('cachette');
       const ch = p.acteurs.filter((a) => a.role === 'chasseur'), pos0 = ch.map((a) => a.pos.clone());
@@ -490,14 +492,19 @@ export default function (jeu) {
       for (const [n, role, profil] of [[2, 'chasseur', 'combat'], [3, 'prop', 'prop']]) {
         jusqua('traque'); p._finir('props'); jusqua('revelation', 1);
         appels.length = 0; inp.presser('KeyZ'); inp.relacher('KeyZ'); touche('KeyQ'); touche('KeyQ', false);
+        // (la simulation change le rôle ; la vue et les touches suivent à l'image suivante, jamais depuis un pas)
         jusqua('presentation', 10);
+        const avantImage = appels.length;
+        await jeu.images(1);
         const vide = inp.pressedSet.size === 0 && inp.releasedSet.size === 0;
         const cle = role === 'prop' ? (inp.bind.deguiser || []).includes('KeyE') : (inp.bind.recharger || []).includes('KeyR') && !inp.bind.deguiser;
-        res.push([`manche ${n} : ${p.local.role} / ${p.profil}, purge ${appels.join(',')} (vidé ${vide}), touche ${cle}`, p.local.role === role && p.profil === profil && appels.includes(true) && vide && cle]);
+        const vue = role === 'chasseur' ? p.vue.acteur === p.local : !p.vue.acteur;
+        res.push([`manche ${n} : ${p.local.role} / ${p.profil}, purge ${appels.join(',')} (${avantImage} depuis la simulation, vidé ${vide}), touche ${cle}, vue ${vue}`,
+          p.local.role === role && p.profil === profil && avantImage === 0 && appels.includes(true) && vide && cle && vue]);
       }
     } finally { game.appliquerProfil = ap; jeu.quitter('balade'); }
     const ko = res.filter((r) => !r[1]);
-    return { ok: !ko.length, attendu: 'prop (E déguiser) → chasseur (R recharger, profil combat) → prop, chaque fois appliquerProfil({ purger: true }) et les fronts vidés',
+    return { ok: !ko.length, attendu: 'prop (E déguiser) → chasseur (R recharger, profil combat, vue FPS) → prop, chaque fois appliquerProfil({ purger: true }) à l’image (jamais depuis un pas) et les fronts vidés',
       obtenu: res.map((r) => (r[1] ? '' : '✗ ') + r[0]).join(' · ') };
   });
 
@@ -627,8 +634,18 @@ export default function (jeu) {
     jeu.avancer(2 * 260); dq(); jeu.quitter('balade');
     const eM = tM2 > 0 && await jeu.verifierEtat({ ...oH, secondes: tM2 + 2 });
     const rM = jeu._dernierEtat ? jeu._dernierEtat.e1.acteurs.find((a) => a.id === 0) : null;
-    return { ok: d.egal && eC && eT && eR && phR === 'revelation' && eM && !!rM && rM.role === 'chasseur', attendu: 'déterminisme égal ; état vrai en cachette, traque, révélation, et à la manche 2 (rôles tournés)',
-      obtenu: `${d.a} / ${d.b} · cachette ${eC} · traque ${eT} · révélation ${eR} (${phR}, à ${r2(tRev + 2)} s) · manche 2 ${eM} (Haythem ${rM ? rM.role : '-'}, à ${r2(tM2 + 2)} s)` };
+    // (relecture) ce que l'état ne porte pas se déduit : l'état d'une traque rendu dans une partie neuve (à sa présentation,
+    // armes bloquées) y débloque les armes des chasseurs ; la vue de Haythem suit son rôle à l'image suivante
+    await jeu.lancer('prophunt', { ...oH, graine: 75 }); const r = P(); jusqua('traque'); const eTr = r.etat(); jeu.quitter('balade');
+    await jeu.lancer('prophunt', { ...oH, graine: 75, premierRole: 'chasseur' }); const s = P();
+    const bloque0 = s.acteurs.filter((a) => a.arsenal).every((a) => a.arsenal.bloque);
+    s.appliquer(eTr);
+    const debloque = s.acteurs.filter((a) => a.role === 'chasseur').every((a) => a.arsenal && !a.arsenal.bloque && !a.gele);
+    await jeu.images(1); const vueOk = !s.vue.acteur && s.local.role === 'prop' && s.profil === 'prop';
+    jeu.quitter('balade');
+    return { ok: d.egal && eC && eT && eR && phR === 'revelation' && eM && !!rM && rM.role === 'chasseur' && bloque0 && debloque && vueOk,
+      attendu: 'déterminisme égal ; état vrai en cachette, traque, révélation, et à la manche 2 (rôles tournés) ; armes débloquées et vue suivie après un état rendu',
+      obtenu: `${d.a} / ${d.b} · cachette ${eC} · traque ${eT} · révélation ${eR} (${phR}, à ${r2(tRev + 2)} s) · manche 2 ${eM} (Haythem ${rM ? rM.role : '-'}, à ${r2(tM2 + 2)} s) · état de traque rendu : armes bloquées ${bloque0} → débloquées ${debloque}, vue du prop ${vueOk}` };
   }, { delai: 300 });
 
   // 16. LES CHASSEURS : sprint à endurance en traque (sprintLimite), jamais de sprint tactique (double Maj, SOURIS 5)
