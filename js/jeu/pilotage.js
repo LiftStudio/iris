@@ -447,7 +447,9 @@ export class Errant {
   _choisirRonde() {
     const N = this._nav(), c = this.versPt;
     if (!N || !c) { this._choisirPiece(); return; }
-    const L = N.dans(c.x, c.y, c.z, 6, this._tmp || (this._tmp = []), 1.2).filter((v) => Math.hypot(N.px[v] - c.x, N.pz[v] - c.z) >= 2 && N.degage[v] >= 0.5);
+    // (à 2-6,5 m À PIED du point : à vol d'oiseau, la ronde passait le mur et menait au bout de l'école par le couloir)
+    const F = N.champMulti([c], 6.5, this._champ && this._champ.length === N.nb ? this._champ : (this._champ = new Float64Array(N.nb)));
+    const L = N.dans(c.x, c.y, c.z, 6, this._tmp || (this._tmp = []), 1.2).filter((v) => Math.hypot(N.px[v] - c.x, N.pz[v] - c.z) >= 2 && F[v] <= 6.5 && N.degage[v] >= 0.5);
     if (!L.length) { this._choisirPiece(); return; }
     const v = L[this.rng.int(L.length)];
     this.mode = 'ronde'; this.rondeT = this.partie.t + 4 + this.rng.next() * 5;
