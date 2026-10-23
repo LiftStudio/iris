@@ -5,9 +5,13 @@ Branche `lot/L-I` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-I`), partie de `s
 
 ## Où j'en suis
 
-**RELECTURE EN COURS** (relecteur sévère, 23/10 dès 06:20 ; section « Relecture » plus bas) : diff `socle...lot/L-I` relu
-contre §§ 3.2, 3.6, 4.5.18, 4.8, 5.5.13 ; propriétaires OK ; 1er défaut corrigé (tir auto et armes semi-automatiques) ;
-en attente d'un jeton du navigateur pour rejouer les critères et jouer.
+**RELU — FINI** (relecteur sévère, 23/10, 06:20 → 08:10 ; détail : section « Relecture » en fin de rapport). Trois défauts
+corrigés (le tir auto ne tirait qu'une balle avec une arme semi-automatique ; le sprint verrouillé — et le sprint tactique —
+partait dès le BORD du joystick ; code mort et coût de l'aide à la visée), une demande ajoutée (L-B). Rejoué sur
+`3e55d06` : `&rapport=1&lot=L-I` **13/13 sur PC** (1280 × 720, 8,2 s), **13/13 sous `?tel=1` à 812 × 375** (11,7 s),
+**13/13 sous `?tel=1` en émulation mobile 375 × 812** (14,1 s) ; `&rapport=1&lot=S0` **29/29 sur PC** (85,7 s) et **29/29
+sous `?tel=1` à 812 × 375** (96,3 s), 0 signalé ; `verifier_proprietaires` OK 7 fichiers ; joué au navigateur intégré ;
+onglet fermé, serveur 8143 arrêté, `jeton_2` rendu (pris à 07:13:46 après 53 min d'attente, rendu à 08:05).
 
 (Constructeur, avant la relecture) **FINI.** Les six points de la définition du § 5.1 règle 5 sont tenus :
 - (a) `&rapport=1&lot=L-I` : **13/13 sur PC** (8,8 s), **13/13 sous `?tel=1` à 812 × 375** (16,6 s) et **13/13 sous `?tel=1`
@@ -48,7 +52,8 @@ Fait (commits `L-I : …`) :
    enchaînées sur les rayons réels : ≥ 10 px à l'unité entre deux boutons, à toutes les tailles) ; contextes combat,
    chasseur (SCAN, ni flash ni couteau), prop (DÉGUISER, FIGER, VERROU, PROVOQUER) ; TIR et GRENADE en RÔLE MIXTE (le doigt
    vise en glissant) ; VISER en BASCULE (quand la visée est « maintenue » au clavier, le défaut) ; ACCROUPI en sprint = la
-   glissade (le sprint tenu encore 0,15 s) ; SPRINT VERROUILLÉ au bord du joystick vers l'avant (sprint tactique demandé ;
+   glissade (le sprint tenu encore 0,15 s) ; le SPRINT au bord du joystick vers l'avant, VERROUILLÉ au-delà (relecture : 1,25
+   course ; sprint tactique demandé ;
    pouce levé, Haythem continue tout droit ; reposer le pouce, tirer, viser, s'accroupir, le tir auto, la pause le rendent) ;
    PROVOQUER : appui long 0,28 s (ou le pouce qui glisse déjà) = la roue, le glissé va à `partie.mouvementSouris` ; bref = la
    dernière (`provocVite`) ; visée au doigt 0,006 × sensibilité rad/px (les deux axes), × la sensibilité de visée de
@@ -69,7 +74,8 @@ Fait (commits `L-I : …`) :
 2. **Touche reçue à la manette** : § 3.6 dit « fort 0,5, faible 0,8, 90 ms », § 4.5.18 et le critère 7 « forte 120 ms » →
    0,5 / 0,8 / 120 ms.
 3. **Sprint verrouillé au doigt** : « verrouillé » lu à la manière de CoD Mobile — on peut lever le pouce, la course
-   continue tout droit jusqu'à reposer le pouce (ou tirer, viser, s'accroupir).
+   continue tout droit jusqu'à reposer le pouce (ou tirer, viser, s'accroupir). (Relecture : le bord = le sprint tenu,
+   « au-delà du bord » = la poussée brute ≥ 1,25 course, là où le socle flottant suit le pouce.)
 4. **L3 à la manette** (§ 4.8 « L3 (double) ») : `js/manette.js` n'y ajoute RIEN — le verrou du sprint (un clic suffit,
    comme Call of Duty) est celui de `lireCommande`, que L-B a écrit dans sa branche (`E.verrou`) ; une 2e logique côté manette
    (essayée, puis retirée) se serait battue avec la sienne. Son test est à F2.
@@ -107,8 +113,8 @@ critères 2, 4, 10 et 11 disent « joué sous ?tel=1 » ; l'aide à la visée et
 |---|---|---|
 | 1 | trois contextes présents, sans recouvrement, dans l'écran | combat 11 boutons, chasseur 10 (SCAN, ni flash ni couteau), prop 7 (5 encore humain) · 0 recouvrement, 0 dehors aux trois tailles · écart mini 9,6 / 10,6 / 14,0 px · à l'écran : les 11 du combat |
 | 2 | TIR mixte : 100 px → 0,006 × s rad/px, tir tenu | −0,600000 rad pour −0,600000 · tangage inchangé · tir tenu tout le glissé · relâché au lever |
-| 3 | tir auto 0,12 s ≤ 30 m ; jamais à la souris | mannequin à 3,4 m : 1er tir à 0,133 s (16 pas) · à côté (après la grâce), hors de portée, à la souris, coupé : 0 tir |
-| 4 | joystick au-delà du bord → sprint verrouillé (tactique) ; ACCROUPI en sprint → glissade | mi-course : rien · au bord : verrou + front `sprintTact` · 60 % vers l'avant : tenu · pouce levé : court tout droit (ay 1, amp 1) · ACCROUPI : accroupi ET sprint au même pas, sprint rendu 0,15 s après · pouce reposé : arrêt · au bord sur le côté : pas de verrou |
+| 3 | tir auto 0,12 s ≤ 30 m ; jamais à la souris | mannequin à 3,4 m : 1er tir à 0,133 s (16 pas) · à côté (après la grâce), hors de portée, à la souris, coupé : 0 tir · (relecture) P-17 semi-automatique : 4 balles en 0,62 s, à sa cadence |
+| 4 | joystick au-delà du bord → sprint verrouillé (tactique) ; ACCROUPI en sprint → glissade | mi-course : rien · (relecture) au bord : le sprint, sans verrou ni tactique · revenu à 70 % : rien · au-delà (1,3 course) : verrou + front `sprintTact` · 60 % vers l'avant : tenu · pouce levé : court tout droit (ay 1, amp 1) · ACCROUPI : accroupi ET sprint au même pas, sprint rendu 0,15 s après · pouce reposé : arrêt · au-delà sur le côté : ni verrou ni sprint |
 | 5 | manette en partie | RT tir, LT visée, L3 sprint, R3 couteau, RB létale, LB tactique, Y arme, X recharger, B accroupi, A saut, Back scores · L3 double → tactique · bornes ± 1,48 · 1,435 rad/s pour 3,6 × 0,6^1,8 · 3,6 → 4,51 → 4,86 rad/s (× 1,35) · visée × 0,55 (0,789 rad/s) |
 | 6 | assistance : × 0,55 / × 0,7, suivi + 45 %, aimant 70 % ; souris identique au bit près | 0,7 dans le cône (8,5° à 3,4 m), 1 hors du cône, 0,55 en visée, 1 caché / hors de portée / à la souris · suivi : écart max 1,1e-16 rad à 0,45 × la vitesse de la cible, rien quand le regard ne bouge pas · aimant 5° → 1,5° (30 %), commande réécrite, rien à 9° · souris : 40 pas identiques au bit près avec et sans l'aide |
 | 7 | vibrations | tir [0 ; 0,35 ; 40 ms] · touche reçue [0,5 ; 0,8 ; 120 ms] · annonce 1 · élimination 1 · `hoops-feedback` en partie : 0 vibration, aucun émis |
@@ -181,3 +187,67 @@ Relu : le diff complet `socle...lot/L-I` (7 fichiers), contre §§ 3.2, 3.6, 4.1
   clavier) ; « tirer ou viser coupe le sprint » doit donc être tranché dans la lecture de la commande, pour TOUTES les
   entrées (aujourd'hui le squelette laisse `cmd.sprint` et `cmd.tir` vrais ensemble). Seul le sprint VERROUILLÉ, état du
   tactile, est rendu par `js/touch.js` (TIR, VISER, ACCROUPI, le tir auto).
+
+- **L-G / F2** (vu en jouant, `?tel=1` à 812 × 375) : le HUD du SQUELETTE (`#hud-jeu`, une ligne en haut à gauche à
+  16 px du bord) passe SOUS les boutons II et SCORES (recouvrement mesuré : (16, 14)-(360, 33) contre (12, 12)-(102, 52)).
+  Le vrai HUD de L-G doit descendre sous `--tc-haut` (60 px à 812 × 375) au doigt — déjà demandé par le constructeur ;
+  à vérifier à F2.
+
+### Les critères rejoués par la relecture (`3e55d06`, navigateur intégré, onglet devant pendant les séries)
+
+| Série | Résultat |
+|---|---|
+| `?test=1&rapport=1&lot=L-I`, PC 1280 × 720 | `ok: true`, 13/13, 8 210 ms, 0 signalé (2, 4, 10, 11 : « joué sous ?tel=1 ») |
+| `?test=1&tel=1&rapport=1&lot=L-I`, 812 × 375 | `ok: true`, 13/13, 11 699 ms, 0 signalé |
+| `?test=1&tel=1&rapport=1&lot=L-I`, émulation mobile 375 × 812 | `ok: true`, 13/13, 14 056 ms, 0 signalé |
+| `?test=1&rapport=1&lot=S0`, PC 1280 × 720 | `ok: true`, 29/29, 85 659 ms, 0 signalé (balade au bit près) |
+| `?test=1&tel=1&rapport=1&lot=S0`, 812 × 375 | `ok: true`, 29/29, 96 287 ms, 0 signalé |
+
+Mesures de la série PC (extraits) : tir auto 1er tir à 0,133 s, P-17 4 balles ; manette 1,435 rad/s pour 3,6 × 0,6^1,8,
+3,6 → 4,51 → 4,86 rad/s, visée 0,789 rad/s, bornes ± 1,48 ; aide 0,7 dans le cône (8,5° à 3,4 m), 0,55 en visée, suivi
+écart 1,1e-16 rad, aimant 5° → 1,5°, souris identique au bit près sur 40 pas ; vibrations tir [0 ; 0,35 ; 40],
+touche reçue [0,5 ; 0,8 ; 120], annonce 1, élimination 1. Sous `?tel=1` : 0 recouvrement aux trois tailles (écart mini 9,6
+/ 10,6 / 14,0 px) ; TIR mixte −0,600000 rad pour −0,600000 ; critère 11 : 4 touches, 0 capture, 0 événement clavier.
+En plus des tailles du critère 1, la disposition calculée à 375 × 812, 390 × 844, 360 × 640, 768 × 1024, 1024 × 768,
+667 × 375 et 640 × 360 : 0 recouvrement, 0 dehors, écart mini ≥ 8 px pour les trois contextes.
+Console : aucune erreur du jeu (seule l'inscription du service worker échoue sur 127.0.0.1, comme partout).
+
+### Joué (navigateur intégré, `?tel=1` à 812 × 375 ; la page réduite dans le panneau)
+
+- **Combat au doigt** (doigts fabriqués pour le joystick, VRAIS clics pour les boutons) : le joystick au bord → le sprint
+  (anneau orange), au-delà → le verrou (anneau et chevron qui bat), pouce levé Haythem file tout droit (6,6 m/s) — jusque
+  dans le mur, comme dans CoD Mobile : reposer le pouce le rend ; un glissé à droite vise (0,006 rad/px), ralenti près d'un
+  ennemi ; VISER touché → le bouton s'allume en orange, `visee` tenue, un 2e appui la relâche ; ARME → FA-24 sortie, le
+  bouton dit « P-17 ».
+- **Tir auto en temps réel** (essai, mannequin protégé à 3,4 m, le regard amené au doigt) : FA-24 12 balles en 1 s
+  (750 coups/min), TIR plein et pulsé pendant le tir auto ; P-17 7 balles en 1 s (400 coups/min) — AVANT la relecture,
+  une seule.
+- **Prop hunt au doigt** (Haythem prop, zone `e1`) : DÉGUISER (vert) touché → le carton, FIGER et VERROU apparaissent ;
+  PROVOQUER glissé à la souris vers le bas à droite → la roue s'ouvre, secteur 3, la provocation « canard » part au lever.
+- **Cadence** : 70 images/s, 122 pas/s onglet devant ; 2 images/s quand un autre agent remet son onglet devant (les temps
+  d'une série prise ainsi sont « non valables » ; les séries ci-dessus ont tourné onglet devant).
+
+Photos regardées : `C:/Users/hgami/.claude/projects/C--/d2516763-f01d-443a-9d38-fe9a0c124e7f/tool-results/mcp-Claude_Browser-blob-1792732965130-6tg0g5.png`
+(sprint verrouillé, pouce levé), `…-1792732920187-xscwff.png` (VISER allumé, mannequin), `…-1792732941138-qo0piz.png`
+(prop déguisé : DÉGUISER, FIGER, VERROU, PROVOQUER, SAUT), `…-1792732858154-k199sl.jpg` (combat en manche, couloir).
+
+### Vérifié sans y toucher
+
+- Contrats § 4.5.18 : `corriger(cmd, game, dt)` réécrit `game.camYaw/camPitch` ET `cmd.lacet/tangage` (bornes de la
+  partie), appelée par `lireCommande` à l'étape 2 ; `facteurStick(game)` ne fait que multiplier (stick et doigt) ; jamais à
+  la souris (`entree.manette`, ou le doigt pour dernière entrée) ; ni `Math.random`, ni horloge, ni lecture d'`Input` dans
+  `corriger` (les drapeaux `regardBouge` sont posés par la manette et le doigt, hors du pas) ; état rangé par partie.
+- `js/manette.js` : bornes `game.bornesTangage()`, 3,6 rad/s ^1,8, × 1,35 (0,25 s puis 0,3 s), × 0,55 en visée ; la roue
+  (ou LB tenu au profil prop) → `partie.mouvementStick`, caméra immobile ; A / Start sur le calque → `fermerCalque(true)`,
+  bouton muet jusqu'au relâchement ; vibrations sur `tir`, `touche`, `elim`, `annonce`, `explosion`, `flash` (champs du
+  § 4.6), plus aucune par `hoops-feedback` en partie ; `notifier` jamais `hud.feedback` en partie (§ 4.1 règle 13).
+- `js/manette_menus.js` : `data-retour`, ré-inscription avec `avant`, `racinesInscrites()` — ajouts, aucune signature
+  changée. Fins de ligne : CRLF partout, comme avant. Aucun TODO, aucun bouchon ; `verifier_proprietaires` OK.
+
+### Doutes de la relecture
+
+- Le seuil « au-delà du bord » (1,25 course ≈ 56 px à 812 × 375, le bord du rond qu'on voit) est à juger au VRAI pouce
+  (§ 6.2 ✋) : trop près, on verrouille sans le vouloir ; trop loin, on n'y arrive pas d'un geste. Une valeur, dans
+  `TACTILE_JEU.verrou.auDela`.
+- La course verrouillée file dans les murs (comme CoD Mobile) : on pourrait la rendre au bout de 0,5 s bloquée ; laissé
+  tel quel, à trancher au vrai téléphone.
