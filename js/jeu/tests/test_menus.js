@@ -308,7 +308,8 @@ export default function (jeu) {
     res.push(['bilan après 2,5 s : podium, chiffres, 4 boutons', F.classList.contains('bilan') && F.querySelectorAll('.fj-marche').length >= 1 && F.querySelectorAll('.fj-chiffres div').length === 6
       && egal([...F.querySelectorAll('.fj-actions button')].map((b) => b.textContent), ['REJOUER', 'CHANGER DE MODE', 'MENU PRINCIPAL', 'BALADE'])]);
     // ÉCHAP sur l'écran de fin : pas de pause par-dessus
-    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', bubbles: true })); window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape', bubbles: true }));
+    // (sur le corps de la page, comme une vraie touche : à la cible `window`, Chromium sert d'abord les écouteurs posés avant)
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', bubbles: true })); document.body.dispatchEvent(new KeyboardEvent('keyup', { code: 'Escape', bubbles: true }));
     game.frame(1 / 60);
     res.push(['ÉCHAP : pas de pause par-dessus (la partie gelée sous l’écran de fin)', !vu($('#overlay')) && game.paused && vu(F)]);
     // REJOUER
@@ -473,10 +474,11 @@ export default function (jeu) {
         const b = await rep.blob(), im = await createImageBitmap(b);
         const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height;
         const g = cv.getContext('2d'); g.drawImage(im, 0, 0);
-        const coins = [[1, 1], [190, 1], [1, 190], [190, 190]].map(([x, y]) => g.getImageData(x, y, 1, 1).data[3]);
+        // (les deux coins du HAUT : le buste remplit le bas de l'image, épaules comprises)
+        const coins = [[1, 1], [190, 1], [96, 1]].map(([x, y]) => g.getImageData(x, y, 1, 1).data[3]);
         const milieu = g.getImageData(96, 90, 1, 1).data[3];
         if (im.width !== 192 || im.height !== 192) fautes.push(`${id} ${im.width} × ${im.height}`);
-        if (coins.some((a) => a !== 0)) fautes.push(`${id} coins opaques`);
+        if (coins.some((a) => a !== 0)) fautes.push(`${id} coins du haut opaques`);
         if (milieu < 200) fautes.push(`${id} visage transparent`);
         if (b.size > 30 * 1024) fautes.push(`${id} ${b.size} octets`);
       } catch (e) { fautes.push(id + ' : ' + e.message); }
@@ -484,7 +486,7 @@ export default function (jeu) {
     res.push([`7 fichiers 192 × 192, fond transparent, ≤ 30 Ko${fautes.length ? ' — ' + fautes.join(', ') : ''}`, fautes.length === 0]);
     const m = jeu.mesurer(() => { for (let i = 0; i < 1000; i++) portrait(FICHES_BOTS[i % 6]); }, 20);
     const url = portrait(FICHE_HAYTHEM), sans = portrait({ id: 'inconnu', nom: 'Zoé' });
-    res.push([`portrait() ${(m.med / 1000 * 1000).toFixed(4)} ms l’appel`, url === 'assets/portraits/haythem.webp' && sans === null && m.med / 1000 < 0.1]);
+    res.push([`portrait() ${(m.med / 1000).toExponential(1)} ms l’appel`, url === 'assets/portraits/haythem.webp' && sans === null && m.med / 1000 < 0.1]);
     const v = vignette({ id: 'inconnu', nom: 'Zoé', color1: '#123456', color2: '#abcdef' });
     res.push(['sans image : l’initiale sur un dégradé', v.tagName === 'SPAN' && v.classList.contains('portrait-initiale') && v.textContent === 'Z']);
     // le premier Tab d'une manche (le tableau des scores, avec ses portraits)
@@ -519,8 +521,9 @@ export default function (jeu) {
     game.input.presser('KeyW');
     b?.click();
     const ok = !!b && game.mode === 'menu' && !game.paused && !document.pointerLockElement && game.input.pressedSet.size === 0 && vu($('#menu-jeu')) && !vu($('#overlay'));
+    const obtenu = `bouton ${!!b} · mode ${game.mode} · pause ${game.paused} · fronts ${game.input.pressedSet.size} · accueil ${vu($('#menu-jeu'))}`;
     jeu.quitter('balade');
-    return { ok, attendu: 'menu, pas en pause, pointeur libre, entrée purgée, accueil visible', obtenu: `bouton ${!!b} · mode ${game.mode} · fronts ${game.input.pressedSet.size}` };
+    return { ok, attendu: 'menu, pas en pause, pointeur libre, entrée purgée, accueil visible', obtenu };
   });
 
   // À F2 : le parcours complet à la manette sur les vrais écrans (menu → COMBAT → LANCER → la vraie fin de L-E → REJOUER →
