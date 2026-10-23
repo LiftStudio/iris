@@ -7,7 +7,8 @@
         (et la planche), répond, puis s'arrête.
 
 Chaque image est vérifiée : en-tête RIFF/WEBP, 192 × 192, une couche alpha (VP8X avec le drapeau alpha, ou VP8L), au plus
-30 Ko. Sortie : une ligne par fichier, puis « OK <n> portraits » (code 0) ou les fautes (code 1).
+30 Ko ; une image fautive n'est pas écrite. Sortie : une ligne par fichier, puis « OK <n> portraits » (code 0) ou les
+fautes (code 1).
 """
 import base64, http.server, json, os, struct, sys
 
@@ -51,16 +52,19 @@ def ecrire(donnees, dossier, planche=None):
         try:
             b = decoder(portraits[ident])
             l, h, alpha = examiner(b)
-            if (l, h) != (TAILLE, TAILLE):
-                fautes.append('%s : %dx%d (192x192 attendu)' % (ident, l, h))
+            print('%-12s %6d octets  %dx%d  alpha %s' % (ident, len(b), l, h, 'oui' if alpha else 'NON'))
+            ko = [] if (l, h) == (TAILLE, TAILLE) else ['%dx%d (192x192 attendu)' % (l, h)]
             if not alpha:
-                fautes.append('%s : sans couche alpha' % ident)
+                ko.append('sans couche alpha')
             if len(b) > MAX_OCTETS:
-                fautes.append('%s : %d octets (30 Ko au plus)' % (ident, len(b)))
+                ko.append('%d octets (30 Ko au plus)' % len(b))
+            if ko:
+                # (une image fautive n'écrase jamais la bonne qui est déjà dans assets/portraits/)
+                fautes.append('%s : %s (non ecrit)' % (ident, ', '.join(ko)))
+                continue
             with open(os.path.join(dossier, ident + '.webp'), 'wb') as f:
                 f.write(b)
             n += 1
-            print('%-12s %6d octets  %dx%d  alpha %s' % (ident, len(b), l, h, 'oui' if alpha else 'NON'))
         except Exception as e:  # noqa: BLE001 (une image abîmée est une faute, pas un arrêt)
             fautes.append('%s : %s' % (ident, e))
     if planche and isinstance(donnees, dict) and donnees.get('planche'):
@@ -90,8 +94,12 @@ def ecouter(port, dossier, planche):
             self.end_headers()
 
         def do_OPTIONS(self):  # noqa: N802 (nom imposé par http.server)
-            self._entetes(204)
+            # (un pré-vol, si un navigateur en envoyait un : ses en-têtes AVANT la fin des en-têtes)
+            self.send_response(204)
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Access-Control-Allow-Methods', 'POST')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+            self.end_headers()
 
         def do_POST(self):  # noqa: N802
             n = int(self.headers.get('Content-Length') or 0)

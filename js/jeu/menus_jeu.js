@@ -78,7 +78,7 @@ export const MANCHES = REGLAGES_PROP.choixManches || [4, 6, 8];
 // L'HABILLAGE (arbitrage 35, R33 : en tête des réglages du combat ; la même ligne que dans Options › Combat)
 export const HABILLAGES = [['airsoft', 'AIRSOFT', 'Billes de peinture, « TOUCHÉ », tir au gaz — conseillé, et pour toute vidéo publiée.'],
   ['militaire', 'MILITAIRE', 'Impacts de balles, « ÉLIMINÉ ».']];
-const STAND_CLE = 'iris.stand.v1';
+const STAND_CLE = 'iris.stand.v1', REGLAGES_CLE = 'iris.settings.v1';
 
 // LA CAMÉRA DU MENU : trois plans de 12 s, un fondu au noir de 1,2 s à chaque coupe (0,6 s de chaque côté). Chaque plan
 // glisse de `de` à `a` (position de la caméra et point visé), lissé aux deux bouts. Positions relevées dans l'école le
@@ -121,7 +121,8 @@ const ASTUCES_STAND = [
 // ---------------------------------------------------------------- petits outils
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const jv = (v) => esc(JSON.stringify(v));
-const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+// (arrondi à la seconde AVANT le partage : 59,6 s font « 1:00 », pas « 0:60 »)
+const mmss = (s) => { const t = Math.max(0, Math.round(+s || 0)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
 const limites = () => (TELEPHONE ? LIMITES.tel : LIMITES.pc);
 const lisse = (u) => u * u * (3 - 2 * u);
 const borne = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -175,6 +176,7 @@ export class MenuJeu {
     this._tFin = null; this._tAstuce = null; this._suivi = null;
     // `compterTypes(zone)` : le nombre de types déguisables d'une zone (js/jeu/deguisements.js) — remplaçable par un test
     this.compterTypes = (z) => { this._registre(); return typesDeguisables(z).length; };
+    this._rattraper();
     this._construire();
     // (à la manette : B revient de chaque sous-écran ; le focus, en arrivant, sur l'action principale de l'écran)
     ajouterRacine('menu-jeu', { defaut: '#menu-jeu [data-act="balade"]' });
@@ -323,8 +325,8 @@ export class MenuJeu {
     if (!Number.isFinite(c.ennemis)) c.ennemis = TELEPHONE ? 2 : 4;
     c.allies = borne(Math.round(c.allies), 0, 4); c.ennemis = borne(Math.round(c.ennemis), 1, 5);
     if (c.allies + c.ennemis > L.bots) { c.allies = TELEPHONE ? 1 : 3; c.ennemis = TELEPHONE ? 2 : 4; }
-    // (en mémoire seulement pour l'instant : `adversaires`, `limites` et `jeu.stand` ne sont pas dans les DEFAULTS de
-    // js/settings.js, qui les oublie au rechargement — DEMANDE à INT dans le rapport L-U)
+    // (`adversaires`, `limites` et `jeu.stand` ne sont pas dans les DEFAULTS de js/settings.js, qui les oublie à la
+    // relecture : _rattraper les reprend de la sauvegarde brute au démarrage — DEMANDE 1 à INT dans le rapport L-U)
     if (!Number.isFinite(c.adversaires)) c.adversaires = TELEPHONE ? 3 : 5;
     c.adversaires = borne(Math.round(c.adversaires), 1, Math.min(5, L.bots));
     const Lm = c.limites && typeof c.limites === 'object' ? c.limites : (c.limites = {});
@@ -348,6 +350,19 @@ export class MenuJeu {
     if (!CLASSES[st.classe]) st.classe = 'assaut';
     if (J.habillage !== 'militaire') J.habillage = 'airsoft';
     return J;
+  }
+  // LES CHOIX QUE js/settings.js NE CONNAÎT PAS ENCORE (ses DEFAULTS : DEMANDE 1 à INT) — la limite et le temps par mode,
+  // les adversaires du chacun pour soi, le défi et la classe du stand : la sauvegarde les garde, mais sa relecture
+  // (deepMerge contre les DEFAULTS) les oublie ; rattrapés une fois, au démarrage, depuis la sauvegarde BRUTE (lue, jamais
+  // écrite ; `brut` pour les tests), puis remis d'aplomb par _jeu comme le reste. Sans effet le jour où INT les ajoute.
+  _rattraper(brut) {
+    if (brut === undefined) { try { brut = JSON.parse(localStorage.getItem(REGLAGES_CLE) || 'null'); } catch (e) { brut = null; } }
+    const s = this.game.settings, J = s && s.data && s.data.jeu, B = brut && brut.jeu;
+    if (!J || !B || typeof B !== 'object') return;
+    const C = J.combat || (J.combat = {}), Cb = B.combat && typeof B.combat === 'object' ? B.combat : {};
+    if (C.limites === undefined && Cb.limites && typeof Cb.limites === 'object') C.limites = JSON.parse(JSON.stringify(Cb.limites));
+    if (C.adversaires === undefined && Number.isFinite(Cb.adversaires)) C.adversaires = Cb.adversaires;
+    if (J.stand === undefined && B.stand && typeof B.stand === 'object') J.stand = { defi: B.stand.defi ?? null, classe: B.stand.classe };
   }
   // écrire un réglage (par settings.set : enregistré, puis game.applySettings comme tout réglage)
   _poser(chemin, v) {
@@ -460,8 +475,10 @@ export class MenuJeu {
         + (tousGrises ? ' Aucune zone n’a encore 6 types : la partie se joue au 1er avec le meuble de secours.' : '') + raisons,
         this._choix('jeu.prop.zone', [[null, 'AUTO', `Calculée au lancement : ${nomZone(Z.defaut)}`], ...ZONES_PROP.map((z) => [z, nomZone(z).toUpperCase(), `${Z.R[z].n} types déguisables`, Z.R[z].ok ? null : Z.R[z].raison])], zv), 'rj-large');
       h += this._ligne('manches', 'Manches', 'Ton rôle change à chaque manche.', this._choix('jeu.prop.manches', MANCHES.map((v) => [v, String(v)]), p.manches));
-      const nC = REGLAGES_PROP.chasseurs(p.acteurs), bots = p.acteurs - 1;
-      const avert = bots > L.conseil ? ` <span class="rj-avert">${bots} bots : au-delà de ${L.conseil}, l’image peut ramer.</span>` : '';
+      // (l'avertissement au-delà du conseil de l'appareil — jamais sur la partie par défaut : au téléphone, ses 5 joueurs font
+      // 4 bots, un de plus que le conseil de 3, et ce sont surtout des meubles, pas des avatars)
+      const nC = REGLAGES_PROP.chasseurs(p.acteurs), bots = p.acteurs - 1, seuil = Math.max(L.conseil, REGLAGES_PROP.acteurs - 1);
+      const avert = bots > seuil ? ` <span class="rj-avert">${bots} bots : au-delà de ${seuil}, l’image peut ramer.</span>` : '';
       h += this._ligne('acteurs', 'Joueurs', `${p.acteurs} en tout, toi compris : ${nC} chasseur${nC > 1 ? 's' : ''} et ${p.acteurs - nC} prop${p.acteurs - nC > 1 ? 's' : ''}.${avert}`,
         this._compteur('jeu.prop.acteurs', p.acteurs, REGLAGES_PROP.acteursMin, Math.min(REGLAGES_PROP.acteursMax, L.bots + 1), 'joueurs'));
       const D = DIFFS_PROP.find(([v]) => v === p.difficulte);
@@ -574,7 +591,7 @@ export class MenuJeu {
       for (const e of [this.el, this.regEl, this.finEl, this.credEl]) if (e) e.hidden = true;
       const mode = this._lance ? this._lance.mode : null;
       this._prepEtapes = ETAPES.filter(([c]) => c !== 'meubles' || mode === 'prophunt');
-      this._prepMax = 0; this._prepT0 = performance.now();
+      this._prepMax = 0;
       this.prep.querySelector('.pj-mode').textContent = this._resumeLance();
       this._majEtapes(null);
       this._astuce(0, mode);
@@ -682,7 +699,8 @@ export class MenuJeu {
     B.podium = cl.slice(0, 3).map((a) => ({ nom: a.nom, local: !!a.local, fiche: ficheDe(a), couleur: couleur(a),
       ligne: p.id === 'prophunt' ? `${a.stats.score} pts` : `${a.stats.score} pts · ${a.stats.elims} / ${a.stats.morts}` }));
     if (loc) {
-      const s = loc.stats, prec = s.tirs ? Math.round(100 * s.touches / s.tirs) : 0;
+      const s = loc.stats, tirs = S ? S.plombs.get(loc.id) || 0 : s.tirs, touches = S ? S.touches.get(loc.id) || 0 : s.touches;
+      const prec = tirs ? Math.min(100, Math.round(100 * touches / tirs)) : 0;
       if (p.id === 'prophunt') {
         B.chiffres = [['points', String(s.score)], ['props trouvés', String(s.elims)], ['provocations', String(s.provocs || 0)],
           ['survie', mmss(s.survie || 0)], ['vrais meubles', String(s.rates || 0)], ['précision', `${prec} %`]];
@@ -699,7 +717,11 @@ export class MenuJeu {
     if (d.etat === 'entree' && p) {
       this.cacher(); this._fondu(0);
       this._dernier = this._lance || { mode: p.id, opts: { ...p.opts } }; this._lance = null;
-      const S = this._suivi = { p, serie: new Map(), meilleure: new Map(), manches: { props: 0, chasseurs: 0 } };
+      const S = this._suivi = { p, serie: new Map(), meilleure: new Map(), manches: { props: 0, chasseurs: 0 }, plombs: new Map(), touches: new Map() };
+      // (la PRÉCISION du bilan : touches sur balles TIRÉES, plombs compris — les statistiques de l'acteur comptent un tir
+      // de FP-12 pour un et chacun de ses huit plombs pour une touche, d'où 800 % : DEMANDE à F2 au rapport)
+      p.sur('tir', (e) => S.plombs.set(e.a, (S.plombs.get(e.a) || 0) + (e.n || 1)));
+      p.sur('touche', (e) => { if (e.par >= 0 && e.par !== e.cible) S.touches.set(e.par, (S.touches.get(e.par) || 0) + 1); });
       p.sur('elim', (e) => {
         if (e.cible !== undefined) S.serie.set(e.cible, 0);
         if (e.par === undefined || e.par === e.cible) return;

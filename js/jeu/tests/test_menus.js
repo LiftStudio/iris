@@ -29,6 +29,9 @@ export default function (jeu) {
   const menu = () => MENUS.courant;
   const options = () => menu() && menu().deps.options;
   const L = TELEPHONE ? LIMITES.tel : LIMITES.pc;
+  // les réglages NEUFS (les DEFAULTS de js/settings.js) sans toucher à ceux en mémoire : un test qui vérifie une valeur par
+  // défaut ne dépend pas de la sauvegarde de cette origine (une partie jouée à la main sur ce port y laisse ses choix)
+  const neufs = () => { const g = settings.data; settings.charger(null); const n = JSON.parse(JSON.stringify(settings.data)); settings.data = g; return n; };
 
   // LA MANETTE SIMULÉE : un appui bref sur `nom` (enfoncé une image, relâché la suivante), sur l'écran du dessus
   const nav = () => game.input.manette.nav;
@@ -140,6 +143,7 @@ export default function (jeu) {
     THREE.DefaultLoadingManager.onLoad = function (...a) { charges++; return onLoad && onLoad.apply(this, a); };
     try {
       const M = await auMenu();
+      settings.data.jeu = neufs().jeu;                // (les choix d'un tout premier lancement)
       $('#menu-jeu [data-act="combat"]').click();
       await jeu.images(2);
       const R = $('#reglage-jeu');
@@ -241,21 +245,31 @@ export default function (jeu) {
     M.reglage('combat');
     const R = $('#reglage-jeu'), btn = (ch, v) => R.querySelector(`[data-champ="${ch}"][data-v='${JSON.stringify(v)}']`);
     btn('jeu.combat.mode', 'melee').click(); btn('jeu.combat.difficulte', 'veteran').click(); btn('jeu.combat.classe', 'tireur').click(); btn('jeu.habillage', 'militaire').click();
+    btn('jeu.combat.limites.melee.score', 25).click(); btn('jeu.combat.limites.melee.duree', 900).click();
     M.accueil(); M.reglage('prop');
     btn('jeu.prop.manches', 8).click(); btn('jeu.prop.premierRole', 'chasseur').click();
     M.accueil(); M.reglage('stand'); btn('jeu.stand.defi', 'recul').click();
     $('#reglage-jeu [data-act="retour"]').click();
     M.reglage('combat');
     const on = (ch) => { const b = R.querySelector(`[data-champ="${ch}"].on`); return b ? JSON.parse(b.dataset.v) : undefined; };
-    res.push(['combat : chacun pour soi, vétéran, tireur, militaire', on('jeu.combat.mode') === 'melee' && on('jeu.combat.difficulte') === 'veteran' && on('jeu.combat.classe') === 'tireur' && on('jeu.habillage') === 'militaire']);
+    res.push(['combat : chacun pour soi, vétéran, tireur, militaire, 25 en 15:00', on('jeu.combat.mode') === 'melee' && on('jeu.combat.difficulte') === 'veteran' && on('jeu.combat.classe') === 'tireur' && on('jeu.habillage') === 'militaire'
+      && on('jeu.combat.limites.melee.score') === 25 && on('jeu.combat.limites.melee.duree') === 900]);
     M.reglage('prop');
     res.push(['prop : 8 manches, chasseur d’abord', on('jeu.prop.manches') === 8 && on('jeu.prop.premierRole') === 'chasseur']);
     M.reglage('stand');
     res.push(['stand : recul', on('jeu.stand.defi') === 'recul']);
     // (et l'enregistrement : les choix des DEFAULTS de js/settings.js survivent à une relecture du stockage)
     const relu = JSON.parse(JSON.stringify(settings.data)), garde = JSON.parse(JSON.stringify(settings.data));
-    try { settings.charger(relu); res.push(['relus du stockage', settings.data.jeu.combat.mode === 'melee' && settings.data.jeu.combat.difficulte === 'veteran' && settings.data.jeu.prop.manches === 8 && settings.data.jeu.habillage === 'militaire']); }
-    finally { settings.data = garde; }
+    try {
+      settings.charger(relu);
+      res.push(['relus du stockage', settings.data.jeu.combat.mode === 'melee' && settings.data.jeu.combat.difficulte === 'veteran' && settings.data.jeu.prop.manches === 8 && settings.data.jeu.habillage === 'militaire']);
+      // (les choix hors des DEFAULTS de js/settings.js — limite et temps, stand — : oubliés par la relecture, rattrapés de la
+      // sauvegarde brute comme au démarrage)
+      const oublies = settings.data.jeu.combat.limites === undefined && settings.data.jeu.stand === undefined;
+      M._rattraper(relu);
+      const J = M._jeu();
+      res.push([`rattrapés au démarrage (oubliés par la relecture : ${oublies})`, J.combat.limites.melee.score === 25 && J.combat.limites.melee.duree === 900 && J.stand.defi === 'recul']);
+    } finally { settings.data = garde; }
     M.accueil();
     const r = bilan(res);
     return { ok: r.ok, attendu: res.map((x) => x[0]).join(' · '), obtenu: r.ok ? 'tout vrai' : 'faux : ' + r.ko.join(' ; ') };
@@ -361,7 +375,10 @@ export default function (jeu) {
 
   // 10. L'ONGLET COMBAT DES OPTIONS : chaque réglage écrit le sien ; la sensibilité en cm par tour à 800 ppp (0,45 → 17,7 cm)
   T('10 onglet COMBAT : chaque réglage écrit le sien', async () => {
-    const O = options(), res = [];
+    const O = options(), res = [], N = neufs();
+    // (les valeurs par défaut de l'onglet, quelle que soit la sauvegarde de cette origine)
+    settings.data.controls.fps = N.controls.fps; settings.data.jeu.habillage = N.jeu.habillage; settings.data.jeu.fluidite = N.jeu.fluidite;
+    settings.data.game.demarrage = N.game.demarrage;
     O.open('combat');
     const P = $('#opt-panels');
     try {
