@@ -708,10 +708,13 @@ export function poserPause1(ch, ctx) {
     // les deux machines (façades lumineuses), leur caisse dans la niche (le local n'a plus que 0,5 m de fond : elles
     // s'adossent au mur du fond)
     const xm = Math.max(XB - 0.5, XF + 0.08);
-    B(xm, yc0, xb - 0.03, yc1, N1, hm, M.noirMat, { collision: true });
-    B(xm, ys0, xb - 0.03, ys1, N1, hm, M.noirMat, { collision: true });
-    panneau(lum(texCafe(), 0.32), yc1 - yc0 - 0.02, 1.83, xb - 0.028, (yc0 + yc1) / 2, N1 + 0.95, 'E');
-    panneau(lum(texSnack(), 0.6), ys1 - ys0 - 0.02, 1.83, xb - 0.028, (ys0 + ys1) / 2, N1 + 0.95, 'E');
+    // (prop hunt, L-K 23/10 : chaque pièce d'une machine porte l'étiquette de son meuble — `partie` les réunit, `cap` : la façade à l'est)
+    const dCafe = { type: 'distributeur-cafe', nom: 'le distributeur de café', mural: true, surPlace: true, partie: 'e1-distributeur-cafe', cap: Math.PI / 2 };
+    const dSnack = { type: 'distributeur-snacks', nom: 'le distributeur de friandises', mural: true, surPlace: true, partie: 'e1-distributeur-snacks', cap: Math.PI / 2 };
+    B(xm, yc0, xb - 0.03, yc1, N1, hm, M.noirMat, { collision: true }).userData.meuble = dCafe;
+    B(xm, ys0, xb - 0.03, ys1, N1, hm, M.noirMat, { collision: true }).userData.meuble = dSnack;
+    panneau(lum(texCafe(), 0.32), yc1 - yc0 - 0.02, 1.83, xb - 0.028, (yc0 + yc1) / 2, N1 + 0.95, 'E').userData.meuble = dCafe;
+    panneau(lum(texSnack(), 0.6), ys1 - ys0 - 0.02, 1.83, xb - 0.028, (ys0 + ys1) / 2, N1 + 0.95, 'E').userData.meuble = dSnack;
     // (relecture V2 : entre le bout de l'habillage et le muret court, le meuble bas brun sombre — VO q_0187, q_0189,
     // q_0215 : à hauteur d'appui, contre la face du local)
     const brun = new THREE.MeshStandardMaterial({ color: 0x3b2f29, roughness: 0.55 });
@@ -786,6 +789,7 @@ export function poserPause1(ch, ctx) {
   // LE MANGE-DEBOUT (VO : plateau rond noir de 65 cm à 1,10 m, colonne noire, piétement en croix)
   const mangeDebout = (x, y) => {
     const g = new THREE.Group(); g.position.set(x, N1, -y); g.rotation.y = (x * 7 + y * 3) % 1.5; groupe.add(g);
+    g.userData.meuble = { type: 'mange-debout-croix', nom: 'le mange-debout' };   // (prop hunt, L-K 23/10 : js/registre_meubles.js)
     maille(new THREE.CylinderGeometry(0.325, 0.325, 0.025, 40), P.laque, 0, 1.087, 0, 0, g);
     maille(new THREE.CylinderGeometry(0.06, 0.06, 0.02, 16), P.noir, 0, 1.066, 0, 0, g, { ombre: false });
     maille(new THREE.CylinderGeometry(0.025, 0.025, 1.0, 12), P.noir, 0, 0.56, 0, 0, g);
@@ -820,6 +824,7 @@ export function poserPause1(ch, ctx) {
   const miura = (x, y, dir, sortie = null) => {
     const [fx, fz] = DIR[dir], h = 0.8;
     const g = new THREE.Group(); g.position.set(x, N1, -y); g.rotation.y = Math.atan2(fx, fz); groupe.add(g);
+    g.userData.meuble = { type: 'tabouret-miura', nom: 'le tabouret Miura' };   // (prop hunt, L-K)
     // (le +z local regarde vers l'avant ; la plaque est dessinée avant vers -z : retournée)
     const a = maille(_geoAssiseMiura, P.miura, 0, h - 0.022, 0, 0, g); a.rotation.y = Math.PI;
     // les deux lames de devant, en A, et leur repose-pieds ; les deux de derrière, plus serrées en haut
@@ -848,6 +853,7 @@ export function poserPause1(ch, ctx) {
   const coque = (x, y, dir, mat, sortie) => {
     const [fx, fz] = DIR[dir];
     const g = new THREE.Group(); g.position.set(x, N1, -y); g.rotation.y = Math.atan2(fx, fz); groupe.add(g);
+    { const v = mat === P.coqueOrange ? 'orange' : mat === P.coqueMenthe ? 'menthe' : 'lime'; g.userData.meuble = { type: 'chaise-coque-noire', nom: 'la chaise coque ' + v, variante: v }; }   // (prop hunt, L-K)
     maille(geoCoque(), mat, 0, 0, 0, 0, g, { ombre: false });
     maille(geoOurletCoque(), mat, 0, 0, 0, 0, g, { ombre: false });
     // (la « tour Eiffel » de la salle d'attente, js/ecole_mobilier.js, en fil noir : quatre pieds, la ceinture à 19 cm,
@@ -1157,6 +1163,7 @@ export function poserPause1(ch, ctx) {
   const chaiseHetre = (x, y, dir, sortie) => {
     const [fx, fz] = DIR[dir];
     const g = new THREE.Group(); g.position.set(x, N1, -y); g.rotation.y = Math.atan2(fx, fz); groupe.add(g);
+    g.userData.meuble = { type: 'chaise-hetre', nom: 'la chaise de hêtre' };   // (prop hunt, L-K)
     maille(_geoAssise, P.hetre, 0, 0.455, 0.02, 0, g);
     const d = maille(_geoDos, P.dossier, 0, 0.67, -0.19, 0, g); d.rotation.x = -0.12;
     // (relecture du 14/10 — VO q_0200, q_0204, q_0206, q_0212 de près : pas quatre pieds droits, une LUGE — de chaque côté,

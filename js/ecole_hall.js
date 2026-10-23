@@ -521,6 +521,7 @@ function siege(ch, x, y, h, face, sx, sy, nom) {
 // accoudoirs. `zebre` : le coussin rayé noir et blanc ; `place` : false pour celui du bureau d'angle, qu'on n'atteint pas
 function fauteuil(ch, x, y, face, { zebre = false, sx, sy, nom = 'le fauteuil', place = true } = {}) {
   const M = ch.M, g = groupe(ch, x, y, face);
+  g.userData.meuble = { type: 'fauteuil-accueil', nom: 'le fauteuil', variante: zebre ? 'zebre' : 'uni' };   // (prop hunt, L-K 23/10 : js/registre_meubles.js)
   for (let k = 0; k < 5; k++) {
     const a = k / 5 * Math.PI * 2, b = BL(g, M.noir, 0.05, 0.03, 0.3, Math.sin(a) * 0.15, 0.075, Math.cos(a) * 0.15, { ombre: false });
     b.rotation.y = a;
@@ -553,6 +554,7 @@ function ecran(ch, x, y, h, face, allume = false, haut = 0.33, l = 0.56) {
 // `haut` : le dessus du chargeur
 function copieur(ch, x, y, face, haut = 1.15) {
   const g = groupe(ch, x, y, face), k = haut / 1.15, { M } = ch;
+  g.userData.meuble = { type: 'copieur', nom: 'le photocopieur', mural: true, surPlace: true };   // (prop hunt, L-K)
   const c1 = H.copieur, c2 = H.copieur2;
   BL(g, c1, 0.64, 0.56 * k, 0.66, 0, 0.3 * k, 0);
   for (const h of [0.14, 0.27, 0.4, 0.53]) BL(g, c2, 0.6, 0.01, 0.005, 0, h * k, 0.332, { ombre: false });
@@ -574,6 +576,7 @@ function copieur(ch, x, y, face, haut = 1.15) {
 // meuble blanc de 1,16 m, IMAGINÉ.) Tournée vers l'ouest, dans le jour de la fenêtre c 18,98.
 function affranchisseuse(ch, x, y) {
   const g = groupe(ch, x, y, 'W'), { M } = ch, c1 = H.copieurJour, c2 = H.copieurJour2, S = 1.16;
+  g.userData.meuble = { type: 'affranchisseuse', nom: 'la machine à affranchir', mural: true };   // (prop hunt, L-K)
   // (dans le repère du groupe : +z vers l'ouest, le hall ; +x vers le SUD — à droite, vu du hall)
   // (le meuble : 0,50 m de profondeur seulement — à 0,62, avec le fauteuil du bout sud, il fermait le passage du personnel
   // le long du plan de travail : joué, relecture du 13/10)
