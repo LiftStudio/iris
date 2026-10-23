@@ -43,8 +43,10 @@ export const REGLAGES_SONS = {
   claquementMax: 25,                                      // m : au-delà, ni claquement ni mécanique haute
   hauteur: 0.04,                                          // ±4 % par coup
   pasEnnemi: 4,                                           // dB de plus pour les pas d'un ennemi
-  // rayons (m) : au-delà, la voix n'est pas créée (l'oreille de Haythem, plus fine que celle des bots, § 3.7)
-  rayons: { tir: 75, pas: { sprint: 22, course: 15, marche: 6, accroupi: 4 }, impact: 25, recharge: 10, vide: 6, arme: 6, explosion: 90, flash: 60,
+  // rayons (m) : au-delà, la voix n'est pas créée ; les PAS des autres comme au § 3.1 et à CoD § 7.5 — sprint 14, course 9,
+  // marche 4 (« pas audibles à 4 m »), accroupi muet : l'oreille de Haythem est celle des bots (relecture du 23/10 : 22 / 15
+  // / 6 / 4 m lui donnaient l'avantage sur un bot qui l'entend à 14 / 9 / 4 / 0) ; ses pas à lui, toujours (au milieu)
+  rayons: { tir: 75, pas: { sprint: 14, course: 9, marche: 4, accroupi: 0 }, impact: 25, recharge: 10, vide: 6, arme: 6, explosion: 90, flash: 60,
     frole: 4, corps: 15, saut: 10, grenade: 25, douille: 12 },
   // gains de base des voix (avant la loi de distance)
   gains: { tirLocal: 0.9, tir: 0.8, pas: 0.6, pasLocal: 0.3, impact: 0.55, recharge: 0.55, rechargeLocal: 0.6, vide: 0.5, arme: 0.45,
@@ -627,9 +629,9 @@ export class SonsJeu {
       case 'vide': { const a = P.acteurParId(e.a); if (a) this._corps(a, RECETTES.vide(B), G.vide, R.vide, dec, 1.2); return; }
       case 'arme': { const a = P.acteurParId(e.a); if (a) this._corps(a, RECETTES.arme(B), G.arme, R.arme, dec, 1.0); return; }
       case 'pas': {
-        const allure = e.allure || 'course', r = R.pas[allure] ?? R.pas.course;
-        if (!r) return;
-        const local = lui(e.a), plus = this._ennemi(e.a) ? Math.pow(10, REGLAGES_SONS.pasEnnemi / 20) : 1;
+        const allure = e.allure || 'course', r = R.pas[allure] ?? R.pas.course, local = lui(e.a);
+        if (!r && !local) return;
+        const plus = this._ennemi(e.a) ? Math.pow(10, REGLAGES_SONS.pasEnnemi / 20) : 1;
         const k = allure === 'marche' ? 0.45 : allure === 'accroupi' ? 0.3 : allure === 'sprint' ? (e.tact ? 1.3 : 1.15) : 1;
         const f = e.f ?? 0.6, o = { gain: (local ? G.pasLocal : G.pas) * plus * k, rayon: r, retard: true, decalage: dec, hauteurOcc: 1.0, centre: local };
         const fb = FORCES_PAS.reduce((m, x) => (Math.abs(x - f) < Math.abs(m - f) ? x : m), FORCES_PAS[0]);

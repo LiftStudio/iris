@@ -239,6 +239,11 @@ Spécification relue (§§ 3.6, 3.10, 4.1, 4.5.17, 4.6, 5.1, 5.5.12), diff `socl
    champ `mat` de l'impact. La balistique du squelette dit 'mur' partout. Une forme haute d'un meuble du registre
    (distributeur, armoire étiquetée, plus de 1,8 m) était donc décalquée. Correction : une forme de `MEUBLES.parForme`
    est un meuble, quoi que dise `mat`. Test 3 complété.
+4. **Haythem entendait les pas des autres plus loin que la spécification** (`sons_jeu.js`, `REGLAGES_SONS.rayons.pas`).
+   Le lot avait posé sprint 22 m, course 15 m, marche 6 m, accroupi 4 m (« l'oreille de Haythem, plus fine que celle des
+   bots »). Le § 3.1 dit « pas audibles à 4 m » pour la marche et « pas muets » accroupi ; CoD § 7.5 dit sprint 14, course
+   9, marche 4, accroupi muet. Les bots l'entendent à 14 / 9 / 4 / 0 m : l'écart lui donnait l'avantage, contre
+   l'équité du § 1 (arbitrage 4). Ramené à 14 / 9 / 4 / 0. Ses propres pas restent joués, accroupi compris, au milieu.
 
 ### Nettoyé
 
