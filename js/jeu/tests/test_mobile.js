@@ -75,6 +75,7 @@ export default function (jeu) {
     m.vibrer = function (f, l, ms) { vib.push([r3(f), r3(l), ms]); return vibrer.call(this, f, l, ms); };
     m.annoncees.add(0);                                       // (pas de notification « manette connectée »)
     m.adopter(gp);
+    m.scruter(game, 0);                                       // (le contexte posé : un bouton tenu au changement de contexte serait muet)
     return {
       gp, vib, m,
       bouton(nom, bas = true) { const i = PAD_BOUTONS.indexOf(nom); gp.buttons[i] = { pressed: !!bas, value: bas ? 1 : 0 }; },
@@ -183,8 +184,8 @@ export default function (jeu) {
       const dt = premier === null ? null : premier - t0;
       res.push(['tir après 0,12 s', dt !== null && dt >= AIDE.tirAuto.delai - 1e-9 && dt <= AIDE.tirAuto.delai + 2 * PAS + 1e-9, dt === null ? 'aucun tir' : r3(dt) + ' s']);
       res.push(['état de l’aide : tir auto', !!etatAide(p).tirAuto]);
-      // (b) le réticule hors de la silhouette (10° à côté) : rien
-      jeu.avancer(0.2); jeu.viser(0, { lacet: game.camYaw + 10 * DEG, tangage: game.camPitch });
+      // (b) le réticule hors de la silhouette (10° à côté) : rien, passé les 0,05 s de grâce
+      jeu.avancer(0.2); jeu.viser(0, { lacet: game.camYaw + 10 * DEG, tangage: game.camPitch }); jeu.avancer(AIDE.tirAuto.grace + 2 * PAS);
       let n = 0; const off2 = p.sur('tir', (e) => { if (e.a === 0) n++; }); jeu.avancer(0.4); off2();
       res.push(['à côté : aucun tir', n === 0, n + ' tirs']);
       // (c) au-delà de la portée (réglée à 2 m le temps du test) : rien
