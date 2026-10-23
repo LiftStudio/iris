@@ -9,8 +9,8 @@
 //     n'en change que le niveau — des uniformes seulement, sur les matériaux CLONÉS du corps (js/player.js _loadAvatar) :
 //     ni programme nouveau, ni matériau du décor ou de Haythem touché ;
 //   - DEUX BRASSARDS LARGES (8 cm) de la couleur pleine, enfants des os des bras (LeftArm, RightArm : l'os qui part de
-//     l'épaule), à 11 cm sous l'articulation, ajustés à la manche de CET avatar (le rayon mesuré sur la pose de liaison
-//     des sommets portés par l'os, + 6 mm), un rien émissifs (0,22 : lisibles au −1). Géométrie par avatar et matériau par
+//     l'épaule), à 12 cm sous l'articulation, ajustés à la manche de CET avatar (le 93e centile du rayon des sommets que
+//     l'os porte, mesuré sur la pose de liaison, + 5 mm), un rien émissifs (0,22 : lisibles au −1). Géométrie par avatar et matériau par
 //     équipe PARTAGÉS : un corps libéré les détache avant Player.dispose (js/jeu/avatars.js libererCorps).
 // Une équipe nulle (chacun pour soi, mannequins sans camp) : la tenue d'origine, sans brassard.
 import * as THREE from 'three';
@@ -121,7 +121,8 @@ export function teinteEquipe(player, equipe) {
   }
   player.brassards = L;
 }
-// les brassards détachés (leur géométrie et leur matériau restent : partagés) et la tenue rendue à l'origine
+// les brassards détachés (leur géométrie et leur matériau restent : partagés) ; la tenue, elle, est rendue à l'origine
+// par teinteEquipe(player, null)
 export function retirerTeinte(player) {
   if (!player || !player.brassards) return;
   for (const b of player.brassards) if (b.parent) b.parent.remove(b);

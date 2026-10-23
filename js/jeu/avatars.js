@@ -41,7 +41,7 @@ export const FICHE_HAYTHEM = { id: 'haythem', nom: 'Haythem', height: HAYTHEM.he
   gabarit: 'A', model: HAYTHEM.model, color1: HAYTHEM.color1, color2: HAYTHEM.color2, skin: HAYTHEM.skin };
 
 // LES AVATARS PRÊTS de la partie (preparerAvatars) : les fiches qu'un corps peut porter, dans l'ordre des amis cochés
-const PRETS = { fiches: [FICHE_HAYTHEM], modeles: new Set([FICHE_HAYTHEM.model]), mesures: { ms: 0, sondes: 0, onLoad: 0 } };
+const PRETS = { fiches: [FICHE_HAYTHEM], modeles: new Set([FICHE_HAYTHEM.model]), mesures: { ms: 0, sondes: 0 } };
 const attendre = (s) => new Promise((r) => setTimeout(r, s * 1000));
 // le plafond d'avatars DISTINCTS (≈ 23 Mo de textures chacun en tel/)
 export const plafondAvatars = () => (TELEPHONE ? LIMITES.tel.avatars : LIMITES.pc.avatars);

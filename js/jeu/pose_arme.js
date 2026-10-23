@@ -122,7 +122,7 @@ function etatPose(acteur) {
 }
 
 // le creux de la paume d'une main (monde) : la mesure des « mains sur les prises »
-const _hw = new THREE.Vector3(), _hm = new THREE.Vector3(), _hf = new THREE.Vector3(), _hn = new THREE.Vector3();
+const _hw = new THREE.Vector3(), _hm = new THREE.Vector3(), _hf = new THREE.Vector3(), _hn = new THREE.Vector3(), _mn = new THREE.Vector3();
 export function priseMain(A, cote, e, out) {
   const B = A.bones;
   B[cote + 'Hand'].getWorldPosition(_hw);
@@ -136,9 +136,9 @@ export function priseMain(A, cote, e, out) {
 function mainSur(A, cote, prise, fd, nd, pole, plis, k, e) {
   const B = A.bones;
   const L = _hw.setFromMatrixPosition(B[cote + 'Hand'].matrixWorld).distanceTo(_hm.setFromMatrixPosition(B[cote + 'HandMiddle1'].matrixWorld));
-  _fd.copy(fd).normalize(); _nd.copy(nd).addScaledVector(_fd, -nd.dot(_fd)).normalize();
-  _E.copy(prise).addScaledVector(_fd, -POSE_3E.prise.doigts * L).addScaledVector(_nd, -POSE_3E.prise.paume * e);
-  ikBrasRapide(A, cote, _E, _fd, _nd, pole);
+  _fd.copy(fd).normalize(); _mn.copy(nd).addScaledVector(_fd, -_mn.dot(_fd)).normalize();
+  _E.copy(prise).addScaledVector(_fd, -POSE_3E.prise.doigts * L).addScaledVector(_mn, -POSE_3E.prise.paume * e);
+  ikBrasRapide(A, cote, _E, _fd, _mn, pole);
   if (plis) A.plierDoigts(cote, plis, k);
 }
 
@@ -360,7 +360,7 @@ export function poserArme(acteur, dt) {
   _nd.copy(_x).negate();
   _pole.copy(_b).addScaledVector(_r, 0.35).addScaledVector(_u, -0.55).addScaledVector(_f, -0.1);
   const recharge = S.recharge > 0 ? lisse(S.recharge) : 0;
-  mainSur(A, 'Right', _a, _fd, _nd.clone(), _pole, [0.9, 1.1, 0.8], 1, e);
+  mainSur(A, 'Right', _a, _fd, _nd, _pole, [0.9, 1.1, 0.8], 1, e);
   // main gauche : le garde-main (fusils) ou la main droite (pistolet) ; à la recharge, le chargeur puis la ceinture
   _b.setFromMatrixPosition(B.LeftArm.matrixWorld);
   const mg = rep('mainG', _mg) || _mg.copy(_G);
@@ -390,7 +390,7 @@ export function poserArme(acteur, dt) {
     }
   }
   _pole.copy(_b).addScaledVector(_r, -0.25).addScaledVector(_u, -0.6).addScaledVector(_f, 0.05);
-  mainSur(A, 'Left', mg, _fd, _nd.clone(), _pole, fusil ? [0.8, 1.0, 0.7] : [0.9, 1.0, 0.8], 1, e);
+  mainSur(A, 'Left', mg, _fd, _nd, _pole, fusil ? [0.8, 1.0, 0.7] : [0.9, 1.0, 0.8], 1, e);
   // ---- 5. la bouche
   const bo = rep('bouche', _P);
   if (bo) { const o = acteur.aff.bouche; o.x = bo.x; o.y = bo.y; o.z = bo.z; }
