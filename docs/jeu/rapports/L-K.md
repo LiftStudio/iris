@@ -5,19 +5,14 @@ Branche `lot/L-K` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-K`, depuis `socle
 
 ## Où j'en suis
 
-**FINI** (23/10, 10:10) — le lot est construit, joué et vérifié ; les six points de la définition de fini tenus :
+**RELECTURE EN COURS** (23/10, relecteur sévère, à partir de 10:16 ; jeton_3 tenu depuis 10:16:18) — commits
+`L-K relecture : …` sur `lot/L-K`. Fait : relu la spec (§§ 3.9, 4.1, 4.5.13, 4.6, 4.7, 5.1-5.3, 5.5.8), tout le diff
+`socle...lot/L-K`, rejoué L-K (16 / 16 avant et après les corrections), joué au 1er et au RDC en prop et en chasseur ;
+corrigé quatre défauts de jeu et cinq tests (section « Relecture » ci-dessous). Reste : S0 sur la branche, `?tel=1`, le
+rapport final, onglet, serveur et jeton. Un repreneur relance `?test=1&rapport=1&lot=L-K` puis `lot=S0` sur 8138.
 
-- (a) `?test=1&rapport=1&lot=L-K` : **16 / 16**, 0 signalé (qualité haute, 69 s) — commit b91237d ;
-- (b) `?test=1&rapport=1&lot=S0` sur `lot/L-K` : **29 / 29** (les deux derniers passages, de suite ; voir Doutes : S0 · 8
-  a échoué 4 fois sur 6, sous deux formes, et passe rejoué seul) ;
-- (c) `python -I tools/verifier_proprietaires.py lot/L-K` : « OK 12 fichiers » ;
-- (d) commits `L-K : …` avec la ligne `Co-Authored-By` ;
-- (e) ce rapport ;
-- (f) onglet fermé, serveur 8138 arrêté, jeton rendu (jeton_3, pris à 09:27:00 dans la file normale, rendu à 10:09:38 —
-  la règle des 45 min n'a pas servi).
-
-Joué pour de vrai (prop hunt au 1er, Haythem prop puis chasseur) : voir « Photos regardées ». Un successeur n'a rien à
-reprendre ici ; ce qui reste est chez d'autres lots (Demandes).
+(Le constructeur avait écrit, 23/10 10:10 : FINI — L-K 16 / 16, S0 29 / 29 sur la branche, propriétaires OK, joué ; commit
+aa76798.)
 
 ## Fait
 
