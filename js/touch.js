@@ -36,6 +36,7 @@
 import { TELEPHONE } from './appareil.js';
 import { settings, entree } from './settings.js';
 import { facteurStick, etatAide } from './jeu/assistance_visee.js';
+import { ARMES } from './jeu/armes.js';
 
 // un écran tactile dont le pointeur principal est grossier (la détection d'origine)
 const ECRAN_TACTILE = (typeof window !== 'undefined') && (('ontouchstart' in window) || navigator.maxTouchPoints > 0)
@@ -357,7 +358,9 @@ export class TouchControls {
     if (a.role === 'chasseur' && ph === 'cachette') return { v, stick: false };
     const A = a.arsenal, D = (A && A.dotation) || {}, chasseur = a.role === 'chasseur';
     v.tir = ['tir', 'TIR']; v.viser = ['visee', 'VISER']; v.jsaut = ['jump', 'SAUT']; v.accr = ['accroupi', 'ACCROUPI'];
-    if (A) { v.rech = ['recharger', 'RECHARGER']; v.arme = ['armeSuiv', 'ARME']; }
+    // (ARME porte le nom court de l'arme qu'il sort : « P-17 », « FA-24 »…)
+    const autre = A && A.arme && D.principale ? (A.arme.id === D.principale ? D.secondaire : D.principale) : null;
+    if (A) { v.rech = ['recharger', 'RECHARGER']; v.arme = ['armeSuiv', autre && ARMES[autre] ? ARMES[autre].nom.split(' «')[0] : 'ARME']; }
     if (A && (D.letale || A.letales > 0)) v.gren = ['letale', 'GRENADE', A.letales];
     if (A && (D.tactique || A.tactiques > 0)) v.tact = ['tactique', 'FLASH', A.tactiques];
     if (!chasseur && D.couteau !== false) v.cout = ['couteau', 'COUTEAU'];
