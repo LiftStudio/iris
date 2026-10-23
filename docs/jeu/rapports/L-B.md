@@ -5,11 +5,11 @@ Branche `lot/L-B` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-B`), partie de `s
 
 ## Où j'en suis
 
-**PRESQUE FINI (23/10, 04:52) — reste à rejouer `&rapport=1&lot=L-B` après 754a71d (les sauts sous linteaux du critère 3
-mis en fonction, `sautsPortes`, pour le test « À F2 » des 20 portes ; aucun code du jeu changé), jeton attendu.** Avant
-754a71d, les 19 critères passaient au navigateur (`&rapport=1&lot=L-B` : `ok`, 19/19, aussi en profil
+**FINI (23/10, 04:58)** — les 19 critères passent au navigateur (`&rapport=1&lot=L-B` : `ok`, 19/19, aussi en profil
 téléphone `&tel=1`), `&rapport=1&lot=S0` passe ENCORE sur la branche (29/29), `verifier_proprietaires` passe ; onglet et
-serveur fermés, jeton rendu. Restent les 5 tests « À F2 » (`apresFusion`, joués sous `&fusion=1` à l'intégration).
+serveur fermés, jeton rendu. Rejoué après le dernier changement de test (754a71d) : `&rapport=1&lot=L-B` → `ok`, 19/19,
+20 708 ms. Restent les 5 tests « À F2 » (`apresFusion`, sous `&fusion=1` à l'intégration ; sur la branche, celui des 20
+portes tourne et ne trouve que 16 portes — 40/40 passages —, comme attendu sans les tables de L-M).
 
 Pour un repreneur : serveur `python serve.py 8132` dans l'arbre, prendre un jeton (`mkdir …/_navigateur/jeton_N`), ouvrir
 `http://127.0.0.1:8132/?test=1`, puis dans la console `await __jeu.chargerTests('L-B'); await __jeu.tests('L-B', '7 ')` (le
