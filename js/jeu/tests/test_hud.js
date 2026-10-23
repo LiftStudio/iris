@@ -199,8 +199,11 @@ export default function (jeu) {
     try {
       const arme = (ch, res_ = 90, etatA = 'pret') => ({ id: 'fa24', nom: 'FA-24 « Faucon »', chargeur: ch, reserve: res_, etat: etatA, k: 0 });
       A.hud.maj(0, etat(p, { arme: arme(30) }));
-      const M = A.hud.eMun, b = M.getBoundingClientRect();
-      res.push([`munitions en bas à droite (${Math.round(b.right)}, ${Math.round(b.bottom)} / ${innerWidth} × ${innerHeight})`, visible(M) && b.right > innerWidth * 0.75 && b.bottom > innerHeight * 0.7]);
+      // (au doigt, à gauche de la grappe de tir : --tc-droite, posée par js/touch.js)
+      const M = A.hud.eMun, b = M.getBoundingClientRect(), doigt = document.body.classList.contains('touch');
+      const droite = doigt ? innerWidth - (parseFloat(document.body.style.getPropertyValue('--tc-droite')) || 0) - 8 : innerWidth;
+      res.push([`munitions en bas à droite${doigt ? ', à gauche de la grappe de tir' : ''} (${Math.round(b.right)}, ${Math.round(b.bottom)} / ${innerWidth} × ${innerHeight})`,
+        visible(M) && b.bottom > innerHeight * 0.7 && (doigt ? egalA(b.right, droite, 26) : b.right > innerWidth * 0.75)]);
       res.push([`« ${A.hud.eMunCh.textContent} / ${A.hud.eMunRes.textContent} »`, A.hud.eMunCh.textContent === '30' && A.hud.eMunRes.textContent === '90']);
       A.hud.maj(0, etat(p, { arme: arme(9) })); const a9 = A.hud.eMunAide.textContent;
       A.hud.maj(0, etat(p, { arme: arme(8) })); const a8 = A.hud.eMunAide.textContent;
@@ -353,7 +356,7 @@ export default function (jeu) {
         { id: 'C', x: L.pos.x, y: 3.5, z: L.pos.z - 30, r: 3, possesseur: null, capture: { equipe: 'A', k: 0.4 } }];
       A.hud.maj(0, etat(p, { points }));
       const D = A.hud.eDom, b = D.getBoundingClientRect(), P = A.hud.eDomP;
-      res.push([`en haut au centre (${Math.round((b.left + b.right) / 2)} / ${innerWidth / 2}, haut ${Math.round(b.top)})`, visible(D) && egalA((b.left + b.right) / 2, innerWidth / 2, 4) && b.top < innerHeight * 0.2]);
+      res.push([`en haut au centre (${Math.round((b.left + b.right) / 2)} / ${innerWidth / 2}, haut ${Math.round(b.top)})`, visible(D) && egalA((b.left + b.right) / 2, innerWidth / 2, 4) && b.top < innerHeight * 0.3]);
       res.push([`lettres ${P.map((e) => e.textContent).join('')}`, P.map((e) => e.textContent).join('') === 'ABC']);
       const cB = getComputedStyle(P[1].querySelector('b')).color, cA = getComputedStyle(P[0].querySelector('b')).color;
       res.push([`couleurs : A ${cA}, B ${cB}`, cA === 'rgb(61, 139, 255)' && cB === 'rgb(255, 138, 31)']);

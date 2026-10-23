@@ -240,8 +240,9 @@ export class HudJeu {
     S('capture', (e) => this._captures.set(e.point, { t0: this.t, equipe: e.equipe, etat: e.etat }));
     S('apparition', (e) => { const L = partie.local; if (L && e.a === L.id) { this._infoMort = null; this._arcs.length = 0; } });
     S('soin', (e) => { const L = partie.local; if (L && e.a === L.id && e.pv >= 1) this._soins = { t0: this.t, pv: (this._soins && this.t - this._soins.t0 < 1 ? this._soins.pv : 0) + e.pv }; });
-    // (l'annonce posée avant le branchement : la présentation la remplace, voir _majAnnonce)
-    if (partie.hud && partie.hud.annonce) this._pousserAnnonce(partie.hud.annonce.texte, partie.hud.annonce.cls);
+    // (l'annonce posée avant le branchement — par `peupler` — : celle d'une partie sans présentation ; sinon la présentation
+    // la dit, voir _majAnnonce)
+    if (partie.hud && partie.hud.annonce && partie.phase !== 'presentation') this._pousserAnnonce(partie.hud.annonce.texte, partie.hud.annonce.cls);
     this.cadre.oublier();
     cacher(this.el, false);
   }

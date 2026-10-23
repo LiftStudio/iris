@@ -373,13 +373,18 @@ body:not(.combat) #voile-flash, body:not(.combat) #voile-cachette { display: non
   .vc-carte canvas { max-height: 38vh; } .vc-bas p { font-size: 11px; line-height: 1.3; margin-bottom: 2px; }
   .vc-manche { display: none; }
 }
-/* au doigt (js/touch.js : body.touch ; --tc-haut sous la rangée du haut, --tc-droite la grappe de tir) : la mini-carte en
-   haut à gauche sous les boutons, la vie dessous ; le score au centre ; les munitions à gauche de la grappe */
-body.touch .hud-carte { bottom: auto; top: calc(var(--tc-haut, 64px) + 4px); }
-body.touch .hj-vie { bottom: auto; top: calc(var(--tc-haut, 64px) + var(--cartT, 160) * 1px + 26px); }
-body.touch .hj-score { left: 50%; transform: translateX(-50%); align-items: center; min-width: 0; }
-body.touch .hj-score .hj-eq { min-width: 170px; }
-body.touch .hj-dom { top: auto; bottom: calc(110px + var(--sa-b, 0px)); }
+/* au doigt (js/touch.js : body.touch ; --tc-haut sous la rangée du haut, --tc-droite la grappe de tir) : la vie juste sous
+   les boutons du haut, la mini-carte dessous (le joystick a le bas gauche) ; le score en une ligne au centre — SISR, chrono,
+   SLAM —, la domination dessous ; les munitions à gauche de la grappe de tir */
+body.touch .hud-carte { bottom: auto; top: calc(var(--tc-haut, 64px) + 12px); }
+body.touch .hj-vie { bottom: auto; top: calc(var(--tc-haut, 64px) + 1px); }
+body.touch .hj-score { left: 50%; transform: translateX(-50%); flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; min-width: 0; max-width: 46vw; gap: 4px 6px; }
+body.touch .hj-score .hj-eq { min-width: 0; width: 120px; grid-template-columns: 36px 1fr 26px; padding: 2px 6px; }
+body.touch .hj-score .hj-eq:nth-child(2) { order: 3; }
+body.touch .hj-score .hj-clock { order: 2; font-size: 22px; min-width: 52px; padding: 1px 6px 0; align-self: center; }
+body.touch .hj-score .hj-eq-v { font-size: 18px; }
+body.touch .hj-score-txt, body.touch .hj-manche { order: 4; flex-basis: 100%; text-align: center; }
+body.touch .hj-dom { top: calc(48px + var(--sa-t, 0px)); }
 body.touch .hj-mun { right: calc(var(--tc-droite, 278px) + 8px); }
 body.touch .hj-fil-l { top: calc(var(--tc-haut, 64px) + 4px); }
 body.touch .hp-scan { right: calc(var(--tc-droite, 278px) + 8px); }
