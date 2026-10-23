@@ -30,6 +30,7 @@ import { departs, pointsDe, piecesDe } from './apparitions.js';
 import { CerveauChasseur, CerveauCacheur, DIFFICULTES_PROP } from './cerveau_prop.js';
 import { typesDeguisables, viserMeuble, deguiser, retirerProp, toucherPoses, credibilite, typeDe } from './deguisements.js';
 import { MEUBLES } from '../registre_meubles.js';
+import * as Pilotage from './pilotage.js';
 import { CorpsProp } from './corps_prop.js';
 import { FICHES_BOTS, FICHE_HAYTHEM } from './avatars.js';
 import { PROVOCATIONS } from './sons_prop.js';
@@ -229,6 +230,10 @@ export class PartieProp extends Partie {
     const s2 = C.solEn(p.x, p.z, sol + 0.3);
     return C.libre(p.x, p.z, 0.3, sol) && Math.abs(s2 - y) <= 0.3 ? { x: p.x, y: s2, z: p.z } : null;
   }
+  // un point dans un passage d'une pièce à l'autre (à moins de 1,3 m de son centre, à son niveau) : un meuble posé là
+  // boucherait la porte (les 46 passages de carte_monde § 7 : `PASSAGES` du squelette de js/jeu/pilotage.js, lu s'il y est
+  // encore — L-D remplace l'errant par le graphe)
+  _dansUnPassage(q) { return (Pilotage.PASSAGES || []).some((P) => Math.hypot(P.x - q.x, P.z - q.z) < 1.3 && Math.abs(P.y - q.y) < 1.5); }
   // LES DÉPARTS DES PROPS : les lieux de la zone hors de la pièce des chasseurs, à tour de rôle d'une manche à l'autre,
   // espacés de 1,5 m (Haythem prend le premier : l'espace pause au −1, la pause orange au 1er)
   _lieuxProps(n) {
@@ -242,7 +247,7 @@ export class PartieProp extends Partie {
     for (let k = 0; out.length < n && k < base.length * OFF.length; k++) {
       const b = base[(k0 + k) % base.length], o = OFF[Math.floor(k / base.length)];
       const q = this._placer(b.x + o[0], b.y, b.z + o[1]);
-      if (!q || out.some((w) => Math.hypot(w.x - q.x, w.z - q.z) < 1.2)) continue;
+      if (!q || out.some((w) => Math.hypot(w.x - q.x, w.z - q.z) < 1.2) || this._dansUnPassage(q)) continue;
       out.push({ x: q.x, y: q.y, z: q.z, lacet: Math.atan2(-(dC.x - q.x), -(dC.z - q.z)) + Math.PI });
     }
     while (out.length < n) { const b = base[out.length % base.length]; out.push({ x: b.x, y: b.y, z: b.z, lacet: 0 }); }
