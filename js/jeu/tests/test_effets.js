@@ -469,7 +469,7 @@ export default function (jeu) {
       jeu.quitter('balade');
       // le stand : ses cibles (hud.cibles des règles) dessinées à leur place
       await jeu.lancer('stand', {}); await jeu.images(3);
-      const q = game.partie, H = q.hud.cibles || [], M = q.aff.effets.pools.cibles, v = new THREE.Vector3();
+      const q = game.partie, H = (q.hud.cibles || []).filter((c) => !c.mannequin), M = q.aff.effets.pools.cibles, v = new THREE.Vector3();
       let places = 0;
       for (let i = 0; i < H.length; i++) { M.getMatrixAt(i, m); v.setFromMatrixPosition(m); if (Math.hypot(v.x - H[i].x, v.y - H[i].y, v.z - H[i].z) < 0.01) places++; }
       res.push([`stand : ${places}/${H.length} cibles à leur place`, H.length > 0 && places === H.length]);

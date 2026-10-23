@@ -873,7 +873,8 @@ export class Effets {
     const L = Array.isArray(cibles) ? cibles : [];
     let n = 0;
     for (let k = 0; k < L.length && n < M.count; k++) {
-      const c = L[k]; if (!c || !Number.isFinite(c.x)) continue;
+      // (le mannequin du stand est un vrai corps, L-C : pas de carton pour lui)
+      const c = L[k]; if (!c || !Number.isFinite(c.x) || c.mannequin) continue;
       let s = this._cibAff.get(c.id);
       if (!s) { s = { k: c.touchee ? 0 : c.k ?? 1, b: 0, flash: 0 }; this._cibAff.set(c.id, s); }
       const but = c.touchee ? 0 : Math.max(0, Math.min(1, c.k ?? 1));
