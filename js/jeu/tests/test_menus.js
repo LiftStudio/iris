@@ -145,6 +145,9 @@ export default function (jeu) {
       const R = $('#reglage-jeu');
       const lignes = [...R.querySelectorAll('[data-ligne]')].map((l) => l.dataset.ligne);
       res.push([`lignes ${lignes.join(', ')}`, egal(lignes, ['habillage', 'mode', 'zone', 'effectifs', 'difficulte', 'limite', 'temps', 'classe', 'avatars'])]);
+      // (la fiche tient dans l'écran : LANCER visible sans faire défiler la page, le corps défile seul)
+      const lr = $('#reglage-jeu .rj-lancer').getBoundingClientRect(), br = $('#reglage-jeu .rj-boite').getBoundingClientRect();
+      res.push([`LANCER dans l’écran (${Math.round(lr.bottom)} ≤ ${innerHeight})`, lr.top >= 0 && lr.bottom <= innerHeight && br.bottom <= innerHeight + 1]);
       res.push(['habillage en tête, Airsoft par défaut', lignes[0] === 'habillage' && $('[data-champ="jeu.habillage"].on', R)?.dataset.v === '"airsoft"']);
       const btn = (ch, v) => R.querySelector(`[data-champ="${ch}"][data-v='${JSON.stringify(v)}']`);
       const modes = [...R.querySelectorAll('[data-champ="jeu.combat.mode"]')].map((b) => JSON.parse(b.dataset.v));
