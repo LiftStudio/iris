@@ -632,7 +632,10 @@ export default function (jeu) {
       A.hud.maj(0.1, etat(p));
       res.push([`« ${A.hud.eAlerte.textContent} » à la ligne d'alerte, annonces ${an0} → ${A.hud.annonces || 0}`, /qualité/i.test(A.hud.eAlerte.textContent) && (A.hud.annonces || 0) === an0 && !A.hud._technique]);
       p.annonce('GO !', 'go'); A.hud.maj(0.1, etat(p));
-      res.push([`une vraie annonce ensuite : « ${A.hud.eAnnonce.textContent} »`, A.hud.eAnnonce.textContent === 'GO !']);
+      // (F2 : avec le vrai stand de L-E, « ENTRAÎNEMENT LIBRE » est annoncé à l'entrée et passe d'abord — la file des annonces
+      // la montre avant « GO ! » : la vraie annonce doit être dans la FILE, pas à la ligne d'alerte)
+      const file = (A.hud._annonces || []).map((x) => x.texte);
+      res.push([`une vraie annonce ensuite : « ${A.hud.eAnnonce.textContent} » (file ${file.join(' / ')})`, A.hud.eAnnonce.textContent === 'GO !' || file.includes('GO !')]);
     } finally { rendre(); }
     return bilan(res, 'stand : ni fil ni « +100 » pour une silhouette, dégâts de l’arme, pas de chrono sans défi ; qualité automatique à la ligne d’alerte');
   });
