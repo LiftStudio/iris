@@ -36,7 +36,7 @@ const _o = new THREE.Vector3(), _L = [];
 const _etats = new WeakMap();
 const etat = (p) => {
   let S = _etats.get(p);
-  if (!S) { S = { viseeAvant: false, aimant: null, suivi: null, tirSur: -1, tirT: 0, perduT: 0, tirAuto: false, bat: false, cible: null }; _etats.set(p, S); }
+  if (!S) { S = { viseeAvant: false, aimant: null, suivi: null, tirSur: -1, tirT: 0, perduT: 0, tirAuto: false, bat: false }; _etats.set(p, S); }
   return S;
 };
 const R = () => (reglages.controls && reglages.controls.fps) || {};
@@ -80,6 +80,8 @@ function chercher(p, a, lacet, tangage, portee, affiche, garde) {
   let mieux = null;
   for (const b of p.acteurs) {
     if (b === a || !b.vivant || !b.corps || b.prop || !p.ennemis(a, b)) continue;
+    // (relecture : un ennemi loin n'est même pas mesuré — ni capsules ni objets neufs, trois fois par pas à 120 Hz)
+    const q = b.corps.pos; if (Math.abs(q.x - o.x) > portee + 1 || Math.abs(q.z - o.z) > portee + 1) continue;
     const B = buste(b, {}); if (!B) continue;
     if (affiche && b.corps.posAff) { B.x += b.corps.posAff.x - b.corps.pos.x; B.z += b.corps.posAff.z - b.corps.pos.z; }
     const vx = B.x - o.x, vy = B.y - o.y, vz = B.z - o.z, d = Math.hypot(vx, vy, vz);
@@ -154,7 +156,6 @@ export function corriger(cmd, game, dt) {
   S.viseeAvant = visee;
   // 2. LE SUIVI : le regard bouge et une cible est dans le cône du ralentissement → + 45 % de sa vitesse angulaire
   const c = aide ? chercher(p, a, l, t, AIDE.ralenti.portee, false, gardeRalenti) : null;
-  S.cible = c ? c.id : null;
   if (c && S.suivi && S.suivi.id === c.id && regardBouge(game)) {
     l += AIDE.suivi.part * enrouler(c.l - S.suivi.l);
     t += AIDE.suivi.part * (c.t - S.suivi.t);
