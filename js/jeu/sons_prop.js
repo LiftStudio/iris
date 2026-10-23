@@ -312,7 +312,7 @@ export class SonsProp {
       if (dalle) gain *= D.dalle.gain;
       if (!S.spatial) {
         const r = D.distance.reference;
-        gain *= Math.min(1, r / (r + D.distance.attenuation * Math.max(0, d - r)));
+        gain *= Math.min(1, r / (r + D.distance.attenuation * (Math.min(D.distance.max, Math.max(r, d)) - r)));   // (PannerNode 'inverse', maxDistance 60)
         const dh = Math.hypot(x - ec.x, z - ec.z);
         if (dh > 0.3) pan = Math.max(-1, Math.min(1, ((x - ec.x) * Math.cos(ec.lacet) - (z - ec.z) * Math.sin(ec.lacet)) / dh)) * 0.8;
       }
