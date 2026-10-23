@@ -36,7 +36,11 @@ import { MEUBLES } from '../registre_meubles.js';
 export const REGLAGES_EFFETS = {
   pools: TELEPHONE ? { impacts: 96, traceurs: 16, douilles: 24, eclairs: 8, etincelles: 48, explosion: 40, grenades: 6, anneaux: 9, cibles: 12 }
     : { impacts: 256, traceurs: 32, douilles: 64, eclairs: 16, etincelles: 128, explosion: 96, grenades: 8, anneaux: 9, cibles: 12 },
-  impact: { trou: 0.09, peinture: [0.12, 0.19], felure: 0.26, brulure: 1.3, vie: 25, effacement: 1, decalage: 0.002, hautMin: 1.8 },
+  impact: { trou: 0.09, peinture: [0.12, 0.19], felure: 0.26, brulure: 1.3, vie: 25, effacement: 1, decalage: 0.002, hautMin: 1.8,
+    // (F2, demande de L-H : un PAN DE MUR bas — l'allège sous une fenêtre, 1,75 m ; le linteau au-dessus d'une porte, de 2,10 à
+    // 3,25 m — est mince : une forme de ≥ 1 m de haut, de ≤ 0,45 m d'épaisseur et ≥ 0,6 m de long, qui n'est pas un meuble du
+    // registre, prend ses trous comme le mur voisin)
+    murMince: { haut: 1.0, ep: 0.45, long: 0.6 } },
   traceur: { vitesse: 400, longueur: 2.5, largeur: 0.016, parMetre: 0.0016, uneSur: 3, portee: 120 },
   douille: { droite: 0.12, bas: 0.08, avant: 0.35, vitesse: [1.8, 1.2, 0.3], restitution: 0.3, rebonds: 2, vie: 3, distance: 15 },
   // (tailles relevées au navigateur le 23/10 : à 3 m, un éclair de 14 cm vu de face n'était qu'un point)
@@ -972,7 +976,12 @@ export function genreGrenade(e, quoi) { return e.arme === 'frag' || e.arme === '
 // (il bouge : `mobile`, `vantail`), ni une forme éteinte, ni une barrière invisible (`limite`)
 export function decalquable(f) {
   if (!f || f.off || f.mobile || f.vantail || f.porte || f.limite !== undefined && f.limite !== null && f.limite !== false) return false;
-  return f.y1 - f.y0 > REGLAGES_EFFETS.impact.hautMin || f.joueur === false;
+  if (f.y1 - f.y0 > REGLAGES_EFFETS.impact.hautMin || f.joueur === false) return true;
+  // (F2 : le pan de mur bas et mince — allège, linteau —, jamais un meuble du registre)
+  const W = REGLAGES_EFFETS.impact.murMince;
+  if (f.y1 - f.y0 < W.haut || (MEUBLES.parForme && MEUBLES.parForme.has(f)) || f.t === 'c') return false;
+  const lx = f.t === 'b' ? f.x1 - f.x0 : 2 * f.hx, lz = f.t === 'b' ? f.z1 - f.z0 : 2 * f.hz;
+  return Math.min(lx, lz) <= W.ep && Math.max(lx, lz) >= W.long;
 }
 // la forme dont la surface passe par le point (à 6 cm près) et sa normale sortante — pour un impact dont la balistique
 // n'a pas dit la forme (le squelette du socle) ; lu hors de toute autre requête au monde solide

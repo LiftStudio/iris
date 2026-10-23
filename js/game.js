@@ -198,7 +198,9 @@ export class Game {
       });
       const pret = this._compilerTout(o, true);
       const fx = this.fx;
-      const R = fx && fx.auto && fx.compilerTout && fx._etatRepli?.();
+      // (F2 : même qualité automatique coupée — figée par un test, ou réglée à la main : la variante de repli d'un corps qui
+      // arrive en pleine partie se compilait sinon plus tard, à sa première baisse ou à une préchauffe, image figée comprise)
+      const R = fx && fx.compilerTout && fx._etatRepli?.();
       const repli = R ? fx.avecRepli(o, (x) => this._compilerTout(x, true)) : null;
       if (repli) {
         Promise.all([pret, repli]).then(() => {

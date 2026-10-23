@@ -610,6 +610,7 @@ export class SonsJeu {
       }
       case 'impact': {
         if ((e.plomb | 0) > 1) return;                 // (une gerbe de plombs : deux impacts s'entendent, pas huit)
+        if (e.arme === 'couteau') return;              // (F2 : le coup de couteau sur le décor — 'couteau' le joue, pas une balle)
         const peint = this._gaz(), o = { gain: G.impact * (e.plomb ? 0.5 : 1), rayon: R.impact, retard: true, decalage: dec, hauteurOcc: 0.1 };
         const m = peint ? 'peinture' : e.mat === 'sol' || e.mat === 'meuble' || e.mat === 'vitre' ? e.mat : 'mur';
         const son = this.banque && this.banque.get(`imp:${m}:${Math.floor(Math.random() * (PRISES - 1))}`);
@@ -633,8 +634,12 @@ export class SonsJeu {
         // (les trois phases du § 4.6 ; une recharge ANNULÉE ou INTERROMPUE — des phases de plus chez L-A : le sprint, le
         // tir au FP-12 — ne joue rien : relecture du 23/10, elle jouait le « clac » du chargeur en place ou la pompe)
         const a = P.acteurParId(e.a); if (!a || !a.arsenal || !a.arsenal.arme) return;
-        if (e.phase !== 'debut' && e.phase !== 'insere' && e.phase !== 'fin') return;
-        const id = a.arsenal.arme.id, f = e.phase === 'debut' ? RECETTES.rechargeDebut(B, id) : e.phase === 'insere' ? RECETTES.rechargeInsere(B, id) : RECETTES.rechargeFin(B, id, e.tactique);
+        // (F2 : et la POMPE du FP-12 à vide, sa phase à elle — l'arsenal l'émet avec la dernière cartouche ; la fin, alors, ne
+        // la rejoue pas : le geste de retour)
+        if (e.phase !== 'debut' && e.phase !== 'insere' && e.phase !== 'fin' && e.phase !== 'pompe') return;
+        const id = a.arsenal.arme.id;
+        const f = e.phase === 'debut' ? RECETTES.rechargeDebut(B, id) : e.phase === 'insere' ? RECETTES.rechargeInsere(B, id)
+          : e.phase === 'pompe' ? RECETTES.rechargeFin(B, id, false) : RECETTES.rechargeFin(B, id, e.tactique || id === 'fp12');
         this._corps(a, f, lui(e.a) ? G.rechargeLocal : G.recharge, R.recharge, dec, 1.0);
         return;
       }
