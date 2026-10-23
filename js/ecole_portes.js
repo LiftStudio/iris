@@ -21,6 +21,8 @@
 //   'auto'    : la porte S'OUVRE TOUTE SEULE devant Haythem (entrée, passage, escalier) et se referme derrière lui : ses
 //               vantaux tournent sur leurs gonds (0,35 s), toujours du côté opposé à celui d'où il arrive ; fermée, elle
 //               est un mur (une forme MOBILE du monde solide, js/collisions.js : `off` quand elle s'ouvre).
+//               (En partie — lot L-M du jeu, 23/10 —, c'est la partie qui les pilote, pour TOUS les acteurs : `pilotees`,
+//               `forcer`, `liste`, `instantane` / `restaurer`, en bas de la classe ; js/jeu/monde_partie.js.)
 // Le repère d'une porte : x le long du mur (l'ouverture va de -l/2 à +l/2), z la normale du mur (`cote` +1 ou -1 : la
 // face où se pose le vantail fermé), y vers le haut. `rot` : la rotation du mur (comme poserMur, js/carte_ecole.js).
 import * as THREE from 'three';
@@ -295,15 +297,25 @@ function texVitrophanie(dos = false) {
 // =====================================================================
 //  LES PORTES
 // =====================================================================
-const ANGLE_AUTO = 1.45;        // rad : l'ouverture d'une porte automatique (83°)
-const RAYON_AUTO = 2.1;         // m : à cette distance de son centre, la porte s'ouvre
-const DUREE = 0.38;             // s : le temps d'ouvrir (de refermer : 1,6 fois plus)
+export const ANGLE_AUTO = 1.45; // rad : l'ouverture d'une porte automatique (83°)
+export const RAYON_AUTO = 2.1;  // m : à cette distance de son centre, la porte s'ouvre
+export const DUREE = 0.38;      // s : le temps d'ouvrir (de refermer : 1,6 fois plus)
+// (23/10, lot L-M du jeu : les modèles VITRÉS — leur forme fermée porte `vitre: true`, la balle la traverse à 80 % ; la
+// porte bleue de la David Clark est un dépoli dans un cadre d'aluminium : vitrée elle aussi, et dépolie en partie,
+// js/jeu/monde_partie.js TABLE_DEPOLIS)
+const VITREES = new Set(['vitree', 'vitree2', 'bleue']);
 
 export class Portes {
   constructor(C, M, decor) {
     this.C = C; this.M = M; this.decor = decor;
     this.auto = [];               // les portes qui s'ouvrent toutes seules (maj)
     this._autocollant = null; this._notices = null;
+    // (23/10, lot L-M du jeu) TOUTES les portes, automatiques ou non (liste) : chacune sous un NOM STABLE, celui des
+    // tables de js/jeu/monde_partie.js (le `nom` de la carte, à défaut le nom du groupe ; un doublon prend « (2) ») ; et
+    // `pilotees` : vrai en partie, `maj` rend alors la main tout de suite — la partie anime elle-même ses portes
+    // automatiques, dans son pas (Partie.pas, étape 5 : déterministe, pour tous les acteurs)
+    this.toutes = []; this._noms = new Map();
+    this.pilotees = false;
   }
 
   // Les matériaux d'affichettes, partagés
@@ -534,7 +546,8 @@ export class Portes {
 
     // LA FORME SOLIDE de l'ouverture fermée : la porte fermée est un mur
     const etat = o.etat || 'fermee';
-    const forme = etat === 'ouverte' ? null : this._formePorte(o.cx, o.cz, o.rot, l, ep, h, base, etat === 'auto');
+    const vitree = VITREES.has(o.modele);
+    const forme = etat === 'ouverte' ? null : this._formePorte(o.cx, o.cz, o.rot, l, ep, h, base, etat === 'auto', vitree);
     if (etat === 'ouverte') {
       const A = o.angle ?? 1.65, ouverts = o.ouverts || vantaux.map(() => true);
       vantaux.forEach((v, i) => { if (ouverts[i]) v.g.rotation.y = -v.s * cote * A; });
@@ -549,21 +562,31 @@ export class Portes {
         C.ajouterBoiteOrientee((a.x + b.x) / 2, (a.z + b.z) / 2, w / 2, 0.035, Math.atan2(b.z - a.z, b.x - a.x), { y0: base, y1: base + h });
       });
     }
+    // (le nom stable, et la fiche de la porte dans `toutes` — pour une automatique, c'est l'objet même de `auto`)
+    let nom = o.nom || g.name;
+    const n = (this._noms.get(nom) || 0) + 1; this._noms.set(nom, n);
+    if (n > 1) nom += ` (${n})`;
+    const P = { g, vantaux, forme, cx: o.cx, cz: o.cz, rot: o.rot, cote, k: etat === 'ouverte' ? 1 : 0, sens: cote, nx: Math.sin(o.rot), nz: Math.cos(o.rot), libre: o.libre || null, base, h, l };
+    P.nom = nom; P.etat = etat; P.modele = o.modele; P.vitree = vitree; P.double = double;
+    this.toutes.push(P);
     if (etat === 'auto') {
       nePasFusionner(g);
       // (un vantail qui tourne ne projette pas d'ombre : la carte d'ombre du décor est gardée en cache, js/ombre_cache.js,
       // et sous une lumière presque d'aplomb l'ombre d'une porte n'est qu'un trait)
       for (const v of vantaux) v.g.traverse((x) => { if (x.isMesh) x.castShadow = false; });
-      this.auto.push({ g, vantaux, forme, cx: o.cx, cz: o.cz, rot: o.rot, cote, k: 0, sens: cote, nx: Math.sin(o.rot), nz: Math.cos(o.rot), libre: o.libre || null, base, h, l });
+      this.auto.push(P);
     }
     this.decor.add(g);
     return { g, vantaux };
   }
-  // (`mobile` : la forme d'une porte automatique — la lumière cuite au sol passe au travers, js/ecole_lumieres.js)
-  _formePorte(cx, cz, rot, l, ep, h, base = 0, mobile = false) {
+  // (`mobile` : la forme d'une porte automatique — la lumière cuite au sol passe au travers, js/ecole_lumieres.js ;
+  // `vitree` : un modèle vitré, `vitre: true` — rien ne change en balade : collisions.js ne le lit pas, et la lumière
+  // cuite comme la glace de l'accueil sautent déjà les formes mobiles, seules à être vitrées)
+  _formePorte(cx, cz, rot, l, ep, h, base = 0, mobile = false, vitree = false) {
     const ux = Math.cos(rot), uz = -Math.sin(rot);
     const ex = Math.abs(ux) * l / 2 + Math.abs(uz) * ep / 2, ez = Math.abs(uz) * l / 2 + Math.abs(ux) * ep / 2;
     const o = { y0: base, y1: base + h, mobile };
+    if (vitree) o.vitre = true;
     if (Math.abs(ux) > 0.999 || Math.abs(uz) > 0.999) return this.C.ajouterBoite(cx - ex, cz - ez, cx + ex, cz + ez, o);
     return this.C.ajouterBoiteOrientee(cx, cz, l / 2, ep / 2, Math.atan2(uz, ux), o);
   }
@@ -580,6 +603,7 @@ export class Portes {
   // la hauteur de l'ouverture ; sinon les portes du -1 s'ouvraient sous les pas du joueur du rez-de-chaussée, et
   // inversement. `y`, `camY` : les pieds de Haythem et la caméra ; par défaut, le rez-de-chaussée)
   maj(dt, x, z, camX, camZ, y = 0, camY = 1.5) {
+    if (this.pilotees) return;
     for (const P of this.auto) {
       const dx = x - P.cx, dz = z - P.cz, d = Math.hypot(dx, dz);
       const dc = Math.hypot(camX - P.cx, camZ - P.cz);
@@ -607,6 +631,35 @@ export class Portes {
       for (const v of P.vantaux) v.g.rotation.y = -v.s * P.sens * ANGLE_AUTO * e;
       if (P.forme) P.forme.off = P.k > 0.02;
     }
+  }
+
+  // ---------------------------------------------------------------- en partie (23/10, lot L-M du jeu)
+  // TOUTES les portes (automatiques ou non), sous leur nom stable : { nom, etat ('fermee' | 'ouverte' | 'auto'), modele,
+  // vitree, double, cx, cz, rot, cote, nx, nz, base, h, l, libre, g, vantaux, forme, k, sens }
+  liste() { return this.toutes; }
+  // UNE PORTE AUTOMATIQUE POSÉE à l'ouverture `k` (0 fermée, 1 ouverte), du côté `P.sens` : ses vantaux comme `maj` les pose
+  // à ce `k`, sa forme éteinte au-delà de la moitié (la partie ne force que 0 ou 1 ; js/jeu/monde_partie.js pose elle-même
+  // les ouvertures intermédiaires de son pas)
+  forcer(P, k) {
+    P.k = k;
+    const e = k * k * (3 - 2 * k);
+    for (const v of P.vantaux) v.g.rotation.y = -v.s * P.sens * ANGLE_AUTO * e;
+    if (P.forme) P.forme.off = k > 0.5;
+  }
+  // L'ÉTAT DES PORTES AUTOMATIQUES tel quel (ouverture, côté, forme, angle de chaque vantail) et le drapeau `pilotees` : pris
+  // à l'entrée d'une partie, rendu à la sortie — l'école telle qu'en balade, au bit près
+  instantane() {
+    return { pilotees: this.pilotees, portes: this.auto.map((P) => ({ k: P.k, sens: P.sens, off: P.forme ? P.forme.off : null, rot: P.vantaux.map((v) => v.g.rotation.y) })) };
+  }
+  restaurer(i) {
+    if (!i) return;
+    this.pilotees = i.pilotees;
+    i.portes.forEach((s, n) => {
+      const P = this.auto[n]; if (!P) return;
+      P.k = s.k; P.sens = s.sens;
+      if (P.forme) P.forme.off = s.off;
+      P.vantaux.forEach((v, j) => { v.g.rotation.y = s.rot[j]; });
+    });
   }
 }
 
