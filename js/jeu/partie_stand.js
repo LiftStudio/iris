@@ -36,7 +36,10 @@ const COULOIRS = [{ x: LX, z: 2.85 }, { x: LX, z: 3.75 }, { x: LX, z: 5.8 }];
 // couloir en biais — depuis la ligne, aucune ne cache celle d'un autre couloir ; les neuf places mesurées restent valables)
 const POSES = [[0, 8, 5.3, 0, 2.85], [0, 15, 12.3, 0, 2.85],
   [1, 15, 12.3, -0.12, 3.75], [1, 25, 22.3, -0.12, 3.75],
-  [2, 8, 5.3, -0.12, 6.056], [2, 25, 22.3, -0.12, 6.6]];
+  [2, 8, 5.3, -0.12, 6.056], [2, 25, 22.3, -0.12, 6.8]];
+// (F2, 23/10 : la cible à 25 m du 3e couloir de z 6,6 à 6,8 — depuis la place de départ de la ligne, le segment œil → buste
+// passait au-dessus des vélos garés à 0,85 m de haut et la VRAIE balistique de L-A s'y arrêtait : jamais touchée aux réflexes ;
+// libre et vue du départ de z 6,70 à 6,95, prise dans les voitures d'en face à 7,0)
 export const STAND = {
   ligne: { x: LX, y: -0.12, z: 3.75, lacet: -PI / 2 },
   couloirs: COULOIRS,

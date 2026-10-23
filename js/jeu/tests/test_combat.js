@@ -551,6 +551,14 @@ export default function (jeu) {
         if (s.t < 0.999) F.push(`${c.distance} m couloir ${c.couloir} ${nom} : forme ${s.qui} à ${r2(s.t * d)} m`);
       }
       if (!C.libre(c.x, c.z, 0.3, yc)) F.push(`cible ${c.distance} m couloir ${c.couloir} dans une forme`);
+      // (F2 : et depuis la PLACE DE DÉPART de la ligne — les « réflexes » laissent 0,8 s, on n'a pas le temps de changer de
+      // couloir : avec la vraie balistique de L-A, les vélos garés arrêtaient le buste de la cible à 25 m du 3e couloir)
+      const S0 = STAND.ligne, y0 = C.solEn(S0.x, S0.z, 0.3) + 1.62;
+      for (const [nom, h] of [['buste', 0.75], ['tête', 1.6]]) {
+        const tx = c.x, ty = yc + h, tz = c.z, d = Math.hypot(tx - S0.x, ty - y0, tz - S0.z);
+        p.balistique.balle(S0.x, y0, S0.z, (tx - S0.x) / d, (ty - y0) / d, (tz - S0.z) / d, d + 0.5, out);
+        if (out.t < d - 0.02) F.push(`${c.distance} m couloir ${c.couloir} ${nom} depuis le départ : balle arrêtée à ${r2(out.t)} m`);
+      }
     }
     let err = null;
     try { jeu.avancer(10); await jeu.images(10); } catch (e) { err = String(e); }
