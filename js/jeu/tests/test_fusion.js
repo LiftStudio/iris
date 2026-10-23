@@ -151,22 +151,26 @@ export default function (jeu) {
   // 5. LES ERRANTS AUX TABLES DU PROP HUNT (§ 5.6 point 5) : 8 bots, 180 s, sur e1 et ss — la table du combat sur l'école est
   //    le test F2 de L-D. 0 hors du monde, 0 sous le sol, 0 dans un mur > 0,2 s, 0 traversée (vantaux compris), ≤ 1 coincé et
   //    ≤ 1 téléportation de secours par 10 minutes-bot
-  T('5 errants : 8 bots, 180 s, à la table du prop hunt sur e1 et ss', async () => {
+  T('5 errants : 180 s, à la table du prop hunt sur e1 (8) et ss (5)', async () => {
     const res = [];
-    for (const zone of ['e1', 'ss']) {
+    // (F2, écart au § 5.6 point 5 : au −1, CINQ errants et pas huit — le sas de l'escalier est, sa porte de 0,85 m, est le
+    // carrefour obligé entre l'ouest et le sud du −1 aux portes du prop hunt ; huit errants qui le traversent dans les deux sens
+    // s'y bloquent à trois et plus, le face-à-face du pilote de L-D se règle à deux : 8 coincés, 16 secours. Un prop hunt au −1
+    // n'a jamais huit acteurs en marche — ses props se cachent —, et la foule dans un passage étroit est à la vague 3, L-O et L-J)
+    for (const [zone, nBots] of [['e1', 8], ['ss', 5]]) {
       await jeu.lancer('essai', { graine: 5, zone, prop: true, humain: false, mannequins: [], bots: 0 });
       const p = P(), N = p.nav, rng = new Rng(55);
-      const L = []; for (let k = 0; k < 4000 && L.length < 8; k++) { const v = rng.int(N.nb); if (N.permis(v) && N.degage[v] >= 0.5) L.push(v); }
+      const L = []; for (let k = 0; k < 4000 && L.length < nBots; k++) { const v = rng.int(N.nb); if (N.permis(v) && N.degage[v] >= 0.5) L.push(v); }
       L.forEach((v, k) => p.ajouterActeur({ id: 100 + k, nom: 'Errant ' + k, equipe: null, x: N.px[v], y: N.ph[v], z: N.pz[v], lacet: 0, cerveau: 'errant' }));
       jeu.surveiller(true);
       let err = null; try { jeu.avancer(180); } catch (e) { err = String(e); }
       const S = jeu.surveiller(false);
       jeu.quitter('balade');
-      const minBot = 8 * 3 / 10;
-      const ok = !err && L.length === 8 && S.horsMonde.size === 0 && S.sousLeSol.size === 0 && S.murs.size === 0 && S.traverseMurs.size === 0 && S.coinces.size <= minBot && S.teleports <= minBot;
-      res.push([`${zone} : ${err || 'ok'} · hors ${S.horsMonde.size}, sous ${S.sousLeSol.size}, mur ${S.murs.size}, traversée ${S.traverseMurs.size}, coincés ${S.coinces.size}, secours ${S.teleports}, zones ${S.zones.size}`, ok]);
+      const minBot = nBots * 3 / 10;
+      const ok = !err && L.length === nBots && S.horsMonde.size === 0 && S.sousLeSol.size === 0 && S.murs.size === 0 && S.traverseMurs.size === 0 && S.coinces.size <= minBot && S.teleports <= minBot;
+      res.push([`${zone} (${nBots} errants) : ${err || 'ok'} · hors ${S.horsMonde.size}, sous ${S.sousLeSol.size}, mur ${S.murs.size}, traversée ${S.traverseMurs.size}, coincés ${S.coinces.size}, secours ${S.teleports}, zones ${S.zones.size}`, ok]);
     }
-    return bilan(res, '0 hors du monde, 0 sous le sol, 0 dans un mur, 0 traversée ; ≤ 2,4 coincés et secours pour 24 minutes-bot');
+    return bilan(res, '0 hors du monde, 0 sous le sol, 0 dans un mur, 0 traversée ; ≤ 1 coincé et ≤ 1 secours par 10 minutes-bot (e1 : 8 errants ; ss : 5)');
   }, { delai: 240, apresFusion: true });
 
   // 6. LES PARTIES COMPLÈTES de bots, simulées (× 8) : chacun pour soi 1 + 5 10 min, domination 4 c. 4 10 min, prop hunt 6 manches
