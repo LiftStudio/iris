@@ -534,7 +534,7 @@ export default function (jeu) {
     const p = await combatCourt({ allies: 2, ennemis: 3, avatars: ['gabriel', 'imad'] });
     // (30 images SANS Tab d'abord : si elles passent déjà 50 ms — la machine chargée par les autres agents —, la mesure
     // du Tab ne dit rien de lui et elle est notée « non valable », comme onglet caché)
-    await jeu.images(10);
+    await jeu.images(30);                           // (les premières images d'une partie compilent encore : passées)
     const libre = await jeu.images(30);
     game.input.presser('Tab');
     const im = await jeu.images(30);
