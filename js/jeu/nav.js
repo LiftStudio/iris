@@ -238,9 +238,9 @@ function generer(C, Lu, { pas, rayon, franchir, bornes: B, graines, chrono = nul
           const L = Math.hypot(D8[d][0], D8[d][1]), ux = D8[d][0] / L, uz = D8[d][1] / L;
           // (l'arrivée de `franchissable` est un nœud du graphe à 1,2-2,1 m devant, sur ce sol : s'il n'y en a aucun, inutile
           // de sonder — c'est le tri qui compte, `franchissable` coûte 9 sondes)
-          // (un essai par bloc de 3 × 3 cases, par direction et par sol : le long d'un bord de table, un lien tous les 0,75 m
+          // (un essai par bloc de 4 × 4 cases, par direction et par sol : le long d'un bord de table, un lien par mètre
           // suffit au chemin, et les voisins d'un essai raté butent sur le même obstacle)
-          const bloc = ((((ci[a] / 3 | 0) * NK + (ck[a] / 3 | 0)) * 64 + ((Math.round(ph[a] * 2) + 32) & 63)) * 8) + d;
+          const bloc = ((((ci[a] >> 2) * NK + (ck[a] >> 2)) * 64 + ((Math.round(ph[a] * 2) + 32) & 63)) * 8) + d;
           if (essais.has(bloc)) continue;
           nBas++;
           if (!basDevant(C, px[a], ph[a], pz[a], ux, uz)) continue;
@@ -419,7 +419,9 @@ export class Nav {
       D = generer(C, Lu, { ...opts, graines, chrono });
       D.empreinte = emp;
       _refaitCetteSession.add(emp);
-      await ecrireNav(emp, D);
+      // (l'écriture n'est pas attendue : sur une machine chargée, IndexedDB a mis 1,4 s à écrire le Mo du graphe ; une
+      // lecture qui suit attend d'elle-même la fin de cette transaction — même magasin)
+      Nav.ecriture = ecrireNav(emp, D);
     }
     MEMOIRE.set(emp, D);
     n._charger(D, C);
@@ -696,3 +698,4 @@ export class Nav {
   longueur(L) { let s = 0; for (let i = 1; i < L.length; i++) s += Math.hypot(this.px[L[i]] - this.px[L[i - 1]], this.pz[L[i]] - this.pz[L[i - 1]], this.ph[L[i]] - this.ph[L[i - 1]]); return s; }
 }
 Nav.derniere = null;
+Nav.ecriture = Promise.resolve();

@@ -72,6 +72,7 @@ export default function (jeu) {
   // ---------------------------------------------------------------- 1. verifierNav
   T('1 graphe des humains : nœuds, liens, composante, apparitions, niveaux, cabine, temps, cache', async (t) => {
     const g = await jeu.verifierNav({ refaire: true });
+    await Nav.ecriture;                                      // (l'écriture du cache, faite en arrière-plan)
     Nav.oublier();                                           // (la session oublie : la 2e lecture vient d'IndexedDB)
     const c = await jeu.verifierNav({});
     const m = await jeu.verifierNav({});

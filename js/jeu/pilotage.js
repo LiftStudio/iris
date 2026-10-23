@@ -26,7 +26,8 @@
 // tirée par la graine —, ou vers `vers(acteur)` (le point chaud), puis une ronde autour ; le regard dans la marche, lissé,
 // et des coups d'œil quand il s'arrête. Fichier de SIMULATION : hasard semé, temps de la partie, aucune entrée.
 import { Rng, melanger } from './rng.js';
-import { pointsDe, POINTS_APPARITION } from './apparitions.js';
+import { pointsDe, piecesDe, POINTS_APPARITION } from './apparitions.js';
+import { PIECES } from './constantes.js';
 
 const FICELLE_T = 0.25, FICELLE_N = 12, MARGE_FICELLE = 0.08;
 const PROCHE = 0.35;                       // un nœud est passé à 0,35 m
@@ -84,6 +85,14 @@ export class Pilote {
     if (!c || !p) return;
     const t = P ? P.t : 0;
     if (N) N.t = t;
+    // (DÉPLACÉ par quelqu'un d'autre — une réapparition, une téléportation du harnais — : plus d'un mètre depuis le dernier
+    // pas, le chemin, les nœuds sûrs et la surveillance repartent de là ; sinon le secours le renverrait d'où il venait)
+    const D = this._vu;
+    if (D && Math.hypot(p.x - D.x, p.z - D.z) > 1 + Math.abs(p.y - D.y)) {
+      this.chemin = []; this.k = 0; this.vise = 0; this._surs.length = 0; this._ref = null; this.coincements = 0; this._franchi = null;
+      this._replan = true; this._tPlan = -1; this._arrive = false; if (this.mode !== 'route') this._finFace(false);
+    }
+    if (!D) this._vu = { x: p.x, y: p.y, z: p.z }; else { D.x = p.x; D.y = p.y; D.z = p.z; }
     // L'ARRIVÉE (hystérésis, sur le même sol)
     const memeSol = Math.abs(c.y - p.y) < 1.2, d = Math.hypot(c.x - p.x, c.z - p.z);
     if (this.mode === 'route') {
@@ -393,14 +402,21 @@ export class Errant {
     const N = this._nav(), a = this.acteur;
     if (!N) { this._choisirPoint(); return; }
     let V = _visites.get(this.partie); if (!V) _visites.set(this.partie, V = new Map());
-    const ici = N.noeudPres(a.pos.x, a.pos.y, a.pos.z, 2), zi = ici >= 0 ? N.zone[ici] : 255;
-    const Z = N.piecesPermises().filter((z) => z !== zi);
+    // (les pièces de la ZONE DE JEU — le masque du graphe la dit déjà quand le monde de la partie la pose ; sans lui, la liste
+    // de ZONES_JEU : un chasseur du prop hunt au 1er n'erre pas au −1)
+    const ici = N.noeudPres(a.pos.x, a.pos.y, a.pos.z, 2), zi = ici >= 0 ? N.zone[ici] : 255, permises = piecesDe(this.partie.zone || 'ecole');
+    const Z = N.piecesPermises().filter((z) => z !== zi && permises.has(PIECES[z]));
     if (!Z.length) { this._choisirPoint(); return; }
     let min = Infinity; for (const z of Z) min = Math.min(min, V.get(z) || 0);
     const pool = Z.filter((z) => (V.get(z) || 0) === min), z = pool[this.rng.int(pool.length)];
-    V.set(z, (V.get(z) || 0) + 1);
+    const n = (V.get(z) || 0) + 1;
+    V.set(z, n);
+    // (la 1re visite d'une pièce, et une sur deux ensuite : son lieu d'apparition — le cœur de la pièce, carte_monde § 8 —
+    // s'il en a un ; sinon le plus dégagé de cinq nœuds tirés dans la pièce)
     let best = -1, bd = -1;
-    for (let k = 0; k < 5; k++) { const v = N.aleatoireDans(z, this.rng); if (v >= 0 && N.degage[v] > bd) { bd = N.degage[v]; best = v; } }
+    const lieu = n % 2 === 1 ? POINTS_APPARITION.find((q) => q.zone === PIECES[z]) : null;
+    if (lieu) { const v = N.noeudPres(lieu.x, lieu.y, lieu.z, 1.5); if (v >= 0 && N.zone[v] === z) best = v; }
+    if (best < 0) for (let k = 0; k < 5; k++) { const v = N.aleatoireDans(z, this.rng); if (v >= 0 && N.degage[v] > bd) { bd = N.degage[v]; best = v; } }
     if (best < 0) { this._choisirPoint(); return; }
     this.zoneDest = z; this.mode = 'piece';
     this.dest = { x: N.px[best], y: N.ph[best], z: N.pz[best] };
@@ -412,11 +428,11 @@ export class Errant {
     const q = (pool.length ? pool : L)[this.rng.int((pool.length ? pool : L).length)];
     this.mode = 'piece'; this.dest = { x: q.x, y: q.y, z: q.z };
   }
-  // la ronde autour du point chaud : un nœud à 3-10 m de lui, à pied
+  // la ronde autour du point chaud : un nœud à 2-6 m de lui (on fouille le coin d'où venait le bruit, on ne s'en va pas)
   _choisirRonde() {
     const N = this._nav(), c = this.versPt;
     if (!N || !c) { this._choisirPiece(); return; }
-    const L = N.dans(c.x, c.y, c.z, 10, this._tmp || (this._tmp = []), 1.2).filter((v) => Math.hypot(N.px[v] - c.x, N.pz[v] - c.z) >= 3 && N.degage[v] >= 0.5);
+    const L = N.dans(c.x, c.y, c.z, 6, this._tmp || (this._tmp = []), 1.2).filter((v) => Math.hypot(N.px[v] - c.x, N.pz[v] - c.z) >= 2 && N.degage[v] >= 0.5);
     if (!L.length) { this._choisirPiece(); return; }
     const v = L[this.rng.int(L.length)];
     this.mode = 'ronde'; this.rondeT = this.partie.t + 4 + this.rng.next() * 5;
@@ -430,12 +446,13 @@ export class Errant {
       if (!this.versPt || Math.hypot(v.x - this.versPt.x, v.z - this.versPt.z) > 3 || Math.abs(v.y - this.versPt.y) > 1.5) {
         this.versPt = { x: v.x, y: v.y, z: v.z }; this.mode = 'vers'; this.dest = { ...this.versPt };
       }
-    } else if (this.mode === 'vers' || this.mode === 'ronde') { this.versPt = null; this.dest = null; }
+    } else if (this.mode === 'vers' || this.mode === 'guet' || this.mode === 'ronde') { this.versPt = null; this.dest = null; }
     if (!this.dest) this._choisirPiece();
-    if (P.coince) { P.stop(); if (this.mode === 'vers') this._choisirRonde(); else this._choisirPiece(); }
+    if (P.coince) { P.stop(); if (this.mode === 'vers' || this.mode === 'guet') this._choisirRonde(); else this._choisirPiece(); }
     else if (P.arrive) {
-      if (this.mode === 'vers') this._choisirRonde();
-      else if (this.mode === 'ronde') { if (t >= this.rondeT) this._choisirRonde(); }
+      // (arrivé au point chaud : il GUETTE 2 à 4 s, le regard qui balaie, puis fait sa ronde autour)
+      if (this.mode === 'vers') { this.mode = 'guet'; this.rondeT = t + 2 + this.rng.next() * 2; }
+      else if (this.mode === 'guet' || this.mode === 'ronde') { if (t >= this.rondeT) this._choisirRonde(); }
       else if (t >= (this._repos || 0)) { if (this._repos) { this._repos = 0; this._choisirPiece(); } else this._repos = t + 0.6 + this.rng.next() * 1.4; }
     }
     const d = this.dest, p = a.pos, loin = Math.hypot(d.x - p.x, d.z - p.z);
