@@ -408,8 +408,10 @@ export default function (jeu) {
       const lf = N.cout[j], m = marche(u, v);
       if (!(m > lf * 1.05)) continue;
       candidats++;
+      // (le chemin franchit — ce lien-là, ou un voisin plus court sur le même obstacle)
       const L = []; N.chemin(u, v, L);
-      if (L.length === 2 && L[0] === u && L[1] === v) pris++;
+      let fr = false; for (let i = 1; i < L.length; i++) { const q = N.lien(L[i - 1], L[i]); if (q >= 0 && N.typeLien[q] === 1) fr = true; }
+      if (fr) pris++;
     }
     const ok = liens.length > 0 && verifies === liens.length && attente >= 1 && rangs === 0 && candidats > 0 && pris === candidats;
     return { ok, attendu: 'tous redonnés à ≤ 0,3 m, ≥ 1 sur les banquettes de l\'attente, 0 dans un rang, A* les prend (le comptoir : 0, il fait 1,18 m)',
