@@ -488,6 +488,20 @@ export default function (jeu) {
         L.vivant = true; L.vie = 100;
       } finally { rendre(); jeu.quitter('balade'); }
     }
+    // (relecture 23/10) la carte de mort sans rien de la mort (jamais « PAR NULL »), et le chasseur tombé à force de tirer sur
+    // de vrais meubles (pas « tu t'es touché toi-même »)
+    s.jeu.habillage = 'airsoft';
+    for (const [mode, o, attendu] of [['essai', { graine: 42, mannequins: 1 }, TEXTES.airsoft.mort], ['prophunt', { zone: 'e1', graine: 3, premierRole: 'chasseur' }, 'TROP DE TIRS SUR DE VRAIS MEUBLES']]) {
+      const { p, A, rendre } = await lancer(mode, o);
+      try {
+        const L = p.local; L.vivant = false; L.vie = 0;
+        A.hud._infoMort = mode === 'essai' ? null : { soi: true, tueur: null, t0: A.hud.t };
+        A.hud.maj(0.5, etat(p, { mort: null, phase: mode === 'essai' ? 'manche' : 'traque' }));
+        const t1 = A.hud.eMortT.textContent;
+        L.vivant = true; L.vie = 100;
+        res.push([`${mode} : « ${t1} »`, t1 === attendu]);
+      } finally { rendre(); jeu.quitter('balade'); }
+    }
     // la liste noire (aucun mot anglais du genre)
     const { p, A, rendre } = await lancer('prophunt', { zone: 'e1', graine: 3, premierRole: 'prop' });
     try {

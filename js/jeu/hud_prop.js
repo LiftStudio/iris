@@ -157,7 +157,8 @@ export class HudProp {
     if (prop && pm) { texte(this.eProvoc.children[1], mmss(Pr.provocT || 0)); classe(this.eProvoc, 'urgent', (Pr.provocT || 0) < 5); }
     // ---- la discrétion, l'œil ----
     const disc = clamp(Pr && typeof Pr.discretion === 'number' ? Pr.discretion : 0, 0, 1), et = Math.ceil(disc * 5 - 1e-9);
-    cacher(this.eDisc, !(prop && A.discretion));
+    // (la discrétion est celle du DÉGUISEMENT : rien à juger tant qu'il est humain)
+    cacher(this.eDisc, !(prop && A.discretion && Pr && Pr.forme));
     if (prop) { texte(this.eDisc.lastChild, '★'.repeat(et) + '☆'.repeat(5 - et)); this.etoiles = et; }
     const oe = clamp(Pr && typeof Pr.oeil === 'number' ? Pr.oeil : 0, 0, 1);
     cacher(this.eOeil, !(prop && A.oeil && phase === 'traque'));

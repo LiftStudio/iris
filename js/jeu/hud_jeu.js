@@ -44,15 +44,15 @@ export const REGLAGES_HUD = {
   plaque: 30,
   chevron: { grand: 14, petit: 8, dPres: 2, dLoin: 40, nom: 15, max: 4 },
   grenade: { rayon: 7, cercle: 92, slots: 2 },
-  munitionsBas: 0.30, chronoRouge: 30,
+  munitionsBas: 0.30, chronoRouge: 30, chronoRougeCachette: 10,
   flash: { fondu: 0.6 }, mort: { desat: 3, entree: 0.5 }, lunette: 0.85,
   annonce: { duree: 1.9, min: 0.55, file: 3 },
   objectif: { hauteur: 2.2, marge: 34 },
 };
 // L'HABILLAGE (arbitrage 35 ; § 3.6) : les mots seuls changent
 export const TEXTES = {
-  airsoft: { elim: 'TOUCHÉ', par: 'TOUCHÉ PAR', soi: 'TU T’ES TOUCHÉ TOI-MÊME' },
-  militaire: { elim: 'ÉLIMINATION', par: 'ÉLIMINÉ PAR', soi: 'TU T’ES ÉLIMINÉ TOI-MÊME' },
+  airsoft: { elim: 'TOUCHÉ', par: 'TOUCHÉ PAR', soi: 'TU T’ES TOUCHÉ TOI-MÊME', mort: 'TOUCHÉ' },
+  militaire: { elim: 'ÉLIMINATION', par: 'ÉLIMINÉ PAR', soi: 'TU T’ES ÉLIMINÉ TOI-MÊME', mort: 'ÉLIMINÉ' },
 };
 const ZONES_FR = { tete: 'tête', cou: 'cou', torse: 'torse', ventre: 'ventre', jambes: 'jambes' };
 // les raisons d'un événement `score` (§ 3.8, § 3.9) : le libellé de son « + »
@@ -404,7 +404,8 @@ export class HudJeu {
     const ph = H.phase || '', ch = H.chrono;
     const montre = typeof ch === 'number' && (ch > 0 || ph === 'manche' || ph === 'traque') && id !== 'essai' && ph !== 'presentation' && ph !== 'fin';
     cacher(this.eClock, !montre);
-    if (montre) { texte(this.eClock, mmss(ch)); classe(this.eClock, 'low', ch < REGLAGES_HUD.chronoRouge && (ph === 'manche' || ph === 'traque' || ph === 'cachette')); }
+    // (rouge sous 30 s ; la cachette du prop hunt ne dure que 30 à 50 s : rouge sous 10 s, avec l'annonce « 10 SECONDES ! »)
+    if (montre) { texte(this.eClock, mmss(ch)); classe(this.eClock, 'low', (ph === 'manche' || ph === 'traque') ? ch < REGLAGES_HUD.chronoRouge : ph === 'cachette' && ch < REGLAGES_HUD.chronoRougeCachette); }
     const nM = H.nManches || 0;
     const man = nM > 1 ? `MANCHE ${H.manche || 1} / ${nM}` : '';
     texte(this.eManche, man); cacher(this.eManche, !man);
@@ -697,8 +698,11 @@ export class HudJeu {
     const prop = P && P.id === 'prophunt';
     let nom = I && I.tueur !== undefined && I.tueur !== null ? I.tueur : null;
     if (typeof nom === 'number' && P) { const k = P.acteurParId(nom); nom = k ? k.nom : null; }
-    const soi = !!(I && I.soi) || (I && !nom);
-    texte(this.eMortT, soi ? TX.soi : `${prop && I && I.trouve ? 'TROUVÉ PAR' : TX.par} ${String(nom).toUpperCase()}`);
+    // (sans rien de la mort — état rendu, HUD branché après coup — : le mot seul, jamais « PAR NULL » ; le chasseur du prop
+    // hunt tombé à 0 PV à force de tirer sur de vrais meubles, § 2.8 : pas « tu t'es touché toi-même »)
+    const soi = !!I && (!!I.soi || !nom);
+    texte(this.eMortT, !I ? TX.mort : soi ? (prop && L.role === 'chasseur' ? 'TROP DE TIRS SUR DE VRAIS MEUBLES' : TX.soi)
+      : `${prop && I.trouve ? 'TROUVÉ PAR' : TX.par} ${String(nom).toUpperCase()}`);
     const d = [];
     if (I) {
       if (I.arme) d.push(nomCourt(I.arme));
