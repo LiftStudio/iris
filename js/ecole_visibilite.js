@@ -326,10 +326,17 @@ const VU_E2 = T('cageE2', 'e2e', 'e2avb', 'e2av', 'e2', 'rue');
 // et la porte met 0,38 s à se refermer derrière lui ; plus loin, elle est fermée
 let FERMEES = [];
 const PRES_PORTE = 8.0;
+// (23/10, lot L-M du jeu) EN PARTIE, les portes ne se referment plus derrière Haythem : la partie les pilote pour tous les
+// acteurs (ouvertes à demeure au combat, ouvertes par n'importe qui au prop hunt). `FORCEES` (posé par js/jeu/monde_partie.js
+// à l'entrée, `forcees` de poserVisibilite ; remis à null à la sortie) : le Set des portes pilotées ; une pièce fermée dont
+// une de ces portes est OUVERTE (k > 0,02) se voit de partout — sinon, de plus de 8 m, on verrait une pièce vide par la porte
+// ouverte. Null : le chemin d'aujourd'hui.
+let FORCEES = null;
 function fermeesVues(x, y) {
   let vu = 0;
   for (const F of FERMEES) {
     if (F.toujours || F.boites.some((B) => x > B[0] - 0.3 && x < B[2] + 0.3 && y > B[1] - 0.3 && y < B[3] + 0.3) || F.portes.some(([px, py]) => Math.hypot(x - px, y - py) < PRES_PORTE)) vu |= F.bit;
+    else if (FORCEES !== null && F.objets.some((P) => FORCEES.has(P) && P.k > 0.02)) vu |= F.bit;
   }
   return vu;
 }
@@ -391,8 +398,9 @@ export function poserVisibilite(scene, portesAuto = []) {
   // 0. les pièces fermées et leurs portes automatiques (celles du rez-de-chaussée posées sur le bord d'une de leurs boîtes)
   FERMEES = ['r0wc', 'r0lt', 'r0si', 'r0sv'].map((n) => {
     const boites = ZONES.find((Zn) => Zn[0] === n)[1];
-    const portes = portesAuto.filter((P) => Math.abs(P.base || 0) < 0.5 && boites.some((B) => P.cx > B[0] - 0.25 && P.cx < B[2] + 0.25 && -P.cz > B[1] - 0.25 && -P.cz < B[3] + 0.25)).map((P) => [P.cx, -P.cz]);
-    return { bit: Z[n], boites, portes };
+    const objets = portesAuto.filter((P) => Math.abs(P.base || 0) < 0.5 && boites.some((B) => P.cx > B[0] - 0.25 && P.cx < B[2] + 0.25 && -P.cz > B[1] - 0.25 && -P.cz < B[3] + 0.25));
+    const portes = objets.map((P) => [P.cx, -P.cz]);
+    return { bit: Z[n], boites, portes, objets };
   });
   // (une pièce sans porte retrouvée — le plan a bougé — reste toujours dessinée)
   for (const F of FERMEES) F.toujours = !F.portes.length;
@@ -443,7 +451,8 @@ export function poserVisibilite(scene, portesAuto = []) {
     if (cam !== camJeu && !(cam.parent && cam.parent.isCubeCamera)) return;
     const p = cam.getWorldPosition(_v);
     const k = Math.round(p.x * 50) * 1e8 + Math.round(p.y * 50) * 1e4 + Math.round(p.z * 50);
-    if (k !== cle || V.regles) { cle = k; H = (V.regles || zonesCachees)(p.x, p.y, p.z); V.cachees = H; }
+    // (en partie, une porte pilotée s'ouvre ou se ferme sans que la caméra bouge : le masque est refait à chaque rendu)
+    if (k !== cle || V.regles || FORCEES) { cle = k; H = (V.regles || zonesCachees)(p.x, p.y, p.z); V.cachees = H; }
     if (p.y < -0.15 && p.z < 0.3 && !dans(p.x, -p.z, VERS_CAGE_E) && sc.background && sc.background.isColor) { fond = sc.background; sc.background = FOND_SS; }
     if (!H) return;
     for (const [m, L] of lots) if ((m & ~H) === 0) for (const o of L) cacher(o);
@@ -474,9 +483,13 @@ export function poserVisibilite(scene, portesAuto = []) {
   };
   V.ms = Math.round(performance.now() - t0); V.msCoupe = Math.round(COUPE.ms);
   console.info('[visibilité] %d zones · %d blocs rangés par famille (%d ms de coupe en tout) · %d maillages en %d jeux de zones · pose %d ms', ZONES.length, blocs.length, V.msCoupe, n, lots.length, V.ms);
+  // (23/10, lot L-M du jeu : les portes pilotées par la partie, null en balade — voir FORCEES)
+  Object.defineProperty(V, 'forcees', { get: () => FORCEES, set: (s) => { FORCEES = s || null; cle = NaN; }, enumerable: false });
   if (typeof window !== 'undefined') window.__visibilite = V;
   return {
     V,
+    get forcees() { return FORCEES; },
+    set forcees(s) { FORCEES = s || null; cle = NaN; },
     // (à chaque image : la caméra du jeu ; et la sûreté : un rendu interrompu par une exception laisserait des morceaux
     // cachés et le compteur d'imbrication décalé)
     maj(dt, jeu) {

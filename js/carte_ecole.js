@@ -625,7 +625,8 @@ function construireEscalier(ch) {
   C.ajouterBoite(1.85, -yPorte, 2.0, -E.yF2, { y0: 0, y1: 5.2 });
   // le jour (x 2,0-2,42), du mur des portes au palier, à toutes hauteurs (pour le joueur seul : la caméra y voit d'une
   // volée à l'autre)
-  C.ajouterBoite(2.0, -yPorte, E.x1o, -E.yF2, { y0: 0, y1: 5.2, camera: false });
+  // (23/10, lot L-M du jeu : ni les balles — rien à y toucher, c'est un vide)
+  C.ajouterBoite(2.0, -yPorte, E.x1o, -E.yF2, { y0: 0, y1: 5.2, camera: false, balle: false });
   C.ajouterCercle(xg1, -yPied, 0.04, { y0: 0, y1: 1.2 });
   // la caméra ne passe pas dans les volées ni sous le palier intermédiaire ; sous la volée 2, au-dessus de la trémie du -1
   // (y < 10,3), à partir de 25 cm sous son limon — dessous, les plafonds de caméra du rampant de la volée de tôle,
@@ -1778,6 +1779,9 @@ export function construireCarte(scene, renderer = null) {
   construirePorteFond(ch);
   construireEscalier(ch);
   const accueil = construireAccueil(ch);
+  // (23/10, lot L-M du jeu : l'état de la GLACE de l'accueil — js/ecole_hall.js n'en rend que `maj` ; `coupe` vrai, elle est
+  // peinte et son décor n'est plus redessiné : js/jeu/monde_partie.js le pose en partie, le rend à la sortie)
+  const miroirAccueil = (typeof window !== 'undefined' && window.__miroirAccueil && window.__miroirAccueil.etat) || null;
   // (le radiateur du hall ouest : entre l'extincteur et l'affiche jaune du tri — photos 02 et 06, de gauche à droite :
   // porte grise, extincteur, radiateur, affiche, portes de l'escalier. Relecture du 09/10 : il est fixé sur la face SUD
   // de l'avancée nord, perpendiculaire au mur — la photo 02 le montre de chant, la photo 06 de trois quarts)
@@ -2472,5 +2476,8 @@ export function construireCarte(scene, renderer = null) {
     sieges: ch.sieges,
     maj,
     lumieres, portes: ch.portes, chantier: ch,
+    // (23/10, lot L-M du jeu : ce que la partie met en état de jeu et rend telle qu'en balade — la visibilité par zones,
+    // ses pièces fermées que les portes ouvertes montrent, et la glace de l'accueil ; l'ascenseur l'est par `chantier`)
+    visibilite, miroirAccueil,
   };
 }

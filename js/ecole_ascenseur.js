@@ -421,14 +421,21 @@ export function poserBandeSud(ch, { groupe, lampes = null }) {
   // L'EXTINCTEUR au pied de l'ascenseur, sur le doublage, contre l'angle (relecture du 10/10 : q_0277, f_0041, f_0050 —
   // le corps rouge de 0,36 à 0,88 m, la tête jusqu'à 0,95 ; pas de pictogramme au-dessus)
   {
-    const x = 17.72, y = yD + 0.1;
+    const x = 17.72, y = yD + 0.1, n0 = G.children.length;
     maille(new THREE.CylinderGeometry(0.085, 0.085, 0.52, 18), X.rouge, x, b + 0.62, -y, 0, G);
     maille(new THREE.CylinderGeometry(0.03, 0.045, 0.07, 12), M.noirMat, x, b + 0.915, -y, 0, G);
     B(x - 0.012, y - 0.02, x + 0.07, y + 0.02, b + 0.92, b + 0.95, M.noirMat);
     B(x - 0.04, yD, x + 0.04, yD + 0.025, b + 0.76, b + 0.84, M.noirMat);
     const t = maille(new THREE.CylinderGeometry(0.011, 0.011, 0.4, 8), M.noirMat, x - 0.095, b + 0.66, -(y + 0.02), 0, G); t.rotation.z = 0.1;
     B(x - 0.03, y + 0.081, x + 0.03, y + 0.087, b + 0.52, b + 0.64, M.boitier);     // (l'étiquette blanche, g056)
-    C.ajouterCercle(x, -y, 0.09, { y0: b, y1: b + 1.0 });
+    const f = C.ajouterCercle(x, -y, 0.09, { y0: b, y1: b + 1.0 });
+    // (23/10, lot L-M du jeu : un VRAI MEUBLE du prop hunt — ses pièces rangées dans un groupe à lui, posé au pied du corps,
+    // à la place qu'elles avaient dans le groupe de l'étage (la couture les voit dans le même ordre), et son étiquette, une
+    // donnée que lit js/registre_meubles.js avant la couture ; sa forme du monde solide avec lui)
+    const E = new THREE.Group(); E.name = 'extincteur (pied de l'ascenseur)'; E.position.set(x, b, -y);
+    for (const o of G.children.splice(n0)) { o.parent = null; o.position.sub(E.position); E.add(o); }
+    E.userData.meuble = { type: 'extincteur', nom: 'l'extincteur', mural: true, formes: [f] };
+    G.add(E);
   }
   // LE PALIER DE L'ASCENSEUR, desservi
   return poserAscenseur(ch, { base: b, groupe: G, ouvert: true, y0: yD, hMur: H1, zone: 'e1est', bouton: 'S' });
@@ -454,6 +461,10 @@ function suivant(S, servis) {
   return servis[Math.max(0, Math.min(servis.length - 1, j))];
 }
 export function majAscenseur(ch, dt, jeu) {
+  // (23/10, lot L-M du jeu : EN PARTIE, l'ascenseur est coupé — cabine immobile, portes palières fermées, formes de passage
+  // allumées : des murs ; il ne porte que `jeu.user`, qui n'y est plus Haythem mais l'acteur suivi. js/jeu/monde_partie.js
+  // le ferme à l'entrée, couper(), et le rend tel qu'il était à la sortie, instantane() / restaurer())
+  if (jeu && jeu.partie) return;
   const S = ch._ascenseur;
   if (!S || !S.paliers.length || !jeu || !jeu.user) return;
   const L = S.paliers, servis = L.filter((p) => p.ouvert);
@@ -525,5 +536,46 @@ export function majAscenseur(ch, dt, jeu) {
     S.vu = vu;
     const noms = L.map((p) => p.nom).reverse();
     for (const P of L) { P.aff.dessiner(txt, fl); if (P.cop) P.cop.dessiner(noms, txt, cib); }
+  }
+}
+
+// =====================================================================
+//  EN PARTIE (23/10, lot L-M du jeu : js/jeu/monde_partie.js)
+// =====================================================================
+// L'ÉTAT DE LA CABINE tel quel — sa phase, ses minuteries, ses paliers (cabine, cible, appel, départ : des indices),
+// l'ouverture vue et la position des vantaux de chaque palier, sa forme de passage, sa lampe, son anneau d'appel —, pris à
+// l'entrée d'une partie et rendu à la sortie : l'ascenseur repart comme en balade, au bit près
+const _CHAMPS = ['phase', 'k', 't', 'duree', 'sens', 'dir', 'passager', 'absent', 'dedansT', 'vu'];
+export function instantane(ch) {
+  const S = ch && ch._ascenseur; if (!S) return null;
+  const L = S.paliers, i = {};
+  for (const c of _CHAMPS) i[c] = S[c];
+  for (const c of ['cab', 'cible', 'appel', 'de']) i[c] = S[c] ? L.indexOf(S[c]) : -1;
+  i.paliers = L.map((P) => ({ kVu: P.kVu, lent: P.vLent.position.z, rapide: P.vRapide.position.z, off: !!P.forme.off,
+    lampe: P.lampe ? P.lampe.type : null, anneau: P.matAnneau.emissiveIntensity }));
+  return i;
+}
+export function restaurer(ch, i) {
+  const S = ch && ch._ascenseur; if (!S || !i) return;
+  const L = S.paliers;
+  for (const c of _CHAMPS) S[c] = i[c];
+  for (const c of ['cab', 'cible', 'appel', 'de']) S[c] = i[c] >= 0 ? L[i[c]] : null;
+  i.paliers.forEach((q, n) => {
+    const P = L[n]; if (!P) return;
+    P.kVu = q.kVu; P.vLent.position.z = q.lent; P.vRapide.position.z = q.rapide; P.forme.off = q.off;
+    if (P.lampe) P.lampe.type = q.lampe;
+    P.matAnneau.emissiveIntensity = q.anneau;
+  });
+}
+// COUPÉ : les portes palières fermées et leurs passages allumés (des murs), la lampe de la cabine éteinte, aucun appel ; la
+// cabine reste où elle est (majAscenseur ne fait plus rien tant que `jeu.partie`)
+export function couper(ch) {
+  const S = ch && ch._ascenseur; if (!S) return;
+  S.k = 0; S.appel = null;
+  for (const P of S.paliers) {
+    P.kVu = 0; P.vLent.position.z = 0; P.vRapide.position.z = 0;
+    P.forme.off = false;
+    if (P.lampe) P.lampe.type = 'aucune';
+    P.matAnneau.emissiveIntensity = 0;
   }
 }
