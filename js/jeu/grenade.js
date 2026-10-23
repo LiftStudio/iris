@@ -15,9 +15,12 @@
 //     le HUD (le calque blanc #voile-flash, par Partie.majHud), la vue, les sons et les cerveaux.
 // Une mèche à 0 (la frag cuite jusqu'au bout) : la grenade naît dans la main, immobile, et explose au pas même.
 // Événements : 'grenade' (le lancer), 'rebond' (a, arme, x, y, z, v : le « tink » des sons), 'explosion', 'flash'.
-// (ATTENTION, défaut du contrat — rapport L-A : le champ `type` de 'grenade' et d'explosion' du § 4.6 ÉCRASE le type de
-// l'événement dans Partie.evt, `{ t, type, ...data }` : un abonné à 'explosion' reçoit e.type === 'frag' ; un abonné à '*'
-// ne reconnaît plus l'événement. Le champ du contrat est gardé, doublé de `arme` ; à F2 de trancher.)
+// (ATTENTION, défaut du contrat — rapport L-A : le champ `type` de 'grenade' et d'explosion' du § 4.6 ÉCRASERAIT le type
+// de l'événement dans Partie.evt, `{ t, type, ...data }` : un abonné à 'explosion' recevrait e.type === 'frag'. Le type de
+// grenade voyage donc sous `arme` ('frag' | 'flash'), comme pour 'tir' ; à F2 de trancher.)
+// L'identifiant d'une grenade : le pas de son lancer × 64 + l'id du lanceur (une grenade au plus par acteur et par pas) —
+// rien à garder dans l'état, le même après etat() → appliquer() (un compteur repartait de zéro dans une partie neuve).
+// La flash épargne les ALLIÉS du lanceur (§ 3.5, tir allié désactivé, comme la frag par Partie.infliger), pas lui-même.
 import * as THREE from 'three';
 import { ARMES } from './armes.js';
 import { MODE } from './balistique.js';
@@ -37,7 +40,7 @@ function distSegment(px, py, pz, x, y0, y1, z) {
 }
 
 export class Grenades {
-  constructor(partie) { this.partie = partie; this._liste = []; this._id = 0; }
+  constructor(partie) { this.partie = partie; this._liste = []; }
   get liste() { return this._liste; }
 
   // `mecheRestante` : le temps qu'il reste à la mèche (une grenade cuite en main part avec moins ; 0 : elle explose en main)
@@ -51,7 +54,7 @@ export class Grenades {
     let dd = devant;
     if (B) { const t = B.rayon(_o.x, _o.y, _o.z, _d.x, _d.y, _d.z, devant + RAYON, MODE.objet, _h); if (t < devant + RAYON) dd = Math.max(0, t - RAYON - 0.01); }
     const c = acteur.corps, vx0 = c && c.vel ? c.vel.x : 0, vz0 = c && c.vel ? c.vel.z : 0;
-    const g = { id: ++this._id, a: acteur.id, type, x: _o.x + _d.x * dd, y: _o.y + _d.y * dd - (meche <= 0 ? 0.2 : 0), z: _o.z + _d.z * dd,
+    const g = { id: P.tick * 64 + (acteur.id & 63), a: acteur.id, type, x: _o.x + _d.x * dd, y: _o.y + _d.y * dd - (meche <= 0 ? 0.2 : 0), z: _o.z + _d.z * dd,
       vx: 0, vy: 0, vz: 0, t: meche, posee: false, rb: 0 };
     if (meche > 0) {
       // l'axe du regard à 15 m/s, + 2,5 m/s vers le haut, + l'élan du lanceur
@@ -115,14 +118,14 @@ export class Grenades {
   _exploser(g) {
     const P = this.partie, f = ARMES[g.type], B = P.balistique;
     P.evt('explosion', { x: g.x, y: g.y, z: g.z, r: g.type === 'flash' ? f.rayon : f.rMax, arme: g.type, a: g.a, id: g.id });
-    const ox = g.x, oy = g.y + 0.3, oz = g.z;
+    const ox = g.x, oy = g.y + 0.3, oz = g.z, lanceur = P.acteurParId(g.a);
     for (const a of P.acteurs) {
       if (!a.vivant || !a.corps || a.role === 'cible') continue;
       const p = a.corps.pos, e = a.h / 1.73, pieds = p.y + (a.corps.jumpY || 0);
       if (g.type === 'flash') {
         a.oeil(_o);
         const dx = g.x - _o.x, dy = g.y - _o.y, dz = g.z - _o.z, d = Math.hypot(dx, dy, dz);
-        if (d > f.rayon || a.prop) continue;
+        if (d > f.rayon || a.prop || (lanceur && a !== lanceur && !P.ennemis(lanceur, a))) continue;
         if (B && !B.vue(g.x, g.y + 0.15, g.z, _o.x, _o.y, _o.z)) continue;
         a.regard(_d);
         const face = d > 1e-6 ? Math.max(0, Math.min(1, (dx * _d.x + dy * _d.y + dz * _d.z) / d)) : 1;
@@ -145,6 +148,5 @@ export class Grenades {
   etat() { return this._liste.map((g) => ({ id: g.id, a: g.a, type: g.type, x: g.x, y: g.y, z: g.z, vx: g.vx, vy: g.vy, vz: g.vz, t: g.t, posee: g.posee, rb: g.rb })); }
   appliquer(e) {
     this._liste = (e || []).map((g) => ({ rb: 0, ...g }));
-    this._id = this._liste.reduce((m, g) => Math.max(m, g.id), this._id);
   }
 }
