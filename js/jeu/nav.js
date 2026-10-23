@@ -45,6 +45,10 @@ const CABINE = { x0: 17.95, z0: -9.05, z1: -7.7 };     // la cabine d'ascenseur 
 const TRANCHE = 1500;                                  // nœuds ouverts par tranche de la file (≈ 1,5 ms au pire)
 const COUT_FRANCHIR = 2;                               // un franchissement coûte deux fois sa longueur
 const PENALITE = 10;                                   // un lien où l'on s'est coincé : × 10 pendant 10 s
+// (un CHEMIN préfère le milieu : entrer sur un nœud collé à un mur — dégagement = le rayon — coûte 30 % de plus ; le plus
+// court chemin longeait les murs et rasait chaque coin, un bot raclait les chambranles. Les champs de distance, eux, restent
+// des distances à pied vraies)
+const COUT_BORD = 1.3;
 const D8 = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
 const INDEX_PIECE = new Map(PIECES.map((p, i) => [p, i]));
 // les 20 lieux d'apparition de carte_monde § 8 (les graines du remplissage ; les mêmes que js/jeu/apparitions.js — recopiés
@@ -311,7 +315,7 @@ class Recherche {
     const n = nav.nb;
     this.nav = nav; this.g = new Float64Array(n); this.pere = new Int32Array(n); this.vu = new Uint32Array(n); this.ferme = new Uint32Array(n);
     this.tas = new Int32Array(256); this.tf = new Float64Array(256); this.n = 0; this.tour = 0;
-    this.de = -1; this.a = -1; this.fini = true; this.ok = false; this.ouverts = 0;
+    this.de = -1; this.a = -1; this.fini = true; this.ok = false; this.ouverts = 0; this.pur = false;
   }
   _pousser(v, f) {
     if (this.n >= this.tas.length) { const t = new Int32Array(this.tas.length * 2); t.set(this.tas); this.tas = t; const u = new Float64Array(this.tf.length * 2); u.set(this.tf); this.tf = u; }
@@ -348,8 +352,9 @@ class Recherche {
   // `budget` nœuds ouverts au plus ; vrai quand c'est fini (trouvé ou impossible)
   avancer(budget = Infinity) {
     if (this.fini) return true;
-    const N = this.nav, D = N.debut, L = N.liens, K = N.cout, M = N.masque, P = N._penal, tour = this.tour, g = this.g, a = this.a;
-    const pen = P.size > 0;
+    const N = this.nav, D = N.debut, L = N.liens, K = N.cout, M = N.masque, P = N._penal, tour = this.tour, g = this.g, a = this.a, T = N.typeLien;
+    // (`pur` : la distance à pied vraie — ni bords, ni pénalités : distancePied)
+    const pur = this.pur, pen = P.size > 0 && !pur, frMal = N.franchirMauvais && !pur, G = N.degage, bord = pur ? -1 : N.rayon + 0.01;
     let n = 0;
     while (this.n > 0) {
       if (n >= budget) return false;
@@ -364,6 +369,8 @@ class Recherche {
         if (this.ferme[v] === tour) continue;
         let c = K[j];
         if (pen) { const f = P.get(j); if (f !== undefined && N.t < f) c *= PENALITE; }
+        if (frMal && T[j]) c *= PENALITE;
+        if (G[v] <= bord) c *= COUT_BORD;
         const gv = gu + c;
         if (this.vu[v] === tour && gv >= g[v]) continue;
         this.vu[v] = tour; g[v] = gv; this.pere[v] = u;
@@ -446,7 +453,7 @@ export class Nav {
     this.debut = new Int32Array(1); this.liens = new Int32Array(0); this.cout = new Float32Array(0); this.typeLien = new Uint8Array(0);
     this.empreinte = 'vide'; this.masque = null;
     this.C = null; this.t = 0;                  // (t : l'horloge de la partie, posée par le pilote — les liens pénalisés expirent)
-    this._penal = new Map(); this._file = []; this._champs = new Map(); this._parZone = null;
+    this._penal = new Map(); this._file = []; this._champs = new Map(); this._parZone = null; this._frOk = 0; this._frRate = 0;
     this._r1 = null; this._r2 = null; this._rC = null;
   }
   _charger(D, C) {
@@ -456,7 +463,7 @@ export class Nav {
     this.degage = D.degage; this.debut = D.debut; this.liens = D.liens; this.cout = D.cout; this.typeLien = D.typeLien;
     this.NI = D.NI; this.NK = D.NK; this.ci = D.ci; this.ck = D.ck; this.caseDebut = D.caseDebut; this.caseNoeuds = D.caseNoeuds;
     this.nFranchir = D.nFranchir || 0;
-    this._r1 = new Recherche(this); this._r2 = new Recherche(this); this._rC = new Recherche(this);
+    this._r1 = new Recherche(this); this._r2 = new Recherche(this); this._rC = new Recherche(this); this._rP = new Recherche(this); this._rP.pur = true;
     this.balistique = new Balistique(C);
   }
 
@@ -529,6 +536,11 @@ export class Nav {
   }
   // le lien de u vers v (son indice dans `liens`), ou −1
   lien(u, v) { for (let j = this.debut[u]; j < this.debut[u + 1]; j++) if (this.liens[j] === v) return j; return -1; }
+  // LES FRANCHISSEMENTS RATÉS de la partie (le pilote les compte) : à 3 ratés, et plus de deux fois plus de ratés que de
+  // réussis, tous les liens « franchir » coûtent × 10 — un bot ne s'acharne pas sur une table que son corps ne passe pas
+  // (le mouvement du squelette ne fait qu'un saut de 0,5 m ; celui de L-B franchit)
+  noterFranchir(reussi) { if (reussi) this._frOk++; else this._frRate++; }
+  get franchirMauvais() { return this._frRate >= 3 && this._frRate > 2 * this._frOk; }
   // un lien où un bot s'est coincé : coûte × 10 jusqu'à `jusqua` (temps de la partie) — dans les deux sens
   penaliser(u, v, jusqua) {
     const a = this.lien(u, v), b = this.lien(v, u);
@@ -676,7 +688,7 @@ export class Nav {
     if (u === v) return 0;
     const cu = this._champs.get(u); if (cu) return cu[v];
     const cv = this._champs.get(v); if (cv) return cv[u];
-    const R = this._r1;
+    const R = this._rP;
     R.debut(u, v); R.avancer(Infinity);
     return R.ok ? R.g[v] : Infinity;
   }

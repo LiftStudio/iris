@@ -28,7 +28,7 @@
 import { Rng, melanger } from './rng.js';
 import { pointsDe, POINTS_APPARITION } from './apparitions.js';
 
-const FICELLE_T = 0.25, FICELLE_N = 12;
+const FICELLE_T = 0.25, FICELLE_N = 12, MARGE_FICELLE = 0.08;
 const PROCHE = 0.35;                       // un nœud est passé à 0,35 m
 const COINCE_T = 3, COINCE_D = 0.6;        // § 4.5.11
 const PENAL_T = 10;
@@ -104,6 +104,8 @@ export class Pilote {
     else {
       // les nœuds passés
       while (this.k < L.length && this._passe(L[this.k], p)) { this._noterSur(L[this.k], p); this.k++; }
+      // (un franchissement en cours dont l'arrivée est passée : réussi)
+      if (this._franchi && this.k > this._franchi.iv) { N.noterFranchir?.(true); this._franchi = null; }
       // (poussé plus loin sur le chemin sans être passé à 0,35 m d'un nœud — par un autre corps, un mur qui fait glisser :
       // il reprend au nœud qu'il touche, jusqu'à 12 devant ; sinon la ficelle le ramènerait en arrière)
       for (let j = Math.min(L.length - 1, this.k + FICELLE_N); j > this.k; j--) if (this._passe(L[j], p)) { this.k = j + 1; break; }
@@ -159,31 +161,39 @@ export class Pilote {
     const der = S[S.length - 1];
     if (der === undefined || Math.hypot(N.px[der] - N.px[v], N.pz[der] - N.pz[v]) > 0.75) { S.push(v); if (S.length > 6) S.shift(); }
   }
-  // LA FICELLE : le nœud le plus loin (≤ 12 devant, jamais au-delà d'un franchissement) qu'un balayage atteint
+  // LA FICELLE : le nœud le plus loin (≤ 12 devant, jamais au-delà d'un franchissement) qu'un balayage atteint — d'abord
+  // avec 8 cm de marge (la ligne tirée passe à une main des chambranles et des coins au lieu de les frôler : un bot ne racle
+  // pas les murs), sinon au rayon du corps (un passage trop étroit pour la marge : il suit les nœuds, qui sont au milieu)
   _ficelle(p) {
     const N = this.nav, L = this.chemin, k = this.k;
     let hi = Math.min(L.length - 1, k + FICELLE_N);
     for (let j = k + 1; j <= hi; j++) { const q = N.lien(L[j - 1], L[j]); if (q >= 0 && N.typeLien[q] === 1) { hi = j - 1; break; } }
-    // (l'ancienne visée tient tant qu'un balayage l'atteint : la ficelle ne recule jamais pour rien)
-    let lo = k;
-    if (this.vise > k && this.vise < hi && this._balayer(p.x, p.y, p.z, L[this.vise])) lo = this.vise;
-    if (hi <= lo) return lo;
-    if (this._balayer(p.x, p.y, p.z, L[hi])) return hi;
-    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (this._balayer(p.x, p.y, p.z, L[m])) lo = m; else hi = m; }
-    return lo;
+    if (hi <= k) return k;
+    for (const marge of [MARGE_FICELLE, 0]) {
+      // (l'ancienne visée tient tant qu'un balayage l'atteint : la ficelle ne recule jamais pour rien)
+      let lo = k, h = hi;
+      if (this.vise > k && this.vise < h && this._balayer(p.x, p.y, p.z, L[this.vise], marge)) lo = this.vise;
+      if (this._balayer(p.x, p.y, p.z, L[h], marge)) return h;
+      while (h - lo > 1) { const m = (lo + h) >> 1; if (this._balayer(p.x, p.y, p.z, L[m], marge)) lo = m; else h = m; }
+      if (lo > k || marge === 0) return lo;
+    }
+    return k;
   }
-  // le corps irait-il tout droit de (x, y, z) au nœud v ? (tronçons de 0,35 m, le sol suivi, pas de descente > 0,35 m)
-  _balayer(x, y, z, v) {
-    const N = this.nav, C = this._C, r = this._r, bx = N.px[v], bz = N.pz[v], by = N.ph[v];
+  // le corps irait-il tout droit de (x, y, z) au nœud v ? (tronçons de 0,35 m, le sol suivi, pas de descente > 0,35 m.)
+  // Avec une marge : le disque balayé a `marge` de plus que le corps ; il part du corps poussé hors des murs à ce rayon (s'il
+  // en est à moins de la marge : sinon, refusé) et peut finir à `marge` du nœud (un nœud le long d'un mur est à 0,3 m de lui)
+  _balayer(x, y, z, v, marge = 0) {
+    const N = this.nav, C = this._C, r = this._r + marge, bx = N.px[v], bz = N.pz[v], by = N.ph[v];
+    _Q.x = x; _Q.z = z;
+    if (marge > 0) { C.resoudre(_Q, r, null, y); if (Math.hypot(_Q.x - x, _Q.z - z) > marge + 0.02) return false; x = _Q.x; z = _Q.z; }
     const L = Math.hypot(bx - x, bz - z);
     if (L < 1e-6) return Math.abs(by - y) < 0.45;
     const n = Math.max(1, Math.ceil(L / 0.35)), sx = (bx - x) / n, sz = (bz - z) / n;
-    _Q.x = x; _Q.z = z;
     let h = y;
     for (let i = 1; i <= n; i++) {
       const ex = x + sx * i, ez = z + sz * i;
       C.deplacer(_Q, ex - _Q.x, ez - _Q.z, r, null, h);
-      if (Math.hypot(_Q.x - ex, _Q.z - ez) > 0.03) return false;
+      if (Math.hypot(_Q.x - ex, _Q.z - ez) > (i === n && marge > 0 ? marge + 0.03 : 0.03)) return false;
       const h2 = C.solEn(_Q.x, _Q.z, h);
       if (h2 < h - 0.35 || h2 > h + 0.45) return false;
       h = h2;
@@ -195,10 +205,10 @@ export class Pilote {
   _franchir(cmd, u, v, p, dx, dz, t) {
     const N = this.nav, C = this._C;
     const lx = N.px[v] - N.px[u], lz = N.pz[v] - N.pz[u], ll = Math.hypot(lx, lz) || 1, ux = lx / ll, uz = lz / ll;
-    if (!this._franchi || this._franchi.v !== v) this._franchi = { u, v, t, saute: false };
+    if (!this._franchi || this._franchi.v !== v) this._franchi = { u, v, t, saute: false, iv: this.k };
     const F = this._franchi;
     // (raté : 1,6 s sur le lien sans être passé → pénalisé, un autre chemin)
-    if (t - F.t > FRANCHIR_MAX) { this._penaliserFranchir(u, t + PENAL_T); this._franchi = null; this._replan = true; this._tPlan = -1; this.chemin = []; return; }
+    if (t - F.t > FRANCHIR_MAX) { this._penaliserFranchir(u, t + PENAL_T); N.noterFranchir?.(false); this._franchi = null; this._replan = true; this._tPlan = -1; this.chemin = []; return; }
     if (F.saute || this.acteur.corps.airborne) return;
     // aligné (< 15°) et la face à ≤ 0,6 m : le saut (la face : un disque poussé de 0,8 m bute)
     if (dx * ux + dz * uz < Math.cos(15 * Math.PI / 180)) return;

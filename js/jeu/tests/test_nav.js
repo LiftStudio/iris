@@ -159,7 +159,9 @@ export default function (jeu) {
     }
     let bons = 0; const rates = [];
     for (const q of pts) { if (N.noeudPres(q.x, q.y, q.z, 1.5) >= 0) bons++; else if (rates.length < 6) rates.push([r2(q.x), r2(q.y), r2(q.z)]); }
-    const M = jeu.mesurer((i) => { const q = pts[i % pts.length]; N.noeudPres(q.x, q.y, q.z, 1.5); }, 2000);
+    // (par paquets de 200 appels : l'horloge du navigateur est au dixième de milliseconde)
+    const M = jeu.mesurer((i) => { for (let j = 0; j < 200; j++) { const q = pts[(i * 200 + j) % pts.length]; N.noeudPres(q.x, q.y, q.z, 1.5); } }, 40);
+    M.med /= 200; M.p95 /= 200;
     const a = t.temps('L-D champDepuis ms', ms, 15), b = t.temps('L-D noeudPres µs', M.med * 1000, 20);
     return { ok: a && b && F2 === F && ms2 < 1 && atteints > N.nb * 0.99 && pts.length === 1000 && bons >= 990,
       attendu: 'champ ≤ 15 ms, le même objet ensuite, ≥ 99 % atteints ; noeudPres ≤ 20 µs ; ≥ 990 / 1000',
