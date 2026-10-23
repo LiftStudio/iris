@@ -28,6 +28,7 @@
 import { Rng, melanger } from './rng.js';
 import { pointsDe, piecesDe, POINTS_APPARITION } from './apparitions.js';
 import { PIECES } from './constantes.js';
+import { viderFronts } from './commande.js';
 
 const FICELLE_T = 0.25, FICELLE_N = 12, MARGE_FICELLE = 0.08;
 const PROCHE = 0.35;                       // un nœud est passé à 0,35 m
@@ -37,6 +38,7 @@ const SECOURS_RECUL = 1.5;                 // le nœud sûr : à 1,5 m au moins 
 const EVITE = 0.6;
 const FACE_D = 1.0, FACE_DEG = 0.6, REFUGE_DEG = 0.75, PASSE_D = 1.2, ATTENTE_MAX = 3;
 const SAUT_FACE = 0.6, FRANCHIR_MAX = 1.6;
+const SANS_FRANCHIR = { franchir: false };
 const angle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const _Q = { x: 0, z: 0 };
 
@@ -55,6 +57,7 @@ export class Pilote {
     this._franchi = null;                                    // { de, a, t } : le franchissement en cours
     this.dir = null;                                          // la direction voulue (monde, unitaire) : l'errant y met son regard
     this.cle = 'pilote:' + acteur.id;
+    this.franchir = true;                                    // (faux : par la marche seule — l'errant)
   }
   // `o` = { sprint, arret = 0,3, marge = 0,3 } — appelé à chaque pas par le cerveau : la même cible ne replanifie rien
   allerA(x, y, z, o) {
@@ -155,7 +158,7 @@ export class Pilote {
     let a = N.noeudPres(c.x, c.y, c.z, 1.5); if (a < 0) a = N.noeudPres(c.x, c.y, c.z, 3);
     if (de < 0 || a < 0) { this._direct = true; this.chemin = []; return; }
     this._direct = false; this._attente = true;
-    N.demander(this.cle, de, a, (liste) => this._recu(liste));
+    N.demander(this.cle, de, a, (liste) => this._recu(liste), this.franchir ? null : SANS_FRANCHIR);
   }
   _recu(liste) {
     this._attente = false;
@@ -391,6 +394,9 @@ export class Errant {
   constructor(acteur, partie, { vers } = {}) {
     this.acteur = acteur; this.partie = partie; this.vers = vers || null;
     this.pilote = new Pilote(acteur, partie.nav, partie.balistique);
+    // (l'errant MARCHE : ni table ni banc franchi en patrouille — le franchissement est l'affaire d'une poursuite, L-J ; et
+    // le harnais compte un saut par-dessus un banc comme « dans un mur » : il lit les pieds sans le saut)
+    this.pilote.franchir = false;
     this.rng = new Rng(melanger(partie.graine || 1, acteur.id, 0x4572));
     this.dest = null; this.mode = null; this.versPt = null; this.rondeT = 0; this.zoneDest = -1;
     this.regard = acteur.cmd.lacet || 0; this.coupDOeilT = 0; this.coupDOeil = 0;
@@ -440,6 +446,7 @@ export class Errant {
   }
   commande(dt, cmd) {
     const a = this.acteur, P = this.pilote, t = this.partie.t;
+    viderFronts(cmd);                              // (les fronts ne vivent qu'un pas : un `saut` resté vrai faisait sautiller)
     // LA DESTINATION
     const v = this.vers ? this.vers(a) : null;
     if (v) {

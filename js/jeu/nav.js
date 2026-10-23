@@ -315,7 +315,7 @@ class Recherche {
     const n = nav.nb;
     this.nav = nav; this.g = new Float64Array(n); this.pere = new Int32Array(n); this.vu = new Uint32Array(n); this.ferme = new Uint32Array(n);
     this.tas = new Int32Array(256); this.tf = new Float64Array(256); this.n = 0; this.tour = 0;
-    this.de = -1; this.a = -1; this.fini = true; this.ok = false; this.ouverts = 0; this.pur = false;
+    this.de = -1; this.a = -1; this.fini = true; this.ok = false; this.ouverts = 0; this.pur = false; this.marche = false;
   }
   _pousser(v, f) {
     if (this.n >= this.tas.length) { const t = new Int32Array(this.tas.length * 2); t.set(this.tas); this.tas = t; const u = new Float64Array(this.tf.length * 2); u.set(this.tf); this.tf = u; }
@@ -354,7 +354,7 @@ class Recherche {
     if (this.fini) return true;
     const N = this.nav, D = N.debut, L = N.liens, K = N.cout, M = N.masque, P = N._penal, tour = this.tour, g = this.g, a = this.a, T = N.typeLien;
     // (`pur` : la distance à pied vraie — ni bords, ni pénalités : distancePied)
-    const pur = this.pur, pen = P.size > 0 && !pur, frMal = N.franchirMauvais && !pur, G = N.degage, bord = pur ? -1 : N.rayon + 0.01;
+    const pur = this.pur, pen = P.size > 0 && !pur, frMal = N.franchirMauvais && !pur, G = N.degage, bord = pur ? -1 : N.rayon + 0.01, marche = this.marche;
     let n = 0;
     while (this.n > 0) {
       if (n >= budget) return false;
@@ -366,11 +366,11 @@ class Recherche {
       for (let j = D[u]; j < D[u + 1]; j++) {
         const v = L[j];
         if (M && !M[v]) continue;
-        if (this.ferme[v] === tour) continue;
+        if (this.ferme[v] === tour || (marche && T[j])) continue;
         let c = K[j];
         if (pen) { const f = P.get(j); if (f !== undefined && N.t < f) c *= PENALITE; }
         if (frMal && T[j]) c *= PENALITE;
-        if (G[v] <= bord) c *= COUT_BORD;
+        if (G[v] <= bord && !T[j]) c *= COUT_BORD;           // (la marche seulement : un franchissement garde son « 2 × »)
         const gv = gu + c;
         if (this.vu[v] === tour && gv >= g[v]) continue;
         this.vu[v] = tour; g[v] = gv; this.pere[v] = u;
@@ -572,19 +572,20 @@ export class Nav {
   }
   // A* FRACTIONNABLE en file : `rappel(liste | null, cle)` à l'étape 9 du pas qui l'a fini ; une demande de même `cle`
   // remplace la précédente (le bot a changé d'avis)
-  demander(cle, de, a, rappel) {
+  // (`o` facultatif : { franchir: faux } — par la marche seule)
+  demander(cle, de, a, rappel, o = null) {
     const u = this._noeud(de), v = this._noeud(a);
     const F = this._file;
     for (let i = 0; i < F.length; i++) if (F[i].cle === cle) { F.splice(i, 1); if (i === 0 && this._r2) this._r2.fini = true; break; }
     if (u < 0 || v < 0 || !this._r2) { if (rappel) rappel(null, cle); return; }
-    F.push({ cle, de: u, a: v, rappel, parti: false });
+    F.push({ cle, de: u, a: v, rappel, parti: false, marche: !!(o && o.franchir === false) });
   }
   // une tranche de la demande en tête (Partie.pas, étape 9) : 1 500 nœuds ouverts au plus, une demande à la fois
   pasFile() {
     const F = this._file;
     if (!F.length) return;
     const q = F[0], R = this._r2;
-    if (!q.parti) { R.debut(q.de, q.a); q.parti = true; }
+    if (!q.parti) { R.marche = q.marche; R.debut(q.de, q.a); q.parti = true; }
     if (!R.avancer(TRANCHE)) return;
     F.shift();
     if (q.rappel) q.rappel(R.ok ? R.liste([]) : null, q.cle);

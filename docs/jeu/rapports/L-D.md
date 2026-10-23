@@ -1,14 +1,195 @@
 # Rapport L-D — navigation, pilotage, apparitions (vague 2)
 
-Branche `lot/L-D` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-D`, depuis `socle` = `socle-ok`), port 8136 ; 23/10/2026.
+Branche `lot/L-D` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-D`, depuis `socle` = `socle-ok`, e06258f), port 8136 ;
+23/10/2026. Spécification : `docs/jeu/spec_finale.md` § 5.5.6 (contrats § 4.5.11, valeurs §§ 3.7-3.8, propriétaires § 5.2).
 
 ## Où j'en suis
 
-- [ ] `nav.js` : génération (méthode B), deux graphes, CSR, empreinte, cache, A* d'un bloc et en file, champs, couverts
-- [ ] `nav_cache.js` : IndexedDB `iris.nav`
-- [ ] `pilotage.js` : `Pilote` (ficelle par balayage, évitement, face-à-face, franchir, coincé → secours), `Errant`
-- [ ] `apparitions.js` : départs, réapparition (§ 3.8), `ramenerPoint`
-- [ ] `tests/test_nav.js` : les 16 critères du § 5.5.6 (+ tests `apresFusion`)
-- [ ] joué dans le navigateur (jeton), `&lot=L-D` vert, `&lot=S0` vert, propriétaires OK
+- [x] `nav.js` : génération (méthode B), deux graphes, CSR, empreinte, cache, A* d'un bloc et en file, champs, couverts
+- [x] `nav_cache.js` : IndexedDB `iris.nav` (index des 4 dernières empreintes, délais, `try/catch`)
+- [x] `pilotage.js` : `Pilote` (ficelle par balayage, évitement, face-à-face, franchir, coincé → secours), `Errant`
+- [x] `apparitions.js` : départs (deux camps tirés ensemble), réapparition (§ 3.8), `ramenerPoint`
+- [x] `tests/test_nav.js` : les 16 critères du § 5.5.6 + un test de ressenti (17) + 4 tests `apresFusion` pour F2
+- [x] joué dans le navigateur (jeton 1), `&lot=L-D` vert, `&lot=S0` vert (29/29), propriétaires OK
+- [ ] (rien d'obligatoire) — voir « Ce qui reste » pour ce que F2 / la vague 3 doivent savoir
 
-Un repreneur : `git log` de `lot/L-D`, puis la première case non cochée.
+**FINI** au sens du § 5.1 règle 5 (voir « Définition de fini » en bas). Un repreneur : `git log lot/L-D`, ce rapport.
+
+## Ce qui est fait
+
+### `js/jeu/nav.js` — le graphe
+- **Génération** (carte_monde § 7, méthode B, recodée en tableaux) : représentant = centre de case poussé par `C.resoudre`,
+  gardé s'il reste dans sa case, sur le même sol, `libre` ; un nœud par case ET par sol (clé case + hauteur au demi-mètre) ;
+  liens vers les 8 voisines si `C.deplacer` y mène à 3 cm ; descente > 0,6 m = pas de lien ; remplissage depuis le départ
+  de Haythem + les 20 lieux ; cabine d'ascenseur exclue ; formes `mobile` et `limite` ÉTEINTES, `vantail` ALLUMÉES pendant
+  la génération, chacune rendue à son état exact (`finally`) ; tout en UNE tâche synchrone (une image de la carte vivante
+  ouvrirait/fermerait des portes au milieu).
+  Accélérations mesurées : le lien dans l'autre sens réutilise le balayage déjà fait (`deplacer` est symétrique à 6 liens
+  près sur 97 274, carte_monde) — remplissage 0,56 → 0,36 s ; dégagement lu en UNE visite de la grille (`clairance`, le
+  critère exact de `libre`) au lieu de `libre` à 2 m (64 µs l'appel) — 180 → 85 ms.
+- **Liens « franchir »** (graphe des humains) : `franchissable` (js/jeu/mouvement.js, le critère du mouvement, jamais
+  recopié) sur les directions où la marche échoue, après deux tris : une forme BASSE devant (boîte englobante) et les deux
+  conditions nécessaires les moins chères de `franchissable` recopiées À L'IDENTIQUE (la sonde au ras du sol bute, une des
+  arrivées est libre : 3 essais sur 10 échouaient là après 9 sondes) ; un essai par bloc de 4 × 4 cases, par direction et
+  par sol (un lien par mètre le long d'une table). Arrivée = le nœud à ≤ 0,3 m ; coût 2 × la distance. **≈ 400 liens**
+  (pause du 1er, pause du −1, David Clark, Kahn, salle 1 du 2e, Si 0.1, banquettes de l'attente, la rue…).
+- **Tableaux** : `px pz ph` (Float32), `zone` (indice dans `PIECES`, 255 = aucune), `region` (AJOUT : la zone, ou celle
+  de la pièce la plus proche par le graphe pour un seuil entre deux rectangles — c'est elle que lisent les masques : un
+  seuil sans pièce couperait une porte), `niveau` (−1…2, 3 = la rue), `degage` (0,5 / 0,75 / 1 / 1,5 / 2, sinon le rayon),
+  CSR `debut liens cout typeLien`, grille des cases (`caseDebut caseNoeuds`) pour `noeudPres`.
+- **Empreinte** : FNV-1a sur les formes (type, coordonnées au mm, hauteurs, drapeaux, `off` des formes ni mobiles ni
+  vantaux), les sols, les plafonds, les rectangles des 47 zones, puis `hacher([...comptes, pas, rayon, franchir, bornes,
+  VERSION_NAV])` ; les barrières (`limite`) n'y entrent pas. Stable portes ouvertes ou fermées, d'un rechargement à l'autre.
+- **Cache** : la session (données partagées, une `Nav` neuve par partie : masque, file, pénalités et champs n'en fuient
+  pas), puis IndexedDB, sinon génération ; l'écriture N'EST PAS attendue (sous charge, 1,4 s pour le Mo du graphe ; une
+  lecture qui suit attend la transaction d'elle-même) ; `?nav=refaire` ou `{ refaire: true }` force.
+- **Chemins** : A* en tableaux (tas binaire, Float64), heuristique euclidienne ; `chemin` d'un bloc et `demander`/`pasFile`
+  (1 500 nœuds ouverts par tranche, une demande à la fois, une demande de même clé remplace l'autre) — MÊME code, mêmes
+  départages, donc même liste ; un nœud collé à un mur (dégagement = le rayon) coûte × 1,3 (le plus court chemin longeait
+  les murs et rasait chaque coin) ; liens pénalisés × 10 pendant 10 s ; franchissements ratés appris (ci-dessous).
+- `champDepuis` (Dijkstra complet, en cache par nœud tant que le masque ne change pas), `champMulti(sources, max)` (AJOUT :
+  plusieurs sources, borné), `aleatoireDans`, `couverts` (12 tirés dans l'anneau 2-8 m, cachés à 1,0 m de chaque menace,
+  en voyant une à 1,6 m ; `menaces` = leurs YEUX), `distancePied` (A* « pur » : la vraie distance, sans bords ni pénalités).
+
+### `js/jeu/pilotage.js` — le Pilote et l'Errant
+- **Pilote** : arrivée à hystérésis (LA CAGE `moveTo`) ; chemin demandé à la file quand la cible saute (> 1 m) ou glisse
+  (> 1,5 m), 0,5 s au plus souvent ; **ficelle** toutes les 0,25 s jusqu'à 12 nœuds par dichotomie de balayages
+  `C.deplacer` qui suivent le sol (pas de raccourci par-dessus un bord de palier, jamais au-delà d'un lien « franchir »),
+  d'abord avec 8 cm de marge (on ne racle pas les chambranles), l'ancienne visée gardée tant qu'elle tient ;
+  **resynchronisation** (poussé plus loin sur le chemin, il reprend au nœud qu'il touche : sinon la ficelle le ramenait en
+  arrière — un va-et-vient vu au palier du 2e) ; axe relatif au lacet ; **évitement** des corps à 0,6 m devant (jamais vers
+  un vide) ; **face-à-face** quand le passage est ÉTROIT (aucun nœud à 0,45 m de l'un ou l'autre n'a 0,6 m de dégagement —
+  le critère « nœuds de dégagement < 0,6 » seul déclenchait le long de tous les murs : 70 reculs en 3 min) : le plus petit
+  `id` recule par un chemin qui ne fait que S'ÉLOIGNER de l'autre jusqu'au nœud dégagé ≥ 0,75 m, attend qu'il soit passé
+  (≥ 1,2 m et qui s'éloigne, ou arrivé), 3 s au plus ; un cul-de-sac dans son dos → c'est l'autre qui recule ;
+  **franchir** : aligné < 15°, `saut` quand la face est à ≤ 0,6 m du centre ; raté (1,6 s) → les liens « franchir » à
+  1,5 m pénalisés, un autre chemin ; la partie compte réussis / ratés (`nav.noterFranchir`) : à 3 ratés et plus de deux
+  fois plus de ratés que de réussis, TOUS les liens « franchir » coûtent × 10 (le saut du squelette — 0,5 m — ne passe pas
+  une table ; celui de L-B franchit, la règle ne se déclenche alors jamais) ; **coincé** (< 0,6 m en 3 s, ou 4 s sans
+  passer un nœud) → lien pénalisé, nouveau chemin ; 2e d'affilée → **secours** au dernier nœud sûr à ≥ 1,5 m en arrière,
+  jamais plus bas que lui de 0,5 m (une téléportation n'est pas une chute), seulement si le joueur local ne voit ni le bot
+  ni le nœud ; 3e → `coince` (le cerveau change d'idée) ; **déplacé par un autre** (réapparition, harnais : > 1 m d'un pas)
+  → il repart de zéro (sinon le secours le renvoyait d'où il venait).
+- **Errant** : de pièce en pièce de la ZONE DE JEU (la moins visitée de la partie, partagée par les errants ; le cœur de
+  la pièce — son lieu d'apparition — une visite sur deux, sinon le plus dégagé de cinq nœuds) ; avec `vers` (le point
+  chaud du cerveau minimal) : il y court (sprint au-delà de 15 m), le GUETTE 2 à 4 s, puis fait sa ronde à 2-6 m ; regard
+  dans la marche lissé (0,09 s, 9 rad/s au plus), coups d'œil à l'arrêt.
+
+### `js/jeu/apparitions.js`
+- `departs` : les deux camps tirés ENSEMBLE, à tour de rôle (le plus proche à pied de sa base, pénalisé de 1,5 × ce dont
+  il s'avance vers la base adverse ; passes : dégagé 0,75 à ≤ 12 m, 0,5 à ≤ 12 m, puis jusqu'à 30 m), chaque point à ≥ 15 m
+  à pied de tous ceux d'en face, à 1,5 m de ceux de son camp, hors des volées ; tournés vers le premier bout du chemin vers
+  la base adverse (on part dans le bon couloir) ; mis en cache par graphe et masque. Les chasseurs : un camp seul.
+- `choisirApparition` (§ 3.8) : candidats = les 20 lieux + ≈ 12 nœuds par niveau échantillonnés du plus loin d'abord
+  (52 sur `ecole`) ; distances À PIED par Dijkstra BORNÉS depuis les acteurs (un par ennemi à 20 m, un pour les alliés à
+  15 m) au lieu d'un champ par candidat ; note = 1,0 × proximité − 3,0 × danger (× 3 vu, morts récentes à 8 m) ; jamais un
+  point à < 20 m à pied d'un ennemi qui le voit, ni à < 6 m d'un ennemi ; tirage parmi les 3 meilleurs (`partie.rng`) ;
+  chacun pour soi : le plus loin à pied du plus proche ennemi que personne ne voit, exactement ; regard vers l'ennemi.
+- `ramenerPoint` : le nœud de dégagement ≥ `degageMin` le plus proche à ≤ `rayonMax` ; s'il n'y en a pas, RELEVÉ (le plus
+  dégagé de la ronde) et dit : `{ x, y, z, degage, releve: true }` (voir écarts).
+- Sans graphe (`nb = 0`) : les replis du squelette.
+
+## Le `__rapport` (PC, `http://127.0.0.1:8136/?test=1&rapport=1&lot=L-D`)
+
+(à jour au dernier passage, voir en bas)
+
+## Mesures (relatives : trois autres agents tournaient, et l'onglet passait souvent derrière les leurs)
+
+| | mesure |
+|---|---|
+| graphe des humains | 8 904 nœuds (8 956 ± 5 %), ≈ 60 350 liens (dont ≈ 400 « franchir »), 1 composante, 20/20 lieux, m² −1 96 · RDC 182 · 1er 111 · 2e 61 · rue 106, 0 nœud de cabine, 44 pièces |
+| génération (onglet devant) | 0,9-1,05 s : remplissage ≈ 0,36-0,42 s, franchissements ≈ 0,33-0,45 s, zones + dégagement ≈ 0,12 s ; onglet derrière : jusqu'à 4,6 s |
+| graphe des props | 10 610 nœuds, 72 840 liens, 1 composante, 0,8-0,9 s ; attente ×1,11, S 1.3 ×1,25, pause du 1er ×1,23 |
+| cache | IndexedDB 6-8 ms, session 2 ms |
+| A* (200 paires, graine 13) | médiane 0,6 ms, p95 2,5 ms ; tranches p95 0,8 ms ; mêmes 200/200 |
+| `champDepuis` | 3,7-4,2 ms ; `noeudPres` 0,5 µs |
+| `verifierBots` 180 s × 8 | 0 hors monde, 0 sous le sol, 0 mur, 0 traversée, 0 coincé, 0 secours, 44 pièces ; ≈ 2,6 chemins par bot et par minute |
+| Pilote 100 trajets entre niveaux | 100 arrivés, 98-99 en ≤ 1,5 × (médiane 1,02-1,03) ; les deux lents passent par un lien « franchir » de la Kahn que le saut du squelette ne passe pas |
+| face-à-face | volée de tôle 10/10 (4,6 s), couloir du −1 (cul-de-sac) 10/10 (3,1 s), 0 coincé |
+| réapparition | 0 faute sur 1 000 tirages, 8-11 ms le tirage ; chacun pour soi 100/100 exacts |
+| errants (ressenti) | 4,99 m/s en ligne droite (jamais ralentis), regard ≤ 9 rad/s, ≤ 8 demi-tours de commande en 40 s × 6 ; à moins de 4 cm d'un mur en courant : 15 % des pas → 10 % (bords × 1,3, marge de ficelle) |
+| combat d'essai 3 c. 4 (`equipes`, ecole) | 8 éliminations en ≈ 20 s de manche, `Partie.pas` 0,29 ms (6 bots, surveillance comprise) |
+
+## Écarts au document
+
+1. **Le lieu « rue »** (§ 4.5.11 `POINTS_APPARITION`, carte_monde § 8 : (15,63 ; 0 ; 9,38)) est HORS de la rue bornée
+   (`BORNES_NAV.zMax` 6) : aucun nœud, `verifierNav` aurait 19/20. Ramené au plus dégagé de la rue bornée, la chaussée
+   devant la porte 6 : (13,13 ; −0,12 ; 4,88), dégagement 2 m (aussi dans les graines de `nav.js`).
+2. **47 pièces** (§ 5.5.6 point 6) : `e1bureau`, `e103`, `e104` sont derrière des portes FERMÉES (aucun nœud, même au rayon
+   0,2) ; le test exige les 44 pièces atteignables.
+3. **Le comptoir de l'accueil** (point 14, § 3.1) : le comptoir haut fait **1,18 m** (`ecole_hall.js` CPT.h) ; 
+   `franchissable` refuse au-delà de 1,15 m : aucun lien n'y est possible sans changer la fonction du socle. Le test vérifie
+   les banquettes de l'attente (5 liens), et dit « comptoir 0 ». DEMANDE ci-dessous.
+4. **Anneaux B et C** (§ 2.5, point 16) : les pauses du −1 et du 1er sont meublées, aucun nœud n'y a 1,5 m de dégagement
+   à 8 m à la ronde (1,0 au mieux). `ramenerPoint` relève (le plus dégagé à ≤ 3 m) et le dit (`releve`, `degage`) au lieu
+   de rendre null ; A (hall) est dégagé de 1,5 m.
+5. **Départs du −1** (point 9) : la pause entière est à moins de 15 m à pied de la sas ; le camp B (pied de la volée de
+   tôle) n'a que 3 nœuds dégagés de 0,75 m à 15 m de la base d'en face (le camp A 4) : 5 points à 0,75 m y sont
+   impossibles. Les départs relâchent (0,5 m, puis le graphe : 2 points du camp B dans le couloir du −1, cul-de-sac de
+   0,8 m) ; le test calcule ce que la zone permet et le dit. Les trois autres zones : 5 + 5 points à 0,75 m, ≥ 15 m.
+6. **Franchissements** (§ 4.5.11 : « pour chaque nœud et chacune des 8 directions ») : un essai par bloc de 1 m, par
+   direction et par sol (la génération passait de 1,5 s à 0,9 s) ; chaque lien gardé est redonné par `franchissable`.
+7. **Pénalités du chemin** : en plus du × 10 des liens où l'on s'est coincé, × 1,3 sur un nœud collé à un mur et × 10 sur
+   les « franchir » d'une partie où ils ratent (ci-dessus) ; `champDepuis`, `champMulti` et `distancePied` restent des
+   distances à pied vraies.
+8. **Empreinte** (§ 4.5.11 : « Σ arrondi(coordonnées) ») : un FNV-1a au mm au lieu d'une somme (une forme déplacée sans
+   changer la somme passait) ; les zones (le lot R les change avec le −1) y entrent aussi.
+9. **`noeudsAutorises`** (L-M) est encore « tout permis » au squelette : l'errant lit lui-même les pièces de la zone de
+   jeu (sinon un chasseur du prop hunt au 1er errait au −1 et dans la rue — c'est ce qui faisait échouer S0 point 25).
+10. **AJOUTS** aux contrats (règle 3 du § 4.1, rien de changé) : `Nav.oublier()`, `Nav.empreinteDe(game, o)`,
+    `Nav.genererSync(game, o)`, `Nav.ecriture`, `Nav.derniere`, options `refaire` et `chrono` d'`obtenir` ;
+    `nav.region`, `nav.dans(x, y, z, r, out, dyMax)`, `nav.lien(u, v)`, `nav.penaliser(u, v, jusqua)`,
+    `nav.annuler(cle)`, `nav.champMulti(sources, max, out)`, `nav.masquePieces(pieces)`, `nav.pieceDe(i)`,
+    `nav.piecesPermises()`, `nav.permis(i)`, `nav.longueur(L)`, `nav.noterFranchir(ok)`, `nav.franchirMauvais` ;
+    `nav_cache.js` `viderNav()`, `oublierBase()` ; `apparitions.js` `REGLES_APPARITION`, `candidatsApparition(nav)`,
+    `departs(…, nav = null)` (5e paramètre facultatif : `departs` n'a pas de graphe dans sa signature — à défaut,
+    `Nav.derniere`, le graphe des humains que la partie vient de restreindre), `piecesDe`, `pointsDe` ; `pilotage.js`
+    `Pilote.secoursTotal`, `pilote.dir`, `pilote.mode`, `errant.etat`. Les `PASSAGES` / `routePieces` du squelette sont
+    retirés (le graphe les remplace : demande de S0).
+11. `franchissable` relue (demande de S0, écart 10) : son interprétation (arrivée au-delà de la face, ligne ≥ 1,4 m,
+    hauteur = la marche franchie) donne des liens justes (499/499 redonnés) ; seul le plafond 1,15 m pose question (3).
+
+## Demandes
+
+- **F2 / S0** : `franchissable` plafonne la hauteur à 1,15 m ; le comptoir haut de l'accueil fait 1,18 m. Passer le
+  plafond à 1,20 m (§ 3.1 cite le comptoir parmi les franchissables) ou rayer le comptoir du § 5.5.6 point 14.
+- **F2 / L-E** : les anneaux de domination B et C n'ont pas 1,5 m de dégagement (1,0 au mieux) : `ramenerPoint` rend
+  `{ …, degage: 1, releve: true }` ; L-E peut réduire le rayon de capture de ces deux anneaux ou les garder à 3 m (on se
+  bat entre les tables : c'est voulu ?).
+- **F2 / INT** : la base du camp B au −1 (`ZONES_JEU.ss.departs.B`, pied de la volée de tôle) laisse deux joueurs dans
+  le couloir du −1 (cul-de-sac de 0,8 m) ; la mettre devant la grande salle (9,63 ; −3,06 ; −22,62), 19 m à pied de la sas,
+  donnerait cinq points dégagés à chaque camp — à mesurer avec le lot R (il refait le −1).
+- **L-M** : `noeudsAutorises(nav, zone, mode)` peut s'écrire `nav.masquePieces(piecesDe(zone))` moins les nœuds des pièces
+  fermées par la table (la RÉGION d'un nœud, pas sa zone : un seuil de porte n'a pas de pièce dans les rectangles) ; la
+  rue est une pièce (`rue`) comme les autres.
+- **L-B** : le pilote envoie le front `saut` face à l'obstacle, aligné < 15°, quand la face est à ≤ 0,6 m du CENTRE du
+  corps (la sonde de `franchissable` bute à < 0,48 m) ; le regard de l'errant est dans l'axe (lissé). Si le franchissement
+  exige autre chose (le sprint, l'axe à fond…), le dire à F2.
+- **L-J (vague 3)** : `couverts(x, y, z, menaces, rng, n)` attend les YEUX des menaces ; `champMulti` borné sert les
+  points chauds et les replis ; `pilote.mode` (`route` / `recul` / `attente`) et `pilote.dir` sont lisibles ; le face-à-face
+  ne se déclenche qu'entre deux PILOTES (`b.cerveau.pilote`).
+
+## Doutes
+
+- Les temps : onglet derrière ceux de trois autres agents (le panneau est partagé), une génération y a pris 4,6 s ; devant,
+  0,9-1,05 s. Le seuil de 1,0 s est « signalé » ou tenu selon la charge ; l'intégration le mesurera au calme.
+- Le graphe a 8 904 nœuds (8 956 attendus) : les 52 de moins sont la cabine (exclue AVANT le remplissage) et les cases du
+  lieu « rue » d'avant.
+- Le cerveau minimal replanifie souvent en combat (≈ 9 chemins/s pour 6 bots : le point chaud bouge à chaque tir entendu) :
+  0,12 ms par pas en moyenne, dans le budget ; L-J lissera.
+
+## Ce qui reste (pour F2 et la vague 3 — rien d'obligatoire pour L-D)
+
+- Les 4 tests `apresFusion` de `test_nav.js` : `verifierBots` avec les tables de L-M ; départs adverses sans ligne de vue
+  (vraie `vue` de L-A) ; 50 franchissements de bots avec le vrai franchissement de L-B (≥ 48) ; cachettes de L-K
+  atteignables sur le graphe des props (e1).
+- Avec le lot R : régénération par empreinte (automatique), `verifierNav` / `verifierBots` / test 9 au −1 à refaire.
+
+## Photos regardées
+
+`…/scratchpad/ld/` : une manche d'équipes de bots (orbite derrière un bot qui passe la porte du palier est du RDC en
+courant) ; rien à redire à l'image fixe — le ressenti des trajectoires est mesuré (test 17, frottement des murs).
+
+## Définition de fini (§ 5.1 règle 5)
+
+(voir le dernier passage en bas)
