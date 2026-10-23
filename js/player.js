@@ -276,6 +276,9 @@ export class Player {
       // l'éclairage du personnage (découpe, occlusion du corps, peau) : APRÈS le shader des tenues, qu'il chaîne
       this.eclairage = new EclairagePerso(); this.eclairage.equiper(model);
       this.avatar = rig; this.avatarModel = model;
+      // (23/10, lot L-C : en partie, le corps d'un bot s'habille ici — teinte d'équipe, brassards —, AVANT la compilation
+      // de ses programmes et sa première image ; absent en balade)
+      if (this.surAvatar) this.surAvatar(this);
       // LES CLIPS AVANT DE SE MONTRER (au plus 6 s) ; LES PROGRAMMES compilés en parallèle avant le premier dessin
       // (Player.preparerRendu, posé par js/game.js) : l'avatar paraît prêt, sans image figée.
       const clips = this._loadAnims(model, rig).catch(() => {});
@@ -665,6 +668,9 @@ export class Player {
     let d = this.ang - this.angPrec;
     while (d > Math.PI) d -= Math.PI * 2;              // toujours par le plus court chemin
     while (d < -Math.PI) d += Math.PI * 2;
+    // (23/10, lot L-C : `leger`, un bot que l'image ne dessine pas — un autre étage, hors du cadre : js/jeu/cadence_acteurs.js —
+    // n'a que sa position affichée ; le groupe, ses matrices et ses sphères d'occlusion attendent la pose qui le remontre)
+    if (this.leger) { this.angAff = this.angPrec + d * a; return; }
     this.mesh.position.copy(this.posAff);
     this.angAff = this.angPrec + d * a;
     this.mesh.rotation.set(this.couches.tangage, this.angAff, this.couches.roulis);
@@ -1082,7 +1088,36 @@ export class Player {
   update(dt) { this._annulerCouches(); this.simuler(dt); this.poser(dt, false, true); }
   // Les couches du pas précédent (regard, respiration...) sont retirées AVANT tout le reste : le mélangeur ne doit
   // jamais les voir (voir AvatarRig.couchesAnnuler)
-  _annulerCouches() { if (this.avatar) { this.avatar.couchesAnnuler(Couches.OS); this.avatar.surAnnuler(); } }
+  _annulerCouches() { if (this.avatar) { if (this.apresPose && this._apres) this._apresAnnuler(); this.avatar.couchesAnnuler(Couches.OS); this.avatar.surAnnuler(); } }
+  // LES AJOUTS D'APRÈS-POSE (23/10, lot L-C) : en partie, `apresPose` (js/jeu/accroupi.js, js/jeu/pose_arme.js) tourne et
+  // abaisse des os PAR-DESSUS la pose finale — `AvatarRig.ajouter` est RELATIF (piège 1 de la carte des personnages) et
+  // three ne réécrit un os que si la valeur du clip a changé : un buste tourné de 0,3 rad que personne ne réécrit
+  // s'empilerait d'une image à l'autre (vissé en quelques images). Même remède que les couches de vie, une couche de
+  // plus : la pose d'avant les ajouts (q0) et celle d'après (q1) gardées ; à la pose suivante, un os resté à q1 reprend
+  // q0, AVANT que les couches et le mélangeur ne rendent les leurs (ordre inverse de la pose). Rien de tout cela en balade.
+  _apresDebut() {
+    const A = this.avatar;
+    let M = this._apres;
+    if (!M || M.A !== A) {
+      const os = Couches.OS.map((n) => A.bone(n)).filter(Boolean);
+      M = this._apres = { A, os, q0: os.map(() => new THREE.Quaternion()), q1: os.map(() => new THREE.Quaternion(2, 2, 2, 2)),
+        h: A.bone('Hips') || null, p0: new THREE.Vector3(), p1: new THREE.Vector3(1e9, 1e9, 1e9) };
+    }
+    for (let i = 0; i < M.os.length; i++) M.q0[i].copy(M.os[i].quaternion);
+    if (M.h) M.p0.copy(M.h.position);
+  }
+  _apresFin() {
+    const M = this._apres; if (!M) return;
+    for (let i = 0; i < M.os.length; i++) M.q1[i].copy(M.os[i].quaternion);
+    if (M.h) M.p1.copy(M.h.position);
+  }
+  _apresAnnuler() {
+    const M = this._apres; if (!M || M.A !== this.avatar) return;
+    for (let i = 0; i < M.os.length; i++) { const q = M.os[i].quaternion; if (q.equals(M.q1[i])) q.copy(M.q0[i]); }
+    if (M.h && M.h.position.equals(M.p1)) M.h.position.copy(M.p0);
+  }
+  // (une pose oubliée : la poupée de chiffon a écrit les os, la réapparition les rend au mélangeur — js/jeu/poupee.js)
+  oublierApres() { this._apres = null; }
   simuler(dt) {
     if (this.airborne) {
       this.jumpVel -= G * dt; this.jumpY += this.jumpVel * dt;
@@ -1159,7 +1194,12 @@ export class Player {
     this.mesh.updateMatrixWorld(true);
     // regard, respiration, essoufflement, petits pas, appuis : par-dessus la pose du pas
     if (this.avatar) { this.avatar.surFin(); this.couches.os(dt); this.mesh.updateMatrixWorld(true); }
-    this.apresPose?.(this, dt);
+    // (en partie : accroupi puis arme en main, entre deux relevés de la pose — voir _apresDebut)
+    if (this.apresPose) {
+      if (this.avatar) this._apresDebut();
+      this.apresPose(this, dt);
+      if (this.avatar) this._apresFin();
+    }
   }
 
   // LIBÉRER UN CORPS (22/10, socle du jeu : les bots d'une partie, js/jeu/avatars.js libererCorps) : retiré de la scène,

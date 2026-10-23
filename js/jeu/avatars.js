@@ -1,15 +1,29 @@
 // =====================================================================
-//  LES CORPS DES BOTS — squelette du socle S0 (22/10), rempli par le lot L-C
+//  LES CORPS DES BOTS (lot L-C, 23/10 ; spec §§ 3.10, 4.5.10, 5.5.5 — squelette du socle S0)
 // =====================================================================
-// Les fiches des amis de Haythem (js/roster.js de LA CAGE : taille, vitesse, gabarit, couleurs) et leurs corps : des Player
-// (js/player.js) aux drapeaux de partie — `capFixe` (le cap vient de la commande), `sansRangs` (un bot ne se faufile pas
-// dans un rang), `audible = false` (les pas viennent de la simulation), `sansSouffle` (pas de mains sur les genoux),
-// `elanAir` (l'élan gardé en l'air), `discret` (le chargeur à part : pas de DefaultLoadingManager.onLoad, qui recuirait
-// l'ombre du sol). Avatars `assets/tel/<id>.glb` même sur PC (≤ 6 distincts, 3 au téléphone : spec §§ 3.10, 4.5.10), copiés
-// de LA CAGE par le socle. Le SQUELETTE charge `assets/haythem.glb` pour tous (déjà en cache : Haythem cloné) ; L-C règle
-// et charge les vrais avatars (un par gabarit d'abord, programmes et clips attendus).
+// Les fiches des amis de Haythem (js/roster.js de LA CAGE : taille, hauteur du modèle, gabarit, couleurs) et leurs corps :
+// des Player (js/player.js) aux drapeaux de partie — `capFixe` (le cap vient de la commande), `sansRangs` (un bot ne se
+// faufile pas dans un rang), `audible = false` (les pas viennent de la simulation, événement `pas`), `sansSouffle` (pas
+// de mains sur les genoux), `elanAir` (l'élan gardé en l'air), `discret` (un chargeur à son propre LoadingManager : jamais
+// DefaultLoadingManager.onLoad, qui recuirait l'ombre du sol, la carte d'environnement et le cache d'ombre,
+// js/kit_decor.js:441-452). Avatars `assets/tel/<id>.glb` MÊME SUR PC (textures 512 : 136 Mo pour les six, contre 376 en
+// pleine taille, carte des personnages § 4.6) ; Haythem cloné (aucun ami coché) porte SON modèle, déjà chargé : zéro octet.
+//
+// LA PRÉPARATION (écran PRÉPARATION, Partie.preparer) : un corps SONDE par avatar, jamais montré, qui charge le GLB,
+// recible les clips et compile ses programmes (Player.preparerRendu), puis est rendu. Un avatar PAR GABARIT D'ABORD (le
+// 1er d'un gabarit recible les 24 clips, ≈ 300 ms ; les suivants les copient du cache de js/anim.js, 4 ms : lancés
+// ensemble, deux avatars d'un même gabarit les recibleraient deux fois), les autres ensuite. Au plus 6 avatars distincts,
+// 3 au téléphone (LIMITES) : un bot dont l'ami n'est pas préparé porte un des avatars préparés. Ensuite, 28 ms par corps
+// (géométries, textures, clips partagés ; matériaux clonés). La préparation compile aussi ce que les corps montreront
+// plus tard : la teinte et les brassards (js/jeu/teintes.js), les armes à la 3e personne (js/jeu/pose_arme.js) et la
+// variante transparente de l'effacement Airsoft (js/jeu/poupee.js) — aucun programme en pleine manche.
 import { Player, prechargerModele } from '../player.js';
 import { HAYTHEM } from '../game.js';
+import { TELEPHONE } from '../appareil.js';
+import { LIMITES } from './constantes.js';
+import { teinteEquipe, retirerTeinte, preparerTeintes } from './teintes.js';
+import { preparerArmes3e } from './pose_arme.js';
+import { opaciteCorps } from './poupee.js';
 
 export const FICHES_BOTS = [
   { id: 'gabriel', nom: 'Gabriel', height: 1.79, modelHeight: 1.865, spd: 87, gabarit: 'A', model: 'assets/tel/gabriel.glb', color1: '#161618', color2: '#c4161c', skin: '#e8b49a' },
@@ -19,23 +33,88 @@ export const FICHES_BOTS = [
   { id: 'djafar', nom: 'Djafar', height: 1.65, modelHeight: 1.886, spd: 91, gabarit: 'B', model: 'assets/tel/djafar.glb', color1: '#ffd166', color2: '#1a1a1a', skin: '#c68642' },
   { id: 'ethan', nom: 'Ethan', height: 1.85, modelHeight: 1.88, spd: 80, gabarit: 'C', model: 'assets/tel/ethan.glb', color1: '#1d3557', color2: '#f1faee', skin: '#f1c27d' },
 ];
-// (Haythem cloné : la fiche des bots quand aucun ami n'est coché — et, au squelette, de tous)
+// (Haythem cloné : la fiche des bots quand aucun ami n'est coché ; gabarit A, celui de Gabriel, Imad et Marc-Antoine —
+// ses clips sont déjà reciblés par son propre corps)
 export const FICHE_HAYTHEM = { id: 'haythem', nom: 'Haythem', height: HAYTHEM.height, modelHeight: HAYTHEM.modelHeight, spd: HAYTHEM.spd,
-  gabarit: 'H', model: HAYTHEM.model, color1: HAYTHEM.color1, color2: HAYTHEM.color2, skin: HAYTHEM.skin };
+  gabarit: 'A', model: HAYTHEM.model, color1: HAYTHEM.color1, color2: HAYTHEM.color2, skin: HAYTHEM.skin };
 
-// les avatars d'une partie, prêts avant l'entrée (écran PRÉPARATION) — le squelette : le modèle de Haythem, en cache
-export async function preparerAvatars(game, ids, progres) {
-  if (progres) progres('Les élèves arrivent', 0);
-  await prechargerModele(HAYTHEM.model);
-  if (progres) progres('Les élèves arrivent', 1);
+// LES AVATARS PRÊTS de la partie (preparerAvatars) : les fiches qu'un corps peut porter, dans l'ordre des amis cochés
+const PRETS = { fiches: [FICHE_HAYTHEM], modeles: new Set([FICHE_HAYTHEM.model]), mesures: { ms: 0, sondes: 0, onLoad: 0 } };
+const attendre = (s) => new Promise((r) => setTimeout(r, s * 1000));
+// le plafond d'avatars DISTINCTS (≈ 23 Mo de textures chacun en tel/)
+export const plafondAvatars = () => (TELEPHONE ? LIMITES.tel.avatars : LIMITES.pc.avatars);
+// (lu par les tests : ce que la dernière préparation a fait)
+export const avatarsPrets = () => ({ fiches: PRETS.fiches.map((f) => f.id), ...PRETS.mesures });
+
+// la définition d'un Player depuis une fiche (le modèle et sa taille ; les couleurs ne servent qu'au bonhomme de secours)
+function definition(f) {
+  return { ...HAYTHEM, id: f.id, name: f.nom, height: f.height, modelHeight: f.modelHeight, spd: f.spd, model: f.model,
+    color1: f.color1, color2: f.color2, skin: f.skin, discret: true };
 }
-// LE CORPS d'un bot (un Player aux drapeaux de partie), dans la scène ; `o.equipe` : sa teinte (L-C)
+// un corps SONDE : chargé, reciblé, compilé, jamais montré, rendu ensuite (sa variante transparente compilée avec)
+async function sonder(game, f) {
+  const p = new Player(definition(f), game.scene);
+  p.mesh.visible = false;                                      // (jamais à l'image : seuls ses programmes comptent)
+  try {
+    for (let i = 0; i < 300 && !p._pretAvatar && !p.body.visible; i++) await attendre(0.02);   // le GLB lu (6 s au plus)
+    if (p._pretAvatar) await Promise.race([p._pretAvatar, attendre(8)]);
+    for (let i = 0; i < 100 && p.avatarModel && !p.anim; i++) await attendre(0.02);              // les clips reciblés
+    // la variante transparente (l'effacement Airsoft) : compilée une fois, rendue opaque aussitôt (sinon elle se compilerait
+    // à la première poupée qui s'efface — une image figée en pleine manche)
+    if (p.avatarModel && game._compilerAsync) {
+      p.avatarModel.visible = true;
+      opaciteCorps(p, 0.5);
+      try { await Promise.race([game._compilerAsync(p.avatarModel), attendre(8)]); } finally { opaciteCorps(p, 1); }
+    }
+  } finally { libererCorps(p); }
+}
+
+// LES AVATARS D'UNE PARTIE, prêts avant l'entrée (écran PRÉPARATION) : `ids`, les amis cochés (FICHES_BOTS), dans l'ordre ;
+// vide → Haythem cloné. Haythem cloné est toujours préparé (les mannequins, et les bots s'il n'y a personne d'autre).
+export async function preparerAvatars(game, ids, progres) {
+  const pr = progres || (() => {}), t0 = performance.now();
+  pr('Les élèves arrivent', 0);
+  const voulus = [];
+  for (const id of ids || []) { const f = FICHES_BOTS.find((x) => x.id === id); if (f && !voulus.includes(f)) voulus.push(f); }
+  const fiches = voulus.slice(0, plafondAvatars());
+  PRETS.fiches = fiches.length ? fiches : [FICHE_HAYTHEM];
+  PRETS.modeles = new Set([FICHE_HAYTHEM.model, ...fiches.map((f) => f.model)]);
+  await prechargerModele(HAYTHEM.model);
+  // un avatar par gabarit d'abord (Haythem ouvre le gabarit A : ses clips sont reciblés depuis le démarrage)
+  const tous = [FICHE_HAYTHEM, ...fiches], premiers = [], suivants = [], gabarits = new Set();
+  for (const f of tous) { if (gabarits.has(f.gabarit)) suivants.push(f); else { gabarits.add(f.gabarit); premiers.push(f); } }
+  let n = 0;
+  const un = async (f) => { await sonder(game, f); n++; pr('Les élèves arrivent', n / (tous.length + 1)); };
+  await Promise.all(premiers.map(un));
+  await Promise.all(suivants.map(un));
+  // ce que les corps montreront : teintes et brassards, armes à la 3e personne
+  await preparerTeintes(game);
+  await preparerArmes3e(game);
+  PRETS.mesures = { ms: performance.now() - t0, sondes: tous.length };
+  pr('Les élèves arrivent', 1);
+}
+
+// LE CORPS d'un bot (un Player aux drapeaux de partie), dans la scène ; `o.equipe` : sa teinte (posée quand l'avatar
+// arrive, avant sa première image). Une fiche dont l'avatar n'est pas préparé (plafond atteint, ou corps créé hors d'une
+// préparation) prend un avatar préparé — le même nom, le corps d'un autre : jamais un 7e avatar en mémoire.
 export function creerCorps(fiche, scene, o) {
-  const f = fiche || FICHE_HAYTHEM;
-  const def = { ...HAYTHEM, id: f.id, name: f.nom, discret: true };     // (squelette : le corps de Haythem pour tous)
-  const p = new Player(def, scene);
+  let f = fiche || FICHE_HAYTHEM;
+  if (!PRETS.modeles.has(f.model)) {
+    const L = PRETS.fiches, k = FICHES_BOTS.indexOf(f);
+    f = { ...(L[(k < 0 ? 0 : k) % L.length] || FICHE_HAYTHEM), id: f.id, nom: f.nom };
+  }
+  const p = new Player(definition(f), scene);
   p.capFixe = true; p.sansRangs = true; p.audible = false; p.sansSouffle = true; p.elanAir = true; p.cibleRegard = null;
   p.equipe = (o && o.equipe) || null;
+  p.fiche = f;
+  if (p.equipe) p.surAvatar = (q) => teinteEquipe(q, q.equipe);
   return p;
 }
-export function libererCorps(player) { if (player) player.dispose(); }
+// LIBÉRER un corps : ses brassards détachés d'abord (géométries et matériaux PARTAGÉS : Player.dispose rendrait leur
+// matériau, que portent tous les corps de l'équipe), puis Player.dispose (bonhomme de secours compris)
+export function libererCorps(player) {
+  if (!player) return;
+  retirerTeinte(player);
+  player.surAvatar = null;
+  player.dispose();
+}
