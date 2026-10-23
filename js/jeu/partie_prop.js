@@ -230,11 +230,12 @@ export class PartieProp extends Partie {
     return C.libre(p.x, p.z, 0.3, sol) && Math.abs(s2 - y) <= 0.3 ? { x: p.x, y: s2, z: p.z } : null;
   }
   // LES DÉPARTS DES PROPS : les lieux de la zone hors de la pièce des chasseurs, à tour de rôle d'une manche à l'autre,
-  // espacés de 1,5 m (Haythem prend le premier : l'espace pause au −1, la salle Robert Kahn au 1er)
+  // espacés de 1,5 m (Haythem prend le premier : l'espace pause au −1, la pause orange au 1er)
   _lieuxProps(n) {
     const dC = departs(this.zone, 'chasseurs', 1, this.rng)[0], P = pointsDe(this.zone);
-    // (hors de la pièce des chasseurs, et pas sous leur nez : à plus de 6 m — au 1er, la pause orange est à 3,8 m du palier est)
-    const L = P.filter((q) => Math.hypot(q.x - dC.x, q.z - dC.z) > 6 || Math.abs(q.y - dC.y) > 1.5);
+    // (hors du lieu des chasseurs : au 1er, la pause orange, à 3,8 m du palier est, reste aux props — les chasseurs y sont
+    // figés et aveugles pendant toute la cachette ; c'est l'espace ouvert d'où l'on part se cacher)
+    const L = P.filter((q) => Math.hypot(q.x - dC.x, q.z - dC.z) > 3 || Math.abs(q.y - dC.y) > 1.5);
     const base = L.length ? L : P.length ? P : [dC];
     const OFF = [[0, 0], [1.5, 0], [-1.5, 0], [0, 1.5], [0, -1.5], [1.5, 1.5], [-1.5, -1.5], [1.5, -1.5], [-1.5, 1.5]];
     const out = [], k0 = (this.manche - 1) % base.length;
