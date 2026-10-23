@@ -11,13 +11,16 @@ import { CerveauBase, DIFFICULTES } from './cerveau.js';
 import { candidatsMeubles } from './deguisements.js';
 import { MEUBLES } from '../registre_meubles.js';
 import { Rng, melanger } from './rng.js';
+import { viderFronts } from './commande.js';
 
 export const DIFFICULTES_PROP = {
   facile: { id: 'facile', K: 0.25, epsMax: 0.35, ballesTest: 1, erreur: 3.5, reaction: 0.6, ouie: 0.7, sigmaOuie: 0.15, memoire: 30, grenade: false, coequipier: 'facile' },
   normal: { id: 'normal', K: 0.6, epsMax: 0.25, ballesTest: 2, erreur: 1.8, reaction: 0.4, ouie: 1.0, sigmaOuie: 0.08, memoire: 60, grenade: false, coequipier: 'facile' },
   difficile: { id: 'difficile', K: 1.2, epsMax: 0.12, ballesTest: 3, erreur: 0.8, reaction: 0.25, ouie: 1.2, sigmaOuie: 0.05, memoire: 90, grenade: true, coequipier: 'normal' },
 };
-const TEST_PERIODE = 8, TEST_PORTEE = 10;
+// (TEST_VISE : le tir part dès que la visée est faite, passé 0,4 s ; abandonné à 1,2 s — un candidat dans le dos se tourne en
+// ≈ 0,6 s à la rotation du Régulier)
+const TEST_PERIODE = 8, TEST_PORTEE = 10, TEST_VISE = 1.2;
 
 export class CerveauChasseur extends CerveauBase {
   constructor(acteur, partie, diff) {
@@ -31,19 +34,26 @@ export class CerveauChasseur extends CerveauBase {
   commande(dt, cmd) {
     const a = this.acteur, P = this.partie;
     if (!a.vivant || a.gele) { cmd.ax = 0; cmd.ay = 0; cmd.tir = false; return; }
+    // le tir de test : viser le candidat (au moins 0,4 s), puis une balle. (F2, demande de L-F, bloquante : la patrouille de
+    // CerveauBase.commande — l'errant — reposait la visée sur SON lacet à chaque pas, la visée ne se faisait jamais et le tir ne
+    // partait pas : pendant la visée, seule la perception tourne ; un humain vu l'emporte, comme au combat)
+    if (this.vise) {
+      viderFronts(cmd);
+      if ((P.tick + 7 * a.id) % (P.degrade ? 24 : 12) === 0) this.percevoir();
+      if (!this.cible || !this.cible.vivant) {
+        cmd.ax = 0; cmd.ay = 0; cmd.amp = 0; cmd.sprint = false; cmd.visee = false;
+        const pret = this.viserVers(this.vise.x, this.vise.y + 0.3, this.vise.z, dt);
+        this.viseT += dt;
+        cmd.tir = pret && this.viseT >= 0.4 && !this._tire;
+        if (cmd.tir) { this._tire = true; this.tirsTest = (this.tirsTest || 0) + 1; }
+        if ((this._tire && !cmd.tir) || this.viseT >= TEST_VISE) { this.vise = null; this._tire = false; }
+        return;
+      }
+      this.vise = null; this._tire = false;
+    }
     // un corps humain vu : comme au combat
     super.commande(dt, cmd);
     if (this.cible) { this.vise = null; return; }
-    // le tir de test : viser le candidat 0,4 s, puis une balle
-    if (this.vise) {
-      cmd.ax = 0; cmd.ay = 0; cmd.amp = 0; cmd.sprint = false;
-      const pret = this.viserVers(this.vise.x, this.vise.y + 0.3, this.vise.z, dt);
-      this.viseT += dt;
-      cmd.tir = pret && this.viseT >= 0.4 && !this._tire;
-      if (cmd.tir) this._tire = true;
-      if (this.viseT >= 0.6) { this.vise = null; this._tire = false; }
-      return;
-    }
     if (P.phase === 'traque' && P.t >= this.prochainTest) {
       this.prochainTest = P.t + TEST_PERIODE;
       const eo = a.oeil(this._o || (this._o = { x: 0, y: 0, z: 0, set(x, y, z) { this.x = x; this.y = y; this.z = z; return this; } }));
