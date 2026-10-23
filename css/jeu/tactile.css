@@ -46,9 +46,13 @@
   animation: tc-verrou .5s ease-in-out infinite alternate; }
 @keyframes tc-verrou { from { transform: translate(-50%, 2px); } to { transform: translate(-50%, -3px); } }
 
+/* RECHARGER qui bat : le chargeur est vide, il reste des balles */
+.tc-btn.urgent { opacity: 1; border-color: var(--accent, #f0a417); color: var(--accent, #f0a417); animation: tc-urgent .45s ease-in-out infinite alternate; }
+@keyframes tc-urgent { from { box-shadow: 0 0 0 0 rgba(240, 164, 23, .6); } to { box-shadow: 0 0 0 6px rgba(240, 164, 23, 0); } }
+
 /* SCORES dans la rangée du haut, comme la pause */
 .tc-btn[data-slot="scores"] { letter-spacing: 0; }
 
 @media (prefers-reduced-motion: reduce) {
-  .tc-btn[data-slot="tir"].auto, .tc-stick.verrou::after { animation: none; }
+  .tc-btn[data-slot="tir"].auto, .tc-stick.verrou::after, .tc-btn.urgent { animation: none; }
 }

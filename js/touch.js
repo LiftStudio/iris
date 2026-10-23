@@ -418,6 +418,10 @@ export class TouchControls {
     if (auto && (this.sprintVerrou || this.courseAuto)) this._desverrouillerSprint();
     const T = this.el.tir;
     if (T.classList.contains('auto') !== auto) T.classList.toggle('auto', auto);
+    // RECHARGER bat quand le chargeur est vide et qu'il reste des balles (le pouce le trouve sans lire le HUD)
+    const A = p.local && p.local.arsenal, Rc = this.el.rech;
+    const urgent = !!(A && Rc.dataset.action === 'recharger' && A.chargeur === 0 && A.reserve > 0);
+    if (Rc.classList.contains('urgent') !== urgent) Rc.classList.toggle('urgent', urgent);
     // (la fenêtre quittée vide les touches tenues, js/input.js : une bascule que l'entrée a perdue est oubliée)
     for (const c of [...this.verrous.keys()]) if (!inp.downSet.has(c)) this._lacherVerrou(c);
   }
