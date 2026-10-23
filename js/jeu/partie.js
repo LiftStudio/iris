@@ -112,9 +112,11 @@ export class Partie {
   // la table des portes que `monde.entrer` applique (js/jeu/monde_partie.js : TABLE_PORTES_FPS au combat, TABLE_PORTES_PROP
   // au prop hunt — la sous-classe la rend) ; null : les portes de la balade, sans règle de partie
   tablePortes() { return null; }
+  // (F2 : ce que `monde.entrer` reçoit en plus — { rueTracee: false } : la rue bornée sans sa rubalise, au stand ; null : tout)
+  optionsMonde() { return null; }
   entrer() {
     const g = this.game;
-    this.monde.entrer(this.zone, this.tablePortes());
+    this.monde.entrer(this.zone, this.tablePortes(), null, this.optionsMonde());
     // le corps de Haythem : ses drapeaux de balade gardés, rendus à la sortie
     this._drapeaux = {};
     for (const k of DRAPEAUX) this._drapeaux[k] = Object.prototype.hasOwnProperty.call(g.user, k) ? g.user[k] : undefined;

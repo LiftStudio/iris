@@ -442,7 +442,7 @@ export class MondePartie {
   // ================================================================ L'ENTRÉE
   // `table` : TABLE_PORTES_FPS (combat), TABLE_PORTES_PROP (prop hunt) ou null (les portes automatiques pour tous) ; `mode`
   // ('combat' | 'prop' | l'id de la partie), à défaut lu sur la table
-  entrer(zoneJeu, table, mode = null) {
+  entrer(zoneJeu, table, mode = null, opts = null) {
     if (this._dedans) this.sortir();
     if (!this.pret) this.preparerSession();
     const g = this.game, C = g.collisions, carte = this.carte, Po = carte.portes, u = g.user, Z = ZONES_JEU[zoneJeu] || ZONES_JEU.ecole;
@@ -486,8 +486,11 @@ export class MondePartie {
     // LA RUE BORNÉE, et sa rubalise sur poteaux
     this.bornes = Z.rue ? BORNES_JEU : null;
     if (this.bornes) u.bounds = this.bornes;
-    if (this.bornes) this.rubans.push(...this.rue);
-    this._poteauxVus = this.bornes ? this.poteaux : [];
+    // (F2 : `opts.rueTracee === false` — le stand, js/jeu/partie_stand.js — : la borne sans sa rubalise ; ses couloirs de tir
+    // filent de z 5,8 à 6,6 et son mannequin est à z 7,2, au-delà de la borne : le cordon passait devant — demande de L-E)
+    const tracee = this.bornes && !(opts && opts.rueTracee === false);
+    if (tracee) this.rubans.push(...this.rue);
+    this._poteauxVus = tracee ? this.poteaux : [];
     // LA GLACE peinte
     if (Mi) Mi.coupe = true;
     // LES DÉPOLIS

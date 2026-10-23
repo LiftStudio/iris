@@ -108,6 +108,8 @@ export class PartieStand extends Partie {
     this._tirPas = false; this._touchePas = false;
   }
   tablePortes() { return TABLE_PORTES_FPS; }
+  // (F2 : la rue bornée SANS sa rubalise — le 3e couloir passe la borne en biais et le mannequin est au-delà : demande de L-E)
+  optionsMonde() { return { rueTracee: false }; }
   _dotation() {
     const o = this.opts, base = CLASSES[o.classe] || CLASSES.assaut;
     if (!o.arme || !ARMES[o.arme] || !ARMES[o.arme].rpm) return base;

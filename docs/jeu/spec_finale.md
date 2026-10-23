@@ -1582,9 +1582,10 @@ export class MondePartie {
                                  //   VANTAUX SOLIDES : pour chaque porte 'auto' de la carte, une boîte orientée mince le long du vantail
                                  //   OUVERT (même calcul que ecole_portes.js:546-548, à l'angle ANGLE_AUTO), { vantail: true, porte: nom },
                                  //   off = true ; DÉPOLIS : forme.depoli = true pour chaque forme `vitre` de TABLE_DEPOLIS
-  entrer(zoneJeu, table)         // portes forcées (forcer), vantaux solides allumés pour les portes 'ouverte' du COMBAT, ascenseur coupé,
+  entrer(zoneJeu, table, mode = null, opts = null)   // portes forcées (forcer), vantaux solides allumés pour les portes 'ouverte' du COMBAT, ascenseur coupé,
                                  //   barrières de la zone allumées, joueur.bounds = BORNES_JEU si zone avec rue, glace de l'accueil
-                                 //   peinte (miroir.coupe = true, ancienne valeur gardée)
+                                 //   peinte (miroir.coupe = true, ancienne valeur gardée) ; (F2) opts = Partie.optionsMonde() :
+                                 //   { rueTracee: false } = la rue bornée sans sa rubalise (le stand)
   sortir()                       // l'état EXACT de la balade (formes off, k, vantaux et leurs boîtes, ascenseur, bornes, glace)
   majPortes(dt, acteurs)         // portes 'auto' : ouvertes si un acteur vivant est à < 2,1 m à son niveau (règle de Portes.maj) ; dans Partie.pas
   verrouiller(nom, ferme)
