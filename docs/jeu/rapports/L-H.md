@@ -4,16 +4,20 @@ Branche `lot/L-H` (depuis `socle` = `socle-ok` e06258f), arbre `C:/Users/hgami/D
 
 ## Où j'en suis
 
-**EN COURS — derniers passages.** Tout le lot est écrit, joué (photos au navigateur) et commité.
-- `&rapport=1&lot=L-H` : **14/14 sur PC** (62 s, 2 temps notés « non valables » : l'onglet n'était pas devant, les autres
-  agents prenant le devant du panneau — Effets.maj 0,037 ms, SonsJeu.maj 0,152 ms, sous les seuils).
-- `&rapport=1&lot=S0` : **29/29 sur PC** (76 s, 0 signalé, balade 0 / 0 avant et après) — à rejouer après les derniers
-  commits (en cours), puis `?tel=1` (L-H et S0).
-- `python -I tools/verifier_proprietaires.py lot/L-H` → `OK 6 fichiers`.
+**FINI** (les six points du § 5.1 règle 5). Le lot est construit, joué au navigateur intégré (photos ci-dessous) et vert :
+- `&rapport=1&lot=L-H` : **14/14 sur PC** (47 s) et **14/14 sous `?tel=1`** (émulation mobile 375 × 812, 43 s) ; deux temps
+  notés « non valables » à chaque passage (critère 13 : l'onglet n'était pas devant — les autres agents prennent le devant
+  du panneau —, images faites à la main ; mesurés quand même sous les seuils : Effets.maj 0,068 / 0,059 ms, SonsJeu.maj
+  0,189 / 0,188 ms) ;
+- `&rapport=1&lot=S0` sur la branche : **29/29 sur PC** (130 s, 0 signalé) et **29/29 sous `?tel=1`** (73 s, 0 signalé) ;
+  balade au bit près avant (1) et après les parties (27), vue 3 et vue 1 : 0 / 0 ;
+- `python -I tools/verifier_proprietaires.py lot/L-H` → `OK 6 fichiers` (fichiers et pureté) ;
+- commits préfixés « L-H : », jeton 3 du navigateur rendu (pris 05:21, rendu 06:21), onglet fermé, serveur arrêté.
 
-Un repreneur : `git log` de `lot/L-H`, puis ce rapport. Le serveur de la session (`…/scratchpad/lh/serve_lh.py <racine>
-<port> <photos>`) est `serve.py` plus un POST `/__photo/<nom>` : les photos d'un onglet qui n'est pas devant arrivent en
-JPEG dans le dossier de session (`window.__jeu.photo`, réduite, envoyée par `fetch`).
+Un repreneur n'a rien à finir ; s'il reprend, il part du dernier commit de `lot/L-H` et de ce rapport. Le serveur de la
+session (`…/scratchpad/lh/serve_lh.py <racine> <port> <photos>`, hors dépôt) est `serve.py` plus un POST `/__photo/<nom>` :
+les photos d'un onglet qui n'est pas devant arrivent en JPEG dans le dossier de session (`window.__jeu.photo`, réduite,
+envoyée par `fetch`).
 
 ## Ce qui est construit
 
@@ -102,7 +106,11 @@ que celui collé dans la console de `a8b22dd`.
 
 ### Le `__rapport` (PC, `http://127.0.0.1:8142/?test=1&rapport=1&lot=L-H`)
 
-`ok: true`, `total: 14`, `ms: 62062`, qualité medium.
+`ok: true`, `total: 14`, `ms: 47026`, qualité medium, `echecs: []`, `signales` : les deux temps du critère 13 (non valables).
+Sous `?tel=1` : `ok: true`, `total: 14`, `ms: 42775`, téléphone vrai — 12 voix au plus (critère 5 : 472 libérées à leur fin,
+557 volées), pools du téléphone (96 impacts), programmes 87 → 87, banque de 41 sons.
+
+Le tableau (passage PC précédent, 62 s ; le dernier ne diffère que par les temps) :
 
 | # | Mesure |
 |---|---|
@@ -194,4 +202,5 @@ trop longues (jusqu'à 1 m du mur), éclairs trop petits vus de face, fumée tro
 
 ## Ce qui reste
 
-- voir « Où j'en suis » : S0 sur PC après les derniers commits, puis `?tel=1`.
+- rien pour L-H ; à F2 : les trois tests `apresFusion` (F1 occlusion avec la vraie `vue`, F2 éclairs à la vraie bouche,
+  F3 impacts du vrai DDA), le test à l'aveugle au stand (✋, sans `?test=1`, vrai son), et les demandes ci-dessus.
