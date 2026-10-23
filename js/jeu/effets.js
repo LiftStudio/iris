@@ -329,7 +329,7 @@ export class Effets {
   constructor(game) {
     this.game = game; this.partie = null; this._des = [];
     this._file = []; this.pools = null; this.racines = [];
-    this._kImp = 0; this._tirs = []; this._points = []; this._douillesAttente = []; this._cibAff = new Map(); this._grenVues = new Map(); this._image = 0;
+    this._kImp = 0; this._tirs = []; this._trajets = []; this._points = []; this._douillesAttente = []; this._cibAff = new Map(); this._grenVues = new Map(); this._image = 0;
     this.t = 0; this.stats = { impacts: 0, decalques: 0, gerbes: 0, traceurs: 0, douilles: 0, eclairs: 0, explosions: 0 };
   }
 
@@ -402,7 +402,9 @@ export class Effets {
     this._creer(); this._poser(); this._vider();
     // (l'événement noté AVEC son genre : Partie.evt fait { t, type, ...données }, et une explosion ou une grenade porte un
     // champ `type` à elle — 'frag' | 'flash' — qui écrase celui de l'événement ; demande à F2 au rapport)
-    for (const quoi of ['tir', 'impact', 'touche', 'elim', 'explosion', 'flash', 'faux']) this._des.push(partie.sur(quoi, (e) => { this._file.push({ quoi, e }); }));
+    // (`trajet` : le chemin exact de chaque plomb, de l'œil au point d'arrêt — un ajout de L-A au § 4.6 : le traceur y va
+    // tout droit ; sans lui, il va à l'impact du même pas sur le rayon du tir)
+    for (const quoi of ['tir', 'trajet', 'impact', 'touche', 'elim', 'explosion', 'flash', 'faux']) this._des.push(partie.sur(quoi, (e) => { this._file.push({ quoi, e }); }));
     this._fluidite();
   }
   debrancher() {
@@ -441,8 +443,8 @@ export class Effets {
     // 1. les événements du pas (les tirs d'abord : un impact y retrouve son tireur)
     if (this._file.length) {
       const L = this._file; this._file = [];
-      this._tirs.length = 0; this._points.length = 0;
-      for (const w of L) if (w.quoi === 'tir') this._tirs.push(w.e);
+      this._tirs.length = 0; this._points.length = 0; this._trajets.length = 0;
+      for (const w of L) if (w.quoi === 'tir') this._tirs.push(w.e); else if (w.quoi === 'trajet') this._trajets.push(w.e);
       for (const w of L) if (w.quoi === 'impact' || w.quoi === 'touche') this._points.push(w.e);
       for (const w of L) { try { this._evenement(w.quoi, w.e, P); } catch (err) { console.warn('[effets]', w.quoi, err); } }
       for (const ev of this._tirs) { try { this._traceur(ev, P); } catch (err) { console.warn('[effets] traceur', err); } }
@@ -533,9 +535,11 @@ export class Effets {
     const a = P.acteurParId(ev.a); if (!a || ev.arme === 'couteau') return;
     const R = REGLAGES_EFFETS.traceur;
     if (a.local && (ev.seq | 0) % R.uneSur !== 0) return;
-    // le point d'arrivée : l'impact ou la touche du même pas sur son rayon, sinon au loin
+    // le point d'arrivée : le trajet de son premier plomb (L-A), sinon l'impact ou la touche du même pas sur son rayon,
+    // sinon au loin
     let best = null, bc = REGLAGES_EFFETS.appariement;
-    for (const p of this._points) {
+    for (const j of this._trajets) if (j.a === ev.a && Math.abs(j.t - ev.t) < 1e-6 && !(j.plomb | 0)) { best = j; bc = 2; break; }
+    if (!best) for (const p of this._points) {
       if (Math.abs(p.t - ev.t) > 1e-6) continue;
       const dx = p.x - ev.ox, dy = p.y - ev.oy, dz = p.z - ev.oz, l = Math.hypot(dx, dy, dz) || 1, c = (dx * ev.dx + dy * ev.dy + dz * ev.dz) / l;
       if (c > bc) { bc = c; best = p; }
@@ -781,7 +785,7 @@ export class Effets {
       for (let i = 0; i < 4; i++) F.emettre(x, y, z, (r() - 0.5) * 0.8, 0.3 + r() * 0.3, (r() - 0.5) * 0.8, 2 + r(), 0.4, 1.4 + r() * 0.6, [0.55, 0.55, 0.56], { cas: 0, a0: 0.45, frein: 1.5 });
       return;
     }
-    const tireur = this._lanceur(ev, P), air = this.airsoft;
+    const tireur = ev.a !== undefined && ev.a !== null ? P.acteurParId(ev.a) || this._lanceur(ev, P) : this._lanceur(ev, P), air = this.airsoft;
     const C = this.game.collisions, sol = C ? C.solEn(x, z, y + 0.3) : y - 0.2;
     if (air) {
       // la grenade Airsoft : un pop, un NUAGE DE POUDRE à la couleur de l'équipe, les billes qui fusent, une tache au sol
@@ -900,8 +904,8 @@ export class Effets {
 }
 
 // le genre d'une grenade ('frag' | 'flash') dans un événement `explosion` ou `grenade` : son champ `type` — qui, chez Partie.evt,
-// écrase le nom de l'événement — ou, si F2 le renomme, `grenade` / `genre`
-export function genreGrenade(e, quoi) { return e.type && e.type !== quoi ? e.type : e.grenade ?? e.genre ?? 'frag'; }
+// écrase le nom de l'événement — ou `arme` (ainsi chez L-A), `grenade`, `genre`
+export function genreGrenade(e, quoi) { return e.arme === 'frag' || e.arme === 'flash' ? e.arme : e.type && e.type !== quoi ? e.type : e.grenade ?? e.genre ?? 'frag'; }
 
 // ---------------------------------------------------------------- le monde solide, en lecture
 // un DÉCALQUE va sur une forme HAUTE (un mur : y1 − y0 > 1,8) ou un plafond (`joueur === false`), jamais sur un vantail

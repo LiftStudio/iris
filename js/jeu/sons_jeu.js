@@ -250,7 +250,7 @@ const RECETTES = {
 // ---------------------------------------------------------------- SonsJeu
 const MUET = 1e-4;
 // le genre d'une grenade ('frag' | 'flash') dans un événement `explosion` ou `grenade` (voir brancher)
-const genreGrenade = (e, quoi) => (e.type && e.type !== quoi ? e.type : e.grenade ?? e.genre ?? 'frag');
+const genreGrenade = (e, quoi) => (e.arme === 'frag' || e.arme === 'flash' ? e.arme : e.type && e.type !== quoi ? e.type : e.grenade ?? e.genre ?? 'frag');
 const db = (x) => 20 * Math.log10(Math.max(MUET, x));
 
 export class SonsJeu {
@@ -294,11 +294,11 @@ export class SonsJeu {
   brancher(partie) {
     this.debrancher(); this.partie = partie;
     this._bus();
-    this._tPrec = partie.t; this._phase = partie.phase; this._bips = -1; this._coeurT = 0; this._gren.clear();
+    this._tPrec = partie.t; this._phase = partie.phase; this._bips = -1; this._coeurT = 0; this._gren.clear(); this._rebondsEvt = false;
     // (l'événement noté AVEC son genre : Partie.evt fait { t, type, ...données }, et une explosion ou une grenade porte un
     // champ `type` à elle — 'frag' | 'flash' — qui écrase celui de l'événement)
     for (const quoi of ['tir', 'impact', 'touche', 'elim', 'recharge', 'arme', 'vide', 'pas', 'saut', 'reception', 'glissade', 'frole',
-      'grenade', 'explosion', 'flash', 'capture', 'apparition', 'fin']) this._des.push(partie.sur(quoi, (e) => { this._file.push({ quoi, e }); }));
+      'grenade', 'explosion', 'flash', 'capture', 'apparition', 'fin', 'couteau', 'rebond']) this._des.push(partie.sur(quoi, (e) => { this._file.push({ quoi, e }); }));
   }
   debrancher() {
     for (const d of this._des) d();
@@ -528,6 +528,20 @@ export class SonsJeu {
       case 'reception': { const a = P.acteurParId(e.a); if (a) this._corps(a, RECETTES.reception(B, Math.max(0.3, e.f ?? 0.6)), G.pas * (lui(e.a) ? 0.6 : 1), R.pas.course, dec, 0.3); return; }
       case 'glissade': { if (!e.debut && e.debut !== undefined) return; const a = P.acteurParId(e.a); if (a) this._corps(a, RECETTES.glissade(B), G.glissade, R.pas.sprint, dec, 0.4); return; }
       case 'frole': if (lui(e.a)) this.jouer3d(e.x, e.y, e.z, RECETTES.frole(B, this._gaz()), { gain: G.frole, rayon: R.frole, prioritaire: true, occlusion: false }); return;
+      // (deux ajouts de L-A au § 4.6 : le coup de COUTEAU — dans le vide, sur le décor ou sur un corps — et le REBOND d'une
+      // grenade ; quand ils viennent, les rebonds ne sont plus lus dans l'état)
+      case 'couteau': {
+        const a = P.acteurParId(e.a), p = a && a.corps && a.corps.pos;
+        if (p) this.jouer3d(p.x, p.y + 1.3, p.z, RECETTES.couteau(B), { gain: G.couteau, rayon: 10, retard: !lui(e.a), decalage: dec, occlusion: !lui(e.a) });
+        if (e.cible >= 0) this.jouer3d(e.x, e.y, e.z, RECETTES.corps(B), { gain: G.corps * 2, rayon: R.corps, retard: true, decalage: dec + 0.05 });
+        return;
+      }
+      case 'rebond': {
+        this._rebondsEvt = true;
+        const f = Math.min(1, Math.abs(e.v ?? 3) / 6);
+        this.jouer3d(e.x, e.y, e.z, RECETTES.rebond(B, f), { gain: G.grenade, rayon: R.grenade, retard: true, decalage: dec, hauteurOcc: 0.3 });
+        return;
+      }
       case 'grenade': this.jouer3d(e.x, e.y, e.z, RECETTES.lancer(B, genreGrenade(e, 'grenade') !== 'flash'), { gain: G.grenade, rayon: R.grenade, retard: true, decalage: dec, occlusion: !lui(e.a) }); return;
       case 'explosion': {
         const E = this._oreille, d = Math.hypot(e.x - E.x, e.y - E.y, e.z - E.z), flash = genreGrenade(e, 'explosion') === 'flash';
@@ -575,7 +589,7 @@ export class SonsJeu {
   // sous 30 PV, le décompte et les changements de phase du combat (le prop hunt a les siens : js/jeu/sons_prop.js)
   _etat(P) {
     const B = this._B, G = REGLAGES_SONS.gains;
-    const gr = P.grenades && P.grenades.liste;
+    const gr = !this._rebondsEvt && P.grenades && P.grenades.liste;
     if (gr) {
       const vus = new Set();
       for (const g of gr) {
