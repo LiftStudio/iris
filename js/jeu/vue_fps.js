@@ -254,7 +254,13 @@ export class VueFPS {
       glisse: a ? a.glisse || 0 : 0, vitesse: c ? Math.hypot(c.vel.x, c.vel.z) : 0, lacetV: this._lV, tangageV: this._pV, accroupi: a ? a.accroupi || 0 : 0,
       enAir: !!(c && c.airborne), mort: !!(a && !a.vivant),
       franchit: M && M.franchit ? M.franchit.k : 0, reception: this._creux.x, phase: this._balPhi, frequence: VUE.balancement.f0 + VUE.balancement.fv * (c ? Math.hypot(c.vel.x, c.vel.z) : 0),
-      balancement: this._balA, allure: al, lateral: lat, lunette: E ? E.lunette : 0, souffle: !!(E && E.souffle.tenu) };
+      balancement: this._balA, allure: al, lateral: lat, lunette: E ? E.lunette : 0, souffle: !!(E && E.souffle.tenu),
+      // (F2, demandes de L-A (d) et de L-V : ce que l'arsenal sait de son geste, recopié ici — l'arme de vue ne lit plus
+      // l'arsenal par derrière)
+      piston: A ? A.piston || 0 : 0, roulis: A ? A.roulis || 0 : 0, vers: A ? A.versArme : null, versArme: A ? A.versArme : null,
+      duree: A && Number.isFinite(A.fin - A.t0) ? Math.max(0, A.fin - A.t0) : 0, tactique: !!(A && A.tact), tirSeq: A ? A.tirSeq || 0 : 0,
+      chargeur: A ? A.chargeur : 0, reserve: A ? A.reserve : 0, cartouches: A ? A.cartouches || 0 : 0, grenade: A ? A.grenade : null,
+      phaseLancer: A ? A.phaseLancer : null, cuisson: A ? A.cuisson : 0, dernierTir: A ? A.dernierTir : -Infinity };
   }
   // LA CAPTURE DU POINTEUR (pointeur brut, repli sans option) : la promesse dit si elle est accordée
   capturer() {
