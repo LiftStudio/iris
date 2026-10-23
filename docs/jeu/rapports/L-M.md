@@ -4,12 +4,44 @@ Branche `lot/L-M` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-M`, depuis `socle
 
 ## Relecture (23/10, relecteur sévère) — où j'en suis
 
-EN COURS. Code relu contre §§ 3, 4.5.19, 5.3, 5.5.14 et le diff `socle...lot/L-M` ; `verifier_proprietaires` OK 7 fichiers.
-Corrigé (commit `L-M relecture : …`) : `appliquer` levait jamais un verrou (état d'avant un verrou → porte restée fermée) ;
-ordre des portes pilotées après un verrou ; `_dedans` dès la balade gardée ; rubalise envoyée segment par segment.
-Reste : rejouer `&lot=L-M` et `&lot=S0` (PC, `?tel=1`), jouer (combat, prop hunt), photos.
-Repreneur de la relecture (session coupée après `7adb331`) : rubalise de la rue en travées, test 1 compte `monde.ecarts`
-(`950a2ae`) ; jeton_3 pris à 08:51 (attendu depuis 08:06), serveur 8144.
+EN COURS (repreneur de la relecture, la première session coupée après `7adb331`). Jeton_3 pris à 08:51 (attendu depuis
+08:06 : les trois tenus par L-C, L-H, L-F, puis L-B), serveur 8144, un onglet.
+
+**Relu** contre §§ 3, 4.5.19, 4.6, 5.1, 5.3, 5.5.14 et le diff `socle...lot/L-M` : signatures exactes (`entrer` a un 3e
+paramètre facultatif, noté), ordre du pas (majPortes à l'étape 5), état `{ i, k, sens }` (+ `v`), déterminisme (ni
+hasard ni horloge dans `monde_partie.js` : `verifier_proprietaires` OK 7 fichiers, pureté comprise), aucun fichier hors
+du lot, aucun TODO ni bouchon. Vérifié à part : l'extincteur du hall ouest est bien construit par `ecole_mobilier.js`
+(l. 368-387, L-K) — l'écart 2 tient ; `B(...)` de `poserBandeSud` pose ses maillages dans `G` (le regroupement de
+l'extincteur de l'ascenseur les prend tous) ; `lumieres.zones` est dans l'ordre de `PIECES` (47 = 47 : l'index de
+`nav.zone` ne prête pas à confusion) ; la porte « grise vers le −1 » de la table du § 4.5.19 est `service (hall)`.
+
+**Défauts trouvés et corrigés** (commits `L-M relecture : …`) :
+1. (1re session) `appliquer` ne levait jamais un verrou ; ordre des portes pilotées après un verrou ; `_dedans` posé dès
+   la balade gardée ; rubalise envoyée segment par segment (`f23ce82`). La rue bornée TRACÉE (`7adb331`) : sans elle, un
+   mur invisible au milieu de la chaussée.
+2. Ce tracé, jamais rejoué : **test 10 ROUGE** — la voiture garée à cheval sur la borne est (x 22,7-26,1, z 3,3-5,0)
+   arrêtait la recherche du nu de la façade (ligne est de 1,3 m) et le ruban l'aurait traversée. Nu = avant 2,5 m de
+   plein ; ligne posée seulement où elle est libre (coupée de part et d'autre de la voiture) ; bouts reculés de 15 cm
+   (socles de 28 cm) ; test 10 : 0 point de ruban ou de socle dans un plein (`087151a`).
+3. La rubalise de la rue d'un seul tenant (26 m, une flèche de 3 cm, une vrille d'un bloc) : une travée par paire de
+   poteaux (`950a2ae`).
+4. La rubalise du passage hall ouest → escalier principal traversait toute la baie de 2 m, alors que le vantail droit de
+   cette double porte fixe reste FERMÉ : la moitié du ruban s'enfonçait dedans (vu à l'image). Elle couvre maintenant la
+   partie libre de la baie (la barrière garde la baie entière) (`b9273db`).
+5. **S0 point 8 rouge une fois sur deux sous charge** (`programmes 147 → 148` pendant les 10 s de tir) : depuis la rue
+   tracée, la rubalise est dans la scène de toute zone avec rue (`ecole`, le défaut du combat) ; elle n'était compilée que
+   dans la variante du moment, et la première baisse de la qualité AUTOMATIQUE la compilait en pleine partie (un à-coup).
+   Elle est compilée aussi dans la variante de repli (`fx.avecRepli`, comme `Player.preparerRendu`) ; rejoué : qualité
+   haute → moyenne en partie, programmes de la rubalise 2 → 2, total 147 → 147 (`015922a`, test 5).
+6. Test 1 : aucune porte fixe contre sa table (`monde.ecarts` vide) — il ne le vérifiait pas.
+
+**Joué** (navigateur intégré, `?test=1`, combat et prop hunt) : rue fermée des deux côtés (le cordon traverse la
+chaussée, s'interrompt de part et d'autre de la voiture, remonte vers la façade) ; porte de la David Clark ouverte à
+demeure contre le mur, toilettes fermées ; têtes d'escalier barrées de deux rubans d'un mur à l'autre ; Haythem poussé
+au sprint et en sautant dans les trois rubans de `rdc_rue` : arrêté à 0,35 m de la ligne (rayon 0,3 + 5 cm) ; une manche
+de prop hunt au RDC (60 s simulées en 290 ms) : quatre portes pilotées, événements `porte` (Si 0.1 ouverte puis
+refermée, bureau B et passage tenus ouverts par un prop caché à 1,75 m et un chasseur — l'indice voulu). Console : seule
+l'inscription du service worker échoue (le navigateur intégré la refuse ; hors du lot).
 
 ## Où j'en suis (constructeur)
 
