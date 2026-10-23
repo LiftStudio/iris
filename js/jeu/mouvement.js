@@ -51,7 +51,7 @@ export const FRANCHIR = { duree: 0.45, dureeBas: 0.38, bas: 0.7, arc: 0.35, sort
 export const PAS_ACTEUR = { course: 0.7, marche: 0.45, accroupiMin: 1.3 };
 export const CONTACTS = { pousseeMax: 0.05, ecartVertical: 1.2 };
 // l'œil lissé : la fenêtre (en SECONDES de trajet à la vitesse du moment), son plafond en mètres, ses échantillons
-export const OEIL_LISSE = { fenetre: 0.2, max: 1.6, echantillons: 21, ecartMax: 0.6 };
+export const OEIL_LISSE = { fenetre: 0.2, max: 1.6, echantillons: 21, ecartMax: 0.6, amorti: 0.08 };
 
 const _dir = new THREE.Vector3();
 // la vitesse de base d'une fiche (js/player.js move : 3,1 + spd/100 × 2,4 ; Haythem 5,476)
@@ -112,7 +112,7 @@ export function appliquerCommande(acteur, cmd, dt, partie) {
   // (une mort, une réapparition, une téléportation : la glissade, le franchissement, le sprint tactique et l'œil repartent)
   if (M.mortT !== acteur.mortT || Math.hypot(x0 - M.px, z0 - M.pz) > 1) {
     M.mortT = acteur.mortT; M.glisse = null; M.franchit = null; M.tact = false; M.sprintT = 0; M.sprinte = false; M.contreT = 0;
-    M.receptionFin = -Infinity; M.viseeLibreT = -Infinity; M.hautVol = 0; M.tickOeil = -1;
+    M.receptionFin = -Infinity; M.viseeLibreT = -Infinity; M.hautVol = 0; M.tickOeil = -1; M.fenL = NaN;
   }
   // le cap : celui de la visée (les bots courent en pas chassés quand ils visent ailleurs)
   p.setFacing(-Math.sin(cmd.lacet), -Math.cos(cmd.lacet));
@@ -274,9 +274,15 @@ function finPas(acteur, p, M, C, t, x0, z0, dt, partie, sprint) {
   } else if (vit < 0.3) M.pasD = PAS_ACTEUR.course / 2;                  // (le premier pas vient vite au départ)
   // L'ŒIL LISSÉ (l'acteur local : sa caméra) — la valeur d'avant gardée pour l'interpolation de l'image
   if (acteur.local && C) {
+    // la longueur de la fenêtre suit la vitesse en douceur (amortisseur critique, 0,08 s) : un arrêt net contre un mur en haut
+    // d'une volée ne fait pas sauter l'œil de la moyenne au sol exact
+    const Lc = Math.min(OEIL_LISSE.max, OEIL_LISSE.fenetre * Math.hypot(p.vel.x, p.vel.z)), w = 1 / OEIL_LISSE.amorti;
+    if (!Number.isFinite(M.fenL)) { M.fenL = Lc; M.fenV = 0; }
+    M.fenV += (w * w * (Lc - M.fenL) - 2 * w * M.fenV) * dt; M.fenL = Math.max(0, M.fenL + M.fenV * dt);
+    if (Math.hypot(p.vel.x, p.vel.z) > 0.05) { M.fenX = p.vel.x; M.fenZ = p.vel.z; }
     // (en franchissant, les pieds sont soulevés : le sol lissé est celui d'en dessous, soulevé d'autant)
     const lev = M.franchit ? M.franchit.leve : 0;
-    const sol = solLisse(C, p.pos.x, p.pos.y - lev, p.pos.z, p.vel.x, p.vel.z) + lev;
+    const sol = solLisse(C, p.pos.x, p.pos.y - lev, p.pos.z, M.fenX || 0, M.fenZ || 0, M.fenL) + lev;
     M.solOeil = Math.abs(sol - p.pos.y) > OEIL_LISSE.ecartMax ? p.pos.y : sol;
     const y = M.solOeil + hauteurOeil(acteur) + (p.jumpY || 0);
     M.yOeilPrec = M.tickOeil === partie.tick - 1 && Number.isFinite(M.yOeil) ? M.yOeil : y;
@@ -287,9 +293,9 @@ function finPas(acteur, p, M, C, t, x0, z0, dt, partie, sprint) {
 // le sol MOYEN sur une fenêtre de trajet centrée sur les pieds, le long de la vitesse (0,2 s de trajet, 1,6 m au plus) :
 // un plan incliné reste lui-même (la moyenne d'une droite sur une fenêtre centrée est la droite), une cassure devient un
 // arrondi, une bordure une pente douce — sans retard au milieu d'une volée
-export function solLisse(C, x, y, z, vx, vz) {
-  const v = Math.hypot(vx, vz), L = Math.min(OEIL_LISSE.max, OEIL_LISSE.fenetre * v);
-  if (L < 0.02) return y;
+export function solLisse(C, x, y, z, vx, vz, longueur) {
+  const v = Math.hypot(vx, vz), L = longueur ?? Math.min(OEIL_LISSE.max, OEIL_LISSE.fenetre * v);
+  if (L < 0.02 || v < 1e-6) return y;
   const ux = vx / v, uz = vz / v, N = OEIL_LISSE.echantillons;
   let somme = 0;
   for (let i = 0; i < N; i++) {

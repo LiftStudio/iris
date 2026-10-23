@@ -167,6 +167,7 @@ export class VueFPS {
     const sprint = al === 'sprint' || al === 'tact';
     const cibleA = sprint ? B.sprint : al === 'course' || al === 'marche' || al === 'accroupi' ? B.course * Math.min(1, v / B.vCourse) : 0;
     this._balA = poser ? cibleA : this._balA + (cibleA - this._balA) * (1 - Math.exp(-d / B.lisse));
+    if (cibleA === 0 && this._balA < 1e-5) this._balA = 0;
     const f = B.f0 + B.fv * v;
     this._balPhi = (this._balPhi + 2 * Math.PI * f * d) % (4 * Math.PI);
     const kv = 1 + (B.visee - 1) * e, kl = Math.min(1, this._balA / B.course);
