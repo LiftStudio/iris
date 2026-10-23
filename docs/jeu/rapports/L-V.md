@@ -5,9 +5,12 @@ Fichiers : `js/jeu/viewmodel.js`, `js/jeu/anim_vue.js` (remplis), `js/jeu/tests/
 
 ## Où j'en suis
 
-**EN COURS — dernière passe** : tout est construit et réglé ; `&rapport=1&lot=L-V` 15/15 sur PC et sous `?tel=1`,
-`&rapport=1&lot=S0` 29/29 sur la branche, `verifier_proprietaires` OK. Reste : rejouer L-V et S0 sur le dernier commit,
-coller les `__rapport`, fermer onglet et serveurs, rendre le jeton (`_navigateur/jeton_3`).
+**FINI** (757f08e et ce rapport). Les six points de la définition de « fini » (§ 5.1 règle 5) sont tenus : (a)
+`&rapport=1&lot=L-V` **15/15 sur PC** (1280 × 720, haute) **et 15/15 sous `?tel=1`** (375 × 812, moyenne), 0 signalé ;
+(b) `&rapport=1&lot=S0` **29/29** sur la branche (balade au bit près avant et après les parties) ; (c)
+`python -I tools/verifier_proprietaires.py lot/L-V` → `OK 4 fichiers` ; (d) commits préfixés `L-V : …` avec la ligne
+d'attribution ; (e) ce rapport, commité ; (f) onglet fermé, serveurs (8134, 8234) arrêtés, jeton `jeton_3` rendu.
+Un repreneur n'a rien à finir ; F2 rejoue les deux tests `apresFusion` (vraies armes de L-W, recul et gestes de L-A/L-B).
 Outils de session, non commités : `C:/Users/hgami/AppData/Local/Temp/claude/C--/d2516763-f01d-443a-9d38-fe9a0c124e7f/scratchpad/lv/`
 (`recepteur.py`, port 8234 : reçoit les photos du navigateur ; `planche.py` : planches-contact ; `photos/`). La maquette des
 armes est DANS `js/jeu/tests/test_viewmodel.js` (`maquette`, `poserMaquettes`).
@@ -64,7 +67,32 @@ au réglage des mains et aux photos.
 
 ## Le `__rapport`
 
-(à coller : dernier commit)
+PC (`http://127.0.0.1:8134/?test=1&rapport=1&lot=L-V`, 757f08e) : `ok: true`, `total: 15`, `echecs: []`, `signales: []`,
+`ms: 74 127`, qualité high. Sous `?tel=1` (émulation 375 × 812) : `ok: true`, `total: 15`, `echecs: []`, `signales: []`,
+`ms: 30 655`, téléphone, qualité medium.
+
+| # | Critère (§ 5.5.4) | PC | `?tel=1` |
+|---|---|---|---|
+| 1 | appels ≤ 8 | 149 états, max 4 (grenade à 0,1 s : bras 2 + boîte + grenade) ; hanche 3 ; bras 2 maillages | idem |
+| 2 | 3 lumières pendant 60 s | 3 (hémisphère, clé, bouche), 0 image fautive sur 3 600 (50 états) ; scène de jeu 8 → 8 | idem, 6 → 6 |
+| 3 | programmes constants 10 s | arme 20 → 20 · jeu 146 → 146 (380 images, qualité figée) | arme 20 → 20 · jeu 85 → 85 (570 images) |
+| 4 | épaules ≥ 4° sous le bord bas | pire 8,0° (FP-12, sprint tactique) sur 1 702 ancres | pire 6,7° |
+| 5 | IK ≤ 1 / 2 cm | 0 cm (exacte, ≈ 1e-8 m) sur 851 mesures | idem |
+| 6 | visée sur l'axe à 0,24 m, ± 1 px | ≤ 0,23 mm, ≤ 0,86 px (5 armes ; la respiration × 0,1) | ≤ 0,04 mm, ≤ 0,15 px |
+| 7 | chargeur parti 0,55 s, en place 1,35 s | fabriqué 0,567 / 1,350 ; vraie recharge 0,558 / 1,342, balles entrées 1,350 | idem |
+| 8 | recul visuel ± 5 %, < 2 % en 0,25 s | piston et cabré = fiche (2,8 cm / 2,2° … 6 cm / 8°), retour 0,20 s | idem |
+| 9 | TP-50 caché à 85 % | 0,84 montrée · 0,85 cachée · 1 cachée · 0,5 montrée · FA-24 montrée | idem |
+| 10 | `maj` ≤ 0,15 ms ; 0 NaN | 0,086 ms ; 0 NaN sur 10 000 états | 0,089 ms ; 0 |
+| 11 | bras ≤ 6 000 tri. ; Haythem inchangé | 5 083 triangles, 2 maillages ; empreinte identique | idem |
+| 12 | après l'œil, léger, sans composer | 1 / 1 (léger vrai) / 1, après l'œil ; 3 photos | idem |
+| 13 | six photos | 6 différentes | 6 différentes |
+| 14 | environnement fixe, programmes constants | même PMREM ; 20 → 20 de Basse à Ultra et retour ; 0 texture libérée sur 8 | idem |
+| 15 | vitrine au menu | superposée, lacet 0,018 → 0,065, arme seule, lumières du jeu 8 → 8, retirée | idem |
+
+`&rapport=1&lot=S0` sur la branche (PC, 2992335 — la suite ne touche que le test 3 de L-V) : `ok: true`, 29/29, 0 signalé,
+127 s ; balade au bit près (1 et 27 : vue 3 0 / 0, vue 1 0 / 0) ; 8 : programmes 147 → 147, géométries 1 579 → 1 579 ;
+14 : la passe superposée après l'œil, composer 1, sans composer 1.
+`python -I tools/verifier_proprietaires.py lot/L-V` → `OK 4 fichiers (lot/L-V, L-V, base socle)`.
 
 ## Écarts au document (§ et ligne de `spec_finale.md`)
 
