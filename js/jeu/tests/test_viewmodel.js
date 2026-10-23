@@ -523,7 +523,7 @@ export default function (jeu) {
 
   // 16. LES CONTRATS DES PISTES (relecture du 23/10 ; § 4.5.9) : CHRONOS complet pour les cinq armes (rechargeTact,
   // rechargeVide, sortie, rangement : des pistes à clés), leurs temps ceux des FICHES (recharges, rangement, couteau 0,60 s,
-  // grenade : lancer 0,35, remontée 0,25), le chargeur EN PLACE à l'heure des balles entrées (`recharge.ajout`) et parti
+  // grenade : goupille 0,15, lancer 0,35, remontée 0,25), le chargeur EN PLACE à l'heure des balles entrées (`recharge.ajout`) et parti
   // avant ; `evaluer` en Hermite MONOTONE (jamais au-delà des deux clés qui encadrent l'instant)
   T('16 contrats des pistes : CHRONOS complet, temps des fiches, Hermite monotone', async () => {
     const fautes = [], v = new Float64Array(VOIES.length), ck = VOIES.indexOf('ck');
@@ -538,7 +538,8 @@ export default function (jeu) {
         if (!(Math.abs(evaluer(P, r.ajout, v)[ck]) < 1e-6) || !(evaluer(P, r.ajout - 0.1, v)[ck] > 0.5) || !(evaluer(P, 0.55 * r.ajout / 1.35 + 0.01, v)[ck] > 0.5)) fautes.push(`${id} chargeur`);
       }
     }
-    if (!egal(CHRONOS.couteau.coup.duree, ARMES.couteau.coup) || !egal(CHRONOS.grenade.lancer.duree, 0.35) || !egal(CHRONOS.grenade.remontee.duree, 0.25)) fautes.push('couteau / grenade');
+    const G = CHRONOS.grenade;
+    if (!egal(CHRONOS.couteau.coup.duree, ARMES.couteau.coup) || !egal(G.goupille.duree, 0.15) || !egal(G.lancer.duree, 0.35) || !egal(G.remontee.duree, 0.25)) fautes.push('couteau / grenade');
     // Hermite monotone : 40 points entre chaque paire de clés de chaque piste
     let n = 0, depasse = 0;
     const toutes = [];
@@ -552,6 +553,45 @@ export default function (jeu) {
     }
     return { ok: fautes.length === 0 && depasse === 0 && n > 1000, attendu: 'pistes présentes, temps des fiches, chargeur en place aux balles entrées ; 0 dépassement entre deux clés',
       obtenu: `${fautes.length ? 'fautes : ' + fautes.join(', ') : 'contrats tenus'} · ${toutes.length} pistes, ${n} points, ${depasse} dépassement(s)` };
+  });
+
+  // 17. LES GESTES QUAND L'ARSENAL LES DIT AUTREMENT QUE LE SQUELETTE (relecture du 23/10, avant F2 — l'arsenal de L-A,
+  // fini : il passe à l'arme qui vient à la fin du RANGEMENT, pas de la sortie ; son `tEtat` repart au lâcher de la grenade,
+  // `phaseLancer` dit où en est le geste) : l'arme rangée puis la nouvelle, jamais l'inverse ; la goupille n'est pas rejouée
+  T('17 gestes : arme qui bascule au rangement, grenade dont le temps repart au lâcher', async () => {
+    const p = await essai(jeu), vm = p.aff.viewmodel, img = 1 / 60, iM = CHRONOS.couteau.coup.i;
+    // le changement P-17 → FA-24, l'arme de l'arsenal basculée à 0,15 s (le rangement du P-17, plus court que celui de la
+    // FA-24 : lu sur l'arme qui VIENT, la FA-24 serait rangée une 2e fois)
+    calmer(vm, etat({ arme: 'p17' }), 30);
+    const vues = [], cles = [];
+    for (let s = 0; s <= ARMES.p17.rangement + ARMES.fa24.sortie + 1e-9; s += img) {
+      const bascule = s >= ARMES.p17.rangement;
+      vm.maj(img, etat({ arme: bascule ? 'fa24' : 'p17', etatArme: 'change', tEtat: s, vers: 'fa24' }));
+      if (vues[vues.length - 1] !== vm.diag.arme) vues.push(vm.diag.arme);
+      if (vm.diag.geste && cles[cles.length - 1] !== vm.diag.geste) cles.push(vm.diag.geste);
+    }
+    const okChange = vues.join('>') === 'p17>fa24' && cles.join('>') === 'p17.rangement>fa24.sortie';
+    // la flash : goupille 0,15 s, lâchée (tEtat repart), lancer 0,35 s, remontée 0,25 s
+    calmer(vm, etat(), 30);
+    let pinRetombe = false, ph = [], lancerVu = false;
+    const suite = [];
+    for (let s = 0; s < 0.15; s += img) suite.push({ etatArme: 'lancer', grenade: 'flash', phaseLancer: 'goupille', tEtat: s, duree: null });
+    for (let s = 0; s < 0.60; s += img) suite.push({ etatArme: 'lancer', grenade: 'flash', phaseLancer: s < 0.35 ? 'lance' : 'remontee', tEtat: s, duree: 0.60 });
+    let pinVu = 0;
+    for (const o of suite) {
+      vm.maj(img, etat(o));
+      const pin = vm._geste.main[iM.pin];
+      if (o.phaseLancer === 'lance' && pinVu > 0.99 && pin < 0.99 && vm._geste.poidsMain > 0.5) pinRetombe = true;
+      pinVu = Math.max(pinVu, pin);
+      if (o.phaseLancer === 'lance' && vm._geste.main[iM.ov] < 0.5) lancerVu = true;      // (la grenade quitte la main)
+      if (ph[ph.length - 1] !== o.phaseLancer) ph.push(o.phaseLancer);
+    }
+    vm.maj(img, etat()); for (let i = 0; i < 20; i++) vm.maj(img, etat());
+    const rendue = vm.racine.visible && vm._geste.poidsMain === 0;
+    jeu.quitter('balade');
+    const ok = okChange && !pinRetombe && pinVu > 0.99 && lancerVu && rendue;
+    return { ok, attendu: 'armes p17 > fa24 et pistes p17.rangement > fa24.sortie ; anneau arraché en 0,15 s et pas remis ; grenade lâchée ; arme rendue',
+      obtenu: `armes ${vues.join(' > ')} · pistes ${cles.join(' > ')} · anneau ${r3(pinVu)} (retombé ${pinRetombe}) · lâchée ${lancerVu} · phases ${ph.join(' > ')} · rendue ${rendue}` };
   });
 
   // ---------------------------------------------------------------- À F2 (les vrais modules des autres lots)

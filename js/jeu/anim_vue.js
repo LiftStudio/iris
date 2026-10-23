@@ -251,14 +251,15 @@ const COUTEAU = piste(0.60, [
   { t: 0.52, dk: 0, gl: 0, x: 0.02, y: -0.04, rx: -0.12, rz: 0.06 },
   { t: 0.60, x: 0, y: 0, rx: 0, rz: 0, dx: 0, dy: 0, dz: 0, drx: 0, dry: 0, drz: 0 },
 ], VOIES_MAIN);
-// LA GRENADE : l'arme baissée 0,15 s (cachée), la grenade dans la main droite ; la main gauche arrache l'anneau
-// (0,15-0,30) ; tenue en arrière tant qu'on cuisine (`tenue`, la même pose) ; le lancer en 0,35 s (la grenade lâchée à
-// 0,12) ; l'arme remonte en 0,25 s
+// LA GRENADE : en 0,15 s (la goupille de l'arsenal : une flash peut partir dès 0,15 s — relecture du 23/10, c'était
+// 0,30 et la main lançait 0,15 s après la grenade) l'arme baisse et se cache, la grenade vient dans la main droite, la
+// main gauche arrache l'anneau ; tenue en arrière tant qu'on cuisine (`tenue`, la même pose) ; le lancer en 0,35 s (la
+// grenade lâchée à 0,12) ; l'arme remonte en 0,25 s
 const MAIN_TENUE = { dk: 1, dx: 0.14, dy: -0.16, dz: -0.30, drx: 0.4, dry: -0.2, drz: 0.5, ov: 1 };
 const GRENADE = {
-  goupille: piste(0.30, [{ t: 0, vis: 1 }, { t: 0.10, x: 0.06, y: -0.26, rx: -0.8, rz: 0.4, ...MAIN_TENUE, dy: -0.22 },
-    { t: 0.12, vis: 0 }, { t: 0.18, gl: 1, gfx: 0.08, gfy: -0.15, gfz: -0.32, dy: -0.16 }, { t: 0.24, gl: 1, gfx: 0.10, gfy: -0.15, gfz: -0.30, pin: 0 },
-    { t: 0.30, gl: 1, gfx: -0.12, gfy: -0.36, gfz: -0.30, pin: 1, dx: 0.18, dy: -0.12, dz: -0.24 }], VOIES_MAIN),
+  goupille: piste(0.15, [{ t: 0, vis: 1 }, { t: 0.05, x: 0.06, y: -0.26, rx: -0.8, rz: 0.4, ...MAIN_TENUE, dy: -0.22 },
+    { t: 0.06, vis: 0 }, { t: 0.09, gl: 1, gfx: 0.08, gfy: -0.15, gfz: -0.32, dy: -0.16 }, { t: 0.12, gl: 1, gfx: 0.10, gfy: -0.15, gfz: -0.30, pin: 0 },
+    { t: 0.15, gl: 1, gfx: -0.12, gfy: -0.36, gfz: -0.30, pin: 1, dx: 0.18, dy: -0.12, dz: -0.24 }], VOIES_MAIN),
   tenue: piste(0.5, [{ t: 0, x: 0.06, y: -0.26, rx: -0.8, rz: 0.4, vis: 0, ...MAIN_TENUE, dx: 0.18, dy: -0.12, dz: -0.24, gl: 1, gfx: -0.12, gfy: -0.36, gfz: -0.30, pin: 1 },
     { t: 0.5, dy: -0.115 }], VOIES_MAIN),
   lancer: piste(0.35, [{ t: 0, x: 0.06, y: -0.26, rx: -0.8, rz: 0.4, vis: 0, ...MAIN_TENUE, dx: 0.18, dy: -0.12, dz: -0.24, gl: 1, gfx: -0.12, gfy: -0.36, gfz: -0.30, pin: 1 },

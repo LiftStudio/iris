@@ -152,7 +152,7 @@ export class Viewmodel {
     this._phase = 0; this._amp = 0; this._lacet = null; this._tangage = 0; this._enAir = false; this._airT = 0;
     this._seq = null; this._tirT = -10; this._ressortArsenal = false; this._eclair = 0;
     this._geste = { cle: null, objet: null, poids: 0, vals: new Float64Array(VOIES.length), main: new Float64Array(VOIES_MAIN.length), poidsMain: 0 };
-    this._lancer = { relache: -1, cle: null };
+    this._lancer = { relache: -1, cle: null }; this._chg = { de: null, vers: null };
     this._chargeur = { capte: false, rel: new THREE.Matrix4(), decal: new THREE.Vector3(), d: 0 };
     this._inspection = -1;
     this.cleLissee = 1; this._piece = null; this._pieceN = 0;
@@ -287,6 +287,8 @@ export class Viewmodel {
   // L'état de VueFPS.etatArme (§ 4.5.7) ne dit pas tout ce qu'un geste montre : l'arme qui VIENT pendant un changement, la
   // durée de la recharge (le FP-12 compte ses cartouches), tactique ou à vide, le compte des tirs, la grenade et sa
   // cuisson. On les lit dans l'ARSENAL de l'acteur local (l'état, jamais une règle), un champ de `etat` passant devant.
+  // (Relecture du 23/10, avant F2 : l'arsenal de L-A dit en plus `grenade` — 'frag' | 'flash' — et `phaseLancer` —
+  // 'goupille' | 'tenue' | 'lance' | 'remontee' — et son `tEtat` REPART au lâcher de la grenade : lus quand il les a.)
   _lire(etat) {
     const e = this._e, P = this.game.partie, a = P && P.local, A = a && a.arsenal;
     e.arme = etat.arme || null; e.et = etat.etatArme || 'pret'; e.t = +etat.tEtat || 0; e.visee = borne(+etat.visee || 0, 0, 1);
@@ -298,8 +300,9 @@ export class Viewmodel {
     e.duree = etat.duree !== undefined ? etat.duree : (A && Number.isFinite(A.fin) && Number.isFinite(A.t0) ? A.fin - A.t0 : null);
     e.tactique = etat.tactique !== undefined ? !!etat.tactique : (A ? !!A.tact : true);
     e.chargeur = etat.chargeur !== undefined ? etat.chargeur : (A ? A.chargeur : 1);
-    e.grenade = etat.grenade || (A && A.lancerType) || (a && a.cmd && a.cmd.tactique ? 'flash' : 'frag');
+    e.grenade = etat.grenade || (A && A.grenade) || (a && a.cmd && a.cmd.tactique ? 'flash' : 'frag');
     e.cuisson = etat.cuisson !== undefined ? !!etat.cuisson : !!(a && a.cmd && a.cmd.letale);
+    e.phaseLancer = etat.phaseLancer !== undefined ? etat.phaseLancer : (A && typeof A.phaseLancer === 'string' ? A.phaseLancer : null);
     // la vitesse de côté (le pas chassé) : la vitesse du corps sur la droite du regard
     if (etat.lateral !== undefined) e.lateral = +etat.lateral || 0;
     else { const c = a && a.corps, l = this.game.camYaw || 0; e.lateral = c && c.vel ? c.vel.x * Math.cos(l) - c.vel.z * Math.sin(l) : 0; }
@@ -314,9 +317,15 @@ export class Viewmodel {
     if (this._vitrine) { this.diag.maj = performance.now() - t0; return; }
     dt = borne(Number.isFinite(dt) ? dt : 0, 0, 0.1);
     // une partie neuve : ses compteurs à elle (le compte des tirs repart, le ressort de l'arsenal est à redécouvrir)
-    if (this.game.partie !== this._partie) { this._partie = this.game.partie; this._seq = null; this._ressortArsenal = false; this._geste.poids = 0; this._geste.cle = null; }
+    if (this.game.partie !== this._partie) { this._partie = this.game.partie; this._seq = null; this._ressortArsenal = false; this._geste.poids = 0; this._geste.cle = null; this._chg.de = null; }
     const e = this._lire(etat || {});
     e.dt = dt;
+    // LE CHANGEMENT D'ARME : celle qu'on range est celle qu'on tenait quand il a commencé, celle qui vient `vers` — l'arsenal
+    // du squelette passe à la nouvelle à la FIN de la sortie, celui de L-A à la fin du RANGEMENT : on ne dépend d'aucun
+    const chg = this._chg;
+    if (e.et !== 'change') { chg.de = null; chg.vers = null; }
+    else if (!chg.de) { chg.de = e.arme; chg.vers = e.vers || e.arme; }
+    else if (e.vers && e.vers !== chg.de) chg.vers = e.vers;
     if (!e.arme || e.mort || !this.armes[e.arme]) { this.cacher(); this._seq = e.seq; this.diag.maj = performance.now() - t0; return; }
     this.t += dt;
     if (this.cachee) {
@@ -329,8 +338,7 @@ export class Viewmodel {
     const lunette = e.arme === 'tp50' && e.visee >= 0.85;
     // 1. l'arme montrée : pendant un changement, l'ancienne jusqu'au bout de son rangement, puis celle qui vient
     let id = e.arme;
-    const fA = ARMES[e.arme];
-    if (e.et === 'change' && e.vers && e.t >= (fA.rangement || 0)) id = e.vers;
+    if (e.et === 'change' && chg.de) id = e.t >= ((ARMES[chg.de] && ARMES[chg.de].rangement) || 0) ? chg.vers : chg.de;
     if (!this.armes[id] || !ARMES_VUE.includes(id)) id = ARMES_VUE.includes(e.arme) ? e.arme : 'fa24';
     if (!this.courante || this.courante.userData.arme !== id) this.montrer(id);
     const f = ARMES[id], PR = PRISES[id] || PRISES.fa24;
@@ -427,8 +435,8 @@ export class Viewmodel {
         else { cle = 'fp12.pompe'; P = C.pompe; t = tp; }
       } else { P = e.tactique ? C.rechargeTact : C.rechargeVide; cle = id + (e.tactique ? '.tact' : '.vide'); t = e.t; }
     } else if (e.et === 'change' && C) {
-      const fO = ARMES[e.arme] || f;
-      if (e.t < fO.rangement && CHRONOS[e.arme]) { cle = e.arme + '.rangement'; P = CHRONOS[e.arme].rangement; t = e.t; }
+      const de = this._chg.de || e.arme, fO = ARMES[de] || f;
+      if (e.t < fO.rangement && CHRONOS[de]) { cle = de + '.rangement'; P = CHRONOS[de].rangement; t = e.t; }
       else { cle = id + '.sortie'; P = C.sortie; t = e.t - (fO.rangement || 0); }
     } else if (C && C.apresTir && this.t - this._tirT < C.apresTir.duree && (e.et === 'tir' || e.et === 'pret')) {
       cle = id + '.apresTir'; P = C.apresTir; t = this.t - this._tirT;
@@ -443,10 +451,15 @@ export class Viewmodel {
     const L = this._lancer;
     if (e.et === 'couteau') { PM = CHRONOS.couteau.coup; tm = e.t; }
     else if (e.et === 'lancer') {
-      const Gr = CHRONOS.grenade;
+      const Gr = CHRONOS.grenade, ph = e.phaseLancer;
       if (L.cle === null) { L.cle = e.grenade; L.relache = -1; }
-      if (e.t < Gr.goupille.duree) { PM = Gr.goupille; tm = e.t; }
-      else if (L.relache < 0 && e.cuisson && L.cle === 'frag') { PM = Gr.tenue; tm = (e.t - Gr.goupille.duree) % Gr.tenue.duree; }
+      if (ph === 'lance') { PM = Gr.lancer; tm = Math.min(e.t, Gr.lancer.duree); }
+      else if (ph === 'remontee') {
+        // (le `tEtat` de l'arsenal repart au lâcher : la remontée occupe la fin du geste — tout le geste si elle a éclaté en main)
+        const D = Number.isFinite(e.duree) ? e.duree : Gr.lancer.duree + Gr.remontee.duree;
+        PM = Gr.remontee; tm = borne(e.t - (D - Gr.remontee.duree), 0, Gr.remontee.duree);
+      } else if (e.t < Gr.goupille.duree) { PM = Gr.goupille; tm = e.t; }
+      else if (ph === 'tenue' || (ph === null && L.relache < 0 && e.cuisson && L.cle === 'frag')) { PM = Gr.tenue; tm = (e.t - Gr.goupille.duree) % Gr.tenue.duree; }
       else {
         if (L.relache < 0) L.relache = e.t;
         const tl = e.t - L.relache;
