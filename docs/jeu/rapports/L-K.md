@@ -114,7 +114,9 @@ verrou, figé, 'frottement'), `ALLURES_PROP`.
 - **L-F** : `PartieProp._deguiser` remplace le corps AVANT `deguiser` — refusé, l'humain devient un `CorpsProp` sans meuble
   (son avatar caché : il disparaît) ; `deguiser` change lui-même le corps d'un humain : l'appeler directement. Écouter
   `refus` (« Pas la place »), remplir `hud.prop.discretion` par `credibiliteActeur`, l'aide « E : devenir … » par
-  `partie.viseMeuble.nom`.
+  `partie.viseMeuble.nom`. (Lu sur `lot/L-F` 556d75e : son `_deguiser` rend déjà le Player sur un refus — parfait ; mais
+  `assez = (z) => typesDeguisables(z).length >= 6` compte des CLÉS : les six couleurs de la chaise coque font six « types »
+  — prendre `typesDistincts(z)`.)
 - **L-G** : dessiner `partie.viseMeuble` (le point de visée et l'aide) et `refus`.
 - **L-M** : l'étiquette de l'extincteur de `js/ecole_ascenseur.js` (l. 421-430) — tant qu'il manque, l'extincteur n'est pas
   déguisable au 1er (zone `e1est`) ni dans toute l'école.
