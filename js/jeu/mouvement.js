@@ -14,7 +14,9 @@
 //   - le SAUT borné au décollage (la tête à 8 cm du plafond) ET EN VOL : le plafond, puis la TRANCHE DE TÊTE (1,35-1,78 m) contre
 //     les linteaux et les boîtes hautes, le corps qui ne heurte qu'à 1,35 m en l'air (`hautCorps` : pas de mur invisible
 //     devant une porte) ; la gravité intégrée EXACTEMENT (la parabole, pas le schéma d'Euler de Player.simuler, qui perdait
-//     1,3 cm d'apogée) ; l'élan gardé en l'air (`elanAir`, τ 0,45 s) ; la RÉCEPTION d'une chute de plus de 0,3 m ;
+//     1,3 cm d'apogée) ; l'élan gardé en l'air (`elanAir`, τ 0,45 s) ; le corps qui redescend sur un meuble bas qu'il a
+//     survolé s'y POSE et en glisse (il en était sorti d'un bond, parfois à travers un mur) ; la RÉCEPTION d'une chute de plus
+//     de 0,3 m ;
 //   - le FRANCHISSEMENT scripté (Espace face à un obstacle bas, ou sprint contre lui 0,15 s) par `franchissable`, la fonction du
 //     socle telle quelle — la même que la génération des liens « franchir » du graphe (L-D) : un bot ne planifie jamais un
 //     franchissement que le mouvement refuserait ;
@@ -268,7 +270,8 @@ export function appliquerCommande(acteur, cmd, dt, partie) {
 // du meuble, en l'air pour Player (le saut et la glissade attendent qu'il en descende) ; et il en GLISSE, à 3 m/s au plus, vers
 // la sortie la plus proche (une des 8 directions : le premier point à 1,25 m au plus où le corps redescend libre, et qu'on
 // atteint par C.deplacer à la hauteur tenue — jamais à travers un mur, jamais vers le mur contre lequel le meuble est posé).
-// Coincé entre le meuble et un linteau (aucune hauteur libre pour la tête) : le pas est annulé, comme contre un mur.
+// Coincé entre le meuble et un linteau (aucune hauteur libre pour la tête) : le pas est annulé, comme contre un mur (si le
+// départ du pas est libre).
 const _q = { x: 0, z: 0 }, SORTIES = [0.15, 0.3, 0.45, 0.6, 0.8, 1.0, 1.25];
 function surMeuble(p, C, s, r, jy0, x0, y0, z0, dt) {
   const pieds = p.pos.y, hc = SAUT.hautCorpsAir * s, bas = p.jumpY;
@@ -296,10 +299,11 @@ function surMeuble(p, C, s, r, jy0, x0, y0, z0, dt) {
       C.deplacer(p.pos, bx * L, bz * L, r, null, pieds + hi, hc);
       p.pos.y = C.solEn(p.pos.x, p.pos.z, p.pos.y);
     }
-  } else {
+  } else if (!chevauche(C, x0, z0, r, y0 + jy0, hc)) {
     p.pos.set(x0, y0, z0); p.vel.x = 0; p.vel.z = 0;
     p.jumpY = jy0; p.jumpVel = 0; p.airborne = jy0 > 0;
   }
+  // (sinon — une forme haute qui l'a rejoint, un vantail qui se referme — rien ici : C.deplacer l'en sort comme au sol)
 }
 // le disque (x, z, r) chevauche-t-il une forme du joueur dans la bande [pieds + bas, pieds + haut] ? Lu forme par forme
 // (Collisions._parcourir / _sortir sur une copie), et non par C.libre, qu'un meuble collé à un mur trompe : le disque dont le
