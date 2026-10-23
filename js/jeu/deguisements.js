@@ -497,10 +497,11 @@ export function distPassage(x, y, z) {
   for (const P of _portes) if (Math.abs(P.y - y) < 1.5) d = Math.min(d, Math.hypot(P.x - x, P.z - z));
   return d;
 }
-// le dos d'un meuble posé là est-il contre un mur (moins de 12 cm derrière lui) ?
+// le dos d'un meuble posé là est-il contre un mur ? (moins de 12 cm derrière lui — ou, quand son disque est plus large que
+// sa profondeur, aussi près que le disque le laisse aller : un distributeur de 0,48 m de fond a un disque de 0,36 m)
 export function contreMurEn(T, x, y, z, cap) {
   const C = MEUBLES.collisions; if (!C || !T) return false;
-  const dos = T.dos ?? Math.max(0.02, -T.boite.min.z), ym = y + Math.min(1.2, T.haut / 2 + 0.05), L = dos + 0.12;
+  const dos = T.dos ?? Math.max(0.02, -T.boite.min.z), ym = y + Math.min(1.2, T.haut / 2 + 0.05), L = Math.max(dos + 0.12, (T.rayon || 0) + 0.08);
   const dx = -Math.sin(cap), dz = -Math.cos(cap);
   return C.rayonLibre(x, ym, z, x + dx * L, ym, z + dz * L, 0) < 1 - 1e-6;
 }
