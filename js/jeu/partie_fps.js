@@ -299,6 +299,7 @@ export class PartieFPS extends Partie {
     let p = null;
     try { p = choisirApparition(this, a); } catch (e) { p = null; }
     if (p && !this._vu(a, p)) return p;
+    this.replis = (this.replis || 0) + 1;         // (compté : à F2, avec les apparitions de L-D, il ne devrait presque plus servir)
     const L = this.candidats(), notes = [];
     for (const q of L) {
       let dE = Infinity, nA = 0;
