@@ -459,7 +459,7 @@ export class Errant {
     viderFronts(cmd);                              // (les fronts ne vivent qu'un pas : un `saut` resté vrai faisait sautiller)
     // (le lacet a été tenu par un autre depuis le dernier pas — le cerveau en combat, une réapparition — : le regard repart
     // de là ; sinon, le combat fini, la tête et le corps sautaient d'un coup vers le regard d'avant le combat)
-    if (this._lacetPose !== undefined && Math.abs(angle(cmd.lacet - this._lacetPose)) > 1e-9) this.regard = cmd.lacet;
+    if (this._lacetPose !== undefined && Math.abs(angle(cmd.lacet - this._lacetPose)) > 1e-9) { this.regard = cmd.lacet; this.coupDOeil = cmd.lacet; }
     // LA DESTINATION
     const v = this.vers ? this.vers(a) : null, avant = this.dest;
     if (v) {
