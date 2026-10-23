@@ -247,6 +247,36 @@ const RECETTES = {
   victoire: (gagne) => (ctx, out, q) => { let f = 0; const N = gagne ? [523, 659, 784, 1047] : [392, 349, 311, 262]; for (let i = 0; i < 4; i++) f = Math.max(f, ton(ctx, out, q, 'triangle', N[i], 0, i === 3 ? 0.6 : 0.16, 0.45, 0.004, 0.95 + i * 0.13)); return f; },
 };
 
+// ---------------------------------------------------------------- LA BANQUE DE SONS
+// Les sons les plus fréquents — tirs, pas, impacts — RENDUS UNE FOIS, à la préparation, dans un OfflineAudioContext, à
+// partir des MÊMES recettes : en manche, un tir n'est plus qu'une source qui lit un tampon (5 nœuds avec sa voix au lieu
+// d'une vingtaine, 3 automatismes au lieu d'une quarantaine) — sept bots qui se battent au −1 coûtaient 0,39 ms par
+// image à `maj`, mesuré le 23/10 sous ?test=1. La hauteur ±4 % du coup passe par playbackRate ; les pas et les impacts
+// ont plusieurs prises (le bruit tiré ailleurs dans la seconde précalculée). Tant que la banque n'est pas rendue (une
+// à deux secondes, à la toute première partie de la session), les recettes jouent en direct.
+const CLASSES_TIR = TELEPHONE ? ['local', 'pres', 'loin'] : ['local', 'localDehors', 'pres', 'presDehors', 'loin'];
+const PRISES = TELEPHONE ? 2 : 3;
+const cleTir = (arme, gaz, classe) => `tir:${arme}:${gaz ? 'g' : 'm'}:${classe}`;
+const FORCES_PAS = [0.3, 0.6, 0.9];
+function listeBanque() {
+  const L = [];
+  for (const arme of Object.keys(RECETTES_TIR)) for (const gaz of [false, true]) for (const classe of CLASSES_TIR) {
+    const R = gaz ? recetteGaz(RECETTES_TIR[arme]) : RECETTES_TIR[arme];
+    const local = classe.startsWith('local'), dehors = classe.endsWith('Dehors'), loin = classe === 'loin';
+    L.push({ cle: cleTir(arme, gaz, classe), fab: (B, meta) => recetteTir(B, R, { h: 1, loin, local, dehors, proche: !loin, meta }) });
+  }
+  for (const f of FORCES_PAS) for (let k = 0; k < PRISES; k++) L.push({ cle: `pas:${f}:${k}`, fab: (B) => RECETTES.pas(B, f) });
+  for (const mat of ['mur', 'sol', 'meuble', 'vitre']) for (let k = 0; k < PRISES - 1; k++) L.push({ cle: `imp:${mat}:${k}`, fab: (B) => RECETTES.impact(B, mat, false) });
+  for (let k = 0; k < PRISES - 1; k++) L.push({ cle: `imp:peinture:${k}`, fab: (B) => RECETTES.impact(B, 'mur', true) });
+  return L;
+}
+// un faux contexte : la durée d'une recette sans rien créer (la place de chaque son dans le rendu)
+class FauxParam { setValueAtTime() { return this; } exponentialRampToValueAtTime() { return this; } linearRampToValueAtTime() { return this; } setTargetAtTime() { return this; } }
+function fauxContexte(sr) {
+  const noeud = () => ({ connect() {}, disconnect() {}, start() {}, stop() {}, gain: new FauxParam(), frequency: new FauxParam(), Q: new FauxParam(), playbackRate: new FauxParam(), detune: new FauxParam(), buffer: null, type: '' });
+  return { sampleRate: sr, currentTime: 0, createGain: noeud, createBiquadFilter: noeud, createOscillator: noeud, createBufferSource: noeud };
+}
+
 // ---------------------------------------------------------------- SonsJeu
 const MUET = 1e-4;
 // le genre d'une grenade ('frag' | 'flash') dans un événement `explosion` ou `grenade` (voir brancher)
@@ -289,11 +319,48 @@ export class SonsJeu {
     if (!M || M.blanc !== b || M.rose !== r) this._bruitsVus = { blanc: b, rose: r };
     return this._bruitsVus;
   }
-  preparer() { if (this.audio && this.audio.ctx && !this.audio.bruitBlanc) this.audio._bruits?.(); this._bus(); }
+  // la préparation (Partie.preparer, sans l'attendre) : le bus, et la banque rendue en tâche de fond
+  preparer() { if (this.audio && this.audio.ctx && !this.audio.bruitBlanc) this.audio._bruits?.(); this._bus(); return this.pretBanque(); }
+  // LA BANQUE (une fois par session) : la durée de chaque son par un faux contexte, tous rendus à la suite dans UN
+  // OfflineAudioContext, puis découpés en tampons — une promesse, tenue quand elle est prête (ou impossible)
+  pretBanque() {
+    if (this._banque) return this._banque;
+    const A = this.audio, ctx = A && A.ctx, B = this._B, OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!ctx || !B.blanc || !B.rose || !OAC) return Promise.resolve(null);
+    const sr = ctx.sampleRate, L = listeBanque(), faux = fauxContexte(sr), plan = [];
+    let t = 0.01;
+    for (const s of L) { const d = s.fab(B, {})(faux, null, 0) || 0.1; plan.push({ cle: s.cle, fab: s.fab, t0: t, d }); t += Math.ceil((d + 0.02) * sr) / sr; }
+    const t0 = performance.now();
+    this._banque = (async () => {
+      try {
+        const o = new OAC(1, Math.ceil(t * sr) + 256, sr);
+        for (const s of plan) { s.meta = {}; s.fab(B, s.meta)(o, o.destination, s.t0); }
+        const rendu = await o.startRendering(), data = rendu.getChannelData(0), M = new Map();
+        for (const s of plan) {
+          const i0 = Math.round(s.t0 * sr), n = Math.max(1, Math.min(data.length - i0, Math.ceil(s.d * sr))), b = ctx.createBuffer(1, n, sr);
+          b.copyToChannel(data.subarray(i0, i0 + n), 0);
+          M.set(s.cle, { buf: b, duree: n / sr, parts: s.meta });
+        }
+        this.banque = M; this.stats.banque = { sons: M.size, secondes: Math.round(t * 10) / 10, ms: Math.round(performance.now() - t0) };
+        return M;
+      } catch (e) { console.warn('[sons] banque :', e); return null; }
+    })();
+    return this._banque;
+  }
+  // une voix qui LIT un son de la banque, à la hauteur `h` (playbackRate)
+  _tampon(x, y, z, son, h, opts) {
+    let src = null;
+    const v = this.jouer3d(x, y, z, (ctx, out, q) => {
+      src = ctx.createBufferSource(); src.buffer = son.buf; src.playbackRate.setValueAtTime(h, q);
+      src.connect(out); src.start(q); src.stop(q + son.duree / h + 0.02); return son.duree / h;
+    }, opts);
+    if (v) { v.parts = son.parts; v.banque = true; v.source = src; }
+    return v;
+  }
 
   brancher(partie) {
     this.debrancher(); this.partie = partie;
-    this._bus();
+    this._bus(); this.pretBanque();
     this._tPrec = partie.t; this._phase = partie.phase; this._bips = -1; this._coeurT = 0; this._gren.clear(); this._rebondsEvt = false;
     // (l'événement noté AVEC son genre : Partie.evt fait { t, type, ...données }, et une explosion ou une grenade porte un
     // champ `type` à elle — 'frag' | 'flash' — qui écrase celui de l'événement)
@@ -482,15 +549,22 @@ export class SonsJeu {
         const base = RECETTES_TIR[e.arme] || RECETTES_TIR.fa24, gaz = this._gaz(), R0 = gaz ? recetteGaz(base) : base;
         const E = this._oreille, d = Math.hypot(e.ox - E.x, e.oy - E.y, e.oz - E.z);
         const h = 1 + (new Rng(melanger(P.graine, e.a, e.seq | 0)).next() * 2 - 1) * REGLAGES_SONS.hauteur;
-        const meta = {};
-        const v = this.jouer3d(e.ox, e.oy, e.oz, recetteTir(B, R0, { h, loin: d > REGLAGES_SONS.claquementMax, local: lui(e.a), dehors: this._dehors(e.ox, e.oy, e.oz),
-          proche: d < 15, meta }), { gain: lui(e.a) ? G.tirLocal : G.tir, rayon: R.tir, retard: true, decalage: dec, prioritaire: lui(e.a), occlusion: !lui(e.a) });
-        if (v) { v.parts = meta; v.hauteur = h; v.arme = e.arme; v.gaz = gaz; v.tireur = e.a; }
+        const loin = d > REGLAGES_SONS.claquementMax, dehors = this._dehors(e.ox, e.oy, e.oz);
+        const o = { gain: lui(e.a) ? G.tirLocal : G.tir, rayon: R.tir, retard: true, decalage: dec, prioritaire: lui(e.a), occlusion: !lui(e.a) };
+        const classe = loin ? 'loin' : (lui(e.a) ? 'local' : 'pres') + (dehors && CLASSES_TIR.includes('presDehors') ? 'Dehors' : '');
+        const son = this.banque && this.banque.get(cleTir(RECETTES_TIR[e.arme] ? e.arme : 'fa24', gaz, classe));
+        let v;
+        if (son) v = this._tampon(e.ox, e.oy, e.oz, son, h, o);
+        else { const meta = {}; v = this.jouer3d(e.ox, e.oy, e.oz, recetteTir(B, R0, { h, loin, local: lui(e.a), dehors, proche: d < 15, meta }), o); if (v) v.parts = meta; }
+        if (v) { v.hauteur = h; v.arme = e.arme; v.gaz = gaz; v.tireur = e.a; }
         return;
       }
       case 'impact': {
         if ((e.plomb | 0) > 1) return;                 // (une gerbe de plombs : deux impacts s'entendent, pas huit)
-        const v = this.jouer3d(e.x, e.y, e.z, RECETTES.impact(B, e.mat, this._gaz()), { gain: G.impact * (e.plomb ? 0.5 : 1), rayon: R.impact, retard: true, decalage: dec, hauteurOcc: 0.1 });
+        const peint = this._gaz(), o = { gain: G.impact * (e.plomb ? 0.5 : 1), rayon: R.impact, retard: true, decalage: dec, hauteurOcc: 0.1 };
+        const m = peint ? 'peinture' : e.mat === 'sol' || e.mat === 'meuble' || e.mat === 'vitre' ? e.mat : 'mur';
+        const son = this.banque && this.banque.get(`imp:${m}:${Math.floor(Math.random() * (PRISES - 1))}`);
+        const v = son ? this._tampon(e.x, e.y, e.z, son, 0.94 + Math.random() * 0.12, o) : this.jouer3d(e.x, e.y, e.z, RECETTES.impact(B, e.mat, peint), o);
         if (v) v.mat = e.mat;
         return;
       }
@@ -519,8 +593,10 @@ export class SonsJeu {
         if (!r) return;
         const local = lui(e.a), plus = this._ennemi(e.a) ? Math.pow(10, REGLAGES_SONS.pasEnnemi / 20) : 1;
         const k = allure === 'marche' ? 0.45 : allure === 'accroupi' ? 0.3 : allure === 'sprint' ? (e.tact ? 1.3 : 1.15) : 1;
-        const v = this.jouer3d(e.x, e.y, e.z, RECETTES.pas(B, e.f ?? 0.6), { gain: (local ? G.pasLocal : G.pas) * plus * k,
-          rayon: local ? 3 : r, retard: true, decalage: dec, hauteurOcc: 1.0, occlusion: !local });
+        const f = e.f ?? 0.6, o = { gain: (local ? G.pasLocal : G.pas) * plus * k, rayon: local ? 3 : r, retard: true, decalage: dec, hauteurOcc: 1.0, occlusion: !local };
+        const fb = FORCES_PAS.reduce((m, x) => (Math.abs(x - f) < Math.abs(m - f) ? x : m), FORCES_PAS[0]);
+        const son = this.banque && this.banque.get(`pas:${fb}:${Math.floor(Math.random() * PRISES)}`);
+        const v = son ? this._tampon(e.x, e.y, e.z, son, 0.93 + Math.random() * 0.14, o) : this.jouer3d(e.x, e.y, e.z, RECETTES.pas(B, f), o);
         if (v) { v.pas = true; v.ennemi = plus > 1; v.acteur = e.a; }
         return;
       }

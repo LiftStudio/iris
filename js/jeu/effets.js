@@ -339,17 +339,18 @@ export class Effets {
     const N = REGLAGES_EFFETS.pools;
     const tImp = atlasImpacts(), tLue = atlasLueurs(), tFum = atlasFumees(), tAnn = atlasAnneaux(), tCib = textureCible();
     this.textures = [tImp, tLue, tFum, tAnn, tCib];
+    // (les transparents à deux faces en UNE passe — `forceSinglePass` : three les dessine sinon deux fois, dos puis face)
     // les matériaux : les impacts éclairés comme le mur (le trou est sombre, la peinture brille un peu), les lueurs
     // additives sans tonalité (le bloom), les fumées mélangées, les douilles et les grenades en métal, la cible en carton
     const mImp = instancier(new THREE.MeshStandardMaterial({ map: tImp, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4,
       roughness: 0.82, metalness: 0 }), 0.5);
     mImp.name = 'effets : impacts';
-    const mLue = instancier(new THREE.MeshBasicMaterial({ map: tLue, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false, side: THREE.DoubleSide }), 0.5);
+    const mLue = instancier(new THREE.MeshBasicMaterial({ map: tLue, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false, side: THREE.DoubleSide, forceSinglePass: true }), 0.5);
     mLue.name = 'effets : lueurs';
-    const mAnn = instancier(new THREE.MeshBasicMaterial({ map: tAnn, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false, side: THREE.DoubleSide,
+    const mAnn = instancier(new THREE.MeshBasicMaterial({ map: tAnn, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false, side: THREE.DoubleSide, forceSinglePass: true,
       polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }), 0.5);
     mAnn.name = 'effets : anneaux';
-    const mFum = instancier(new THREE.MeshBasicMaterial({ map: tFum, transparent: true, depthWrite: false, fog: false, side: THREE.DoubleSide }), 0.5);
+    const mFum = instancier(new THREE.MeshBasicMaterial({ map: tFum, transparent: true, depthWrite: false, fog: false, side: THREE.DoubleSide, forceSinglePass: true }), 0.5);
     mFum.name = 'effets : fumées';
     const mMet = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.85, roughness: 0.38 }); mMet.name = 'effets : laiton et grenades';
     const mCib = new THREE.MeshStandardMaterial({ map: tCib, side: THREE.DoubleSide, roughness: 0.95, metalness: 0 }); mCib.name = 'effets : cibles du stand';

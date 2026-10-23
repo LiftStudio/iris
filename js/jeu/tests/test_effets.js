@@ -21,6 +21,13 @@ const bilan = (res, attendu) => {
   return { ok: ko.length === 0, attendu, obtenu: ko.length ? 'faux : ' + ko.join(' | ') : res.map((x) => x[0]).join(' · ') };
 };
 // une voix de test : un sinus de `d` s
+// l'espion des DÉPARTS de toutes les sources : le journal du harnais n'enveloppe que AudioScheduledSourceNode.start, que
+// AudioBufferSourceNode.prototype.start masque (les bruits, les sons de la banque) — demande à F2 au rapport
+function espionDeparts() {
+  const L = [], P = [AudioScheduledSourceNode.prototype, AudioBufferSourceNode.prototype].map((o) => [o, Object.getOwnPropertyDescriptor(o, 'start')]).filter((x) => x[1]);
+  for (const [o, d] of P) Object.defineProperty(o, 'start', { ...d, value: function (q = 0, ...r) { L.push(q); return d.value.call(this, q, ...r); } });
+  return { L, rendre() { for (const [o, d] of P) Object.defineProperty(o, 'start', d); } };
+}
 const SINUS = (d = 0.3, f = 440) => (ctx, out, q) => { const o = ctx.createOscillator(); o.frequency.value = f; o.connect(out); o.start(q); o.stop(q + d); return d; };
 // LE COMPTE DES SONS DE LA BALADE (critère 9) : 5 s de course de Haythem, du départ vers la salle d'attente puis vers le
 // hall ouest et retour, les `start` programmés comptés — le MÊME script, collé dans la console d'un arbre `a8b22dd`
@@ -29,8 +36,7 @@ export function compterSonsBalade(game, espion) {
   const u = game.user, inp = game.input;
   const code = (id) => (inp.bind[id] || []).find((c) => c && !c.startsWith('Tactile:'));
   const tenir = (id, oui) => { const c = code(id); if (oui) inp.downSet.add(c); else inp.downSet.delete(c); };
-  const P = AudioScheduledSourceNode.prototype, s0 = P.start; let n = 0;
-  if (espion) P.start = function (...a) { n++; return s0.apply(this, a); };
+  const D = espion ? espionDeparts() : null;
   const buts = [{ x: 9.6, z: -6.755 }, { x: 6.2, z: -3.2 }, { x: 12.2, z: -2.2 }];
   try {
     game.placerAuDepart(); u.stamina = 100;
@@ -43,9 +49,9 @@ export function compterSonsBalade(game, espion) {
       game.update(1 / 120);
       if (i % 2) { game.carte.maj(1 / 60, game); game.updateCamera(1 / 60); game.audio.setListener(game.camera.position, game.camera); }
     }
-  } finally { tenir('forward', false); if (espion) P.start = s0; }
+  } finally { tenir('forward', false); if (D) D.rendre(); }
   game.placerAuDepart();
-  return n;
+  return D ? D.L.length : 0;
 }
 // (la mesure sur a8b22dd : 600 pas — rapport L-H ; le seuil : ± 10 %)
 export const PAS_A8B22DD = null;
@@ -219,6 +225,7 @@ export default function (jeu) {
   // jamais par onended, 0 AudioBuffer créé par tir
   T('05 voix : ≤ 24, libérées à leur fin, 0 tampon par tir', async () => {
     const { p, S } = await essai({ mannequins: 3, bots: 2 });
+    await S.pretBanque();                      // (la banque de sons rendue : ses tampons sont ceux de la préparation)
     const ctx = game.audio.ctx, res = [], N = REGLAGES_SONS.voix;
     // l'espion des tampons : createBuffer et new AudioBuffer
     let tampons = 0;
@@ -333,12 +340,10 @@ export default function (jeu) {
     if (vL) { const o = occ(vL); res.push([`libre : gain ${r3(o.g)}, filtre ${o.f} Hz`, Math.abs(o.g - 1) < 1e-3 && o.f >= 20000]); }
     if (vH) { const o = occ(vH); res.push([`autre niveau : gain ${r3(o.g)} (${r3(kN)}), filtre ${o.f} Hz`, Math.abs(o.g - kN) < 1e-3 && o.f === O.niveau.hz]); }
     // le RETARD : un tir à d m, émis juste après une image (son moment dans l'image : 0) → start à d/343
-    const a = p.acteurParId(1), d = 17;
-    J.vider();
-    p.evt('tir', { a: a.id, arme: 'fa24', ox: L.x + d, oy: L.y, oz: L.z, dx: -1, dy: 0, dz: 0, n: 1, seq: 7 });
-    S.maj(0, cam);
-    const st = J.entrees.find((e) => e.methode === 'start'), dd = Math.hypot(d, 0, 0);
-    res.push([`retard ${st ? r3(st.quand * 1000) : '—'} ms (${r3(dd / 343 * 1000)})`, !!st && Math.abs(st.quand - (game.audio.ctx.currentTime + dd / 343)) <= 0.001]);
+    const a = p.acteurParId(1), d = 17, dep = espionDeparts();
+    try { p.evt('tir', { a: a.id, arme: 'fa24', ox: L.x + d, oy: L.y, oz: L.z, dx: -1, dy: 0, dz: 0, n: 1, seq: 7 }); S.maj(0, cam); } finally { dep.rendre(); }
+    const st = dep.L.length ? Math.min(...dep.L) : null, dd = Math.hypot(d, 0, 0);
+    res.push([`retard ${st !== null ? r3(st * 1000) : '—'} ms (${r3(dd / 343 * 1000)}) · ${S.banque ? 'banque' : 'direct'}`, st !== null && Math.abs(st - (game.audio.ctx.currentTime + dd / 343)) <= 0.001]);
     // 4 VOIX AU PLUS par image : 10 voix neuves d'un coup (≥ −30 dB), une image
     let vues = 0; const vue = B.vue;
     B.vue = function (...x) { vues++; return vue.apply(this, x); };
@@ -383,12 +388,14 @@ export default function (jeu) {
       const v10 = tir(10), v35 = tir(35);
       res.push([`à 10 m : claquement ${v10 && v10.parts.claquement} s ; à 35 m : ${v35 ? v35.parts.claquement ?? 'aucun' : '—'} (corps ${v35 && v35.parts.corps})`, !!v10 && !!v10.parts.claquement && !!v35 && v35.parts.claquement === undefined]);
       // 30 coups du même tireur : la hauteur (et la fréquence de départ du grave, au journal) dans ± 4 %, jamais deux fois la même
-      J.vider(); const H = [];
-      for (let s = 1; s <= 30; s++) { const v = tir(6, 1, 100 + s); if (v && v.hauteur) H.push(v.hauteur); }
+      await S.pretBanque();
+      J.vider(); const H = [], V = [];
+      for (let s = 1; s <= 30; s++) { const v = tir(6, 1, 100 + s); if (v && v.hauteur) { H.push(v.hauteur); V.push(v); } }
       // (le grave : la seule fréquence programmée à ± 4 % de 95 Hz — l'écho du couloir part de 85,5 Hz)
-      const g = J.entrees.filter((e) => e.methode === 'setValueAtTime' && Math.abs(e.valeur / RECETTES_TIR.fa24.grave[0] - 1) <= 0.0401).map((e) => e.valeur / RECETTES_TIR.fa24.grave[0]);
+      const g = V.filter((v) => J.entrees.some((e) => e.methode === 'setValueAtTime' && (v.source ? e.param === v.source.playbackRate && Math.abs(e.valeur - v.hauteur) < 1e-6
+        : Math.abs(e.valeur / RECETTES_TIR.fa24.grave[0] - v.hauteur) < 1e-6)));
       const min = Math.min(...H), max = Math.max(...H), diff = new Set(H.map((h) => h.toFixed(5))).size;
-      res.push([`hauteur ${r3(min)} … ${r3(max)} sur ${H.length} coups (${diff} différentes) ; grave au journal ${g.length} fois`, H.length === 30 && min >= 0.96 - 1e-9 && max <= 1.04 + 1e-9 && diff >= 28 && g.length >= 30]);
+      res.push([`hauteur ${r3(min)} … ${r3(max)} sur ${H.length} coups (${diff} différentes) ; hauteur programmée au journal ${g.length} fois (${V[0] && V[0].banque ? 'playbackRate, banque' : 'grave, direct'})`, H.length === 30 && min >= 0.96 - 1e-9 && max <= 1.04 + 1e-9 && diff >= 28 && g.length >= 30]);
       // les pas : un ennemi et un allié de Haythem, même distance, même allure
       const ennemi = p.acteurs.find((b) => !b.local && p.ennemis(p.local, b)), allie = p.acteurs.find((b) => !b.local && !p.ennemis(p.local, b));
       if (ennemi && allie) {
@@ -404,12 +411,10 @@ export default function (jeu) {
   // ± 10 % de a8b22dd)
   T('09 balade : sons des couches, ± 10 % de a8b22dd', async () => {
     jeu.quitter('balade'); await jeu.images(2);
-    const J = jeu.journalAudio; J.vider();
-    const n = compterSonsBalade(game, false);
-    const starts = J.entrees.filter((e) => e.methode === 'start').length;
+    const starts = compterSonsBalade(game, true);
     const ref = PAS_A8B22DD;
     const ok = ref ? Math.abs(starts - ref) <= 0.1 * ref : starts >= 30;
-    return { ok, attendu: ref ? `${ref} ± 10 % (a8b22dd)` : '≥ 30 (référence a8b22dd non posée)', obtenu: `${starts} start programmés en 5 s (${n})` };
+    return { ok, attendu: ref ? `${ref} ± 10 % (a8b22dd)` : '≥ 30 (référence a8b22dd non posée)', obtenu: `${starts} départs programmés en 5 s` };
   });
 
   // 10. fx.js : la passe superposée sur les trois chemins ; « Priorité fluidité » en partie → 1000/60 ; éteinte ou en balade →
@@ -514,6 +519,7 @@ export default function (jeu) {
   T('13 coût par image : effets ≤ 0,3 ms, sons ≤ 0,2 ms (7 bots)', async (t) => {
     await jeu.lancer('equipes', { zone: 'ss', allies: 3, ennemis: 4, graine: 13 });
     const p = game.partie, E = p.aff.effets, S = p.aff.sons, res = [];
+    await S.pretBanque();
     jeu.avancer(6.2); game.paused = false;
     let me = 0, ms = 0, n = 0;
     const fe = E.maj, fs = S.maj;
@@ -528,7 +534,7 @@ export default function (jeu) {
       for (let k = 0; k < 6; k++) { const r = await jeu.images(60); valable = valable && r.valable; n += r.n; }
     } finally { delete E.maj; delete S.maj; }
     const tirs = jeu.compteurs().tirs - tirs0, Em = me / Math.max(1, n), Sm = ms / Math.max(1, n);
-    res.push([`${tirs} tirs, ${S.stats.creees} voix, ${E.stats.traceurs} traceurs`, tirs >= 20]);
+    res.push([`${tirs} tirs, ${S.stats.creees} voix, ${E.stats.traceurs} traceurs, banque ${JSON.stringify(S.stats.banque || null)}`, tirs >= 20 && !!S.banque]);
     res.push([`Effets.maj ${r3(Em)} ms par image (≤ 0,3)`, t.temps('L-H Effets.maj par image, 7 bots (ms)', Em, 0.3, valable)]);
     res.push([`SonsJeu.maj ${r3(Sm)} ms par image (≤ 0,2)`, t.temps('L-H SonsJeu.maj par image, 7 bots (ms)', Sm, 0.2, valable)]);
     jeu.quitter('balade');
