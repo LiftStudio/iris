@@ -53,8 +53,9 @@ export function compterSonsBalade(game, espion) {
   game.placerAuDepart();
   return D ? D.L.length : 0;
 }
-// (la mesure sur a8b22dd : 600 pas — rapport L-H ; le seuil : ± 10 %)
-export const PAS_A8B22DD = null;
+// (la mesure sur a8b22dd, 23/10 : l'archive servie à côté, le même script collé dans la console après « APPUIE » — 26,
+// 26 et 23 départs sur trois passes, la médiane 26 ; le seuil : ± 10 %)
+export const PAS_A8B22DD = 26;
 
 export default function (jeu) {
   const game = window.__game;
