@@ -88,7 +88,8 @@ export default function (jeu) {
         if (P.k !== k || (P.forme && !!P.forme.off !== (r === 'ouverte'))) mauvais.push(`${P.nom} : k ${P.k}, off ${P.forme && P.forme.off} pour ${r}`);
       } else if (r !== (P.etat === 'ouverte' ? 'ouverte' : 'fermee') || (P.forme && P.forme.off)) mauvais.push(P.nom + ' : fixe ' + P.etat + ' → ' + r);
     }
-    const inconnues = [...M.inconnues];
+    // (et aucune règle de table qu'une porte fixe ne pourrait pas suivre)
+    const inconnues = [...M.inconnues], ecarts = M.ecarts.map((e) => `${e.nom} ${e.table}→${e.regle}`);
     jeu.quitter('balade');
     // la porte fictive : au milieu du hall (ses deux côtés dans la zone), automatique, inconnue des tables
     const F = { nom: 'porte fictive (test L-M)', etat: 'auto', modele: 'grise', vitree: false, double: false, g: new THREE.Group(), vantaux: [], forme: { off: false },
@@ -105,10 +106,10 @@ export default function (jeu) {
       rp = game.partie.monde.regles.get(F.nom); ip = game.partie.monde.inconnues.includes(F.nom);
       jeu.quitter('balade');
     } finally { Po.toutes.splice(Po.toutes.indexOf(F), 1); Po.auto.splice(Po.auto.indexOf(F), 1); }
-    const ok = noms.size === L.length && !sansFps.length && !sansProp.length && !mauvais.length && !inconnues.length
+    const ok = noms.size === L.length && !sansFps.length && !sansProp.length && !mauvais.length && !inconnues.length && !ecarts.length
       && rc === 'ouverte' && ic && rp === 'auto' && ip && egal(rd, ['ouverte', 'auto', 'fermee']);
     return { ok, attendu: 'noms uniques ; chaque porte dans les deux tables ; en combat k / off = sa règle ; fictive : ouverte (combat), auto (prop hunt), inconnue ; hors zone : fermée',
-      obtenu: `${L.length} portes (${L.filter((P) => P.etat === 'auto').length} automatiques), ${noms.size} noms · sans règle combat [${sansFps}] prop [${sansProp}] · écarts [${mauvais.join(' ; ')}] · inconnues [${inconnues}] · fictive ${rc}/${ic} ${rp}/${ip} · défaut ${rd}` };
+      obtenu: `${L.length} portes (${L.filter((P) => P.etat === 'auto').length} automatiques), ${noms.size} noms · sans règle combat [${sansFps}] prop [${sansProp}] · écarts [${mauvais.join(' ; ')}] · fixes contre leur table [${ecarts.join(' ; ')}] · inconnues [${inconnues}] · fictive ${rc}/${ic} ${rp}/${ip} · défaut ${rd}` };
   });
 
   // 2. LA SORTIE : l'école au bit près, pour chaque zone et chaque mode

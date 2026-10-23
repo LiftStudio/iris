@@ -294,9 +294,12 @@ export class MondePartie {
         if (!saute && i < n) continue;
         const s1 = saute ? s - 0.025 : lg;
         if (s1 - s0 > 0.2) {
-          L.push({ cle: 'rue', bx: x0, bz: z0, tx, tz, s0, s1, sol: h0 });
+          // (une travée par paire de poteaux : chacune sa flèche et sa vrille — un seul ruban de 26 m tournait d'un bloc)
           const k = Math.ceil((s1 - s0) / 3.5);
-          for (let j = 0; j <= k; j++) { const u = s0 + (s1 - s0) * j / k; poteau(x0 + tx * u, z0 + tz * u, h0, ang); }
+          for (let j = 0; j <= k; j++) {
+            const u = s0 + (s1 - s0) * j / k; poteau(x0 + tx * u, z0 + tz * u, h0, ang);
+            if (j < k) L.push({ cle: 'rue', bx: x0, bz: z0, tx, tz, s0: u, s1: s0 + (s1 - s0) * (j + 1) / k, sol: h0 });
+          }
         }
         s0 = s1; h0 = h;
       }
