@@ -329,7 +329,9 @@ function noter(racines, E, aJour = false) {
 }
 
 // LE PARCOURS d'un sous-arbre avant sa couture : les étiquetés, et la signature de chaque maillage non étiqueté
-function parcourir(o, racine, parties) {
+// (`libres` : noter les maillages non étiquetés — pas sous un groupe `nofuse` vu depuis la scène : un niveau déjà cousu, dont
+// les originaux ont été notés à sa propre couture, et dont les blocs ne sont pas des meubles)
+function parcourir(o, racine, parties, libres = true) {
   const E = etiquette(o);
   if (E && !_E.vus.has(o)) {
     _E.vus.add(o);
@@ -339,7 +341,8 @@ function parcourir(o, racine, parties) {
     return;
   }
   if (E) return;
-  if (o.isMesh && !_E.maillesVues.has(o) && o.geometry && !(o.userData && (o.userData.dynamique || o.userData.suite))) {
+  if (libres && o !== racine && o.userData && o.userData.nofuse) libres = false;
+  if (libres && o.isMesh && !_E.maillesVues.has(o) && o.geometry && !(o.userData && (o.userData.dynamique || o.userData.suite))) {
     _E.maillesVues.add(o);
     const n = nSommets(o.geometry);
     if (n >= 8 && n <= 40000) {
@@ -351,7 +354,7 @@ function parcourir(o, racine, parties) {
       MEUBLES.stats.libres++;
     }
   }
-  for (const c of o.children) parcourir(c, racine, parties);
+  for (const c of o.children) parcourir(c, racine, parties, libres);
 }
 
 // AVANT CHAQUE COUTURE (racine comprise) : fusionnerLocal et optimiserDecor l'appellent en première ligne
