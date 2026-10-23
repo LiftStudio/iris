@@ -5,7 +5,7 @@
 // `Partie.pas` (étape 7) : la pesanteur, puis le segment du pas lancé dans le monde solide par la balistique en mode
 // `objet` (les formes, les vitres — une grenade n'en traverse pas —, les 53 sols et le plan y = 0) ; à l'impact, le
 // REBOND : la vitesse normale renvoyée × 0,35 (restitution), la tangentielle × 0,6 (frottement) ; au sol, elle roule
-// (freinée à 4 m/s²) et s'arrête sous 0,4 m/s. Une grenade est une petite sphère (4 cm) : posée à son rayon des surfaces.
+// (freinée à 6 m/s²) et s'arrête sous 0,4 m/s. Une grenade est une petite sphère (4 cm) : posée à son rayon des surfaces.
 // À la fin de sa mèche, elle EXPLOSE (dégâts appliqués tout de suite, par `partie.infliger` — la seule porte des dégâts) :
 //   - la frag : 160 à ≤ 2,0 m, puis linéaire jusqu'à 25 à 6,5 m, la distance prise au CORPS (le segment vertical des pieds
 //     au sommet de la tête : un acteur debout à 4,25 m d'une grenade au sol prend 92,5) ; il faut une LIGNE LIBRE du centre
@@ -14,14 +14,17 @@
 //     0,8 + 3,2 × face × (1 − d/14) s, 4 s au plus (face : 0 dos tourné, 1 en plein regard) — événement 'flash', que lisent
 //     le HUD (le calque blanc #voile-flash, par Partie.majHud), la vue, les sons et les cerveaux.
 // Une mèche à 0 (la frag cuite jusqu'au bout) : la grenade naît dans la main, immobile, et explose au pas même.
-// Événements : 'grenade' (le lancer), 'rebond' (a, type, x, y, z, v : le « tink » des sons), 'explosion', 'flash'.
+// Événements : 'grenade' (le lancer), 'rebond' (a, arme, x, y, z, v : le « tink » des sons), 'explosion', 'flash'.
+// (ATTENTION, défaut du contrat — rapport L-A : le champ `type` de 'grenade' et d'explosion' du § 4.6 ÉCRASE le type de
+// l'événement dans Partie.evt, `{ t, type, ...data }` : un abonné à 'explosion' reçoit e.type === 'frag' ; un abonné à '*'
+// ne reconnaît plus l'événement. Le champ du contrat est gardé, doublé de `arme` ; à F2 de trancher.)
 import * as THREE from 'three';
 import { ARMES } from './armes.js';
 import { MODE } from './balistique.js';
 
 const G = 9.81;
 const RAYON = 0.04;                // m : la grenade
-const ROULEMENT = 4.0;             // m/s² : le freinage au sol
+const ROULEMENT = 6.0;             // m/s² : le freinage au sol (elle roule 1 à 2 m après ses rebonds)
 const _o = new THREE.Vector3(), _d = new THREE.Vector3();
 const _h = { t: 0, forme: null, sol: null, nx: 0, ny: 0, nz: 0 };
 
@@ -53,7 +56,7 @@ export class Grenades {
       g.vx = _d.x * f.lancer + vx0; g.vy = _d.y * f.lancer + f.haut; g.vz = _d.z * f.lancer + vz0;
     } else g.posee = true;
     this._liste.push(g);
-    P.evt('grenade', { a: acteur.id, type, x: g.x, y: g.y, z: g.z, vx: g.vx, vy: g.vy, vz: g.vz, meche, id: g.id });
+    P.evt('grenade', { a: acteur.id, arme: type, x: g.x, y: g.y, z: g.z, vx: g.vx, vy: g.vy, vz: g.vz, meche, id: g.id });
     return g;
   }
 
@@ -65,7 +68,8 @@ export class Grenades {
       if (g.t <= 1e-9) { this._liste.splice(i, 1); this._exploser(g); }
     }
   }
-  // LE VOL d'un pas : la pesanteur, puis le segment lancé dans le monde (4 rebonds au plus dans un pas)
+  // LE VOL d'un pas : la pesanteur, puis le segment lancé dans le monde (4 rebonds au plus dans un pas) ; enfin la SONDE
+  // du sol (un rayon vers le bas de son rayon + 2 cm) : posée sur lui, elle roule, freinée, et s'arrête sous 0,4 m/s
   _voler(g, dt) {
     const P = this.partie, B = P.balistique, f = ARMES[g.type];
     g.vy -= G * dt;
@@ -76,30 +80,35 @@ export class Grenades {
       const ux = sx / L, uy = sy / L, uz = sz / L;
       const t = B ? B.rayon(g.x, g.y, g.z, ux, uy, uz, L + RAYON, MODE.objet, _h) : L + RAYON;
       if (t >= L + RAYON - 1e-9) { g.x += sx; g.y += sy; g.z += sz; break; }
+      // (le point touché ; la grenade posée à son rayon de la face, le long de sa normale)
+      const nx = _h.nx, ny = _h.ny, nz = _h.nz, hx = g.x + ux * t, hy = g.y + uy * t, hz = g.z + uz * t;
       const av = Math.max(0, t - RAYON);
-      g.x += ux * av; g.y += uy * av; g.z += uz * av;
-      reste *= 1 - av / L;
-      // LE REBOND sur la normale de la face touchée
-      const nx = _h.nx, ny = _h.ny, nz = _h.nz, vn = g.vx * nx + g.vy * ny + g.vz * nz;
+      reste *= 1 - Math.min(1, av / L);
+      g.x = hx + nx * RAYON; g.y = hy + ny * RAYON; g.z = hz + nz * RAYON;
+      // LE REBOND sur la normale de la face touchée : la normale renvoyée × restitution, la tangente × frottement
+      const vn = g.vx * nx + g.vy * ny + g.vz * nz;
       if (vn < 0) {
         const tx = g.vx - vn * nx, ty = g.vy - vn * ny, tz = g.vz - vn * nz;
-        const fort = -vn > 1.0, kt = fort ? f.frottement : 1;
-        g.vx = tx * kt - vn * f.restitution * nx; g.vy = ty * kt - vn * f.restitution * ny; g.vz = tz * kt - vn * f.restitution * nz;
-        if (fort) { g.rb++; P.evt('rebond', { a: g.a, type: g.type, x: g.x, y: g.y, z: g.z, v: -vn, id: g.id }); }
+        const fort = -vn > 1.0, kt = fort ? f.frottement : 1, kn = fort ? f.restitution : 0;
+        g.vx = tx * kt - vn * kn * nx; g.vy = ty * kt - vn * kn * ny; g.vz = tz * kt - vn * kn * nz;
+        if (fort) { g.rb++; P.evt('rebond', { a: g.a, arme: g.type, x: g.x, y: g.y, z: g.z, v: -vn, id: g.id }); }
       }
-      // AU SOL : elle roule, freinée ; sous 0,4 m/s, elle s'arrête
-      if (ny > 0.7) {
-        const vh = Math.hypot(g.vx, g.vz), dv = ROULEMENT * dt;
-        if (vh > dv) { g.vx *= 1 - dv / vh; g.vz *= 1 - dv / vh; } else { g.vx = 0; g.vz = 0; }
-        if (Math.hypot(g.vx, g.vy, g.vz) < f.arret) { g.vx = 0; g.vy = 0; g.vz = 0; g.posee = true; break; }
-      }
+    }
+    if (!B) return;
+    const t = B.rayon(g.x, g.y, g.z, 0, -1, 0, RAYON + 0.02, MODE.objet, _h);
+    if (g.vy > -1 && t < RAYON + 0.02 && _h.ny > 0.7) {
+      g.y += RAYON - t;
+      if (g.vy < 0) g.vy = 0;
+      const vh = Math.hypot(g.vx, g.vz), dv = ROULEMENT * dt;
+      if (vh > dv) { g.vx *= 1 - dv / vh; g.vz *= 1 - dv / vh; } else { g.vx = 0; g.vz = 0; }
+      if (Math.hypot(g.vx, g.vy, g.vz) < f.arret) { g.vx = 0; g.vy = 0; g.vz = 0; g.posee = true; }
     }
   }
 
   // L'EXPLOSION : 'explosion', puis les dégâts (frag) ou l'aveuglement (flash) de chaque acteur vivant
   _exploser(g) {
     const P = this.partie, f = ARMES[g.type], B = P.balistique;
-    P.evt('explosion', { x: g.x, y: g.y, z: g.z, r: g.type === 'flash' ? f.rayon : f.rMax, type: g.type, a: g.a, id: g.id });
+    P.evt('explosion', { x: g.x, y: g.y, z: g.z, r: g.type === 'flash' ? f.rayon : f.rMax, arme: g.type, a: g.a, id: g.id });
     const ox = g.x, oy = g.y + 0.3, oz = g.z;
     for (const a of P.acteurs) {
       if (!a.vivant || !a.corps || a.role === 'cible') continue;

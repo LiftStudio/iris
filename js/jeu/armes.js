@@ -281,6 +281,7 @@ export class Arsenal {
       if (!sprinte || veutTirer || cmd.visee) {
         this._etat('pret', t, 0);
         this.tA = Math.max(this.tA, t + (this.spTac ? f.sprintTactTir : f.sprintTir)); this.sT = this.tA;
+        if (veutTirer && !f.auto) this.tampon = this.tA;    // (le clic qui a fait sortir du sprint part au bout de la sortie)
       } else { if (tact) this.spTac = true; return; }
     } else if (sprinte && !veutTirer && (this.et === 'pret' || (this.et === 'tir' && t + 1e-9 >= this.prochain))) {
       this._etat('sprint', t, 0); this.spTac = tact;
@@ -335,6 +336,7 @@ export class Arsenal {
         // interrompue : la pompe d'abord si le tube était vide, sinon la main revient à la poignée
         this._etat('pret', t, 0); this.nC = 0;
         this.tA = Math.max(this.tA, t + (this.pp ? R.pompe : GESTES.sortieRecharge)); this.pp = false;
+        this.tampon = this.tA;                              // (le coup demandé part dès que la main est revenue)
         partie.evt('recharge', { a: a.id, phase: 'interrompue', tactique: this.tact });
         return;
       }
@@ -463,7 +465,7 @@ export class Arsenal {
     for (const b of partie.acteurs) {
       if (b === a || !b.vivant || !b.corps || !partie.ennemis(a, b)) continue;
       const q = b.corps.pos, dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz);
-      if (d > portee || Math.abs(q.y - p.y) > 1.0) continue;
+      if (d > portee + 1e-6 || Math.abs(q.y - p.y) > 1.0) continue;
       if (d > 0.35 && (dx * fx + dz * fz) / d < cosC) continue;
       if (!partie.balistique.vue(_o.x, _o.y, _o.z, q.x, q.y + 1.2 * b.h / 1.73, q.z)) continue;
       if (d < bd) { bd = d; best = b; }
@@ -475,7 +477,7 @@ export class Arsenal {
     const K = ARMES.couteau;
     this._etat('couteau', t, K.coup); this.vk = 0; this.kF = false; this.kC = -1; this.kFin = -INF;
     const b = this._cibleCouteau(partie, K.fente, K.coneFente);
-    if (b && this._dCouteau > K.portee) { this.kC = b.id; this.kFin = t + K.dureeFente; }
+    if (b && this._dCouteau > K.portee + 1e-6) { this.kC = b.id; this.kFin = t + K.dureeFente; }
   }
   _couteau(partie, t) {
     const a = this.acteur, K = ARMES.couteau, c = a.corps, C = partie.game && partie.game.collisions;

@@ -821,7 +821,7 @@ export default function (jeu) {
     s.fronts = { tactique: true }; avancer(p, 2.2);
     d(); jeu.quitter('balade');
     const SCHEMA = { tir: ['a', 'arme', 'ox', 'oy', 'oz', 'dx', 'dy', 'dz', 'n', 'seq'], recharge: ['a', 'phase', 'tactique'], arme: ['a', 'id'], vide: ['a'],
-      grenade: ['a', 'type', 'x', 'y', 'z', 'vx', 'vy', 'vz'], explosion: ['x', 'y', 'z', 'r', 'type'], flash: ['cible', 'duree'] };
+      grenade: ['a', 'arme', 'x', 'y', 'z', 'vx', 'vy', 'vz'], explosion: ['x', 'y', 'z', 'r', 'arme'], flash: ['cible', 'duree'] };
     const vus = {}, fautes = [];
     for (const e of E) {
       const S = SCHEMA[e.type]; if (!S) continue;
