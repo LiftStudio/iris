@@ -212,4 +212,7 @@ rayon 3 cm ; regardé à l'écran depuis la ligne (boîtes posées à la main pu
    `_reapparaitre` / `_reprise` (étape 8 du pas) : déplacés dans un abonné à `apparition` (comme `Partie._elimVue`, § 4.1
    règle 5).
 4. `replis` posé au constructeur ; schéma du HUD du test 13 complété (`astuce`, § 4.5.15).
+5. **Chacun pour soi, départs à vue** — § 2.4 « au point le plus éloigné […] vu de personne » : `_placerMelee` ne regardait
+   que la distance. Chacun prend maintenant le lieu le plus loin des placés PARMI ceux qu'aucun placé ne voit (œil → tête ou
+   buste ; à défaut le plus loin) ; contrôle ajouté au test 9 (toute l'école : 0 paire à vue ; le −1 noté).
 

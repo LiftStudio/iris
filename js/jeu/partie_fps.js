@@ -276,20 +276,27 @@ export class PartieFPS extends Partie {
     this._candidats = L;
     return L;
   }
-  // chacun pour soi, au départ : chacun au lieu le plus loin de ceux déjà placés (le premier tiré par la graine)
+  // chacun pour soi, au départ (§ 2.4 : « au point le plus éloigné de son plus proche ennemi, vu de personne ») : chacun au
+  // lieu le plus loin de ceux déjà placés, parmi ceux qu'aucun d'eux ne voit s'il en reste (le premier tiré par la graine)
   _placerMelee(n) {
-    const L = this.candidats(), out = [];
+    const L = this.candidats(), out = [], B = this.balistique;
     if (!L.length) { for (let k = 0; k < n; k++) out.push({ x: 14.88 + (k % 3) * 1.5, y: 0, z: -3.12 + Math.floor(k / 3) * 1.5, lacet: 0 }); return out; }
+    // (vu d'un lieu déjà pris : de son œil debout à la tête ou au buste du nouveau)
+    const vu = (q) => out.some((p) => B.vue(p.x, p.y + 1.62, p.z, q.x, q.y + 1.5, q.z) || B.vue(p.x, p.y + 1.62, p.z, q.x, q.y + 0.9, q.z));
     for (let k = 0; k < n; k++) {
       let best = null;
       if (!out.length) best = L[this.rng.int(L.length)];
       else {
-        let bd = -1;
-        for (const q of L) {
-          let d = Infinity;
+        // (les lieux libres du plus loin au plus proche ; le premier qu'aucun placé ne voit, sinon le plus loin)
+        const D = [];
+        for (let i = 0; i < L.length; i++) {
+          const q = L[i]; let d = Infinity;
           for (const p of out) d = Math.min(d, Math.hypot(q.x - p.x, (q.y - p.y) * 2, q.z - p.z));
-          if (d > bd + 1e-9) { bd = d; best = q; }
+          if (d >= 1.0) D.push([d, i]);
         }
+        D.sort((u, v) => v[0] - u[0] || u[1] - v[1]);
+        const j = D.find(([, i]) => !vu(L[i]));
+        best = L[(j || D[0] || [0, k % L.length])[1]];
       }
       out.push({ x: best.x, y: best.y, z: best.z, lacet: best.lacet });
     }

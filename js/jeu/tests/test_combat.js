@@ -377,13 +377,26 @@ export default function (jeu) {
       res.push([zone, ok, err || (p ? p.acteurs.filter((a) => !pres(a)).map((a) => `${a.id}@${r2(a.pos.x)},${r2(a.pos.y)},${r2(a.pos.z)}`).join(' ') : 'pas de partie')]);
       jeu.quitter('balade');
     }
+    // (chacun pour soi, au départ : personne sous les yeux d'un autre — § 2.4 ; de l'œil de chacun à la tête ou au buste de l'autre)
+    const vusAuDepart = [];
+    for (const zone of ['ecole', 'ss']) {
+      await jeu.lancer('melee', { graine: 109, zone, appareil: 'pc' });
+      const p = game.partie, B = p.balistique; let n = 0;
+      for (const a of p.acteurs) for (const b of p.acteurs) {
+        if (a === b) continue; a.oeil(_o);
+        if (B.vue(_o.x, _o.y, _o.z, b.pos.x, b.pos.y + 1.5, b.pos.z) || B.vue(_o.x, _o.y, _o.z, b.pos.x, b.pos.y + 0.9, b.pos.z)) n++;
+      }
+      vusAuDepart.push([zone, n, p.acteurs.length]);
+      jeu.quitter('balade');
+    }
+    res.push(['chacun pour soi : départs non vus', vusAuDepart[0][1] === 0, vusAuDepart.map((v) => `${v[0]} ${v[1]} vus / ${v[2]}`).join(', ')]);
     let msg = null; try { await jeu.lancer('domination', { zone: 'ss' }); } catch (e) { msg = String(e && e.message || e); }
     const refuse = !!msg && /domination/i.test(msg) && !game.partie;
     let msg2 = null; try { await jeu.lancer('equipes', { zone: 'e1' }); } catch (e) { msg2 = String(e && e.message || e); }
     jeu.quitter('balade');
     const ok = res.every((r) => r[1]) && refuse && !!msg2 && PartieFPS.refus({ mode: 'domination', zone: 'ecole' }) === null;
-    return { ok, attendu: 'chaque zone : partie lancée, chaque acteur à ≤ 6 m d’un départ de son camp ; domination au −1 : refusée, avec un message',
-      obtenu: res.map((r) => `${r[0]} ${r[1] ? 'ok' : '✗ ' + r[2]}`).join(' · ') + ` · refus « ${msg} » · zone du prop hunt « ${msg2} »` };
+    return { ok, attendu: 'chaque zone : partie lancée, chaque acteur à ≤ 6 m d’un départ de son camp ; chacun pour soi sur toute l’école : aucun départ vu d’un autre ; domination au −1 : refusée, avec un message',
+      obtenu: res.map((r) => `${r[0]} ${r[1] ? 'ok' : '✗'} ${typeof r[2] === 'string' && r[2] ? '(' + r[2] + ')' : ''}`).join(' · ') + ` · refus « ${msg} » · zone du prop hunt « ${msg2} »` };
   }, { delai: 120 });
 
   // 10. LES EFFECTIFS : PC 4 c. 4 et 1 + 5, 9 bots au plus ; téléphone 2 c. 2 et 1 + 3, 5 bots au plus (et sous ?tel=1, d'office)
