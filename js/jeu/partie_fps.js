@@ -599,6 +599,12 @@ export class PartieFPS extends Partie {
       camp: this.local ? this.local.equipe : null };
   }
   peutTirer(a) { return this.phase === 'manche' && super.peutTirer(a); }
+  // (pendant la présentation, la caméra est derrière Haythem : l'arme de vue, une superposition, n'y est pas — cachée après
+  // sa mise à jour de l'image, avant le rendu ; elle revient d'elle-même au décompte)
+  image(dt) {
+    super.image(dt);
+    if (this.phase === 'presentation' && this._lacet0 !== null) this.aff.viewmodel?.cacher?.();
+  }
   // LA PRÉSENTATION : la caméra file de derrière Haythem (7 m en arrière, 2,2 m plus haut, gardée hors des murs) jusque dans
   // ses yeux, en 3 s ; le regard est tenu au cap du départ (la vue à la 1re personne du décompte enchaîne sans saut)
   camera(dt, poser) {
