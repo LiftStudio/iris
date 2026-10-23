@@ -40,10 +40,14 @@ const EPS = 1e-12, EPS_T = 1e-6;
 export const MODE = { balle: 0, vue: 1, objet: 2 };
 
 // LES PAIRES DE ZONES où le pré-filtre a menti ('zoneDeA|zoneDeB', noms de js/ecole_visibilite.js ZONES) : on y passe
-// directement au parcours. Relevées le 23/10 sur 10 000 paires de points libres que le parcours brut dit visibles, portes
-// automatiques ouvertes (le combat les tient ouvertes : les pièces fermées du rez-de-chaussée — `r0si`, la salle David
-// Clark et son entrée ; `r0lt` — se voient alors de plus de 8 m de leur porte, distance des règles du rendu)
-export const EXCEPTIONS_PREFILTRE = new Set([]);
+// directement au parcours. Relevées le 23/10 (test 19 de js/jeu/tests/test_armes.js) sur 10 000 paires de points libres que
+// le parcours brut dit visibles, portes automatiques ouvertes — le combat les tient ouvertes, le prop hunt les ouvre pour
+// tous : les PIÈCES FERMÉES du rez-de-chaussée (`FERMEES` du rendu : r0wc les toilettes, r0lt le local et le PMR, r0si la
+// salle David Clark et son entrée, r0sv la Si 0.1) se voient alors de plus de 8 m de leur porte, la distance des règles du
+// rendu. Trouvées : r0|r0si (29 sur 10 000), rue|r0si (4), r0|r0sv (4) ; gardées pour les quatre pièces, vues de toutes les
+// zones d'où l'on voit le rez-de-chaussée (le relevé suivant, sur les nœuds du vrai graphe, est à F2)
+const FERMEES_R0 = ['r0wc', 'r0lt', 'r0si', 'r0sv'], VOIENT_R0 = ['r0', 'rue', 'r0e', 'cageO0', 'cageE0', 'tremie0'];
+export const EXCEPTIONS_PREFILTRE = new Set(VOIENT_R0.flatMap((a) => FERMEES_R0.map((b) => a + '|' + b)));
 
 // le nom d'une zone de rendu (un bit de ecole_visibilite.js ZONE), pour les clés des exceptions
 const NOMS = new Map(Object.entries(ZONE).map(([n, b]) => [b, n]));

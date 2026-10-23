@@ -9,7 +9,7 @@
 // ici seulement). Un test rend { ok, attendu, obtenu }.
 import * as THREE from 'three';
 import { Rng, melanger, hacher } from '../rng.js';
-import { PAS, NIVEAUX } from '../constantes.js';
+import { PAS, NIVEAUX, niveauDe } from '../constantes.js';
 import { viderFronts } from '../commande.js';
 import { ARMES, degatsDe, tirage, Arsenal } from '../armes.js';
 import { FICHES_BOTS } from '../avatars.js';
@@ -88,7 +88,14 @@ function brut(C, ax, ay, az, bx, by, bz, mode = 'balle') {
   return best;
 }
 // DES POINTS LIBRES tirés sur les sols (C.sols) à 1,0-1,7 m au-dessus : le sol effectif sous eux est ce sol, le disque du
-// joueur y est libre, le point n'est dans aucune forme et sous son plafond ; `dedans` : dans l'école (pas la rue)
+// joueur y est libre, le point n'est dans aucune forme et sous son plafond, et il est DANS UNE PIÈCE de la carte
+// (lumieres.zoneEn : une dalle déborde parfois du bâtiment — celle du 2e couvre, au sud-ouest, un vide sans plancher
+// dessiné) ; `dedans` : dans l'école (pas la rue)
+const piece = (x, y, z) => { const Lu = window.__game && window.__game.carte && window.__game.carte.lumieres; const Z = Lu && Lu.zoneEn ? Lu.zoneEn(x, z, y + 0.1) : null; return Z ? Z.id : null; };
+// le niveau d'une pièce (les cages d'escalier : tous) — une pièce du rez-de-chaussée rendue sous la dalle du −1, c'est la
+// dalle qui déborde sous l'école sans sous-sol (la dalle du −1 couvre aussi l'attente, le bureau B, la Si 0.1)
+const niveauPiece = (id) => (/^(escalier|escEst|descenteEst)/.test(id) ? null : /SSE?$/.test(id) ? -1 : /^e1|^palier1$/.test(id) ? 1 : /^e2/.test(id) ? 2 : 0);
+const pieceDuNiveau = (x, sol, z) => { const id = piece(x, sol, z); if (!id) return null; const n = niveauPiece(id); return n === null || n === niveauDe(sol + 0.5) ? id : null; };
 function pointsLibres(C, n, rng, { hMin = 1.0, hMax = 1.7, dedans = true } = {}) {
   const S = C.sols.map((r) => ({ r, w: Math.min(60, (r.x1 - r.x0) * (r.z1 - r.z0)) })).filter((q) => q.w > 0.2);
   const W = S.reduce((s, q) => s + q.w, 0), L = [];
@@ -100,6 +107,7 @@ function pointsLibres(C, n, rng, { hMin = 1.0, hMax = 1.7, dedans = true } = {})
     if (dedans && z > 0.35) continue;
     const h = C._hSol(r, x, z), sol = C.solEn(x, z, h + 0.05);
     if (Math.abs(sol - h) > 0.02 || !C.libre(x, z, 0.3, sol)) continue;
+    const pc = pieceDuNiveau(x, sol, z); if (!pc || (dedans && (pc === 'rue' || pc === 'porche'))) continue;
     const y = sol + hMin + rng.next() * (hMax - hMin);
     if (dansUneForme(C, x, y, z) || C.plafondEn(x, z, sol) < y + 0.1) continue;
     L.push({ x, y, z, sol });
@@ -113,6 +121,7 @@ function pointsNiveau(C, n, niveau, rng, { hMin = 1.0, hMax = 1.7, plafond = tru
     const x = -0.2 + rng.next() * 20.2, z = -24.3 + rng.next() * 24.5;
     const sol = C.solEn(x, z, N.sol + 0.3);
     if (Math.abs(sol - N.sol) > 0.3 || !C.libre(x, z, 0.3, sol)) continue;
+    const pc = pieceDuNiveau(x, sol, z); if (!pc || pc === 'rue' || pc === 'porche') continue;
     const y = sol + hMin + rng.next() * (hMax - hMin);
     if (dansUneForme(C, x, y, z)) continue;
     if (plafond && C.plafondEn(x, z, sol) > sol + 3.4) continue;
@@ -211,7 +220,23 @@ export default function (jeu) {
     const cotes = new Map();
     for (const o of maillages) for (const M of [].concat(o.material)) if (M && !cotes.has(M)) { cotes.set(M, M.side); M.side = THREE.DoubleSide; }
     const rc = new THREE.Raycaster();
-    let ok = 0, n = 0, verre = 0, sansForme = 0;
+    let ok = 0, n = 0, verre = 0, sansForme = 0, escalier = 0, escOk = 0, sansDecor = 0, portes = 0, portesOk = 0;
+    const estPorte = (o) => { for (let q = o; q; q = q.parent) if (/^porte|vantail/i.test(q.name || '')) return true; const M = [].concat(o.material)[0]; return !!(M && /vantail|porte/i.test(M.name || '')); };
+    const rc2 = new THREE.Raycaster(), _a = new THREE.Vector3(), _u = new THREE.Vector3();
+    const maillagePres = (q) => {
+      for (const [ux, uy, uz] of [[d0.x, d0.y, d0.z], [q.nx, q.ny, q.nz]]) {
+        _u.set(ux, uy, uz).normalize(); _a.set(q.x, q.y, q.z).addScaledVector(_u, -0.12);
+        rc2.set(_a, _u); rc2.near = 0; rc2.far = 0.24;
+        if (rc2.intersectObjects(maillages, false).length) return true;
+      }
+      return false;
+    };
+    let d0 = null;
+    // (les CAGES D'ESCALIER : le monde solide y est simplifié par construction — les volées sont des rampes qui passent au
+    // milieu des marches, l'échiffre de la volée 2 un mur plein de 5,20 m, le jour un bloc « joueur seul », les marches de la
+    // volée de tôle des boîtes — : un rayon dont l'un des deux impacts tombe dans une cage est compté à part, et noté)
+    const ESC = new Set(['escalier', 'escalierSS', 'escEst', 'escEst2', 'escEst3', 'escEstSS', 'descenteEst', 'palierSS', 'palierSSE']);
+    const dansEscalier = (x, y, z) => ESC.has(piece(x, y - 0.3, z)) || ESC.has(piece(x, y - 1.5, z));
     const fautes = [];
     const presDuneForme = (x, y, z) => {
       for (const s of formesPres(C0, x - 0.2, z - 0.2, x + 0.2, z + 0.2)) {
@@ -222,10 +247,10 @@ export default function (jeu) {
       return Math.abs(y) < 0.15 && C0.solEn(x, z, 0.1) === 0;
     };
     try {
-      for (let k = 0; n + verre + sansForme < 100 && k < 400; k++) {
+      for (let k = 0; n < 100 && k < 600; k++) {
         const a = P[rng.int(P.length)], b = P[rng.int(P.length)];
         const L = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z); if (L < 1) continue;
-        const d = new THREE.Vector3((b.x - a.x) / L, (b.y - a.y) / L, (b.z - a.z) / L);
+        const d = new THREE.Vector3((b.x - a.x) / L, (b.y - a.y) / L, (b.z - a.z) / L); d0 = d;
         rc.set(new THREE.Vector3(a.x, a.y, a.z), d); rc.near = 0; rc.far = L;
         const H = rc.intersectObjects(maillages, false)[0] || null;
         if (H) {
@@ -234,14 +259,24 @@ export default function (jeu) {
           if (!presDuneForme(H.point.x, H.point.y, H.point.z)) { sansForme++; continue; }
         }
         B.balle(a.x, a.y, a.z, d.x, d.y, d.z, L, m);
+        // (le premier impact de la balle : la première vitre qu'elle traverse — elle y pose sa fêlure —, sinon son arrêt)
+        if (m.vitres) { const v = B._vt[0]; m.t = v.t; m.x = a.x + d.x * v.t; m.y = a.y + d.y * v.t; m.z = a.z + d.z * v.t; m.nx = v.nx; m.ny = v.ny; m.nz = v.nz; m.mat = 'vitre'; m.forme = v.forme; }
         const tR = H ? H.distance : L;
+        if ((H && dansEscalier(H.point.x, H.point.y, H.point.z)) || (m.mat !== 'rien' && dansEscalier(m.x, m.y, m.z))) { escalier++; if (Math.abs(tR - m.t) <= 0.10) escOk++; continue; }
+        // (les PORTES : leur boîte n'est pas leur vantail — plus épaisse, et une porte automatique ouverte n'en a pas ; le
+        // combat les reprend toutes, js/jeu/monde_partie.js, L-M)
+        if ((m.forme && m.forme.mobile) || (H && estPorte(H.object))) { portes++; if (Math.abs(tR - m.t) <= 0.10) portesOk++; continue; }
+        // (le miroir du décor sans forme : la balle bute sur une FORME SANS DÉCOR — aucun maillage à 12 cm de son impact, ni le
+        // long du rayon ni le long de la normale : un rang en un bloc, une chaise en cylindre, une boîte de la caméra)
+        if (m.mat !== 'rien' && m.t < tR - 0.10 && !maillagePres(m)) { sansDecor++; continue; }
         n++;
         if (Math.abs(tR - m.t) <= 0.10) ok++; else if (fautes.length < 6) fautes.push(`(${r3(a.x)}, ${r3(a.y)}, ${r3(a.z)}) → (${r3(b.x)}, ${r3(b.y)}, ${r3(b.z)}) : maillage ${r3(tR)} « ${H ? H.object.name || H.object.parent?.name || '?' : 'rien'} », balle ${r3(m.t)} (${m.mat})`);
       }
     } finally { for (const [M, s] of cotes) M.side = s; }
     void h; await t.attendre(0);
-    return { ok: n >= 60 && ok / n >= 0.97, attendu: '≥ 97 % des rayons comparés à ≤ 10 cm du premier maillage (verre et décor sans forme exclus)',
-      obtenu: `${ok}/${n} (${(100 * ok / Math.max(1, n)).toFixed(1)} %) · exclus : ${verre} verre, ${sansForme} sans forme${fautes.length ? ' · écarts : ' + fautes.join(' ; ') : ''}` };
+    t.note('maillages : accord dans les cages d’escalier', `${escOk}/${escalier}`); t.note('maillages : accord sur les portes', `${portesOk}/${portes}`);
+    return { ok: n >= 100 && ok / n >= 0.97, attendu: '≥ 97 % de 100 rayons comparés à ≤ 10 cm du premier maillage (exclus, comptés à part : verre, décor sans forme, forme sans décor, cages d’escalier, portes)',
+      obtenu: `${ok}/${n} (${(100 * ok / Math.max(1, n)).toFixed(1)} %) · exclus : ${verre} verre, ${sansForme} décor sans forme, ${sansDecor} forme sans décor, ${escalier} dans une cage d'escalier (${escOk} d'accord), ${portes} sur une porte (${portesOk} d'accord)${fautes.length ? ' · écarts : ' + fautes.join(' ; ') : ''}` };
   }, { delai: 300 });
 
   // 3. 400 RAYONS VERTICAUX : arrêtés par un sol ou un plafond avant le niveau voisin
@@ -351,7 +386,7 @@ export default function (jeu) {
     for (let k = 0; k < 1500; k++) {
       const q = P[rng.int(P.length)], l = rng.next() * 2 * Math.PI, tg = (rng.next() - 0.5) * 0.4;
       const dx = -Math.sin(l) * Math.cos(tg), dy = -Math.sin(tg), dz = -Math.cos(l) * Math.cos(tg);
-      const t0 = performance.now(); for (let r = 0; r < 10; r++) B.balle(q.x, q.y, q.z, dx, dy, dz, 30, m); L.push((performance.now() - t0) / 10 * 1000);
+      const t0 = performance.now(); for (let r = 0; r < 40; r++) B.balle(q.x, q.y, q.z, dx, dy, dz, 30, m); L.push((performance.now() - t0) / 40 * 1000);
     }
     // tirer : 7 cibles autour d'un tireur, dans la rue
     const LL = ligneLibre(p, 10) || [{ x: 2, y: 0, z: 4.5 }, { x: 12, y: 0, z: 4.5 }];
@@ -360,7 +395,7 @@ export default function (jeu) {
     const o = a.oeil(new THREE.Vector3()), M = [];
     for (let k = 0; k < 400; k++) {
       const l = -Math.PI / 2 + (rng.next() - 0.5) * 0.6, dx = -Math.sin(l), dz = -Math.cos(l);
-      const t0 = performance.now(); for (let r = 0; r < 10; r++) B.tirer(p, a, o.x, o.y, o.z, dx, -0.03, dz, 100, m); M.push((performance.now() - t0) / 10);
+      const t0 = performance.now(); for (let r = 0; r < 40; r++) B.tirer(p, a, o.x, o.y, o.z, dx, -0.03, dz, 100, m); M.push((performance.now() - t0) / 40);
     }
     jeu.quitter('balade');
     const med = mediane(L), p99 = centile(L, 0.99), mt = mediane(M);
@@ -514,8 +549,7 @@ export default function (jeu) {
     let [a, s] = nouveau('fa24');
     tirerN(a, s, 5);
     const dTact = duree(a, s, () => { s.fronts = { recharger: true }; }), chTact = a.arsenal.chargeur;
-    tirerN(a, s, 31);
-    const dVide = duree(a, s), chVide = a.arsenal.chargeur;
+    const dVide = duree(a, s, () => tirerN(a, s, 31)), chVide = a.arsenal.chargeur;      // (la recharge à vide part d'office)
     p.retirerActeur(a);
     // le sprint à 1,30 s : annulée (chargeur inchangé) ; à 1,40 s : gardée
     const sprintA = (k) => {
@@ -785,6 +819,7 @@ export default function (jeu) {
     const etatEnVol = async () => {
       const p = await essaiVide(16, { mannequins: 2, bots: 2 });
       const [a, s] = tireur(p, 12.0, 0, -4.4, 'assaut', 77, Math.PI);
+      a.vie = a.vieMax = 1e9;                                    // (les bots de l'essai lui tirent dessus)
       s.vise = null; s.c.lacet = Math.PI / 2; s.c.tangage = -0.4;
       return { p, a, s };
     };

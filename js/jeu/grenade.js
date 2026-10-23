@@ -21,9 +21,11 @@
 import * as THREE from 'three';
 import { ARMES } from './armes.js';
 import { MODE } from './balistique.js';
+import { NIVEAUX, BORNES_JEU } from './constantes.js';
 
 const G = 9.81;
 const RAYON = 0.04;                // m : la grenade
+const FOND = NIVEAUX[0].bas;          // m : sous le −1, plus rien
 const ROULEMENT = 6.0;             // m/s² : le freinage au sol (elle roule 1 à 2 m après ses rebonds)
 const _o = new THREE.Vector3(), _d = new THREE.Vector3();
 const _h = { t: 0, forme: null, sol: null, nx: 0, ny: 0, nz: 0 };
@@ -95,6 +97,10 @@ export class Grenades {
       }
     }
     if (!B) return;
+    // (le filet : sous le sol du −1, ou à 2 m hors des bornes du jeu — un trou du monde solide —, elle s'arrête là)
+    if (g.y < FOND || g.x < BORNES_JEU.xMin - 2 || g.x > BORNES_JEU.xMax + 2 || g.z < BORNES_JEU.zMin - 2 || g.z > BORNES_JEU.zMax + 2) {
+      g.vx = 0; g.vy = 0; g.vz = 0; g.posee = true; return;
+    }
     const t = B.rayon(g.x, g.y, g.z, 0, -1, 0, RAYON + 0.02, MODE.objet, _h);
     if (g.vy > -1 && t < RAYON + 0.02 && _h.ny > 0.7) {
       g.y += RAYON - t;
