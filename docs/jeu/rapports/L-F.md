@@ -5,7 +5,16 @@ Branche `lot/L-F` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-F`), partie de `s
 
 ## Relecture (relecteur sévère, 23/10) — où j'en suis
 
-**EN COURS.** Relu : la spec (§§ 2.7-2.9, 3.9, 4.1, 4.3, 4.5.5, 4.5.13-4.5.17, 4.6, 4.7, 4.10, 5.1, 5.5.9) et tout le diff
+**EN COURS (repreneur, 08:04).** Jeton 3 repris (pris à 07:24:29 par la session coupée, rafraîchi), serveur 8139 relancé,
+onglet `tab-35`. 1er `&lot=L-F` sur `a0a54e4` : **16/17** — le test 3 échouait (« témoin : 0 reçus à la traque ») : depuis
+`44bdcf7`, l'oreille du chasseur est enveloppée à SA création et l'espion du test, posé après, ne voyait plus rien (le « 0 son
+reçu en cachette » était vide de sens). Corrigé en `2553a46` avec : la vue, l'arme de vue et les touches de Haythem suivent
+son rôle À L'IMAGE (`_suivreRole`, au début de `camera`) au lieu d'un appel depuis `regles` (§ 4.1 règle 5 ; un état rendu
+qui change son rôle est suivi aussi) ; `arsenal.bloque` (hors de l'état) déduit de la phase à la fin d'`appliquer` et dès la
+présentation ; endurance remise à 100 à chaque manche ; options de l'appelant copiées. `&lot=L-F` → **17/17** (31 s).
+Reste : S0 (PC, `?tel=1`), L-F `?tel=1`, le jeu en vrai.
+
+Relu par la session coupée : la spec (§§ 2.7-2.9, 3.9, 4.1, 4.3, 4.5.5, 4.5.13-4.5.17, 4.6, 4.7, 4.10, 5.1, 5.5.9) et tout le diff
 `socle...lot/L-F` ; `verifier_proprietaires` OK (4 fichiers). Corrigé à la lecture (commits « L-F relecture : … », de
 `74bc40a` à `eb084a4`) : l'état garde les colonnes du prop hunt (survie, provocations, vrais meubles) ; un prop figé (ou
 verrouillé) le reste en changeant de forme ; le scanner refusé avec sa raison hors de la traque ; « Voir les sons » ne
