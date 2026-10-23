@@ -90,6 +90,16 @@ function departsSansGraphe(Z, equipe, n) {
 
 // ---------------------------------------------------------------- les outils du graphe
 const navDe = (nav) => (nav && nav.nb ? nav : Nav.derniere && Nav.derniere.nb ? Nav.derniere : null);
+// les nœuds des pièces de la zone de jeu (par leur RÉGION : un seuil suit sa pièce), en cache par graphe — en plus du masque
+// du graphe : un départ ou une réapparition n'est jamais hors de la zone, même quand le masque permet plus (relecture : sous
+// le monde du squelette, tout permis, les bots du −1 réapparaissaient au 2e)
+const _zones = new WeakMap();
+function dansZone(N, zoneJeu) {
+  let M = _zones.get(N); if (!M) _zones.set(N, M = new Map());
+  let Z = M.get(zoneJeu || 'ecole');
+  if (!Z) { Z = N.masquePieces(piecesDe(zoneJeu || 'ecole')); M.set(zoneJeu || 'ecole', Z); }
+  return Z;
+}
 // le nœud permis le plus proche de (x, y, z), à ≤ rayon, de dégagement ≥ degMin, sur ce sol ; −1
 function noeudDegage(N, x, y, z, rayon, degMin) {
   const L = N.dans(x, y, z, rayon, [], 0.6);
@@ -146,9 +156,9 @@ export function departs(zoneJeu, equipe, n, rng, nav = null) {
   if (deux) {
     let M = _departs.get(N); if (!M) _departs.set(N, M = new Map());
     let J = M.get(zoneJeu);
-    if (!J || J.masque !== N.masque || J.K < K) { J = departsDeux(N, D, K); if (J) { J.masque = N.masque; J.K = K; M.set(zoneJeu, J); } }
+    if (!J || J.masque !== N.masque || J.K < K) { J = departsDeux(N, D, K, dansZone(N, zoneJeu)); if (J) { J.masque = N.masque; J.K = K; M.set(zoneJeu, J); } }
     pris = J ? J[equipe] : null;
-  } else pris = departsUn(N, (D[equipe] || D.A || D.chasseurs || [[14.88, 0, -3.12]]), K);
+  } else pris = departsUn(N, (D[equipe] || D.A || D.chasseurs || [[14.88, 0, -3.12]]), K, dansZone(N, zoneJeu));
   if (!pris || !pris.length) return departsSansGraphe(Z, equipe, n);
   pris = pris.slice(0, n);
   while (pris.length < n) pris.push(pris[pris.length % Math.max(1, pris.length)]);
@@ -173,12 +183,12 @@ function basesDe(N, base) {
   return L;
 }
 // les candidats d'un camp, triés : à ≤ 30 m à pied de sa base, la distance plus 1,5 × l'avance vers la base adverse
-function candidatsCamp(N, bases, adverses) {
+function candidatsCamp(N, bases, adverses, Z) {
   const P = N.champMulti(bases, 30).slice();
   let E = null, e0 = 0;
   if (adverses && adverses.length) { E = N.champMulti(adverses, Infinity).slice(); e0 = Math.min(...bases.map((v) => E[v])); }
   const L = [];
-  for (let v = 0; v < N.nb; v++) if (P[v] <= 30 && !surVolee(N.C, N.px[v], N.ph[v], N.pz[v])) L.push([P[v] + (E && Number.isFinite(E[v]) ? 1.5 * Math.max(0, e0 - E[v]) : 0), v]);
+  for (let v = 0; v < N.nb; v++) if (P[v] <= 30 && Z[v] && !surVolee(N.C, N.px[v], N.ph[v], N.pz[v])) L.push([P[v] + (E && Number.isFinite(E[v]) ? 1.5 * Math.max(0, e0 - E[v]) : 0), v]);
   L.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   const R = L.map((c) => c[1]); R.P = P;
   return R;
@@ -188,9 +198,9 @@ function candidatsCamp(N, bases, adverses) {
 const PASSES = [[0.75, 12], [0.5, 12], [0.75, 30], [0.5, 30], [0, 30]];
 const espaceOk = (N, pris, v) => pris.every((w) => Math.hypot(N.px[w] - N.px[v], N.pz[w] - N.pz[v]) >= REGLES_APPARITION.espacement || Math.abs(N.ph[w] - N.ph[v]) > 1.5);
 // UN camp seul (les chasseurs du prop hunt)
-function departsUn(N, base, K) {
+function departsUn(N, base, K, Z) {
   const B = basesDe(N, base); if (!B.length) return null;
-  const L = candidatsCamp(N, B, null), pris = [];
+  const L = candidatsCamp(N, B, null, Z), pris = [];
   for (const [dMin, rMax] of PASSES) {
     for (const v of L) { if (pris.length >= K) break; if (N.degage[v] >= dMin && L.P[v] <= rMax && !pris.includes(v) && espaceOk(N, pris, v)) pris.push(v); }
     if (pris.length >= K) break;
@@ -199,10 +209,10 @@ function departsUn(N, base, K) {
 }
 // LES DEUX camps, à tour de rôle, à ≥ 15 m à pied l'un de l'autre ; chaque prise prend le premier candidat de la première
 // passe qui en a un (une prise ne dépend que des prises d'avant : les k premières sont les mêmes quel que soit K)
-function departsDeux(N, D, K) {
+function departsDeux(N, D, K, Z) {
   const bA = basesDe(N, D.A), bB = basesDe(N, D.B);
   if (!bA.length || !bB.length) return null;
-  const S = { A: { L: candidatsCamp(N, bA, bB), pris: [] }, B: { L: candidatsCamp(N, bB, bA), pris: [] } };
+  const S = { A: { L: candidatsCamp(N, bA, bB, Z), pris: [] }, B: { L: candidatsCamp(N, bB, bA, Z), pris: [] } };
   // (la distance à pied aux points déjà pris de chaque camp, bornée à 15 m, tenue à jour à chaque prise)
   const pres = { A: new Float64Array(N.nb).fill(Infinity), B: new Float64Array(N.nb).fill(Infinity) }, tmp = new Float64Array(N.nb);
   const prendre = (cote, v) => {
@@ -240,20 +250,21 @@ function lacetOuvert(N, v, rng) {
 
 // ---------------------------------------------------------------- LES CANDIDATS d'une zone (par graphe et par masque)
 const _cands = new WeakMap();
-function candidats(N) {
-  let K = _cands.get(N);
+function candidats(N, zoneJeu) {
+  let M = _cands.get(N); if (!M) _cands.set(N, M = new Map());
+  const K = M.get(zoneJeu || 'ecole');
   if (K && K.masque === N.masque) return K.L;
-  const R = REGLES_APPARITION, C = N.C, L = [];
+  const R = REGLES_APPARITION, C = N.C, L = [], Z = dansZone(N, zoneJeu);
   // les 20 lieux (ramenés au nœud dégagé à ≤ 3 m)
   for (const q of POINTS_APPARITION) {
     let v = noeudDegage(N, q.x, q.y, q.z, 3, R.degageMin);
     if (v < 0) v = N.noeudPres(q.x, q.y, q.z, 3);
-    if (v >= 0 && N.permis(v) && !L.includes(v)) L.push(v);
+    if (v >= 0 && N.permis(v) && Z[v] && !L.includes(v)) L.push(v);
   }
   // ≈ 12 par niveau, les plus éloignés des candidats déjà pris (l'échantillonnage du plus loin d'abord)
   const parN = new Map();
   for (let v = 0; v < N.nb; v++) {
-    if (!N.permis(v) || N.degage[v] < R.degageMin || surVolee(C, N.px[v], N.ph[v], N.pz[v])) continue;
+    if (!N.permis(v) || !Z[v] || N.degage[v] < R.degageMin || surVolee(C, N.px[v], N.ph[v], N.pz[v])) continue;
     const k = N.niveau[v]; let A = parN.get(k); if (!A) parN.set(k, A = []); A.push(v);
   }
   for (const k of [...parN.keys()].sort((a, b) => a - b)) {
@@ -267,19 +278,19 @@ function candidats(N) {
       L.push(A[bi]); maj(A[bi]);
     }
   }
-  _cands.set(N, { masque: N.masque, L });
+  M.set(zoneJeu || 'ecole', { masque: N.masque, L });
   return L;
 }
 
-// (les candidats de la réapparition du graphe et de son masque : nœuds — les tests)
-export function candidatsApparition(nav) { const N = navDe(nav); return N ? candidats(N).slice() : []; }
+// (les candidats de la réapparition du graphe, de son masque et de la zone de jeu : nœuds — les tests)
+export function candidatsApparition(nav, zoneJeu = 'ecole') { const N = navDe(nav); return N ? candidats(N, zoneJeu).slice() : []; }
 
 // ---------------------------------------------------------------- LA RÉAPPARITION (§ 3.8)
 const _buf = new WeakMap();
 export function choisirApparition(partie, acteur) {
   const N = navDe(partie.nav), R = REGLES_APPARITION;
   if (!N) return choisirSansGraphe(partie, acteur);
-  const L = candidats(N);
+  const L = candidats(N, partie.zone);
   if (!L.length) return choisirSansGraphe(partie, acteur);
   const ennemis = partie.acteurs.filter((b) => b !== acteur && b.vivant && b.corps && b.role !== 'cible' && partie.ennemis(acteur, b));
   const allies = acteur.equipe ? partie.acteurs.filter((b) => b !== acteur && b.vivant && b.corps && b.equipe === acteur.equipe) : [];

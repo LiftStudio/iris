@@ -297,8 +297,19 @@ export default function (jeu) {
         ok = ok && bon;
         lignes.push(`${z} esp ${r2(esp)} dég ${r2(deg)} à pied ${r2(dAB)} m (3 c. 9 : ${r2(d39)} m${prefixe ? '' : ', préfixe ≠'})${faisable ? '' : ` (0,75 m impossible : ${pA} / ${pB} nœuds dégagés à 15 m de l'autre base)`}${hors ? ' hors ' + hors : ''}${bon ? '' : ' ✗'}`);
       }
+      // (relecture : le graphe sans masque — le monde du squelette permet tout — : les départs et les candidats de la
+      // réapparition restent dans les pièces de la zone)
+      N.restreindre(null);
+      let horsZone = 0;
+      for (const z of Object.keys(ZONES_JEU).filter((k) => ZONES_JEU[k].modes.includes('combat'))) {
+        const P = piecesDe(z), rng = new Rng(9);
+        for (const q of [...departs(z, 'A', 5, rng, N), ...departs(z, 'B', 5, rng, N)]) { const v = N.noeudPres(q.x, q.y, q.z, 0.05); if (v < 0 || !P.has(N.pieceDe(v))) horsZone++; }
+        for (const v of candidatsApparition(N, z)) if (!P.has(N.pieceDe(v))) horsZone++;
+      }
+      ok = ok && horsZone === 0;
+      lignes.push(`sans masque : ${horsZone} hors de la zone`);
     } finally { N.restreindre(null); Nav.derniere = avant; }
-    return { ok, attendu: '4 zones × 2 camps : 5 points, ≥ 1,5 m, ≥ 0,75 m, ≥ 15 m à pied', obtenu: lignes.join(' · ') };
+    return { ok, attendu: '4 zones × 2 camps : 5 points, ≥ 1,5 m, ≥ 0,75 m, ≥ 15 m à pied ; sans masque, 0 hors de la zone', obtenu: lignes.join(' · ') };
   });
 
   // ---------------------------------------------------------------- 10. la réapparition
