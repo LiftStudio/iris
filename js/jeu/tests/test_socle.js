@@ -272,16 +272,22 @@ export default function (jeu) {
     const m1 = jeu.memoire(), i1 = jeu.instantane(), s1 = suites();
     m1.geometries -= s1 - s0;
     const pc = (a, b) => Math.abs(a - b) / Math.max(1, a);
-    // programmes pendant 10 s de tir (images réelles, ou faites à la main sans rAF)
-    await jeu.lancer('essai', { graine: 9, mannequins: 3 });
-    await jeu.images(10);
-    const p0 = game.renderer.info.programs.length;
-    jeu.commande(0, { tir: true }, 10);
-    const tir0 = jeu.compteurs().tirs;
-    const t0 = performance.now();
-    while (performance.now() - t0 < 10000) await jeu.images(10);
-    const p1 = game.renderer.info.programs.length, tirs = jeu.compteurs().tirs - tir0;
-    jeu.quitter('balade');
+    // programmes pendant 10 s de tir (images réelles, ou faites à la main sans rAF) ; la qualité automatique FIGÉE (F2, demande
+    // de L-U et L-M : sous charge, elle changeait de préréglage en plein tir et compilait la variante de repli d'un objet de la
+    // partie — un programme de plus qui n'est pas une fuite ; § 4.10.1 : un compte se mesure qualité figée)
+    jeu.figerQualite(true);
+    let p0, p1, tirs;
+    try {
+      await jeu.lancer('essai', { graine: 9, mannequins: 3 });
+      await jeu.images(10);
+      p0 = game.renderer.info.programs.length;
+      jeu.commande(0, { tir: true }, 10);
+      const tir0 = jeu.compteurs().tirs;
+      const t0 = performance.now();
+      while (performance.now() - t0 < 10000) await jeu.images(10);
+      p1 = game.renderer.info.programs.length; tirs = jeu.compteurs().tirs - tir0;
+      jeu.quitter('balade');
+    } finally { jeu.figerQualite(false); }
     const ok = pc(m0.geometries, m1.geometries) <= 0.02 && pc(m0.textures, m1.textures) <= 0.02 && m0.enfants === m1.enfants && egal(i0, i1) && p0 === p1 && tirs > 20;
     return { ok, attendu: 'géométries et textures ± 2 %, enfants identiques, instantané identique, programmes constants pendant 10 s de tir',
       obtenu: `géo ${m0.geometries}→${m1.geometries} (hors ${s1 - s0} suites neuves du décor) · tex ${m0.textures}→${m1.textures} · enfants ${m0.enfants}→${m1.enfants} · instantané ${egal(i0, i1)} · programmes ${p0}→${p1} (${tirs} tirs)` };
