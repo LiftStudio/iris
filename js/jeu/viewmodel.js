@@ -63,7 +63,11 @@ const ARMES_VUE = ['fa24', 'pm9', 'fp12', 'tp50', 'p17'], TENUS = ['couteau', 'f
 // paume `n` (vers ce qu'elle tient), la flexion des doigts [phalanges 1, 2, 3] (index à part : sur la détente ou le long
 // du garde-main) — `o` : le point tenu (le repère de l'arme), le poignet est `o + p`
 const prise = (o, p, f, n, doigts, index = doigts, pouce = null) => ({ o, p, f: new THREE.Vector3(...f).normalize(), n: new THREE.Vector3(...n).normalize(), doigts, index, pouce });
-const POIGNEE = (o = [0, 0, 0]) => prise(o, [0.024, -0.075, 0.062], [-0.10, -0.30, -0.95], [-1, 0.05, 0], [1.05, 1.25, 0.9], [0.30, 0.45, 0.35], [0.5, 0.3, 0.2]);
+// (le POUCE de la main qui tient — poignée, grenade, couteau — plié à 0,8 / 0,8 / 0,6 : à 0,5 / 0,3 / 0,2 il restait tendu
+// au-dessus de la poignée et l'index le long du pontet faisait un « V » à chaque recharge — relecture du 23/10, photos
+// avec les armes de L-W)
+const POUCE_TENU = [0.8, 0.8, 0.6];
+const POIGNEE = (o = [0, 0, 0]) => prise(o, [0.024, -0.075, 0.062], [-0.10, -0.30, -0.95], [-1, 0.05, 0], [1.05, 1.25, 0.9], [0.30, 0.45, 0.35], POUCE_TENU);
 const GARDE = (o) => prise(o, [-0.022, -0.014, 0.046], [0.42, 0.30, -0.86], [0.25, 1, 0.12], [0.85, 1.05, 0.75], [0.55, 0.6, 0.45], [0.3, 0.2, 0.1]);
 export const PRISES = {
   fa24: { d: POIGNEE(), g: GARDE(REPERES.fa24.mainG),
@@ -81,7 +85,7 @@ export const PRISES = {
     arretoir: prise([0.05, 0.03, 0.02], [-0.02, -0.03, 0.06], [0.6, 0.45, -0.66], [0.8, 0.2, 0.4], [0.5, 0.5, 0.4]),
     levier: prise([0.05, 0.03, 0.025], [0.075, -0.035, 0.085], [-0.35, 0.40, -0.85], [-0.55, 0.75, 0.1], [0.8, 1.0, 0.8], [0.6, 0.8, 0.6]) },
   // (le pistolet : poignée inclinée de 15°, la main gauche referme la droite)
-  p17: { d: prise([0, 0, 0], [0.022, -0.072, 0.050], [-0.10, -0.24, -0.96], [-1, 0.05, 0], [1.05, 1.25, 0.9], [0.30, 0.45, 0.35], [0.5, 0.3, 0.2]),
+  p17: { d: prise([0, 0, 0], [0.022, -0.072, 0.050], [-0.10, -0.24, -0.96], [-1, 0.05, 0], [1.05, 1.25, 0.9], [0.30, 0.45, 0.35], POUCE_TENU),
     g: prise(REPERES.p17.mainG, [-0.050, -0.055, 0.035], [0.55, -0.05, -0.83], [0.95, 0.2, 0.1], [1.0, 1.1, 0.8], [0.9, 1.0, 0.7], [0.2, 0.1, 0.1]),
     chargeur: prise([0, -0.12, 0.03], [-0.04, -0.16, 0.05], [0.3, 0.6, -0.74], [0.9, 0.2, 0.1], [0.9, 1.0, 0.8]),
     arretoir: prise([-0.016, 0.03, -0.02], [-0.06, -0.01, 0.03], [0.55, 0.40, -0.73], [0.9, 0, 0.3], [0.3, 0.3, 0.2]) },
@@ -804,7 +808,7 @@ function melangerPrise(T, pr, k) {
   T.p.x += (pr.o[0] + pr.p[0] - T.p.x) * k; T.p.y += (pr.o[1] + pr.p[1] - T.p.y) * k; T.p.z += (pr.o[2] + pr.p[2] - T.p.z) * k;
   T.f.lerp(pr.f, k).normalize(); T.n.lerp(pr.n, k).normalize();
 }
-const DOIGTS_TENUS = { doigts: [1.1, 1.25, 0.95], index: [0.9, 1.1, 0.8], pouce: [0.5, 0.4, 0.2] };
+const DOIGTS_TENUS = { doigts: [1.1, 1.25, 0.95], index: [0.9, 1.1, 0.8], pouce: [0.7, 0.7, 0.6] };
 const DOIGTS_LIBRES = { doigts: [0.35, 0.45, 0.3], index: [0.25, 0.35, 0.25], pouce: null };
 const DETENTE = [0.55, 0.75, 0.5], POUCE0 = [0.2, 0.15, 0.1];
 // ne garde que les triangles dont les trois sommets sont « bras » à plus de `seuil` (géométrie COPIÉE : celle du GLB en

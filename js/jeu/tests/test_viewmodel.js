@@ -616,7 +616,7 @@ export default function (jeu) {
   // L-A et L-B : le cabré de l'arsenal (reculV) est celui que montre l'arme, la caméra en reçoit 15 % (VueFPS) ; les états réels
   // de l'arsenal (couteau, lancer) montrés par leur geste
   T('F2 recul de l’arsenal, caméra à 15 % ; couteau et grenade réels', async () => {
-    const p = await essai(jeu), vm = p.aff.viewmodel, A = p.local.arsenal;
+    const p = await essai(jeu), vm = p.aff.viewmodel, A = p.local.arsenal, iM = CHRONOS.couteau.coup.i, fiche = ARMES.fa24.recul.cabre;
     let pic = 0, picVm = 0, cam = 0;
     jeu.tirer(0, { n: 1 });
     for (let i = 0; i < 12; i++) {
@@ -626,10 +626,21 @@ export default function (jeu) {
     }
     jeu.commande(0, { couteau: true }, 1 / 60); await jeu.images(4); const gC = vm.diag.geste;
     await jeu.images(60);
-    jeu.commande(0, { letale: true }, 0.5); await jeu.images(10); const gG = vm.diag.geste;
+    // la frag tenue 0,5 s puis lâchée : la main la lance (la goupille n'est pas rejouée quand le temps de l'arsenal repart)
+    jeu.commande(0, { letale: true }, 0.5);
+    let gG = null, lancee = false, rejouee = false, vuPin = 0;
+    for (let i = 0; i < 90; i++) {
+      await jeu.images(1);
+      if (vm.diag.geste === 'grenade') gG = 'grenade';
+      const pin = vm._geste.main[iM.pin], ph = A.phaseLancer;
+      if (ph === 'lance' && vuPin > 0.99 && pin < 0.99) rejouee = true;
+      if (ph === 'lance' && vm._geste.main[iM.ov] < 0.5) lancee = true;
+      vuPin = Math.max(vuPin, pin);
+    }
     jeu.quitter('balade');
-    const ok = pic > 0 && Math.abs(picVm / pic - 1) <= 0.05 && Math.abs(cam / (0.15 * pic) - 1) <= 0.1 && gC === 'couteau' && gG === 'grenade';
-    return { ok, attendu: 'cabré de l’arme = reculV ± 5 % ; caméra 15 % ± 10 % ; couteau et grenade montrés',
-      obtenu: `reculV ${r3(pic)}° · arme ${r3(picVm)}° · caméra ${r3(cam)}° · gestes ${gC} / ${gG}` };
+    const ok = pic > 0 && Math.abs(pic / fiche - 1) <= 0.05 && Math.abs(picVm / pic - 1) <= 0.05 && Math.abs(cam / (0.15 * pic) - 1) <= 0.1
+      && gC === 'couteau' && gG === 'grenade' && lancee && !rejouee;
+    return { ok, attendu: 'crête de reculV = cabré de la fiche ± 5 % (§ 3.4, critère 8) ; l’arme la montre ± 5 % ; caméra 15 % ± 10 % ; couteau ; frag lancée, goupille pas rejouée',
+      obtenu: `reculV ${r3(pic)}° (fiche ${fiche}°) · arme ${r3(picVm)}° · caméra ${r3(cam)}° · gestes ${gC} / ${gG} · lancée ${lancee} · goupille rejouée ${rejouee}` };
   }, { apresFusion: true });
 }
