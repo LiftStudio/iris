@@ -726,7 +726,13 @@ export class MenuJeu {
     if (!p) return B;
     const A = this._jeu().habillage === 'airsoft', loc = p.local, S = this._suivi && this._suivi.p === p ? this._suivi : null;
     const joueurs = p.acteurs.filter((a) => a.role !== 'cible');
-    const cl = [...joueurs].sort((x, y) => y.stats.score - x.stats.score || y.stats.elims - x.stats.elims || x.stats.morts - y.stats.morts);
+    // le classement : au chacun pour soi par ÉLIMINATIONS d'abord (la règle qui désigne le gagnant), ailleurs par points ; le
+    // RANG d'un joueur compte les ex æquo (1 + ceux strictement devant : quatre joueurs à 0 point sont tous premiers)
+    const cmp = p.id === 'melee' ? (x, y) => y.stats.elims - x.stats.elims || y.stats.score - x.stats.score
+      : (x, y) => y.stats.score - x.stats.score || y.stats.elims - x.stats.elims;
+    const cl = [...joueurs].sort((x, y) => cmp(x, y) || x.stats.morts - y.stats.morts);
+    const rang = (a) => (a ? 1 + joueurs.filter((b) => b !== a && cmp(b, a) < 0).length : 0), exAequo = (a) => joueurs.some((b) => b !== a && cmp(b, a) === 0);
+    const place = (r) => (r === 1 ? '1re' : `${r}e`) + ' PLACE';
     const couleur = (a) => (a.equipe && EQUIPES[a.equipe] ? EQUIPES[a.equipe].couleur : null);
     const ficheDe = (a) => a.fiche || (a.local ? FICHE_HAYTHEM : FICHES_BOTS.find((f) => f.nom === a.nom) || null);
     const g = p.gagnant;
@@ -738,14 +744,14 @@ export class MenuJeu {
       else if (loc) { B.titre = 'DÉFAITE'; B.cls = 'defaite'; }
       else { B.titre = `VICTOIRE DES ${(EQUIPES[g] || { nom: g }).nom}`; B.cls = 'neutre'; }
     } else if (p.id === 'melee') {
-      const r = loc ? cl.indexOf(loc) + 1 : 0;
-      B.titre = r === 1 || (loc && g === loc.id) ? 'VICTOIRE' : r ? `${r}e PLACE` : 'FIN DE LA PARTIE';
-      B.cls = r === 1 ? 'victoire' : 'neutre';
+      const r = rang(loc), gagne = !!loc && g === loc.id;
+      B.titre = gagne ? 'VICTOIRE' : r ? place(r) : 'FIN DE LA PARTIE';
+      B.cls = gagne ? 'victoire' : 'neutre';
       B.sous = `${loc ? loc.stats.elims : 0} ${A ? 'adversaires touchés' : 'éliminations'} · ${joueurs.length} joueurs`;
     } else if (p.id === 'prophunt') {
-      const r = loc ? cl.indexOf(loc) + 1 : 0, M = S ? S.manches : { props: 0, chasseurs: 0 };
-      B.titre = r === 1 ? 'MEILLEUR SCORE' : r ? `${r}e PLACE` : (g === 'props' ? 'LES PROPS GAGNENT' : 'LES CHASSEURS GAGNENT');
-      B.cls = r === 1 ? 'victoire' : 'neutre';
+      const r = rang(loc), M = S ? S.manches : { props: 0, chasseurs: 0 }, seul = r === 1 && !exAequo(loc);
+      B.titre = seul ? 'MEILLEUR SCORE' : r === 1 ? 'EX ÆQUO EN TÊTE' : r ? place(r) : (g === 'props' ? 'LES PROPS GAGNENT' : 'LES CHASSEURS GAGNENT');
+      B.cls = seul ? 'victoire' : 'neutre';
       B.sous = `${p.nManches || p.manche || ''} manches · props ${M.props} – ${M.chasseurs} chasseurs`;
     } else if (p.id === 'stand') { B.titre = 'STAND TERMINÉ'; }
     B.podium = cl.slice(0, 3).map((a) => ({ nom: a.nom, local: !!a.local, fiche: ficheDe(a), couleur: couleur(a),
