@@ -2,7 +2,15 @@
 
 Branche `lot/L-M` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-M`, depuis `socle` = `socle-ok`), port 8144 ; 23/10/2026.
 
-## Où j'en suis
+## Relecture (23/10, relecteur sévère) — où j'en suis
+
+EN COURS. Code relu contre §§ 3, 4.5.19, 5.3, 5.5.14 et le diff `socle...lot/L-M` ; `verifier_proprietaires` OK 7 fichiers.
+Corrigé (commit `L-M relecture : …`) : `appliquer` levait jamais un verrou (état d'avant un verrou → porte restée fermée) ;
+ordre des portes pilotées après un verrou ; `_dedans` dès la balade gardée ; rubalise envoyée segment par segment.
+Reste : rejouer `&lot=L-M` et `&lot=S0` (PC, `?tel=1`), jouer (combat, prop hunt), photos — en attente d'un jeton du
+navigateur (les trois pris à 06:55).
+
+## Où j'en suis (constructeur)
 
 **FINI.** Les quatre prises de la carte (§ 5.3), `js/jeu/monde_partie.js` complet (§ 4.5.19), `js/jeu/tests/test_monde.js`
 (les 14 critères du § 5.5.14, plus 2 tests `apresFusion` pour F2), joués dans le navigateur intégré (jeton_2, de 05:52 à
