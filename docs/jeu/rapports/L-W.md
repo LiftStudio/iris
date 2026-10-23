@@ -1,5 +1,13 @@
 # Rapport L-W — les modèles d'armes (vague 2)
 
+## Relecture — où j'en suis (relecteur, 23/10/2026, commits « L-W relecture : … »)
+
+**EN COURS.** Lu : la spec (§ 3.3, § 4.1, § 4.5.8-4.5.9, § 4.10, § 5.1, § 5.5.3), CoD § 6.2, le diff `socle...lot/L-W`
+(3 fichiers), la planche et les photos du constructeur. `verifier_proprietaires` : OK 3 fichiers ; fins de ligne CRLF comme
+les voisins ; 9 commits préfixés, tous avec la ligne d'attribution. Jeton du navigateur : en attente (les trois pris à
+06:00). Prochaines étapes : corriger les défauts trouvés à la lecture (ci-dessous), puis rejouer L-W et S0 sur PC et sous
+`?tel=1`, jouer l'essai, regarder les pièces mobiles en bout de course.
+
 Branche `lot/L-W` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-W`), partie de `socle` (`e06258f`, tag `socle-ok`),
 port 8133 ; 23/10/2026.
 
