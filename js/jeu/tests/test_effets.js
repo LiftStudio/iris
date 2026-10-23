@@ -13,6 +13,7 @@ import { REGLAGES_SONS, RECETTES_TIR } from '../sons_jeu.js';
 import { SPATIAL } from '../../audio.js';
 import { EQUIPES, PAS } from '../constantes.js';
 import { settings } from '../../settings.js';
+import { MEUBLES } from '../../registre_meubles.js';
 
 const DEG = Math.PI / 180;
 const r2 = (x) => Math.round(x * 100) / 100, r3 = (x) => Math.round(x * 1000) / 1000;
@@ -218,6 +219,14 @@ export default function (jeu) {
       // la règle elle-même, sur toutes les formes : un vantail ou une porte n'est jamais décalquable
       const fautes = C().formes.filter((f) => (f.mobile || f.vantail) && decalquable(f)).length;
       res.push([`${fautes} vantail décalquable`, fautes === 0]);
+      // (relecture) un VRAI MEUBLE haut — une forme du registre, que la balistique dit 'mur' : le mur choisi, prêté au registre
+      // le temps d'un tir — n'a pas de décalque
+      if (F.mur) {
+        const avantReg = MEUBLES.parForme.has(F.mur), n1 = E.stats.decalques;
+        if (!avantReg) MEUBLES.parForme.set(F.mur, -1);
+        try { tirVers(p, a, surFace(F.mur), { mat: 'mur', forme: F.mur.id }); E.maj(1 / 60); } finally { if (!avantReg) MEUBLES.parForme.delete(F.mur); }
+        res.push([`meuble du registre haut de ${r2(F.mur.y1 - F.mur.y0)} m, dit « mur » : ${E.stats.decalques - n1} décalque`, E.stats.decalques === n1]);
+      }
     } finally { habillage(avant); jeu.quitter('balade'); }
     return bilan(res, 'un décalque sur un mur haut et un plafond, aucun sur un meuble, un vantail ou le sol ; quad sur la normale à ± 2°');
   });
@@ -316,6 +325,29 @@ export default function (jeu) {
     }
     res.push([`${places}/8 panoramiques à leur source (± 1 cm)`, places === 8]);
     res.push([`${justes}/8 du bon côté (${vus.join('')})`, justes === 8]);
+    // (relecture) LES SONS DE HAYTHEM AU MILIEU : son tir (l'œil simulé à 3 cm à droite de la caméra, un pas chassé), ses pas
+    // (sous la caméra), sa recharge — sans panoramique ; la raison, rendue à part : un panoramique 'equalpower' à 3 cm à
+    // droite et 1,6 m dessous met presque tout le son dans l'oreille droite
+    const rendre = async (px, py, pz) => {
+      const M = new OfflineAudioContext(2, 2205, 44100), Q = M.listener;
+      for (const k of ['positionX', 'positionY', 'positionZ', 'forwardX', 'forwardY', 'forwardZ', 'upX', 'upY', 'upZ']) Q[k].value = Lst[k].value;
+      const pan = M.createPanner(); pan.panningModel = SPATIAL.modele; pan.distanceModel = SPATIAL.loi; pan.refDistance = SPATIAL.reference; pan.rolloffFactor = SPATIAL.attenuation;
+      pan.positionX.value = px; pan.positionY.value = py; pan.positionZ.value = pz;
+      const o = M.createOscillator(); o.connect(pan); pan.connect(M.destination); o.start(0);
+      const b = await M.startRendering(), g = b.getChannelData(0), dr = b.getChannelData(1); let eg = 0, ed = 0;
+      for (let i = 0; i < g.length; i++) { eg += g[i] * g[i]; ed += dr[i] * dr[i]; }
+      return ed / Math.max(1e-12, eg + ed);
+    };
+    const kD = await rendre(L.x + r.x * 0.03, L.y - 1.6, L.z + r.z * 0.03);
+    S.maj(1, cam);
+    const loc = p.local;
+    p.evt('tir', { a: loc.id, arme: 'fa24', ox: L.x + r.x * 0.03, oy: L.y, oz: L.z + r.z * 0.03, dx: f.x, dy: 0, dz: f.z, n: 1, seq: 3 });
+    p.evt('pas', { a: loc.id, x: L.x + r.x * 0.03, y: L.y - 1.62, z: L.z + r.z * 0.03, f: 0.7, allure: 'course' });
+    p.evt('recharge', { a: loc.id, phase: 'debut', tactique: true });
+    S.maj(0, cam);
+    const siens = S.voix.slice(-3), centres = siens.filter((v) => v.centre && !v.panner).length;
+    res.push([`sons de Haythem (tir à 3 cm, pas, recharge) : ${centres}/3 au milieu, sans panoramique (un panoramique à 3 cm à droite : ${Math.round(kD * 100)} % à droite)`,
+      centres === 3]);
     jeu.quitter('balade');
     return bilan(res, 'auditeur à la caméra de l’image (± 1°, sans retard sur 90°) ; panoramiques à ± 1 cm ; 8/8 du bon côté');
   });
@@ -555,6 +587,24 @@ export default function (jeu) {
     jeu.quitter('balade');
     return bilan(res, 'Effets.maj ≤ 0,3 ms et SonsJeu.maj ≤ 0,2 ms par image, 7 bots qui se battent');
   }, { delai: 120 });
+
+  // 15. (relecture) LA MORT DE HAYTHEM : le son étouffé (450 Hz) le temps de la caméra de mort, puis rouvert — au journal ;
+  // le spectateur du prop hunt, qui ne réapparaît pas, ne reste pas sourd jusqu'à la fin de la partie
+  T('15 mort de Haythem : étouffé 3 s, puis rouvert', async () => {
+    const { p, S } = await essai({ mannequins: 1 });
+    const J = jeu.journalAudio, cam = game.camera, M = REGLAGES_SONS.etouffe.mort;
+    S.maj(0, cam); J.vider();
+    const q0 = game.audio.ctx.currentTime;
+    // (une vraie mort : Partie.infliger, la seule porte des dégâts — 'touche' puis 'elim')
+    const L0 = p.local, o = L0.pos; L0.protegeT = 0;
+    p.infliger(L0, 500, { par: 1, arme: 'fa24', zone: 'torse', x: o.x, y: o.y + 1.2, z: o.z, dx: 1, dy: 0, dz: 0, plomb: 0 });
+    S.maj(0, cam);
+    const F = J.entrees.filter((e) => e.param === S.filtreBus.frequency && e.methode === 'setTargetAtTime');
+    const bas = F.find((e) => e.valeur === M.hz), haut = F.find((e) => e.valeur >= 20000);
+    jeu.quitter('balade');
+    return { ok: !L0.vivant && !!bas && !!haut && Math.abs(haut.quand - (q0 + M.duree)) < 1e-6,
+      attendu: `passe-bas ${M.hz} Hz tout de suite, rouvert à + ${M.duree} s`, obtenu: `${bas ? bas.valeur + ' Hz à ' + r3(bas.quand - q0) + ' s' : 'aucun'} · ${haut ? 'rouvert à ' + r3(haut.quand - q0) + ' s' : 'jamais rouvert'}` };
+  });
 
   // 14. LA BALADE AU BIT PRÈS, la passe superposée éteinte, les pools hors de la scène
   T('14 balade au bit près, passe éteinte, rien du jeu dans la scène', async () => {

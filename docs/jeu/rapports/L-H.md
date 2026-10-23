@@ -4,6 +4,13 @@ Branche `lot/L-H` (depuis `socle` = `socle-ok` e06258f), arbre `C:/Users/hgami/D
 
 ## Où j'en suis
 
+**RELECTURE EN COURS (relecteur sévère, 23/10)** — voir la section « Relecture » en fin de rapport : trois défauts corrigés
+(les sons de Haythem jetés dans une oreille, la mort qui laissait le son étouffé jusqu'à la fin de la partie, les vrais
+meubles hauts décalqués), deux abonnements morts retirés, les pools posés à l'entrée de la partie ; tests ajoutés ; pas
+encore rejoué au navigateur (jetons pris). Un repreneur : rejouer `&rapport=1&lot=L-H` puis `&lot=S0` (PC et `?tel=1`).
+
+Ce qui suit est l'état laissé par le constructeur :
+
 **FINI** (les six points du § 5.1 règle 5). Le lot est construit, joué au navigateur intégré (photos ci-dessous) et vert :
 - `&rapport=1&lot=L-H` : **14/14 sur PC** (47 s) et **14/14 sous `?tel=1`** (émulation mobile 375 × 812, 43 s) ; deux temps
   notés « non valables » à chaque passage (critère 13 : l'onglet n'était pas devant — les autres agents prennent le devant
@@ -204,3 +211,39 @@ trop longues (jusqu'à 1 m du mur), éclairs trop petits vus de face, fumée tro
 
 - rien pour L-H ; à F2 : les trois tests `apresFusion` (F1 occlusion avec la vraie `vue`, F2 éclairs à la vraie bouche,
   F3 impacts du vrai DDA), le test à l'aveugle au stand (✋, sans `?test=1`, vrai son), et les demandes ci-dessus.
+
+## Relecture (relecteur sévère, 23/10/2026)
+
+### Où en est la relecture
+
+Spécification relue (§§ 3.6, 3.10, 4.1, 4.5.17, 4.6, 5.1, 5.5.12), diff `socle...lot/L-H` lu en entier. Corrections
+écrites, tests ajoutés ; rejeu au navigateur à faire.
+
+### Défauts trouvés et corrigés
+
+1. **Les sons de Haythem jetés dans une oreille** (`sons_jeu.js`). Le panoramique 'equalpower' ne regarde que la direction
+   HORIZONTALE de la source. Le tir de Haythem part de son œil SIMULÉ, à quelques centimètres de la caméra, qui est posée
+   sur la position AFFICHÉE et balancée. Ses pas sont joués à ses pieds, juste sous la caméra, et sa recharge à 1 m au-dessus
+   d'eux. À 2-4 cm, la direction horizontale est quelconque et le son part presque tout entier dans une oreille. En pas
+   chassé, chaque balle de Haythem claquait d'un côté ; ses pas et sa recharge sautaient d'une oreille à l'autre avec le
+   balancement. Correction : option `centre` de `jouer3d` (ajout, règle 3). La voix va au milieu, sans panoramique ni
+   distance ni occlusion, mais reste dans le bus du jeu (compresseur, étouffement des explosions, envoi vers la salle). Elle
+   sert au tir, aux pas, aux bruits du corps (recharge, tir à vide, arme, saut, réception, glissade), au couteau et au lancer
+   de grenade de Haythem en vue FPS. Test 6 complété.
+2. **La mort laissait le son étouffé jusqu'à la fin de la partie** (`sons_jeu.js`). L'élimination de Haythem posait le
+   passe-bas de 450 Hz sans réouverture ; seule une `apparition` le rouvrait. Le prop hunt n'en émet pas : un prop ou un
+   chasseur éliminé restait sourd tout le reste de la manche, et des suivantes. Correction : étouffé 3 s (la caméra de
+   mort, § 3.6), puis rouvert en 1 s ; une réapparition plus tôt (2 s en chacun pour soi) rouvre tout de suite. Test 15
+   ajouté (une vraie mort par `Partie.infliger`, lue au journal).
+3. **Les vrais meubles hauts recevaient des décalques** (`effets.js`). La règle « jamais sur un meuble » ne tenait qu'au
+   champ `mat` de l'impact. La balistique du squelette dit 'mur' partout. Une forme haute d'un meuble du registre
+   (distributeur, armoire étiquetée, plus de 1,8 m) était donc décalquée. Correction : une forme de `MEUBLES.parForme`
+   est un meuble, quoi que dise `mat`. Test 3 complété.
+
+### Nettoyé
+
+- `Effets` s'abonnait à `elim` et à `flash` sans rien en faire (deux abonnements morts) : retirés. La touche qui tue a
+  déjà sa gerbe, la poupée est à L-C, le voile blanc au HUD.
+- `SonsJeu._etouffeJusque` écrit, jamais lu : retiré.
+- `Effets.preparer` laissait les pools dans la scène : une préparation interrompue les y oubliait en balade. Ils sont
+  maintenant retirés après la compilation ; `brancher` les pose à l'entrée de la partie.

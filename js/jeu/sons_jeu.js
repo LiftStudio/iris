@@ -50,7 +50,11 @@ export const REGLAGES_SONS = {
   gains: { tirLocal: 0.9, tir: 0.8, pas: 0.6, pasLocal: 0.3, impact: 0.55, recharge: 0.55, rechargeLocal: 0.6, vide: 0.5, arme: 0.45,
     explosion: 1, flash: 0.9, marqueur: 0.55, tete: 0.5, elim: 0.6, recu: 0.7, frole: 0.6, coeur: 0.5, phase: 0.6, capture: 0.4, douille: 0.35,
     grenade: 0.5, saut: 0.3, glissade: 0.4, corps: 0.35, apparition: 0.25, couteau: 0.5 },
-  etouffe: { explosion: { hz: 600, distance: 8, reouverture: 2 }, flash: { hz: 300, reouverture: 2 }, mort: { hz: 450, duree: 3 } },
+  // (la mort : étouffé le temps de la caméra de mort — 3 s, la désaturation du § 3.6 —, puis rouvert en 1 s ; une
+  // réapparition plus tôt, à 2 s en chacun pour soi, rouvre tout de suite ; le spectateur du prop hunt, qui ne réapparaît
+  // pas avant la manche suivante, entend la partie — relecture du 23/10 : sans réouverture, il restait à 450 Hz jusqu'à
+  // la fin de la partie)
+  etouffe: { explosion: { hz: 600, distance: 8, reouverture: 2 }, flash: { hz: 300, reouverture: 2 }, mort: { hz: 450, duree: 3, reouverture: 1 } },
   acouphene: { hz: 3600, duree: 1.5, gain: 0.1 },
   coeur: { seuil: 30, periode: 60 / 75, hz: 55 },         // deux sinus 55 Hz, 75 battements/min, sous 30 PV
   bus: { seuil: -14, ratio: 4, attaque: 0.003, relache: 0.12 },
@@ -291,7 +295,7 @@ export class SonsJeu {
     this._occ = 0;                       // le tour de rôle de l'occlusion
     this._mourantes = [];                // les voix volées, le temps de leur fondu
     this._oreille = { x: 0, y: 0, z: 0 };
-    this._tPrec = 0; this._phase = null; this._bips = -1; this._coeurT = 0; this._gren = new Map(); this._etouffeJusque = 0;
+    this._tPrec = 0; this._phase = null; this._bips = -1; this._coeurT = 0; this._gren = new Map();
     this.stats = { creees: 0, refusees: 0, volees: 0, occlusions: 0, horsRayon: 0 };
   }
   get voix() { return this._voix; }
@@ -377,7 +381,6 @@ export class SonsJeu {
     for (const m of this._mourantes) this._liberer(m.v);
     this._voix.length = 0; this._mourantes.length = 0;
     if (ctx && this.filtreBus) { const f = this.filtreBus.frequency; f.cancelScheduledValues(0); f.setValueAtTime(20000, ctx.currentTime); }
-    this._etouffeJusque = 0;
     this.partie = null;
   }
 
@@ -386,22 +389,29 @@ export class SonsJeu {
   // (vrai : d/343 s ; faux par défaut — un appel direct part à la date courante, test 21 du socle), `decalage` (s : le
   // moment de l'événement dans l'image), `hauteurOcc` (m au-dessus du point, pour la ligne de l'occlusion : le buste
   // d'un pas, pas ses pieds), `oreille` (vrai : un son à l'oreille, sans panoramique ni distance ni occlusion), `occlusion`
-  // (faux : jamais occultée — un son de Haythem lui-même), `dalle` ('faite' : js/jeu/sons_prop.js a déjà étouffé la dalle).
+  // (faux : jamais occultée — un son de Haythem lui-même), `dalle` ('faite' : js/jeu/sons_prop.js a déjà étouffé la dalle),
+  // `centre` (vrai : un son du CORPS DE HAYTHEM en vue FPS — son tir, ses pas, sa recharge — au milieu des deux oreilles,
+  // sans panoramique ni distance ni occlusion, mais dans le bus du jeu : compressé, étouffé par une explosion, avec sa
+  // salle. Relecture du 23/10 : le panoramique 'equalpower' ne regarde que la direction HORIZONTALE de la source ; à 2-4 cm
+  // de l'oreille — l'œil simulé d'un tir contre la caméra posée sur la position affichée, le balancement, ou les pieds juste
+  // sous elle — cette direction est quelconque et le son part tout entier dans UNE oreille : en pas chassé, chaque balle
+  // de Haythem claquait à droite ou à gauche, ses pas et sa recharge sautaient d'une oreille à l'autre).
   // Rend la voix, ou null (pas de contexte, trop loin, la plus faible de toutes quand elles sont 24)
   jouer3d(x, y, z, recette, o) {
     const opts = o || {};
     const { gain = 1, rayon = 30, bas = false, prioritaire = false } = opts;
     const A = this.audio, ctx = A && A.ctx;
     if (!ctx || !A.master || !this._bus()) return null;
-    const oreille = !!opts.oreille, E = this._oreille;
-    const d = oreille ? 0 : Math.hypot(x - E.x, y - E.y, z - E.z);
+    const oreille = !!opts.oreille, centre = !oreille && !!opts.centre, E = this._oreille;
+    const d = oreille || centre ? 0 : Math.hypot(x - E.x, y - E.y, z - E.z);
     if (d > rayon) { this.stats.horsRayon++; return null; }
     const base = gain * (A.vol ? A.vol.sfx ?? 1 : 1);
-    const niveauDb = db(base * (oreille ? 1 : A.attenuation ? A.attenuation(d) : 1));
+    const niveauDb = db(base * (oreille || centre ? 1 : A.attenuation ? A.attenuation(d) : 1));
     if (!this._place(niveauDb, prioritaire)) { this.stats.refusees++; return null; }
     const now = ctx.currentTime;
     let g, filtre = null, panner = null, ch = null;
     if (oreille) { g = ctx.createGain(); g.gain.value = base; g.connect(this.ui); }
+    else if (centre) { g = ctx.createGain(); g.gain.value = base; g.connect(this.entree); if (A.envoi) g.connect(A.envoi); }
     else {
       // une CHAÎNE reprise (gain → passe-bas → panoramique → bus), remise à zéro : son niveau, le filtre ouvert, sa place
       ch = this._chaine(); if (!ch) { this.stats.refusees++; return null; }
@@ -410,7 +420,7 @@ export class SonsJeu {
       filtre.frequency.cancelScheduledValues(now); filtre.frequency.value = 20000;
       if (panner.positionX) { panner.positionX.value = x; panner.positionY.value = y; panner.positionZ.value = z; } else panner.setPosition(x, y, z);
     }
-    const retard = opts.retard && !oreille ? d / REGLAGES_SONS.vitesseSon : 0, decalage = Math.max(0, opts.decalage || 0);
+    const retard = opts.retard && !oreille && !centre ? d / REGLAGES_SONS.vitesseSon : 0, decalage = Math.max(0, opts.decalage || 0);
     const quand = now + decalage + retard;
     // la source : un son de la banque (une seule source, branchée droit sur la chaîne) ou une recette (dans une entrée à
     // la voix, qu'on débranche d'un coup quand elle est volée)
@@ -426,8 +436,8 @@ export class SonsJeu {
       }
     } catch (e) { console.warn('[sons]', e); }
     const v = { x, y, z, panner, filtre, gain: g, debut: this.t, fin: this.t + decalage + retard + duree, niveauDb, base, rayon, bas, retard, quand,
-      dalle: opts.dalle || false, hauteurOcc: opts.hauteurOcc || 0, occ: 0, aVerifier: !oreille && opts.occlusion !== false && opts.dalle !== 'faite', oreille,
-      sansOcclusion: opts.occlusion === false, chaine: ch, source, entree: ch ? entree : null, tOcc: -1 };
+      dalle: opts.dalle || false, hauteurOcc: opts.hauteurOcc || 0, occ: 0, aVerifier: !oreille && !centre && opts.occlusion !== false && opts.dalle !== 'faite', oreille,
+      centre, sansOcclusion: opts.occlusion === false || centre, chaine: ch, source, entree: ch ? entree : null, tOcc: -1 };
     this._voix.push(v);
     this.stats.creees++;
     return v;
@@ -528,7 +538,6 @@ export class SonsJeu {
     f.cancelScheduledValues(now); f.setValueAtTime(Math.max(hz, Math.min(20000, f.value)), now);
     f.setTargetAtTime(hz, now, 0.02);
     if (reouverture > 0) f.setTargetAtTime(20000, now + Math.max(0.05, tenue), reouverture / 4);
-    this._etouffeJusque = this.t + tenue + reouverture;
   }
   rouvrir(reouverture = 0.4) {
     const ctx = this.audio && this.audio.ctx; if (!ctx || !this.filtreBus) return;
@@ -574,12 +583,12 @@ export class SonsJeu {
     switch (quoi) {
       case 'tir': {
         const a = P.acteurParId(e.a); if (!a) return;
-        if (e.arme === 'couteau') { this.jouer3d(e.ox, e.oy, e.oz, RECETTES.couteau(B), { gain: G.couteau, rayon: 10, retard: true, decalage: dec, occlusion: !lui(e.a) }); return; }
+        if (e.arme === 'couteau') { this.jouer3d(e.ox, e.oy, e.oz, RECETTES.couteau(B), { gain: G.couteau, rayon: 10, retard: true, decalage: dec, centre: lui(e.a) }); return; }
         const base = RECETTES_TIR[e.arme] || RECETTES_TIR.fa24, gaz = this._gaz(), R0 = gaz ? recetteGaz(base) : base;
         const E = this._oreille, d = Math.hypot(e.ox - E.x, e.oy - E.y, e.oz - E.z);
         const h = 1 + (new Rng(melanger(P.graine, e.a, e.seq | 0)).next() * 2 - 1) * REGLAGES_SONS.hauteur;
         const loin = d > REGLAGES_SONS.claquementMax, dehors = this._dehors(e.ox, e.oy, e.oz);
-        const o = { gain: lui(e.a) ? G.tirLocal : G.tir, rayon: R.tir, retard: true, decalage: dec, prioritaire: lui(e.a), occlusion: !lui(e.a) };
+        const o = { gain: lui(e.a) ? G.tirLocal : G.tir, rayon: R.tir, retard: true, decalage: dec, prioritaire: lui(e.a), centre: lui(e.a) };
         const classe = loin ? 'loin' : (lui(e.a) ? 'local' : 'pres') + (dehors && CLASSES_TIR.includes('presDehors') ? 'Dehors' : '');
         const son = this.banque && this.banque.get(cleTir(RECETTES_TIR[e.arme] ? e.arme : 'fa24', gaz, classe));
         let v;
@@ -605,7 +614,7 @@ export class SonsJeu {
       }
       case 'elim': {
         if (lui(e.par) && e.cible !== e.par) this.jouer2d(RECETTES.elim(B), G.elim);
-        if (lui(e.cible)) { const M = REGLAGES_SONS.etouffe.mort; this.etouffer(M.hz, M.duree, 0); }
+        if (lui(e.cible)) { const M = REGLAGES_SONS.etouffe.mort; this.etouffer(M.hz, M.duree, M.reouverture); }
         return;
       }
       case 'apparition': if (lui(e.a)) { this.rouvrir(0.5); this.jouer2d(RECETTES.apparition(B), G.apparition, false); } return;
@@ -622,7 +631,7 @@ export class SonsJeu {
         if (!r) return;
         const local = lui(e.a), plus = this._ennemi(e.a) ? Math.pow(10, REGLAGES_SONS.pasEnnemi / 20) : 1;
         const k = allure === 'marche' ? 0.45 : allure === 'accroupi' ? 0.3 : allure === 'sprint' ? (e.tact ? 1.3 : 1.15) : 1;
-        const f = e.f ?? 0.6, o = { gain: (local ? G.pasLocal : G.pas) * plus * k, rayon: local ? 3 : r, retard: true, decalage: dec, hauteurOcc: 1.0, occlusion: !local };
+        const f = e.f ?? 0.6, o = { gain: (local ? G.pasLocal : G.pas) * plus * k, rayon: r, retard: true, decalage: dec, hauteurOcc: 1.0, centre: local };
         const fb = FORCES_PAS.reduce((m, x) => (Math.abs(x - f) < Math.abs(m - f) ? x : m), FORCES_PAS[0]);
         const son = this.banque && this.banque.get(`pas:${fb}:${Math.floor(Math.random() * PRISES)}`);
         const v = son ? this._tampon(e.x, e.y, e.z, son, 0.93 + Math.random() * 0.14, o) : this.jouer3d(e.x, e.y, e.z, RECETTES.pas(B, f), o);
@@ -637,7 +646,7 @@ export class SonsJeu {
       // grenade ; quand ils viennent, les rebonds ne sont plus lus dans l'état)
       case 'couteau': {
         const a = P.acteurParId(e.a), p = a && a.corps && a.corps.pos;
-        if (p) this.jouer3d(p.x, p.y + 1.3, p.z, RECETTES.couteau(B), { gain: G.couteau, rayon: 10, retard: !lui(e.a), decalage: dec, occlusion: !lui(e.a) });
+        if (p) this.jouer3d(p.x, p.y + 1.3, p.z, RECETTES.couteau(B), { gain: G.couteau, rayon: 10, retard: true, decalage: dec, centre: lui(e.a) });
         if (e.cible >= 0) this.jouer3d(e.x, e.y, e.z, RECETTES.corps(B), { gain: G.corps * 2, rayon: R.corps, retard: true, decalage: dec + 0.05 });
         return;
       }
@@ -647,7 +656,7 @@ export class SonsJeu {
         this.jouer3d(e.x, e.y, e.z, RECETTES.rebond(B, f), { gain: G.grenade, rayon: R.grenade, retard: true, decalage: dec, hauteurOcc: 0.3 });
         return;
       }
-      case 'grenade': this.jouer3d(e.x, e.y, e.z, RECETTES.lancer(B, genreGrenade(e, 'grenade') !== 'flash'), { gain: G.grenade, rayon: R.grenade, retard: true, decalage: dec, occlusion: !lui(e.a) }); return;
+      case 'grenade': this.jouer3d(e.x, e.y, e.z, RECETTES.lancer(B, genreGrenade(e, 'grenade') !== 'flash'), { gain: G.grenade, rayon: R.grenade, retard: true, decalage: dec, centre: lui(e.a) }); return;
       case 'explosion': {
         const E = this._oreille, d = Math.hypot(e.x - E.x, e.y - E.y, e.z - E.z), flash = genreGrenade(e, 'explosion') === 'flash';
         const f = flash ? RECETTES.flash(B) : this._gaz() ? RECETTES.fragGaz(B) : RECETTES.frag(B, d > 30);
@@ -683,12 +692,11 @@ export class SonsJeu {
     }
   }
   // un bruit du CORPS d'un acteur (recharge, saut, changement d'arme…) : à sa hauteur `h` au-dessus des pieds ; le sien,
-  // pour Haythem, sans occlusion
+  // pour Haythem en vue FPS, au milieu des deux oreilles (`centre` ; un prop vu de derrière par la caméra orbitale garde sa place)
   _corps(a, recette, gain, rayon, dec, h) {
     const p = a.corps && (a.corps.posAff || a.corps.pos); if (!p) return null;
-    const local = a.local;
-    return this.jouer3d(p.x, (Number.isFinite(a.corps.solAff) ? a.corps.solAff : p.y) + h, p.z, recette, { gain, rayon: local ? Infinity : rayon, retard: !local, decalage: dec,
-      occlusion: !local, hauteurOcc: 0 });
+    return this.jouer3d(p.x, (Number.isFinite(a.corps.solAff) ? a.corps.solAff : p.y) + h, p.z, recette, { gain, rayon, retard: true, decalage: dec,
+      centre: !!a.local && !a.prop && a.corps === a.joueur, hauteurOcc: 0 });
   }
   // L'ÉTAT lu à chaque image : les rebonds des grenades (leur vitesse verticale qui change de signe, ou la pose), le cœur
   // sous 30 PV, le décompte et les changements de phase du combat (le prop hunt a les siens : js/jeu/sons_prop.js)

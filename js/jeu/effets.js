@@ -5,10 +5,10 @@
 // douilles, éclairs de bouche, étincelles et poussières, explosions et fumées, grenades en vol ; et deux choses que les
 // règles décrivent sans les dessiner : les anneaux de la domination (`hud.points`) et les cibles en carton du stand
 // (`hud.cibles`). Tout est en POOLS : un InstancedMesh chacun, créé une fois par session et COMPILÉ à la préparation
-// (Player.preparerRendu, puis la scène — aucun programme neuf en pleine manche), enfant DIRECT de la scène,
+// (Player.preparerRendu — aucun programme neuf en pleine manche), enfant DIRECT de la scène,
 // `dynamique` (hors des cuissons, des cartes d'environnement, des ombres de contact, de la coupe par zones), sans ombre,
-// `frustumCulled = false` (la sphère d'un InstancedMesh ne suit pas ses instances) ; posé dans la scène à la préparation,
-// RETIRÉ à la sortie (la balade retrouve ses enfants). Chaque pool = UN appel de dessin (rien quand il est vide).
+// `frustumCulled = false` (la sphère d'un InstancedMesh ne suit pas ses instances) ; posé dans la scène à l'entrée de la
+// partie (`brancher`), RETIRÉ à la sortie (la balade retrouve ses enfants). Chaque pool = UN appel de dessin (rien quand il est vide).
 // AUCUNE LUMIÈRE dans la scène de jeu (une de plus : 27 s d'image figée, carte_props § 5.4) : les éclairs, traceurs,
 // étincelles et le cœur des explosions sont des quads additifs `toneMapped: false` que le bloom fait briller.
 // Les abonnés ne font que NOTER l'événement : tout est fabriqué dans `maj` (une fois par image, après la caméra), quand
@@ -393,13 +393,19 @@ export class Effets {
   _retirer() { let n = 0; for (const m of this.racines) if (m.parent) { m.parent.remove(m); n++; } if (n) { const S = this.game.scene; S.userData.effetsJeu = (S.userData.effetsJeu | 0) + 1; } }
 
   // LA PRÉPARATION (Partie.preparer, sous l'écran « PRÉPARATION DE LA PARTIE ») : pools créés, posés, compilés — leurs
-  // programmes pour la cible du rendu, ceux du préréglage de repli de la qualité automatique (Player.preparerRendu)
+  // programmes pour la cible du rendu, ceux du préréglage de repli de la qualité automatique (Player.preparerRendu) —,
+  // puis RETIRÉS : c'est `brancher` (Partie.entrer) qui les pose pour la partie (relecture du 23/10 : une préparation
+  // interrompue — une exception, une partie jamais entrée — les laissait dans la scène de la balade)
   async preparer(progres) {
     this._creer(); this._poser();
     for (const m of this.racines) m.visible = true;
-    const pr = Player.preparerRendu ? this.racines.map((m) => Player.preparerRendu(m)).filter(Boolean) : [];
-    if (pr.length) await Promise.race([Promise.all(pr), new Promise((r) => setTimeout(r, 6000))]);
-    for (const m of this.racines) m.visible = false;
+    try {
+      const pr = Player.preparerRendu ? this.racines.map((m) => Player.preparerRendu(m)).filter(Boolean) : [];
+      if (pr.length) await Promise.race([Promise.all(pr), new Promise((r) => setTimeout(r, 6000))]);
+    } finally {
+      for (const m of this.racines) m.visible = false;
+      if (!this.partie) this._retirer();
+    }
   }
 
   brancher(partie) {
@@ -410,7 +416,9 @@ export class Effets {
     // champ `type` à elle — 'frag' | 'flash' — qui écrase celui de l'événement ; demande à F2 au rapport)
     // (`trajet` : le chemin exact de chaque plomb, de l'œil au point d'arrêt — un ajout de L-A au § 4.6 : le traceur y va
     // tout droit ; sans lui, il va à l'impact du même pas sur le rayon du tir)
-    for (const quoi of ['tir', 'trajet', 'impact', 'touche', 'elim', 'explosion', 'flash', 'faux']) this._des.push(partie.sur(quoi, (e) => { this._file.push({ quoi, e }); }));
+    // (ni `elim` ni `flash` : la touche qui tue a déjà sa gerbe, la poupée est à L-C, le voile blanc au HUD — relecture du
+    // 23/10, deux abonnements qui ne dessinaient rien)
+    for (const quoi of ['tir', 'trajet', 'impact', 'touche', 'explosion', 'faux']) this._des.push(partie.sur(quoi, (e) => { this._file.push({ quoi, e }); }));
     this._fluidite();
   }
   debrancher() {
@@ -695,7 +703,9 @@ export class Effets {
     let nx = ev.nx, ny = ev.ny, nz = ev.nz;
     if (F && F.n) { nx = F.n[0]; ny = F.n[1]; nz = F.n[2]; }
     const nl = Math.hypot(nx, ny, nz) || 1; nx /= nl; ny /= nl; nz /= nl;
-    const f = F && F.f, mat = ev.mat === 'mur' && f && f.vitre ? 'vitre' : ev.mat;
+    // (un VRAI MEUBLE — une forme du registre, js/registre_meubles.js parForme — n'a jamais de décalque, même haut et dit
+    // 'mur' par la balistique : un distributeur, une armoire étiquetée ; relecture du 23/10)
+    const f = F && F.f, mat = ev.mat === 'mur' && f && f.vitre ? 'vitre' : f && MEUBLES.parForme.has(f) ? 'meuble' : ev.mat;
     const plomb = (ev.plomb | 0) > 0;
     if (mat === 'vitre') {
       this._decalque(ev.x, ev.y, ev.z, nx, ny, nz, 2, REGLAGES_EFFETS.impact.felure * (plomb ? 0.6 : 1), COUL.eclat);
