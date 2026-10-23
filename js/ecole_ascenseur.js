@@ -432,9 +432,9 @@ export function poserBandeSud(ch, { groupe, lampes = null }) {
     // (23/10, lot L-M du jeu : un VRAI MEUBLE du prop hunt — ses pièces rangées dans un groupe à lui, posé au pied du corps,
     // à la place qu'elles avaient dans le groupe de l'étage (la couture les voit dans le même ordre), et son étiquette, une
     // donnée que lit js/registre_meubles.js avant la couture ; sa forme du monde solide avec lui)
-    const E = new THREE.Group(); E.name = 'extincteur (pied de l'ascenseur)'; E.position.set(x, b, -y);
+    const E = new THREE.Group(); E.name = "extincteur (pied de l'ascenseur)"; E.position.set(x, b, -y);
     for (const o of G.children.splice(n0)) { o.parent = null; o.position.sub(E.position); E.add(o); }
-    E.userData.meuble = { type: 'extincteur', nom: 'l'extincteur', mural: true, formes: [f] };
+    E.userData.meuble = { type: 'extincteur', nom: "l'extincteur", mural: true, formes: [f] };
     G.add(E);
   }
   // LE PALIER DE L'ASCENSEUR, desservi
