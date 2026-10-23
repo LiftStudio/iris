@@ -115,6 +115,9 @@ export class Pilote {
     }
     // LE CHEMIN
     if (this.mode === 'route' && this._replan && !this._attente && t >= this._tPlan) this._planifier(t);
+    // (GELÉ — la présentation et le décompte, 6 s — ou mort : le chemin demandé, mais ni commande ni surveillance ; sinon il
+    // se croyait coincé deux fois pendant le décompte, pénalisait ses liens et pouvait être téléporté au « GO ! »)
+    if (a.gele || !a.vivant) { this._ref = null; this._tK = 0; return; }
     // LE FACE-À-FACE (le recul, l'attente)
     if (this.mode === 'attente') { this._attendre(dt, t); if (this.mode === 'attente') return; }
     if (this.mode === 'route') this._faceAFace(t);

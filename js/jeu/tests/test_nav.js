@@ -571,6 +571,17 @@ export default function (jeu) {
     return { ok: essais >= 30 && rendus > 0 && fautes === 0, attendu: '≥ 30 essais, des couverts rendus, 0 faute', obtenu: `${essais} essais, ${rendus} couverts, ${fautes} fautes` };
   });
 
+  // ---------------------------------------------------------------- 19. le décompte (relecture)
+  T('19 décompte d\'un match d\'équipes de bots (gelés 6 s) : aucun pilote ne s\'y croit coincé, aucune commande de marche gelé', async () => {
+    await jeu.lancer('equipes', { graine: 19, humain: false, allies: 4, ennemis: 4, zone: 'ecole', difficulte: 'regulier' });
+    const p = game.partie; let gelesQuiMarchent = 0, co = 0, sec = 0, partis = 0;
+    for (let i = 0; i < 120 * 7; i++) { jeu.avancer(PAS); for (const a of p.acteurs) if (a.gele && (a.cmd.ax || a.cmd.ay)) gelesQuiMarchent++; }
+    for (const a of p.acteurs) { const P = a.cerveau && a.cerveau.pilote; if (P) { co += P.coincements; sec += P.secours; if (P.chemin.length) partis++; } }
+    jeu.quitter('balade');
+    return { ok: gelesQuiMarchent === 0 && co === 0 && sec === 0 && partis === 8, attendu: '0 pas de marche gelé, 0 coincement, 0 secours, 8 bots partis sur un chemin au « GO ! »',
+      obtenu: `${gelesQuiMarchent} pas gelés en marche, ${co} coincements, ${sec} secours, ${partis} partis` };
+  });
+
   // ================================================================ À F2 (les vrais modules de la vague 2)
   T('F2 · verifierBots avec les tables de L-M (combat, portes figées) : mêmes seuils', async () => {
     const r = await jeu.verifierBots({ duree: 180, bots: 8, cerveau: 'errant' });
