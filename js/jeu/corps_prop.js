@@ -208,7 +208,10 @@ export function deplacerProp(acteur, cmd, dt, partie) {
   acteur.endurance = e; c.endurance = e;
   const vit = marche ? A.marche : sprint ? base * A.sprint : base;
   if (cmd.saut && !c.airborne && !c.plaque) { c.sauter(A.saut); partie.evt('saut', { a: acteur.id, f: 0.3 }); }
+  // (F2, demande de L-F : l'atterrissage d'un petit saut émet `reception` { a, f } — js/jeu/sons_prop.js y joue le « toc » à 6 m)
+  const enLair = c.airborne, vy = c.jumpVel;
   const d = c.plaque ? 0 : c.bouger(_dir, bouge ? vit : 0, dt);
+  if (enLair && !c.airborne && !c.plaque) partie.evt('reception', { a: acteur.id, f: Math.min(1, Math.abs(vy) / 6), chute: 0 });
   if (c.plaque) { c.vel.set(0, 0, 0); c.speedNow = 0; }
   // LE CAP
   const ang0 = c.ang;
