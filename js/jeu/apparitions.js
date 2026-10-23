@@ -322,14 +322,15 @@ export function choisirApparition(partie, acteur) {
   for (const e of mortsDe(partie)) {
     for (let i = 0; i < L.length; i++) { const v = L[i], d = Math.hypot(N.px[v] - e.x, N.pz[v] - e.z, N.ph[v] - e.y); if (d <= R.danger.morts) note[i] -= R.danger.poids * (1 - d / R.danger.morts); }
   }
-  let ordre = L.map((v, i) => i).filter((i) => !interdit[i] && !(champE && champE[L[i]] < R.procheMin) && !colle(L[i]));
-  // (et de ceux-là, ceux qu'AUCUN ennemi ne voit, même à plus de 20 m à pied — vu de loin, on meurt en apparaissant ; la
-  // règle du § 3.8 reste le plancher quand tout est vu)
-  const caches = ordre.filter((i) => !vuDeQuelquun(L[i]));
-  if (caches.length) ordre = caches;
+  const ordre = L.map((v, i) => i).filter((i) => !interdit[i] && !(champE && champE[L[i]] < R.procheMin) && !colle(L[i]));
+  ordre.sort((p, q) => note[q] - note[p] || p - q);
+  // (et de ceux-là, les 3 mieux notés qu'AUCUN ennemi ne voit, même à plus de 20 m à pied — vu de loin, on meurt en
+  // apparaissant ; la règle du § 3.8 reste le plancher quand tout est vu. La vue n'est essayée que dans l'ordre des notes,
+  // jusqu'à 3 : une cinquantaine de rayons au lieu de 400)
+  const caches = [];
+  for (const i of ordre) { if (!vuDeQuelquun(L[i])) { caches.push(i); if (caches.length >= R.meilleurs) break; } }
   const loin = (p, q) => { const a = champE ? champE[L[p]] : 0, b = champE ? champE[L[q]] : 0; return a === b ? p - q : b > a ? 1 : -1; };
-  const pool = ordre.length ? ordre : L.map((v, i) => i).sort(loin).slice(0, 1);
-  pool.sort((p, q) => note[q] - note[p] || p - q);
+  const pool = caches.length ? caches : ordre.length ? ordre : L.map((v, i) => i).sort(loin).slice(0, 1);
   const top = pool.slice(0, R.meilleurs), i = top[partie.rng ? partie.rng.int(top.length) : 0];
   return sortie(N, L[i], champE);
 }
