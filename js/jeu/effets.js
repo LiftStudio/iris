@@ -491,17 +491,19 @@ export class Effets {
     const fps = a.local && a.corps === a.joueur && !a.prop;
     if (!this._visible(ev.ox, ev.oy, ev.oz, 80)) return;
     // l'ÉCLAIR (pas pour Haythem en vue FPS : son arme de vue a le sien)
-    if (!fps) this._eclair(a, ev);
+    // (Haythem en vue FPS : son arme de vue n'a que sa lumière de bouche — la flamme est posée ici, dans la scène, là où
+    // l'écran montre le bout du canon : `_boucheVue`)
+    this._eclair(a, ev, fps);
     // la DOUILLE (Militaire : une réplique à gaz n'en éjecte pas) — le TP-50 et le FP-12 éjectent au réarmement
     if (!this.airsoft && this._visible(ev.ox, ev.oy, ev.oz, REGLAGES_EFFETS.douille.distance)) {
       const retard = ev.arme === 'tp50' ? 0.27 : ev.arme === 'fp12' ? 0.38 : 0;
       this._douillesAttente.push({ t: this.t + retard, a: ev.a, arme: ev.arme, dx: ev.dx, dy: ev.dy, dz: ev.dz, fps });
     }
   }
-  _eclair(a, ev) {
+  _eclair(a, ev, fps = false) {
     const E = this.ecl, P = this.pools.eclairs, i = E.k; E.k = (E.k + 1) % P.count;
-    const b = this._bouche(a, _s), R = REGLAGES_EFFETS.eclair, gaz = this.airsoft;
-    const T = (R.taille[ev.arme] || 0.14) * (0.85 + Math.random() * 0.3) * (gaz ? 0.55 : 1);
+    const b = fps ? this._boucheVue(a, ev, _s) : this._bouche(a, _s), R = REGLAGES_EFFETS.eclair, gaz = this.airsoft;
+    const T = (R.taille[ev.arme] || 0.14) * (0.85 + Math.random() * 0.3) * (gaz ? 0.55 : 1) * (fps ? 0.7 : 1);
     // −Z de l'instance le long du tir, roulis au hasard
     _n.set(ev.dx, ev.dy, ev.dz).normalize();
     _q.setFromUnitVectors(_v.set(0, 0, -1), _n); _q2.setFromAxisAngle(_v.set(0, 0, 1), Math.random() * 6.28); _q.multiply(_q2);
@@ -558,10 +560,31 @@ export class Effets {
     const [u, w] = UV(1); this.pools.traceurs.geometry.attributes.aFx.setXYZW(i, u, w, 1, 0);
     this.stats.traceurs++;
   }
+  // LE BOUT DU CANON DE L'ARME DE VUE, dans la scène : le repère `bouche` de l'arme montrée (sa scène et sa caméra à elle,
+  // js/jeu/viewmodel.js) projeté à l'écran, puis reposé à `D` m de la caméra du jeu sur la même ligne de vue — l'éclair
+  // et le départ du traceur tombent au bout du canon dessiné ; sans arme de vue, sous et à droite de l'œil
   _boucheVue(a, ev, out) {
+    const D = 0.8, cam = this.game.camera, vm = this.partie && this.partie.aff && this.partie.aff.viewmodel;
+    const sup = vm && vm.superposition, bo = sup && sup.scene && sup.camera ? this._repereBouche(sup.scene) : null;
+    if (bo) {
+      bo.getWorldPosition(_v); _v.project(sup.camera);
+      if (Math.abs(_v.x) < 1.2 && Math.abs(_v.y) < 1.2) {
+        _w.set(_v.x, _v.y, 0.5).unproject(cam).sub(cam.position).normalize();
+        return out.copy(cam.position).addScaledVector(_w, D);
+      }
+    }
     const eye = a.oeil(_n, true), C = _cam, k = a.arsenal ? a.arsenal.visee : 0;
     const d = 0.55, r = 0.1 * (1 - k), b = 0.09 * (1 - k) + 0.04 * k;
     return out.set(eye.x + ev.dx * d + C.rx * r - C.ux * b, eye.y + ev.dy * d + C.ry * r - C.uy * b, eye.z + ev.dz * d + C.rz * r - C.uz * b);
+  }
+  // le repère `bouche` de l'arme VISIBLE de l'arme de vue (gardé tant qu'elle ne change pas)
+  _repereBouche(scene) {
+    const g = this._vmBouche;
+    if (g && g.arme.visible && g.arme.parent && this._vmImage === this._image) return g.b;
+    let b = null, arme = null;
+    scene.traverseVisible((o) => { if (!b && o.userData && o.userData.reperes && o.userData.reperes.bouche && o.userData.reperes.bouche.isObject3D) { b = o.userData.reperes.bouche; arme = o; } });
+    this._vmBouche = b ? { b, arme } : null; this._vmImage = this._image;
+    return b;
   }
   _majTraceurs(dt) {
     const T = this.tra, M = this.pools.traceurs, a = M.instanceMatrix.array, R = REGLAGES_EFFETS.traceur, C = _cam;
