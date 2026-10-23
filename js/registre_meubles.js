@@ -271,8 +271,14 @@ function aplatir(src, invP) {
     MEUBLES.stats.clones++;
   }
   plat.updateMatrixWorld(true);
+  // LE BUDGET D'UNE COPIE (≤ 12 appels en haute) : deux par maillage (couleur, profondeur) et un par passe d'ombre de chaque
+  // maillage qui en porte — deux passes au pire (mesuré : l'extincteur du hall ouest, 4 maillages dont 3 ombrants, 11 appels
+  // puis 14 une image sur deux) ; au-delà, les plus petits cessent de porter une ombre (sa poignée de 13 cm)
+  const ombrants = plat.children.filter((c) => c.castShadow).map((c) => ({ c, t: new THREE.Box3().setFromObject(c).getSize(_v).length() })).sort((a, b) => a.t - b.t);
+  while (ombrants.length && 2 * plat.children.length + 2 * ombrants.length > APPELS_COPIE) ombrants.shift().c.castShadow = false;
   return plat;
 }
+const APPELS_COPIE = 12;
 
 // UN TYPE NEUF : le prototype — les maillages de l'original cousus dans son repère (aucune étiquette n'y passe : un
 // clone porterait userData par JSON.stringify, et les `formes` du lot R sont des formes du monde solide) —, sa boîte

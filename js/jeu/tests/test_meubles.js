@@ -123,12 +123,18 @@ export default function (jeu) {
       o.matrixWorld.decompose(m.position, m.quaternion, m.scale); libres.add(m); n++; s += o.geometry.attributes.position.count;
     }
     rep.add(libres);
-    const t0 = performance.now();
-    const r = _bacASable((M) => { fermerRegistre(rep); rattraperRegistre(null); zonerRegistre(game.carte.lumieres, game.collisions); return { types: M.types.size, poses: M.poses.length }; });
-    const ms = performance.now() - t0;
+    // (la construction ne paie que `fermerRegistre` — ce que les coutures appellent ; le rattrapage, qui achève les prototypes,
+    // et les zones sont de l'écran PRÉPARATION : chronométrés à part, ils vérifient que la réplique rend toutes ses poses)
+    let ms = 0, msPrep = 0;
+    const r = _bacASable((M) => {
+      const t0 = performance.now(); fermerRegistre(rep); ms = performance.now() - t0;
+      const t1 = performance.now(); rattraperRegistre(null); zonerRegistre(game.carte.lumieres, game.collisions); msPrep = performance.now() - t1;
+      return { types: M.types.size, poses: M.poses.length };
+    });
+    t.note('registre, rattrapage et zones de la réplique (ms, préparation)', msPrep);
     const ok = t.temps('registre (ms, rejoué)', ms, 30) && r.poses === MEUBLES.poses.length;
     return { ok, attendu: '≤ 30 ms · ' + MEUBLES.poses.length + ' poses retrouvées',
-      obtenu: `${ms.toFixed(1)} ms pour ${r.poses} poses, ${r.types} types, ${n} maillages libres (${s} sommets ; la construction : ${vus} maillages non étiquetés croisés, ${S.libres} retenus, ${S.coutures} coutures)` };
+      obtenu: `${ms.toFixed(1)} ms à la construction (+ ${msPrep.toFixed(1)} ms à la préparation) pour ${r.poses} poses, ${r.types} types, ${n} maillages libres (${s} sommets ; la construction : ${vus} maillages non étiquetés croisés, ${S.libres} retenus, ${S.coutures} coutures)` };
   }, { delai: 120 });
 
   // 2. LE REGISTRE HORS DU −1 : types, poses, tailles, oubliés
@@ -168,13 +174,14 @@ export default function (jeu) {
     const cam = game.camera, u = game.user, appels = [], trop = [];
     game.freeCam = true;
     try {
-      // le hall, devant la pile : un fond fixe, puis chaque type déguisable posé à 2,2 m devant la caméra
+      // le hall, devant la pile : chaque type déguisable posé à 2,2 m devant la caméra, le fond relevé juste avant (relevé
+      // une seule fois, il dérivait de 3 appels en cours de route : toutes les copies d'un coup trop chères)
       const x = 14.9, z = -3.4; u.pos.set(x, 0, z + 0.6); if (u.posAff) u.posAff.copy(u.pos);
       cam.position.set(x, 1.5, z); cam.rotation.set(-0.35, 0, 0, 'YXZ'); cam.aspect = 16 / 9; cam.updateProjectionMatrix();
       await jeu.images(30);
-      const fond = (await jeu.images(4)).appels;
       for (const [cle, T0] of CATALOGUE) {
         if (!T0.deguisable) continue;
+        const fond = (await jeu.images(4)).appels;
         const c = T0.secours ? T0.proto.clone(true) : copieMeuble(cle); c.userData.dynamique = true;
         c.position.set(x, 0, z - 2.2); game.scene.add(c);
         await jeu.images(3);
