@@ -5,10 +5,20 @@ Section de la spécification : § 5.5.11 (contrats § 4.5.16, valeurs § 3, prop
 
 ## Où j'en suis
 
-**RELECTURE EN COURS** (23/10, 06:30 ; relecteur sévère, commits « L-U relecture : … », section « Relecture » plus bas) :
-spécification relue (§§ 2.1, 2.2, 2.9, 3, 4.5.16, 4.8, 5.1, 5.5.11), diff complet `socle...lot/L-U` lu, propriétaires
-OK 17 fichiers ; en attente d'un jeton du navigateur (les trois pris à 06:26) pour rejouer les 14 critères et jouer.
-Un repreneur : lire la section « Relecture » (défauts trouvés, corrigés ou non), puis reprendre là où elle s'arrête.
+**RELECTURE FINIE** (23/10, 07:25 ; relecteur sévère, commits « L-U relecture : … », section « Relecture » en fin de
+rapport : 13 défauts trouvés et corrigés, 5 écarts et 1 demande ajoutés). Sur le code final (2095d30 ; les commits suivants
+ne touchent que ce rapport), la définition de « fini » du § 5.1, règle 5 :
+- (a) `&rapport=1&lot=L-U` : **14/14 sur PC** (1280 × 720, `&qualite=haute`, 18,3 s) et **14/14 sous `?tel=1`** (375 × 812,
+  moyenne, 13,9 s) ; seul « signalé » : le premier Tab, « non valable » (onglet derrière ceux des autres agents, ou machine
+  déjà au-delà de 50 ms sans Tab) — mesuré valable onglet devant : 35, 19, 21, 20 ms ;
+- (b) `&rapport=1&lot=S0` : **29/29 sur PC** (`&qualite=haute`, 103 s) et **29/29 sous `?tel=1`** (98,5 s), la balade au bit
+  près avant et après les parties (vue 3 et vue 1 : 0 / 0), « menu = référence » vrai ;
+- (c) `python -I tools/verifier_proprietaires.py lot/L-U` → **OK 17 fichiers** ;
+- (d) 12 commits « L-U relecture : … » avec la ligne d'attribution ; (e) ce rapport ;
+- (f) onglet fermé, serveur 8141 arrêté, **jeton_3 rendu à 07:24** (pris à 06:49).
+Reste à F2 : ce que disait le constructeur (ci-dessous : parcours manette sur les vraies fins, crédits, portraits à
+côté des avatars de L-C, ÉCHAP réel sur l'écran de fin pointeur capturé — le navigateur intégré refuse la capture), et les
+DEMANDES 1 à 8.
 
 **Construction FINIE** (23/10, 05:56, le constructeur). La définition de « fini » du § 5.1, règle 5 :
 - (a) `&rapport=1&lot=L-U` : **14/14 sur PC** (1280 × 720, qualité haute, 17,0 s ; dernier passage sur 4a3f7cc) et **14/14 sous
@@ -280,7 +290,7 @@ togglePause / frame, `js/manette.js` et `js/manette_menus.js`, `js/settings.js`,
 
 - **La vraie capture du pointeur** : le navigateur intégré la refuse (après un vrai clic sur « CLIQUE POUR JOUER », le
   calque reste et `pointerLockElement` est nul). L'ÉCHAP réel sur l'écran de fin, pointeur capturé, reste donc à F2 (déjà
-  dans « Reste », point 3) ; il est couvert par le raisonnement (index.js rend le pointeur APRÈS que `fin` a gelé la partie :
+  demandé par le constructeur) ; il est couvert par le raisonnement (index.js rend le pointeur APRÈS que `fin` a gelé la partie :
   `iris-pointeur` arrive sur une partie en pause) et par le test 8 (synthétique).
 - **Les temps** : la machine est partagée (rAF à 6 images/s quand l'onglet n'est pas devant, trois onglets d'école
   ouverts) ; le premier Tab mesuré VALABLE, onglet devant, quatre manches de suite : 35, 19, 21, 20 ms (sans Tab :
