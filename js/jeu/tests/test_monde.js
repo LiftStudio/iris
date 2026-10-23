@@ -268,9 +268,23 @@ export default function (jeu) {
       const instances = R.count, enrub = M.rubans.map((q) => q.cle);
       window.__photosLM = { ...(window.__photosLM || {}), rubalise: jeu.photo('rubalise') };
       jeu.quitter('balade');
-      const ok = n0 !== null && n1 === n0 && avec - sans === 1 && instances > 0;
-      return { ok, attendu: 'programmes à la fin de la préparation = après 10 images ; rubalise = 1 appel',
-        obtenu: `programmes ${n0} → ${n1} · appels ${avec} avec, ${sans} sans (${instances} segments, ${enrub.length} passages enrubannés : ${enrub})` };
+      // (relecture : la qualité AUTOMATIQUE qui descend d'un cran en pleine partie ne compile rien pour la rubalise — sa
+      // variante de repli l'a été à la préparation, comme celles du décor et des avatars)
+      jeu.figerQualite(false);
+      const fx = game.fx, q0 = fx.quality, Rp = fx.auto && fx._etatRepli();
+      let repli = 'sans repli';
+      if (Rp) {
+        await game.lancerPartie(MODES.essai, { graine: 5, mannequins: [], bots: 0, zone: 'rdc_rue' });
+        await jeu.images(4);
+        const pm = () => game.renderer.properties.get(game.partie.monde.rubalise.material).programs.size, a = pm();
+        fx.setQuality(Rp.q); await jeu.images(6);
+        const b = pm(); fx.setQuality(q0); jeu.quitter('balade');
+        repli = { a, b, q: Rp.q };
+      }
+      const okRepli = repli === 'sans repli' || repli.b === repli.a;
+      const ok = n0 !== null && n1 === n0 && avec - sans === 1 && instances > 0 && okRepli;
+      return { ok, attendu: 'programmes à la fin de la préparation = après 10 images ; rubalise = 1 appel ; la qualité qui descend d’un cran ne lui compile rien',
+        obtenu: `programmes ${n0} → ${n1} · appels ${avec} avec, ${sans} sans (${instances} segments, ${enrub.length} passages enrubannés : ${enrub}) · repli ${typeof repli === 'string' ? repli : `${q0} → ${repli.q} : programmes de la rubalise ${repli.a} → ${repli.b}`}` };
     } finally { jeu.figerQualite(false); }
   });
 

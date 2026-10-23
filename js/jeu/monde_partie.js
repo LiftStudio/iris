@@ -589,8 +589,13 @@ export class MondePartie {
   // monde que Partie.preparer appelle à CHAQUE préparation, avant la compilation de la scène : c'est là ; trois fois rien
   // quand le programme existe déjà. Affichage, hors du pas.)
   _compilerRubalise() {
-    const g = this.game, R = this.rubalise;
-    if (R && g && g._compilerAsync) g._compilerAsync(R);
+    const g = this.game, R = this.rubalise, fx = g && g.fx;
+    if (!R || !g || !g._compilerAsync) return;
+    g._compilerAsync(R);
+    // (relecture : et sa variante du cran de REPLI de la qualité automatique — sans carte d'environnement —, comme un avatar
+    // qui arrive, js/game.js Player.preparerRendu : posée dans la scène à l'entrée, la rubalise n'avait que la variante du
+    // moment, et la première baisse automatique en pleine partie la compilait d'un coup — un programme de plus, S0 point 8)
+    if (fx && fx.auto && fx.avecRepli && fx._etatRepli && fx._etatRepli()) fx.avecRepli(R, (x) => g._compilerAsync(x));
   }
 
   // ================================================================ L'AFFICHAGE (une fois par image)
