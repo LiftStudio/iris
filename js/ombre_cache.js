@@ -103,14 +103,20 @@ function materiauProfondeur(o, m) {
 export function sceneOmbre(scene) { return { isScene: false, traverseVisible: (f) => scene.traverseVisible(f), traverse: (f) => scene.traverse(f) }; }
 export function avecProfondeur(racine, compiler) {
   const poses = [];
+  let n = 0;
   racine.traverse((o) => {
-    if (!(o.isMesh || o.isPoints || o.isLine) || !o.castShadow || !o.material) return;
+    if (!(o.isMesh || o.isPoints || o.isLine || o.isSprite) || !o.material) return;
     const src = o.material, ms = Array.isArray(src) ? src : [src];
+    // (F2, 23/10 : ce qui ne porte pas d'ombre — ou un matériau caché — n'entre pas dans la carte : SANS matériau le temps de
+    // la compilation. Son VRAI matériau, compilé contre la scène vide, faisait des programmes jamais dessinés : la variante
+    // transparente d'un corps qui s'efface, son ombre coupée par js/jeu/cadence_acteurs.js, compilée par la préchauffe en
+    // pleine manche — test 01 de L-H, + 6 programmes une fois sur deux.)
+    if (!o.castShadow || o.isSprite || (!Array.isArray(src) && !src.visible)) { poses.push([o, src]); o.material = null; return; }
     const prof = ms.map((m) => (m && m.visible ? materiauProfondeur(o, m) : m));
-    poses.push([o, src]);
+    poses.push([o, src]); n++;
     o.material = Array.isArray(src) ? prof : prof[0];
   });
-  try { return poses.length ? compiler(racine) : null; }
+  try { return n ? compiler(racine) : null; }
   finally { for (const [o, src] of poses) o.material = src; }
 }
 
