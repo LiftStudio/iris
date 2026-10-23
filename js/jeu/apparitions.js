@@ -10,7 +10,8 @@
 //   - LA RÉAPPARITION en cours de partie (`choisirApparition`, § 3.8) : les candidats sont les 20 lieux et des nœuds
 //     échantillonnés du graphe (≈ 12 par niveau, les plus éloignés les uns des autres, dégagement ≥ 0,75 m, hors volées,
 //     dans la zone de jeu) ; note = 1,0 × proximité des alliés (≤ 15 m à pied) − 3,0 × danger (ennemis à ≤ 20 m à pied,
-//     × 3 s'ils VOIENT le point ; morts récentes à ≤ 8 m) ; jamais un point à moins de 20 m à pied d'un ennemi qui le voit ;
+//     × 3 s'ils VOIENT le point ; morts récentes à ≤ 8 m) ; jamais un point à moins de 20 m à pied d'un ennemi qui le voit,
+//     ni à 6 m d'un ennemi, et de préférence un point qu'AUCUN ennemi ne voit (à 50 m : la tête ou le buste) ;
 //     tirage parmi les 3 meilleurs (la graine). CHACUN POUR SOI : le point qui maximise la distance à pied au plus proche
 //     ennemi et que personne ne voit, exactement. Les distances à pied : des Dijkstra BORNÉS depuis les acteurs (un par
 //     ennemi, à 20 m ; un depuis tous les alliés, à 15 m ; un complet depuis tous les ennemis en chacun pour soi) — au
@@ -51,7 +52,7 @@ export const POINTS_APPARITION = [
 export const REGLES_APPARITION = {
   degageMin: 0.75, espacement: 1.5, parNiveau: 12,
   allies: { poids: 1.0, portee: 15 }, danger: { poids: 3.0, portee: 20, vue: 3, morts: 8, mortsT: 10 },
-  meilleurs: 3, interditVu: 20, vueMax: 50,
+  meilleurs: 3, interditVu: 20, vueMax: 50, procheMin: 6,
 };
 // les pièces d'une zone de jeu (Set), et les lieux qui y sont
 export function piecesDe(zoneJeu) {
@@ -127,10 +128,13 @@ const _o = { x: 0, y: 0, z: 0, set(x, y, z) { this.x = x; this.y = y; this.z = z
 // du camp d'en face. Les deux camps sont tirés ENSEMBLE (à tour de rôle, le meilleur candidat de chacun : le plus proche
 // à pied de la base de son camp, pénalisé de 1,5 × ce dont il s'avance vers la base adverse), chaque point à 15 m à pied
 // au moins de tous ceux de l'autre camp — un appel pour A et un pour B rendent donc les mêmes deux camps (le tirage ne
-// dépend que de la zone et du graphe ; DEPARTS_N points par camp, les `n` premiers rendus). Une salle de classe pleine
-// de tables (la S 1.3 des étages, la salle 1 du 2e) n'a qu'un nœud dégagé : le camp déborde alors dans le couloir voisin.
-// Les passes : PASSES (dégagés près de la base d'abord). (`nav` facultatif : à défaut, le graphe des
-// humains de la partie qui se prépare ; `rng` : la graine de la partie — le tirage est déterministe, il n'en tire rien.)
+// dépend que de la zone et du graphe ; au moins DEPARTS_N points par camp, les `n` premiers rendus). Une salle de classe
+// pleine de tables (la S 1.3 des étages, la salle 1 du 2e) n'a qu'un nœud dégagé : le camp déborde alors dans le couloir
+// voisin. Les passes : PASSES (dégagés près de la base d'abord), essayées à CHAQUE prise : les k premières prises de chaque
+// camp ne dépendent pas du nombre tiré, un appel à 4 et un à 9 rendent deux camps qui se tiennent (relecture : le nombre
+// était dans la clé du cache, deux appels de `n` différents au-delà de 6 tiraient deux fois — deux camps de deux tirages,
+// sans garantie des 15 m). (`nav` facultatif : à défaut, le graphe des humains de la partie qui se prépare ; `rng` : la
+// graine de la partie — le tirage est déterministe, il n'en tire rien.)
 const DEPARTS_N = 6, SEPARATION = 15;
 const _departs = new WeakMap();
 export function departs(zoneJeu, equipe, n, rng, nav = null) {
@@ -141,9 +145,8 @@ export function departs(zoneJeu, equipe, n, rng, nav = null) {
   let pris;
   if (deux) {
     let M = _departs.get(N); if (!M) _departs.set(N, M = new Map());
-    const cle = zoneJeu + ':' + K;
-    let J = M.get(cle);
-    if (!J || J.masque !== N.masque) { J = departsDeux(N, D, K); if (J) { J.masque = N.masque; M.set(cle, J); } }
+    let J = M.get(zoneJeu);
+    if (!J || J.masque !== N.masque || J.K < K) { J = departsDeux(N, D, K); if (J) { J.masque = N.masque; J.K = K; M.set(zoneJeu, J); } }
     pris = J ? J[equipe] : null;
   } else pris = departsUn(N, (D[equipe] || D.A || D.chasseurs || [[14.88, 0, -3.12]]), K);
   if (!pris || !pris.length) return departsSansGraphe(Z, equipe, n);
@@ -194,7 +197,8 @@ function departsUn(N, base, K) {
   }
   return pris;
 }
-// LES DEUX camps, à tour de rôle, à ≥ 15 m à pied l'un de l'autre
+// LES DEUX camps, à tour de rôle, à ≥ 15 m à pied l'un de l'autre ; chaque prise prend le premier candidat de la première
+// passe qui en a un (une prise ne dépend que des prises d'avant : les k premières sont les mêmes quel que soit K)
 function departsDeux(N, D, K) {
   const bA = basesDe(N, D.A), bB = basesDe(N, D.B);
   if (!bA.length || !bB.length) return null;
@@ -206,18 +210,19 @@ function departsDeux(N, D, K) {
     const F = N.champMulti([v], SEPARATION, tmp), M = pres[cote];
     for (let i = 0; i < N.nb; i++) if (F[i] < M[i]) M[i] = F[i];
   };
-  for (const [dMin, rMax] of PASSES) {
-    for (let tour = 0; tour < K; tour++) {
-      for (const cote of ['A', 'B']) {
-        const c = S[cote], autre = pres[cote === 'A' ? 'B' : 'A'];
-        if (c.pris.length >= K) continue;
+  for (let tour = 0; tour < K; tour++) {
+    for (const cote of ['A', 'B']) {
+      const c = S[cote], autre = pres[cote === 'A' ? 'B' : 'A'];
+      let v0 = -1;
+      for (const [dMin, rMax] of PASSES) {
         for (const v of c.L) {
           if (N.degage[v] < dMin || c.L.P[v] > rMax || c.pris.includes(v) || !(autre[v] >= SEPARATION) || !espaceOk(N, c.pris, v)) continue;
-          prendre(cote, v); break;
+          v0 = v; break;
         }
+        if (v0 >= 0) break;
       }
+      if (v0 >= 0) prendre(cote, v0);
     }
-    if (S.A.pris.length >= K && S.B.pris.length >= K) break;
   }
   return { A: S.A.pris, B: S.B.pris };
 }
@@ -281,8 +286,13 @@ export function choisirApparition(partie, acteur) {
   let B = _buf.get(N); if (!B) _buf.set(N, B = { a: new Float64Array(N.nb), b: new Float64Array(N.nb) });
   const B_ = partie.balistique || N.balistique;
   const yeux = ennemis.map((e) => { e.oeil(_o); return { x: _o.x, y: _o.y, z: _o.z, e }; });
-  const voit = (v, o) => Math.hypot(o.x - N.px[v], o.z - N.pz[v]) <= R.vueMax && B_.vue(o.x, o.y, o.z, N.px[v], N.ph[v] + 1.6, N.pz[v]);
+  // (« voit » : l'œil d'un ennemi, à ≤ 50 m, voit la tête (1,6 m) ou le buste (0,9 m) d'un acteur posé là — ce que la partie
+  // vérifie avant de prendre le point, js/jeu/partie_fps.js : un point vu au buste seul était refusé par elle)
+  const voit = (v, o) => Math.hypot(o.x - N.px[v], o.z - N.pz[v]) <= R.vueMax &&
+    (B_.vue(o.x, o.y, o.z, N.px[v], N.ph[v] + 1.6, N.pz[v]) || B_.vue(o.x, o.y, o.z, N.px[v], N.ph[v] + 0.9, N.pz[v]));
   const vuDeQuelquun = (v) => yeux.some((o) => voit(v, o));
+  // (un ennemi à moins de 6 m à vol d'oiseau, la hauteur comptée double — un autre étage est loin)
+  const colle = (v) => ennemis.some((e) => Math.hypot(e.pos.x - N.px[v], (e.pos.y - N.ph[v]) * 2, e.pos.z - N.pz[v]) < R.procheMin);
   const melee = !acteur.equipe;
   // les distances à pied : depuis tous les ennemis (complet en chacun pour soi : on maximise le plus proche)
   const champE = ennemis.length ? N.champMulti(ennemis.map((e) => e.pos), melee ? Infinity : R.danger.portee + 10, B.a).slice() : null;
@@ -308,16 +318,33 @@ export function choisirApparition(partie, acteur) {
       note[i] -= R.danger.poids * (1 - d / R.danger.portee) * (vu ? R.danger.vue : 1);
     }
   }
-  // les morts récentes (les événements de la partie : la place est chaude)
-  for (const e of partie.evenements || []) {
-    if (e.type !== 'elim' || partie.t - e.t > R.danger.mortsT) continue;
+  // les morts récentes (la place est chaude)
+  for (const e of mortsDe(partie)) {
     for (let i = 0; i < L.length; i++) { const v = L[i], d = Math.hypot(N.px[v] - e.x, N.pz[v] - e.z, N.ph[v] - e.y); if (d <= R.danger.morts) note[i] -= R.danger.poids * (1 - d / R.danger.morts); }
   }
-  const ordre = L.map((v, i) => i).filter((i) => !interdit[i] && !(champE && champE[L[i]] < 6));
-  const pool = ordre.length ? ordre : L.map((v, i) => i).sort((p, q) => (champE ? champE[L[q]] - champE[L[p]] : 0)).slice(0, 1);
+  let ordre = L.map((v, i) => i).filter((i) => !interdit[i] && !(champE && champE[L[i]] < R.procheMin) && !colle(L[i]));
+  // (et de ceux-là, ceux qu'AUCUN ennemi ne voit, même à plus de 20 m à pied — vu de loin, on meurt en apparaissant ; la
+  // règle du § 3.8 reste le plancher quand tout est vu)
+  const caches = ordre.filter((i) => !vuDeQuelquun(L[i]));
+  if (caches.length) ordre = caches;
+  const loin = (p, q) => { const a = champE ? champE[L[p]] : 0, b = champE ? champE[L[q]] : 0; return a === b ? p - q : b > a ? 1 : -1; };
+  const pool = ordre.length ? ordre : L.map((v, i) => i).sort(loin).slice(0, 1);
   pool.sort((p, q) => note[q] - note[p] || p - q);
   const top = pool.slice(0, R.meilleurs), i = top[partie.rng ? partie.rng.int(top.length) : 0];
   return sortie(N, L[i], champE);
+}
+// les morts récentes d'une partie (relecture : l'anneau de 256 événements de la partie ne couvre que 3 s d'un combat nourri
+// — tirs, pas, impacts —, pas les 10 s du § 3.8) : abonnées à 'elim' au premier appel, amorcées par ce que l'anneau garde
+const _morts = new WeakMap();
+function mortsDe(partie) {
+  let M = _morts.get(partie);
+  if (!M) {
+    M = (partie.evenements || []).filter((e) => e.type === 'elim').map((e) => ({ x: e.x, y: e.y, z: e.z, t: e.t }));
+    if (partie.sur) partie.sur('elim', (e) => { M.push({ x: e.x, y: e.y, z: e.z, t: e.t }); });
+    _morts.set(partie, M);
+  }
+  while (M.length && partie.t - M[0].t > REGLES_APPARITION.danger.mortsT) M.shift();
+  return M;
 }
 function sortie(N, v, champE) {
   let lacet = champE ? lacetVers(N, champE, v) : null;

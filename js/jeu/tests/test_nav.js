@@ -71,6 +71,9 @@ export default function (jeu) {
 
   // ---------------------------------------------------------------- 1. verifierNav
   T('1 graphe des humains : nœuds, liens, composante, apparitions, niveaux, cabine, temps, cache', async (t) => {
+    // (le monde des PARTIES d'abord : MondePartie.preparerSession — les vantaux solides et les barrières de L-M — n'est posé
+    // que par une partie ; sans lui, le graphe mesuré ici n'est pas celui des parties, ni son empreinte. Relecture.)
+    await jeu.lancer('essai', { graine: 1, mannequins: [], bots: 0, humain: false }); jeu.quitter('balade');
     const g = await jeu.verifierNav({ refaire: true });
     await Nav.ecriture;                                      // (l'écriture du cache, faite en arrière-plan)
     Nav.oublier();                                           // (la session oublie : la 2e lecture vient d'IndexedDB)
@@ -268,7 +271,9 @@ export default function (jeu) {
     for (let k = 0; k < 4; k++) ennemis.push(p.ajouterActeur({ id: 20 + k, nom: 'E' + k, equipe: 'B', x: 14.88, y: 0, z: -3.12, cerveau: null }));
     for (let k = 0; k < 2; k++) allies.push(p.ajouterActeur({ id: 30 + k, nom: 'A' + k, equipe: 'A', x: 14.88, y: 0, z: -3.12, cerveau: null }));
     const poserAuHasard = (a) => { const v = auHasard(N, rng, (w) => N.degage[w] >= 0.5 && N.niveau[w] <= 3); a.corps.pos.set(N.px[v], N.ph[v], N.pz[v]); a.corps.posPrec.copy(a.corps.pos); };
-    let fautes = 0, essais = 0; const ms = []; const exemples = [];
+    let fautes = 0, essais = 0, vusEvitables = 0, colles = 0, vus = 0; const ms = []; const exemples = [];
+    const LC = candidatsApparition(N);
+    const vuPar = (yeux, x, y, z) => yeux.some((o) => Math.hypot(o.x - x, o.z - z) <= 50 && (B.vue(o.x, o.y, o.z, x, y + 1.6, z) || B.vue(o.x, o.y, o.z, x, y + 0.9, z)));
     for (let k = 0; k < 1000; k++) {
       for (const a of [...ennemis, ...allies]) poserAuHasard(a);
       const t0 = performance.now(); const q = choisirApparition(p, moi); ms.push(performance.now() - t0);
@@ -276,6 +281,19 @@ export default function (jeu) {
       for (const e of ennemis) {
         const d = N.distancePied({ x: q.x, y: q.y, z: q.z }, e.pos), o = oeil(e);
         if (d < 20 && B.vue(o.x, o.y, o.z, q.x, q.y + 1.6, q.z)) { fautes++; if (exemples.length < 3) exemples.push(`${r2(d)} m`); break; }
+      }
+      // (relecture, les 200 premiers : à 6 m d'un ennemi jamais ; VU d'un ennemi — même à plus de 20 m à pied — seulement si
+      // tous les candidats permis l'étaient aussi)
+      if (k < 200) {
+        const yeux = ennemis.map(oeil);
+        if (ennemis.some((e) => Math.hypot(e.pos.x - q.x, (e.pos.y - q.y) * 2, e.pos.z - q.z) < 6)) colles++;
+        if (vuPar(yeux, q.x, q.y, q.z)) {
+          vus++;
+          const F = N.champMulti(ennemis.map((e) => e.pos), Infinity);
+          // (un candidat que personne ne voit n'est jamais « interdit » : il reste les 6 m, à pied et à vol d'oiseau)
+          const permis = (v) => F[v] >= 6 && !ennemis.some((e) => Math.hypot(e.pos.x - N.px[v], (e.pos.y - N.ph[v]) * 2, e.pos.z - N.pz[v]) < 6);
+          if (LC.some((v) => permis(v) && !vuPar(yeux, N.px[v], N.ph[v], N.pz[v]))) vusEvitables++;
+        }
       }
     }
     // CHACUN POUR SOI : 100 tirages, 5 ennemis
@@ -285,15 +303,15 @@ export default function (jeu) {
       for (const a of [...ennemis, ...allies]) poserAuHasard(a);
       const autres = [...ennemis, ...allies], yeux = autres.map(oeil);
       const F = N.champMulti(autres.map((a) => a.pos), Infinity);
-      const vu = (v) => yeux.some((o) => Math.hypot(o.x - N.px[v], o.z - N.pz[v]) <= 50 && B.vue(o.x, o.y, o.z, N.px[v], N.ph[v] + 1.6, N.pz[v]));
+      const vu = (v) => yeux.some((o) => Math.hypot(o.x - N.px[v], o.z - N.pz[v]) <= 50 && (B.vue(o.x, o.y, o.z, N.px[v], N.ph[v] + 1.6, N.pz[v]) || B.vue(o.x, o.y, o.z, N.px[v], N.ph[v] + 0.9, N.pz[v])));
       let best = -1, bd = -1;
       for (const v of L) if (!vu(v) && F[v] > bd) { bd = F[v]; best = v; }
       const q = choisirApparition(p, moi);
       if (best >= 0 && Math.hypot(q.x - N.px[best], q.z - N.pz[best]) < 1e-4 && Math.abs(q.y - N.ph[best]) < 1e-4) exacts++;
     }
     jeu.quitter('balade');
-    return { ok: fautes === 0 && exacts === 100, attendu: '0 faute sur 1 000 ; chacun pour soi 100/100 exacts',
-      obtenu: `${fautes} fautes / ${essais}${exemples.length ? ' (' + exemples.join(', ') + ')' : ''}, ${r2(mediane(ms))} ms par tirage (p95 ${r2(centile(ms, 0.95))}) ; chacun pour soi ${exacts}/100 ; ${L.length} candidats` };
+    return { ok: fautes === 0 && exacts === 100 && colles === 0 && vusEvitables === 0, attendu: '0 faute sur 1 000 ; sur 200 : 0 à 6 m, 0 vu évitable ; chacun pour soi 100/100 exacts',
+      obtenu: `${fautes} fautes / ${essais}${exemples.length ? ' (' + exemples.join(', ') + ')' : ''}, ${r2(mediane(ms))} ms par tirage (p95 ${r2(centile(ms, 0.95))}) ; sur 200 : ${colles} à 6 m, ${vus} vus (${vusEvitables} évitables) ; chacun pour soi ${exacts}/100 ; ${L.length} candidats` };
   }, { delai: 300 });
 
   // ---------------------------------------------------------------- 11. déterminisme, IndexedDB qui lève
