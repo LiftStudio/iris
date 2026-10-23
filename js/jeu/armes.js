@@ -146,7 +146,7 @@ export class Arsenal {
     this.ch = this.armes.map((f) => f.chargeur); this.res = this.armes.map((f) => f.reserve);
     this.i = 0; this.et = 'pret'; this.t0 = t; this.fin = t; this.vers = -1; this.basc = false; this.tB = 0;
     this.entre = false; this.tEntrees = 0; this.tact = false; this.nC = 0; this.tC = 0; this.pp = false;
-    this.prochain = 0; this.tirAvant = false; this.tampon = -INF; this._vide = false; this.tA = -INF; this.sT = -INF; this.spTac = false;
+    this.pr = this.armes.map(() => 0); this.tirAvant = false; this.tampon = -INF; this._vide = false; this.tA = -INF; this.sT = -INF; this.spTac = false;
     this.vk = 0; this.seq = 0; this.chaleur = 0; this.reculI = 0;
     const f = this.armes[0], D = f && (f.dispersion || null), b = D ? D.repos : 0;
     this.bDe = b; this.bVers = b; this.bT0 = -INF; this._s = (f && f.gerbe ? f.gerbe.cone : b) * DEG;
@@ -160,6 +160,10 @@ export class Arsenal {
   }
 
   get arme() { return this.armes[this.i] || null; }
+  // l'heure du prochain tir permis, PAR ARME : le verrou du TP-50 (1,33 s) ou la pompe du FP-12 ne retiennent pas le pistolet
+  // sorti juste après (relecture du 23/10 : une seule heure pour l'arsenal bloquait le P-17 jusqu'au bout du verrou)
+  get prochain() { return this.pr[this.i]; }
+  set prochain(v) { this.pr[this.i] = v; }
   get emplacement() { return this.arme ? this.arme.emplacement : null; }
   get chargeur() { return this.ch[this.i] || 0; }
   get reserve() { return this.res[this.i] || 0; }
@@ -247,7 +251,7 @@ export class Arsenal {
     if (this.et === 'couteau') { this._couteau(partie, t); return; }
     if (this.et === 'change') {
       if (!this.basc && t + 1e-9 >= this.tB) {
-        this.i = this.vers; this.basc = true; this.tampon = -INF;
+        this.i = this.vers; this.basc = true; this.tampon = -INF; this.reculI = 0;     // (le motif de recul repart du début)
         partie.evt('arme', { a: a.id, id: this.arme.id });
       }
       if (t + 1e-9 >= this.fin) { this.vers = -1; this._etat('pret', t, 0); }
@@ -574,7 +578,7 @@ export class Arsenal {
     const fin = (v) => (Number.isFinite(v) ? v : null);
     return { i: this.i, ch: this.ch.slice(), res: this.res.slice(), et: this.et, t: this.t0, vk: this.vk, seq: this.seq, chaleur: this.chaleur,
       reculI: this.reculI, let: this.let, tac: this.tac, fin: fin(this.fin), ent: this.entre, tE: this.tEntrees, vers: this.vers, basc: this.basc, tB: this.tB,
-      tact: this.tact, nC: this.nC, tC: this.tC, pp: this.pp, pr: this.prochain, ta: this.tirAvant, tp: fin(this.tampon), vide: this._vide,
+      tact: this.tact, nC: this.nC, tC: this.tC, pp: this.pp, pr: this.pr.slice(), ta: this.tirAvant, tp: fin(this.tampon), vide: this._vide,
       tA: fin(this.tA), sT: fin(this.sT), spT: this.spTac, bD: this.bDe, bV: this.bVers, bT: fin(this.bT0), s: this._s,
       env: fin(this.envol), air: this.air, glT: fin(this.glT), gl: this.gl, kC: this.kC, kF: this.kF, kFin: fin(this.kFin), dC: fin(this._dCouteau ?? null),
       gTy: this.gTy, gT0: this.gT0, gTe: this.gTe, gRl: this.gRl, gLa: this.gLa, la: this.la,
@@ -585,7 +589,7 @@ export class Arsenal {
     this.i = e.i; this.ch = e.ch.slice(); this.res = e.res.slice(); this.et = e.et; this.t0 = e.t; this.vk = e.vk; this.seq = e.seq;
     this.chaleur = e.chaleur; this.reculI = e.reculI; this.let = e.let; this.tac = e.tac; this.fin = e.fin === null ? INF : e.fin;
     this.entre = e.ent; this.tEntrees = e.tE ?? 0; this.vers = e.vers; this.basc = !!e.basc; this.tB = e.tB ?? 0;
-    this.tact = e.tact; this.nC = e.nC ?? 0; this.tC = e.tC ?? 0; this.pp = !!e.pp; this.prochain = e.pr; this.tirAvant = e.ta;
+    this.tact = e.tact; this.nC = e.nC ?? 0; this.tC = e.tC ?? 0; this.pp = !!e.pp; this.pr = Array.isArray(e.pr) ? e.pr.slice() : this.armes.map(() => e.pr ?? 0); this.tirAvant = e.ta;
     this.tampon = inf(e.tp); this._vide = e.vide; this.tA = inf(e.tA); this.sT = inf(e.sT); this.spTac = !!e.spT;
     this.bDe = e.bD ?? this.bDe; this.bVers = e.bV ?? this.bVers; this.bT0 = inf(e.bT); this._s = e.s ?? this._s;
     this.envol = inf(e.env); this.air = !!e.air; this.glT = inf(e.glT); this.gl = !!e.gl;

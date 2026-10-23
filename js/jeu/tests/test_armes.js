@@ -465,12 +465,24 @@ export default function (jeu) {
     q.s.c.tir = true; avancer(p, 0.3); q.s.c.tir = false; avancer(p, 2.0);
     const i0 = q.T0.length; q.s.c.tir = true; avancer(p, 0.2); q.s.c.tir = false;
     const reprise = q.T0.length >= i0 + 2 ? q.T0[i0 + 1] - q.T0[i0] : -1; q.fin();
+    // (relecture : la cadence est PAR ARME — un coup de TP-50, l'arme changée aussitôt : le P-17 tire au bout de sa sortie,
+    // 0,25 + 0,20 s, pas au bout du verrou, 1,33 s)
+    const [aS, sS] = tireur(p, o.x, o.y, o.z, null, id++);
+    aS.arsenal = new Arsenal(aS, { principale: 'tp50', secondaire: 'p17', letale: null, tactique: null, couteau: false });
+    sS.vise = { x: o.x - 20, y: o.y + 6, z: o.z };
+    const TS = [], dS = p.sur('tir', (e) => { if (e.a === aS.id) TS.push(e); });
+    k = 0; sS.chaque = (cmd) => { cmd.tir = k++ % 2 === 0; };
+    jusqua(p, () => TS.length >= 1, 1);
+    sS.chaque = (cmd) => { cmd.tir = false; }; sS.fronts = { armeN: 2 }; p.pas(PAS);
+    sS.chaque = (cmd) => { cmd.tir = k++ % 2 === 0; };
+    jusqua(p, () => TS.length >= 2, 3); dS(); p.retirerActeur(aS);
+    const pistolet = TS.length >= 2 && TS[1].arme === 'p17' ? TS[1].t - TS[0].t : -1;
     jeu.quitter('balade');
     const P1 = PAS + 1e-6;
     const ok = Math.abs(res.fa - 2.32) <= P1 && Math.abs(res.pm - 31 * 60 / 900) <= P1 && Math.abs(res.fp - 9 * 60 / 70) <= P1 && Math.abs(res.tp - 60 / 45) <= P1
-      && Math.abs(n17 - 20) <= 1 && Math.abs(tampon - 0.15) <= P1 && reprise >= 0.08 - P1;
-    return { ok, attendu: 'FA-24 30e à 2,32 s ± 1 pas · PM-9 32e à 2,067 s · FP-12 10 coups en 7,714 s · TP-50 1,333 s · P-17 20 ± 1 coups en 3 s · tampon ≈ 150 ms · reprise ≥ 80 ms − 1 pas',
-      obtenu: `FA-24 ${res.fa.toFixed(4)} · PM-9 ${res.pm.toFixed(4)} · FP-12 ${res.fp.toFixed(4)} · TP-50 ${res.tp.toFixed(4)} · P-17 ${n17} · tampon ${tampon.toFixed(4)} · reprise ${reprise.toFixed(4)} s` };
+      && Math.abs(n17 - 20) <= 1 && Math.abs(tampon - 0.15) <= P1 && reprise >= 0.08 - P1 && Math.abs(pistolet - 0.45) <= 3 * PAS;
+    return { ok, attendu: 'FA-24 30e à 2,32 s ± 1 pas · PM-9 32e à 2,067 s · FP-12 10 coups en 7,714 s · TP-50 1,333 s · P-17 20 ± 1 coups en 3 s · tampon ≈ 150 ms · reprise ≥ 80 ms − 1 pas · P-17 0,45 s après un coup de TP-50',
+      obtenu: `FA-24 ${res.fa.toFixed(4)} · PM-9 ${res.pm.toFixed(4)} · FP-12 ${res.fp.toFixed(4)} · TP-50 ${res.tp.toFixed(4)} · P-17 ${n17} · tampon ${tampon.toFixed(4)} · reprise ${reprise.toFixed(4)} s · P-17 après TP-50 ${pistolet.toFixed(4)} s` };
   }, { delai: 180 });
 
   // 8. LES TEMPS POUR TUER (100 PV au torse, en visée)
