@@ -58,8 +58,26 @@ export const TABLE_PORTES_PROP = {
   'salle David Clark': 'auto', 'hall -1 → pause': 'auto', 'grande salle S -1.14': 'auto', 'Si 0.1': 'auto', 'bureau B': 'auto', 'service (hall)': 'auto',
 };
 // LES VITRES DÉPOLIES parmi les 51 formes `vitre` (carte_monde § 9.7) et les portes vitrées dépolies — relevées une à une le
-// 23/10 (centre de la forme, ± 5 cm) : la balle les traverse (× 0,8), la vue s'y arrête (Balistique.vue, L-A)
-export const TABLE_DEPOLIS = [];
+// 23/10 (centre de la forme, ± 5 cm ; des 58 formes `vitre` du socle, 51 fixes et 7 portes vitrées) : la balle les traverse
+// (× 0,8), la vue s'y arrête (Balistique.vue, L-A). Restent CLAIRES : les fenêtres des façades (rue, salles du 1er et du 2e,
+// la fenêtre du palier du 2e, celles de la salle 1 du 2e, stores ouverts), les fixes et l'imposte de la porte 6, les portes
+// 6, du passage et du bureau B. (Le jour du bureau B a une bande claire de 0,5 m en haut, au-dessus de 2 m : dépoli, l'œil
+// est à 1,62.)
+export const TABLE_DEPOLIS = [
+  // RDC : les trois jours de la Si 0.1 (vert pâle, js/ecole_portes.js fenetreDepolie), celui du bureau B, la porte bleue de la
+  // David Clark et son imposte
+  { x: 5.825, y: 1.76, z: -4.6, nom: 'jour de la Si 0.1 (ouest)' }, { x: 7.145, y: 1.76, z: -4.6, nom: 'jour de la Si 0.1 (milieu)' },
+  { x: 8.465, y: 1.76, z: -4.6, nom: 'jour de la Si 0.1 (est)' }, { x: 11.33, y: 1.775, z: -2.925, nom: 'jour du bureau B' },
+  { x: 5.156, y: 1.025, z: -12.785, nom: 'porte de la salle David Clark' }, { x: 5.156, y: 2.225, z: -12.785, nom: 'imposte de la salle David Clark' },
+  // 1er : les trois jours de la S 1.3 sur l'espace pause
+  { x: 9.075, y: 5.21, z: -4.95, nom: 'jour de la S 1.3 (travée 6)' }, { x: 7.425, y: 5.21, z: -4.95, nom: 'jour de la S 1.3 (travée 5)' },
+  { x: 5.775, y: 5.21, z: -4.95, nom: 'jour de la S 1.3 (travée 4)' },
+  // 2e : les portes des salles 1 et 2 (verre dépoli)
+  { x: 12.45, y: 7.62, z: -6.56, nom: 'porte de la salle 1 du 2e' }, { x: 10.52, y: 7.62, z: -4.59, nom: 'porte de la salle 2 du 2e' },
+  // −1 (js/ecole_amphi.js, lot R : à relever de nouveau après sa fusion) : le fixe, l'imposte et la porte de la S −1.14
+  { x: 9.1, y: -2.03, z: -14.485, nom: 'fixe de la S −1.14', lotR: true }, { x: 9.55, y: -0.88, z: -14.485, nom: 'imposte de la S −1.14', lotR: true },
+  { x: 9.8, y: -2.035, z: -14.485, nom: 'porte de la S −1.14', lotR: true },
+];
 
 // ---------------------------------------------------------------- LES 46 PASSAGES
 // d'une pièce à l'autre (carte_monde § 7 : les liens du graphe dont les deux bouts sont dans deux pièces ; centre en PLAN x,
@@ -199,8 +217,11 @@ export class MondePartie {
     const g = this.game, C = g.collisions, Lu = this.carte.lumieres;
     _lum = Lu;
     for (const P of this.toutes) cotesPorte(P, Lu);
-    // LES PASSAGES : leur limite, leur barrière, leur porte
-    this.passages = PASSAGES_PIECES.map((Q) => ({ ...Q, ...this._limite(Q) }));
+    // LES PASSAGES : leur limite (les portes automatiques ouvertes le temps du calcul), leur barrière, leur porte
+    const ouvertes = this.portes.map((P) => (P.forme ? P.forme.off : null));
+    for (const P of this.portes) if (P.forme) P.forme.off = true;
+    try { this.passages = PASSAGES_PIECES.map((Q) => ({ ...Q, ...this._limite(Q) })); }
+    finally { this.portes.forEach((P, i) => { if (P.forme) P.forme.off = ouvertes[i]; }); }
     for (const Q of this.passages) {
       Q.porte = this._porteDu(Q);
       if (Q.ok) Q.forme = horsMonde(C, () => C.ajouterBoiteOrientee(Q.cx, Q.cz, Q.hl + 0.1, 0.05, Math.atan2(Q.tz, Q.tx),
@@ -237,32 +258,40 @@ export class MondePartie {
     this.rubalise = R;
     g._compilerAsync?.(R);
   }
-  // LA LIMITE d'un passage : la normale (de la pièce `a` vers `b`), le point de la limite le long d'elle, et le passage
-  // libre de part et d'autre le long de la limite tant qu'elle sépare bien `a` de `b`
+  // LA LIMITE d'un passage. Les pièces sont des rectangles alignés sur les axes (carte_ecole.js l. 2345-2385) : leur limite
+  // aussi. Le long de chaque axe, de part et d'autre du centre du passage (1,5 m), la suite des pièces — lues au SOL de chaque
+  // point (une volée change de pièce par sa hauteur, comme l'escalier est) — : la bascule de `a` à `b` la plus proche du
+  // centre (45 cm au plus hors de toute pièce entre les deux : l'épaisseur d'un mur) donne la normale (de `a` vers `b`) et le
+  // point de la limite ; puis le passage libre le long de la limite (disque de 4 cm au sol, pas de 3 cm, 8 m au plus de
+  // chaque côté), tant qu'elle sépare bien `a` de `b`. (Les portes automatiques sont ouvertes le temps du calcul.)
   _limite(Q) {
-    const C = this.game.collisions, Lu = this.carte.lumieres, h = Q.y;
+    const C = this.game.collisions, Lu = this.carte.lumieres;
     if (!Lu || !Lu.zoneEn) return { ok: false };
-    const zone = (x, z) => { const Z = Lu.zoneEn(x, z, h + 0.1); return Z ? Z.id : null; };
+    const solDe = (x, z) => C.solEn(x, z, Q.y + 0.35);
+    const zone = (x, z) => { const Z = Lu.zoneEn(x, z, solDe(x, z) + 0.1); return Z ? Z.id : null; };
     let best = null;
-    for (let i = 0; i < 36; i++) {
-      const t = i * Math.PI / 36, nx = Math.cos(t), nz = Math.sin(t);
-      let s = 0;
-      for (const d of [0.3, 0.6, 0.9, 1.2]) {
-        const za = zone(Q.x - nx * d, Q.z - nz * d), zb = zone(Q.x + nx * d, Q.z + nz * d);
-        if (za === Q.a && zb === Q.b) s++; else if (za === Q.b && zb === Q.a) s--;
+    for (const [ux, uz] of [[1, 0], [0, 1]]) {
+      const L = [];
+      for (let k = -30; k <= 30; k++) L.push({ u: k * 0.05, z: zone(Q.x + ux * k * 0.05, Q.z + uz * k * 0.05) });
+      for (let i = 0; i < L.length; i++) {
+        if (L[i].z !== Q.a && L[i].z !== Q.b) continue;
+        let j = i + 1;
+        while (j < L.length && L[j].z === null && L[j].u - L[i].u <= 0.45) j++;
+        if (j >= L.length || L[j].z === L[i].z || (L[j].z !== Q.a && L[j].z !== Q.b)) continue;
+        const u = (L[i].u + L[j].u) / 2, sg = L[i].z === Q.a ? 1 : -1;
+        if (!best || Math.abs(u) < Math.abs(best.u)) best = { u, nx: ux * sg, nz: uz * sg, ux, uz, ua: L[i].u, ub: L[j].u };
       }
-      if (!best || Math.abs(s) > Math.abs(best.s)) best = { s, nx, nz };
     }
-    if (!best || best.s === 0) return { ok: false };
-    const nx = best.s > 0 ? best.nx : -best.nx, nz = best.s > 0 ? best.nz : -best.nz, tx = -nz, tz = nx;
-    // le point de la limite : la dernière pièce `a` et la première `b` le long de la normale, au cm près
-    let ua = -1.5, ub = 1.5;
-    for (let u = -1.5; u <= 1.5; u += 0.05) { const z0 = zone(Q.x + nx * u, Q.z + nz * u); if (z0 === Q.a) ua = u; else if (z0 === Q.b && u > ua) { ub = u; break; } }
-    for (let k = 0; k < 8; k++) { const u = (ua + ub) / 2; if (zone(Q.x + nx * u, Q.z + nz * u) === Q.a) ua = u; else ub = u; }
-    const u0 = (ua + ub) / 2, bx = Q.x + nx * u0, bz = Q.z + nz * u0;
-    const sol = C.solEn(bx, bz, h + 0.2);
-    // le passage libre le long de la limite (pas de 3 cm, 8 m au plus de chaque côté), tant que la limite sépare `a` de `b`
-    const libre = (x, z) => C.libre(x, z, 0.04, sol);
+    if (!best) return { ok: false };
+    const { nx, nz } = best, tx = -nz, tz = nx;
+    // la bascule au cm près (dichotomie entre les deux échantillons)
+    let ua = best.ua, ub = best.ub;
+    const zA = (u) => zone(Q.x + best.ux * u, Q.z + best.uz * u);
+    const cA = zA(ua);
+    for (let k = 0; k < 6; k++) { const u = (ua + ub) / 2; if (zA(u) === cA) ua = u; else ub = u; }
+    const u0 = (ua + ub) / 2, bx = Q.x + best.ux * u0, bz = Q.z + best.uz * u0;
+    const sol = solDe(bx, bz);
+    const libre = (x, z) => C.libre(x, z, 0.04, solDe(x, z));
     const limite = (x, z) => zone(x - nx * 0.45, z - nz * 0.45) === Q.a && zone(x + nx * 0.45, z + nz * 0.45) === Q.b;
     let s0 = 0, s1 = 0;
     for (const sg of [-1, 1]) {
