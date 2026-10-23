@@ -28,7 +28,7 @@
 // entrées — le temps est `partie.t`, les entrées la commande.
 // CE QUE CE MODULE ÉCRIT SUR L'ACTEUR (lu par l'arsenal, l'arme de vue, la vue) : `accroupi`, `glisse`, `jaugeTact`,
 // `endurance` (état, § 4.7) ; `allure` ('arret' | 'marche' | 'course' | 'sprint' | 'tact' | 'accroupi' | 'glisse' | 'air' |
-// 'franchit') et `mvt` (son état de mouvement : `sprintFinT` — l'heure de la fin du dernier sprint, pour le délai sprint → tir
+// 'franchit'), `franchit` (le franchissement en cours ou null) et `sprintTactique` (lus par l'arsenal, L-A), et `mvt` (son état de mouvement : `sprintFinT` — l'heure de la fin du dernier sprint, pour le délai sprint → tir
 // de l'arsenal —, `franchit` — le franchissement en cours, `k` de 0 à 1 —, `viseeBloquee`, l'œil lissé `yOeil` / `yOeilPrec`).
 import * as THREE from 'three';
 import { OEIL } from './constantes.js';
@@ -195,9 +195,10 @@ export function appliquerCommande(acteur, cmd, dt, partie) {
     const G0 = M.glisse, um = Math.min(1, (t - G0.t0 + dt / 2) / GLISSADE.duree);
     const vg = G0.v0 * Math.pow(Math.max(0, 1 - um), GLISSADE.expo);
     p.vel.set(G0.dx * vg, 0, G0.dz * vg);
-    p.speedMul = vg / (vb * (ALLURES.sprint / ALLURES.course)); p.sprintMul = ALLURES.sprint / ALLURES.course; p.marche = false;
+    // (sans le drapeau de sprint de Player : on tire en glissade, l'arsenal lit `sprinting`)
+    p.speedMul = vg / vb; p.marche = false;
     _dir.set(G0.dx, 0, G0.dz);
-    p.move(_dir, true, dt);
+    p.move(_dir, false, dt);
   } else p.move(_dir, sprint, dt);
   // (contre un obstacle, en sprint vers l'avant : le franchissement d'office après 0,15 s)
   const d = Math.hypot(p.pos.x - x0, p.pos.z - z0);
@@ -261,6 +262,10 @@ function finPas(acteur, p, M, C, t, x0, z0, dt, partie, sprint) {
   M.vit = vit;
   acteur.allure = M.franchit ? 'franchit' : M.glisse ? 'glisse' : p.airborne ? 'air' : vit < 0.3 ? 'arret' : sprint ? (M.tact ? 'tact' : 'sprint')
     : acteur.accroupi > 0.5 ? 'accroupi' : p.marche || vit < 2.3 ? 'marche' : 'course';
+  // (les deux drapeaux que lit l'arsenal de L-A : le franchissement en cours — rien en main —, le sprint tactique — sa sortie
+  // coûte `sprintTactTir`)
+  acteur.franchit = M.franchit || null;
+  acteur.sprintTactique = !!(sprint && M.tact);
   // LES PAS (tous les 0,7 m en course, 0,45 m en marche ; rien accroupi sous 1,3 m/s, rien en glissade, en l'air, en franchissant)
   const marcheA = acteur.allure === 'marche', accA = acteur.allure === 'accroupi';
   if (!p.airborne && !M.glisse && !M.franchit && vit > (accA ? PAS_ACTEUR.accroupiMin : 0.3)) {
