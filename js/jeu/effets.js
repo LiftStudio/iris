@@ -36,10 +36,11 @@ import { MEUBLES } from '../registre_meubles.js';
 export const REGLAGES_EFFETS = {
   pools: TELEPHONE ? { impacts: 96, traceurs: 16, douilles: 24, eclairs: 8, etincelles: 48, explosion: 40, grenades: 6, anneaux: 9, cibles: 12 }
     : { impacts: 256, traceurs: 32, douilles: 64, eclairs: 16, etincelles: 128, explosion: 96, grenades: 8, anneaux: 9, cibles: 12 },
-  impact: { trou: 0.075, peinture: [0.12, 0.19], felure: 0.26, brulure: 1.3, vie: 25, effacement: 1, decalage: 0.002, hautMin: 1.8 },
+  impact: { trou: 0.09, peinture: [0.12, 0.19], felure: 0.26, brulure: 1.3, vie: 25, effacement: 1, decalage: 0.002, hautMin: 1.8 },
   traceur: { vitesse: 400, longueur: 2.5, largeur: 0.016, parMetre: 0.0016, uneSur: 3, portee: 120 },
   douille: { droite: 0.12, bas: 0.08, avant: 0.35, vitesse: [1.8, 1.2, 0.3], restitution: 0.3, rebonds: 2, vie: 3, distance: 15 },
-  eclair: { images: 3, taille: { fa24: 0.14, pm9: 0.12, fp12: 0.18, tp50: 0.2, p17: 0.1 } },
+  // (tailles relevées au navigateur le 23/10 : à 3 m, un éclair de 14 cm vu de face n'était qu'un point)
+  eclair: { images: 3, taille: { fa24: 0.22, pm9: 0.18, fp12: 0.28, tp50: 0.3, p17: 0.15 } },
   // la correspondance impact ↔ tir du même pas : l'impact à moins de 12° du rayon du tir
   appariement: Math.cos(12 * Math.PI / 180),
   gravite: 9.81,
@@ -47,7 +48,8 @@ export const REGLAGES_EFFETS = {
 // les couleurs (linéaires ; au-delà de 1, le bloom les fait briller)
 const COUL = {
   eclair: [5.5, 3.3, 1.3], eclairGaz: [1.1, 1.25, 1.45], traceur: [4.2, 3.0, 1.5], etincelle: [5, 2.8, 1.1], verre: [1.6, 1.9, 2.2],
-  feu: [4.5, 1.9, 0.55], fumee: [0.32, 0.31, 0.3], poussiere: [0.62, 0.58, 0.52], platre: [0.78, 0.76, 0.72], tissu: [0.5, 0.46, 0.4],
+  // (fumée plus sombre et feu plus vif : vus au navigateur le 23/10, un gris de 0,32 sur un mur blanc ne se voyait presque pas)
+  feu: [6, 2.4, 0.6], fumee: [0.13, 0.125, 0.12], poussiere: [0.5, 0.47, 0.42], platre: [0.78, 0.76, 0.72], tissu: [0.5, 0.46, 0.4],
   eclat: [0.85, 0.92, 1], brule: [1, 1, 1], trou: [1, 1, 1], neutre: [0.95, 0.88, 0.3], laiton: [0.79, 0.62, 0.3], cartouche: [0.62, 0.08, 0.06],
   frag: [0.22, 0.26, 0.16], flash: [0.42, 0.44, 0.46], blanc: [3.2, 3.2, 3.4],
 };
@@ -81,13 +83,16 @@ function blob(g, R, cx, cy, r, n, irr) {
 function atlasImpacts() {
   const [c, g] = canevas(256, 256), R = new Rng(7);
   { const [x, y] = CASE(0), cx = x + 64, cy = y + 64;
-    g.save(); g.filter = 'blur(1px)';
-    g.fillStyle = 'rgba(205,200,190,0.55)'; blob(g, R, cx, cy, 30, 18, 0.35); g.fill();
-    const gr = g.createRadialGradient(cx, cy, 2, cx, cy, 20); gr.addColorStop(0, 'rgba(10,9,8,1)'); gr.addColorStop(0.5, 'rgba(38,34,30,0.95)'); gr.addColorStop(1, 'rgba(70,64,58,0)');
-    g.fillStyle = gr; blob(g, R, cx, cy, 20, 14, 0.25); g.fill();
-    g.strokeStyle = 'rgba(30,27,24,0.8)'; g.lineWidth = 1.4;
-    for (let i = 0; i < 6; i++) { const a = R.next() * 6.28, l = 18 + R.next() * 26; g.beginPath(); g.moveTo(cx + Math.cos(a) * 8, cy + Math.sin(a) * 8); g.lineTo(cx + Math.cos(a + 0.2) * l * 0.6, cy + Math.sin(a + 0.2) * l * 0.6); g.lineTo(cx + Math.cos(a) * l, cy + Math.sin(a) * l); g.stroke(); }
-    g.fillStyle = 'rgba(0,0,0,1)'; g.beginPath(); g.arc(cx, cy, 6, 0, 6.28); g.fill(); g.restore(); }
+    // (23/10, vu au navigateur : un cœur noir de 2 cm et un liseré clair ne se voyaient pas sur le plâtre blanc à plus de
+    // 2 m — le cratère est plus large, ourlé d'un halo gris de poussière brûlée, les fissures plus longues)
+    g.save(); g.filter = 'blur(1.2px)';
+    const halo = g.createRadialGradient(cx, cy, 10, cx, cy, 52); halo.addColorStop(0, 'rgba(70,64,58,0.55)'); halo.addColorStop(1, 'rgba(70,64,58,0)');
+    g.fillStyle = halo; blob(g, R, cx, cy, 50, 20, 0.3); g.fill();
+    const gr = g.createRadialGradient(cx, cy, 4, cx, cy, 30); gr.addColorStop(0, 'rgba(8,7,6,1)'); gr.addColorStop(0.55, 'rgba(32,29,26,0.95)'); gr.addColorStop(1, 'rgba(60,55,50,0)');
+    g.fillStyle = gr; blob(g, R, cx, cy, 30, 14, 0.28); g.fill();
+    g.strokeStyle = 'rgba(28,25,22,0.85)'; g.lineWidth = 1.8;
+    for (let i = 0; i < 7; i++) { const a = R.next() * 6.28, l = 26 + R.next() * 32; g.beginPath(); g.moveTo(cx + Math.cos(a) * 12, cy + Math.sin(a) * 12); g.lineTo(cx + Math.cos(a + 0.18) * l * 0.6, cy + Math.sin(a + 0.18) * l * 0.6); g.lineTo(cx + Math.cos(a) * l, cy + Math.sin(a) * l); g.stroke(); }
+    g.fillStyle = 'rgba(0,0,0,1)'; g.beginPath(); g.arc(cx, cy, 10, 0, 6.28); g.fill(); g.restore(); }
   { const [x, y] = CASE(1), cx = x + 64, cy = y + 64;
     g.save(); g.filter = 'blur(0.8px)'; g.fillStyle = '#ffffff';
     blob(g, R, cx, cy, 30, 22, 0.22); g.fill();
@@ -146,7 +151,7 @@ function atlasFumees() {
     const [x, y] = CASE(k), cx = x + 64, cy = y + 64;
     for (let i = 0; i < (k ? 30 : 18); i++) { const a = R.next() * 6.28, d = R.next() * (k ? 30 : 26), r = (k ? 10 : 18) + R.next() * (k ? 14 : 18);
       const gr = g.createRadialGradient(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 0, cx + Math.cos(a) * d, cy + Math.sin(a) * d, r);
-      const v = 200 + Math.floor(R.next() * 55); gr.addColorStop(0, `rgba(${v},${v},${v},${k ? 0.22 : 0.16})`); gr.addColorStop(1, `rgba(${v},${v},${v},0)`); g.fillStyle = gr; g.fillRect(x, y, 128, 128); }
+      const v = 200 + Math.floor(R.next() * 55); gr.addColorStop(0, `rgba(${v},${v},${v},${k ? 0.3 : 0.24})`); gr.addColorStop(1, `rgba(${v},${v},${v},0)`); g.fillStyle = gr; g.fillRect(x, y, 128, 128); }
   }
   { const [x, y] = CASE(2), cx = x + 64, cy = y + 64, gr = g.createRadialGradient(cx - 6, cy - 6, 0, cx, cy, 40);
     gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.85, 'rgba(235,235,235,1)'); gr.addColorStop(1, 'rgba(235,235,235,0)');
@@ -516,7 +521,7 @@ export class Effets {
     P.instanceMatrix.needsUpdate = true; P.instanceColor.needsUpdate = true; P.geometry.attributes.aFx.needsUpdate = true; P.visible = true;
     this.stats.eclairs++;
     // (et une petite lueur ronde : l'éclair éclaire l'air autour de lui)
-    if (!gaz) this.etincelles.emettre(b.x, b.y, b.z, 0, 0, 0, 0.05, T * 2.4, T * 2.8, [1.6, 0.9, 0.35], { cas: 0, a0: 0.8 });
+    if (!gaz) this.etincelles.emettre(b.x, b.y, b.z, 0, 0, 0, 0.05, T * 2.6, T * 3.2, [2.8, 1.6, 0.6], { cas: 0, a0: 0.85 });
   }
   // (3 images : celle du tir, puis deux qui pâlissent ; rien ne bouge en pause)
   _majEclairs(dt) {
@@ -724,9 +729,10 @@ export class Effets {
     // les éclats (sombres) et les étincelles (vives) : moins sur un meuble, aucune étincelle au sol
     for (let i = 0; i < Math.round((decal ? 3 : 4) * k); i++) this.fumees.emettre(x, y, z, nx * (2 + r() * 2) + (r() - 0.5) * 2, ny * (2 + r() * 2) + r() * 1.5, nz * (2 + r() * 2) + (r() - 0.5) * 2,
       0.4 + r() * 0.3, 0.012, 0.012, mat === 'meuble' ? [0.3, 0.22, 0.14] : [0.35, 0.33, 0.3], { cas: 3, a0: 1, grav: 9.81 });
-    if (!sol) for (let i = 0; i < Math.round((mat === 'meuble' ? 2 : 4) * k); i++) this.etincelles.emettre(x + nx * 0.01, y + ny * 0.01, z + nz * 0.01,
-      nx * (3 + r() * 4) + (r() - 0.5) * 3.5, ny * (3 + r() * 4) + (r() - 0.5) * 3.5 + 0.8, nz * (3 + r() * 4) + (r() - 0.5) * 3.5,
-      0.12 + r() * 0.18, 0.012, 0.008, COUL.etincelle, { cas: 1, a0: 1, grav: 9.81, trainee: 0.018 });
+    // (des étincelles COURTES — vues au navigateur le 23/10, 3-7 m/s pendant 0,3 s en faisaient des fils jusqu'à 1 m du mur)
+    if (!sol) for (let i = 0; i < Math.round((mat === 'meuble' ? 2 : 3) * k); i++) this.etincelles.emettre(x + nx * 0.01, y + ny * 0.01, z + nz * 0.01,
+      nx * (1.5 + r() * 2.5) + (r() - 0.5) * 2.4, ny * (1.5 + r() * 2.5) + (r() - 0.5) * 2.4 + 0.6, nz * (1.5 + r() * 2.5) + (r() - 0.5) * 2.4,
+      0.07 + r() * 0.1, 0.01, 0.006, COUL.etincelle, { cas: 1, a0: 1, grav: 9.81, trainee: 0.014 });
     if (!sol && !plomb) this.etincelles.emettre(x + nx * 0.02, y + ny * 0.02, z + nz * 0.02, 0, 0, 0, 0.06, 0.06, 0.14, [2.4, 1.5, 0.7], { cas: 0, a0: 0.9 });
   }
   // un DÉCALQUE : quad aligné sur la normale, 2 mm devant la surface, tourné au hasard ; le plus vieux recyclé
@@ -824,7 +830,7 @@ export class Effets {
     E.emettre(x, y, z, 0, 0, 0, 0.1, 2.4, 3.2, [3.5, 2.4, 1.3], { cas: 0, a0: 1 });
     E.emettre(x, y, z, 0, 0, 0, 0.12, 1.8, 2.6, [4, 2.6, 1.2], { cas: 2, a0: 0.9 });
     for (let i = 0; i < 6; i++) F.emettre(x + (r() - 0.5) * 0.5, y + r() * 0.4, z + (r() - 0.5) * 0.5, (r() - 0.5) * 2, 0.5 + r(), (r() - 0.5) * 2, 0.32 + r() * 0.15, 0.6, 2.0 + r() * 0.6, COUL.feu, { cas: 0, a0: 1, frein: 4 });
-    for (let i = 0; i < 9; i++) F.emettre(x + (r() - 0.5) * 0.8, y + r() * 0.5, z + (r() - 0.5) * 0.8, (r() - 0.5) * 1.6, 0.5 + r() * 0.6, (r() - 0.5) * 1.6, 2.6 + r() * 1.4, 0.8, 3 + r() * 1.2, COUL.fumee, { cas: 0, a0: 0.7, frein: 1.2, grav: -0.12 });
+    for (let i = 0; i < 9; i++) F.emettre(x + (r() - 0.5) * 0.8, y + r() * 0.5, z + (r() - 0.5) * 0.8, (r() - 0.5) * 1.6, 0.5 + r() * 0.6, (r() - 0.5) * 1.6, 2.6 + r() * 1.4, 0.8, 3 + r() * 1.2, COUL.fumee, { cas: 0, a0: 0.9, frein: 1.2, grav: -0.12 });
     for (let i = 0; i < 26; i++) E.emettre(x, y, z, (r() - 0.5) * 16, r() * 9, (r() - 0.5) * 16, 0.35 + r() * 0.5, 0.02, 0.012, COUL.etincelle, { cas: 1, grav: 9.81, trainee: 0.022 });
     for (let i = 0; i < 12; i++) F.emettre(x, y, z, (r() - 0.5) * 9, 1 + r() * 5, (r() - 0.5) * 9, 0.7 + r() * 0.5, 0.03, 0.03, [0.12, 0.11, 0.1], { cas: 3, grav: 9.81 });
     for (let i = 0; i < 3; i++) F.emettre(x, sol + 0.1, z, (r() - 0.5) * 4, 0.2, (r() - 0.5) * 4, 1.4 + r(), 0.5, 2.2, COUL.poussiere, { cas: 1, a0: 0.5, frein: 2 });
