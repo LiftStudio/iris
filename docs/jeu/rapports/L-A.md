@@ -6,7 +6,12 @@ port 8131 ; 23/10/2026. Fichiers du lot : `js/jeu/armes.js`, `js/jeu/balistique.
 
 ## Où j'en suis
 
-**FINI.** Les six points de la définition du § 5.1 (règle 5) sont tenus :
+**RELECTURE en cours** (relecteur, 23/10, 05:30 ; même arbre, même branche, commits « L-A relecture : … ») : spec relue
+(§§ 3.3-3.5, 4.5.6, 4.6, 4.7, 5.1, 5.5.1) et diff `socle...lot/L-A` lu en entier ; propriétaires et pureté : `OK 6
+fichiers`. En attente d'un jeton du navigateur (les trois pris : L-U, L-K, L-H) pour rejouer les critères et jouer.
+Constats et corrections : section « Relecture » en fin de rapport.
+
+**FINI (constructeur).** Les six points de la définition du § 5.1 (règle 5) sont tenus :
 - (a) `&rapport=1&lot=L-A` : **19/19 sur PC** (13,6 s, 0 signalé) et **19/19 sous `?tel=1`** (émulation 375 × 812,
   15,1 s, 0 signalé) ;
 - (b) `&rapport=1&lot=S0` sur la branche : **29/29 sur PC** (88,5 s, 0 signalé) et **29/29 sous `?tel=1`** (133,8 s,
@@ -221,3 +226,10 @@ Captures du panneau (onglet du lot, 524 × 306 affiché) : l'essai au départ, l
 (HUD « 0:00 · VIE 100 · FA-24 « Faucon » 30 / 90 ») ; la même vue à la 7e balle d'une rafale tenue (la vue a monté d'un
 cran, 23 / 90) et à la 16e (le mannequin est passé sous le centre : la montée du motif, 14 / 90). Rien d'autre à
 regarder pour ce lot : il n'a ni maillage ni effet (impacts, traceurs, grenade en vol : L-H ; l'arme : L-W, L-V).
+
+## Relecture (relecteur sévère, 23/10)
+
+### Où en est la relecture
+- Lu : la spec (§§ 3.3-3.5, 4.5.6, 4.6, 4.7, 5.1, 5.5.1), le diff complet `socle...lot/L-A` (6 fichiers), le squelette du
+  socle de chaque fichier (signatures). `python -I tools/verifier_proprietaires.py lot/L-A` : `OK 6 fichiers`.
+- Reste : rejouer les 19 critères (`&rapport=1&lot=L-A`) puis S0, jouer à l'écran (PC, `?tel=1`), corriger.
