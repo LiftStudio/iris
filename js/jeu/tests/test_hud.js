@@ -640,6 +640,10 @@ export default function (jeu) {
   // À F2 : avec les vrais événements de L-A / L-E / L-F, une manche de 2 min de chaque mode : seuils 1 et 12 tenus
   T('F2 manches réelles de 2 min : écritures et exceptions', async () => {
     const res = [];
+    // (F2 : qualité BASSE figée le temps des 21 600 images — dans un panneau caché, chaque image est faite à la main, rendu
+    // compris : en haute, une manche de 2 min y prenait ≈ 6 min et le test passait son délai ; le HUD, lui, est le même)
+    jeu.figerQualite(true); await jeu.qualite('basse');
+    try {
     for (const [mode, o] of [['equipes', { zone: 'ecole', allies: 3, ennemis: 4, graine: 21 }], ['domination', { zone: 'ecole', allies: 3, ennemis: 4, graine: 22 }],
       ['prophunt', { zone: 'e1', graine: 23 }]]) {
       await jeu.lancer(mode, o);
@@ -653,6 +657,7 @@ export default function (jeu) {
       res.push([`${mode} : ${r2(records / Math.max(1, n))} écriture(s) par image sur ${n}, ${erreurs} exception(s)`, records / Math.max(1, n) <= 2 && erreurs === 0]);
       jeu.quitter('balade');
     }
+    } finally { jeu.figerQualite(false); await jeu.qualite('auto'); }
     return bilan(res, 'une manche de 2 min par mode avec les vrais lots : ≤ 2 écritures par image, 0 exception');
   }, { delai: 600, apresFusion: true });
   const t0 = () => new Promise((r) => setTimeout(r, 0));
