@@ -190,8 +190,13 @@ export default function (jeu) {
   });
 
   // 3. LES PROGRAMMES constants après la préparation, pendant 10 s de tir, recharges, changements, sprint, glissade, visée,
-  // couteau, grenade (images RENDUES ; les gestes que l'arsenal du socle n'a pas : par l'état forcé)
+  // couteau, grenade (images RENDUES ; les gestes que l'arsenal du socle n'a pas : par l'état forcé) — la qualité FIGÉE
+  // (§ 4.10.1 : sous ?tel=1, la qualité automatique changeait de préréglage en route et ajoutait un programme au DÉCOR)
   T('3 programmes constants pendant 10 s de gestes', async (t) => {
+    jeu.figerQualite(true);
+    try { return await test3(t); } finally { jeu.figerQualite(false); }
+  }, { delai: 60 });
+  const test3 = async (t) => {
     const p = await essai(jeu), vm = p.aff.viewmodel, r = game.renderer;
     await jeu.images(4);
     const g0 = r.info.programs.length, v0 = programmesVue(vm);
@@ -210,9 +215,9 @@ export default function (jeu) {
     const g1 = r.info.programs.length, v1 = programmesVue(vm);
     jeu.quitter('balade');
     t.note('images rendues (3)', images);
-    return { ok: v0 === v1 && g1 === g0 && images > 50, attendu: 'variantes des programmes de l’arme et programmes du jeu constants',
-      obtenu: `arme ${v0} → ${v1} · jeu ${g0} → ${g1} · ${images} images, ${etapes.length} étapes en ${Math.round(D * k)} s` };
-  }, { delai: 60 });
+    return { ok: v0 === v1 && g1 === g0 && images > 50, attendu: 'variantes des programmes de l’arme et programmes du jeu constants (qualité figée)',
+      obtenu: `arme ${v0} → ${v1} · jeu ${g0} → ${g1} · ${images} images, ${etapes.length} étapes en ${Math.round(D * k)} s · qualité ${game.fx.quality}` };
+  };
 
   // 4 et 5. LES ÉPAULES hors champ et LES MAINS tenues : toutes les poses, toutes les clés des pistes au pas de 0,05 s
   const parcours = (vm, f) => {
