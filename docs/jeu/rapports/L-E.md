@@ -8,8 +8,9 @@ Branche `lot/L-E` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-E`), partie de `s
 
 **RELECTURE EN COURS** (relecteur sévère, 23/10, 05:00 — commits « L-E relecture : … », section « Relecture » en fin de
 rapport). Fait : spécification relue (§§ 2.3-2.6, 3.5, 3.8, 4.5.12, 4.5.15, 4.6, 4.7, 5.1, 5.5.7), diff `socle...lot/L-E` relu en
-entier, vérificateur OK ; premières corrections commitées, NON ENCORE REJOUÉES (jeton du navigateur attendu : les trois
-pris). Reste : rejouer L-E (PC, `?tel=1`) et S0, jouer à la main, finir la section « Relecture ».
+entier, vérificateur OK ; corrections commitées et REJOUÉES (jeton 1 pris à 05:56) : `&lot=L-E` **17/17 sur PC** (28,3 s, 0
+signalé) et **17/17 sous `?tel=1`** (27,8 s), `&lot=S0` **29/29** (65,0 s, balade 0 / 0 avant et après les parties). Reste :
+jouer à la main, finir la section « Relecture ».
 
 Ce qui suit est l'état laissé par le constructeur :
 
