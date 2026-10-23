@@ -384,6 +384,10 @@ export class Viewmodel {
     this._lumieres(dt, id);
     const fov = CHAMP_VUE + (CHAMP_VISEE - CHAMP_VUE) * kv;
     if (Math.abs(c.fov - fov) > 1e-4) { c.fov = fov; c.updateProjectionMatrix(); }
+    // L'ÉCRAN ÉTROIT (un téléphone en hauteur : 12,7° de demi-champ horizontal au lieu de 40,9° en 16:9) : la caméra de l'arme
+    // tourne vers elle, la prise ramenée à 60 % du demi-champ, et revient dans l'axe en visée (en 16:9 et 4:3 : rien ou presque)
+    const dh = Math.atan(Math.tan(CHAMP_VUE / 2 * DEG) * c.aspect), lacet = -Math.max(0, Math.atan2(H.p[0], -H.p[2]) - 0.6 * dh) * (1 - kv);
+    if (Math.abs(c.rotation.y - lacet) > 1e-6) { c.rotation.set(0, lacet, 0); c.updateMatrixWorld(); }
     this.diag.arme = id; this.diag.montree = !lunette;
     if (lunette) { this.racine.visible = false; this.tenus.visible = false; if (this.bras) this.bras.groupe.visible = false; }
     this.diag.maj = performance.now() - t0;
@@ -738,6 +742,7 @@ export class Viewmodel {
       const c = this.camera, g = this.game.camera;
       if (g && Math.abs(c.aspect - g.aspect) > 1e-6) { c.aspect = g.aspect; c.updateProjectionMatrix(); }
       if (c.fov !== CHAMP_VUE) { c.fov = CHAMP_VUE; c.updateProjectionMatrix(); }
+      if (c.rotation.y !== 0) { c.rotation.set(0, 0, 0); c.updateMatrixWorld(); }
       const n = performance.now(), d = Math.min(0.1, (n - avant) / 1000); avant = n;
       pivot.rotation.set(0.12, pivot.rotation.y + 0.6 * d, 0, 'YXZ');
     };
