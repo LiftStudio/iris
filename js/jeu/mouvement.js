@@ -278,7 +278,9 @@ function finPas(acteur, p, M, C, t, x0, z0, dt, partie, sprint) {
     if (M.pasD >= pas) {
       M.pasD -= pas;
       const allure = sprint ? 'sprint' : marcheA ? 'marche' : accA ? 'accroupi' : 'course';
-      partie.evt('pas', { a: acteur.id, x: p.pos.x, y: p.pos.y, z: p.pos.z, f: Math.min(1, vit / ALLURES.sprint), allure, tact: !!M.tact });
+      // (le pied posé là où la distance est atteinte, dans le pas : à 6,6 m/s un pas de simulation fait 5,5 cm, 8 % de 0,7)
+      const k = d > 1e-9 ? Math.min(1, M.pasD / d) : 0;
+      partie.evt('pas', { a: acteur.id, x: p.pos.x - (p.pos.x - x0) * k, y: p.pos.y, z: p.pos.z - (p.pos.z - z0) * k, f: Math.min(1, vit / ALLURES.sprint), allure, tact: !!M.tact });
     }
   } else if (vit < 0.3) M.pasD = PAS_ACTEUR.course / 2;                  // (le premier pas vient vite au départ)
   // L'ŒIL LISSÉ (l'acteur local : sa caméra) — la valeur d'avant gardée pour l'interpolation de l'image
