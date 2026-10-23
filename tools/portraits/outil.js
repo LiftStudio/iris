@@ -21,8 +21,11 @@ export const AVATARS = [
   { id: 'djafar', nom: 'Djafar', model: '../../assets/tel/djafar.glb' },
   { id: 'ethan', nom: 'Ethan', model: '../../assets/tel/ethan.glb' },
 ];
-// le cadrage (LA CAGE : caméra à 0,30 à droite, 0,05 au-dessus et 1,28 devant la tête, qui vise 6 cm sous elle ; champ 26°)
-export const CADRAGE = { dx: 0.30, dy: 0.05, dz: 1.28, sous: 0.06, champ: 26 };
+// le cadrage : LA CAGE posait la caméra à 0,30 à droite, 0,05 au-dessus et 1,28 devant l'os de la tête, visant 6 cm sous
+// lui ; ici plus serré (le visage au centre d'une vignette ronde de 76 px, ou de 32 px dans le tableau des scores : à 1,28
+// la tête n'y faisait qu'un quart de l'image) — 1,0 m devant, 0,2 à droite, le regard 5 cm AU-DESSUS de l'os (le visage
+// est au-dessus de lui), les épaules en bas de l'image ; champ 26°
+export const CADRAGE = { dx: 0.20, dy: 0.05, dz: 1.0, sous: -0.05, champ: 26 };
 
 const etat = document.getElementById('etat'), planche = document.getElementById('planche');
 const dire = (t) => { if (etat) etat.textContent = t; };
