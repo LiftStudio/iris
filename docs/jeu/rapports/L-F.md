@@ -5,23 +5,65 @@ Branche `lot/L-F` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-F`), partie de `s
 
 ## Relecture (relecteur sévère, 23/10) — où j'en suis
 
-**EN COURS (repreneur, 08:04).** Jeton 3 repris (pris à 07:24:29 par la session coupée, rafraîchi), serveur 8139 relancé,
-onglet `tab-35`. 1er `&lot=L-F` sur `a0a54e4` : **16/17** — le test 3 échouait (« témoin : 0 reçus à la traque ») : depuis
-`44bdcf7`, l'oreille du chasseur est enveloppée à SA création et l'espion du test, posé après, ne voyait plus rien (le « 0 son
-reçu en cachette » était vide de sens). Corrigé en `2553a46` avec : la vue, l'arme de vue et les touches de Haythem suivent
-son rôle À L'IMAGE (`_suivreRole`, au début de `camera`) au lieu d'un appel depuis `regles` (§ 4.1 règle 5 ; un état rendu
-qui change son rôle est suivi aussi) ; `arsenal.bloque` (hors de l'état) déduit de la phase à la fin d'`appliquer` et dès la
-présentation ; endurance remise à 100 à chaque manche ; options de l'appelant copiées. `&lot=L-F` → **17/17** (31 s).
-Reste : S0 (PC, `?tel=1`), L-F `?tel=1`, le jeu en vrai.
+**EN COURS (repreneur, 08:04) — reste : `&lot=L-F` et `&lot=S0` sous `?tel=1`, puis onglet, serveur et jeton.**
+Jeton 3 repris (pris à 07:24:29 par la session coupée de la relecture, `qui.txt` rafraîchi), serveur 8139 relancé, onglet
+`tab-35` (celui de la session coupée).
 
-Relu par la session coupée : la spec (§§ 2.7-2.9, 3.9, 4.1, 4.3, 4.5.5, 4.5.13-4.5.17, 4.6, 4.7, 4.10, 5.1, 5.5.9) et tout le diff
-`socle...lot/L-F` ; `verifier_proprietaires` OK (4 fichiers). Corrigé à la lecture (commits « L-F relecture : … », de
-`74bc40a` à `eb084a4`) : l'état garde les colonnes du prop hunt (survie, provocations, vrais meubles) ; un prop figé (ou
-verrouillé) le reste en changeant de forme ; le scanner refusé avec sa raison hors de la traque ; « Voir les sons » ne
-montre que ce qu'on entendrait (rayon de la provocation, `dalle`) ; Haythem éliminé qui suit un prop : l'orbite aux chiffres
-du prop ; le chasseur bot sourd enveloppe SON oreille (pas celle du prototype) ; l'atténuation de secours bornée à 60 m ; au
-téléphone 5 bots au plus. Tests 2, 8, 10 complétés. Serveur 8139 lancé ; reste : un jeton du navigateur (tous pris depuis
-06:15), puis L-F et S0 (PC, `?tel=1`) et le jeu en vrai.
+**Relu** : la spec (§§ 2.7-2.9, 3.9, 4.1, 4.3, 4.5.5, 4.5.7, 4.5.13-4.5.17, 4.6, 4.7, 4.8, 4.10, 5.1, 5.5.9), tout le diff
+`socle...lot/L-F`, les squelettes lus par le lot (`partie.js`, `acteur.js`, `armes.js`, `cerveau.js`, `cerveau_prop.js`,
+`deguisements.js`, `corps_prop.js`, `sons_jeu.js`, `hud_prop.js`, `apparitions.js`, `cadence_acteurs.js`, `vue_fps.js`,
+`game.js` `appliquerProfil` / `lancerPartie`). `python -I tools/verifier_proprietaires.py lot/L-F` → OK 4 fichiers ; fins de
+ligne CRLF comme le socle ; ni TODO, ni bouchon, ni `Math.random` / horloge / `Input` dans ce qu'appelle `Partie.pas` (hors
+`lireExtra`, la lecture de la commande). Les valeurs du § 3.9 (`REGLAGES_PROP`, `PROVOCATIONS` : durées, rayons, points ;
+rayons des petits bruits ; dalle × 0,35 / 900 Hz) : toutes conformes.
+
+**Trouvé et corrigé** (commits « L-F relecture : … ») :
+1. *Session coupée* (`74bc40a`-`eb084a4`) : l'état garde les colonnes du prop hunt (survie, provocations, vrais meubles) ;
+   figé / verrou gardés au changement de forme ; scanner refusé avec sa raison hors de la traque ; « Voir les sons » au rayon
+   de la provocation (`dalle`) ; orbite aux chiffres du prop pour Haythem éliminé qui suit un prop ; le chasseur bot sourd
+   enveloppe SON oreille ; atténuation de secours bornée à 60 m ; téléphone : 5 bots au plus.
+2. **Test 3 vide de sens** (`2553a46`) : depuis `44bdcf7`, l'oreille est enveloppée à la CRÉATION du cerveau ; l'espion du
+   test, posé après le lancement, ne voyait plus rien (« 0 son reçu en cachette » toujours vrai, témoin de la traque à 0 :
+   le test échouait). L'espion est posé avant la partie : 0 reçu en cachette, 9 frottements reçus à la traque.
+3. **La simulation appelait l'affichage** (`2553a46`) : `_debutManche` (dans `regles`) faisait `vue.entrer` / `sortir`,
+   `viewmodel.montrer` / `cacher` et `game.appliquerProfil` (§ 4.1 règle 5). Maintenant `_suivreRole`, au début de `camera`
+   (une fois par image, avant la caméra) : la vue, l'arme de vue et les touches suivent le rôle de Haythem — et aussi un état
+   rendu qui change son rôle (avant : une partie neuve où `appliquer` faisait de Haythem un chasseur gardait la caméra du
+   prop, sans VueFPS). Test 12 : 0 appel depuis la simulation, purge à l'image, vue FPS du chasseur.
+4. **`arsenal.bloque` hors de l'état** (`2553a46`) : déduit de la phase (`_majGeles`) à la fin d'`appliquer` et dès
+   `_debutManche` — sans quoi le 1er pas après un état rendu (traque rendue dans une partie à sa présentation) tirait autrement
+   que la partie d'origine, et au tout 1er pas d'une partie les chasseurs pouvaient recharger. Test 15.
+5. **Souffle d'une manche à l'autre** (`2553a46`) : `acteur.endurance`, `jaugeTact` et `CorpsProp.endurance` remis à 100 à
+   chaque manche (`reapparaitre` ne le fait pas : un chasseur épuisé à la fin d'une manche aurait commencé la suivante sans
+   sprint dès que L-B / L-K les font vivre).
+6. **Options de l'appelant réécrites** (`2553a46`) : le constructeur complétait l'objet `opts` du menu ou du test ; il en
+   fait une copie.
+7. **Le chasseur lâché fixait un mur** (`673b09c`, vu en jouant) : au 1er, « tourné vers le cœur de la zone », il regardait
+   le mur du palier est à 1 m (le cœur est derrière). Maintenant `_regardDepart` : vers la porte qui mène de sa pièce dans
+   la zone (`PASSAGES`), puis, à moins de 90°, le cap qui voit le plus loin (6 m au plus) : au 1er, le couloir du palier et la
+   porte de la pause à droite (3 m libres) ; au RDC, le couloir du hall (6 m). Test 3 : 2,5 m libres devant l'œil.
+8. **Une provocation pouvait être refusée faute de voix** (`3ab871d`) : c'est LE son de la règle — voix prioritaire (elle
+   en vole une, `jouer3d` `prioritaire`). Test 14 : 24 voix pleines de frottements, la provocation est jouée.
+
+**Rejoué** (navigateur intégré, onglet de fond — `rafParSeconde` 0, images faites par le harnais) :
+- `&rapport=1&lot=L-F` sur `3ab871d` : **17/17 sur PC** (72,4 s, 0 signalé) ; `?tel=1` : voir plus bas.
+- `&rapport=1&lot=S0` sur `6245de0` : **29/29 sur PC** (148,5 s, 0 signalé) — balade au bit près (points 1 et 27 : vue 3
+  0 / 0, vue 1 0 / 0), 8 « programmes 145 → 145 (54 tirs) », 9 « prop hunt vrai (3 props déguisés) », 25 « 40 tirs de test,
+  props 33 % pour 33 % des candidats ». (Un passage à 1 280 × 720 émulé avait donné 28/29 : point 8 « programmes 144 → 145 »
+  en mode `essai` — aucun code de L-F n'y dessine ; la taille de l'onglet change ce que la caméra voit du décor : noté pour F2.)
+- `verifierDeterminisme(42, 60)` : `61050922 / 61050922`.
+
+**Joué** (`?partie=prophunt&zone=e1&graine=3`, sans `?test=1`, 1 280 × 720, mené par `__jeu.avancer` / `images` / vraies
+touches `KeyboardEvent` — l'onglet n'a pas de rAF) : Haythem humain dans la pause orange ; « CLIQUE POUR JOUER » au début de
+la cachette (partie gelée) ; E → le carton (pouf), courir (frottements), F (figé) contre le mur du couloir ; « 10 SECONDES ! »
+et ses bips, sifflet du lâcher, provocations forcées au sifflet (78,0 et 78,7 s), survie +10 ; Gabriel passe à 0,6 m du carton
+sans tirer (le cerveau minimal : DEMANDE F2) ; ŒIL 0 (le carton à ses pieds, hors de son cône : juste) ; révélation « LES PROPS
+GAGNENT LA MANCHE » (170 points). Manche 2 chasseur : vue FPS à l'image suivante, X en cachette refusé (« Le scanner, c'est
+pendant la traque »), au lâcher X → un arc < 4 m ; à travers le mur 7 balles « mur » ; dans la pause, 3 balles dans le carton
+de Koji : 3 « aïe », « crac », +100, soins 6,5 + 6,5 + 6,25. Six manches jusqu'à l'écran de fin « FIN DE LA PARTIE · Partie
+finie » (Marc-Antoine 1 020 points) : le gagnant n'y est pas nommé (DEMANDE L-U, déjà faite). Console : rien de L-F.
+Ennuyeux pour un joueur de prop hunt AUJOURD'HUI : les chasseurs bots ne tirent jamais (tir de test du minimal cassé, F2) — les
+props gagnent les six manches ; tout le reste de la boucle tient.
 
 ## Où j'en suis
 
