@@ -375,8 +375,21 @@ export class MondePartie {
   // mordait de 30 cm sur l'entrée du C05)
   _parLaPorte(Q, P) {
     const C = this.game.collisions, [, cb] = cotesPorte(P), sg = cb === Q.b ? 1 : -1;
-    const nx = P.nx * sg, nz = P.nz * sg, bx = P.wx ?? P.cx, bz = P.wz ?? P.cz, l = P.l || 0.9;
-    Object.assign(Q, { ok: true, nx, nz, tx: -nz, tz: nx, bx, bz, sol: C.solEn(bx, bz, (P.base || 0) + 0.3), s0: -l / 2, s1: l / 2, cx: bx, cz: bz, hl: l / 2, parPorte: true });
+    const nx = P.nx * sg, nz = P.nz * sg, bx = P.wx ?? P.cx, bz = P.wz ?? P.cz, l = P.l || 0.9, sol = C.solEn(bx, bz, (P.base || 0) + 0.3);
+    // (relecture : la rubalise sur la partie LIBRE de la baie — le vantail resté fermé d'une double porte fixe, celle de
+    // l'escalier principal, en tient la moitié : le ruban s'y enfonçait — ; la barrière, elle, garde toute la baie. La porte
+    // automatique ouverte le temps du calcul ; rien de libre, une porte fixe fermée : toute la baie)
+    const off = P.forme ? P.forme.off : null; if (P.forme) P.forme.off = true;
+    let lib = null, run = null;
+    try {
+      for (let u = -l / 2; u <= l / 2 + 1e-6; u += 0.02) {
+        if (!C.libre(bx - nz * u, bz + nx * u, 0.04, sol)) { run = null; continue; }
+        if (run) run[1] = u; else run = [u, u];
+        if (!lib || run[1] - run[0] > lib[1] - lib[0]) lib = [run[0], run[1]];
+      }
+    } finally { if (P.forme) P.forme.off = off; }
+    const [s0, s1] = lib && lib[1] - lib[0] > 0.2 ? lib : [-l / 2, l / 2];
+    Object.assign(Q, { ok: true, nx, nz, tx: -nz, tz: nx, bx, bz, sol, s0, s1, cx: bx, cz: bz, hl: l / 2, parPorte: true });
   }
   // le côté où s'ouvre une porte forcée ou au départ d'une partie : son côté libre, sinon celui de sa face
   _sens(P) { return P.libre || P.cote || 1; }
