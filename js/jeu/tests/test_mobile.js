@@ -202,9 +202,12 @@ export default function (jeu) {
       res.push(['tir auto coupé : aucun tir', n === 0, n + ' tirs']);
       // (f) (relecture) une arme SEMI-AUTOMATIQUE (le P-17) : le tir auto la bat — une balle à chaque coup de sa cadence,
       // pas une seule (elle ne part qu'au front de la gâchette)
-      settings.controls.fps.tirAuto = true; jeu.avancer(0.2);
+      // (le réticule d'abord hors de la silhouette, la grâce passée : le délai de 0,12 s repart de zéro)
+      settings.controls.fps.tirAuto = true;
       const A = p.local.arsenal, j = A.armes.findIndex((f) => !f.auto);
-      A.remplir(); A.i = j; jeu.viser(0, 1);
+      A.remplir(); A.i = j;
+      jeu.viser(0, { lacet: game.camYaw + 10 * DEG, tangage: game.camPitch }); jeu.avancer(AIDE.tirAuto.grace + 2 * PAS);
+      jeu.viser(0, 1);
       n = 0; const off6 = p.sur('tir', (e) => { if (e.a === 0) n++; }); jeu.avancer(0.62); off6();
       const f = A.armes[j], attendus = Math.floor((0.62 - AIDE.tirAuto.delai) / (60 / f.rpm)) + 1;
       res.push([`semi-automatique (${f.id}) : battue, ${attendus} balles à sa cadence`, j >= 0 && n >= attendus - 1 && n <= attendus, n + ' tirs']);
