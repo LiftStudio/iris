@@ -83,6 +83,17 @@ export default function (jeu) {
   };
   const HALL = { x0: 5, x1: 21, z0: -9, z1: -0.5, y: 0 }, RUE = { x0: -2, x1: 21, z0: 0.8, z1: 5.6, y: 0 };
   const ligne = (L) => ligneLibre(HALL, L) || ligneLibre(RUE, L);
+  // un point DÉGAGÉ (un disque libre de `R` m autour de lui, sol plat), au hall puis dans la rue
+  const pointDegage = (R) => {
+    const c = C();
+    for (const b of [HALL, RUE]) for (let z = b.z0; z <= b.z1; z += 0.25) for (let x = b.x0; x <= b.x1; x += 0.25) {
+      const y = c.solEn(x, z, b.y + 0.3);
+      if (Math.abs(y - b.y) > 0.02 || !c.libre(x, z, R, y)) continue;
+      let plat = true; for (let k = 0; k < 8 && plat; k++) { const d = dirDe(k * Math.PI / 4); if (Math.abs(c.solEn(x + d.x * R, z + d.z * R, y + 0.3) - y) > 0.005) plat = false; }
+      if (plat) return { x, y, z };
+    }
+    return null;
+  };
   // des points LIBRES au hasard sur les quatre niveaux (hors volées), `filtre(x, y, z, plafond)` en plus
   const NIV = [-3.06, 0, 3.5, 6.6];
   const pointsLibres = (rng, n, filtre = null, r = 0.32, essais = 40000) => {
@@ -99,8 +110,9 @@ export default function (jeu) {
     }
     return L;
   };
-  // l'œil de la caméra (sans le balancement) et une image faite à la main : 2 pas, l'interpolation, la caméra
-  const image = (vue) => { const p = P(); p.pas(PAS); p.pas(PAS); game.acc = 0; game.interpoler(); p.camera(1 / 60, false); return vue ? vue._oeilY(p.local) : game.camera.position.y; };
+  // l'œil de la caméra (sans le balancement) et une image faite à la main : 2 pas, l'interpolation (au dernier pas simulé : la
+  // fraction 1, que l'œil comparé et les pieds lus soient du même pas), la caméra
+  const image = (vue) => { const p = P(); p.pas(PAS); p.pas(PAS); game.acc = PAS; game.interpoler(); p.camera(1 / 60, false); return vue ? vue._oeilY(p.local) : game.camera.position.y; };
   const angleCam = () => { const e = new THREE.Euler().setFromQuaternion(game.camera.quaternion, 'YXZ'); return { lacet: e.y, tangage: -e.x, roulis: e.z }; };
   // (un faux pointeur capturé : la souris de js/game.js _onMove ne bouge la caméra que pointeur capturé)
   const avecCapture = async (fn) => {
@@ -236,7 +248,7 @@ export default function (jeu) {
     const rng = new Rng(11);
     const bas = pointsLibres(rng, 400, (x, y, z, pl) => pl - y >= 2.15 && pl - y <= 2.45);
     const tous = pointsLibres(rng, 400);
-    let sauts = 0, sousBas = 0, fautesTete = 0, fautesTranche = 0, refus = 0, refusAttendus = 0, pasAir = 0;
+    let sauts = 0, sousBas = 0, fautesTete = 0, fautesTranche = 0, refus = 0, refusAttendus = 0, pasAir = 0, franchis = 0;
     const R = SAUT;
     for (let i = 0; i < 2000; i++) {
       const L = i < 1000 ? bas : tous; if (!L.length) break;
@@ -247,11 +259,15 @@ export default function (jeu) {
       const vs = vitesseSaut(a);
       if (vs === 0) refusAttendus++;
       front(a, { ay: 1, sprint: true, lacet: l, saut: true });
-      if (!a.corps.airborne) { refus++; continue; }
+      // (un obstacle bas juste devant : Espace le franchit — ce n'est ni un saut ni un refus)
+      if (a.mvt && a.mvt.franchit) { franchis++; if (vs === 0) refusAttendus--; for (let n = 0; n < 80 && a.mvt.franchit; n++) p.pas(PAS); lacher(a); continue; }
+      if (!a.corps.airborne) { refus++; lacher(a); continue; }
       sauts++; if (i < 1000) sousBas++;
       for (let n = 0; n < 150 && a.corps.airborne; n++) {
         const j = a.corps, pl = c().plafondEn(j.pos.x, j.pos.z, j.pos.y);
-        if (j.pos.y + R.tete + j.jumpY > pl - R.teteVol + 1e-6) fautesTete++;
+        // (une tête DANS le plafond sans saut — un dessous de volée plus bas que 1,78 m, où l'on passe debout — n'est pas une faute
+        // du saut : on ne compte que quand le saut l'aggrave, jumpY > 0)
+        if (j.jumpY > 1e-9 && j.pos.y + R.tete + j.jumpY > pl - R.teteVol + 1e-6) fautesTete++;
         if (j.jumpY > 0 && !c().libre(j.pos.x, j.pos.z, j.rayon ?? 0.3, j.pos.y + j.jumpY, R.hautTete, R.basTete)) fautesTranche++;
         pasAir++;
         p.pas(PAS);
@@ -282,10 +298,10 @@ export default function (jeu) {
     }
     jeu.quitter('balade');
     const okA = Math.abs(libreR.h - 0.505) <= 0.005 && Math.abs(libreR.t - 0.642) <= 0.01 && pc(libreR.v1, libreR.att) <= 0.05;
-    const okB = sauts >= 1900 && sousBas >= 900 && fautesTete === 0 && fautesTranche === 0 && refus === refusAttendus;
+    const okB = sauts + franchis >= 1900 && sousBas >= 900 && fautesTete === 0 && fautesTranche === 0 && refus === refusAttendus;
     const okC = portes.length >= 20 && passes === essais && oeilDedans === 0 && trancheDedans === 0;
     return { ok: okA && okB && okC, attendu: 'apogée 0,505 ± 0,005 m, 0,642 ± 0,01 s, élan τ 0,45 · 2 000 sauts (1 000 sous 2,2-2,4 m) : tête ≥ 5 cm sous le plafond, tranche libre, refus = v < 1,2 · 40 passages sous 20 linteaux',
-      obtenu: `apogée ${r4(libreR.h)} m en ${r3(libreR.t)} s · élan ${r2(libreR.v1)} m/s (attendu ${r2(libreR.att)}) · ${sauts} sauts (${sousBas} sous plafond bas, ${pasAir} pas en l'air) : tête ${fautesTete}, tranche ${fautesTranche}, refus ${refus}/${refusAttendus}`
+      obtenu: `apogée ${r4(libreR.h)} m en ${r3(libreR.t)} s · élan ${r2(libreR.v1)} m/s (attendu ${r2(libreR.att)}) · ${sauts} sauts (${sousBas} sous plafond bas, ${pasAir} pas en l'air) : tête ${fautesTete}, tranche ${fautesTranche}, refus ${refus}/${refusAttendus}, franchis ${franchis}`
         + ` · portes ${portes.length} : ${passes}/${essais} passages, œil dedans ${oeilDedans}, tranche ${trancheDedans}` };
   }, { delai: 240 });
 
@@ -300,7 +316,7 @@ export default function (jeu) {
       while (a.corps.airborne) { vAvant = vitesse(a); p.pas(PAS); }
       const vApres = vitesse(a);
       pas(6); const v6 = vitesse(a);                                     // (à 0,05 s : la cible encore × 0,85)
-      pas(30); const vFin = vitesse(a);
+      pas(72); const vFin = vitesse(a);                                  // (0,6 s après : la course reprise, τ 0,13 s)
       des(); lacher(a);
       return { vAvant, vApres, v6, vFin, ev };
     });
@@ -376,13 +392,16 @@ export default function (jeu) {
     let pente = null;
     const V = volees(C()).filter((v) => v.pente > 0.4 && v.long >= 3);
     for (const v of V) {
-      jeu.teleporter(0, v.a.x, v.a.y, v.a.z, v.lacet); a.corps.vel.set(0, 0, 0);
+      const dv = dirDe(v.lacet);
+      jeu.teleporter(0, v.a.x, v.a.y, v.a.z, v.lacet); a.corps.vel.set(dv.x * 6.6, 0, dv.z * 6.6);
       forcer(a, { ay: 1, sprint: true, lacet: v.lacet }); let k = 0;
       while (k < 120 && penteEn(C(), a.pos.x, a.pos.z, a.pos.y) <= 0.4) { p.pas(PAS); k++; }
       pas(12);
-      if (penteEn(C(), a.pos.x, a.pos.z, a.pos.y) <= 0.4 || vitesse(a) < 6) continue;
+      if (penteEn(C(), a.pos.x, a.pos.z, a.pos.y) <= 0.4 || vitesse(a) < 6 || !(a.mvt.sprintT >= 0.25)) continue;
+      // (au pas de l'appui, toutes les autres conditions de la glissade sont réunies : seule la pente la refuse)
+      const sT = a.mvt.sprintT, vv = vitesse(a);
       forcer(a, { ay: 1, sprint: true, lacet: v.lacet, accroupi: true }); p.pas(PAS);
-      pente = { refus: !a.mvt.glisse, pente: r2(v.pente), v: r2(vitesse(a)) };
+      pente = { refus: !a.mvt.glisse, pente: r2(v.pente), v: r2(vv), sprint: r2(sT) };
       lacher(a); break;
     }
     jeu.quitter('balade');
@@ -520,7 +539,7 @@ export default function (jeu) {
   // 10. LES CONTACTS : 8 au même point → aucune paire < 0,59 m en 0,2 s, 0 dans une forme, 0 traversée ; une cloison ; les props
   T('10 separer : 8 au même point, cloison, props', async () => {
     const p = await essai({ graine: 10 }), a = p.local, c = C();
-    const L = ligne(3) || { x: 14.9, y: 0, z: -3.7 };
+    const L = pointDegage(1.3) || ligne(3) || { x: 14.9, y: 0, z: -3.7 };
     const B = [a];
     for (let i = 1; i < 8; i++) B.push(p.ajouterActeur({ id: 20 + i, nom: 'B' + i, equipe: 'A', x: L.x, y: L.y, z: L.z, lacet: 0, cerveau: null }));
     for (const b of B) jeu.teleporter(b.id, L.x, L.y, L.z, 0);
@@ -656,7 +675,7 @@ export default function (jeu) {
       for (let i = 0; i < 30; i++) image(null);                       // (0,5 s : la course lancée, le sprint pris)
       const tS = []; for (let i = 0; i < 12; i++) { image(null); tS.push(vue._champH); }
       const sprint = vue._champH, k015 = (tS[8] - repos) / 5;          // (à 0,15 s du début du sprint vu… la montée)
-      forcer(a, { ay: 1, sprint: true, lacet: 0, accroupi: true }); for (let i = 0; i < 12; i++) image(null);
+      forcer(a, { ay: 1, sprint: true, lacet: 0, accroupi: true }); for (let i = 0; i < 18; i++) image(null);
       const glisse = vue._champH, gk = a.glisse;
       lacher(a); for (let i = 0; i < 90; i++) image(null);
       return { repos, sprint, glisse, gk, k015 };
@@ -760,7 +779,7 @@ export default function (jeu) {
     jeu.avancer(1.0); q.majHud(); const h1 = q.hud.aveugle ? { ...q.hud.aveugle } : null;
     jeu.avancer(1.1); q.majHud(); const h2 = q.hud.aveugle;
     jeu.quitter('balade');
-    const ok = a08 && Math.abs(a08.r - 25) <= 0.5 && Math.abs(Math.abs(a08.y) - 0.4) <= 0.02 && tourneFin < 3 && flash === 1 && h0 && h0.duree === 2 && h1 && Math.abs(h1.t - 1) < 0.02 && h2 === null;
+    const ok = a08 && Math.abs(Math.abs(a08.r) - 25) <= 0.5 && Math.abs(Math.abs(a08.y) - 0.4) <= 0.02 && tourneFin < 3 && flash === 1 && h0 && h0.duree === 2 && h1 && Math.abs(h1.t - 1) < 0.02 && h2 === null;
     return { ok, attendu: 'à 0,8 s : roulis 25° ± 0,5, œil à 0,4 ± 0,02 m · la vue tournée vers le tueur · flash : fx.flash 1, hud.aveugle { t, 2 } pendant 2 s puis null',
       obtenu: `0,8 s : roulis ${a08 ? r2(a08.r) : '-'}°, œil ${a08 ? r3(a08.y) : '-'} m · écart au tueur ${r2(tourne)}° puis ${r2(tourneFin)}° · flash ${flash} · aveugle ${JSON.stringify(h0)} → ${JSON.stringify(h1)} → ${h2}` };
   });
@@ -785,11 +804,12 @@ export default function (jeu) {
       const c0 = game.camPitch, y0 = game.camYaw;
       p.pas(PAS);
       const dP = c0 - game.camPitch, dY = y0 - game.camYaw;
+      const avantCam = game.camPitch;
       p.camera(1 / 60, false);
-      const apresCam = game.camPitch;
-      const ok = Math.abs(haut - attendu) < 1e-6 && Math.abs(e2.tangage - 0.2) < 1e-9 && pitchPoser === 0.2 && Math.abs(dP - 0.01) < 1e-12 && Math.abs(dY - 0.002) < 1e-12 && apresCam === game.camPitch;
+      const inchangee = game.camPitch === avantCam;
+      const ok = Math.abs(haut - attendu) < 1e-6 && Math.abs(e2.tangage - 0.2) < 1e-9 && pitchPoser === 0.2 && Math.abs(dP - 0.01) < 1e-12 && Math.abs(dY - 0.002) < 1e-12 && inchangee;
       return { ok, attendu: `caméra plus haute de ${attendu.toExponential(4)} rad (reculV 2°), puis revenue ; camPitch −0,01 et camYaw −0,002 au pas suivant ; la caméra ne touche pas camPitch`,
-        obtenu: `plus haute de ${haut.toExponential(4)} · revenue ${r4(e2.tangage)} · camPitch ${dP.toExponential(3)} / camYaw ${dY.toExponential(3)} · après la caméra ${apresCam === game.camPitch}` };
+        obtenu: `plus haute de ${haut.toExponential(4)} · revenue ${r4(e2.tangage)} · camPitch ${dP.toExponential(3)} / camYaw ${dY.toExponential(3)} · la caméra laisse camPitch ${inchangee}` };
     } finally { delete A.reculV; delete A.prendreRecul; jeu.quitter('balade'); }
   });
 

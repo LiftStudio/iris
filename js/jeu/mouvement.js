@@ -201,7 +201,7 @@ export function appliquerCommande(acteur, cmd, dt, partie) {
   } else p.move(_dir, sprint, dt);
   // (contre un obstacle, en sprint vers l'avant : le franchissement d'office après 0,15 s)
   const d = Math.hypot(p.pos.x - x0, p.pos.z - z0);
-  if (!enAir && !M.glisse && sprint && avant && d < 0.5 * Math.max(vit, 1) * dt) M.contreT += dt; else M.contreT = 0;
+  if (!enAir && !M.glisse && sprint && avant && d < 0.5 * Math.max(vit, 1) * dt) M.contreT += dt; else { M.contreT = 0; M.vLibre = Math.hypot(p.vel.x, p.vel.z); }
   // ---- 7. LE SAUT, ou le FRANCHISSEMENT (Espace face à un obstacle bas ; sprint contre lui) ----
   const veutSaut = !!cmd.saut && !enAir && !acteur.gele;
   if ((veutSaut || M.contreT >= FRANCHIR.contre) && C && t - M.essaiT >= (veutSaut ? 0 : FRANCHIR.essai)) {
@@ -317,7 +317,8 @@ function finirGlissade(acteur, M, t, partie) {
 // ---- LE FRANCHISSEMENT : 0,45 s (0,38 sous 0,7 m), le corps soulevé au-dessus de l'obstacle, l'œil en arc de +0,35 m,
 //      sortie à 70 % de la vitesse d'entrée ----
 function commencerFranchir(acteur, p, M, r, fx, fz, t, partie) {
-  const v0 = Math.hypot(p.vel.x, p.vel.z), n = Math.hypot(fx, fz) || 1;
+  // (la vitesse d'entrée : celle du corps, ou, contre l'obstacle — le franchissement d'office —, celle d'avant le contact)
+  const v0 = Math.max(Math.hypot(p.vel.x, p.vel.z), M.contreT > 0 ? M.vLibre || 0 : 0), n = Math.hypot(fx, fz) || 1;
   if (M.glisse) finirGlissade(acteur, M, t, partie);
   M.franchit = { t0: t, duree: r.h < FRANCHIR.bas ? FRANCHIR.dureeBas : FRANCHIR.duree, x0: p.pos.x, y0: p.pos.y, z0: p.pos.z, x1: r.x, y1: r.y, z1: r.z,
     h: r.h, dx: fx / n, dz: fz / n, vSortie: FRANCHIR.sortie * v0, k: 0, leve: 0 };
