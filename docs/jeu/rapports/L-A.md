@@ -232,4 +232,46 @@ regarder pour ce lot : il n'a ni maillage ni effet (impacts, traceurs, grenade e
 ### Où en est la relecture
 - Lu : la spec (§§ 3.3-3.5, 4.5.6, 4.6, 4.7, 5.1, 5.5.1), le diff complet `socle...lot/L-A` (6 fichiers), le squelette du
   socle de chaque fichier (signatures). `python -I tools/verifier_proprietaires.py lot/L-A` : `OK 6 fichiers`.
+- Corrigé (commits « L-A relecture : … », vérifiés hors navigateur par un banc node, monde synthétique) — voir
+  « Constats » ci-dessous.
 - Reste : rejouer les 19 critères (`&rapport=1&lot=L-A`) puis S0, jouer à l'écran (PC, `?tel=1`), corriger.
+
+### Constats du code (relecture du diff) et ce qui a été fait
+Contrats (§ 4.5.6) : signatures, getters et événements posés comme écrit ; ajouts seulement (permis, § 4.1 règle 3).
+Ordre du pas : arsenal à l'étape 6 (effets différés par `resoudreTir`), grenades à l'étape 7 (dégâts tout de suite) :
+conforme. Pureté : 0 faute. Valeurs du § 3.3-3.4 : recopiées du socle sans écart (fiches, classes, motifs, gerbe) ;
+les dispersions des quatre autres armes sont celles du constructeur (écart 5). Défauts trouvés et CORRIGÉS :
+1. **Le couteau traversait une vitre claire** : la cible était cherchée par `vue()` (une vitre claire laisse voir) ; à
+   1,5 m de part et d'autre d'une cloison vitrée, la lame tuait à travers. Maintenant `libre()` (la ligne d'un objet : une
+   vitre arrête). Test 13 complété (une vraie vitre de la carte entre les deux : ni touche ni fente).
+2. **L'identifiant des grenades n'était pas dans l'état** : un compteur de `Grenades`, remis à zéro dans une partie neuve ;
+   après `appliquer()`, la grenade suivante prenait un autre identifiant que dans la partie d'origine (l'état et les
+   événements divergeaient : l'hôte autoritaire de demain l'aurait vu). Maintenant `id = tick × 64 + id du lanceur`
+   (une grenade au plus par acteur et par pas), rien à garder. Test 16 complété (la suite rejouée depuis l'état).
+3. **La flash aveuglait les alliés du lanceur** alors que la frag ne les blesse pas (§ 3.5, tir allié désactivé, par
+   `Partie.infliger`) : un bot allié aurait aveuglé Haythem. Maintenant la flash épargne les alliés du lanceur (pas le
+   lanceur : il se flashe s'il la regarde). Test 14 complété. (Écart R1 ci-dessous.)
+4. **Une recharge coupée après l'entrée des balles** (changement d'arme, couteau, grenade) n'émettait ni 'fin' ni
+   'annulee' : chaque 'debut' est maintenant fermé par un seul 'fin' | 'annulee' | 'interrompue' (les sons de L-H).
+5. **`Balistique.tirer` émettait les fêlures en lisant sa liste de vitres** : un abonné qui pose sa propre question au
+   monde dans son rappel la récrivait en cours de lecture ; le résultat est rempli et les fêlures recopiées avant d'être
+   émises. Les fêlures portent le numéro de leur plomb (`plomb`, paramètre ajouté en fin de `tirer`, facultatif).
+6. Code mort retiré : les compteurs `Balistique.stats` (jamais lus, incrémentés dans la boucle chaude), deux variables
+   mortes des tests 2 et 11 ; `rayonActeurs` passe par `rayonVolume` (exporté, inutilisé). L'en-tête de `grenade.js`
+   disait le champ `type` « gardé, doublé de `arme` » : il n'est plus émis (en-tête corrigé).
+7. Essayé puis retiré : faire sortir l'arsenal du sprint sur le front `recharger` (le front R est perdu en sprint). Tant
+   que le CORPS sprinte encore, la recharge s'annule au pas suivant ('debut' puis 'annulee') : c'est au corps de couper le
+   sprint sur ce front, comme pour la visée (demande à L-B, ci-dessous).
+
+Écarts ajoutés par la relecture (§ et ligne de `spec_finale.md`) :
+- R1. La flash épargne les alliés du lanceur (§ 3.3 l. 410-416 ne le dit pas ; § 3.5 l. 453 « tir allié : désactivé »).
+- R2. Non chiffrés par le § 3 et posés par le constructeur, notés ici : la dispersion × 1,3 en glissade ; l'élan du
+  lanceur ajouté à la vitesse de la grenade ; la visée bloquée 0,1 s après un décollage et 0,35 s en début de glissade ;
+  la visée permise pendant une recharge.
+
+Demandes ajoutées par la relecture :
+- L-B : (e) le front `recharger` coupe le sprint du corps (sinon une recharge demandée en courant est perdue).
+- INT (réglage) : à la hanche, la couronne du FP-12 est à 3,0° de l'axe (0,6 × 5,0°, critère 12) : 0,21 m à 4 m, plus que
+  le rayon du torse (0,165) ; un coup ne tue à la hanche que jusqu'à ≈ 3 m alors que la table des dégâts (18 par plomb
+  jusqu'à 5 m) est faite pour tuer jusqu'à 5 m. Pour le « pompe » de Call of Duty (il se tire à la hanche) : cône 3,0°
+  à la hanche, 2,2° en visée (couronne à 1,8° : 0,157 m à 5 m) — à décider au stand.
