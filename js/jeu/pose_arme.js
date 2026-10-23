@@ -70,6 +70,9 @@ function prendre(id) {
   return g;
 }
 function rendre(g) { if (g && g.parent) g.parent.remove(g); }
+// (l'image vraie d'une sonde, js/jeu/avatars.js : une arme de la réserve posée à côté d'elle, puis rendue)
+export function armeSonde(scene) { const g = prendre('fa24'); g.matrixAutoUpdate = true; scene.add(g); return g; }
+export function libererArmeSonde(g) { rendre(g); g.matrixAutoUpdate = false; }
 const ombreArme = (g, oui) => { if (g.userData.ombre === oui) return; g.userData.ombre = oui; g.traverse((o) => { if (o.isMesh) o.castShadow = oui; }); };
 
 // L'ARME À LA 3E PERSONNE de l'acteur (celle qu'il a en main), une racine de la scène, `dynamique` ; null s'il n'en a pas
@@ -208,8 +211,9 @@ export function poserArme(acteur, dt) {
   A.ajouter('Spine1', tb * Tg.part[1], -bl * 0.35, 0);
   A.ajouter('Spine2', tb * Tg.part[2], -bl * 0.35, 0);
   const reste = (t - tb * (Tg.part[0] + Tg.part[1] + Tg.part[2])) * kVise;
-  // (la joue sur la crosse : la tête penchée vers l'arme, un fusil épaulé seulement)
-  const joue = fusil ? kVise * POSE_3E.joue : 0;
+  // (la joue sur la crosse : la tête penchée vers l'arme, un fusil épaulé EN VISÉE seulement — en courant elle reste
+  // droite, au-dessus des pieds, où la simulation la compte)
+  const joue = fusil ? kVise * (Ar.visee || 0) * POSE_3E.joue : 0;
   A.ajouter('Neck', reste * 0.4 + joue * 0.3, bl * 0.45, joue * 0.4);
   A.ajouter('Head', reste * 0.6 + joue * 0.5, bl * 0.55, joue * 0.8);
   A.bone('Spine').updateMatrixWorld(true);

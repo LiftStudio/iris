@@ -24,7 +24,7 @@ import { HAYTHEM } from '../game.js';
 import { TELEPHONE } from '../appareil.js';
 import { LIMITES } from './constantes.js';
 import { teinteEquipe, retirerTeinte, preparerTeintes } from './teintes.js';
-import { preparerArmes3e } from './pose_arme.js';
+import { preparerArmes3e, armeSonde, libererArmeSonde } from './pose_arme.js';
 import { opaciteCorps } from './poupee.js';
 
 export const FICHES_BOTS = [
@@ -95,9 +95,36 @@ async function preparerSonde(game, f) {
     opaciteCorps(p, 0.5);
     try { await Promise.race([game._compilerAsync(p.avatarModel), attendre(8)]); } finally { opaciteCorps(p, 1); }
   }
+  // UNE IMAGE VRAIE de la sonde, sous l'écran de préparation (il couvre l'image) : la compilation parallèle (Player.
+  // preparerRendu) ne couvre pas toutes les passes — mesuré le 23/10 : 3 programmes de profondeur (cheveux à alphaTest des
+  // amis, passes sans lumières) et 2 de matériaux simples naissaient au premier dessin d'un bot. Dessinée une fois opaque,
+  // une fois transparente, teinte, brassards et une arme en main : tout ce qu'un corps montrera.
+  if (p.avatarModel && game.fx && game.camera) await imageSonde(game, p);
   if (p.mesh.parent) p.mesh.parent.remove(p.mesh);
   return p;
 }
+async function imageSonde(game, p) {
+  const cam = game.camera, d = new THREE.Vector3();
+  cam.getWorldDirection(d); d.y = 0; if (d.lengthSq() < 1e-6) d.set(0, 0, -1); d.normalize();
+  const x = cam.position.x + d.x * 2.5, z = cam.position.z + d.z * 2.5, C = game.collisions;
+  const y = C ? C.solEn(x, z, cam.position.y - 1.2) : cam.position.y - 1.6;
+  const arme = armeSonde(game.scene);
+  try {
+    game.scene.add(p.mesh);
+    p.pos.set(x, y, z); p.setFacing(-d.x, -d.z); p.mesh.visible = true; p.avatarModel.visible = true;
+    teinteEquipe(p, 'A');
+    p.update(1 / 60); p.memoriser(); p.presenter(1);
+    if (arme) { arme.position.set(x + d.z * 0.4, y + 1.3, z - d.x * 0.4); arme.updateMatrixWorld(true); }
+    // (une IMAGE DU JEU, game.frame, et pas le seul rendu : les ombres de contact y posent la couche des mobiles, sans
+    // laquelle le cache d'ombre — js/ombre_cache.js — ne dessine pas la sonde dans la carte d'ombre : c'est là que naissaient
+    // les programmes de profondeur des cheveux, mesuré au traceur le 23/10)
+    for (const k of [1, 1, 0.5]) { opaciteCorps(p, k); try { if (game.frame) game.frame(1 / 60); else game.fx.render(1 / 60); } catch (e) { /* une image manquée n'empêche pas la partie */ } }
+  } finally {
+    opaciteCorps(p, 1); teinteEquipe(p, null); p.mesh.visible = false;
+    if (arme) libererArmeSonde(arme);
+  }
+}
+
 
 // LES AVATARS D'UNE PARTIE, prêts avant l'entrée (écran PRÉPARATION) : `ids`, les amis cochés (FICHES_BOTS), dans l'ordre ;
 // vide → Haythem cloné. Haythem cloné est toujours préparé (les mannequins, et les bots s'il n'y a personne d'autre).

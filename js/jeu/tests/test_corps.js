@@ -67,7 +67,7 @@ export default function (jeu) {
     let charges = 0;
     M.onLoad = function (...a) { charges++; return onLoad && onLoad.apply(this, a); };
     const prog = () => game.renderer.info.programs.length;
-    let p0, p1, p2, t1, t2, neufs = [];
+    let p0, p1, p2, t1, t2, neufs = [], neufs2 = [];
     const corps = [];
     try {
       // (le décor chaud d'abord : ses préchauffes ne doivent pas tomber dans la mesure)
@@ -89,8 +89,10 @@ export default function (jeu) {
       });
       const t3 = performance.now();
       while (performance.now() - t3 < 10000 && corps.some((c) => !(c.avatarModel && c.avatarModel.visible))) await attendre(0.05);
+      const avant2 = new Set(game.renderer.info.programs);
       for (let i = 0; i < 30; i++) { for (const c of corps) c.update(1 / 60); await jeu.images(1); }
       p2 = prog();
+      neufs2 = game.renderer.info.programs.filter((x) => !avant2.has(x)).map((x) => (x.name || '') + ':' + x.cacheKey.split(',').slice(0, 4).join(','));
     } finally {
       M.onLoad = onLoad;
       for (const c of corps) libererCorps(c);
@@ -101,7 +103,7 @@ export default function (jeu) {
     t.note('programmes de la préparation', `${p0} → ${p1} : ${neufs.join(', ')}`);
     return { ok: okT1 && okT2 && charges === 0 && Math.abs(p2 - p1) <= 2 && P.fiches.length === plafondAvatars(),
       attendu: '1re fois ≤ 6 s, cache chaud ≤ 3 s, onLoad jamais ; corps créés et dessinés APRÈS la préparation : programmes ± 2 ; avatars préparés = plafond (6 PC, 3 tél.)',
-      obtenu: `1re ${Math.round(t1)} ms · chaude ${Math.round(t2)} ms · onLoad ${charges} · programmes ${p0} → ${p1} pendant la préparation (${neufs.join(', ')}) → ${p2} avec les six corps dessinés · préparés ${P.fiches.join(', ')}` };
+      obtenu: `1re ${Math.round(t1)} ms · chaude ${Math.round(t2)} ms · onLoad ${charges} · programmes ${p0} → ${p1} pendant la préparation (${neufs.join(', ')}) → ${p2} avec les six corps dessinés (${neufs2.join(' ; ')}) · préparés ${P.fiches.join(', ')}` };
   }, { delai: 90 });
 
   // 2. LA MÉMOIRE DES TEXTURES des six bots ; au téléphone, 3 avatars distincts au plus
@@ -177,6 +179,7 @@ export default function (jeu) {
       const a = pousses[0], j = a.joueur, r = R[0], bb = r.ouvA ? 0 : 1, sg = bb ? -1 : 1, ex = bb ? r.bx : r.ax, ez = bb ? r.bz : r.az;
       jeu.teleporter(a.id, ex - r.ux * sg * 0.15, r.sol, ez - r.uz * sg * 0.15, a.cmd.lacet);
       j.sansRangs = false;
+      jeu.commande(a.id, { ay: 1, ax: 0, lacet: a.cmd.lacet, marche: true }, 2);
       for (let i = 0; i < 120 && !j.rang; i++) image();
       temoin = j.rang ? 1 : 0;
       j.rang = null; j.sansRangs = true;
@@ -436,11 +439,12 @@ export default function (jeu) {
   // 10. LA TEINTE : deux brassards de 8 cm enfants des os des bras, tenue à 60 %, aucun matériau du décor ni de Haythem
   T('10 teinteEquipe : brassards 8 cm, tenue 60 %, matériaux partagés intacts', async () => {
     const empreinte = () => {
-      // (par matériau, une fois : les « suites » du décor coupé, créées à la demande, portent les matériaux de leur bloc)
+      // (par matériau, une fois : les « suites » du décor coupé, créées à la demande, portent les matériaux de leur bloc ;
+      // ses propriétés, pas sa `version` — les vitres du décor la font monter d'elles-mêmes, ≈ 50 par seconde)
       const M = new Map();
       game.scene.traverse((o) => {
         if (!o.isMesh || !o.material) return;
-        for (const m of Array.isArray(o.material) ? o.material : [o.material]) M.set(m.uuid, [m.uuid, m.version, m.color ? m.color.getHexString() : '', m.opacity, m.transparent, m.emissive ? m.emissive.getHexString() : '']);
+        for (const m of Array.isArray(o.material) ? o.material : [o.material]) M.set(m.uuid, [m.uuid, m.color ? m.color.getHexString() : '', m.opacity, m.transparent, m.emissive ? m.emissive.getHexString() : '', m.map ? m.map.uuid : '', m.side, m.visible]);
       });
       return hacher([...M.values()].sort((a, b) => (a[0] < b[0] ? -1 : 1)));
     };
