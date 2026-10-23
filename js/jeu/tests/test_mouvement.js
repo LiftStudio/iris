@@ -32,9 +32,28 @@ const SANS_BORNES = { xMin: -1e5, xMax: 1e5, zMin: -1e5, zMax: 1e5 };
 
 // LES OBSTACLES DU FRANCHISSEMENT (critère 7) : point de départ (pieds), direction (lacet) ; choisis par une passe de mesure
 // (`__jeu.mesuresFranchir`, ci-dessous) qui vérifie que `franchissable` y rend une arrivée libre — h : la hauteur mesurée
-export const OBSTACLES = [];
-// LES RANGS SERRÉS (critère 7) : franchissement refusé (arrivée jamais libre)
-export const RANGS_SERRES = [];
+// (passe du 23/10 sur `socle-ok` : 20 obstacles trouvés, dont 5 au −1 laissés de côté — le lot R refait le −1 ; h mesurée)
+export const OBSTACLES = [
+  { nom: 'DC, table (0,77)', x: 2.2, y: 0, z: -17, lacet: 3.1416, h: 0.77 },
+  { nom: 'DC, bureau en biais (0,90)', x: 5.45, y: 0, z: -16.25, lacet: 5.4978, h: 0.9 },
+  { nom: 'rue, jardinière (0,61)', x: 15.95, y: 0, z: 0.75, lacet: 4.7124, h: 0.61 },
+  { nom: 'rue, bac en biais (0,68)', x: 13.7, y: 0, z: 1.75, lacet: 2.3562, h: 0.68 },
+  { nom: 'rue, bac (0,68)', x: 10.2, y: 0, z: 2.5, lacet: 1.5708, h: 0.68 },
+  { nom: 'Kahn, table (0,90)', x: 8.95, y: 3.5, z: -22.75, lacet: 4.7124, h: 0.9 },
+  { nom: 'pause du 1er, comptoir (1,10)', x: 10.45, y: 3.5, z: -11, lacet: 3.1416, h: 1.1 },
+  { nom: 'pause du 1er, banquette (0,46)', x: 9.45, y: 3.5, z: -10.75, lacet: 1.5708, h: 0.46 },
+  { nom: 'S 1.03, table (0,90)', x: 14.95, y: 3.5, z: -5, lacet: 0, h: 0.9 },
+  { nom: 'salle 1 du 2e, table (0,76)', x: 8.95, y: 6.6, z: -7.25, lacet: 4.7124, h: 0.76 },
+];
+// LES RANGS SERRÉS (critère 7) : franchissement refusé (arrivée jamais libre) — devant le premier rang, face à lui, le disque libre
+// et la sonde bloquée par le rang (S 1.3 au 1er, S −1.14 au −1)
+export const RANGS_SERRES = [
+  { nom: 'S 1.3, rang x 4,3', x: 3.725, y: 3.5, z: -2.259, lacet: -1.5708 },
+  { nom: 'S 1.3, rang x 4,3', x: 3.725, y: 3.5, z: -1.785, lacet: -1.5708 },
+  { nom: 'S 1.3, rang x 10,55', x: 12.775, y: 3.5, z: -1.785, lacet: 1.5708 },
+  { nom: 'S −1.14, rang 2 (bloc ouest)', x: 6.15, y: -3.06, z: -21.53, lacet: 3.1416 },
+  { nom: 'S −1.14, rang 3 (bloc est)', x: 11.7, y: -3.06, z: -18.68, lacet: 0 },
+];
 
 export default function (jeu) {
   const game = window.__game;
@@ -43,7 +62,9 @@ export default function (jeu) {
   const P = () => game.partie;
   const essai = async (o = {}) => { await jeu.lancer('essai', { graine: 1, mannequins: [], ...o }); return game.partie; };
   // une commande forcée jusqu'à nouvel ordre (`fin` infinie) ou pendant `duree`
-  const forcer = (a, champs, duree = Infinity) => { const p = P(); p.forcees.set(a.id, { champs: { ax: 0, ay: 0, amp: 1, ...champs }, fin: duree === Infinity ? Infinity : p.t + duree }); };
+  // (tous les champs tenus posés : la commande d'un bot sans cerveau n'est réécrite par personne, un champ forcé y resterait)
+  const TENUS = { ax: 0, ay: 0, amp: 1, sprint: false, marche: false, accroupi: false, tir: false, visee: false, letale: false, interagir: false };
+  const forcer = (a, champs, duree = Infinity) => { const p = P(); p.forcees.set(a.id, { champs: { ...TENUS, ...champs }, fin: duree === Infinity ? Infinity : p.t + duree }); };
   // un front pendant UN pas, en plus de la commande forcée en cours (rendue ensuite)
   const front = (a, champs) => {
     const p = P(), F = p.forcees.get(a.id), avant = F ? { ...F.champs } : {};
@@ -162,7 +183,7 @@ export default function (jeu) {
       a0.arsenal = new Arsenal(a0, { principale: w, secondaire: null, letale: null, tactique: null, couteau: true });
       const m = w === 'couteau' ? MOBILITE_COUTEAU : ARMES[w].mobilite, vv = VISEE_PAR_ARME[w] ?? ALLURES.visee * m;
       for (const [nom, ch, vi, ac, ref] of [['course', {}, 0, 0, ALLURES.course * m], ['sprint', { sprint: true }, 0, 0, ALLURES.sprint * m],
-        ['accroupi', {}, 0, 1, ALLURES.accroupi * m], ['visée', {}, 1, 0, vv]]) {
+        ['accroupi', {}, 0, 1, ALLURES.accroupi * m], ...(w === 'couteau' ? [] : [['visée', {}, 1, 0, vv]])]) {   // (le couteau ne vise pas)
         const v = mesure(a0, ch, vi, ac);
         if (pc(v, ref) > 0.01) fautes.push(`${w} ${nom} ${r3(v)} (${r3(ref)})`);
         if (nom === 'course') mob.push(`${w} ${r3(v)}`);
@@ -436,8 +457,11 @@ export default function (jeu) {
     }
     let refuses = 0;
     for (const R of RANGS_SERRES) {
-      const d = dirDe(R.lacet);
-      if (!franchissable(c, R.x, R.y, R.z, d.x, d.z)) refuses++;
+      const d = dirDe(R.lacet), sx = { x: R.x, z: R.z };
+      // (un vrai refus : le départ libre, la sonde arrêtée par le rang — puis pas d'arrivée)
+      c.deplacer(sx, d.x * 0.5, d.z * 0.5, 0.3, null, R.y, 1.6, 0.25);
+      const bloque = (sx.x - R.x) * d.x + (sx.z - R.z) * d.z < 0.48;
+      if (c.libre(R.x, R.z, 0.32, R.y) && bloque && !franchissable(c, R.x, R.y, R.z, d.x, d.z)) refuses++;
     }
     jeu.quitter('balade');
     const ok = OBSTACLES.length === 10 && fautes.length === 0 && RANGS_SERRES.length === 5 && refuses === 5;
@@ -451,15 +475,20 @@ export default function (jeu) {
     const p = await essai({ graine: 8 }), a = p.local, vue = p.vue, c = C();
     const V = volees(c), lignes = [];
     let pire2 = 0, pireEcart = 0, nImages = 0, nMilieu = 0, plafondFautes = 0;
-    const parcours = (x, y, z, l, sprint, secondes) => {
+    // (la mesure s'arrête quand la course est cassée — la vitesse retombe sous 85 % de sa plus haute : le mur du palier, ou le bout
+    // du palier — : un arrêt net à 6,6 m/s arrête aussi net la montée de l'œil, comme le reste du corps ; ce n'est plus l'escalier)
+    const parcours = (x, y, z, l, sprint, secondes, fin) => {
       jeu.teleporter(0, x, y, z, l); a.corps.vel.set(0, 0, 0);
       forcer(a, { ay: 1, sprint, lacet: l, tangage: 0 });
+      let vMax = 0;
       // l'élan pris sur place (le corps arrêté par sa commande lâchée n'avance pas) : 0,2 s de course sur le palier
       const ys = [], sols = [], milieu = [];
       for (let i = 0; i < Math.round(secondes * 60); i++) {
         const y0 = image(vue);
         ys.push(y0);
-        const j = a.corps, d = dirDe(l), L = 0.9;
+        const vv = vitesse(a); vMax = Math.max(vMax, vv);
+        if (vMax > 3 && vv < 0.85 * vMax) { ys.pop(); break; }
+        const j = a.corps, d = dirDe(l), L = 1.1;
         const f0 = c.solEn(j.pos.x, j.pos.z, j.pos.y + 0.01), fa = c.solEn(j.pos.x + d.x * L, j.pos.z + d.z * L, j.pos.y + L), fb = c.solEn(j.pos.x - d.x * L, j.pos.z - d.z * L, j.pos.y + 0.01);
         sols.push(f0 + OEIL.debout);
         milieu.push(Math.abs(fa + fb - 2 * f0) < 1e-3 && Math.abs(fa - f0) > 0.2 && vitesse(a) > 3);
@@ -473,8 +502,8 @@ export default function (jeu) {
       return { m2, mE };
     };
     for (const v of V) for (const sprint of [false, true]) for (const sens of ['monte', 'descend']) {
-      const A = sens === 'monte' ? v.a : v.b, l = sens === 'monte' ? v.lacet : v.lacet + Math.PI;
-      const R = parcours(A.x, A.y, A.z, l, sprint, (v.long + 2.4) / (sprint ? 6.6 : 5.0) + 0.3);
+      const A = sens === 'monte' ? v.a : v.b, B = sens === 'monte' ? v.b : v.a, l = sens === 'monte' ? v.lacet : v.lacet + Math.PI;
+      const R = parcours(A.x, A.y, A.z, l, sprint, (v.long + 2.4) / (sprint ? 6.6 : 5.0) + 0.3, B);
       pire2 = Math.max(pire2, R.m2); pireEcart = Math.max(pireEcart, R.mE);
       lignes.push(`${v.nom} ${sens} ${sprint ? 'sprint' : 'course'} ${r2(R.m2 * 100)}/${r2(R.mE * 100)}`);
     }
@@ -1000,14 +1029,15 @@ export default function (jeu) {
       const [aB, hB, aH, hH] = r.h0 < r.h1 ? [r.a0, r.h0, r.a1, r.h1] : [r.a1, r.h1, r.a0, r.h0];
       const s = Math.sign(aH - aB);
       const pt = (a) => (r.axe === 'x' ? { x: a, z: m } : { x: m, z: a });
+      // le pied (sur le palier d'en bas, 1,2 m avant la volée au plus loin) et le haut (1 m après au plus loin) : la première paire
+      // libre dont le chemin est libre (pas un mur, une rampe ni un garde-corps entre le palier et la volée)
+      const point = (a, h) => { const q = pt(a), y = c.solEn(q.x, q.z, h + 0.3); return Math.abs(y - h) < 0.03 && c.libre(q.x, q.z, 0.32, y) ? { ...q, y } : null; };
+      const libreDe = (P, Q) => { for (let u = 0; u <= 1.0001; u += 0.05) { const px = P.x + (Q.x - P.x) * u, pz = P.z + (Q.z - P.z) * u; if (!c.libre(px, pz, 0.31, c.solEn(px, pz, P.y + (Q.y - P.y) * u + 0.3))) return false; } return true; };
       let A = null, B = null;
-      for (const off of [1.2, 0.9, 0.6, 0.3, 0.05]) {
-        const q = pt(aB - s * off), y = c.solEn(q.x, q.z, hB + 0.3);
-        if (Math.abs(y - hB) < 0.03 && c.libre(q.x, q.z, 0.32, y)) { A = { ...q, y }; break; }
-      }
-      for (const off of [1.0, 0.7, 0.4, 0.05]) {
-        const q = pt(aH + s * off), y = c.solEn(q.x, q.z, hH + 0.3);
-        if (Math.abs(y - hH) < 0.03 && c.libre(q.x, q.z, 0.32, y)) { B = { ...q, y }; break; }
+      for (const oa of [1.2, 0.9, 0.6, 0.3, 0.05]) {
+        const PA = point(aB - s * oa, hB); if (!PA) continue;
+        for (const ob of [1.0, 0.7, 0.4, 0.05]) { const PB = point(aH + s * ob, hH); if (PB && libreDe(PA, PB)) { A = PA; B = PB; break; } }
+        if (A) break;
       }
       if (!A || !B) continue;
       // (accessible : le pied et le haut à un niveau où l'on marche, pas la cage haute)
@@ -1021,6 +1051,13 @@ export default function (jeu) {
   // avec le passage libre dessous et 3 m d'élan libres de chaque côté
   function chercherPortes(c, n) {
     const L = [];
+    // (les vantaux des portes automatiques, fermés à l'entrée d'une partie d'essai, s'ouvrent à l'approche — à 2,1 m, au pas :
+    // on les éteint le temps de chercher les passages, rendus ensuite)
+    const V = ((game.carte && game.carte.portes && game.carte.portes.auto) || []).map((P) => P.forme).filter((f) => f && !f.off);
+    for (const f of V) f.off = true;
+    try { chercher(); } finally { for (const f of V) f.off = false; }
+    return L;
+    function chercher() {
     for (const f of c.formes) {
       if (!f.joueur || f.off || f.vantail) continue;
       let cx, cz, lx, lz, ux, uz;
@@ -1036,15 +1073,17 @@ export default function (jeu) {
       const hl = f.y0 - y;
       if (hl < 2.0 || hl > 2.15 || !c.libre(cx, cz, 0.3, y)) continue;
       let ok = true;
-      for (const sg of [1, -1]) for (let s = 0.3; s <= 3.0 && ok; s += 0.3) {
+      for (const sg of [1, -1]) for (let s = 0.3; s <= 2.4 && ok; s += 0.3) {
         const px = cx + ux * s * sg, pz = cz + uz * s * sg;
         if (!c.libre(px, pz, 0.32, y) || Math.abs(c.solEn(px, pz, y + 0.3) - y) > 0.02) ok = false;
       }
       if (!ok || L.some((D) => Math.hypot(D.x - cx, D.z - cz) < 1)) continue;
-      L.push({ x: cx, y, z: cz, nx: ux, nz: uz, linteau: r2(hl), avant: 3.0, elan: 1.8 });
+      // (le départ à 2,4 m, le saut à 1,6 m du plan de la porte : à 6,6 m/s, la tête y passe à 0,47 m de saut — le linteau la
+      // rabat ; l'apogée est 0,5 m au-delà)
+      L.push({ x: cx, y, z: cz, nx: ux, nz: uz, linteau: r2(hl), avant: 2.4, elan: 1.6 });
       if (L.length >= n) break;
     }
-    return L;
+    }
   }
   // une BORDURE de la rue : là où le sol saute de 0,12 m sur 5 cm, avec 3 m libres de chaque côté
   function chercherBordure(c) {

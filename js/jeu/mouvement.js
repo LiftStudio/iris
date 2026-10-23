@@ -20,9 +20,9 @@
 //     franchissement que le mouvement refuserait ;
 //   - l'ACCROUPI (courbe douce, 0,16 s pour descendre, 0,18 pour se relever ; relever refusé sous un plafond à moins de 1,85 m) ;
 //   - les PAS (événements de la simulation : les sons et l'ouïe des bots les lisent, même d'un bot caché ou posé à 4 Hz) ;
-//   - l'ŒIL LISSÉ de l'acteur local (escaliers, bordures) : la moyenne du sol sur une FENÊTRE de 0,2 s de trajet, devant et
-//     derrière, le long de la vitesse — une volée ne fait plus de cassure à son pied ni à son palier (la dérivée seconde de
-//     l'œil reste sous 1 cm par image à 60 im/s, critère 8), et au milieu d'une volée l'œil suit la pente exacte.
+//   - l'ŒIL LISSÉ de l'acteur local (escaliers, bordures) : la moyenne du sol sous une FENÊTRE carrée de 2 m autour des
+//     pieds — une volée ne fait plus de cassure à son pied ni à son palier (la dérivée seconde de l'œil reste sous 1 cm par
+//     image à 60 im/s, critère 8), et au milieu d'une volée l'œil suit la pente exacte.
 // `separer` (les contacts entre corps) passe par le monde solide ; `franchissable` est ÉCRITE EN ENTIER par le socle (L-B et
 // L-D l'appellent ; personne ne la change sans F2). PURETÉ (spec § 4.1 règle 4) : ni hasard, ni horloge du navigateur, ni
 // entrées — le temps est `partie.t`, les entrées la commande.
@@ -50,8 +50,11 @@ export const RECEPTION = { chute: 0.3, facteur: 0.85, duree: 0.12 };
 export const FRANCHIR = { duree: 0.45, dureeBas: 0.38, bas: 0.7, arc: 0.35, sortie: 0.7, contre: 0.15, essai: 0.1 };
 export const PAS_ACTEUR = { course: 0.7, marche: 0.45, accroupiMin: 1.3 };
 export const CONTACTS = { pousseeMax: 0.05, ecartVertical: 1.2 };
-// l'œil lissé : la fenêtre (en SECONDES de trajet à la vitesse du moment), son plafond en mètres, ses échantillons
-export const OEIL_LISSE = { fenetre: 0.2, max: 1.6, echantillons: 21, ecartMax: 0.6, amorti: 0.08 };
+// l'œil lissé : la fenêtre (m) — une moyenne glissante de 1,6 m passée dans une de 0,4 m (un trapèze : 2 m en tout, plein sur
+// 1,2 m), échantillonnée tous les 4 cm —, la pente au plus d'une volée (elles font 0,48 à 0,77), le saut de sol admis
+// d'un échantillon au suivant (une bordure fait 0,12 ; un bord de palier sur une volée, ≈ 0,1), l'écart au sol au-delà duquel on
+// le lâche
+export const OEIL_LISSE = { longueur: 1.6, rampe: 0.4, pas: 0.04, pente: 0.8, saut: 0.13, ecartMax: 0.6 };
 
 const _dir = new THREE.Vector3();
 // la vitesse de base d'une fiche (js/player.js move : 3,1 + spd/100 × 2,4 ; Haythem 5,476)
@@ -112,7 +115,7 @@ export function appliquerCommande(acteur, cmd, dt, partie) {
   // (une mort, une réapparition, une téléportation : la glissade, le franchissement, le sprint tactique et l'œil repartent)
   if (M.mortT !== acteur.mortT || Math.hypot(x0 - M.px, z0 - M.pz) > 1) {
     M.mortT = acteur.mortT; M.glisse = null; M.franchit = null; M.tact = false; M.sprintT = 0; M.sprinte = false; M.contreT = 0;
-    M.receptionFin = -Infinity; M.viseeLibreT = -Infinity; M.hautVol = 0; M.tickOeil = -1; M.fenL = NaN;
+    M.receptionFin = -Infinity; M.viseeLibreT = -Infinity; M.hautVol = 0; M.tickOeil = -1;
   }
   // le cap : celui de la visée (les bots courent en pas chassés quand ils visent ailleurs)
   p.setFacing(-Math.sin(cmd.lacet), -Math.cos(cmd.lacet));
@@ -133,7 +136,8 @@ export function appliquerCommande(acteur, cmd, dt, partie) {
   }
   const bouge = na > 0.02, avant = bouge && ay / na > 0.5;            // (vers l'avant : à moins de 60° du regard)
   const vit = Math.hypot(p.vel.x, p.vel.z), enAir = p.airborne;
-  const A = acteur.arsenal, vk = A ? A.visee : cmd.visee ? 1 : 0;
+  // (la part de visée de l'arsenal ; une arme sans temps d'ADS — le couteau — n'en a pas)
+  const A = acteur.arsenal, vA = A ? A.visee : cmd.visee ? 1 : 0, vk = Number.isFinite(vA) ? clamp(vA, 0, 1) : 0;
   // ---- 3. L'ACCROUPI, ses refus, et la GLISSADE ----
   const accFront = !!cmd.accroupi && !M.accAvant;
   M.accAvant = !!cmd.accroupi;
@@ -279,15 +283,9 @@ function finPas(acteur, p, M, C, t, x0, z0, dt, partie, sprint) {
   } else if (vit < 0.3) M.pasD = PAS_ACTEUR.course / 2;                  // (le premier pas vient vite au départ)
   // L'ŒIL LISSÉ (l'acteur local : sa caméra) — la valeur d'avant gardée pour l'interpolation de l'image
   if (acteur.local && C) {
-    // la longueur de la fenêtre suit la vitesse en douceur (amortisseur critique, 0,08 s) : un arrêt net contre un mur en haut
-    // d'une volée ne fait pas sauter l'œil de la moyenne au sol exact
-    const Lc = Math.min(OEIL_LISSE.max, OEIL_LISSE.fenetre * Math.hypot(p.vel.x, p.vel.z)), w = 1 / OEIL_LISSE.amorti;
-    if (!Number.isFinite(M.fenL)) { M.fenL = Lc; M.fenV = 0; }
-    M.fenV += (w * w * (Lc - M.fenL) - 2 * w * M.fenV) * dt; M.fenL = Math.max(0, M.fenL + M.fenV * dt);
-    if (Math.hypot(p.vel.x, p.vel.z) > 0.05) { M.fenX = p.vel.x; M.fenZ = p.vel.z; }
     // (en franchissant, les pieds sont soulevés : le sol lissé est celui d'en dessous, soulevé d'autant)
     const lev = M.franchit ? M.franchit.leve : 0;
-    const sol = solLisse(C, p.pos.x, p.pos.y - lev, p.pos.z, M.fenX || 0, M.fenZ || 0, M.fenL) + lev;
+    const sol = solLisse(C, p.pos.x, p.pos.y - lev, p.pos.z) + lev;
     M.solOeil = Math.abs(sol - p.pos.y) > OEIL_LISSE.ecartMax ? p.pos.y : sol;
     const y = M.solOeil + hauteurOeil(acteur) + (p.jumpY || 0);
     M.yOeilPrec = M.tickOeil === partie.tick - 1 && Number.isFinite(M.yOeil) ? M.yOeil : y;
@@ -295,21 +293,56 @@ function finPas(acteur, p, M, C, t, x0, z0, dt, partie, sprint) {
   }
 }
 
-// le sol MOYEN sur une fenêtre de trajet centrée sur les pieds, le long de la vitesse (0,2 s de trajet, 1,6 m au plus) :
-// un plan incliné reste lui-même (la moyenne d'une droite sur une fenêtre centrée est la droite), une cassure devient un
-// arrondi, une bordure une pente douce — sans retard au milieu d'une volée
-export function solLisse(C, x, y, z, vx, vz, longueur) {
-  const v = Math.hypot(vx, vz), L = longueur ?? Math.min(OEIL_LISSE.max, OEIL_LISSE.fenetre * v);
-  if (L < 0.02 || v < 1e-6) return y;
-  const ux = vx / v, uz = vz / v, N = OEIL_LISSE.echantillons;
-  let somme = 0;
-  for (let i = 0; i < N; i++) {
-    const d = (i / (N - 1) - 0.5) * L;
-    // (un échantillon devant, sur une volée qui monte, est plus haut que les pieds : on accepte 0,8 m par mètre en plus de la
-    // marche de solEn — les volées font 0,48 à 0,77 — sans jamais prendre l'étage du dessus)
-    somme += d === 0 ? y : C.solEn(x + ux * d, z + uz * d, y + 0.8 * Math.abs(d));
+// le sol MOYEN sous une fenêtre CARRÉE centrée sur les pieds, alignée sur les axes du monde (les volées, les dalles et les bordures
+// de l'école le sont toutes), en TRAPÈZE : pleine sur 1,2 m, adoucie sur 0,4 m de chaque bord (2 m en tout — une moyenne glissante
+// de 1,6 m passée dans une de 0,4 m). La moyenne d'un sol qui ne varie que le long de x (de z) se lit sur une ligne d'échantillons
+// le long de x (de z) ; x-moyenne + z-moyenne − centre est la moyenne du carré pour tout sol g(x) + h(z). Un plan incliné reste
+// lui-même (la moyenne d'une droite est la droite) : au milieu d'une volée, l'œil suit la pente exacte ; une cassure devient un
+// arrondi (au sprint, 0,85 cm de dérivée seconde par image au plus, mesuré sur les 9 volées), un bord de palier ou une bordure une
+// pente douce. La fenêtre ne dépend ni de la vitesse ni de la direction : rien ne saute au départ, à l'arrêt ou en tournant (en
+// contrepartie, arrêté au bord d'une volée, l'œil est jusqu'à ≈ 15 cm sous sa hauteur : l'arrondi de la cassure). Près d'une
+// volée, seule la ligne de son axe compte (sur une volée étroite, la ligne en travers sortirait par ses côtés). Le long d'une
+// ligne, en partant des pieds, un échantillon n'est gardé que s'il CONTINUE le sol du précédent (0,8 m par mètre, plus un saut
+// de 0,13 m) : au-delà d'un mur ou au bord d'une dalle, `solEn` rendrait le sol d'à côté, d'en dessous ou d'au-dessus — la ligne
+// garde le dernier sol vu.
+export function solLisse(C, x, y, z, longueur = OEIL_LISSE.longueur) {
+  const L = longueur, R = OEIL_LISSE.rampe;
+  if (!(L > 0.02)) return y;
+  const H = (L + R) / 2, P = (L - R) / 2, pas = OEIL_LISSE.pas, n = Math.ceil(H / pas - 1e-9), k = OEIL_LISSE.pente * pas, sj = OEIL_LISSE.saut;
+  // le poids d'un échantillon à la distance d (la fenêtre en trapèze : boîte de L ⊗ boîte de R)
+  const poids = (d) => (d <= P ? 1 : d >= H ? 0 : (H - d) / R);
+  // les lignes utiles : celles des axes des volées que la fenêtre touche, à la hauteur des pieds (sur une volée étroite, la
+  // ligne en travers sortirait par ses côtés — la rampe, elle, ne varie pas en travers) ; loin de toute volée, les deux
+  let lx = false, lz = false;
+  for (const r of C.sols) {
+    if (!r.axe || r.x1 < x - H || r.x0 > x + H || r.z1 < z - H || r.z0 > z + H) continue;
+    if (Math.abs(C._hSol(r, Math.max(r.x0, Math.min(r.x1, x)), Math.max(r.z0, Math.min(r.z1, z))) - y) > 1) continue;
+    if (r.axe === 'x') lx = true; else lz = true;
   }
-  return somme / N;
+  if (!lx && !lz) { lx = true; lz = true; }
+  // chaque ligne : le centre et, de part et d'autre, les échantillons pondérés (un échantillon qui ne CONTINUE pas le sol du
+  // précédent — mur, bord de dalle, volée empilée — arrête la ligne de ce côté : on y garde le dernier sol vu)
+  let total = 0;
+  for (const [actif, ux, uz] of [[lx, 1, 0], [lz, 0, 1]]) {
+    if (!actif) continue;
+    let somme = y, poidsTotal = 1;
+    for (const sg of [1, -1]) {
+      let vu = y, arret = false;
+      for (let i = 1; i <= n; i++) {
+        const d = i * pas, w = poids(d);
+        if (w <= 0) break;
+        if (!arret) {
+          const f = C.solEn(x + ux * d * sg, z + uz * d * sg, vu + k, sj);
+          // (`solEn` rend le sol 0 là où aucun sol ne couvre le point, même au-dessus de la borne : refusé aussi)
+          if (f >= vu - k - sj && f <= vu + k + sj) vu = f; else arret = true;
+        }
+        somme += w * vu; poidsTotal += w;
+      }
+    }
+    total += somme / poidsTotal - y;
+  }
+  // (x-moyenne + z-moyenne − centre : la moyenne du carré pour tout sol g(x) + h(z))
+  return y + total;
 }
 
 // ---- la glissade finie : l'accroupi reprend la main ----

@@ -67,7 +67,7 @@ export class VueFPS {
   get champV() { return this._champV || this.champHanche; }
   // le zoom de visée courant (sur la tangente) et la part de visée (courbe 1 − (1 − t)³)
   _zoomDe(a) {
-    const A = a && a.arsenal, f = A && A.arme, vk = A ? A.visee : 0;
+    const A = a && a.arsenal, f = A && A.arme, vk = A && Number.isFinite(A.visee) ? A.visee : 0;
     const e = 1 - Math.pow(1 - clamp(vk, 0, 1), 3), z = (f && f.zoom) || 1;
     return { zoom: 1 + (z - 1) * e, e };
   }
