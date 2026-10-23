@@ -358,10 +358,14 @@ export function buildOptions(settings, cb = {}) {
     listening = L;
     window.addEventListener('keydown', h, true);
   }
-  // EN PLEIN ÉCRAN, avec un Ctrl lié : le navigateur garde ses raccourcis pour le jeu (navigator.keyboard.lock, Chrome et Edge)
+  // EN PLEIN ÉCRAN, avec un Ctrl lié : le navigateur laisse au jeu les lettres et les chiffres (navigator.keyboard.lock,
+  // Chrome et Edge) — Ctrl + W, Ctrl + S, Ctrl + D, Ctrl + 1… ne ferment ni n'ouvrent plus rien. Ces touches-là seulement :
+  // ÉCHAP reste au navigateur (un appui sort du plein écran et rend le pointeur, la pause s'ouvre comme d'habitude ; verrouillé,
+  // il faudrait le TENIR 2 s) et Tab aussi (Alt + Tab reste à Windows)
+  const VERROUILLEES = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map((c) => 'Key' + c).concat([...'0123456789'].map((c) => 'Digit' + c));
   function verrouClavier() {
     const K = navigator.keyboard; if (!K || !K.lock) return;
-    try { if (document.fullscreenElement && PROFILS.some(([p]) => ctrlLie(settings, p))) K.lock().catch(() => {}); else K.unlock(); } catch (e) { /* refusé */ }
+    try { if (document.fullscreenElement && PROFILS.some(([p]) => ctrlLie(settings, p))) K.lock(VERROUILLEES).catch(() => {}); else K.unlock(); } catch (e) { /* refusé */ }
   }
   document.addEventListener('fullscreenchange', verrouClavier);
   const choisirOnglet = (t) => { tab = t; tabs.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x.dataset.tab === tab)); };

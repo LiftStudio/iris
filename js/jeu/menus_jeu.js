@@ -570,11 +570,15 @@ export class MenuJeu {
     if (r && r.then) r.then(() => { if (this.game.partie) return; this._lance = null; if (this.game.mode === 'menu') { this.accueil(); this._dire('La partie n’a pas pu démarrer — réessaie.'); } });
     return r;
   }
+  // REJOUER : les mêmes réglages, une graine neuve ; la partie finie quittée VERS LE MENU d'abord — la préparation se fait
+  // alors sur l'école vivante du menu, comme après LANCER (et non sur la balade, Haythem au départ et son HUD sous l'écran),
+  // et une partie qui ne démarre pas ramène à l'accueil
   _rejouer() {
-    const p = this.game.partie;
-    if (!p) { const L = this._dernier; if (L) this._lancer({ mode: L.mode, opts: { ...L.opts, graine: 0 } }); return; }
-    const o = { ...p.opts }; delete o.mode; o.graine = 0;
-    this._lancer({ mode: p.id, opts: o });
+    const p = this.game.partie, L = p ? { mode: p.id, opts: { ...p.opts } } : this._dernier;
+    if (!L) return;
+    const o = { ...L.opts }; delete o.mode; o.graine = 0;
+    if (p) { this.cacher(); if (this.deps.quitter) this.deps.quitter('menu'); else this.game.entrerMenu(); }
+    this._lancer({ mode: L.mode, opts: o });
   }
   _dire(t) {
     const x = this.el && this.el.querySelector('.mj-info-x');
