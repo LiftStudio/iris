@@ -282,8 +282,9 @@ export default function (jeu) {
   T('7 visibilité : six vues aux portes ouvertes des pièces fermées', async (t) => {
     jeu.figerQualite(true); await jeu.qualite('moyenne');
     const P = carte().portes.liste().find((q) => q.nom === 'salle David Clark');
-    // (du couloir C05, du hall ouest, du passage : de 2,5 à 12 m, le regard sur la porte)
-    const poses = [[5.2, 1.6, -10.3], [5.3, 1.6, -9.2], [4.6, 1.6, -7.0], [5.6, 1.6, -6.2], [3.7, 1.6, -4.3], [4.3, 1.45, -5.2]];
+    // (les poses : du couloir C05, du hall ouest, du passage — des points libres d'où la vue entre dans la salle par la porte
+    // ouverte, de 2,5 m au plus loin ; six, du plus près au plus loin ; le regard sur un point à 2 m dans la salle)
+    let poses = [], cible = null;
     const cam = game.camera, inf = game.renderer.info, V = carte().visibilite.V;
     const rendre = () => {
       cam.updateMatrixWorld(); carte().visibilite.maj(0, { camera: cam });
@@ -295,7 +296,7 @@ export default function (jeu) {
       const g = cv.getContext('2d', { willReadFrequently: true }); g.drawImage(game.renderer.domElement, 0, 0, W, H);
       return g.getImageData(0, 0, W, H).data;
     };
-    const poser = ([x, y, z]) => { cam.position.set(x, y, z); cam.lookAt(P.cx, 1.2, P.cz); };
+    const poser = ([x, y, z]) => { cam.position.set(x, y, z); cam.lookAt(cible.x, 1.2, cible.z); };
     const mesurer = (avecTri) => {
       const sup = game.fx.superpositions.splice(0);
       try {
@@ -309,13 +310,23 @@ export default function (jeu) {
     };
     try {
       await essai({ zone: 'ecole', humain: false });
+      const sg = Lu().zoneEn(P.cx + P.nx * 1.5, P.cz + P.nz * 1.5, 0.1)?.id === 'dc' ? 1 : -1;
+      cible = { x: P.cx + P.nx * sg * 2, z: P.cz + P.nz * sg * 2 };
+      const cands = [];
+      for (let x = 1; x <= 9; x += 0.5) for (let z = -12.5; z <= -1; z += 0.5) {
+        const d = Math.hypot(x - P.cx, z - P.cz);
+        if (d < 2.5 || Lu().zoneEn(x, z, 0.1)?.id === 'dc' || !C().libre(x, z, 0.3, 0)) continue;
+        if (C().rayonLibre(x, 1.6, z, cible.x, 1.2, cible.z, 0) >= 0.999) cands.push([x, 1.6, z, d]);
+      }
+      cands.sort((a, b) => a[3] - b[3]);
+      poses = [0, 0.2, 0.4, 0.6, 0.8, 1].map((f) => cands[Math.min(cands.length - 1, Math.round(f * (cands.length - 1)))]).filter(Boolean);
       const enPartie = mesurer(true), ouverte = P.k === 1;
       jeu.quitter('balade'); stabiliser();
       const balade = mesurer(false);
       const ecarts = enPartie.map((m, i) => m.appels - balade[i].appels), pires = enPartie.map((m) => m.diff);
-      const ok = ouverte && ecarts.every((d) => d <= 60) && pires.every((d) => d < 0.004);
-      return { ok, attendu: 'porte ouverte ; pixels différents avec / sans le tri < 0,4 % ; appels en partie − balade ≤ 60',
-        obtenu: `ouverte ${ouverte} · appels +${ecarts.join(' +')} (balade ${balade.map((m) => m.appels)}) · pixels ${pires.map((d) => (d * 100).toFixed(2) + ' %').join(' ')}` };
+      const ok = ouverte && poses.length === 6 && ecarts.every((d) => d <= 60) && pires.every((d) => d < 0.004);
+      return { ok, attendu: 'porte ouverte ; six poses ; pixels différents avec / sans le tri < 0,4 % ; appels en partie − balade ≤ 60',
+        obtenu: `ouverte ${ouverte} · ${cands.length} poses possibles, distances ${poses.map((q) => q[3].toFixed(1))} m · appels +${ecarts.join(' +')} (balade ${balade.map((m) => m.appels)}) · pixels ${pires.map((d) => (d * 100).toFixed(2) + ' %').join(' ')}` };
     } finally { jeu.figerQualite(false); }
   });
 

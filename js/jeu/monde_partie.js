@@ -407,20 +407,27 @@ export class MondePartie {
   // ================================================================ LES PORTES DU PAS (Partie.pas, étape 5)
   // une porte 'auto' s'ouvre quand un acteur VIVANT est à moins de 2,1 m de son centre, à son niveau (ses pieds entre 1,2 m
   // sous le seuil et 2,2 m au-dessus : la règle de Portes.maj), du côté opposé au sien ; elle se referme 1,6 fois plus
-  // lentement quand il n'y a plus personne. Le premier acteur trouvé, dans l'ordre de la partie, dit le côté.
+  // lentement quand il n'y a plus personne. Le premier acteur trouvé, dans l'ordre de la partie, dit le côté. Un événement
+  // 'porte' { nom, x, y, z, ouvre, a } quand elle commence à s'ouvrir (`a` : l'acteur) et quand elle finit de se refermer :
+  // « la porte qui s'ouvre seule » s'entend (les sons, l'ouïe des chasseurs — AJOUT au § 4.6)
   majPortes(dt, acteurs) {
+    const partie = this.game.partie;
     for (const P of this.pilotees) {
-      let qui = null;
+      let qui = null, ida = -1;
       for (const a of acteurs) {
         if (!a.vivant || !a.corps) continue;
         const p = a.corps.pos;
-        if (p.y > P.base - 1.2 && p.y < P.base + 2.2 && Math.hypot(p.x - P.cx, p.z - P.cz) < RAYON_AUTO) { qui = p; break; }
+        if (p.y > P.base - 1.2 && p.y < P.base + 2.2 && Math.hypot(p.x - P.cx, p.z - P.cz) < RAYON_AUTO) { qui = p; ida = a.id; break; }
       }
-      if (qui && P.k <= 0.001) { const cote = (qui.x - P.cx) * P.nx + (qui.z - P.cz) * P.nz; P.sens = P.libre || (cote > 0 ? -1 : 1); }
+      if (qui && P.k <= 0.001) {
+        const cote = (qui.x - P.cx) * P.nx + (qui.z - P.cz) * P.nz; P.sens = P.libre || (cote > 0 ? -1 : 1);
+        if (partie) partie.evt('porte', { nom: P.nom, x: P.cx, y: P.base, z: P.cz, ouvre: true, a: ida });
+      }
       const k = Math.max(0, Math.min(1, P.k + (qui ? dt / DUREE : -dt / (DUREE * 1.6))));
       if (k === P.k) continue;
       P.k = k;
       if (P.forme) P.forme.off = k > 0.02;
+      if (k === 0 && partie) partie.evt('porte', { nom: P.nom, x: P.cx, y: P.base, z: P.cz, ouvre: false, a: -1 });
     }
   }
   // UN VERROU posé (ou levé) par les règles : la porte fermée, ou rendue à sa règle de la partie
