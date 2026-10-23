@@ -223,17 +223,23 @@ function departsDeux(N, D, K, Z) {
     const F = N.champMulti([v], SEPARATION, tmp), M = pres[cote];
     for (let i = 0; i < N.nb; i++) if (F[i] < M[i]) M[i] = F[i];
   };
+  // (F2, le test F2 de L-D, la vraie vue de L-A : un départ que voit un départ de l'autre camp — œil à œil, 1,62 m — n'est pris
+  // qu'en dernier recours ; au RDC + rue, deux paires se voyaient à travers le hall)
+  const B_ = N.balistique || null, H = 1.62;
+  const vuDe = (v, L) => !!B_ && L.some((w) => B_.vue(N.px[v], N.ph[v] + H, N.pz[v], N.px[w], N.ph[w] + H, N.pz[w]));
   for (let tour = 0; tour < K; tour++) {
     for (const cote of ['A', 'B']) {
-      const c = S[cote], autre = pres[cote === 'A' ? 'B' : 'A'];
-      let v0 = -1;
+      const c = S[cote], autre = pres[cote === 'A' ? 'B' : 'A'], prisAutre = S[cote === 'A' ? 'B' : 'A'].pris;
+      let v0 = -1, vVu = -1;
       for (const [dMin, rMax] of PASSES) {
         for (const v of c.L) {
           if (N.degage[v] < dMin || c.L.P[v] > rMax || c.pris.includes(v) || !(autre[v] >= SEPARATION) || !espaceOk(N, c.pris, v)) continue;
+          if (vuDe(v, prisAutre)) { if (vVu < 0) vVu = v; continue; }
           v0 = v; break;
         }
         if (v0 >= 0) break;
       }
+      if (v0 < 0) v0 = vVu;
       if (v0 >= 0) prendre(cote, v0);
     }
   }
