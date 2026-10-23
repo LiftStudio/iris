@@ -136,11 +136,10 @@ export function angleEcran(lacet, dx, dz) {
   const fx = -Math.sin(lacet), fz = -Math.cos(lacet), rx = Math.cos(lacet), rz = -Math.sin(lacet);
   return Math.atan2(dx * rx + dz * rz, dx * fx + dz * fz) / DEG;
 }
-// LA TAILLE DE LA MINI-CARTE (px CSS) : 200 (160 au doigt), réduite sur un petit écran (≤ 36 % de la hauteur, 30 % de la
-// largeur, jamais sous 96 px) — la vie se pose au-dessus d'elle
+// LA TAILLE DE LA MINI-CARTE (px CSS) : 200, et 160 au doigt — réduite sur une petite fenêtre (≤ 36 % de sa hauteur au PC,
+// 43 % au doigt : 160 px sur un téléphone de 375 px tenu en paysage ; ≤ 30 % de la largeur ; jamais sous 96 px)
 export function tailleCarte(w = ECRAN.w, h = ECRAN.h, tactile = false) {
-  const base = tactile ? 160 : 200;
-  return Math.round(Math.max(96, Math.min(base, h * 0.36, w * 0.3)));
+  return Math.round(Math.max(96, Math.min(tactile ? 160 : 200, h * (tactile ? 0.43 : 0.36), w * 0.3)));
 }
 // l'échelle des arcs de dégâts (et de la grenade proche) : 1 dès que l'écran fait 320 px de haut et de large
 export function echelleArcs(w = ECRAN.w, h = ECRAN.h) { return Math.min(1, Math.min(w, h) / 320); }
@@ -248,6 +247,8 @@ export class HudJeu {
   }
   debrancher(garder = false) {
     for (const d of this._des) d(); this._des = [];
+    // (la mini-carte et le tableau n'ont pas de `debrancher` au contrat : la sortie de la partie les cache ici)
+    if (!garder && this.partie && this.partie.aff) { this.partie.aff.minicarte?.cacher?.(); this.partie.aff.tableau?.cacher?.(); }
     if (!garder) this.partie = null;
     if (!this.el) return;
     cacher(this.el, true);
@@ -475,7 +476,7 @@ export class HudJeu {
     const visee = clamp(H.visee || 0, 0, 1);
     let o = montre ? clamp(1 - visee / Rg.viseeCache, 0, 1) : 0;
     // L'ÉCART QUI DIT LA VÉRITÉ : 4 px + tan(s) / tan(champV/2) × H/2
-    const s = Math.max(0, H.dispersion || 0);
+    const s = Number.isFinite(H.dispersion) ? clamp(H.dispersion, 0, 1.2) : 0;
     const champV = (P && P.vue && P.vue.champV) || (cam && cam.fov) || 58.7;
     this.ecartPx = Rg.base + Math.tan(s) / Math.tan(champV / 2 * DEG) * ECRAN.h / 2;
     C.v('ve', r1(Math.min(this.ecartPx, ECRAN.h * 0.45)));
@@ -575,8 +576,8 @@ export class HudJeu {
     for (let s = 0; s < R.max; s++) {
       const a = L[s], e = this.eChev[s];
       if (!a || !cam) { C.v('c' + s + 'o', 0); C.v('c' + s + 'x', 0); C.v('c' + s + 'y', 0); C.v('c' + s + 'k', 1); C.v('c' + s + 'n', 0); continue; }
-      const q = projeter(cam, a.x, a.y, a.z);
-      const dedans = q.devant && q.x > -20 && q.x < ECRAN.w + 20 && q.y > -20 && q.y < ECRAN.h + 20;
+      const q = projeter(cam, +a.x || 0, +a.y || 0, +a.z || 0);
+      const dedans = Number.isFinite(q.x) && Number.isFinite(q.y) && q.devant && q.x > -20 && q.x < ECRAN.w + 20 && q.y > -20 && q.y < ECRAN.h + 20;
       const taille = R.grand + (R.petit - R.grand) * clamp((q.d - R.dPres) / (R.dLoin - R.dPres), 0, 1);
       C.v('c' + s + 'x', r1(q.x)); C.v('c' + s + 'y', r1(q.y)); C.v('c' + s + 'k', r2(taille / R.grand));
       C.v('c' + s + 'o', dedans ? 1 : 0); C.v('c' + s + 'n', dedans && q.d <= R.nom ? 1 : 0);

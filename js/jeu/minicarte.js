@@ -213,6 +213,8 @@ export class MiniCarte {
     texte(this.eNom, (NOMS_NIVEAUX[n] || String(n)) + (Z ? ' · ' + (NOMS_PIECES[Z.id] || String(Z.id).toUpperCase()) : ''));
     classe(this.el, 'tactile', tactile);
   }
+  // la sortie de la partie (HudJeu.debrancher) : la carte cachée, la partie oubliée
+  cacher() { if (this.el) cacher(this.el, true); this._brancher(null); }
   _fleche(x, cx, cy, ang, coul, r) {
     x.save(); x.translate(cx, cy); x.rotate(ang);
     x.beginPath(); x.moveTo(0, -r); x.lineTo(r * 0.78, r * 0.82); x.lineTo(0, r * 0.36); x.lineTo(-r * 0.78, r * 0.82); x.closePath();

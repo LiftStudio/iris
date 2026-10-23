@@ -35,6 +35,8 @@ export class TableauScores {
     this.ePied = elt('div', 'ts-pied', B, '');
     hud.appendChild(R);
   }
+  // la sortie de la partie (HudJeu.debrancher) : caché, oublié
+  cacher() { if (this.el) cacher(this.el, true); this._brancher(null); this.montre = false; }
   // la pause : « Tableau des scores » l'ouvre et le ferme (Partie.boutonsPause)
   basculer(partie) { this._force = !this._force; this.maj(partie, false); }
   // les séries en cours (éliminations depuis la dernière mort), lues dans les événements de la partie

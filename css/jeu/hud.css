@@ -34,6 +34,9 @@ body.combat #hud-streak { display: none !important; }
 .hp { z-index: 2; }
 .hj[hidden], .hp[hidden], .hj [hidden], .hp [hidden], #voile-flash[hidden], #voile-cachette[hidden], .roue-provocations[hidden],
 .tableau-scores[hidden], .hud-carte[hidden] { display: none !important; }
+/* (hors partie, rien du HUD du jeu ne se montre, quoi qu'il reste dans le DOM) */
+body:not(.combat) .hj, body:not(.combat) .hp, body:not(.combat) .hud-carte, body:not(.combat) .tableau-scores, body:not(.combat) .roue-provocations,
+body:not(.combat) #voile-flash, body:not(.combat) #voile-cachette { display: none !important; }
 .hj > *, .hp > * { position: absolute; }
 .hj-arc, .hj-gren, .hj-obj, .hj-chev, .hj-xp-l, .hj-fil-l, .hp-son, .hp-scan-arc, .hp-etiq { position: absolute; }
 .hj-fil { inset: 0; }
