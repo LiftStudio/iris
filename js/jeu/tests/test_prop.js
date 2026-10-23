@@ -12,7 +12,7 @@ import { PAS, niveauDe } from '../constantes.js';
 import { REGLAGES_PROP } from '../partie_prop.js';
 import { PROVOCATIONS, RECETTES_PROP, REGLAGES_SONS } from '../sons_prop.js';
 import { CerveauChasseur } from '../cerveau_prop.js';
-import { typesDeguisables, CATALOGUE } from '../deguisements.js';
+import { typesDeguisables, CATALOGUE, typeDe, pivotDe, viserMeuble } from '../deguisements.js';
 import { MEUBLES } from '../../registre_meubles.js';
 import { piecesDe } from '../apparitions.js';
 
@@ -204,24 +204,27 @@ export default function (jeu) {
   }, { delai: 120 });
 
   // 4. LA FIN DE LA CACHETTE : un prop resté humain est déguisé en le meuble le plus courant de SA pièce
-  T('4 lâcher : le prop resté humain, déguisé en le type le plus courant de sa pièce', async () => avecFictifs(async ({ A, B, ajouter }) => {
+  // (F2 : avec le VRAI registre de L-K — un meuble fictif n'est ni au catalogue ni dans la grille des poses : il ne se prend
+  // plus —, le type attendu est compté ici sur le registre : le plus courant de sa pièce parmi les déguisables, puis de la
+  // zone ; un type refusé faute de place laisse le suivant)
+  T('4 lâcher : le prop resté humain, déguisé en le type le plus courant de sa pièce', async () => {
     await lancer({ graine: 9, premierRole: 'prop' });
-    const p = P(), loc = p.local, z = zoneId(loc.pos.x, loc.pos.y, loc.pos.z);
-    // sa pièce : 60 tabourets fictifs et 10 poubelles ; le reste de la zone : 80 poubelles (loin, hors de vue)
-    for (let k = 0; k < 60; k++) ajouter(pose(A.cle, 200 + k, loc.pos.y, 200, z));
-    for (let k = 0; k < 10; k++) ajouter(pose(B.cle, 300 + k, loc.pos.y, 200, z));
-    for (let k = 0; k < 80; k++) ajouter(pose(B.cle, 400 + k, loc.pos.y, 200, 'e1kahn' === z ? 'e1salle' : 'e1kahn'));
-    p._deguisables.add(A.cle); p._deguisables.add(B.cle);
+    const p = P(), loc = p.local, z = zoneId(loc.pos.x, loc.pos.y, loc.pos.z), pieces = piecesDe(p.zone);
+    const compter = (L) => { const n = new Map(); for (const q of L || []) if (p._deguisables.has(q.cle)) n.set(q.cle, (n.get(q.cle) || 0) + 1); return [...n].sort((x, y) => y[1] - x[1] || (x[0] < y[0] ? -1 : 1)).map((e) => e[0]); };
+    const ordre = [...new Set([...compter(MEUBLES.parZone.get(z)), ...compter(MEUBLES.poses.filter((q) => pieces.has(q.zone)))]), 'carton'];
     const humainAvant = !loc.prop && loc.corps === loc.joueur;
-    jusqua('traque');
+    const E = ev(['refus']);
+    jusqua('traque'); E.fin();
+    const refuses = new Set(E.L.filter((e) => e.a === 0).map((e) => e.cle));
+    const attendu = ordre.find((k) => !refuses.has(k));
     const cle = loc.prop ? loc.prop.cle : null, visible = loc.joueur.mesh.visible;
     // sans meuble au registre : le carton de secours
     await lancer({ graine: 9, premierRole: 'prop' }); const q = P(); q._deguisables.clear(); jusqua('traque');
     const cle2 = q.local.prop ? q.local.prop.cle : null;
     jeu.quitter('balade');
-    return { ok: humainAvant && cle === A.cle && !visible && cle2 === 'carton', attendu: `humain jusqu’au lâcher → ${A.cle} (sa pièce ${z}), avatar caché ; registre vide → carton`,
-      obtenu: `humain avant ${humainAvant} → ${cle}, avatar visible ${visible} ; registre vide → ${cle2}` };
-  }), { delai: 90 });
+    return { ok: humainAvant && ordre.length > 1 && cle === attendu && !visible && cle2 === 'carton', attendu: `humain jusqu’au lâcher → ${attendu} (le plus courant de sa pièce ${z}), avatar caché ; registre vide → carton`,
+      obtenu: `humain avant ${humainAvant} → ${cle}, avatar visible ${visible} ; registre vide → ${cle2} (ordre ${ordre.slice(0, 4).join(', ')})` };
+  }, { delai: 90 });
 
   // 5. LES PÉNALITÉS : un vrai meuble −3 (FP-12 : −1 par plomb, −6 au plus par coup), « faux », −2 points ; mur ou sol : 0 ;
   //    grenade : 0 ; le chasseur à 0 PV, spectateur jusqu'à la fin de la manche
@@ -306,15 +309,39 @@ export default function (jeu) {
   });
 
   // 8. LES CHANGEMENTS DE FORME : illimités en cachette ; 3 en traque, 5 s entre deux
-  T('8 changements : illimités en cachette, 3 en traque à 5 s d’écart', async () => avecFictifs(async ({ A, B, ajouter }) => {
+  // (F2 : deux VRAIS meubles déguisables de types différents, de part et d'autre d'une place libre — le registre réel de L-K :
+  // un meuble fictif n'est plus ni au catalogue ni dans la grille des poses, donc jamais visé)
+  const paireReelle = (p) => {
+    const C = game.collisions, pieces = piecesDe(p.zone);
+    const L = MEUBLES.poses.filter((q) => p._deguisables.has(q.cle) && pieces.has(q.zone) && (typeDe(q.cle) || {}).rayon <= 0.4);
+    for (const a of L) for (const b of L) {
+      if (a.cle >= b.cle) continue;
+      const d = Math.hypot(a.cx - b.cx, a.cz - b.cz); if (d < 1.6 || d > 3.0 || Math.abs(a.y0 - b.y0) > 0.05) continue;
+      const x = (a.cx + b.cx) / 2, z = (a.cz + b.cz) / 2, y = C.solEn(x, z, a.y0 + 0.3);
+      if (Math.abs(y - a.y0) > 0.05 || !C.libre(x, z, 0.45, y)) continue;
+      // (visés d'ici sous les trois formes — humain, a, b : le pivot change de hauteur avec la forme —, chacun le PREMIER sur la
+      // ligne : un tabouret bas visant une table haute s'arrêtait sur un autre tabouret de la pause)
+      const ok = [null, a.cle, b.cle].every((cle) => {
+        const f = { corps: { pos: { x, y, z }, jumpY: 0 }, prop: cle ? { T: typeDe(cle) } : null };
+        return [a, b].every((V) => { const pv = pivotDe(f), dx = V.cx - pv.x, dy = (V.y0 + V.y1) / 2 - pv.y, dz = V.cz - pv.z;
+          const m = viserMeuble(p, f, Math.atan2(-dx, -dz), -Math.atan2(dy, Math.hypot(dx, dz))); return !!m && m.pose === V; });
+      });
+      if (ok) return { a, b, x, y, z };
+    }
+    return null;
+  };
+  const viseeDe = (loc, P0) => { const pv = pivotDe(loc), dx = P0.cx - pv.x, dy = (P0.y0 + P0.y1) / 2 - pv.y, dz = P0.cz - pv.z; return { lacet: Math.atan2(-dx, -dz), tangage: -Math.atan2(dy, Math.hypot(dx, dz)) }; };
+  T('8 changements : illimités en cachette, 3 en traque à 5 s d’écart', async () => {
     await lancer({ graine: 21, premierRole: 'prop' });
-    const p = P(), loc = p.local; p._deguisables.add(A.cle); p._deguisables.add(B.cle);
+    const p = P(), loc = p.local;
     jusqua('cachette');
-    // un vrai meuble fictif à 0,9 m devant lui (visé), qui change de type entre deux essais
-    const l = loc.cmd.lacet, P0 = ajouter(pose(A.cle, loc.pos.x - Math.sin(l) * 0.9, loc.pos.y, loc.pos.z - Math.cos(l) * 0.9));
+    const Q = paireReelle(p);
+    if (!Q) { jeu.quitter('balade'); return { ok: false, attendu: 'deux vrais meubles déguisables de part et d’autre d’une place libre', obtenu: 'aucune paire' }; }
+    jeu.teleporter(0, Q.x, Q.y, Q.z); p.pas(PAS);
     const E = ev(['deguise', 'refus']);
     // (le meuble visé : jamais la forme qu'il a déjà — celle-là ne change rien)
-    const essai = () => { P0.cle = loc.prop && loc.prop.cle === A.cle ? B.cle : A.cle; game.camYaw = l; front(0, { deguiser: true }); };
+    const P0 = { cle: null };
+    const essai = () => { const V = loc.prop && loc.prop.cle === Q.a.cle ? Q.b : Q.a; P0.cle = V.cle; front(0, { deguiser: true, ...viseeDe(loc, V) }); };
     for (let k = 0; k < 6; k++) { essai(); jeu.avancer(0.3); }
     const enCachette = E.L.filter((e) => e.type === 'deguise' && e.a === 0).length, chgC = loc.prop ? loc.prop.changements : -1;
     // (relecture) figé, il le reste sous sa nouvelle forme ; puis F le défige en 0,25 s
@@ -330,7 +357,7 @@ export default function (jeu) {
     const attendu = [true, false, true, true, false];
     return { ok: enCachette === 6 && chgC === 0 && okFige && ok.join() === attendu.join(), attendu: '6 changements en cachette (compteur 0) ; figé gardé au changement ; traque : oui, non à 4,9 s, oui à 5 s, oui, non (le 4e)',
       obtenu: `${enCachette} en cachette (compteur ${chgC}) ; figé ${f0} → changé en ${cle1} : figé ${f1}, puis défigé ${!f2} ; traque ${ok.map((x) => (x ? 'oui' : 'non')).join(', ')}` };
-  }), { delai: 90 });
+  }, { delai: 90 });
 
   // 9. LES PROVOCATIONS : forcées toutes les 40 s (départ décalé de 0 à 15 s), 20 s dans la dernière minute, 25 s pour le
   //    dernier prop, au sifflet et rayon × 1,3 ; volontaires : recharge 4 s, compteur remis à zéro, points (× 2 près d'un chasseur)
@@ -583,6 +610,9 @@ export default function (jeu) {
     res.push([`voix ${S.voix.length} (max ${max})`, S.voix.length <= max]);
     // (relecture) les voix pleines de frottements : une provocation passe quand même (elle vole une voix)
     S.maj(5, game.camera); jeu.avancer(0.5);
+    // (F2 : l'oreille de la VRAIE SonsJeu de L-H est la caméra, posée à chaque image ; sans image, elle restait où l'avait laissée
+    // la préparation — au RDC, à plus de 7 m : les frottements, hors de leur rayon, n'y prenaient aucune voix)
+    game.camera.position.set(loc.pos.x, loc.pos.y + 1.6, loc.pos.z); S.maj(0, game.camera);
     for (let k = 0; k < max + 6; k++) SP.jouer('frottement', loc.pos.x + 0.5, loc.pos.y, loc.pos.z, { rayon: 7, deProp: 1 });
     const pleines = S.voix.length, n0 = SP.n;
     p.evt('provocation', { a: 1, id: 'rire', n: 4, x: loc.pos.x + 2, y: loc.pos.y, z: loc.pos.z, forcee: false, rayon: 20, duree: 1.2, points: 0 });
@@ -591,10 +621,12 @@ export default function (jeu) {
     S.maj(5, game.camera); jeu.avancer(2);
     // (d) la dalle : une même provocation sous les pieds de Haythem, au même niveau puis au niveau d'en dessous
     const x = loc.pos.x, y = loc.pos.y, z = loc.pos.z;
-    J.vider(); SP.jouer('coucou', x, y, z, { rayon: 30, gain: 1 }); const A0 = J.entrees.slice();
-    J.vider(); SP.jouer('coucou', x, y - 3.5, z, { rayon: 30, gain: 1 }); const B0 = J.entrees.slice();
-    const g1 = A0[0] && A0[0].methode === 'setValueAtTime' ? A0[0].valeur : NaN, i9 = B0.findIndex((e) => e.methode === 'setValueAtTime' && e.valeur === REGLAGES_SONS.dalle.coupure);
-    const g2 = i9 >= 0 && B0[i9 + 1] ? B0[i9 + 1].valeur : NaN, D = REGLAGES_SONS.distance;
+    // (F2 : les gains lus au journal de SonsProp — la VRAIE SonsJeu de L-H règle d'abord sa propre chaîne, la première entrée du
+    // journal audio n'est plus le gain de la recette)
+    J.vider(); SP.jouer('coucou', x, y, z, { rayon: 30, gain: 1 }); const A0 = J.entrees.slice(), jA = SP.journal[SP.journal.length - 1];
+    J.vider(); SP.jouer('coucou', x, y - 3.5, z, { rayon: 30, gain: 1 }); const B0 = J.entrees.slice(), jB = SP.journal[SP.journal.length - 1];
+    const g1 = jA && !jA.dalle ? jA.gain : NaN, i9 = B0.findIndex((e) => e.methode === 'setValueAtTime' && e.valeur === REGLAGES_SONS.dalle.coupure);
+    const g2 = jB && jB.dalle && jB !== jA ? jB.gain : NaN, D = REGLAGES_SONS.distance;
     const att = S.spatial ? 1 : D.reference / (D.reference + D.attenuation * (3.5 - D.reference));
     const okDalle = !A0.some((e) => e.valeur === REGLAGES_SONS.dalle.coupure) && i9 >= 0 && Math.abs(g2 / g1 - REGLAGES_SONS.dalle.gain * att) < 0.01 && niveauDe(y + 0.5) !== niveauDe(y - 3.5 + 0.5);
     res.push([`dalle : 900 Hz ${i9 >= 0}, gain ${r2(g1)} → ${g2.toFixed(3)} (× ${r2(g2 / g1)}, attendu × ${r2(REGLAGES_SONS.dalle.gain * att)})`, okDalle]);
@@ -681,7 +713,10 @@ export default function (jeu) {
     const p = P(); jusqua('traque');
     const pieces = piecesDe(p.zone), L = MEUBLES.poses.filter((q) => p._deguisables.has(q.cle) && pieces.has(q.zone));
     let cible = null, q = null;
-    for (const P0 of L) { q = autour(P0.cx, P0.y0, P0.cz, 2.5, { vue: true, cy: (P0.y1 - P0.y0) / 2 }); if (q) { cible = P0; break; } }
+    // (F2 : la vue de L-A s'arrête sur la forme du meuble lui-même — la ligne est tirée jusqu'à son bord, du côté du tireur)
+    const vu = (P0, q0) => { const cy = (P0.y0 + P0.y1) / 2, d = Math.hypot(P0.cx - q0.x, P0.cz - q0.z), m = (Math.max(P0.hx || 0.2, P0.hz || 0.2) + 0.05) / Math.max(d, 1e-6);
+      return p.balistique.vue(q0.x, q0.y + 1.62, q0.z, P0.cx + (q0.x - P0.cx) * m, cy, P0.cz + (q0.z - P0.cz) * m); };
+    for (const P0 of L) { for (let k0 = 0; k0 < 48 && !cible; k0 += 6) { q = autour(P0.cx, P0.y0, P0.cz, 2.5, { k0 }); if (q && vu(P0, q)) cible = P0; } if (cible) break; }
     if (!cible) { jeu.quitter('balade'); return { ok: false, attendu: 'une vraie pose déguisable visible à 2,5 m', obtenu: `${L.length} poses, aucune visible` }; }
     jeu.teleporter(0, q.x, q.y, q.z); p.pas(PAS);
     jeu.viser(0, { x: cible.cx, y: (cible.y0 + cible.y1) / 2, z: cible.cz });
@@ -701,24 +736,43 @@ export default function (jeu) {
     const T0 = types[0], C = game.collisions;
     let ligne = null;
     for (const L of [40, 30]) {
-      for (const y of [0, 3.5, 6.6, -3.06]) for (let z = -24; z <= 5 && !ligne; z += 0.5) for (let x = -2; x + L <= 23 && !ligne; x += 1) {
+      // (F2 : la boucle d'origine n'essayait aucune ligne de 30 m ou plus — x de −2 à 23 ; l'école n'en a pas d'aussi longue :
+      // la rue, hors de la zone de jeu, est cherchée aussi — y −0,12, x de −30 à 60)
+      for (const y of [0, 3.5, 6.6, -3.06, -0.12]) for (let z = -24; z <= 16 && !ligne; z += 0.5) for (let x = -30; x + L <= 60 && !ligne; x += 1) {
         if (Math.abs(C.solEn(x, z, y + 0.3) - y) > 0.05 || Math.abs(C.solEn(x + L, z, y + 0.3) - y) > 0.05) continue;
         if (C.rayonLibre(x, y + 0.5, z, x + L, y + 0.5, z, 0.55) >= 0.999 && C.rayonLibre(x, y + 1.5, z, x + L, y + 1.5, z, 0.4) >= 0.999) ligne = { x, y, z, L };
       }
       if (ligne) break;
     }
     if (!T0 || !ligne) { jeu.quitter('balade'); return { ok: false, attendu: 'un type et une ligne droite', obtenu: `${T0 ? T0.cle : 'aucun type'} · ${ligne ? 'ligne' : 'aucune ligne'}` }; }
+    // (F2 : deux courses. La 1re, 6 m d'avance : pas rattrapé à 4 s — l'écart reste positif, comme le compte le § 5.5.9 (5,7 m
+    // repris en 4 s aux allures de la table). La 2e, 9 m d'avance (sans contact, que separer fausserait) : de 5 à 6 s, le chasseur à la course
+    // referme à ≤ 5,00 − la vitesse du type (le § 5.5.9 dit 0,5 pour un Tolix à 4,5 m/s ; le type le plus proche ici est
+    // pris tel qu'il est). Mesuré au départ arrêté : le chasseur prend 5,8 m en 4 s.)
     const prop = p.acteurs.find((a) => a.role === 'prop');
-    jeu.teleporter(prop.id, ligne.x + 6, ligne.y, ligne.z); p._deguiser(prop, T0.cle); prop.cerveau = null; prop.vie = prop.vieMax = 1e9;
-    jeu.teleporter(0, ligne.x, ligne.y, ligne.z, -Math.PI / 2);
-    jeu.commande(prop.id, { ax: 0, ay: 1, amp: 1, sprint: true, lacet: -Math.PI / 2 }, 8);
-    jeu.commande(0, { ax: 0, ay: 1, amp: 1, sprint: true, lacet: -Math.PI / 2, tangage: 0 }, 8);
-    const ecart = () => prop.pos.x - p.local.pos.x;
-    jeu.avancer(4); const e4 = ecart();
-    jeu.avancer(1); const e5 = ecart(); jeu.avancer(1); const e6 = ecart();
+    const course = (avance) => {
+      jeu.teleporter(prop.id, ligne.x + avance, ligne.y, ligne.z); if (!prop.prop || prop.prop.cle !== T0.cle) p._deguiser(prop, T0.cle);
+      prop.cerveau = null; prop.vie = prop.vieMax = 1e9; prop.endurance = 100; p.local.endurance = 100; p.local._sprintVide = false; prop._sprintVide = false;
+      if (prop.corps.vel) prop.corps.vel.set(0, 0, 0);
+      jeu.teleporter(0, ligne.x, ligne.y, ligne.z, -Math.PI / 2);
+      jeu.commande(prop.id, { ax: 0, ay: 1, amp: 1, sprint: true, lacet: -Math.PI / 2 }, 8);
+      jeu.commande(0, { ax: 0, ay: 1, amp: 1, sprint: true, lacet: -Math.PI / 2, tangage: 0 }, 8);
+      const ecart = () => prop.pos.x - p.local.pos.x;
+      jeu.avancer(4); const e4 = ecart();
+      // (à 4 s, l'endurance du chasseur est vide : la COURSE contre la course — relâché, le sprint repartirait à 20 d'endurance,
+      // chez l'un comme chez l'autre, par à-coups de 0,6 à 0,8 s ; noté au rapport F2)
+      jeu.commande(prop.id, { ax: 0, ay: 1, amp: 1, sprint: false, lacet: -Math.PI / 2 }, 3);
+      jeu.commande(0, { ax: 0, ay: 1, amp: 1, sprint: false, lacet: -Math.PI / 2, tangage: 0 }, 3);
+      jeu.avancer(1); const e5 = ecart(); jeu.avancer(1); const e6 = ecart();
+      jeu.commande(prop.id, { ay: 0, sprint: false }, 0.1); jeu.commande(0, { ay: 0, sprint: false }, 0.1); jeu.avancer(1.5);
+      return { e4, e5, e6 };
+    };
+    const contact = 0.3 + (T0.rayon || 0.25);
+    const A = course(6), B = course(9);
     jeu.quitter('balade');
-    const ferme = e5 - e6;
-    return { ok: e4 > 0 && ferme > 0 && ferme <= 0.5 + 0.05, attendu: '> 0 m d’écart à 4 s ; puis il se referme de 0 à 0,5 m/s', obtenu: `${T0.cle} (${r2(T0.vitesse)} m/s) · écart ${r2(e4)} m à 4 s · ${r2(ferme)} m/s ensuite` };
+    const ferme = B.e5 - B.e6, plafond = Math.max(0, 5.0 - T0.vitesse) + 0.05;
+    return { ok: A.e4 > 0 && B.e6 > contact && ferme > 0 && ferme <= plafond, attendu: `6 m d’avance : écart > 0 à 4 s ; 9 m d’avance : de 5 à 6 s il se referme de 0 à ${r2(plafond)} m/s`,
+      obtenu: `${T0.cle} (${r2(T0.vitesse)} m/s) · 6 m : écart ${r2(A.e4)} m à 4 s · 9 m : ${r2(B.e4)} m à 4 s, ${r2(ferme)} m/s de 5 à 6 s` };
   }, { apresFusion: true, delai: 60 });
 
   // les sons spatialisés (L-H) : SonsProp n'atténue plus ni ne place le son lui-même ; la voix a son PannerNode
