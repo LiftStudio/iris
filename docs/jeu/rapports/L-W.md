@@ -2,14 +2,43 @@
 
 ## Relecture — où j'en suis (relecteur, 23/10/2026, commits « L-W relecture : … »)
 
-**EN COURS.** Lu : la spec (§ 3.3, § 4.1, § 4.5.8-4.5.9, § 4.10, § 5.1, § 5.5.3), CoD § 6.2, le diff `socle...lot/L-W`
-(3 fichiers), la planche et les photos du constructeur. `verifier_proprietaires` : OK 3 fichiers ; fins de ligne CRLF comme
-les voisins ; 9 commits préfixés, tous avec la ligne d'attribution. Corrections de lecture COMMITÉES (`160cb2c`,
-`a88fadf`, détail plus bas) et passées sous Node (tests 2, 3, 4, 6, 8 ; aperçu logiciel des pièces en bout de course).
-Jeton du navigateur : en attente depuis 06:00 (les trois pris par L-E, L-M, L-H). Reste : rejouer L-W et S0 sur PC et sous
-`?tel=1` (avec les tests 7 et 10 regardés), jouer l'essai, puis clore ce rapport.
+**FINI (relu).** Un repreneur n'a rien à finir ; F2 rejoue les deux tests `apresFusion` (essayés ici sur une fusion de
+travail, verts) et tranche les écarts 1 et 4 et les demandes ci-dessous.
+- Lu : la spec (§ 3.3, § 4.1, § 4.5.8-4.5.9, § 4.10, § 5.1, § 5.5.3), CoD § 6.2, le diff `socle...lot/L-W` (3 fichiers),
+  les branches de L-V et L-C là où elles lisent les modèles (`viewmodel.js`, `pose_arme.js`, leurs tests).
+- `&rapport=1&lot=L-W` (`c597c31`, le code final) : **10/10 sur PC** (qualité haute, 13,5 s, 0 signalé ; création à froid,
+  la pire 4,9 ms) et **10/10 sous `?tel=1`** (375 × 812, qualité moyenne, 24,6 s, 0 signalé ; 4,0 ms).
+- `&rapport=1&lot=S0` sur la branche : **29/29 sur PC** et **29/29 sous `?tel=1`** (`8d738b9` : `modeles_armes.js` y est
+  celui d'aujourd'hui, seuls les tests de L-W ont bougé depuis), balade au bit près avant et après les parties (1 et 27 :
+  vue 3 0 / 0, vue 1 0 / 0), point 8 : programmes 147 → 147 (PC), 84 → 84 (tel)  ; rejoué sur PC au code final (`c597c31`) : **29/29**, 111,5 s, 0 signalé, vue 3 0 / 0, vue 1 0 / 0, programmes 147 → 147.
+- `python -I tools/verifier_proprietaires.py lot/L-W` → `OK 3 fichiers` ; fins de ligne CRLF comme les voisins ; tous les
+  commits préfixés (« L-W : », « L-W relecture : ») avec la ligne d'attribution.
+- Navigateur : `jeton_3` de 06:27 à 06:49 (attente 06:00-06:27) ; onglet fermé, serveur 8133 et récepteur 8233 arrêtés.
+- Photos regardées (dans `C:/Users/hgami/Downloads/IRIS_lots/_photos/L-W/relecture/`) : `planche.jpg` / `planche_tel.jpg`
+  (8 armes × 4 colonnes, 3e personne comprise), `courses.jpg` / `courses_tel.jpg` (test 10), `gros_*.jpg` (levier de la
+  FA-24, culasse du TP-50, glissière du P-17 en bout de course, de près), `jeu_*.jpg` (l'essai : FA-24 en rafale, PM-9,
+  FP-12, TP-50 en hanche dans le hall, les cinq modèles 3e personne posés dans la vraie scène à 2 m et 8 m), `f_*.jpg` (la
+  fusion de travail, avec les bras de L-V : FA-24 en hanche, TP-50 culasse ouverte 0,52 s après le coup, P-17 vide).
 
-### Ce que la relecture a trouvé et corrigé (lecture du code, avant le navigateur)
+### Jouer (essai, PC, 1280 × 720, qualité haute)
+Les quatre classes en hanche dans le hall, une rafale de FA-24, les cinq modèles 3e personne posés dans la vraie scène :
+rien de faux ni de cassé à l'œil ; 634 appels, image médiane 22,5 ms (p95 30, 0 gel — la machine chargée par les autres
+agents) ; console : seule l'erreur connue du service worker (« An unknown error occurred when fetching the script »).
+Ce qu'un joueur verrait de travers, et qui n'est pas à L-W : les teintes terre et sable sortent très claires sous les trois
+lumières de la scène de l'arme (le doute du constructeur, confirmé avec les bras de L-V) ; la main droite de L-V, pendant le
+réarmement du TP-50, ne va pas sur la boule du levier (demande ci-dessous).
+
+### Fusion de travail (pas commitée)
+Un arbre jetable dans le dossier de session (`lot/L-W` + les fichiers `js/` de `lot/L-V` et `lot/L-C`, disjoints), servi
+sur 8133 : `&rapport=1&lot=L-W&fusion=1` → **12/12** — `F2 · mains de L-V sur les repères` : PRISES = repères à 0 mm, poignets
+sur leurs prises à 0 / 0 cm pour les cinq armes ; `F2 · armes des bots (L-C)` : chaque bot tient un modèle 3e personne
+(`fa24`, `pm9`, `fa24`) ; test 9 : la FA-24 en 4 appels avec les bras. **Piège noté** (pour F2 et les autres) : servir un
+autre arbre sur le MÊME port laisse le cache HTTP du navigateur garder ses fichiers — `serve.py` (SimpleHTTP) répond 304
+quand le fichier est plus VIEUX que `If-Modified-Since`, et les fichiers de l'arbre du lot l'étaient : le passage suivant
+`?tel=1` a tourné sur le `viewmodel.js` de L-V. Vu (le module exportait `PRISES`), rejoué après un `touch` des 13 fichiers
+concernés dans l'arbre de L-W (date seulement : contenu et `git status` inchangés).
+
+### Ce que la relecture a trouvé et corrigé
 1. **Pièces qui flottaient en bout de course** (vue ; invisibles au repos, donc absentes de la planche et des tests) :
    - P-17 : la couronne polie, l'âme et le guide du ressort sont FIXES, à −0,135 ; la glissière reculée de 3 cm (au tir, et
      tenue en arrière à vide par L-V) laissait la couronne flotter 2,5 cm devant elle. Ajout d'un canon fixe (r 5,8 mm,
@@ -43,13 +72,42 @@ Jeton du navigateur : en attente depuis 06:00 (les trois pris par L-E, L-M, L-H)
    4) : son test `F2 vraies armes` compare `reperes[n].position` à la table — il aurait échoué à F2. Remis comme au socle
    (tous enfants directs, `position` = la table, vérifié par le test 2), et les repères qui suivent une pièce ont un JUMEAU
    enfant de l'os, sous `userData.reperesMobiles` (ajout ; `null` en 3e personne).
+9. **Test 9** : (a) il comptait les appels de TOUTE la scène de l'arme et les voulait égaux à ceux de l'arme — avec les bras de
+   L-V (2 appels), rejoué par F2, il échouait ; il rend maintenant la scène avec tout ce qui n'est pas l'arme caché le temps du
+   rendu (mêmes lumières, même environnement : aucun programme neuf) ; (b) il tirait 3 s et rechargeait 3 s d'HORLOGE : onglet
+   derrière un autre (images faites à la main, § 4.10), 3 s d'horloge ne simulaient que 0,3 s — 3 tirs, échec sous `?tel=1` ;
+   il compte maintenant en temps simulé (`partie.t`, borné à 600 images).
+10. **Test F2 des mains** : il attendait `vm.mains()`, que L-V n'expose pas, et comparait le poignet au repère, alors que L-V
+   pose le poignet à `o + p` de sa prise (≈ 10 cm de la main droite au repère, par construction). Réécrit contre la vraie
+   arme de vue de L-V : les points tenus de `PRISES` (export de `viewmodel.js`) = `mainD` / `mainG` à ± 1 mm, et l'erreur de
+   son IK (`vm.diag.erreurD/G`) ≤ 1 cm en hanche, chaque arme à feu en main dans l'essai (la classe ; le P-17 par l'arme
+   suivante). Essayé sur la fusion de travail : vert.
 
-## Constructeur (avant la relecture)
+### Mesures de la relecture (relatives : d'autres agents tournaient)
+- Création à froid, la pire (médiane de 3) : 3,1 / 4,5 / **7,7** / 4,9 ms sur PC en quatre passes de 06:28 à 06:46 (la création
+  EN CACHE, même code : 0,19 / 0,31 / 0,45 / 0,34 ms — c'est la charge de la machine qui bouge, pas le code). Le passage à
+  7,7 ms (> 7,5 : échec) a été rejoué ; à juger machine calme à l'intégration (§ 4.1 règle 10). Essai écarté : les 49 dents de
+  rail de la FA-24 cousues en une pièce — aucun gain mesurable (le minimum reste 2,6 ms sous Node), retiré.
+- Appels et triangles inchangés sauf : FA-24 vue 3 468 (+12, la tige du levier), TP-50 vue 3 704 (+64, le corps de culasse),
+  P-17 vue 1 302 (+96, canon et guide fixes) ; 64 488 sommets, sains.
+
+### Demandes de la relecture
+- **L-V** (lu sur sa branche, `3b2e79f`) : (1) ses points tenus du CHARGEUR ne sont pas sur les chargeurs de L-W — FA-24
+  (0 ; −0,17 ; −0,14) contre `saisieChargeur` (−0,015 ; −0,152 ; −0,133), PM-9 1,9 cm, P-17 2,3 cm (sous la semelle),
+  TP-50 4,5 cm (2,3 cm sous le chargeur) : prendre `REPERES.<id>.saisieChargeur` ; (2) le LEVIER du TP-50 (0,05 ; 0,03 ;
+  0,025) est à 3,3 cm de la boule (`saisieLevier` (0,042 ; 0,010 ; 0,057)), et la main reste à sa place de repos pendant que
+  la culasse se lève et recule : viser le jumeau mobile `arme.userData.reperesMobiles.saisieLevier` (il suit l'os) ; (3) le
+  levier de la FA-24 recule de 6 cm chez L-V, 7,5 cm dans `COURSES_OS` (sans conséquence ; la tige couvre les deux) ; (4) la
+  visée du FP-12 par `REPERES.fp12.oeilleton` (écart 4).
+- **F2** : rejouer `F2 · mains de L-V sur les repères` et `F2 · armes des bots (L-C)` (verts sur la fusion de travail) ;
+  trancher les écarts 1 (bouche du FP-12 3,5 cm devant la couronne) et 4 (visée du FP-12) ; le test 6 machine calme.
+
+## Constructeur (avant la relecture ; ce qui suit est son rapport, gardé tel quel sauf les notes « Relecture »)
 
 Branche `lot/L-W` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-W`), partie de `socle` (`e06258f`, tag `socle-ok`),
 port 8133 ; 23/10/2026.
 
-## Où j'en suis
+### Où en était le constructeur
 
 **FINI.** Les huit modèles sont construits, joués dans le navigateur intégré (jeton 3, 04:43-04:53) et vérifiés :
 - `&rapport=1&lot=L-W` : **9/9 sur PC** (qualité haute, 10,5 s ; 1 temps signalé, voir plus bas) et **9/9 sous `?tel=1`**

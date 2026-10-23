@@ -31,7 +31,7 @@ function rendreCible(game, scene) {
 
 // LE STUDIO DES PHOTOS (tests 7 et 10) : une superposition dessinée par le jeu (__jeu.photo : bloom, sortie, étalonnage), la
 // carte d'environnement de RoomEnvironment, un fond dégradé collé à la caméra (couleurs aux sommets) — aucune lumière ajoutée
-// (`Light(` est interdit dans js/jeu/ hors viewmodel.js), aucune texture ; une planche de `nc` × `nl` cases, chaque photo
+// (toute lumière est interdite dans js/jeu/ hors viewmodel.js), aucune texture ; une planche de `nc` × `nl` cases, chaque photo
 // mesurée contre la même photo sans l'arme (la part de l'image qui est l'arme : vignette et grain compris)
 function studio(jeu, game, nc, nl) {
   const r = game.renderer, fx = game.fx;
