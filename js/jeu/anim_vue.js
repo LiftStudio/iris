@@ -252,12 +252,3 @@ export const CHRONOS = {
   grenade: GRENADE,
   inspection: INSPECTION,
 };
-// toutes les pistes, à plat (les tests les parcourent clé par clé : épaules hors champ, mains tenues, aucun NaN)
-export function toutesLesPistes() {
-  const L = [];
-  for (const [id, C] of Object.entries(CHRONOS)) {
-    if (C && C.cles) { L.push({ id, nom: id, piste: C }); continue; }
-    for (const [nom, P] of Object.entries(C)) if (P && P.cles) L.push({ id, nom, piste: P });
-  }
-  return L;
-}

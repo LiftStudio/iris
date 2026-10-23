@@ -118,7 +118,6 @@ class Ressort {
 }
 const amortir = (x, c, tau, dt) => (dt > 0 ? c + (x - c) * Math.exp(-dt / tau) : x);
 const borne = (x, a, b) => (x < a ? a : x > b ? b : x);
-const lisse = (u) => { u = borne(u, 0, 1); return u * u * (3 - 2 * u); };
 
 const _v = new THREE.Vector3(), _w = new THREE.Vector3(), _u = new THREE.Vector3(), _f = new THREE.Vector3(), _n = new THREE.Vector3();
 const _q = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _e = new THREE.Euler(0, 0, 0, 'YXZ'), _m = new THREE.Matrix4(), _m2 = new THREE.Matrix4();
@@ -152,7 +151,7 @@ export class Viewmodel {
     this.chasse = new Ressort(12, 0.999); this.reception = new Ressort(22, 0.7);
     this._phase = 0; this._amp = 0; this._lacet = null; this._tangage = 0; this._enAir = false; this._airT = 0;
     this._seq = null; this._tirT = -10; this._ressortArsenal = false; this._eclair = 0;
-    this._geste = { cle: null, piste: null, t: 0, poids: 0, vals: new Float64Array(VOIES.length), main: new Float64Array(VOIES_MAIN.length), poidsMain: 0 };
+    this._geste = { cle: null, objet: null, poids: 0, vals: new Float64Array(VOIES.length), main: new Float64Array(VOIES_MAIN.length), poidsMain: 0 };
     this._lancer = { relache: -1, cle: null };
     this._chargeur = { capte: false, rel: new THREE.Matrix4(), decal: new THREE.Vector3(), d: 0 };
     this._inspection = -1;
@@ -348,7 +347,7 @@ export class Viewmodel {
     const ks = geste ? 0.35 : 1;
     let wS = P.sprint * ks, wT = P.sprintTact * ks, wG = P.glisse, wF = P.franchit;
     const somme = wS + wT + wG + wF; if (somme > 1) { wS /= somme; wT /= somme; wG /= somme; wF /= somme; }
-    const H = (POSES_ARMES[id] && POSES_ARMES[id].hanche) || POSES_VUE.hanche, kv = lisse(e.visee) * (1 - wF);
+    const H = (POSES_ARMES[id] && POSES_ARMES[id].hanche) || POSES_VUE.hanche, kv = e.visee * (1 - wF);     // (la courbe 1 − (1 − t)³ est celle de l'Arsenal, § 3.2 : pas une 2e ici)
     const vis = REPERES[id] && REPERES[id].visee ? REPERES[id].visee : [0, 0.06, 0];
     for (let i = 0; i < 3; i++) {
       let p = H.p[i] + wS * (POSES_VUE.sprint.p[i] - H.p[i]) + wT * (POSES_VUE.sprintTact.p[i] - H.p[i]) + wG * (POSES_VUE.glisse.p[i] - H.p[i]) + wF * (POSES_VUE.franchit.p[i] - H.p[i]);

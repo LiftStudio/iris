@@ -10,10 +10,8 @@
 // L-W ne sont pas là (le socle n'a qu'une boîte par arme). Elle ne sert qu'aux tests et aux photos.
 import * as THREE from 'three';
 import { REPERES } from '../modeles_armes.js';
-import { POSES_VUE, CHRONOS, toutesLesPistes, evaluer } from '../anim_vue.js';
-import { Viewmodel, ANCRES, CHAMP_VUE, PRISES } from '../viewmodel.js';
+import { Viewmodel, CHAMP_VUE } from '../viewmodel.js';
 import { ARMES } from '../armes.js';
-import { HAYTHEM } from '../../game.js';
 
 const DEG = Math.PI / 180;
 const r3 = (v) => Math.round(v * 1000) / 1000;
