@@ -5,7 +5,7 @@ Spécification : `docs/jeu/spec_finale.md` § 5.5.5 (lot), § 4.5.10 (contrats),
 
 ## Où j'en suis
 
-**FINI ET RELU** (23/10, 08:30 ; relecture de 06:35 à 08:30, commits « L-C relecture : … », détail dans la section
+**FINI ET RELU** (23/10, 08:26 ; relecture de 06:35 à 08:26, commits « L-C relecture : … », détail dans la section
 « Relecture » en fin de rapport) — six défauts corrigés (tête accroupie hors de la boîte de touche, 13,7 cm → 0,4 cm ;
 six photos de lisibilité sur dix sans les corps ; poupée réglée sur la graine du test, tombée au téléphone ; poupée d'un
 corps caché partie de sa dernière pose ; test 5 au téléphone ; en-têtes faux), les six points du § 5.1 règle 5 tenus :
@@ -14,11 +14,11 @@ corps caché partie de sa dernière pose ; test 5 au téléphone ; en-têtes fau
 |---|---|
 | `?test=1&rapport=1&lot=L-C` (PC, taille du panneau) | **ok : true, 14/14, 0 échec**, 1 signalé (préparation 1re fois 6,3 s pour 6, onglet partagé avec les tests des autres lots : 3,6 à 4,8 s aux passes précédentes), 56,4 s |
 | `?test=1&tel=1&rapport=1&lot=L-C` (375 × 812) | **ok : true, 14/14, 0 échec, 0 signalé**, 35,5 s |
-| `?test=1&rapport=1&lot=S0` sur `lot/L-C` | **ok : true, 29/29, 0 échec, 0 signalé** |
+| `?test=1&rapport=1&lot=S0` sur `lot/L-C` | **ok : true, 29/29, 0 échec, 0 signalé**, 105 s |
 | `?test=1&tel=1&rapport=1&lot=S0` sur `lot/L-C` | **ok : true, 29/29, 0 échec**, 1 note « non valable » (entrée en essai mesurée onglet caché), 124 s |
 | `python -I tools/verifier_proprietaires.py lot/L-C` | `OK 11 fichiers (lot/L-C, L-C, base socle)` |
 | commits | tous « L-C : … » ou « L-C relecture : … », avec la ligne `Co-Authored-By` |
-| navigateur | relecture : jeton_1 pris à 06:58:31, onglet fermé, vue remise en bureau, jeton rendu ; serveur 8135 et récepteur 8199 arrêtés |
+| navigateur | relecture : jeton_1 pris à 06:58:31, onglet fermé, vue remise en bureau, jeton rendu à 08:25:46 ; serveur 8135 et récepteur 8199 arrêtés |
 
 Mesures des derniers `__rapport` (PC / téléphone) : préparation 1re fois 6 338 / 1 929 ms (signalé PC, relatif), chaude
 0 ms, onLoad 0, programmes 138 → 162 → 164 au dessin (tél. 78 → 89 → 90) ; textures 137,3 Mo, 6 distincts (tél. 64,0 Mo,
