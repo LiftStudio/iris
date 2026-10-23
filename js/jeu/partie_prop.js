@@ -177,7 +177,7 @@ export class PartieProp extends Partie {
   // LE RÔLE d'un acteur pour la manche, posé à son départ `p` : son corps (Player d'élève pour un chasseur ; CorpsProp pour
   // un prop — Haythem commence la manche en humain), son arsenal, son cerveau, ses compteurs de manche
   _poserRole(a, role, p, { coequipier = false } = {}) {
-    const R = REGLAGES_PROP;
+    const R = REGLAGES_PROP, avaitPoupee = !!a.poupee;
     if (a.prop) retirerProp(this, a);
     a.cerveau?.liberer?.(); a.cerveau = null;
     a.role = role; a.equipe = role === 'chasseur' ? 'chasseurs' : 'props'; a.poupee = null; a.coequipier = coequipier;
@@ -196,6 +196,11 @@ export class PartieProp extends Partie {
       a.vieMax = 100;
       if (!a.local) a.cerveau = new CerveauCacheur(a, this, this.diff);
     }
+    // (un élève qui a fini la manche d'avant en poupée de chiffon : son Player remis — les clips coupés PUIS la clé oubliée,
+    // piège 2 des persos —, et montré s'il est son corps ; Haythem chasseur, lui, est caché par la vue à la 1re personne)
+    const j = a.joueur;
+    if (j && avaitPoupee && j !== this.game.user && j.anim && j.anim.couper) { j.anim.couper(); j.animKey = null; }
+    if (j && j.mesh) j.mesh.visible = a.corps === j;
     a.reapparaitre(p.x, p.y, p.z, p.lacet || 0, this.t); a.protegeT = 0; a.vie = a.vieMax; a.gele = true;
     a.pp = { provocRef: this.t, provocVolT: JAMAIS, derniere: a.pp ? a.pp.derniere : 0, chgT: JAMAIS, defigeT: JAMAIS,
       scanCharges: R.scanner.charges, scanT: this.t, deg: {} };
@@ -665,6 +670,10 @@ export class PartieProp extends Partie {
   image(dt) {
     if (this.phase !== this._phaseVue && this.phase === 'cachette' && this.besoinCapture() && !this.capte()) this.attendreClic();
     super.image(dt);
+    // Haythem prop encore HUMAIN se voit à la 3e personne : son corps posé une fois par image, si la cadence ne l'a pas fait
+    // (celle du socle ne pose jamais l'acteur local, caché en vue à la 1re personne)
+    const a = this.local;
+    if (a && a.vivant && a.role === 'prop' && a.joueur && a.corps === a.joueur && !a.aPoser && dt > 0) a.joueur.poser(dt, true);
   }
   // les jauges de Haythem prop, 4 fois par seconde : DISCRÉTION (la crédibilité de sa place, la même formule que celle des
   // chasseurs bots) ; ŒIL (un chasseur qui le regarde : le soupçon de son cerveau s'il en dit un — L-O —, sinon la part du
