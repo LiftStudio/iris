@@ -3,6 +3,15 @@
 Branche `lot/L-F` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-F`), partie de `socle` (`e06258f`, tag `socle-ok`), port 8139 ;
 23/10/2026. Fichiers du lot : `js/jeu/partie_prop.js`, `js/jeu/sons_prop.js`, `js/jeu/tests/test_prop.js`, ce rapport.
 
+## Relecture (relecteur sévère, 23/10) — où j'en suis
+
+**EN COURS.** Relu : la spec (§§ 2.7-2.9, 3.9, 4.1, 4.3, 4.5.5, 4.5.13-4.5.17, 4.6, 4.7, 4.10, 5.1, 5.5.9) et tout le diff
+`socle...lot/L-F` ; `verifier_proprietaires` OK (4 fichiers). Corrigé à la lecture (commit « L-F relecture : … ») : l'état
+garde les colonnes du prop hunt (survie, provocations, vrais meubles) ; un prop figé (ou verrouillé) le reste en changeant de
+forme ; le scanner refusé avec sa raison hors de la traque ; « Voir les sons » ne montre que ce qu'on entendrait (rayon de la
+provocation, `dalle`) ; Haythem éliminé qui suit un prop : l'orbite aux chiffres du prop. Reste : rejouer L-F et S0 (PC,
+`?tel=1`) et jouer pour de vrai (jeton du navigateur, tous pris à 06:17).
+
 ## Où j'en suis
 
 **FINI** (les six points du § 5.1 règle 5) :

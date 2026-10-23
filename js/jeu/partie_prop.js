@@ -23,7 +23,7 @@
 import * as THREE from 'three';
 import { Partie } from './partie.js';
 import { Rng, melanger } from './rng.js';
-import { PAS, ZONES_JEU } from './constantes.js';
+import { PAS, ZONES_JEU, niveauDe } from './constantes.js';
 import { Acteur } from './acteur.js';
 import { Arsenal, DOTATION_CHASSEUR, degatsDe } from './armes.js';
 import { departs, pointsDe, piecesDe } from './apparitions.js';
@@ -422,9 +422,10 @@ export class PartieProp extends Partie {
       if (a.prop.changements >= R.changements.traque) { this._refuser(a, 'Plus de changement de forme'); return; }
       if (this.t - a.pp.chgT < R.changements.entre - 1e-9) { this._refuser(a, 'Changement de forme : attends 5 s'); return; }
     }
-    const n = a.prop ? a.prop.changements || 0 : 0;
+    const n = a.prop ? a.prop.changements || 0 : 0, fige = !!(a.prop && a.prop.fige), verrou = !!(a.prop && a.prop.verrou);
     if (!this._deguiser(a, cle)) { this._refuser(a, 'Pas la place'); return; }
-    a.prop.changements = enTraque ? n + 1 : 0;
+    // (figé, il le reste sous sa nouvelle forme — un meuble qui repart tout seul au moindre appui se trahit — ; le verrou aussi)
+    a.prop.changements = enTraque ? n + 1 : 0; a.prop.fige = fige; a.prop.verrou = verrou;
     if (enTraque) a.pp.chgT = this.t;
   }
   // l'intervalle de la provocation obligatoire de `a` : 40 s ; 20 s dans la dernière minute ; 25 s pour le dernier prop
@@ -455,7 +456,8 @@ export class PartieProp extends Partie {
   // LE SCANNER d'un chasseur : 3 charges, 8 s entre deux ; chaque prop vivant à moins de 12 m, au même niveau : sa direction
   // (± 20°, semée) et sa bande de distance (< 4, < 8, < 12 m) — jamais qui, jamais un meuble
   _actionsChasseur(a) {
-    if (!a.cmd.scanner || this.phase !== 'traque') return;
+    if (!a.cmd.scanner) return;
+    if (this.phase !== 'traque') { if (this.phase === 'presentation' || this.phase === 'cachette') this._refuser(a, 'Le scanner, c’est pendant la traque'); return; }
     const S = REGLAGES_PROP.scanner;
     if (a.pp.scanCharges <= 0) { this._refuser(a, 'Scanner vide'); return; }
     if (this.t < a.pp.scanT - 1e-9) { this._refuser(a, 'Le scanner recharge'); return; }
@@ -636,8 +638,10 @@ export class PartieProp extends Partie {
   // ---------------------------------------------------------------- L'ÉTAT (§ 4.7, plus les compteurs du prop hunt)
   etat() {
     const e = super.etat();
+    // (par acteur, en plus de ses compteurs de manche : les colonnes du prop hunt au tableau — survie, provocations, vrais
+    // meubles —, que l'état de base n'a pas : `st` n'y garde que éliminations, morts, aides, score)
     e.pp = { nManches: this.nManches, roleH0: this.roleH0, roleH: this.roleH, gagnantManche: this.gagnantManche, resultats: this.resultats.slice(),
-      gagnant: this.gagnant, acteurs: this.acteurs.map((a) => ({ id: a.id, coeq: !!a.coequipier, ...copiePP(a.pp) })) };
+      gagnant: this.gagnant, acteurs: this.acteurs.map((a) => ({ id: a.id, coeq: !!a.coequipier, sv: a.stats.survie, pr: a.stats.provocs, ra: a.stats.rates, ...copiePP(a.pp) })) };
     return e;
   }
   // L'ÉTAT RENDU : les rôles (corps, arme, cerveau) et les déguisements d'abord — le corps de meuble posé à la forme de
@@ -653,7 +657,11 @@ export class PartieProp extends Partie {
       else if (!s.prop && a.prop) { retirerProp(this, a); if (a.joueur) a.changerCorps(a.joueur); }
     }
     super.appliquer(e);
-    if (X) for (const q of X.acteurs) { const a = this.acteurParId(q.id); if (a) { a.pp = copiePP(q); a.coequipier = !!q.coeq; } }
+    if (X) for (const q of X.acteurs) {
+      const a = this.acteurParId(q.id); if (!a) continue;
+      a.pp = copiePP(q); a.coequipier = !!q.coeq;
+      Object.assign(a.stats, { survie: q.sv || 0, provocs: q.pr || 0, rates: q.ra || 0 });
+    }
   }
   _detruire(a) {
     super._detruire(a);
@@ -773,23 +781,28 @@ export class PartieProp extends Partie {
     for (let i = this._anneau.length - 1; i >= 0; i--) { const e = this._anneau[i]; if (this.t - e.t > age) break; if (e.type === type && e.a === id) return e; }
     return null;
   }
-  // « Voir les sons » : les provocations des 2 dernières secondes (pas les siennes)
+  // « Voir les sons » (l'aide de qui n'entend pas) : les provocations des 2 dernières secondes (pas les siennes) qu'il
+  // ENTENDRAIT — dans leur rayon autour de l'acteur que suit la caméra, comme js/jeu/sons_prop.js ; `dalle` : d'un autre niveau
   _sonsRecents(a) {
-    const out = [];
+    const out = [], s = this.suivi && this.suivi.corps ? this.suivi : a, o = s.pos, nv = niveauDe(o.y + 0.5);
     for (let i = this._anneau.length - 1; i >= 0; i--) {
       const e = this._anneau[i]; if (this.t - e.t > 2) break;
-      if (e.type === 'provocation' && e.a !== a.id) out.push({ x: e.x, y: e.y, z: e.z, id: e.id, forcee: e.forcee, age: this.t - e.t });
+      if (e.type !== 'provocation' || e.a === a.id || Math.hypot(e.x - o.x, e.y - o.y, e.z - o.z) > (e.rayon || 30)) continue;
+      out.push({ x: e.x, y: e.y, z: e.z, id: e.id, forcee: e.forcee, age: this.t - e.t, dalle: niveauDe(e.y + 0.5) !== nv });
     }
     return out;
   }
-  // le prop (même encore humain) en orbite, aux chiffres du prop (pivot à max(0,5 ; 0,75 h), recul clamp(1,4 + 1,6 ×
-  // max(l, h, p), 2,0, 3,6)) ; le chasseur pendant la cachette : caméra fixe à son œil (Partie.camera)
+  // le prop (même encore humain) en orbite, aux chiffres du prop (§ 4.5.7 : pivot à max(0,5 ; 0,75 h), recul
+  // clamp(1,4 + 1,6 × max(l, h, p), 2,0, 3,6)) ; Haythem éliminé qui suit un prop, de même (après la caméra de mort d'un
+  // chasseur : pas à 1,4 m au-dessus d'un carton de 35 cm) ; le chasseur pendant la cachette : caméra fixe (Partie.camera)
   camera(dt, poser) {
-    const a = this.local;
-    if (a && a.vivant && a.role === 'prop') {
-      const T = a.prop && a.prop.T, S = T && T.taille;
+    const a = this.local, s = this.suivi;
+    let b = a && a.vivant && a.role === 'prop' ? a : null;
+    if (!b && a && !a.vivant && s && s !== a && s.vivant && s.prop && s.corps && !(a.corps === a.joueur && this.t - a.mortT < 3)) b = s;
+    if (b) {
+      const T = b.prop && b.prop.T, S = T && T.taille;
       const o = S ? { distance: clamp(1.4 + 1.6 * Math.max(S.x, S.y, S.z), 2.0, 3.6), hauteur: Math.max(0.5, 0.75 * S.y) } : { distance: 2.6, hauteur: 1.4 };
-      this.orbite.viser(a.corps, { ...o, tangage: this.bornesTangage() });
+      this.orbite.viser(b.corps, { ...o, tangage: b === a ? this.bornesTangage() : [-0.7, 1.25] });
       return this.orbite.poser(dt, poser);
     }
     return super.camera(dt, poser);
