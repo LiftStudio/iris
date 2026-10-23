@@ -246,7 +246,7 @@ export default function (jeu) {
         + ` · jauge ${r3(r.j10)} (refus ${r.refuse}) / ${r3(r.j13)} (accepté ${r.accepte}) / pleine ${r.plein}` };
   }, { delai: 120 });
 
-  // 3. LE SAUT : apogée et temps en l'air ; 2 000 sauts avec élan, dont 1 000 sous des plafonds bas ; 40 sauts à travers 20 portes
+  // 3. LE SAUT : apogée et temps en l'air ; 2 000 sauts avec élan, dont 1 000 sous des plafonds bas ; 40 sauts sous des linteaux
   T('3 saut : apogée, plafonds en vol, portes', async () => {
     const p = await essai({ graine: 3 }), a = p.local, c = () => C();
     // (a) en terrain libre
@@ -295,35 +295,46 @@ export default function (jeu) {
       }
       lacher(a);
     }
-    // (c) 40 sauts au sprint à travers 20 portes (linteaux 2,04-2,10 m)
-    const portes = chercherPortes(c(), 20);
+    // (c) 40 sauts au sprint sous des linteaux de 2,04-2,10 m : toutes les portes PASSABLES de la branche (les portes fermées en
+    // balade ne s'ouvrent qu'avec les tables de L-M — le compte de 20 portes est rejoué à F2), chacune dans ses deux sens s'ils ont
+    // la place, sautées à 1,5 m du plan (la tête monte sous le linteau), puis à 0,8 m (l'apogée dessous), puis à 1,15 m
+    const passages = chercherPortes(c()), sauter = [];
+    for (const e of [1.5, 0.8, 1.15]) for (const D of passages) {
+      const el = Math.min(e, D.avant);
+      if (sauter.length < 40 && !sauter.some((S) => S.D === D && Math.abs(S.elan - el) < 0.1)) sauter.push({ D, elan: el });
+    }
+    const nPortes = new Set(sauter.map((S) => S.D.porte)).size;
     let passes = 0, oeilDedans = 0, trancheDedans = 0, essais = 0;
-    for (const D of portes) for (const sens of [1, -1]) {
+    const rates = [];
+    for (const { D, elan } of sauter) {
       essais++;
-      const nx = D.nx * sens, nz = D.nz * sens, l = lacetVers(nx, nz);
+      const nx = D.nx, nz = D.nz, l = lacetVers(nx, nz), fin = Math.min(1.2, D.apres - 0.05);
       jeu.teleporter(0, D.x - nx * D.avant, D.y, D.z - nz * D.avant, l);
       a.corps.vel.set(nx * 6.6, 0, nz * 6.6);
       forcer(a, { ay: 1, sprint: true, lacet: l });
       let saute = false, passe = false;
       for (let n = 0; n < 160; n++) {
         const j = a.corps, s = (j.pos.x - D.x) * nx + (j.pos.z - D.z) * nz;
-        if (!saute && s >= -D.elan) { front(a, { ay: 1, sprint: true, lacet: l, saut: true }); saute = true; continue; }
+        if (!saute && s >= -elan - 1e-6) { front(a, { ay: 1, sprint: true, lacet: l, saut: true }); saute = true; continue; }
         p.pas(PAS);
         if (j.jumpY > 0 && !c().libre(j.pos.x, j.pos.z, j.rayon ?? 0.3, j.pos.y + j.jumpY, R.hautTete, R.basTete)) trancheDedans++;
         const yo = j.pos.y + hauteurOeil(a) + j.jumpY;
         if (!c().libre(j.pos.x, j.pos.z, 0.05, yo - 0.03, 0.06, 0)) oeilDedans++;
-        if ((j.pos.x - D.x) * nx + (j.pos.z - D.z) * nz > 1.2) { passe = true; break; }
+        if ((j.pos.x - D.x) * nx + (j.pos.z - D.z) * nz > fin) { passe = true; break; }
       }
       if (passe) passes++;
+      else if (rates.length < 4) rates.push(`${r2(D.x)},${r2(D.z)}@${elan}`);
       lacher(a);
+      // (la porte refermée : la suivante — ou ce même passage — repart d'une porte close, comme en partie)
+      if (p.monde && p.monde._poser) for (const P of p.monde.portes) p.monde._poser(P, 0);
     }
     jeu.quitter('balade');
     const okA = Math.abs(libreR.h - 0.505) <= 0.005 && Math.abs(libreR.t - 0.642) <= 0.01 && pc(libreR.v1, libreR.att) <= 0.05;
     const okB = sauts + franchis >= 1900 && sousBas >= 900 && fautesTete === 0 && fautesTranche === 0 && refus === refusAttendus;
-    const okC = portes.length >= 20 && passes === essais && oeilDedans === 0 && trancheDedans === 0;
-    return { ok: okA && okB && okC, attendu: 'apogée 0,505 ± 0,005 m, 0,642 ± 0,01 s, élan τ 0,45 · 2 000 sauts (1 000 sous 2,2-2,4 m) : tête ≥ 5 cm sous le plafond, tranche libre, refus = v < 1,2 · 40 passages sous 20 linteaux',
+    const okC = essais >= 40 && nPortes >= 10 && passes === essais && oeilDedans === 0 && trancheDedans === 0;
+    return { ok: okA && okB && okC, attendu: 'apogée 0,505 ± 0,005 m, 0,642 ± 0,01 s, élan τ 0,45 · 2 000 sauts (1 000 sous 2,2-2,4 m) : tête ≥ 5 cm sous le plafond, tranche libre, refus = v < 1,2 · 40 sauts sous les linteaux des portes passables (≥ 10) : 40 passages, œil et tranche jamais dans une forme',
       obtenu: `apogée ${r4(libreR.h)} m en ${r3(libreR.t)} s · élan ${r2(libreR.v1)} m/s (attendu ${r2(libreR.att)}) · ${sauts} sauts (${sousBas} sous plafond bas, ${pasAir} pas en l'air) : tête ${fautesTete}, tranche ${fautesTranche}, refus ${refus}/${refusAttendus}, franchis ${franchis}`
-        + ` · portes ${portes.length} : ${passes}/${essais} passages, œil dedans ${oeilDedans}, tranche ${trancheDedans}` };
+        + ` · ${nPortes} portes (${passages.length} sens) : ${passes}/${essais} passages${rates.length ? ' (ratés ' + rates.join(' ') + ')' : ''}, œil dedans ${oeilDedans}, tranche ${trancheDedans}` };
   }, { delai: 240 });
 
   // 4. LA RÉCEPTION d'une chute > 0,3 m : vitesse × 0,85 pendant 0,12 s, événement `reception`
@@ -1048,43 +1059,51 @@ export default function (jeu) {
     }
     return L;
   }
-  // les PORTES : les portes automatiques de la carte (leur vantail s'ouvre à l'approche, à 2,1 m) et les passages sous un linteau
-  // (formes du joueur dont le bas est à 2,0-2,15 m au-dessus du sol, minces, de la largeur d'une porte), le passage libre et
-  // 2,2 m d'élan libres et plats de chaque côté
-  function chercherPortes(c, n) {
+  // LES PORTES PASSABLES sous un linteau de 2,04-2,10 m : les portes automatiques de la carte (leur forme éteinte le temps de
+  // chercher : `majPortes` les ouvre devant l'acteur) et les ouvertures libres (un linteau, une forme mince au-dessus d'un
+  // passage où l'on tient debout). Pour chaque sens, la place LIBRE et PLATE de part et d'autre (0,1 m à 2,2 m) : `avant`
+  // (l'approche, ≥ 0,5 m) et `apres` (la sortie, ≥ 0,7 m) — la vitesse de sprint est posée au départ, l'élan n'a pas
+  // besoin de piste. Rend [{ x, y, z, nx, nz (le sens), linteau, avant, apres }], deux sens par porte s'ils ont la place.
+  function chercherPortes(c) {
     const L = [], auto = (game.carte && game.carte.portes && game.carte.portes.auto) || [];
-    // (les vantaux, fermés à l'entrée d'une partie d'essai, éteints le temps de chercher les passages, rendus ensuite)
     const V = auto.map((P) => P.forme).filter((f) => f && !f.off);
     for (const f of V) f.off = true;
     try {
       const cands = [];
       for (const P of auto) cands.push({ cx: P.cx, cz: P.cz, ux: P.nx, uz: P.nz, y: P.base ?? c.solEn(P.cx, P.cz, 0.3), hl: P.h ?? 2.04 });
       for (const f of c.formes) {
-        if (!f.joueur || f.off || f.vantail) continue;
+        if (!f.joueur || f.off || f.vantail || !(f.y0 > 1.5)) continue;
         let cx, cz, lx, lz, ux, uz;
         if (f.t === 'b') { cx = (f.x0 + f.x1) / 2; cz = (f.z0 + f.z1) / 2; lx = f.x1 - f.x0; lz = f.z1 - f.z0; }
         else if (f.t === 'o') { cx = f.cx; cz = f.cz; lx = 2 * f.hx; lz = 2 * f.hz; }
         else continue;
         const larg = Math.max(lx, lz), ep = Math.min(lx, lz);
-        if (larg < 0.75 || larg > 1.8 || ep > 0.4) continue;
+        if (larg < 0.7 || larg > 2.2 || ep > 0.45) continue;
         // (la normale du passage : perpendiculaire au grand côté)
         if (f.t === 'b') { if (lx > lz) { ux = 0; uz = 1; } else { ux = 1; uz = 0; } }
         else { const c0 = f.c, s0 = f.s; if (f.hx > f.hz) { ux = -s0; uz = c0; } else { ux = c0; uz = s0; } }
-        const y = c.solEn(cx, cz, f.y0 - 1.9), hl = f.y0 - y;
-        if (hl >= 2.0 && hl <= 2.15) cands.push({ cx, cz, ux, uz, y, hl });
+        const y = c.solEn(cx, cz, f.y0 - 1.9);
+        cands.push({ cx, cz, ux, uz, y, hl: f.y0 - y });
       }
-      for (const D of cands) {
-        if (!c.libre(D.cx, D.cz, 0.3, D.y) || L.some((E) => Math.hypot(E.x - D.cx, E.z - D.cz) < 1)) continue;
-        let ok = true;
-        for (const sg of [1, -1]) for (let s = 0.2; s <= 2.2 + 1e-9 && ok; s += 0.2) {
-          const px = D.cx + D.ux * s * sg, pz = D.cz + D.uz * s * sg;
-          if (!c.libre(px, pz, 0.32, D.y) || Math.abs(c.solEn(px, pz, D.y + 0.3) - D.y) > 0.02) ok = false;
+      // la place libre et plate d'un côté (sg), de 0,1 m à 2,2 m
+      const place = (D, sg) => {
+        let s = 0;
+        for (let t = 0.1; t <= 2.2 + 1e-9; t += 0.1) {
+          const px = D.cx + D.ux * t * sg, pz = D.cz + D.uz * t * sg;
+          if (!c.libre(px, pz, 0.3, D.y) || Math.abs(c.solEn(px, pz, D.y + 0.3) - D.y) > 0.02) break;
+          s = t;
         }
-        if (!ok) continue;
-        // (le départ à 2,2 m, le saut à 1,5 m du plan de la porte : à 6,6 m/s, la tête y passe à 0,46 m de saut — le linteau la
-        // rabat ; l'apogée est 0,6 m au-delà)
-        L.push({ x: D.cx, y: D.y, z: D.cz, nx: D.ux, nz: D.uz, linteau: r2(D.hl), avant: 2.2, elan: 1.5 });
-        if (L.length >= n) break;
+        return s;
+      };
+      const vues = [];
+      for (const D of cands) {
+        if (D.hl < 2.035 || D.hl > 2.105 || !c.libre(D.cx, D.cz, 0.3, D.y) || vues.some((E) => Math.hypot(E.cx - D.cx, E.cz - D.cz) < 1 && Math.abs(E.y - D.y) < 1)) continue;
+        vues.push(D);
+        const pl = { 1: place(D, 1), [-1]: place(D, -1) };
+        for (const sens of [1, -1]) {
+          const avant = pl[-sens], apres = pl[sens];
+          if (avant >= 0.5 - 1e-9 && apres >= 0.7 - 1e-9) L.push({ x: D.cx, y: D.y, z: D.cz, nx: D.ux * sens, nz: D.uz * sens, linteau: r2(D.hl), avant: r2(avant), apres: r2(apres), porte: vues.length - 1 });
+        }
       }
     } finally { for (const f of V) f.off = false; }
     return L;
