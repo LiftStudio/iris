@@ -4,10 +4,14 @@ Branche `lot/L-H` (depuis `socle` = `socle-ok` e06258f), arbre `C:/Users/hgami/D
 
 ## Où j'en suis
 
-**RELECTURE EN COURS (relecteur sévère, 23/10)** — voir la section « Relecture » en fin de rapport : trois défauts corrigés
-(les sons de Haythem jetés dans une oreille, la mort qui laissait le son étouffé jusqu'à la fin de la partie, les vrais
-meubles hauts décalqués), deux abonnements morts retirés, les pools posés à l'entrée de la partie ; tests ajoutés ; pas
-encore rejoué au navigateur (jetons pris). Un repreneur : rejouer `&rapport=1&lot=L-H` puis `&lot=S0` (PC et `?tel=1`).
+**RELECTURE FINIE (relecteur sévère, 23/10) — les six points du § 5.1 règle 5 tenus.** Sur le code final :
+`&rapport=1&lot=L-H` **17/17 sur PC** (103 s) et **17/17 sous `?tel=1`** (84 s) ; `&lot=S0` **29/29 sur PC** (138 s) et
+**29/29 sous `?tel=1`** (126 s), balade au bit près avant et après les parties (0 / 0) ; `verifier_proprietaires` OK
+6 fichiers ; commits « L-H relecture : … » ; jeton_2 rendu à 08:46:23, onglet fermé, serveur arrêté. Huit défauts
+corrigés (section « Relecture » en fin de rapport), dont les sons de Haythem jetés dans une oreille, la mort qui
+laissait le son étouffé jusqu'à la fin de la partie et une frag qui ne se voyait presque pas. Les demandes nouvelles
+(murs bas sans trous : la règle des 1,8 m ; la demande à L-A sur `touches.js` retirée) sont dans la même section.
+Un repreneur n'a rien à finir.
 
 Ce qui suit est l'état laissé par le constructeur :
 
@@ -217,7 +221,7 @@ trop longues (jusqu'à 1 m du mur), éclairs trop petits vus de face, fumée tro
 ### Où en est la relecture
 
 Spécification relue (§§ 3.6, 3.10, 4.1, 4.5.17, 4.6, 5.1, 5.5.12), diff `socle...lot/L-H` lu en entier. Corrections
-écrites, tests ajoutés ; rejeu au navigateur à faire.
+écrites, tests ajoutés, tout rejoué et joué au navigateur (plus bas) : relecture finie.
 
 ### Défauts trouvés et corrigés
 
@@ -248,6 +252,16 @@ Spécification relue (§§ 3.6, 3.10, 4.1, 4.5.17, 4.6, 5.1, 5.5.12), diff `socl
    'insere' jouait la recette de fin. La branche `lot/L-A` émet aussi 'annulee' (le sprint) et 'interrompue' (un tir
    pendant le chargement du FP-12) : on aurait entendu le « clac » ou la pompe d'une recharge qui n'a pas eu lieu. Ces
    phases ne jouent plus rien. Test 16 ajouté.
+6. **Une frag ne se voyait presque pas** (`effets.js`, vu au navigateur). Elle était centrée à 15 cm du sol : la moitié de
+   chaque lueur tournée vers la caméra passait sous le sol, et une table la cachait toute. À 5 m dans la rue, on voyait une
+   boule de 1 m, sans éclair (photos `r09_frag_rue_*`). Maintenant l'éclair, l'étoile et le feu partent à 0,5-0,6 m. Ils
+   sont plus grands et plus vifs, avec des flammes additives et une colonne de poussière ; la fumée monte plus haut
+   (photos `r10_frag_rue_01/08/20/60`). Au téléphone, deux fois moins de particules (pools de 48 et 40). La flash est
+   relevée de même.
+7. **Un coup de couteau sur un mur posait un trou de balle** (`effets.js`). Chez L-A, le couteau qui touche le décor passe
+   par `Partie.resoudreTir` et émet un `impact` au point de la lame. Les effets écoutent maintenant `couteau` (un ajout de
+   L-A) : un impact au même point et au même pas n'a pas de décalque, seulement sa gerbe. Test 3 complété.
+8. **Les douilles passaient pour des bâtonnets de bois brun** (vu au navigateur) : laiton à 0,5 de métal au lieu de 0,85.
 
 ### Demandes des autres lots à L-H (lues dans leurs rapports, prises ici)
 
@@ -274,3 +288,89 @@ Spécification relue (§§ 3.6, 3.10, 4.1, 4.5.17, 4.6, 5.1, 5.5.12), diff `socl
 - `SonsJeu._etouffeJusque` écrit, jamais lu : retiré.
 - `Effets.preparer` laissait les pools dans la scène : une préparation interrompue les y oubliait en balade. Ils sont
   maintenant retirés après la compilation ; `brancher` les pose à l'entrée de la partie.
+
+### Rejoué au navigateur intégré (jeton_2, pris à 08:05:04 après 1 h d'attente — les trois étaient tenus)
+
+Serveur `serve.py` + POST de photos (`…/scratchpad/lhr/serve_lh.py`), port 8142, un onglet, code relu à chaque passe
+(modules frais vérifiés). Sur le code FINAL (`8c28529` et le rapport) :
+
+- `&rapport=1&lot=L-H` : **17/17 sur PC** (103 s) et **17/17 sous `?tel=1`** (375 × 812, 84 s) — les 14 critères et les
+  tests 15, 16, 17 de la relecture ; F1-F4 attendent `&fusion=1`. Deux temps « non valables » à chaque passe (critère 13,
+  l'onglet n'était pas devant) : Effets.maj 0,047 ms, SonsJeu.maj 0,149 ms (PC) ; 0,047 et 0,169 ms (téléphone).
+- `&rapport=1&lot=S0` : **29/29 sur PC** (138 s) ; balade au bit près avant (test 1) et après les parties (test 27), vue 3
+  et vue 1 : 0 / 0. Sous `?tel=1` : voir « Où j'en suis » en tête.
+- `python -I tools/verifier_proprietaires.py lot/L-H` : OK 6 fichiers.
+
+| # | Mesure (passe PC finale) |
+|---|---|
+| 1 | programmes 151 → 151 (tél. 87 → 87) · 874 décalques, 1 213 traceurs, 617 douilles, 1 237 éclairs, 987 gerbes, 5 explosions |
+| 2 | 256 actifs, 256 derniers, 0 ancien · maj < 0,01 ms · 1 appel (de la vue) |
+| 3 | mur 1 décalque à 0° · plafond 1 à 0° · meuble bas 0 · vantail 0 · sol 0 · 0 vantail décalquable · **meuble du registre haut (3,25 m, dit « mur ») 0 · coup de couteau 0** |
+| 4 | lumières 8 → 8 → 8 |
+| 5 | 1 000 tirs · ≤ 24 voix (tél. 12) · 877 libérées à leur fin (tél. 472), 0 en avance, 0 en retard · 0 onended · 0 tampon |
+| 6 | auditeur à 0 m, 0° · 8/8 à ± 1 cm · 8/8 du bon côté · **sons de Haythem 3/3 au milieu ; un panoramique à 3 cm à droite (et 1,6 m dessous) : 100 % à droite** |
+| 7 | bloquée 0,355 / 700 Hz · autre niveau 0,2 / 400 Hz · retard 49,563 ms pour 17 m · 4 par image · −63 dB jamais testée · 0,006 ms hors vue() · 0 rayonLibre |
+| 8 | claquement 6 ms à 10 m, aucun à 35 m · hauteur 0,963 … 1,04 (30 différentes) · pas d'un ennemi × 1,585 (+4 dB) |
+| 9 | 26 départs en 5 s de course (a8b22dd : 26) |
+| 10 | budget 22,22 en balade, 16,67 fluidité cochée, 22,22 décochée et à la sortie · superposition 1 fois sur les 3 chemins |
+| 11 | anneaux 7 instances 1 appel · cibles 12, 1 appel · 9 debout, 3 couchées · stand 6/6 |
+| 12 | peinture de l'équipe B (écart 0) · gaz : claquement 3 ms, sans grave · militaire : trou, 6 ms, 95 Hz |
+| 13 | 79 tirs, banque de 69 sons (tél. 41) · 0,047 / 0,149 ms (non valables) |
+| 14 | balade 0 / 0 · passe éteinte · 0 pool |
+| 15 | passe-bas 450 Hz tout de suite, rouvert à + 3 s |
+| 16 | 0 voix pour 'annulee' / 'interrompue', 1 pour 'fin' |
+| 17 | une voix spatialisée à la porte à l'ouverture et à la fermeture ; rien à 19 m |
+
+**Test 11 instable, corrigé** : le premier passage complet a échoué une fois (« 2 appels » pour les anneaux et les
+cibles), puis réussi seul et à la suite du test 10. Les appels de trop venaient d'une AUTRE caméra : la glace de
+l'accueil (elle redessine la scène une image sur deux quand la caméra a bougé, tant que L-M ne la peint pas en partie)
+et l'image à blanc de la qualité automatique (une cible de 1 × 1). Le critère « 1 appel par pool » parle de la vue :
+`appelsDe` ne compte plus que la caméra du jeu et dit les autres.
+
+### Joué (navigateur intégré, 1 280 × 720, qualité haute figée ; photos `…/scratchpad/lhr/photos/`)
+
+- **Avec un vrai son** (`?partie=equipes` sans `?test=1`, « APPUIE » cliqué) : AudioContext en marche, banque rendue en
+  3,9 s (69 sons, 19,6 s de son). Après 17 s de match (tirs de Haythem, bots, frag, flash, recharge), la console n'a
+  aucune erreur des effets ni des sons. On y voit seulement l'échec d'enregistrement du service worker, connu et hors
+  du lot. Les avertissements WebGL « beginQuery: a query is already active » apparaissent quand le harnais rend par
+  `avancer(…, { rendu: true })` pendant que la boucle tourne : ce sont les chronomètres de `fx.js`, pas les effets.
+- Les sons eux-mêmes ne s'écoutent pas d'ici. Le test à l'aveugle reste à F2 (✋). `AudioParam.value` d'un filtre au
+  repos est périmé dans Chrome (il ne se recalcule que quand le nœud tourne) : les tests lisent le journal, c'est juste.
+- **Frag** : avant (`r09_frag_rue_01/08/20`) une boule de 1 m sans éclair ; après (`r10_frag_rue_01/08/20/60`) un éclair
+  qui remplit la rue, une boule de feu, une colonne de fumée et la brûlure au sol. Dans le bureau (`r08_frag_*`, avant),
+  une table cachait tout.
+- **Rafale de Haythem** (Militaire, `r02`, `r04`, `r16`) : douilles visibles à droite, traceurs. L'arme de vue du squelette
+  n'est qu'une boîte beige, et l'éclair FPS est un petit halo blanc à son repère : à revoir avec L-V (`versMonde`).
+- **Airsoft** (`r07_airsoft_peinture`) : la tache bleue de l'équipe A sur un pilier du hall, bien lisible à 3 m. Toutes les
+  billes au même point : le squelette de l'Arsenal n'a pas de dispersion.
+- **Bot qui tire** (`r12_bot_fa24_*`) : à 9 m, l'éclair se lit (≈ 20 px) devant son buste ; le squelette de L-C n'a pas
+  d'arme, l'éclair part de la bouche de repli.
+- **Murs sans trous** (`r05_trous_militaire`) : une rafale sur la façade, sous une fenêtre, ne laisse aucun trou. La forme
+  touchée (n° 18) est l'allège, 1,75 m de haut : la règle du § 4.5.17 (« formes hautes, y1 − y0 > 1,8 ») la refuse. Même
+  chose pour les linteaux au-dessus des portes (1,15 m, de 2,10 à 3,25). Demande ci-dessous.
+
+### Demandes de la relecture
+
+- **F2 / INT (§ 4.5.17, critère 3)** : la règle « forme haute (> 1,8 m) ou plafond » refuse les PANS DE MUR bas. Ce sont
+  l'allège de la façade (forme 18 : 1,20 × 0,40 × 1,75 m, sous une fenêtre) et les linteaux (y de 2,10 à 3,25). On tire
+  dans un mur et rien ne reste, alors que le mur d'à côté garde ses trous. Proposition : décalquer aussi une forme dont le
+  haut touche le plafond (`y1 ≥ plafondEn − 0,05` : linteau), ou qui est mince (≤ 0,45 m) et longue (≥ 1 m) entre deux
+  formes hautes. Ou bien un drapeau `mur: true` posé par la carte (L-M). Un meuble du registre reste exclu
+  (`MEUBLES.parForme`, relecture). Je n'ai pas changé la règle seul (§ 5.1 : le document fait foi).
+- **L-A** (la demande du constructeur sur `touches.js` est RETIRÉE) : le panneau d'une cible lit `lx = px·c − pz·s`,
+  `lz = px·s + pz·c` avec `s = sin(cap)`. C'est l'inverse exact de `rotation.y = cap` pour tout cap, et non pour ±π/2
+  seulement : vérifié à cap = 0, π/2, π/4, et c'est le repère où les effets dessinent le carton.
+- **L-A** (celle de l'impact de vitre) : déjà tenue sur `lot/L-A` (`balistique.js` l. 346, `traverse: true`).
+- **L-A** (petite) : marquer l'`impact` d'un coup de couteau (`arme: 'couteau'`). Les effets le reconnaissent par le point
+  de l'événement `couteau` du même pas, et SonsJeu y joue un bruit d'impact de balle.
+- Les demandes du constructeur à F2 (`Partie.evt` et le champ `type`, l'espion de `AudioBufferSourceNode.start`, le retard
+  par défaut et le test 21), à L-F (`retard: true`), à L-V (la branche `fps` de l'éclair, si son arme dessine sa flamme)
+  et à INT (« Priorité fluidité ») restent valables.
+
+### Écarts ajoutés par la relecture
+
+- `jouer3d` lit `centre` (ajout, règle 3) : la voix du corps de Haythem en vue FPS, sans panoramique.
+- `Effets` ne s'abonne plus à `elim` ni à `flash`, que le § 4.5.17 cite parmi ses abonnés : il n'avait rien à en dessiner.
+  Il s'abonne à `couteau` (L-A), SonsJeu à `porte` (L-M) : des événements ajoutés au § 4.6 par d'autres lots.
+- L'étouffement de la mort dure 3 s, puis se rouvre en 1 s : le § 3.6 ne donne que les 3 s de désaturation de la caméra.
+- Tests 2 et 11 : « 1 appel » compté pour la vue (caméra du jeu) seulement.
