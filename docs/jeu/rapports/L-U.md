@@ -5,9 +5,21 @@ Section de la spécification : § 5.5.11 (contrats § 4.5.16, valeurs § 3, prop
 
 ## Où j'en suis
 
-**EN COURS (fin de lot)** — tout est construit et joué dans le navigateur ; `&lot=L-U` **14/14 sur PC**. Reste : `&lot=S0`
-sur PC (un 1er passage 28/29 : le point 8, la qualité automatique en route — voir plus bas — rejoué seul : vert), puis
-`?tel=1` (L-U et S0), le rapport final, le jeton rendu.
+**FINI** (23/10, 05:56). La définition de « fini » du § 5.1, règle 5 :
+- (a) `&rapport=1&lot=L-U` : **14/14 sur PC** (1280 × 720, qualité haute, 17,0 s ; dernier passage sur 4a3f7cc) et **14/14 sous
+  `?tel=1`** (375 × 812 émulé, qualité moyenne, 15,3 s) ; seul « signalé » : le premier Tab mesuré onglet caché (non
+  valable) — rejoué onglet DEVANT : **37,5 ms** au plus (≤ 50), vert ;
+- (b) `&rapport=1&lot=S0` : **29/29 sur PC** (`&qualite=haute`, 233 s, balade au bit près avant et après les parties, vue 3
+  et vue 1 : 0 / 0) et **29/29 sous `?tel=1`** (143 s, 0 / 0) ; un premier passage PC sans `&qualite=` : 28/29 (point 8,
+  « programmes 144 → 145 » : la qualité automatique en route, onglet en arrière-plan — comme chez L-E), le point 8 rejoué
+  seul : vert (programmes 179 → 179) ; (les deux derniers commits ne touchent que `menus.css` et une ligne du test 4) ;
+- (c) `python -I tools/verifier_proprietaires.py lot/L-U` → **OK 17 fichiers** ;
+- (d) 14 commits « L-U : … » avec la ligne d'attribution ; (e) ce rapport ;
+- (f) onglet fermé, serveur 8141 arrêté, **jeton_1 rendu à 05:56** (pris à 05:24, périmé chez L-C : écart 15).
+
+Rien ne reste à faire pour L-U en vague 2. Un repreneur part de `lot/L-U` (dernier commit « L-U : … rapport final »).
+À F2 : le test « F2 parcours manette sur les vraies fins » (`apresFusion`), les crédits relus, les portraits à côté des
+vrais avatars de L-C (✋ ; refaits par l'outil si un avatar a changé), et les DEMANDES ci-dessous.
 
 ## Ce qui est construit
 
@@ -77,6 +89,27 @@ onglet en arrière-plan) : **ok, 14/14, 16,7 s, 1 signalé (non valable : onglet
 | 12 | les quatre onglets d'aujourd'hui rendus, la qualité écrite puis rendue, le volume écrit |
 | 13 | 7 fichiers 192 × 192, fond transparent, ≤ 30 Ko ; `portrait()` 1e-4 ms l'appel ; l'initiale sans image ; premier Tab 100 ms au plus (onglet caché : **non valable**, signalé) ; stockage qui lève : rien ne casse |
 | 14 | « Modes de jeu » → menu, pas en pause, fronts purgés, accueil visible |
+
+Sous `?tel=1` (375 × 812, émulation mobile, tactile) : **ok, 14/14, 15,3 s** — 4 : somme des bots 0 + 5 = 5 (au plus 5),
+avertissement au-delà de 3 ; 7 : LANCER → présentation **227 ms** (≤ 10 000), prop hunt 145 ms ; 13 : premier Tab 223 ms
+(onglet caché, non valable). Onglet DEVANT (PC, taille du panneau, rAF 40/s) : test 13 seul, premier Tab **37,5 ms**.
+
+## Joué dans le navigateur (et regardé)
+
+- **Les trois plans** relevés à la main (`menu.figer`, photos 1280 × 720 reçues par un petit serveur local) : le hall
+  (la pile « iris » et Haythem à droite de l'image), l'escalier principal (le hall ouest qui s'approche des battants
+  ouverts sur la volée), la pause orange du 1er (le mur orange à droite, les distributeurs, les mange-debout) ; deux
+  essais refusés (une caméra DANS une forme du hall, une autre qui ne voyait que le plafond de l'escalier).
+- **Les portraits** : deux passes de l'outil ; la planche regardée (`tools/portraits/planche.webp`).
+- **Les écrans à 760 × 428** (téléphone couché) : l'accueil sur deux colonnes, les réglages du combat (les visages cochés
+  en couleur, les autres en gris), une partie lancée par LANCER avec Gabriel et Koji cochés, sa fin (VICTOIRE · SISR 40 –
+  36 SLAM, le podium Koji / Haythem / Gabriel avec leurs portraits, « 12 TOUCHÉS · 5 SORTIES · 3 ASSISTANCES… »), l'écran
+  PRÉPARATION (étapes cochées, astuce aux vraies touches « E », « R »). Ce que ces essais ont corrigé : la fiche des
+  réglages faisait 1 345 px de haut (LANCER hors de l'écran) → bornée à l'écran, le corps défile ; l'accueil d'une
+  fenêtre très basse (374 × 210) coupait OPTIONS et CRÉDITS → il se serre et défile.
+- En 1280 × 720 (mesuré, le panneau du navigateur ne montre pas plus grand) : la colonne 560 px, le titre en haut, les
+  portes au milieu (254-591), la fiche de la porte en bas à droite (841-1211 × 559-677), la fiche des réglages 696 px
+  avec LANCER à 629-695.
 
 ## Écarts au document
 
