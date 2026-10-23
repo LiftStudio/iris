@@ -514,7 +514,7 @@ export default function (jeu) {
         if (!rep.ok) { fautes.push(id + ' absent'); continue; }
         const b = await rep.blob(), im = await createImageBitmap(b);
         const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height;
-        const g = cv.getContext('2d'); g.drawImage(im, 0, 0);
+        const g = cv.getContext('2d', { willReadFrequently: true }); g.drawImage(im, 0, 0);
         // (les deux coins du HAUT : le buste remplit le bas de l'image, épaules comprises)
         const coins = [[1, 1], [190, 1], [96, 1]].map(([x, y]) => g.getImageData(x, y, 1, 1).data[3]);
         const milieu = g.getImageData(96, 90, 1, 1).data[3];

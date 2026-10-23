@@ -174,6 +174,8 @@ body.pad-nav .mj-b.pad-focus { outline: none !important; box-shadow: none !impor
 .fj-chiffres b { font: 400 34px/1 var(--head); color: #fff; letter-spacing: 0.03em; }
 .fj-chiffres span { margin-top: 5px; font-size: 11.5px; letter-spacing: 0.13em; color: var(--muted); text-transform: uppercase; text-align: center; }
 .fj-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+/* (un bilan plus haut que l'écran défile, ses quatre boutons restent au bas, toujours visibles) */
+.fin-jeu.bilan .fj-actions { position: sticky; bottom: 0; width: 100%; padding: 8px 0 2px; background: linear-gradient(180deg, rgba(5, 7, 11, 0), rgba(5, 7, 11, 0.92) 40%); }
 @keyframes fjTitre { from { opacity: 0; transform: scale(1.25); } to { opacity: 1; transform: none; } }
 
 /* ---------------------------------------------------------------- ÉCRANS ÉTROITS ET TÉLÉPHONES */
@@ -183,8 +185,7 @@ body.pad-nav .mj-b.pad-focus { outline: none !important; box-shadow: none !impor
   .rj-boite, .cr-boite { padding: 12px 14px; border-radius: 10px; }
   .rj-titre { font-size: 30px; }
   .rj-tete { gap: 12px; padding-bottom: 8px; }
-  .rj-ligne { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 9px 4px; }
-  .rj-ctl, .rj-duo, .rj-trio { justify-content: flex-start; }
+  .rj-ligne { gap: 8px 14px; padding: 8px 4px; }
   .rj-amis { grid-template-columns: repeat(6, minmax(70px, 1fr)); overflow-x: auto; padding-bottom: 4px; }
   .rj-records { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rj-pied { padding-top: 10px; gap: 12px; }
@@ -194,6 +195,16 @@ body.pad-nav .mj-b.pad-focus { outline: none !important; box-shadow: none !impor
   .fj-vignette { width: 60px; height: 60px; }
   .fj-r1 .fj-vignette { width: 76px; height: 76px; }
 }
+/* une ligne de réglage : le libellé AU-DESSUS du réglage sur un écran étroit seulement (un téléphone couché, large mais
+   bas, garde libellé à gauche et réglage à droite : deux fois plus de lignes visibles sur ses 375 px de haut) */
+@media (max-width: 760px) {
+  .rj-ligne { grid-template-columns: minmax(0, 1fr); }
+  .rj-ctl, .rj-duo, .rj-trio { justify-content: flex-start; }
+}
+@media (max-height: 520px) and (min-width: 761px) {
+  .rj-lbl small { font-size: 11.5px; line-height: 1.35; }
+  .rj-seg button { padding: 7px 12px; }
+}
 /* un téléphone en paysage : l'accueil sur deux colonnes de portes (six boutons de 44 px ne tiennent pas l'un sous l'autre) */
 @media (max-height: 520px) {
   .mj-liste { display: grid; grid-template-columns: auto auto; column-gap: 26px; padding: 2vh 0; }
@@ -201,9 +212,24 @@ body.pad-nav .mj-b.pad-focus { outline: none !important; box-shadow: none !impor
   .mj-titre::after { margin-top: 8px; height: 4px; }
   .mj-sous { margin-top: 8px; }
   .pj-titre { font-size: 32px; }
-  .fin-jeu.bilan { padding-top: 12px; }
-  .fj-podium { padding-top: 4px; }
-  .fj-r1 { transform: none; padding-bottom: 12px; }
+  /* (le bilan tient dans les 375 px d'un téléphone couché : REJOUER sans faire défiler) */
+  .fin-jeu.bilan { padding-top: 8px; gap: 6px; }
+  .fin-jeu.bilan .fj-titre { font-size: 34px; }
+  .fin-jeu.bilan .fj-sous { margin-top: 4px; font-size: 13px; }
+  .fj-bilan { gap: 10px; }
+  .fj-podium { padding-top: 0; gap: 10px; }
+  .fj-marche { width: 112px; padding: 6px 6px 7px; gap: 3px; }
+  .fj-r1 { transform: none; padding-bottom: 7px; box-shadow: none; }
+  .fj-vignette, .fj-r1 .fj-vignette { width: 46px; height: 46px; }
+  .fj-rang { font-size: 20px; }
+  .fj-nom { font-size: 13px; }
+  .fj-score { font-size: 11.5px; }
+  .fj-chiffres div { padding: 6px 4px; }
+  .fj-chiffres b { font-size: 24px; }
+  .fj-chiffres span { margin-top: 2px; font-size: 10.5px; }
+}
+@media (max-height: 520px) and (min-width: 600px) {
+  .fj-chiffres { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
 @media (max-width: 520px) {
   .rj-fil { display: none; }
