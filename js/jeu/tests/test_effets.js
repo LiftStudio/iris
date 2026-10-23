@@ -114,6 +114,9 @@ export default function (jeu) {
 
   // 1. PROGRAMMES CONSTANTS pendant 10 s à 100 tirs/s, avec impacts, traceurs, douilles, éclairs, étincelles, explosions
   T('01 programmes constants : 10 s à 100 tirs/s, tous les effets', async (t) => {
+    // (la qualité figée : sinon js/fx.js precompilerRepli compile en tâche de fond, toutes les 3 s, les variantes du
+    // préréglage de repli des objets arrivés — les pools du jeu compris —, et le compte bouge sans que rien ne fige)
+    jeu.figerQualite(true);
     const { p, E } = await essai({ mannequins: 3, bots: 2 });
     const F = formes(), a = p.acteurParId(1), res = [];
     p.hud.points = [{ id: 'A', x: p.local.pos.x + 3, y: p.local.pos.y, z: p.local.pos.z - 3, r: 2.5, possesseur: 'A', capture: { equipe: 'B', k: 0.4 } }];
@@ -135,7 +138,7 @@ export default function (jeu) {
         if (k === 30) p.grenades.lancer(p.acteurParId(4) || a, 'frag', 2);
         await jeu.images(1);
       }
-    } finally { habillage(avant); }
+    } finally { habillage(avant); jeu.figerQualite(false); }
     const p1 = game.renderer.info.programs.length, s = E.stats;
     res.push([`programmes ${p0} → ${p1}`, p0 === p1]);
     res.push([`${tirs} tirs émis + ${jeu.compteurs().tirs} de la partie, ${s.decalques} décalques, ${s.traceurs} traceurs, ${s.douilles} douilles, ${s.eclairs} éclairs, ${s.gerbes} gerbes, ${explosions} explosions`,
