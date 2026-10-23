@@ -16,6 +16,7 @@ import { TouchControls, disposition, CONTEXTES_JEU, TACTILE_JEU } from '../../to
 import { STICK_JEU, VIBRATIONS_JEU, courbe } from '../../manette.js';
 import { AIDE, facteurStick, etatAide } from '../assistance_visee.js';
 import { ajouterRacine, racinesInscrites } from '../../manette_menus.js';
+import { MENUS } from '../menus_jeu.js';
 import { capsules } from '../touches.js';
 import { versTableau } from '../commande.js';
 
@@ -274,9 +275,21 @@ export default function (jeu) {
         F.bouton(b, false); F.scruter(); jeu.avancer(PAS);
         return v;
       };
-      const B = { RT: 'tir', LT: 'visee', B: 'accroupi', A: 'saut', X: 'recharger', Y: 'armeSuiv', RB: 'letale', LB: 'tactique', R3: 'couteau', L3: 'sprint' };
+      // (F2 : A avant B — accroupi, un saut RELÈVE d'abord, sans événement « saut »)
+      const B = { RT: 'tir', LT: 'visee', A: 'saut', B: 'accroupi', X: 'recharger', Y: 'armeSuiv', RB: 'letale', LB: 'tactique', R3: 'couteau', L3: 'sprint' };
       const ko = [];
-      for (const [b, champ] of Object.entries(B)) if (!un(b, champ)) ko.push(b + '→' + champ);
+      // (F2 : avec le VRAI mouvement de L-B, le saut est un front CONSOMMÉ dans le pas — lu à l'événement « saut » —, et L3 ne
+      // verrouille le sprint qu'en avançant — le stick gauche poussé le temps de l'appui)
+      const sauts = []; p.sur('saut', (e) => { if (e.a === a.id) sauts.push(e); });
+      for (const [b, champ] of Object.entries(B)) {
+        if (b === 'A') { const n0 = sauts.length; un(b, champ); if (sauts.length === n0) ko.push('A→saut'); jeu.avancer(1); continue; }
+        if (b === 'L3') {
+          F.stick('g', 0, -1); F.scruter(); jeu.avancer(0.3);
+          const v = un(b, champ, () => !!c.sprint); F.stick('g', 0, 0); F.scruter(); jeu.avancer(0.6);
+          if (!v) ko.push('L3→sprint'); continue;
+        }
+        if (!un(b, champ)) ko.push(b + '→' + champ);
+      }
       if (!un('Back', 'scores', () => game.input.down('scores'))) ko.push('Back→scores');
       jeu.avancer(0.5);
       res.push(['RT tir, LT visée, L3 sprint, R3 couteau, RB létale, LB tactique, Y arme, X recharger, B accroupi, A saut, Back scores', ko.length === 0, ko.join(', ')]);
@@ -446,7 +459,10 @@ export default function (jeu) {
       // le téléphone : racine, B le range
       const ph = window.__phone;
       if (ph && ph.toggle) {
+        if (ph.open) ph.hide();                                   // (F2 : rangé d'abord — un test d'avant a pu le laisser ouvert)
         ph.toggle(); for (let i = 0; i < 3; i++) { game.frame(1 / 60); await new Promise((q) => setTimeout(q, 30)); }
+        // (F2 : js/phone.js pose la classe « on » dans un requestAnimationFrame — onglet caché, il ne vient jamais : posée ici)
+        if (ph.open && ph.el && !ph.el.classList.contains('on')) { ph.el.classList.add('on'); game.frame(1 / 60); }
         const rP = n.racine();
         F.bouton('B', true); game.frame(1 / 60); F.bouton('B', false); game.frame(1 / 60);
         await new Promise((q) => setTimeout(q, 60)); game.frame(1 / 60);
@@ -503,6 +519,9 @@ export default function (jeu) {
       await essai();
       const menu = document.getElementById('fin-jeu');
       if (menu) {
+        // (F2 : le VRAI écran de fin de L-U est construit par MenuJeu.fin — vide tant qu'aucune partie ne finit ; montré tel quel,
+        // il n'avait aucun bouton où poser le focus)
+        if (MENUS.courant && MENUS.courant.fin) { MENUS.courant.fin({ texte: 'Essai', immediat: true }); game.paused = false; }
         if (menu.hidden) menu.hidden = false;
         for (let i = 0; i < 2; i++) game.frame(1 / 60);
         const rf = n.racine();
