@@ -496,7 +496,7 @@ export default function (jeu) {
         const q = surFace(F.mur), k = E._kImp;
         tirVers(p, tireur, q, { mat: 'mur', forme: F.mur.id, seq: 5 });
         E.maj(1 / 60); S.maj(0, cam);
-        const v = S.voix.filter((x) => x.parts).pop();
+        const v = S.voix.filter((x) => x.parts && x.arme).pop();
         M.getColorAt(k, c);
         const cas = M.geometry.attributes.aFx.getX(k) === 0.5 && M.geometry.attributes.aFx.getY(k) === 0 ? 'peinture' : M.geometry.attributes.aFx.getX(k) === 0 && M.geometry.attributes.aFx.getY(k) === 0 ? 'trou' : '?';
         return { cas, c: c.clone(), v };

@@ -38,7 +38,7 @@ import { Rng, melanger } from './rng.js';
 export const REGLAGES_SONS = {
   voix: TELEPHONE ? 12 : 24,
   vitesseSon: 343,                                        // m/s : le retard d/343
-  occlusion: { parImage: 4, seuilDb: -30, tau: 0.033,     // (τ 0,033 s : 95 % du changement en 0,1 s)
+  occlusion: { parImage: 4, seuilDb: -30, tau: 0.033, revue: 0.25,   // (τ 0,033 s : 95 % du changement en 0,1 s ; une voix revue toutes les 0,25 s)
     bloque: { db: -9, hz: 700 }, niveau: { db: -14, hz: 400 }, dalle: { k: 0.35, hz: 900 } },
   claquementMax: 25,                                      // m : au-delà, ni claquement ni mécanique haute
   hauteur: 0.04,                                          // ±4 % par coup
@@ -320,7 +320,11 @@ export class SonsJeu {
     return this._bruitsVus;
   }
   // la préparation (Partie.preparer, sans l'attendre) : le bus, et la banque rendue en tâche de fond
-  preparer() { if (this.audio && this.audio.ctx && !this.audio.bruitBlanc) this.audio._bruits?.(); this._bus(); return this.pretBanque(); }
+  preparer() {
+    if (this.audio && this.audio.ctx && !this.audio.bruitBlanc) this.audio._bruits?.();
+    if (this._bus()) { const L = []; for (let i = 0; i < REGLAGES_SONS.voix; i++) { const c = this._chaine(); if (c) { c.occupee = true; L.push(c); } } for (const c of L) c.occupee = false; }
+    return this.pretBanque();
+  }
   // LA BANQUE (une fois par session) : la durée de chaque son par un faux contexte, tous rendus à la suite dans UN
   // OfflineAudioContext, puis découpés en tampons — une promesse, tenue quand elle est prête (ou impossible)
   pretBanque() {
@@ -349,12 +353,8 @@ export class SonsJeu {
   }
   // une voix qui LIT un son de la banque, à la hauteur `h` (playbackRate)
   _tampon(x, y, z, son, h, opts) {
-    let src = null;
-    const v = this.jouer3d(x, y, z, (ctx, out, q) => {
-      src = ctx.createBufferSource(); src.buffer = son.buf; src.playbackRate.setValueAtTime(h, q);
-      src.connect(out); src.start(q); src.stop(q + son.duree / h + 0.02); return son.duree / h;
-    }, opts);
-    if (v) { v.parts = son.parts; v.banque = true; v.source = src; }
+    const v = this.jouer3d(x, y, z, null, { ...opts, tampon: son, hauteur: h });
+    if (v) { v.parts = son.parts; v.banque = true; }
     return v;
   }
 
@@ -400,26 +400,51 @@ export class SonsJeu {
     const base = gain * (A.vol ? A.vol.sfx ?? 1 : 1);
     const niveauDb = db(base * (oreille ? 1 : A.attenuation ? A.attenuation(d) : 1));
     if (!this._place(niveauDb, prioritaire)) { this.stats.refusees++; return null; }
-    const g = ctx.createGain(); g.gain.value = base;
-    let filtre = null, panner = null;
-    if (oreille) g.connect(this.ui);
+    const now = ctx.currentTime;
+    let g, filtre = null, panner = null, ch = null;
+    if (oreille) { g = ctx.createGain(); g.gain.value = base; g.connect(this.ui); }
     else {
-      filtre = ctx.createBiquadFilter(); filtre.type = 'lowpass'; filtre.frequency.value = 20000; filtre.Q.value = 0.7;
-      panner = A.spatial ? A.spatial() : ctx.createPanner();
+      // une CHAÎNE reprise (gain → passe-bas → panoramique → bus), remise à zéro : son niveau, le filtre ouvert, sa place
+      ch = this._chaine(); if (!ch) { this.stats.refusees++; return null; }
+      ch.occupee = true; g = ch.gain; filtre = ch.filtre; panner = ch.panner;
+      g.gain.cancelScheduledValues(now); g.gain.value = base;
+      filtre.frequency.cancelScheduledValues(now); filtre.frequency.value = 20000;
       if (panner.positionX) { panner.positionX.value = x; panner.positionY.value = y; panner.positionZ.value = z; } else panner.setPosition(x, y, z);
-      g.connect(filtre); filtre.connect(panner); panner.connect(this.entree);
-      if (A.envoi) panner.connect(A.envoi);
     }
     const retard = opts.retard && !oreille ? d / REGLAGES_SONS.vitesseSon : 0, decalage = Math.max(0, opts.decalage || 0);
-    const quand = ctx.currentTime + decalage + retard;
-    let duree = 0;
-    try { duree = recette(ctx, g, quand) || 0; } catch (e) { console.warn('[sons]', e); }
+    const quand = now + decalage + retard;
+    // la source : un son de la banque (une seule source, branchée droit sur la chaîne) ou une recette (dans une entrée à
+    // la voix, qu'on débranche d'un coup quand elle est volée)
+    let duree = 0, source = null, entree = null;
+    try {
+      if (opts.tampon) {
+        const S = opts.tampon, h = opts.hauteur || 1;
+        source = ctx.createBufferSource(); source.buffer = S.buf; source.playbackRate.setValueAtTime(h, quand);
+        source.connect(g); source.start(quand); source.stop(quand + S.duree / h + 0.02); duree = S.duree / h;
+      } else {
+        entree = ch ? ctx.createGain() : g; if (ch) entree.connect(g);
+        duree = recette(ctx, entree, quand) || 0;
+      }
+    } catch (e) { console.warn('[sons]', e); }
     const v = { x, y, z, panner, filtre, gain: g, debut: this.t, fin: this.t + decalage + retard + duree, niveauDb, base, rayon, bas, retard, quand,
       dalle: opts.dalle || false, hauteurOcc: opts.hauteurOcc || 0, occ: 0, aVerifier: !oreille && opts.occlusion !== false && opts.dalle !== 'faite', oreille,
-      sansOcclusion: opts.occlusion === false };
+      sansOcclusion: opts.occlusion === false, chaine: ch, source, entree: ch ? entree : null, tOcc: -1 };
     this._voix.push(v);
     this.stats.creees++;
     return v;
+  }
+  // LES CHAÎNES DES VOIX, créées une fois et reprises : créer un nœud coûte 15 à 55 µs (mesuré le 23/10 : gain 16, passe-
+  // bas 46, panoramique 53, branchement 12) — une chaîne neuve par son, c'était 200 µs par tir. 24 voix + 6 en fondu.
+  _chaine() {
+    const L = this._chaines || (this._chaines = []);
+    for (const c of L) if (!c.occupee) return c;
+    if (L.length >= REGLAGES_SONS.voix + 6 || !this._bus()) return null;
+    const A = this.audio, ctx = A.ctx;
+    const c = { gain: ctx.createGain(), filtre: ctx.createBiquadFilter(), panner: A.spatial ? A.spatial() : ctx.createPanner(), occupee: false };
+    c.gain.gain.value = 0; c.filtre.type = 'lowpass'; c.filtre.frequency.value = 20000; c.filtre.Q.value = 0.7;
+    c.gain.connect(c.filtre); c.filtre.connect(c.panner); c.panner.connect(this.entree); if (A.envoi) c.panner.connect(A.envoi);
+    L.push(c);
+    return c;
   }
   // un son À L'OREILLE (marqueurs, cœur, décompte, coup reçu) : pas de panoramique, pas de distance, jamais étouffé
   jouer2d(recette, gain = 1, prioritaire = true) {
@@ -443,10 +468,12 @@ export class SonsJeu {
     if (ctx) { try { v.gain.gain.cancelScheduledValues(ctx.currentTime); v.gain.gain.setTargetAtTime(0, ctx.currentTime, 0.005); } catch (e) { /* débranchée */ } }
     this._mourantes.push({ v, t: this.t + 0.05 });
   }
+  // une voix finie (ou volée, après son fondu) : sa source ou son entrée débranchée, sa chaîne rendue au tas
   _liberer(v) {
-    try { v.gain.disconnect(); } catch (e) { /* déjà */ }
-    if (v.filtre) try { v.filtre.disconnect(); } catch (e) { /* déjà */ }
-    if (v.panner) try { v.panner.disconnect(); } catch (e) { /* déjà */ }
+    if (v.source) try { v.source.disconnect(); } catch (e) { /* déjà */ }
+    if (v.entree) try { v.entree.disconnect(); } catch (e) { /* déjà */ }
+    if (v.chaine) { v.chaine.occupee = false; v.chaine = null; }
+    else try { v.gain.disconnect(); } catch (e) { /* déjà */ }
   }
 
   // ---------------------------------------------------------------- L'OCCLUSION d'une voix (0 libre, 1 bloquée, 2 autre niveau, 3 dalle d'une provocation)
@@ -479,14 +506,15 @@ export class SonsJeu {
       if (!v.aVerifier) continue;
       v.aVerifier = false;
       if (v.niveauDb <= O.seuilDb) continue;
-      this._poserOcc(v, this._etatOcc(v), true); n++;
+      this._poserOcc(v, this._etatOcc(v), true); n++; v.tOcc = this.t;
     }
-    // puis, à tour de rôle, les voix en cours (une source ne bouge pas, mais l'auditeur oui)
+    // puis, à tour de rôle, les voix en cours qui durent (une source ne bouge pas, mais l'auditeur oui : revue toutes les
+    // 0,25 s au plus — un tir est fini avant)
     for (let essais = 0; n < O.parImage && essais < L.length; essais++) {
       this._occ = (this._occ + 1) % L.length;
       const v = L[this._occ];
-      if (!v.filtre || v.dalle === 'faite' || v.oreille || v.sansOcclusion || v.niveauDb <= O.seuilDb) continue;
-      const e = this._etatOcc(v); n++;
+      if (!v.filtre || v.dalle === 'faite' || v.oreille || v.sansOcclusion || v.niveauDb <= O.seuilDb || this.t - v.tOcc < O.revue) continue;
+      const e = this._etatOcc(v); n++; v.tOcc = this.t;
       if (e !== v.occ) this._poserOcc(v, e, false);
     }
     return n;
