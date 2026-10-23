@@ -667,6 +667,9 @@ export class PostFX {
     // mesure de performance pour le choix automatique de la qualité
     this.auto = true; this._ech = []; this._decided = false; this._last = performance.now(); this._t = 0;
     this.flash = 0; this.heat = 0;
+    // (23/10, lot L-H du jeu) l'option « Priorité fluidité » EN PARTIE : posée par les effets du jeu tant qu'ils sont
+    // branchés sur une partie (js/jeu/effets.js, réglage jeu.fluidite), rendue à faux à la sortie — voir budgetImage
+    this.fluidite = false;
     this.rays = 0; this.exposure = 1; this._sunNdc = new THREE.Vector3();
     // saturation et vignette de l'étalonnage, reposées à chaque image par la météo (js/weather.js : un terrain
     // peut les retoucher, le parc de Bécon un soir pâle) ; ces valeurs de départ sont celles de toujours
@@ -1767,7 +1770,7 @@ export class PostFX {
     const auPlancher = this.dyn <= plancher + 0.01 || figees.has(cle);
     const seuil = this._seuilBaisse();
     const charge = C ? auPlancher && Math.max(C.gpu, C.cpu) > seuil
-      : auPlancher && med > (seuil > BUDGET_IMAGE + 1 ? 34 : 26);
+      : auPlancher && med > this._marcheBaisse(seuil);
     if (charge) {
       this._souffrance += 0.5;
       if (this._souffrance > 4) {
@@ -1804,10 +1807,19 @@ export class PostFX {
   // (période de l'écran, ou celle de la limite d'images par seconde quand elle est plus longue).
   _cible() {
     const Tv = Math.max(this._tEcran || 1000 / 60, this.periodeCap || 0);
-    return Math.max(1, Math.floor(BUDGET_IMAGE / Tv + 0.02)) * Tv * 0.95;
+    return Math.max(1, Math.floor(this.budgetImage / Tv + 0.02)) * Tv * 0.95;
   }
-  // Le coût au-delà duquel le préréglage descend : le budget (45 im/s) ; de moyenne en basse sur PC, 30 im/s.
-  _seuilBaisse(q = this.quality) { return !this.dev.telephone && q === 'medium' ? 1000 / 30 : BUDGET_IMAGE; }
+  // Le coût au-delà duquel le préréglage descend : le budget (45 im/s, 60 sous « Priorité fluidité » en partie) ; de
+  // moyenne en basse sur PC, 30 im/s.
+  _seuilBaisse(q = this.quality) { return !this.dev.telephone && q === 'medium' ? 1000 / 30 : this.budgetImage; }
+  // LE BUDGET D'UNE IMAGE du moment (23/10, lot L-H du jeu ; arbitrage 32 de la spécification) : BUDGET_IMAGE (45 im/s),
+  // inchangé en balade et par défaut ; 60 im/s en partie quand Haythem a coché « Priorité fluidité » (réglage
+  // jeu.fluidite, posé dans `fluidite` par js/jeu/effets.js tant qu'une partie tourne) — la qualité automatique descend
+  // alors plus tôt d'un préréglage. Éteinte par défaut : l'intégration décide sur des mesures au calme.
+  get budgetImage() { return this.fluidite ? 1000 / 60 : BUDGET_IMAGE; }
+  // la marche de vsync au-dessus du budget, sans requêtes de temps (26 ms pour 45 im/s ; 20 ms pour 60 ; 34 ms de moyenne
+  // en basse sur PC)
+  _marcheBaisse(seuil) { return seuil > this.budgetImage + 1 ? 34 : this.fluidite ? 20 : 26; }
   // Début d'une image (js/game.js, en tête de frame) : le temps du processeur se compte de là à la fin du rendu.
   debutImage() { this._tDebut = performance.now(); }
 
@@ -2017,7 +2029,7 @@ export class PostFX {
           const C = this._cout(this._ech.length), seuil = this._seuilBaisse();
           const cout = C ? Math.max(C.gpu, C.cpu) : med;
           const lourd = C ? Math.max(this._coutA(C.gpu, 1, this._dynMin()), C.cpu) > seuil
-            : med > (seuil > BUDGET_IMAGE + 1 ? 34 : 26) && med >= 1.9 * T;
+            : med > this._marcheBaisse(seuil) && med >= 1.9 * T;
           let j = lourd ? i - 1 : (cout < 11 && !this._descendu) ? i + 1 : i;  // un cran à la fois : l'écart de coût
                                                                                // entre deux crans varie trop (ultra = 2,3 x high sur une puce intégrée)
           j = Math.max(0, Math.min(j, ordre.indexOf(this.plafond())));
