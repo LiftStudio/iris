@@ -67,7 +67,14 @@ export class Pilote {
     const c = this.cible;
     const saute = !c || Math.hypot(c.x - x, c.z - z) > 1.0 || Math.abs(c.y - y) > 1.2;
     if (!c) this.cible = { x, y, z }; else { c.x = x; c.y = y; c.z = z; }
-    if (saute) { this._arrive = false; this._coince = false; this._finBouchee = false; this.coincements = 0; this._replan = true; this._tPlan = -1; if (this.mode !== 'route') this._finFace(); }
+    // (une cible qui SAUTE : l'ancien chemin est oublié — le suivre, c'était courir un pas vers l'ancien but puis faire
+    // demi-tour quand le nouveau chemin arrive, à l'étape 9 du même pas)
+    if (saute) {
+      this._arrive = false; this._coince = false; this._finBouchee = false; this.coincements = 0; this._replan = true; this._tPlan = -1;
+      this.chemin = []; this.k = 0; this.vise = 0; this._franchi = null;
+      if (this._attente) { this._attente = false; if (this.nav && this.nav.annuler) this.nav.annuler(this.cle); }   // (la demande d'avant : caduque)
+      if (this.mode !== 'route') this._finFace();
+    }
     else if (this._plan && (Math.hypot(this._plan.x - x, this._plan.z - z) > 1.5 || Math.abs(this._plan.y - y) > 1.2)) this._replan = true;
   }
   stop() {
