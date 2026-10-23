@@ -566,6 +566,26 @@ export default function (jeu) {
       obtenu: res.map((r) => (r[1] ? '' : '✗ ') + r[0]).join(' · ') };
   });
 
+  // 14 bis. CE QUE L'ON ENTENDRAIT : chaque recette rendue hors ligne (OfflineAudioContext, sans geste) au volume d'une voix
+  //     — ni NaN, ni saturation (crête < 1), assez forte pour s'entendre (efficace ≥ 0,01) ; mesures notées
+  T('14b sons : chaque recette rendue hors ligne — ni NaN, ni saturation, audible', async (t) => {
+    const sr = 22050, L = [];
+    const bruit = (ctx) => { const b = ctx.createBuffer(1, sr, sr), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; };
+    for (const [nom, rec] of Object.entries(RECETTES_PROP)) {
+      const ctx = new OfflineAudioContext(1, Math.ceil(sr * 2), sr), g = ctx.createGain();
+      g.gain.value = PROVOCATIONS.some((q) => q.id === nom) ? REGLAGES_SONS.provocation * REGLAGES_SONS.forcee : 0.8; g.connect(ctx.destination);
+      const duree = rec(ctx, g, 0.01, bruit(ctx));
+      const x = (await ctx.startRendering()).getChannelData(0);
+      let crete = 0, e = 0, nan = false;
+      for (let i = 0; i < x.length; i++) { const v = x[i]; if (!Number.isFinite(v)) nan = true; else { crete = Math.max(crete, Math.abs(v)); e += v * v; } }
+      L.push({ nom, duree, crete, eff: Math.sqrt(e / Math.max(1, duree * sr)), nan });
+    }
+    t.note('sons rendus (nom : crête / efficace)', L.map((s) => `${s.nom} ${s.crete.toFixed(2)}/${s.eff.toFixed(3)}`).join(' · '));
+    const ko = L.filter((s) => s.nan || s.crete >= 1 || s.eff < 0.01);
+    return { ok: !ko.length, attendu: 'crête < 1, efficace ≥ 0,01, aucun NaN, pour les ' + L.length + ' recettes',
+      obtenu: ko.length ? 'hors bornes : ' + ko.map((s) => `${s.nom} ${s.crete.toFixed(2)}/${s.eff.toFixed(3)}${s.nan ? ' NaN' : ''}`).join(', ') : L.map((s) => `${s.nom} ${s.crete.toFixed(2)}/${s.eff.toFixed(3)}`).join(' · ') };
+  });
+
   // 15. LE DÉTERMINISME ET L'ÉTAT : verifierDeterminisme(42, 60) ; verifierEtat en cachette, traque, révélation (et une manche
   //     où les rôles ont tourné, avec Haythem)
   T('15 verifierDeterminisme(42, 60), verifierEtat en cachette, traque, révélation', async () => {
