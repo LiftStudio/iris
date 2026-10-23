@@ -185,7 +185,9 @@ function aplatir(proto) {
     if (!o.isMesh) return;
     const g = o.geometry, m = o.material;
     if (!g || !g.attributes.position || Array.isArray(m) || o.isSkinnedMesh || o.isInstancedMesh || (g.morphAttributes && Object.keys(g.morphAttributes).length)) { aPart.push(o); return; }
-    const cle = [m.uuid, o.castShadow, o.receiveShadow, o.renderOrder, !!o.userData.horsAOSol, !!o.userData.sansNormales, Object.keys(g.attributes).sort().join(','), !!g.index].join('#');
+    // (l'ombre portée n'entre pas dans la clé : une roulette sans ombre cousue avec le reste du piètement en porte une, à 2 cm
+    // près — un maillage de plus coûterait 3 à 4 appels à chaque copie ; `horsAOSol` ne vaut que pour l'ombre cuite du décor)
+    const cle = [m.uuid, o.renderOrder, !!o.userData.sansNormales, Object.keys(g.attributes).sort().join(','), !!g.index].join('#');
     if (!familles.has(cle)) familles.set(cle, []);
     familles.get(cle).push(o);
   });
@@ -197,7 +199,7 @@ function aplatir(proto) {
     if (geos.length > 1) for (const q of geos) if (q !== g) q.dispose();
     if (!g) { for (const o of L) aPart.push(o); continue; }
     const M = L[0], mesh = new THREE.Mesh(g, M.material);
-    mesh.castShadow = M.castShadow; mesh.receiveShadow = M.receiveShadow; mesh.renderOrder = M.renderOrder;
+    mesh.castShadow = L.some((o) => o.castShadow); mesh.receiveShadow = L.some((o) => o.receiveShadow); mesh.renderOrder = M.renderOrder;
     mesh.userData = { ...M.userData }; mesh.name = M.name || '';
     plat.add(mesh);
   }
