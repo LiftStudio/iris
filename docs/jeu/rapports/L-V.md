@@ -9,7 +9,7 @@ Fichiers : `js/jeu/viewmodel.js`, `js/jeu/anim_vue.js` (remplis), `js/jeu/tests/
 `&rapport=1&lot=L-V` **15/15 sur PC** (1280 × 720, haute) **et 15/15 sous `?tel=1`** (375 × 812, moyenne), 0 signalé ;
 (b) `&rapport=1&lot=S0` **29/29** sur la branche (balade au bit près avant et après les parties) ; (c)
 `python -I tools/verifier_proprietaires.py lot/L-V` → `OK 4 fichiers` ; (d) commits préfixés `L-V : …` avec la ligne
-d'attribution ; (e) ce rapport, commité ; (f) onglet fermé, serveurs (8134, 8234) arrêtés, jeton `jeton_3` rendu.
+d'attribution ; (e) ce rapport, commité ; (f) onglet fermé, serveurs (8134, 8234) arrêtés, jeton rendu (voir « Incident : le jeton du navigateur »).
 Un repreneur n'a rien à finir ; F2 rejoue les deux tests `apresFusion` (vraies armes de L-W, recul et gestes de L-A/L-B).
 Outils de session, non commités : `C:/Users/hgami/AppData/Local/Temp/claude/C--/d2516763-f01d-443a-9d38-fe9a0c124e7f/scratchpad/lv/`
 (`recepteur.py`, port 8234 : reçoit les photos du navigateur ; `planche.py` : planches-contact ; `photos/`). La maquette des
@@ -147,6 +147,14 @@ PC (`http://127.0.0.1:8134/?test=1&rapport=1&lot=L-V`, 757f08e) : `ok: true`, `t
   tombe (recharge à vide).
 - **F2 / INT** : brancher l'inspection (`aff.viewmodel.inspecter()` sur R tenu 0,6 s, chargeur plein) ; revoir la pose de
   sprint sur les vrais modèles (proposition si la crosse gêne moins : (0,06 ; −0,15 ; −0,30) rot (−0,40 ; 0,65 ; 0,35)).
+
+## Incident : le jeton du navigateur
+- J'ai pris `jeton_3` au début de ma série et gardé un seul onglet ouvert toute la session (sans rafraîchir `qui.txt`).
+  L-B l'a repris à 03:51 comme « périmé » (plus de 45 min, § 5.1 règle 3) alors que mon onglet était encore ouvert : nous
+  avons partagé ce jeton (4 pages de jeu possibles). En rendant le mien à la fin (04:13), j'ai supprimé `jeton_3`, qui
+  portait alors le `qui.txt` de L-B ; L-A l'a repris 17 s plus tard (04:12:50). L-B croit encore le tenir. Note laissée :
+  `C:/Users/hgami/Downloads/IRIS_lots/_navigateur/NOTE_L-V_jeton3.txt`. Leçon (pour la règle 3) : un agent qui garde
+  sa page plus de 45 min réécrit son `qui.txt`, et l'on ne supprime un jeton qu'après avoir relu que `qui.txt` est le sien.
 
 ## Doutes
 
