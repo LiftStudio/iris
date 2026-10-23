@@ -4,9 +4,39 @@
 
 **EN COURS.** Lu : la spec (§ 3.3, § 4.1, § 4.5.8-4.5.9, § 4.10, § 5.1, § 5.5.3), CoD § 6.2, le diff `socle...lot/L-W`
 (3 fichiers), la planche et les photos du constructeur. `verifier_proprietaires` : OK 3 fichiers ; fins de ligne CRLF comme
-les voisins ; 9 commits préfixés, tous avec la ligne d'attribution. Jeton du navigateur : en attente (les trois pris à
-06:00). Prochaines étapes : corriger les défauts trouvés à la lecture (ci-dessous), puis rejouer L-W et S0 sur PC et sous
-`?tel=1`, jouer l'essai, regarder les pièces mobiles en bout de course.
+les voisins ; 9 commits préfixés, tous avec la ligne d'attribution. Corrections de lecture COMMITÉES (`160cb2c`,
+`a88fadf`, détail plus bas) et passées sous Node (tests 2, 3, 4, 6, 8 ; aperçu logiciel des pièces en bout de course).
+Jeton du navigateur : en attente depuis 06:00 (les trois pris par L-E, L-M, L-H). Reste : rejouer L-W et S0 sur PC et sous
+`?tel=1` (avec les tests 7 et 10 regardés), jouer l'essai, puis clore ce rapport.
+
+### Ce que la relecture a trouvé et corrigé (lecture du code, avant le navigateur)
+1. **Pièces qui flottaient en bout de course** (vue ; invisibles au repos, donc absentes de la planche et des tests) :
+   - P-17 : la couronne polie, l'âme et le guide du ressort sont FIXES, à −0,135 ; la glissière reculée de 3 cm (au tir, et
+     tenue en arrière à vide par L-V) laissait la couronne flotter 2,5 cm devant elle. Ajout d'un canon fixe (r 5,8 mm,
+     −0,1305 → −0,0705) et d'un guide (−0,1345 → −0,0945), cachés dans la glissière au repos : glissière reculée, le canon
+     paraît, comme sur un vrai pistolet.
+   - TP-50 : la culasse ne faisait que 3,8 cm (+0,030 → +0,068) ; reculée de 8 cm elle flottait 7,5 cm derrière le boîtier, à
+     chaque coup (le réarmement est 0,25 s après le tir, en hanche). Le corps se prolonge dans le boîtier jusqu'à −0,05 (os
+     `culasse`, vue seulement) : ouverte, elle sort du boîtier.
+   - FA-24 : le levier d'armement tiré de 7,5 cm était un T sans tige au-dessus du tube de crosse. Une tige (os `culasse`,
+     vue) court dans le boîtier.
+2. **Chargeur du P-17** (`COURSES_OS`) : tiré tout droit vers le bas (`y −0,16`), il traversait le devant de la poignée inclinée
+   de 15° dès 2,6 cm (7 mm de jeu). Sa course suit l'axe de la poignée : `y −0,16·cos 15°, z +0,16·sin 15°`.
+3. **Boîtes des `SkinnedMesh`** : le maillage recevait la Box3 et la Sphere de la GÉOMÉTRIE PARTAGÉE ;
+   `SkinnedMesh.computeBoundingBox()` (three r170) les réécrit sur place avec les os de CET exemplaire — un appel (L-V, un
+   outil) aurait faussé la boîte de toutes les armes. Copiées par exemplaire.
+4. **Repère `oeilleton` du FP-12** (ajout, 0 ; 0,060 ; −0,035 : le centre de l'anneau arrière, sur la ligne de mire de la
+   perle) : viser par la perle à 0,24 m (§ 4.5.9) met la crosse 0,68 m derrière la caméra ; par l'œilleton, 1,5 cm derrière
+   l'œil (FA-24 : 4 cm). Donné à L-V et F2 pour trancher l'écart 4.
+5. **Test 5, « 0 requête »** : il comptait `performance.getEntriesByType('resource')`, dont le tampon plafonne (250 par défaut)
+   — plein, une requête de plus n'y entre plus et « +0 » ne prouve rien. Remplacé par un `PerformanceObserver` ouvert pendant
+   le test (`takeRecords` après 300 ms).
+6. **Planche (test 7)** : la 3e colonne s'appelait « vue du tireur » aussi pour le couteau et les grenades (c'est un
+   trois-quarts arrière) ; et le modèle à la 3e PERSONNE — celui que le joueur voit sur tous les bots — n'était sur aucune
+   photo. 4e colonne « 3e personne (bots) » (32 photos). Le studio est mis en commun (`studio()`).
+7. **Test 10 (ajout) : les pièces mobiles en bout de course** — chaque os au bout de `COURSES_OS` (culasse du TP-50 levée de
+   60° ET reculée ; chargeurs à 40 %, à la sortie du puits), en vue du tireur et de flanc : `window.__plancheCourses`, à
+   regarder (ce que les points 1 et 2 ont manqué).
 
 Branche `lot/L-W` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-W`), partie de `socle` (`e06258f`, tag `socle-ok`),
 port 8133 ; 23/10/2026.
