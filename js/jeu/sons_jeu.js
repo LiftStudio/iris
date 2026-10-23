@@ -44,7 +44,7 @@ export const REGLAGES_SONS = {
   hauteur: 0.04,                                          // ±4 % par coup
   pasEnnemi: 4,                                           // dB de plus pour les pas d'un ennemi
   // rayons (m) : au-delà, la voix n'est pas créée (l'oreille de Haythem, plus fine que celle des bots, § 3.7)
-  rayons: { tir: 75, pas: { sprint: 22, course: 15, marche: 6 }, impact: 25, recharge: 10, vide: 6, arme: 6, explosion: 90, flash: 60,
+  rayons: { tir: 75, pas: { sprint: 22, course: 15, marche: 6, accroupi: 4 }, impact: 25, recharge: 10, vide: 6, arme: 6, explosion: 90, flash: 60,
     frole: 4, corps: 15, saut: 10, grenade: 25, douille: 12 },
   // gains de base des voix (avant la loi de distance)
   gains: { tirLocal: 0.9, tir: 0.8, pas: 0.6, pasLocal: 0.3, impact: 0.55, recharge: 0.55, rechargeLocal: 0.6, vide: 0.5, arme: 0.45,
@@ -515,7 +515,8 @@ export class SonsJeu {
         const allure = e.allure || 'course', r = R.pas[allure] ?? R.pas.course;
         if (!r) return;
         const local = lui(e.a), plus = this._ennemi(e.a) ? Math.pow(10, REGLAGES_SONS.pasEnnemi / 20) : 1;
-        const v = this.jouer3d(e.x, e.y, e.z, RECETTES.pas(B, e.f ?? 0.6), { gain: (local ? G.pasLocal : G.pas) * plus * (allure === 'marche' ? 0.45 : allure === 'sprint' ? 1.15 : 1),
+        const k = allure === 'marche' ? 0.45 : allure === 'accroupi' ? 0.3 : allure === 'sprint' ? (e.tact ? 1.3 : 1.15) : 1;
+        const v = this.jouer3d(e.x, e.y, e.z, RECETTES.pas(B, e.f ?? 0.6), { gain: (local ? G.pasLocal : G.pas) * plus * k,
           rayon: local ? 3 : r, retard: true, decalage: dec, hauteurOcc: 1.0, occlusion: !local });
         if (v) { v.pas = true; v.ennemi = plus > 1; v.acteur = e.a; }
         return;
