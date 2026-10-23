@@ -167,7 +167,7 @@ export class HudProp {
     // ---- le point de visée et l'aide « E : devenir … » (le meuble visé : `hud.prop.vise` si les règles le donnent, sinon
     //      viserMeuble, 10 fois par seconde — une lecture, comme les bots la feraient) ----
     let vise = null;
-    if (prop && (phase === 'cachette' || phase === 'traque' || phase === 'presentation')) {
+    if (prop && Pr && (phase === 'cachette' || phase === 'traque' || phase === 'presentation')) {
       if (Pr.vise !== undefined) vise = Pr.vise ? (typeof Pr.vise === 'string' ? Pr.vise : Pr.vise.nom) : null;
       else {
         if (this.t - this._viseT >= 1 / REGLAGES_HUD_PROP.viseHz || this._viseT < 0) {

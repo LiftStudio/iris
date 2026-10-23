@@ -385,4 +385,6 @@ body.touch .hj-fil-l { top: calc(var(--tc-haut, 64px) + 4px); }
 body.touch .hp-scan { right: calc(var(--tc-droite, 278px) + 8px); }
 body.touch .hp-touches { display: none; }
 @media (max-width: 760px) { .ts-corps.deux { grid-template-columns: 1fr; gap: 6px; } .ts-ligne { height: 28px; } .ts-portrait, .ts-portrait img { width: 24px; height: 24px; } }
-@media (prefers-reduced-motion: reduce) { .hj-vignette.bat .hj-vignette-bat, .hp-oeil.repere b, .hj-mun-aide.recharge { animation: none; } }
+/* (moins de mouvement demandé : les textes ne clignotent plus ; le battement de la vignette reste — c'est une information de
+   jeu, la vie sous 30 PV, et il ne déplace rien) */
+@media (prefers-reduced-motion: reduce) { .hp-oeil.repere b, .hj-mun-aide.recharge { animation: none; } }

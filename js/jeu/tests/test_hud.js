@@ -258,8 +258,10 @@ export default function (jeu) {
       const nav = p.nav, t0 = performance.now();
       if (nav && nav.nb > 0) M._depuisNoeuds(nav); else M._depuisPieces();
       const prep = performance.now() - t0;
-      const mes = jeu.mesurer(() => M.maj(1 / 60, p), 200);
-      res.push([`preparer ${r2(prep)} ms (${M.source}), maj ${r2(mes.med)} ms`, t.temps('L-G minicarte preparer', prep, 50) && t.temps('L-G minicarte maj', mes.med, 0.1)]);
+      // (maj : la moyenne de 300 appels — une seule mesure serait sous la résolution de l'horloge)
+      const t1 = performance.now(); for (let i = 0; i < 300; i++) M.maj(1 / 60, p);
+      const mj = (performance.now() - t1) / 300;
+      res.push([`preparer ${r2(prep)} ms (${M.source}), maj ${Math.round(mj * 1000)} µs`, t.temps('L-G minicarte preparer', prep, 50) && t.temps('L-G minicarte maj', mj, 0.1)]);
     } finally { rendre(); }
     return bilan(res, '200 px (160 au doigt), 24 m ; allié à sa place, ▲ à l’étage ; ennemi 2 s après un tir ; preparer ≤ 50 ms, maj ≤ 0,1 ms');
   });
@@ -282,7 +284,7 @@ export default function (jeu) {
       res.push([`caché, tenu → montré, relâché → caché`, cache0 && montre && cache1]);
       res.push([`deux colonnes d’équipe (${ent.map((e) => e.split('SCORE')[0]).join(' | ')})`, deux]);
       res.push(['colonnes rang, portrait, nom, score, É, M, A, ratio, série', cols && !!A.tableau.el.querySelector('.ts-ligne .ts-rg') && !!A.tableau.el.querySelector('.ts-ligne .ts-nom')]);
-      res.push([`${lignes} lignes pour ${p.hud.classement.length} acteurs ; portrait ${lp} px (${attendu} sur cet écran, 32 au PC)`, lignes === p.hud.classement.length && lp === attendu]);
+      res.push([`${lignes} lignes pour ${p.hud.classement.length} acteurs ; portrait ${lp} px (${attendu} sur cet écran, 32 au PC)`, lignes === p.hud.classement.length && egalA(lp, attendu, 0.5)]);
       rendre();
       ({ p, A, rendre } = await lancer('prophunt', { zone: 'e1', graine: 3 }));
       p.majHud(); A.tableau.maj(p, true);

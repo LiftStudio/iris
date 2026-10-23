@@ -161,7 +161,7 @@ export class HudJeu {
     this._infoMort = null; this._zoneTouche = null; this._soins = null;
     this._captures = new Map();
     this._stand = null;
-    this.ecartPx = 0; this.vise = null;
+    this.ecartPx = 0; this.vise = null; this._vieT = undefined; this._alerte = null; this._presT = undefined; this._chiffreT = undefined;
   }
   // (facultative, § 4.5.5 : appelée sous l'écran PRÉPARATION — le DOM est prêt avant la première image)
   preparer() { this._creer(); }
