@@ -181,8 +181,10 @@ export class Arsenal {
   // peut partir, sinon l'arme baissée du sprint la perdait) une recharge peut-elle partir maintenant ?
   peutRecharger() {
     const f = this.arme; if (!f || !f.recharge) return false;
-    const ch = this.ch[this.i], res = this.res[this.i], capMax = f.chargeur + (f.recharge.parCartouche || ch === 0 ? 0 : 1);
-    return res > 0 && ch < capMax && (this.et === 'pret' || this.et === 'tir' || this.et === 'sprint');
+    // (F2 : un chargeur PLEIN ne se recharge pas — comme dans Call of Duty, R ne fait rien ; la balle de la chambre, + 1, n'est
+    // gagnée que par une recharge tactique d'un chargeur entamé. Avant : 30 → 31, 12 → 13 au P-17, renvoyé par L-A à INT)
+    const ch = this.ch[this.i], res = this.res[this.i];
+    return res > 0 && ch < f.chargeur && (this.et === 'pret' || this.et === 'tir' || this.et === 'sprint');
   }
   get piston() { return this.ps; } get roulis() { return this.ro; }  // m (l'arme recule) ; degrés
   get tirSeq() { return this.seq; }
@@ -305,9 +307,9 @@ export class Arsenal {
     }
     // 7. RECHARGER : sur le front, ou d'office à vide (la cadence du dernier tir finie)
     // (F2 : une arme sans recharge — le couteau tenu en main, une dotation de test de L-B — ne recharge pas)
+    // (F2 : jamais d'un chargeur plein — peutRecharger)
     const ch = this.ch[this.i], res = this.res[this.i];
-    const capMax = f.recharge ? f.chargeur + (f.recharge.parCartouche || ch === 0 ? 0 : 1) : 0;
-    if (f.recharge && res > 0 && ((cmd.recharger && ch < capMax) || (ch === 0 && (this.et !== 'tir' || t + 1e-9 >= this.prochain)))) {
+    if (f.recharge && res > 0 && ((cmd.recharger && ch < f.chargeur) || (ch === 0 && (this.et !== 'tir' || t + 1e-9 >= this.prochain)))) {
       if (this.et === 'pret' || this.et === 'tir') { this._recharger(f, t, partie); return; }
     }
     // 8. TIRER

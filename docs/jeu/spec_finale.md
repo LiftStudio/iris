@@ -393,7 +393,8 @@ pas en partie (sinon `gasMul` ralentit et les couches posent les mains sur les g
 | Bruit (m, ouïe des bots) | 45 | 40 | 45 | 60 | 35 |
 | Encombrement (prises : § 4.5.9) | 0,84 m | 0,62 m | 0,95 m | 1,10 m | 0,19 m |
 
-- Recharge « tactique » = il restait des balles → chargeur + 1 (chambre). Annulée par le sprint, un changement d'arme ou
+- Recharge « tactique » = il restait des balles → chargeur + 1 (chambre) ; (F2) jamais d'un chargeur plein (R n'y fait
+  rien, comme dans Call of Duty). Annulée par le sprint, un changement d'arme ou
   le couteau tant que les balles ne sont pas entrées. Tir en sprint = sortie du sprint puis tir après `sprintTir`.
   Automatiques par `tir` tenu, semi-auto par front avec tampon de 0,1 s. Visée maintenue par défaut (bascule en option).
 - **Cadence, avec REPORT DU RESTE** (80 ms font 9,6 pas, 857 ms en font 102,86 : `prochain = t + 60/rpm` tirerait tous
