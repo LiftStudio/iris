@@ -39,7 +39,7 @@ export const TABLE_PORTES_FPS = {
   'salle 2 du 2e (S 2.8)': 'ouverte', 'salle David Clark': 'ouverte', 'hall -1 → pause': 'ouverte', 'grande salle S -1.14': 'ouverte',
   'Si 0.1': 'ouverte', 'bureau B': 'ouverte', 'service (hall)': 'ouverte',
   'toilettes femmes': 'fermee', 'toilettes hommes': 'fermee', 'toilettes PMR': 'fermee', 'local (C01)': 'fermee', 'service (passage)': 'fermee',
-  // les fixes (27), comme la carte les a construites
+  // les fixes (28 avec celle du lot R), comme la carte les a construites
   'escalier': 'ouverte', 'couloir est (hall)': 'ouverte', 'vestibule est': 'ouverte', 'vestibule est (petit vantail)': 'ouverte',
   'palier est (couloir du 1er)': 'ouverte', '1er étage': 'ouverte', 'salle Robert Kahn Si 1.4': 'ouverte', 'espace pause (porte du fond)': 'ouverte',
   'salle S 1.3': 'ouverte', 'palier -1 (escalier est)': 'ouverte', 'palier -1 (petit vantail)': 'ouverte',
@@ -48,6 +48,9 @@ export const TABLE_PORTES_FPS = {
   'Si 1.4 (porte du mur ouest)': 'fermee', '2e étage (dégagement ouest)': 'fermee', 'bureau des conseillers B 2.3': 'fermee',
   'salle Bjarne Stroustrup Si 2.6': 'fermee', 'local électrique (-1)': 'fermee', 'réservé au personnel (sas, sud)': 'fermee',
   'réservé au personnel (sas, ouest)': 'fermee',
+  // (F2 : la porte neuve du lot R — l'espace pause du −1 refait, js/ecole_soussol.js : la porte sombre vers le sas de l'angle
+  // nord-est, fixe et fermée en balade —, fermée comme la carte la construit ; la seule porte inconnue après sa fusion)
+  'pause → sas de l\'angle nord-est': 'fermee',
 };
 // LE SENS D'OUVERTURE EN PARTIE, quand il n'est pas celui de la balade (F2, raccord L-D / L-M) : la grise du hall du −1 s'ouvre
 // en balade vers le hall (js/ecole_soussol.js, `libre: −1` — Haythem la tire à lui) ; ouverte à ANGLE_AUTO, son vantail de
