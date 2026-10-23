@@ -38,9 +38,12 @@ export default function (jeu) {
     const res = [];
     for (const [mode, o] of [['equipes', { zone: 'ecole', humain: false }], ['prophunt', { zone: 'e1', premierRole: 'prop' }]]) {
       const L = [];
+      // (« valable » : les images viennent de requestAnimationFrame — onglet devant ; dans un panneau caché, les attentes de la
+      // préparation — compileAsync qui sonde toutes les 10 ms, les minuteries — sont bridées à une par seconde : non valable)
+      const v = (await jeu.images(2)).valable;
       for (let k = 0; k < 2; k++) { const t0 = performance.now(); await jeu.lancer(mode, { graine: 10 + k, ...o }); L.push(performance.now() - t0); jeu.quitter('balade'); }
-      const a = t.temps(`F2 préparation ${mode} 1re (ms)`, L[0], 4000), b = t.temps(`F2 préparation ${mode} 2e (ms)`, L[1], 1500);
-      res.push([`${mode} : ${Math.round(L[0])} ms puis ${Math.round(L[1])} ms`, a && b]);
+      const a = t.temps(`F2 préparation ${mode} 1re (ms)`, L[0], 4000, v), b = t.temps(`F2 préparation ${mode} 2e (ms)`, L[1], 1500, v);
+      res.push([`${mode} : ${Math.round(L[0])} ms puis ${Math.round(L[1])} ms${v ? '' : ' (onglet caché : non valable)'}`, a && b]);
     }
     return bilan(res, '1re ≤ 4 000 ms, 2e ≤ 1 500 ms (temps relatifs)');
   }, { delai: 180, apresFusion: true });
