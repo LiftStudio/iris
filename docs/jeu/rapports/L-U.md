@@ -224,3 +224,81 @@ togglePause / frame, `js/manette.js` et `js/manette_menus.js`, `js/settings.js`,
 9. **Tests dépendants de la sauvegarde de l'origine** : les tests 4 (Airsoft par défaut, limites préréglées) et 10 (champ
    à 90°…) lisaient les réglages chargés de `iris.settings.v1` de `127.0.0.1:8141` — une partie jouée à la main sur ce
    port (hors `?test=1`, qui n'écrit rien) les aurait fait échouer. Ils partent maintenant de réglages NEUFS (en mémoire).
+10. **Le CLAVIER ne validait rien dans les menus** (joué : ↓ ↓ ENTRÉE sur l'accueil, rien ne s'ouvrait) : `js/input.js`
+    empêche l'action par défaut des touches qu'il lie (ENTRÉE = interagir, ESPACE = sauter), des flèches et de Tab ; l'aide
+    de l'accueil promettait « ENTRÉE valider », et dans les réglages ni Tab ni les flèches ne parcouraient rien. Corrigé
+    (`MenuJeu._naviguer`, écouté en capture avant `input.js`) : les flèches mènent le focus au bouton le plus proche dans leur
+    direction — l'écart de travers mesuré entre les BORDS (des boutons d'une colonne alignés à gauche, de largeurs
+    différentes : mesuré entre centres, ↓ sautait COMBAT), d'abord dans la fiche qui défile (les lignes sous le pli, que
+    LANCER aurait volées), ← → restent sur la ligne —, ENTRÉE ou ESPACE valident, le focus survit au nouveau rendu des
+    réglages, le cadre du focus clavier est celui de la manette ; accueil, réglages, crédits, bilan. Test 1 (au clavier).
+11. **Téléphone couché (812 × 375)** : le bilan de fin faisait 603 px — REJOUER et les trois autres boutons sous le pli.
+    Corrigé : bilan compact sous 520 px de haut (podium et chiffres resserrés, les six chiffres sur une ligne dès 600 px
+    de large) : 375 px, tout visible ; et partout, un bilan qui défile garde ses quatre boutons collés au bas. Les lignes de
+    réglage gardent libellé à gauche et réglage à droite sur un écran large mais bas (≈ 3 lignes visibles au lieu de 2).
+12. **Titre du bilan sans ex æquo** : au prop hunt, quatre joueurs à 0 point donnaient « MEILLEUR SCORE » (Haythem premier
+    par l'ordre des acteurs) ; « 1e PLACE » au lieu de « 1re ». Le rang compte les ex æquo (« EX ÆQUO EN TÊTE »), et le
+    chacun pour soi est classé par éliminations, comme sa règle (`PartieFPS`) ; VICTOIRE seulement pour le gagnant qu'elle
+    désigne.
+13. **Tests fragiles** (vus au premier passage, le panneau du navigateur à 1280 × 218 : 11/14) : le test 1 supposait une
+    colonne (↓ dans l'ordre de la liste) — sur un écran bas l'accueil est sur deux colonnes : il parcourt maintenant les
+    quatre directions depuis BALADE et vérifie que chaque porte est atteinte ; test 13 (premier Tab à 155 ms onglet DEVANT) :
+    la machine chargée par les autres agents faisait déjà 220 à 280 ms SANS Tab — le test mesure maintenant 30 images sans
+    Tab (après 30 d'échauffement) et note la mesure « non valable » si elles passent déjà 50 ms.
+
+### Vérifié, juste (point par point)
+
+- **Contrat § 4.5.16** : `MenuJeu(game, deps)` avec `deps = { options, lancer, quitter }` (index.js) ; `accueil()` (racine
+  `menu-jeu`), `reglage('combat' | 'prop' | 'stand')` (racine `reglage-jeu`, `prophunt` accepté aussi), `preparation(f,
+  etape)`, `fin(resultat)` (racine `fin-jeu`, les quatre boutons), `credits()` (racine `credits-jeu`), `camera(dt, poser) →
+  true` (branchée par `game.cameraMenu`) ; `portrait(fiche) → 'assets/portraits/<id>.webp' | null`, liste `PORTRAITS` figée,
+  aucun WebGL (`Light(` absent de `js/jeu/`, l'outil est dans `tools/`). Signatures du socle inchangées ; ajouts : `MENUS`,
+  `vignette`, `bilan`, `optionsDe`, `zonesProp`, `compterTypes`, `_rattraper`.
+- **Affichage seulement** : le menu s'abonne à `elim`, `phase`, `tir`, `touche` de la partie et lit son état ; il ne
+  change aucune règle — sauf `game.paused = true` sous l'écran de fin (écart 7, DEMANDE 2, gardé : le pointeur rendu à la
+  fin ouvrirait la pause par-dessus). Aucun fichier de simulation dans le lot (pureté sans objet).
+- **Valeurs du § 3** : `LIMITES` (PC 9 bots, conseil 7, 6 visages ; téléphone 5, 3, 3), limites par mode (équipes 40 —
+  20 au téléphone —, chacun pour soi 20, domination 150 ; 10:00), effectifs par défaut (PC 3 + 4 = 7, chacun pour soi 5 ;
+  téléphone 1 + 2, 3), les textes des difficultés conformes au § 3.7 (repérage + réaction : 0,65 + 0,65 · 0,9 s à 10 m ·
+  0,6 s · 0,2 s, Mixte), les défis du § 2.6, le prop hunt du § 3.9 (manches 4/6/8, 4 à 8 joueurs, chasseurs =
+  arrondi(N/3), Facile au premier lancement, repli `e1`, 6 types), sensibilité 0,45 → 17,7 cm à 800 ppp, champ 75-110 (90),
+  visée 0,5-1,5, classes (dotations lues dans `CLASSES`), crédits contre `CREDITS.md` et LA CAGE `index.html:319-365` (sans
+  basket ni parc).
+- **Propriétaires** : `python -I tools/verifier_proprietaires.py lot/L-U` → OK 17 fichiers ; ni `js/ecole_soussol.js`, ni
+  `js/ecole_amphi.js`, ni le harnais, ni `docs/jeu/` hors de ce rapport ; fins de ligne : CRLF comme les voisins, LF pour
+  `js/ui.js` (comme avant).
+- **Joué et regardé** (onglet devant, 1280 × 720) : les trois plans de la caméra du menu (le hall et la pile « iris »,
+  l'escalier principal, la pause orange du 1er), les réglages COMBAT (habillage en tête, visages cochés en couleur) et
+  PROP HUNT (les zones grisées et leur raison), PRÉPARATION (étapes, astuce aux vraies touches), un LANCER → présentation,
+  la fin (bandeau VICTOIRE, puis le bilan : podium à portraits, six chiffres, quatre boutons), REJOUER (préparation sur
+  le menu), Options › COMBAT, Commandes › COMBAT (libellés AZERTY, souris, molette) ; au téléphone couché : l'accueil sur
+  deux colonnes, les réglages, le bilan (corrigés, 11) ; le vrai démarrage (sans `?test=1` : « APPUIE POUR COMMENCER » →
+  le menu, puis ↓ ↓ ENTRÉE : défaut 10 ; aucune sauvegarde laissée dans l'origine 8141). Console : aucune erreur des menus
+  (la seule : le service worker que le navigateur intégré refuse d'inscrire, hors lot).
+
+### Non vérifiable ici
+
+- **La vraie capture du pointeur** : le navigateur intégré la refuse (après un vrai clic sur « CLIQUE POUR JOUER », le
+  calque reste et `pointerLockElement` est nul). L'ÉCHAP réel sur l'écran de fin, pointeur capturé, reste donc à F2 (déjà
+  dans « Reste », point 3) ; il est couvert par le raisonnement (index.js rend le pointeur APRÈS que `fin` a gelé la partie :
+  `iris-pointeur` arrive sur une partie en pause) et par le test 8 (synthétique).
+- **Les temps** : la machine est partagée (rAF à 6 images/s quand l'onglet n'est pas devant, trois onglets d'école
+  ouverts) ; le premier Tab mesuré VALABLE, onglet devant, quatre manches de suite : 35, 19, 21, 20 ms (sans Tab :
+  17-18 ms) — sous les 50 ms ; les passages complets le notent « non valable » quand la machine passe déjà 50 ms sans Tab.
+
+### Écarts ajoutés par la relecture
+
+17. Avertissement d'effectif du prop hunt au-delà de `max(conseil, joueurs par défaut − 1)` et non du seul conseil (le
+    § 3.10 ne prévoit pas que la partie par défaut du téléphone, 5 joueurs, dépasse son conseil de 3 bots).
+18. REJOUER quitte vers le menu avant de relancer (le § 2.9 ne dit pas par où passer).
+19. `navigator.keyboard.lock(<lettres et chiffres>)` et non `lock()` (§ 4.8) : ÉCHAP et Alt + Tab restent au navigateur.
+20. Le clavier dans les menus (flèches, ENTRÉE, ESPACE) : le § 2.1 ne parle que de la manette et du doigt.
+21. Au chacun pour soi, podium et rang par éliminations (puis points) ; ailleurs par points (§ 2.4 : « podium des trois
+    premiers » ; la règle désigne le gagnant aux éliminations).
+
+### Demandes ajoutées par la relecture
+
+8. **F2 / L-A** (`armes.js` `stats.tirs`, `partie.js` `infliger` → `stats.touches`) : un tir compte UN, une touche compte
+   par PLOMB — la précision des statistiques passe 100 % au FP-12 (deux tirs à 2,5 m : 6 touches pour 2 tirs). Le bilan
+   compte lui-même sur les événements ; le profil (L-P) et le tableau des scores (L-G) en auront besoin : compter les plombs
+   dans `tirs`, ou une touche par tir.
