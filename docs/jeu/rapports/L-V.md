@@ -5,10 +5,10 @@ Fichiers : `js/jeu/viewmodel.js`, `js/jeu/anim_vue.js` (remplis), `js/jeu/tests/
 
 ## Relecture (relecteur sévère, 23/10/2026) — où j'en suis
 
-**EN COURS** (repreneur : reprendre ici). Lecture faite (spec §§ 3.2-3.4, 4.1, 4.5.6-4.5.9, 4.10.1, 5.1, 5.5.4 ; diff
-`socle...lot/L-V`) ; `python -I tools/verifier_proprietaires.py lot/L-V` → OK 4 fichiers ; fins de ligne CRLF comme
-les voisins. En attente d'un jeton du navigateur (les trois pris à 04:57 : L-C, L-K, L-G relecture) pour rejouer
-`&rapport=1&lot=L-V` (PC et `?tel=1`), `&lot=S0`, et jouer.
+**EN COURS** (repreneur : reprendre ici). Jeton 2 pris à 06:41. Rejoué sur `3b2e79f` : `&rapport=1&lot=L-V` **17/17** PC
+(1280 × 720, haute, 29 s) et **17/17** `?tel=1` (375 × 812, moyenne, 27 s), 0 signalé ; `&lot=S0` **29/29** (balade 0 / 0
+avant et après). Corrections faites (voir « Relecture : ce qui a été corrigé » plus bas, à écrire) ; reste : jouer avec
+les vrais modules de L-A, L-B, L-W (copie hors git), photos, rapport.
 
 ## Où j'en suis
 
