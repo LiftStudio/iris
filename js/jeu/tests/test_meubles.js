@@ -16,6 +16,7 @@ import { CorpsProp, deplacerProp, coinsLibres } from '../corps_prop.js';
 import { piecesDe, POINTS_APPARITION } from '../apparitions.js';
 import { creerCommande } from '../commande.js';
 import { Nav } from '../nav.js';
+import { capsules } from '../touches.js';
 
 // LES ONZE ENDROITS de carte_props § 4.1 (pieds, cap) : la caméra posée à 1,6 m, un rien vers le bas, champ 16:9 — les
 // appels et les triangles de la balade y sont ceux de `socle` (référence relevée sur `socle-ok` e06258f, même harnais)
@@ -105,11 +106,21 @@ export default function (jeu) {
   }, { delai: 300 });
   T('1c coût du registre à la construction ≤ 30 ms (rejoué sur une réplique)', async (t) => {
     await preparer();
-    // LA RÉPLIQUE : chaque pose, une copie de son prototype à sa place, avec son étiquette ; autant de maillages non étiquetés
-    // que la construction en a croisés (des maillages de la scène, géométrie partagée : le registre n'en lit que deux sommets)
+    // LA RÉPLIQUE : chaque pose, un meuble d'AUTANT DE MAILLAGES que son original (ceux de son prototype, recopiés en boucle,
+    // à leur place : relecture L-K du 23/10 — la copie cousue n'en a que 3 à 12 quand l'original en a 4 à 40, et le registre
+    // paie chaque maillage d'un étiqueté : la réplique mesurait 15 ms, le vrai en coûtait davantage), à sa place, avec son
+    // étiquette ; autant de maillages non étiquetés que la construction en a croisés (des maillages de la scène, géométrie
+    // partagée : le registre n'en lit que deux sommets)
     const S = MEUBLES.stats, rep = new THREE.Group();
+    let pieces = 0;
     for (const P of MEUBLES.poses) {
-      const T0 = MEUBLES.types.get(P.cle), c = copieMeuble(P.cle); if (!c) continue;
+      const T0 = MEUBLES.types.get(P.cle); if (!T0 || !T0.proto) continue;
+      const src = T0.proto.children.filter((m) => m.isMesh), c = new THREE.Group();
+      for (let k = 0; k < Math.max(1, T0.pieces || src.length); k++) {
+        const o = src[k % src.length], m = new THREE.Mesh(o.geometry, o.material);
+        m.position.copy(o.position); m.quaternion.copy(o.quaternion); m.scale.copy(o.scale);
+        m.castShadow = o.castShadow; c.add(m); pieces++;
+      }
       c.userData = { meuble: { type: T0.type, variante: T0.variante, nom: T0.nom, mural: T0.mural, surPlace: T0.surPlace, voile: T0.voile } };
       c.position.set(P.x, P.y0, P.z); c.rotation.set(0, P.cap, 0); rep.add(c);
     }
@@ -134,7 +145,7 @@ export default function (jeu) {
     t.note('registre, rattrapage et zones de la réplique (ms, préparation)', msPrep);
     const ok = t.temps('registre (ms, rejoué)', ms, 30) && r.poses === MEUBLES.poses.length;
     return { ok, attendu: '≤ 30 ms · ' + MEUBLES.poses.length + ' poses retrouvées',
-      obtenu: `${ms.toFixed(1)} ms à la construction (+ ${msPrep.toFixed(1)} ms à la préparation) pour ${r.poses} poses, ${r.types} types, ${n} maillages libres (${s} sommets ; la construction : ${vus} maillages non étiquetés croisés, ${S.libres} retenus, ${S.coutures} coutures)` };
+      obtenu: `${ms.toFixed(1)} ms à la construction (+ ${msPrep.toFixed(1)} ms à la préparation) pour ${r.poses} poses (${pieces} maillages étiquetés), ${r.types} types, ${n} maillages libres (${s} sommets ; la construction : ${vus} maillages non étiquetés croisés, ${S.libres} retenus, ${S.coutures} coutures)` };
   }, { delai: 120 });
 
   // 2. LE REGISTRE HORS DU −1 : types, poses, tailles, oubliés
@@ -163,8 +174,10 @@ export default function (jeu) {
       obtenu: `${types.size} types, ${H.length} poses hors du −1 (${v.types} clés, ${v.poses} poses en tout) · tailles ${tailles.join(' ; ') || 'justes'} (écarts justifiés au document : ${justes.join(' ; ') || 'aucun'}) · horsTolerance ${JSON.stringify(v.horsTolerance)} · oubliés L-M ${v.nonEtiquetes.filter(LM).map((e) => e.zone + ' (' + r3(e.x) + ' ; ' + r3(e.y) + ' ; ' + r3(e.z) + ')').join(', ') || 'aucun'} · autres ${JSON.stringify(autres)} · fautes ${fautes.join(', ') || 'aucune'}` };
   });
 
-  // 3. LE CATALOGUE : ≤ 600 ms, aucun programme neuf, une copie ≤ 12 appels (haute)
-  T('3 preparerCatalogue ≤ 600 ms, 0 programme, une copie ≤ 12 appels (haute)', async (t) => {
+  // 3. LE CATALOGUE : ≤ 600 ms, aucun programme de couleur (les passes annexes des objets mobiles, ≤ 3 variantes de
+  // profondeur, compilées là plutôt qu'à la première image d'un prop), une copie ≤ 12 appels (haute), 0 programme à la
+  // première image d'une copie
+  T('3 preparerCatalogue ≤ 600 ms, 0 programme de couleur, une copie ≤ 12 appels (haute), 0 à la première image', async (t) => {
     const prog = () => new Set((game.renderer.info.programs || []).map((p) => p.cacheKey));
     const p0 = prog(), t0 = performance.now();
     await preparerCatalogue(game);
@@ -191,11 +204,11 @@ export default function (jeu) {
         if (a > 12) trop.push(cle + ' ' + a + ' (' + T0.proto.children.length + ' maillages)');
       }
     } finally { game.freeCam = false; game.placerAuDepart(); fx.setQuality(q0, true); fx.auto = auto; }
-    const p2 = prog(), neufs = [...p2].filter((k) => !p1.has(k));
-    t.note('programmes de profondeur à la première image d’une copie', neufs.length);
-    const ok = t.temps('preparerCatalogue (ms)', ms, 600) && p1.size === p0.size && trop.length === 0 && neufs.every((k) => k.startsWith('depth')) && neufs.length <= 3;
-    return { ok, attendu: '≤ 600 ms · 0 programme compilé par le catalogue · chaque copie déguisable ≤ 12 appels en haute (≤ 3 pour un meuble cousu seul : le −1, lot R) · à la première image, au plus 3 variantes de profondeur (objets mobiles)',
-      obtenu: `${Math.round(ms)} ms · programmes ${p0.size} → ${p1.size} au catalogue, +${neufs.length} au rendu (${neufs.map((k) => k.split(',')[0]).join(', ') || 'aucun'}) · ${trop.length ? 'trop : ' + trop.join(', ') : 'toutes ≤ 12'} · ${appels.join(', ')}` };
+    const p2 = prog(), cat = [...p1].filter((k) => !p0.has(k)), neufs = [...p2].filter((k) => !p1.has(k));
+    t.note('programmes à la première image d’une copie', neufs.length);
+    const ok = t.temps('preparerCatalogue (ms)', ms, 600) && cat.every((k) => k.startsWith('depth')) && cat.length <= 3 && trop.length === 0 && neufs.length === 0;
+    return { ok, attendu: '≤ 600 ms · aucun programme de couleur au catalogue (≤ 3 variantes de profondeur des objets mobiles) · chaque copie déguisable ≤ 12 appels en haute (≤ 3 pour un meuble cousu seul : le −1, lot R) · 0 programme à la première image d’une copie',
+      obtenu: `${Math.round(ms)} ms · programmes ${p0.size} → ${p1.size} au catalogue (${cat.map((k) => k.split(',')[0]).join(', ') || 'aucun : déjà là'}), +${neufs.length} au rendu (${neufs.map((k) => k.split(',')[0]).join(', ') || 'aucun'}) · ${trop.length ? 'trop : ' + trop.join(', ') : 'toutes ≤ 12'} · ${appels.join(', ')}` };
   }, { delai: 240 });
 
   // 4. CHAQUE PROTOTYPE POSÉ À LA PLACE DE SON ORIGINAL : boîtes à ± 1 mm, même programme
@@ -211,15 +224,22 @@ export default function (jeu) {
       c.traverse((m) => { if (!m.isMesh || m.material.transparent) return; const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) b.expandByPoint(v.fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld)); });
       const e = Math.max(...[...b.min.toArray(), ...b.max.toArray()].map((x, k) => Math.abs(x - [...T0.source.min, ...T0.source.max][k])));
       if (!(e <= 1e-3)) fautes.push(cle + ' ' + (e * 1000).toFixed(2) + ' mm');
-      // le programme : celui d'un matériau du décor de même contenu (le jumeau dédupliqué)
+      // le programme : la copie compilée pour la cible où la scène est dessinée (Game._compilerAsync, la cible du
+      // post-traitement) ne crée AUCUN programme — sa clé est celle d'un programme du décor (le jumeau dédupliqué) — et chacun
+      // de ses matériaux en a un de la liste (relecture L-K du 23/10 : relu seulement sur un matériau déjà dessiné, le contrôle
+      // passait à vide sur une copie jamais vue)
+      const n0 = (game.renderer.info.programs || []).length, pc = game._compilerAsync(c);
+      if (pc) await pc;
+      const n1 = (game.renderer.info.programs || []).length;
+      if (n1 !== n0) fautes.push(cle + ' +' + (n1 - n0) + ' programme(s)');
       c.traverse((m) => {
         if (!m.isMesh) return;
         const pr = game.renderer.properties.get(m.material).currentProgram;
-        if (pr && !(game.renderer.info.programs || []).includes(pr)) fautes.push(cle + ' programme hors liste');
+        if (!pr || !(game.renderer.info.programs || []).includes(pr)) fautes.push(cle + ' programme hors liste');
       });
       n++;
     }
-    return { ok: fautes.length === 0 && n >= 18, attendu: 'chaque type : boîte de la copie = boîte de l’original à 1 mm, programmes existants', obtenu: `${n} types · ${fautes.join(', ') || 'tout juste'}` };
+    return { ok: fautes.length === 0 && n >= 18, attendu: 'chaque type : boîte de la copie = boîte de l’original à 1 mm ; compilée, 0 programme neuf, chacun de ses matériaux sur un programme existant', obtenu: `${n} types · ${fautes.join(', ') || 'tout juste'}` };
   });
 
   // 5. DEUX FORMES DIFFÉRENTES sous un même type ne partagent jamais un prototype
@@ -408,23 +428,30 @@ export default function (jeu) {
     const bf = typeDe('carton'), T0 = { ...bf, cle: 'baby-foot-essai', type: 'baby-foot', nom: 'le baby-foot', secours: false, deguisable: true, surPlace: true,
       boite: new THREE.Box3(new THREE.Vector3(-0.525, 0, -0.74), new THREE.Vector3(0.525, 0.93, 0.74)), taille: new THREE.Vector3(1.05, 0.93, 1.48), rayon: 0.5, haut: 0.93,
       bande: { bas: 0.25, haut: 0.93 } };
-    // une porte de 0,8 m : parmi les passages d'une pièce à l'autre, un dont l'ouverture libre fait de 0,6 à 0,9 m (le plus
-    // grand disque qui y tient, au pas du centimètre)
+    // une porte de 0,8 m : parmi les passages d'une pièce à l'autre, celui dont l'ouverture libre (le plus grand disque qui y
+    // tient, au pas du centimètre) est la plus proche de 0,8 m — (relecture L-K du 23/10 : le premier de 0,6 à 0,9 m était une
+    // porte de 0,60 m) ; et la corbeille, elle, y passe (sinon c'est la porte qui serait fermée, pas le baby-foot trop grand)
+    let porte = null;
     for (const p of PASSAGES_PIECES) {
       const y = Cc.solEn(p.x, p.z, p.y + 0.3);
       if (Math.abs(y - p.y) > 0.3 || !Cc.libre(p.x, p.z, 0.2, y)) continue;
       let w = 0.2; while (w < 0.6 && Cc.libre(p.x, p.z, w + 0.01, y)) w += 0.01;
-      if (w < 0.3 || w > 0.45) continue;
-      CATALOGUE.set(T0.cle, T0);
-      try {
+      if (w >= 0.35 && w <= 0.45 && (!porte || Math.abs(2 * w - 0.8) < Math.abs(2 * porte.w - 0.8))) porte = { p, y, w };
+    }
+    if (!porte) return { ok: false, texte: 'pas de porte de 0,8 m trouvée' };
+    const { p, y, w } = porte, cor = [...CATALOGUE.values()].find((U) => U.type === 'corbeille');
+    CATALOGUE.set(T0.cle, T0);
+    try {
+      const essai = (cle) => {
         const partie = { zone: 'ecole', game, evt(t, d) { this.dernier = { t, ...d }; }, acteurs: [] };
         const c = new CorpsProp(Cc, {}); c.pos.set(p.x, y, p.z);
         const a = { id: 0, corps: c, prop: null, vie: 100, vieMax: 100, changerCorps() {} };
-        const r = deguiser(partie, a, T0.cle);
-        return { ok: r === false && partie.dernier && partie.dernier.raison === 'place', texte: `porte de ${(2 * w).toFixed(2)} m (${p.a} | ${p.b}) : ${r ? 'accepté' : 'refusé (' + (partie.dernier && partie.dernier.raison) + ')'}` };
-      } finally { CATALOGUE.delete(T0.cle); }
-    }
-    return { ok: false, texte: 'pas de porte de 0,8 m trouvée' };
+        return { r: deguiser(partie, a, cle), raison: partie.dernier && partie.dernier.raison };
+      };
+      const bf = essai(T0.cle), co = cor ? essai(cor.cle) : { r: false };
+      return { ok: bf.r === false && bf.raison === 'place' && co.r === true,
+        texte: `porte de ${(2 * w).toFixed(2)} m (${p.a} | ${p.b}) : baby-foot ${bf.r ? 'accepté' : 'refusé (' + bf.raison + ')'}, corbeille ${co.r ? 'acceptée' : 'refusée'}` };
+    } finally { CATALOGUE.delete(T0.cle); }
   }
 
   // 9. SE DÉGUISER : refusé sans la place (rien ne change), PV en proportion à ± 1, 'deguise'
@@ -443,14 +470,17 @@ export default function (jeu) {
     if (coin) {
       placer(a, coin.x, coin.y, coin.z);
       r1 = deguiser(p, a, petit.cle);
-      a.vie = Math.round(a.vieMax * 0.5); a.prop.pv = a.vie;
+      // (touché comme par une balle : Partie.infliger entame la VIE, pas `prop.pv` — relecture L-K du 23/10 : la proportion
+      // lue sur `prop.pv` rendait toute sa vie à un prop touché qui changeait de forme)
+      a.protegeT = 0; p.infliger(a, Math.round(a.vieMax * 0.5), { par: -1, zone: 'torse' });
+      const k = a.vie / a.vieMax;
       const avant = JSON.stringify({ cle: a.prop.cle, vie: a.vie, x: a.corps.pos.x, z: a.corps.pos.z, r: a.corps.rayon });
       r2 = deguiser(p, a, grand.cle);
       const apres = JSON.stringify({ cle: a.prop.cle, vie: a.vie, x: a.corps.pos.x, z: a.corps.pos.z, r: a.corps.rayon });
       // au large : accepté, PV en proportion
       placer(a, 11.63, 0, -4.62);
       r3b = deguiser(p, a, grand.cle);
-      pv = { attendu: Math.round(grand.pv * 0.5), obtenu: a.vie, inchange: avant === apres };
+      pv = { attendu: Math.round(grand.pv * k), obtenu: a.vie, inchange: avant === apres };
     }
     des();
     jeu.quitter('balade');
@@ -475,8 +505,10 @@ export default function (jeu) {
       obtenu: `${L.length} cachettes (${types.size} types, ${bonnes} de crédibilité ≥ 0,6) en ${lots.length} lots, pire ${pire.toFixed(2)} ms · ${dedans.length} dans une forme` };
   }, { delai: 120 });
 
-  // 11. L'AFFICHAGE DES PROPS : jamais penché, un voile (aucun en plus pour la chaise coque), flash sans programme neuf
-  T('11 majProps : racine droite, voile, flash sans programme', async () => {
+  // 11. L'AFFICHAGE DES PROPS : jamais penché, un voile (aucun en plus pour la chaise coque), flash sans programme neuf ; un
+  // extincteur plaqué au verrou : tourné comme les vrais de son mur, pendu à leur hauteur — la racine affichée ET son volume de
+  // touche —, sans voile
+  T('11 majProps : racine droite, voile, flash sans programme, extincteur accroché', async () => {
     await preparer();
     const p = await essaiProp('rdc'), a = p.local, fautes = [];
     const coque = [...CATALOGUE.values()].find((T0) => T0.type === 'chaise-coque'), autre = [...CATALOGUE.values()].find((T0) => T0.type === 'chaise-dc');
@@ -496,16 +528,53 @@ export default function (jeu) {
     // le flash rouge d'une touche : aucun programme neuf
     const prog = () => (game.renderer.info.programs || []).length, p0 = prog();
     p.evt('touche', { par: 9, cible: 0, zone: 'torse', degats: 10, x: a.pos.x, y: a.pos.y, z: a.pos.z, tete: false, dx: 0, dz: 1 });
-    await jeu.images(4);
+    // (le flash dure 80 ms : vu à l'image qui suit — relevé après 4 images, il était fini dès que l'onglet tournait à 30 im/s)
+    await jeu.images(1);
     const rouge = (a.prop.racine.userData.mats || []).some((m) => m.emissive && m.emissive.r > 0.5);
     await jeu.images(8);
     const p1 = prog();
+    const accroches = await extincteursAccroches(p, a);
     jeu.quitter('balade');
     const enfants = game.scene.children.filter((o) => o.name && o.name.startsWith('prop ')).length;
-    const ok = fautes.length === 0 && p1 === p0 && enfants === 0;
-    return { ok, attendu: 'roulis et tangage 0 · un seul maillage transparent (le voile ; celui de la chaise coque est le sien) · flash : 0 programme · racines retirées à la sortie',
-      obtenu: `${fautes.join(', ') || 'droites, un voile chacune'} · flash ${rouge ? 'rouge' : 'pas vu'}, programmes ${p0} → ${p1} · ${enfants} racine(s) restée(s)` };
+    const ok = fautes.length === 0 && rouge && p1 === p0 && enfants === 0 && accroches.ok;
+    return { ok, attendu: 'roulis et tangage 0 · un seul maillage transparent (le voile ; celui de la chaise coque est le sien) · flash rouge vu, 0 programme · racines retirées à la sortie · chaque extincteur pendu du RDC plaqué près du vrai : son cap, sa hauteur (affichée et touchable), pas de voile',
+      obtenu: `${fautes.join(', ') || 'droites, un voile chacune'} · flash ${rouge ? 'rouge' : 'pas vu'}, programmes ${p0} → ${p1} · ${enfants} racine(s) restée(s) · ${accroches.texte}` };
   });
+
+  // (chaque type d'extincteur qui PEND au mur, au RDC : le prop posé à 0,5-0,8 m d'un vrai, le long de son mur, tourné de 17°
+  // de trop ; verrouillé 1 s, il doit s'être plaqué au même mur, au cap du vrai — la façade, `face`, de l'étiquette —, à sa
+  // hauteur d'accroche : la racine affichée ET la boîte de touche (js/jeu/touches.js capsules) ; et sans voile au sol)
+  async function extincteursAccroches(p, a) {
+    const Cc = C(), fautes = [], vus = [];
+    const L = MEUBLES.poses.filter((P) => P.zone && piecesDe('rdc').has(P.zone) && MEUBLES.types.get(P.cle).type === 'extincteur' && MEUBLES.types.get(P.cle).accroche > 0.1);
+    const parCle = new Map(); for (const P of L) if (!parCle.has(P.cle)) parCle.set(P.cle, P);
+    for (const [cle, P] of parCle) {
+      const T0 = MEUBLES.types.get(cle), ux = Math.cos(P.cap), uz = -Math.sin(P.cap), fx = Math.sin(P.cap), fz = Math.cos(P.cap);
+      let pt = null;
+      for (const d of [0.5, -0.5, 0.65, -0.65, 0.8, -0.8]) for (const f of [0.3, 0.4]) {
+        const x = P.x + ux * d + fx * f, z = P.z + uz * d + fz * f;
+        if (!pt && Math.abs(Cc.solEn(x, z, P.y + 0.3) - P.y) < 0.05 && Cc.libre(x, z, T0.rayon, P.y, T0.bande.haut, T0.bande.bas) && coinsLibres(Cc, T0, x, P.y, z, P.cap)) pt = { x, z };
+      }
+      if (!pt) { fautes.push(cle + ' : pas de place à côté'); continue; }
+      if (a.prop && a.prop.verrou) { a.prop.verrou = false; jeu.avancer(0.05); }
+      placer(a, pt.x, P.y, pt.z, P.cap + 0.3);
+      if (!deguiser(p, a, cle)) { fautes.push(cle + ' refusé'); continue; }
+      placer(a, pt.x, P.y, pt.z, P.cap + 0.3);
+      a.prop.verrou = true; jeu.avancer(1);
+      await jeu.images(2);
+      const c = a.corps, R = a.prop.racine, e = Math.abs(Math.atan2(Math.sin(c.ang - P.cap), Math.cos(c.ang - P.cap)));
+      const V = capsules(a, [])[0], vo = R && R.userData.voile;
+      const ry0 = R.position.y, bas = V ? V.cy - V.hy : NaN;
+      vus.push(`${cle} cap ${(e * 180 / Math.PI).toFixed(1)}° · pendu à ${r3(c.jumpY)} (vrai ${r3(P.y0 - P.y)}) · touche dès ${r3(bas - P.y)}`);
+      if (!c.plaque) fautes.push(cle + ' pas plaqué');
+      if (e > 0.05) fautes.push(`${cle} tourné de ${(e * 180 / Math.PI).toFixed(1)}° par rapport au vrai`);
+      if (Math.abs(ry0 - P.y0) > 0.05 || Math.abs(c.jumpY - T0.accroche) > 1e-6) fautes.push(`${cle} affiché à ${r3(ry0)} au lieu de ${r3(P.y0)}`);
+      if (!V || Math.abs(bas - ry0) > 0.02) fautes.push(`${cle} : la boîte de touche commence à ${r3(bas)}, le meuble à ${r3(ry0)}`);
+      if (vo && vo.visible) fautes.push(cle + ' : un voile sous un meuble pendu');
+    }
+    if (a.prop) a.prop.verrou = false;
+    return { ok: fautes.length === 0 && vus.length >= 2, texte: (vus.join(' ; ') || 'aucun extincteur pendu') + (fautes.length ? ' · FAUTES ' + fautes.join(', ') : '') };
+  }
 
   // 12. VISER UN MEUBLE : 20 cas (à 2,5 m → trouvé ; derrière un mur → null ; à 3,5 m → null)
   T('12 viserMeuble : 20 cas', async () => {

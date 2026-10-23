@@ -371,7 +371,7 @@ export function poserMobilier(ch) {
   // (et la même pose le met en y 6,78-6,98, sa tête en 6,90 : 9 cm plus au sud que le 13/10 ; ses plaques en y 6,92)
   const yE = 6.88, rougeExt = new THREE.MeshStandardMaterial({ color: 0x8a2219, roughness: 0.32, metalness: 0.1 }); rougeExt.name = 'extincteur rouge (hall ouest)';
   const ext = new THREE.Group(); ext.position.set(1.86, 0.83, -yE); ext.rotation.x = -0.12; ch.decor.add(ext);
-  ext.userData.meuble = { type: 'extincteur', nom: 'l’extincteur', mural: true };   // (prop hunt, L-K)
+  ext.userData.meuble = { type: 'extincteur', nom: 'l’extincteur', mural: true, face: Math.PI / 2 };   // (prop hunt, L-K ; sa console au mur est à −x : sa façade, +x)
   maille(new THREE.CylinderGeometry(0.09, 0.09, 0.34, 18), rougeExt, 0, 0, 0, 0, ext);
   maille(new THREE.SphereGeometry(0.09, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), rougeExt, 0, 0.17, 0, 0, ext);
   maille(new THREE.CylinderGeometry(0.03, 0.045, 0.07, 10), M.noirMat, 0, 0.255, 0, 0, ext);

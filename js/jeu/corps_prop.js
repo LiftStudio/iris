@@ -44,15 +44,20 @@ export class CorpsProp {
     this.ang = 0; this.angPrec = 0; this.angAff = 0; this.speedNow = 0; this.endurance = 100;
     this.bounds = bounds; this.rayon = rayon; this.haut = haut; this.bas = bas;
     this.h = 1.73;                   // (la taille d'un humain : l'œil d'un prop resté humain, mouvement.js hauteurOeil)
-    // (le meuble porté, posé par deguiser : sa boîte locale — le dos, la face, les flancs — pour le plaquage et les coins)
-    this.boite = null; this.mural = false;
+    // (le meuble porté, posé par deguiser : sa boîte locale — le dos, la face, les flancs — pour le plaquage et les coins ;
+    // `accroche` : la hauteur où pend un meuble mural de son type, l'extincteur à 0,65-0,96 m)
+    this.boite = null; this.mural = false; this.accroche = 0;
     this.plaque = false; this.decal = new THREE.Vector3();   // accroché au mur ; le décalage AFFICHÉ (le dos à 1,5 cm du mur)
   }
-  // les dimensions d'un type du registre (deguiser)
+  // les dimensions d'un type du registre (deguiser) ; décroché s'il pendait (au sol, sauf en plein saut)
   porter(T) {
     this.rayon = T.rayon; this.haut = T.bande.haut; this.bas = T.bande.bas; this.boite = T.boite; this.mural = !!T.mural;
+    this.accroche = T.mural && T.accroche > 0.1 ? T.accroche : 0;
+    if (this.plaque && !this.airborne) this.jumpY = 0;
     this.plaque = false; this.decal.set(0, 0, 0);
   }
+  // DÉCROCHÉ (le verrou relâché, ou une autre forme) : il retombe au sol
+  decrocher() { if (this.plaque && !this.airborne) { this.jumpY = 0; this.jumpVel = 0; } this.plaque = false; this.decal.set(0, 0, 0); }
   memoriser() { this.posPrec.copy(this.pos); this.angPrec = this.ang; }
   presenter(a) {
     if (this.posPrec.distanceToSquared(this.pos) > 1.0) { this.posPrec.copy(this.pos); this.angPrec = this.ang; }
@@ -91,7 +96,11 @@ export class CorpsProp {
   sauter(v) { if (this.airborne) return 0; this.airborne = true; this.jumpVel = v; return v; }
   // LE PLAQUAGE MURAL (au verrou d'un meuble `mural`) : quatre sondes de 0,45 m au-delà de la boîte (le dos, la face, les deux
   // flancs), à mi-hauteur ; le mur le plus proche → le cap à sa normale (le dos contre lui), le corps avancé contre lui
-  // autant que son disque le permet (jamais DANS le mur : le reste, jusqu'à 1,5 cm, est un décalage d'affichage)
+  // autant que son disque le permet (jamais DANS le mur : le reste, jusqu'à 1,5 cm, est un décalage d'affichage). Un meuble
+  // qui PEND (l'extincteur, conception_prophunt § 6.5) monte à sa hauteur d'accroche : c'est `jumpY` — l'état le garde
+  // (`jy`, § 4.7), et tout ce qui le lit le voit là-haut : l'affichage (presenter), le volume de touche (js/jeu/touches.js
+  // capsules), la boîte qu'on vise (viserMeuble). (Relecture L-K du 23/10 : il ne montait qu'à l'affichage, et les balles
+  // qui l'atteignaient au mur passaient au travers — son volume de touche était resté au ras du sol.)
   plaquer(collisions) {
     const C = collisions || this.C, b = this.boite;
     if (!C || !b) return false;
@@ -119,6 +128,7 @@ export class CorpsProp {
     const reste = Math.max(0, (best.mur - Math.max(0, av)) - voulu);
     this.decal.set(best.dx * reste, 0, best.dz * reste);
     this.vel.set(0, 0, 0); this.plaque = true;
+    if (this.accroche > 0) { this.airborne = false; this.jumpVel = 0; this.jumpY = this.accroche; }
     return true;
   }
   // (la fin d'une partie : Partie.sortir libère chaque corps de prop — l'affichage des props s'y range, js/jeu/deguisements.js)
@@ -165,7 +175,7 @@ export function deplacerProp(acteur, cmd, dt, partie) {
   // l'endurance (celle de l'acteur, dans l'état) : le sprint la vide, le reste la rend ; vidée, plus de sprint avant 20
   const en = Number.isFinite(acteur.endurance) ? acteur.endurance : 100;
   if (P && P.fige) { c.vel.set(0, 0, 0); c.speedNow = 0; acteur.endurance = Math.min(100, en + A.endurance.regain * dt); c.endurance = acteur.endurance; P.vitesseAff = 0; P.rotAff = 0; return; }
-  if (c.plaque && !(P && P.verrou)) { c.plaque = false; c.decal.set(0, 0, 0); P && (P._aimant = undefined); }
+  if (c.plaque && !(P && P.verrou)) { c.decrocher(); P && (P._aimant = undefined); }
   const l = cmd.lacet, ax = cmd.ax || 0, ay = cmd.ay || 0;
   _dir.set(0, 0, 0);
   if (!c.plaque && (ax || ay)) {

@@ -34,6 +34,7 @@ import { niveauDe } from './constantes.js';
 import { melanger } from './rng.js';
 import { Balistique } from './balistique.js';
 import { zoneDe as zoneVue, zonesCachees, DEHORS } from '../ecole_visibilite.js';
+import { avecProfondeur, sceneOmbre } from '../ombre_cache.js';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const angle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -45,7 +46,9 @@ export const REGLAGES_DEGUISEMENT = {
   touche: { tressaille: 0.15, roulis: 3 * Math.PI / 180, flash: 0.08 }, mort: 0.4,
   cred: { memeZone: 0.35, memeNiveau: 0.15, voisins: 0.2, rayonVoisins: 2, capBon: 0.15, capMoyen: 0.05, capFaux: -0.35, pas: 0.1,
     murBon: 0.2, murSans: -0.5, passageLoin: 0.1, passagePres: -0.2, couloir: -0.2, sol: 0.1 },
-  cachettes: { budget: 110, poidsVue: 8, rang: 0.9, mur: [0.6, -0.6, 1.2, -1.2], table: [0.7, -0.7, 1.4, -1.4], doublon: 0.35, passage: 0.9, atteinte: 0.6 },
+  // (cachettes.budget : les requêtes au monde solide d'un lot — 110 en faisait des lots de 3,2 à 5,9 ms la machine chargée, relecture
+  // L-K du 23/10 : 75, pour garder les 5 ms de la spec avec de la marge)
+  cachettes: { budget: 75, poidsVue: 8, rang: 0.9, mur: [0.6, -0.6, 1.2, -1.2], table: [0.7, -0.7, 1.4, -1.4], doublon: 0.35, passage: 0.9, atteinte: 0.6 },
 };
 
 // ---------------------------------------------------------------- LE CATALOGUE
@@ -124,19 +127,36 @@ export async function preparerCatalogue(game, progres) {
   CATALOGUE.set(CARTON, typeCarton());
   _nExclus = -1;
   pr('Meubles', 0.3);
-  // LES PROGRAMMES : rien à compiler — les matériaux des prototypes sont les jumeaux de ceux du décor (même signature, même
+  // LES PROGRAMMES : aucun de COULEUR — les matériaux des prototypes sont les jumeaux de ceux du décor (même signature, même
   // programme, mêmes textures, déjà sur la carte). (Mesuré le 23/10 : Player.preparerRendu en compilait onze — les variantes
-  // du cran de repli —, les passes annexes de game._compilerTout sept, pour une cible qui n'est pas celle du rendu ; les
-  // seules variantes qu'un prop demande en jeu sont deux ou trois programmes de PROFONDEUR des objets mobiles non animés —
-  // ombre portée, ombre de contact —, compilés à sa première image : voir le rapport L-K, demande à L-H.) Les textures sont
-  // envoyées à la carte (déjà là : celles du décor), une fois par session.
+  // du cran de repli —, les passes annexes de game._compilerTout sept, pour une cible qui n'est pas celle du rendu.) Restent
+  // les PASSES ANNEXES d'un objet mobile non animé — l'ombre portée (js/ombre_cache.js avecProfondeur) et l'ombre de contact
+  // (js/ombres_contact.js avecContact) : une ou deux variantes de profondeur que le décor, cuit, n'a pas — compilées ici en
+  // parallèle, comme celles d'un avatar (Game._compilerTout), et non à la première image d'un prop (relecture L-K du 23/10 :
+  // 10 à 15 ms d'image figée au premier meuble vu, spec § 4.1 règle 6). Les textures sont envoyées à la carte (déjà là :
+  // celles du décor). Une fois par session.
+  const prets = [];
   for (const T of CATALOGUE.values()) {
     if (_prepares.has(T.proto)) continue;
     _prepares.add(T.proto);
     for (const t of texturesDe(T.proto)) try { game.renderer && game.renderer.initTexture(t); } catch (e) { /* */ }
+    const p = compilerAnnexes(game, T.proto); if (p) prets.push(p);
   }
+  // (une compilation qui ne répond pas ne bloque pas la partie : 3 s au plus)
+  if (prets.length) await Promise.race([Promise.all(prets), new Promise((r) => setTimeout(r, 3000))]);
   pr('Meubles', 1);
   return CATALOGUE;
+}
+// les programmes des passes annexes d'un objet mobile (ceux de Game._compilerTout sans la couleur), pour la cible où elles
+// sont dessinées : la carte d'ombre (la doublure de scène de js/ombre_cache.js) et la carte des ombres de contact
+function compilerAnnexes(game, o) {
+  const comp = game && game._compilerAsync ? (x, s, e, cam) => game._compilerAsync(x, s, e, cam) : null;
+  if (!comp) return null;
+  const so = game._sceneOmbre || (game._sceneOmbre = sceneOmbre(game.scene));
+  const p = [avecProfondeur(o, (x) => comp(x === game.scene ? so : x, so, false))];
+  if (game.ombres && game.ombres.avecContact) p.push(game.ombres.avecContact(o, (x, cam) => comp(x, game.scene, false, cam)));
+  const L = p.filter(Boolean);
+  return L.length ? Promise.all(L) : null;
 }
 // les textures des matériaux d'un objet (envoyées à la carte sous la préparation : elles y sont déjà, ce sont celles du décor)
 function texturesDe(o) {
@@ -301,7 +321,9 @@ export function deguiser(partie, acteur, cle) {
   }
   const corps = acteur.corps;
   corps.porter(T); corps.vel.set(0, 0, 0);
-  const k = avant && avant.T ? avant.pv / Math.max(1, avant.T.pv) : acteur.vie / Math.max(1, acteur.vieMax);
+  // (la proportion se lit sur la VIE de l'acteur, que Partie.infliger entame — `prop.pv` n'est que sa copie au
+  // déguisement : relecture L-K du 23/10, un Miura touché à 50 / 90 redevenait un carton à 77 / 77 en changeant de forme)
+  const k = acteur.vie / Math.max(1, acteur.vieMax);
   const pv = Math.max(1, Math.round(T.pv * clamp(k, 0, 1)));
   const anciennes = avant ? [avant.racine, ...(avant._anciennes || [])].filter(Boolean) : [];
   acteur.prop = { cle, T, racine: null, cap, fige: false, verrou: false, pv, changements: avant ? (avant.changements || 0) + 1 : 0,
@@ -438,8 +460,9 @@ export function majProps(partie, dt) {
     if (!P || !P.T || !a.corps) continue;
     if (!P.racine) P.racine = construireRacine(scene, P.T);
     const R = P.racine, c = a.corps, T = P.T;
+    // (accroché au mur, un meuble qui pend est déjà à sa hauteur : son `jumpY`, js/jeu/corps_prop.js plaquer)
     const plaque = !!c.plaque, dec = plaque && c.decal ? c.decal : null;
-    R.position.set(c.posAff.x + (dec ? dec.x : 0), c.posAff.y + (plaque && T.mural && T.accroche > 0.1 ? T.accroche : 0), c.posAff.z + (dec ? dec.z : 0));
+    R.position.set(c.posAff.x + (dec ? dec.x : 0), c.posAff.y, c.posAff.z + (dec ? dec.z : 0));
     R.rotation.set(0, P.fige || plaque ? c.ang : (c.angAff ?? c.ang ?? 0), 0);
     // (mort : il rétrécit en 0,4 s, puis disparaît)
     const k = a.vivant ? 1 : clamp(1 - (partie.t - (a.mortT || 0)) / REGLAGES_DEGUISEMENT.mort, 0, 1);
@@ -450,8 +473,14 @@ export function majProps(partie, dt) {
     // l'ombre au niveau de la caméra (une ombre portée à travers une dalle trahirait le prop d'en dessous)
     const ombre = niveauDe(c.pos.y + 0.5) === nCam;
     if (R.userData.ombre !== ombre) { R.userData.ombre = ombre; R.userData.copie.traverse((m) => { if (m.isMesh) m.castShadow = ombre && m.userData._ombre; }); }
+    // le voile reste AU SOL (en plein saut, il ne monte pas avec le meuble) ; aucun sous un meuble qui pend au mur (le vrai
+    // extincteur n'assombrit pas le sol cuit : relecture L-K du 23/10, le voile flottait à 0,65 m)
     const vo = R.userData.voile;
-    if (vo) { const rdc = niveauDe(c.pos.y + 0.5) === 0, mv = matVoile(rdc); if (vo.material !== mv) vo.material = mv; }
+    if (vo) {
+      const rdc = niveauDe(c.pos.y + 0.5) === 0, mv = matVoile(rdc), h = Math.max(0, c.posAff.y - c.solAff);
+      if (vo.material !== mv) vo.material = mv;
+      vo.position.y = 0.004 - h; vo.visible = h < 0.3;
+    }
     // la touche : il tressaille (la copie, pas la racine), il rougit
     const cp2 = R.userData.copie;
     if (P._tressaille > 0) {

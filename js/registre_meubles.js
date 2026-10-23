@@ -4,7 +4,7 @@
 // Les déguisements du prop hunt sont les VRAIS meubles de l'école (spec § 4.5.13, arbitrages 21 et 36). Après le
 // chargement, aucun meuble n'existe plus comme objet : optimiserDecor (js/kit_decor.js) coud 4 198 maillages en 232 blocs
 // et fusionnerLocal (js/ecole_portes.js) coud chaque niveau (carte_props § 1.2). La carte ÉTIQUETTE donc ses meubles
-// (`objet.userData.meuble = 'type' | { type, nom, formes?, variante?, mural?, surPlace?, deguisable?, voile?, partie?, cap? }` :
+// (`objet.userData.meuble = 'type' | { type, nom, formes?, variante?, mural?, surPlace?, deguisable?, voile?, partie?, cap?, face? }` :
 // L-K hors du −1, le lot R au −1) et ce registre les COPIE juste avant chaque couture — ses deux appelants, prises du
 // socle, en première ligne. Il ne touche à RIEN de la scène : la ligne [optim] et les appels de dessin ne bougent pas.
 //   - un étiqueté pris dans un bloc qu'on va coudre (≠ racine) : copié TOUT DE SUITE — un prototype par (type, variante),
@@ -22,7 +22,10 @@
 // `type:2` (ou `type:variante-2`) — la chaise de bureau à accoudoirs n'est pas celle sans.
 // LE REPÈRE d'un prototype : l'origine de la racine posée AU BAS du meuble (le plus bas de ses sommets opaques), tournée de
 // son seul cap ; ce qui reste de la pose (l'inclinaison d'un extincteur sur son crochet, l'échelle) est DANS le prototype.
-// Une copie posée à (x, y0, z) et tournée de `cap` retombe exactement sur l'original (test L-K 4).
+// Une copie posée à (x, y0, z) et tournée de `cap` retombe exactement sur l'original (test L-K 4). Le +z du prototype est
+// la FAÇADE (le −z, le dos : celui qu'un meuble mural plaque au mur) ; un meuble dont le code de la carte tourne la façade
+// ailleurs le dit par `face` (l'angle de sa façade dans le repère de sa racine : π/2 = son +x — l'extincteur du hall ouest,
+// dont la console est à −x, relecture L-K du 23/10 : plaqué, sa copie se tournait de 90°, l'étiquette de profil).
 //   T (un type) = { cle, type, variante, nom, famille, proto, boite, taille, rayon, haut, bande, volume, pv, vitesse, mural,
 //                   surPlace, deguisable, voile, symetrie, accroche, dos, signature, cleMaillage, source, raison }
 //   P (une pose) = { i, cle, x, y, z, cap, zone, cx, cz, hx, hz, y0, y1, c, s, pas, objet? }
@@ -293,6 +296,7 @@ function creerType(cle, E, variante, racines, Mbase, sig, geo = null) {
     sources: maillages.map((o) => ({ g: o.geometry, mat: o.material, Mw: o.matrixWorld.clone(), ombre: o.castShadow, recoit: o.receiveShadow, ordre: o.renderOrder,
       ud: { horsAOSol: !!o.userData.horsAOSol, sansNormales: !!o.userData.sansNormales }, o: o.isSkinnedMesh || o.isInstancedMesh || Array.isArray(o.material) ? o : null, nom: o.name })),
     aAchever: true, proto: null, boite: null, taille: null, dy: 0, accroche: 0, source: null,
+    pieces: maillages.length,         // (les maillages de l'original : le test L-K 1 en rejoue autant pour mesurer le coût)
   };
   MEUBLES.types.set(cle, T);
   return T;
@@ -402,8 +406,8 @@ function noter(racines, E) {
   for (const r of racines) r.updateWorldMatrix(true, true);
   let Mbase;
   if (racines.length === 1 && !E.partie) {
-    // le repère : l'origine de la racine, tournée de son seul cap
-    const M = R0.matrixWorld, cap = capDe(M);
+    // le repère : l'origine de la racine, tournée de son seul cap (et de sa façade, `face`)
+    const M = R0.matrixWorld, cap = capDe(M) + (E.face || 0);
     M.decompose(_p, _q, _s);
     Mbase = new THREE.Matrix4().makeRotationY(cap).setPosition(_p.x, _p.y, _p.z);
   } else {
@@ -499,7 +503,7 @@ export function rattraperRegistre(scene) {
   for (const { objet, P } of _E.instances) {
     if (!objet.parent) continue;
     objet.updateWorldMatrix(true, false);
-    const T = MEUBLES.types.get(P.cle), M = objet.matrixWorld, cap = capDe(M);
+    const E = etiquette(objet), T = MEUBLES.types.get(P.cle), M = objet.matrixWorld, cap = capDe(M) + ((E && E.face) || 0);
     M.decompose(_p, _q, _s);
     if (Math.abs(_p.x - P.x) > 1e-3 || Math.abs(_p.z - P.z) > 1e-3 || Math.abs(_p.y + T.dy - P.y0) > 1e-3 || Math.abs(ang(cap - P.cap)) > 1e-3) {
       P.Mbase.makeRotationY(cap).setPosition(_p.x, _p.y, _p.z); poserAcheve(P, T); MEUBLES.stats.recales++;
