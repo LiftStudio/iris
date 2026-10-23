@@ -198,7 +198,7 @@ export default function (jeu) {
     for (let i = 0; i < 4; i++) { const c = i < 2 ? haut : bas; col.push(c.r, c.g, c.b); }
     fg.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
     const fm = new THREE.MeshBasicMaterial({ vertexColors: true, depthWrite: false, toneMapped: false });
-    const fond = new THREE.Mesh(fg, fm); fond.position.z = -40; fond.renderOrder = -1; cam.add(fond);
+    const fond = new THREE.Mesh(fg, fm); fond.position.z = -40; fond.scale.set(60, 60, 1); fond.renderOrder = -1; cam.add(fond);   // (60 m de côté à 40 m : tout le cadre, même à 52°)
     const sup = { scene: sc, camera: cam };
     fx.superpositions.push(sup);
     const W = 400, H = Math.round(400 / cam.aspect), cv = document.createElement('canvas'); cv.width = 3 * W; cv.height = 8 * H;
@@ -217,18 +217,24 @@ export default function (jeu) {
             cam.fov = 52; cam.position.set(-0.135, 0.125, 0.32).applyAxisAngle(new THREE.Vector3(0, 1, 0), -0.035); cam.rotation.set(0, -0.035, 0);
           } else {
             const [az, el] = j === 0 ? [-90, 8] : j === 1 ? [-35, 24] : [-140, 30];
+            // (la distance qui fait tenir l'arme dans le cadre : sa sphère dans la largeur, sa hauteur dans la hauteur)
             cam.fov = 22;
-            const d = s.radius / Math.sin(cam.fov * Math.PI / 360) * 1.02;
+            const tv = Math.tan(cam.fov * Math.PI / 360), th = tv * game.camera.aspect;
+            const d = Math.max(s.radius / Math.sin(Math.atan(th)), (b.max.y - b.min.y) * 0.62 / tv) * 1.06;
             const a = az * Math.PI / 180, e = el * Math.PI / 180;
             // (az −90 : la caméra à −X, le flanc gauche ; −35 : devant, à gauche ; −140 : derrière, à gauche)
             cam.position.set(s.center.x + d * Math.cos(e) * Math.sin(a), s.center.y + d * Math.sin(e), s.center.z - d * Math.cos(e) * Math.cos(a));
             cam.lookAt(s.center);
           }
           cam.aspect = game.camera.aspect; cam.updateProjectionMatrix(); cam.updateMatrixWorld(true);
+          // (la part de l'image qui est l'arme : la même photo sans elle, comparée pixel à pixel — vignette et grain compris)
+          g.visible = false; const vide = await charger(jeu.photo('fond')); g.visible = true;
+          cx.drawImage(vide, j * W, i * H, W, H);
+          const ref = cx.getImageData(j * W, i * H, W, H).data;
           const im = await charger(jeu.photo(`${id} ${vues[j]}`));
           cx.drawImage(im, j * W, i * H, W, H);
-          const px = cx.getImageData(j * W, i * H, W, H).data, ref = cx.getImageData(j * W + 2, i * H + 2, 1, 1).data;
-          let n = 0; for (let k = 0; k < px.length; k += 16) if (Math.abs(px[k] - ref[0]) + Math.abs(px[k + 1] - ref[1]) + Math.abs(px[k + 2] - ref[2]) > 60) n++;
+          const px = cx.getImageData(j * W, i * H, W, H).data;
+          let n = 0; for (let k = 0; k < px.length; k += 16) if (Math.abs(px[k] - ref[k]) + Math.abs(px[k + 1] - ref[k + 1]) + Math.abs(px[k + 2] - ref[k + 2]) > 48) n++;
           contenu.push(n / (px.length / 16));
           cx.fillStyle = 'rgba(0,0,0,0.55)'; cx.fillRect(j * W, i * H, W, 22); cx.fillStyle = '#fff'; cx.fillText(`${NOMS[id]} · ${vues[j]}`, j * W + 6, i * H + 4);
         }
@@ -270,9 +276,10 @@ export default function (jeu) {
   // 9. L'ARME DE VUE DU SOCLE avec les vrais modèles (avant F2) : essai, l'arme en hanche, ≤ 6 appels pour l'arme seule, aucun
   // programme de plus pendant 3 s de tir et une recharge
   jeu.ajouterTest('L-W', '9 · dans l’arme de vue (essai)', async (t) => {
+    jeu.figerQualite(true);                                        // (la qualité automatique recompile en changeant de préréglage)
     await jeu.lancer('essai', { graine: 42, mannequins: 3 });
     const p = game.partie, vm = p && p.aff && p.aff.viewmodel;
-    if (!vm) { jeu.quitter('balade'); return { ok: false, attendu: 'un viewmodel', obtenu: 'aucun' }; }
+    if (!vm) { jeu.quitter('balade'); jeu.figerQualite(false); return { ok: false, attendu: 'un viewmodel', obtenu: 'aucun' }; }
     await t.images(6);
     const ids = Object.keys(vm.armes), modeles = ids.filter((id) => vm.armes[id].userData.arme === id && vm.armes[id].userData.reperes && mailles(vm.armes[id]).every((m) => m.isSkinnedMesh)).length;
     const a = vm.courante, appels = rendreCible(game, vm.scene).appels;
@@ -280,7 +287,7 @@ export default function (jeu) {
     jeu.commande(0, { tir: true }, 3); let t0 = performance.now(); while (performance.now() - t0 < 3000) await t.images(10);
     jeu.commande(0, { tir: false, recharger: true }, 0.1); t0 = performance.now(); while (performance.now() - t0 < 3000) await t.images(10);
     const prog1 = game.renderer.info.programs.length, tirs = jeu.compteurs().tirs - tir0;
-    jeu.quitter('balade');
+    jeu.quitter('balade'); jeu.figerQualite(false);
     const ok = modeles === 8 && !!a && appels === a.userData.appels && appels <= 6 && prog1 === prog0 && tirs > 5;
     return { ok, attendu: '8 armes de creerArme (SkinnedMesh), l’arme en main ≤ 6 appels, programmes constants', obtenu: `${modeles}/8 modèles · ${a ? a.userData.arme : '—'} ${appels} appels · programmes ${prog0} → ${prog1} (${tirs} tirs)` };
   });
