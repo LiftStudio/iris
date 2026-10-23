@@ -262,6 +262,10 @@ export class Pilote {
       if (d > 1.2 || d < 1e-6) continue;
       const devant = rx * dx + rz * dz, lat = rx * px + rz * pz, R = (b.corps.rayon ?? 0.3) + this._r;
       if (devant <= 0 || devant > EVITE + R || Math.abs(lat) > R + 0.05) continue;
+      // (un corps qui s'en va dans notre sens, et qu'on ne rattrape pas — on le suit dans un couloir —, n'est pas à éviter :
+      // sinon le suiveur zigzague dans son dos ; relecture)
+      const vb = b.corps.vel, va = a.corps.vel;
+      if (vb && va) { const sb = vb.x * dx + vb.z * dz, sa = va.x * dx + va.z * dz; if (sb > 1.5 && sa - sb < 1.0) continue; }
       const cote = Math.abs(lat) > 0.04 ? -Math.sign(lat) : a.id < b.id ? 1 : -1, w = 0.9 * (1 - d / 1.2);
       ox += px * cote * w; oz += pz * cote * w;
     }
