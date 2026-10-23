@@ -196,3 +196,31 @@ togglePause / frame, `js/manette.js` et `js/manette_menus.js`, `js/settings.js`,
 (CRLF partout, LF pour `js/ui.js` comme avant).
 
 ### Défauts trouvés à la lecture (avant le navigateur)
+
+1. **Précision du bilan au-delà de 100 %** (`bilan`, l. « prec ») : `stats.tirs` compte un tir de FP-12 pour UN, et
+   `Partie.infliger` compte une touche par PLOMB (huit par coup) — deux tirs à 2,5 m donnaient « 800 % ». Corrigé : le
+   bilan compte lui-même, sur les événements (`tir` : `n` plombs ; `touche` : par le tireur), des touches sur des plombs,
+   borné à 100 % ; test 8 (deux tirs de FP-12 à 2,5 m). → DEMANDE 8 (F2 / L-A) pour les statistiques elles-mêmes.
+2. **`mmss` arrondissait après le partage** : 59,6 s → « 0:60 ». Corrigé (arrondi à la seconde d'abord).
+3. **Les choix hors des DEFAULTS oubliés au rechargement** (limite et temps par mode, adversaires du chacun pour soi,
+   défi et classe du stand : § 2.2 « les derniers choix sont gardés ») : la sauvegarde les écrit, `deepMerge` les jette à
+   la relecture. Corrigé DANS le lot : `MenuJeu._rattraper()` les reprend au démarrage de la sauvegarde brute (lue,
+   jamais écrite), puis `_jeu` les remet d'aplomb ; sans effet le jour où INT les met dans les DEFAULTS (DEMANDE 1
+   gardée) ; test 6 (relecture, puis rattrapage).
+4. **Avertissement sur la partie par défaut du prop hunt au téléphone** : 5 joueurs = 4 bots, un de plus que le conseil
+   de 3 (§ 3.10) — l'écran disait « l'image peut ramer » sur ses propres valeurs par défaut. Le seuil du prop hunt est
+   désormais `max(conseil, joueurs par défaut − 1)` (PC inchangé : 7). Écart 17.
+5. **REJOUER préparait la partie sur la BALADE** : `lancerPartie` quitte la partie finie vers « rien » ; pendant les
+   0,3 à 1,5 s de préparation, l'école tournait en balade (Haythem au départ, pilotable, son HUD sous l'écran
+   PRÉPARATION) et un échec y laissait le joueur. REJOUER quitte maintenant vers le MENU, puis lance : même fond
+   (l'école vivante) qu'après LANCER, et un échec ramène à l'accueil avec un message.
+6. **Le plein écran verrouillait TOUT le clavier** (`navigator.keyboard.lock()` sans argument, dès qu'un Ctrl est lié) :
+   ÉCHAP verrouillé se TIENT 2 s pour sortir du plein écran, et Alt + Tab peut être pris. Ne sont verrouillées que les
+   lettres et les chiffres (Ctrl + W, S, D, T, N, 1… : ce que la spécification veut protéger).
+7. **`ecrire.py`** : le pré-vol `OPTIONS` envoyait un en-tête APRÈS la fin des en-têtes ; une image fautive (taille,
+   alpha, poids) était quand même écrite par-dessus la bonne. Corrigés (essayés : fichier et écoute, une image fautive
+   refusée et non écrite, le pré-vol à trois en-têtes).
+8. **Code mort** : `_prepT0` (posé, jamais lu) retiré.
+9. **Tests dépendants de la sauvegarde de l'origine** : les tests 4 (Airsoft par défaut, limites préréglées) et 10 (champ
+   à 90°…) lisaient les réglages chargés de `iris.settings.v1` de `127.0.0.1:8141` — une partie jouée à la main sur ce
+   port (hors `?test=1`, qui n'écrit rien) les aurait fait échouer. Ils partent maintenant de réglages NEUFS (en mémoire).
