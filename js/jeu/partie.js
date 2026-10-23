@@ -28,6 +28,7 @@ import { preparerAvatars, creerCorps, libererCorps, FICHE_HAYTHEM } from './avat
 import { accroupir } from './accroupi.js';
 import { poserArme } from './pose_arme.js';
 import { Poupee } from './poupee.js';
+import { teinteEquipe } from './teintes.js';
 import { CorpsProp, deplacerProp } from './corps_prop.js';
 import { majProps, preparerCatalogue, retirerProp } from './deguisements.js';
 import { Cerveau } from './cerveau.js';
@@ -36,7 +37,11 @@ import { entree } from '../settings.js';
 
 const ANNEAU = 256;
 // les drapeaux de partie du corps de Haythem, posés à l'entrée et RETIRÉS à la sortie (l'école telle qu'en balade)
-const DRAPEAUX = ['capFixe', 'sansRangs', 'audible', 'sansSouffle', 'elanAir', 'sprintMul', 'rayon', 'hautCorps', 'basCorps', 'apresPose'];
+// (F2, demande de L-C : et ceux que L-C écrit sur un Player — la pose armée de js/jeu/pose_arme.js, droit, penche, sansRegard ;
+// la cadence, leger ; la teinte, surAvatar, equipe — : une killcam ou une 3e personne qui pose le corps de Haythem ne les laisse
+// plus à la balade ; ses brassards, s'il en a reçu, sont retirés à la sortie)
+const DRAPEAUX = ['capFixe', 'sansRangs', 'audible', 'sansSouffle', 'elanAir', 'sprintMul', 'rayon', 'hautCorps', 'basCorps', 'apresPose',
+  'droit', 'penche', 'sansRegard', 'leger', 'surAvatar', 'equipe'];
 // le monde en partie : un par session (ses barrières se calculent une fois) ; `mondeDesParties` le rend préparé (le harnais
 // en a besoin hors partie — verifierNav, F2 : le graphe des bots se génère sur le monde des parties, vantaux de L-M)
 const _mondes = new WeakMap();
@@ -131,6 +136,7 @@ export class Partie {
     this.acteurs = []; this.local = null; this.suivi = null;
     // le corps de Haythem rendu à la balade
     const u = g.user;
+    if (u.brassards) teinteEquipe(u, null);
     for (const k of DRAPEAUX) { if (this._drapeaux && this._drapeaux[k] !== undefined) u[k] = this._drapeaux[k]; else delete u[k]; }
     u.speedMul = 1; u.staminaMul = 1; u.stamina = 100; u.marche = false;
     if (u.mesh) u.mesh.visible = true;
@@ -407,7 +413,9 @@ export class Partie {
       this.differer({ genre: 'degats', cible: res.acteur.id, degats: deg, par: tireur.id, arme: fiche.id, zone: res.zone,
         x: res.x, y: res.y, z: res.z, dx, dy, dz, plomb });
     } else if (res.mat !== 'rien') {
-      this.evt('impact', { x: res.x, y: res.y, z: res.z, nx: res.nx, ny: res.ny, nz: res.nz, mat: res.mat, forme: res.forme ? res.forme.id ?? null : null, plomb });
+      // (`arme` : l'arme du coup — F2, demandes de L-H et L-A : l'impact d'un coup de COUTEAU sur le décor se reconnaît, ni
+      // décalque de balle ni bruit d'impact de balle)
+      this.evt('impact', { x: res.x, y: res.y, z: res.z, nx: res.nx, ny: res.ny, nz: res.nz, mat: res.mat, forme: res.forme ? res.forme.id ?? null : null, plomb, arme: fiche.id });
     }
     // la balle qui frôle une tête (< 1,5 m) sans la toucher
     const tMax = res.t;

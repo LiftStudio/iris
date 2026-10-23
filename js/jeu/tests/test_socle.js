@@ -267,10 +267,19 @@ export default function (jeu) {
     // (les « suites » du décor coupé, js/ecole_visibilite.js : une géométrie chacune, créées À LA DEMANDE par ce que la caméra
     // voit pour la première fois — comptées à part, elles ne sont pas une fuite de la partie)
     const suites = () => { let n = 0; game.scene.traverse((o) => { if (o.userData.suite) n++; }); return n; };
+    // (F2 : et les géométries du DÉCOR envoyées pour la première fois à la carte graphique pendant les cycles — une caméra de
+    // mort, une orbite, un départ qui montrent un coin de l'école jamais vu : avec les vraies armes de L-A, les bots tuent
+    // Haythem au hasard des images, et l'école vue change d'un onglet à l'autre (+ 52 géométries sur un rapport, 0 rejoué
+    // seul). Une géométrie envoyée — three lui pose son écouteur 'dispose' — qui est encore, à la fin, celle d'un objet du
+    // décor (hors des racines `dynamique`) n'est pas une fuite de la partie : comptée à part.)
+    const envoyees = new Set(), aeL = THREE.BufferGeometry.prototype.addEventListener;
+    THREE.BufferGeometry.prototype.addEventListener = function (t, f) { if (t === 'dispose') envoyees.add(this); return aeL.call(this, t, f); };
     const m0 = jeu.memoire(), i0 = jeu.instantane(), s0 = suites();
-    for (let k = 0; k < 3; k++) await cycle();
+    try { for (let k = 0; k < 3; k++) await cycle(); } finally { THREE.BufferGeometry.prototype.addEventListener = aeL; }
     const m1 = jeu.memoire(), i1 = jeu.instantane(), s1 = suites();
-    m1.geometries -= s1 - s0;
+    const dynamique = (o) => { for (let q = o; q; q = q.parent) if (q.userData && q.userData.dynamique) return true; return false; };
+    let decorNeuf = 0; game.scene.traverse((o) => { if (o.geometry && envoyees.has(o.geometry) && !o.userData.suite && !dynamique(o)) { envoyees.delete(o.geometry); decorNeuf++; } });
+    m1.geometries -= s1 - s0 + decorNeuf;
     const pc = (a, b) => Math.abs(a - b) / Math.max(1, a);
     // programmes pendant 10 s de tir (images réelles, ou faites à la main sans rAF) ; la qualité automatique FIGÉE (F2, demande
     // de L-U et L-M : sous charge, elle changeait de préréglage en plein tir et compilait la variante de repli d'un objet de la
@@ -290,7 +299,7 @@ export default function (jeu) {
     } finally { jeu.figerQualite(false); }
     const ok = pc(m0.geometries, m1.geometries) <= 0.02 && pc(m0.textures, m1.textures) <= 0.02 && m0.enfants === m1.enfants && egal(i0, i1) && p0 === p1 && tirs > 20;
     return { ok, attendu: 'géométries et textures ± 2 %, enfants identiques, instantané identique, programmes constants pendant 10 s de tir',
-      obtenu: `géo ${m0.geometries}→${m1.geometries} (hors ${s1 - s0} suites neuves du décor) · tex ${m0.textures}→${m1.textures} · enfants ${m0.enfants}→${m1.enfants} · instantané ${egal(i0, i1)} · programmes ${p0}→${p1} (${tirs} tirs)` };
+      obtenu: `géo ${m0.geometries}→${m1.geometries} (hors ${s1 - s0} suites neuves et ${decorNeuf} géométries du décor vues pour la première fois) · tex ${m0.textures}→${m1.textures} · enfants ${m0.enfants}→${m1.enfants} · instantané ${egal(i0, i1)} · programmes ${p0}→${p1} (${tirs} tirs)` };
   }, { delai: 240 });
 
   // 9. L'ÉTAT ET LE DÉTERMINISME
