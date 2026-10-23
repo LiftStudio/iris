@@ -6,6 +6,13 @@ Branche `lot/L-E` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-E`), partie de `s
 
 ## Où j'en suis
 
+**RELECTURE EN COURS** (relecteur sévère, 23/10, 05:00 — commits « L-E relecture : … », section « Relecture » en fin de
+rapport). Fait : spécification relue (§§ 2.3-2.6, 3.5, 3.8, 4.5.12, 4.5.15, 4.6, 4.7, 5.1, 5.5.7), diff `socle...lot/L-E` relu en
+entier, vérificateur OK ; premières corrections commitées, NON ENCORE REJOUÉES (jeton du navigateur attendu : les trois
+pris). Reste : rejouer L-E (PC, `?tel=1`) et S0, jouer à la main, finir la section « Relecture ».
+
+Ce qui suit est l'état laissé par le constructeur :
+
 **FINI** (23/10, 04:30). Les six points de la définition de « fini » (§ 5.1, règle 5) sont tenus :
 - (a) `&rapport=1&lot=L-E` : **16/16 sur PC** (48,6 s, 0 signalé, qualité haute) et **16/16 sous `?tel=1`** (émulation mobile
   375 × 812, 43,8 s, 0 signalé) ;
@@ -189,3 +196,20 @@ rayon 3 cm ; regardé à l'écran depuis la ligne (boîtes posées à la main pu
   (qualité figée), deux parties de même graine peuvent différer par ces annonces.
 - Sur toute l'école, au squelette (navigation à vol d'oiseau), les bots ne se trouvent pas (3 min, 0 élimination) : ils
   restent dans la rue ou dans l'escalier est ; c'est le pilotage (L-D) — au −1, ils se battent (équipes jouées jusqu'à 40).
+
+## Relecture (relecteur sévère, 23/10)
+
+### Corrections (fichiers du lot)
+
+1. **Stand, entraînement libre : pas de « CLIQUE POUR JOUER »** — le libre part en `manche` sans décompte, donc sans le
+   calque que `Partie.image` pose au passage au décompte : au clavier-souris, le clic du menu a expiré, la souris ne vise pas
+   (`game.js` `_onMove` exige la capture en partie) et rien ne le dit. `PartieStand.image` pose le calque à la 1re image
+   (clavier-souris sans capture) ; à la manette ou au doigt, rien. Test 17 ajouté.
+2. **État : les anneaux partagés avec la partie** — `Partie.etat` (socle) ne copie `points` qu'au 1er niveau : `capture` et
+   `presents`, modifiés EN PLACE à chaque pas, restaient les objets vivants dans un instantané. `PartieFPS.etat` les copie en
+   profondeur ; contrôle ajouté au test 12.
+3. **Affichage dans la simulation** — la poupée libérée et le corps remontré à la réapparition étaient écrits dans
+   `_reapparaitre` / `_reprise` (étape 8 du pas) : déplacés dans un abonné à `apparition` (comme `Partie._elimVue`, § 4.1
+   règle 5).
+4. `replis` posé au constructeur ; schéma du HUD du test 13 complété (`astuce`, § 4.5.15).
+

@@ -355,8 +355,11 @@ export class PartieStand extends Partie {
       restant: D.duree ? Math.max(0, D.duree - S.tDefi) : null, points: S.points,
       reaction: S.reactions.length ? S.reactions.reduce((s, r) => s + r, 0) / S.reactions.length : null, resultat: this.resultat, record: this.record };
   }
-  // L'AFFICHAGE (une fois par image) : le record lu et écrit à la fin d'un défi — hors de la simulation
+  // L'AFFICHAGE (une fois par image) : le record lu et écrit à la fin d'un défi — hors de la simulation ; à l'entraînement
+  // libre (sans décompte, donc sans le calque du passage au décompte, Partie.image), le calque « CLIQUE POUR JOUER » à la
+  // 1re image au clavier-souris (le clic du menu a expiré : sans capture, la souris ne vise pas, et rien ne le disait)
   image(dt) {
+    if (!this._clicVu) { this._clicVu = true; if (this.defi === 'libre' && this.besoinCapture() && !this.capte()) this.attendreClic(); }
     super.image(dt);
     if (this.resultat && !this._ecrit) {
       this._ecrit = true;

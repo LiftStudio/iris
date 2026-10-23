@@ -13,6 +13,7 @@ import { PAS, ZONES_JEU } from '../constantes.js';
 import { CLASSES, ARMES, Arsenal } from '../armes.js';
 import { PartieFPS, REGLES_FPS, DOMINATION, effectifs, tirerClasseBot } from '../partie_fps.js';
 import { STAND, DEFIS, REGLES_STAND, enregistrerRecord, lireRecords } from '../partie_stand.js';
+import { entree } from '../../settings.js';
 
 const r2 = (v) => Math.round(v * 100) / 100;
 const typeDe = (v) => (v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v);
@@ -20,8 +21,8 @@ const typeDe = (v) => (v === null ? 'null' : Array.isArray(v) ? 'array' : typeof
 // LE SCHÉMA DE `partie.hud` (§ 4.5.15) : chaque champ et son type (« ? » : ou null)
 const SCHEMA_HUD = { vie: 'number', vieMax: 'number', armure: 'number', arme: 'object?', dispersion: 'number', visee: 'number', letales: 'number', tactiques: 'number',
   chrono: 'number', phase: 'string', phaseT: 'number', phaseDuree: 'number', manche: 'number', nManches: 'number', scores: 'object?', classement: 'array',
-  annonce: 'object?', mort: 'object?', reapparitionT: 'number', points: 'array', cibles: 'array', prop: 'object?', aveugle: 'object?', signalesMiniCarte: 'array',
-  allies: 'array' };
+  annonce: 'object?', mort: 'object?', reapparitionT: 'number', points: 'array', cibles: 'array', prop: 'object?', aveugle: 'object?', astuce: 'string?',
+  signalesMiniCarte: 'array', allies: 'array' };
 const SCHEMA_ARME = { id: 'string', nom: 'string', chargeur: 'number', reserve: 'number', etat: 'string', k: 'number' };
 const SCHEMA_CLASSEMENT = { id: 'number', nom: 'string', equipe: 'string?', elims: 'number', morts: 'number', assists: 'number', score: 'number', role: 'string', vivant: 'boolean' };
 const SCHEMA_MORT = { tueur: 'string?', arme: 'string?', zone: 'string?', distance: 'number', vieTueur: 'number', t: 'number' };
@@ -485,8 +486,14 @@ export default function (jeu) {
     const e2 = await etat({ mode: 'domination', allies: 3, ennemis: 3, humain: false, duree: 20, secondes: 18 });
     const e3 = await etat({ mode: 'melee', zone: 'ss', ennemis: 4, humain: false, duree: 5, secondes: 15 });
     const e4 = await etat({ mode: 'stand', defi: 'vingt', secondes: 8 });
-    const ok = d.egal && e1 && e2 && e3 && e4 && phases[0].startsWith('manche') && phases[1].startsWith('mi_temps') && phases[2].startsWith('fin');
-    return { ok, attendu: 'empreintes égales ; état vrai en manche, mi-temps, fin (et au stand)', obtenu: `${d.a} / ${d.b} · ${phases.join(' · ')}` };
+    // (un instantané d'état ne bouge plus avec la partie : la prise d'un anneau, modifiée en place, n'y remonte pas)
+    await jeu.lancer('domination', { graine: 112, allies: 1, ennemis: 1, humain: false });
+    const q = game.partie, snap = q.etat(); q.points[0].capture.k = 0.5; q.points[0].presents.A = 3;
+    const fige = snap.points.length === 3 && snap.points[0].capture.k === 0 && snap.points[0].presents.A === 0;
+    jeu.quitter('balade');
+    const ok = d.egal && e1 && e2 && e3 && e4 && fige && phases[0].startsWith('manche') && phases[1].startsWith('mi_temps') && phases[2].startsWith('fin');
+    return { ok, attendu: 'empreintes égales ; état vrai en manche, mi-temps, fin (et au stand) ; instantané des anneaux figé',
+      obtenu: `${d.a} / ${d.b} · ${phases.join(' · ')} · instantané figé ${fige}` };
   }, { delai: 180 });
 
   // 13. LE HUD : tous les champs du § 4.5.15, typés, dans chaque mode ; allies vide en chacun pour soi, ≤ 4 sinon
@@ -564,6 +571,28 @@ export default function (jeu) {
     return { ok: ok0 && ok1, attendu: 'A, B, C libres au centre (A à 1,5 m, B et C à ≥ 1,0 m) ; avec un meuble sur B : B déplacé (≤ 3 m), libre, au même sol',
       obtenu: L0.map((q) => `${q.id} (${r2(q.x)}, ${r2(q.z)}) écart ${q.ecart} dégagement ${q.degage}`).join(' · ')
         + ` · meuble : B → (${r2(bL.x)}, ${r2(bL.z)}) à ${r2(dep)} m, dégagement ${bL.degage}, libre ${libre(bL)}` };
+  });
+
+  // 17. (relecture) L'ENTRAÎNEMENT LIBRE du stand n'a pas de décompte : au clavier-souris sans capture, le calque « CLIQUE POUR
+  //     JOUER » à la 1re image (sinon la souris ne vise pas, sans rien qui le dise) ; à la manette, rien
+  T('17 stand libre : calque au clavier-souris, rien à la manette', async () => {
+    const res = [], calque = document.getElementById('calque-clic'), TC = window.__touch, doigt = TC ? TC.auDoigt : null;
+    if (TC) TC.auDoigt = false;
+    try {
+      jeu.simulerCapture('refusee');
+      await jeu.lancer('stand', { graine: 117 }); await jeu.images(2);
+      const p = game.partie, t0 = p.t;
+      res.push(['calque', !calque.hidden && game.paused]);
+      await jeu.images(4); res.push(['gelé', p.t === t0]);
+      jeu.simulerCapture('accordee'); calque.click(); await new Promise((r) => setTimeout(r, 30)); await jeu.images(4);
+      res.push(['repart au clic', calque.hidden && !game.paused && p.t > t0]);
+      jeu.quitter('balade');
+      jeu.simulerCapture('refusee'); entree.manette = true;
+      await jeu.lancer('stand', { graine: 117 }); await jeu.images(2);
+      res.push(['manette : direct', calque.hidden && !game.paused]);
+    } finally { entree.manette = false; jeu.simulerCapture(null); if (TC) TC.auDoigt = doigt; jeu.quitter('balade'); }
+    const ko = res.filter((r) => !r[1]).map((r) => r[0]);
+    return { ok: !ko.length, attendu: res.map((r) => r[0]).join(', '), obtenu: ko.length ? 'faux : ' + ko.join(', ') : 'tout vrai' };
   });
 
   // ---------------------------------------------------------------- À F2 (les vrais modules des autres lots : &fusion=1)

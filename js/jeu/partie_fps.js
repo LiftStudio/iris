@@ -120,7 +120,7 @@ export class PartieFPS extends Partie {
     this.tJeu = 0; this.chrono = this.duree; this.gagnant = null; this.miTempsFaite = false; this.minuteDite = false;
     this.ext = new Map();                         // id → { serie, serieMax, suicides, tirsTouchants, captures, neutralisations, defenses }
     this.points = this.hud.points;                // (domination : le même tableau que hud.points — il entre dans l'état, § 4.7)
-    this.mortLocal = null; this._lacet0 = null;
+    this.mortLocal = null; this._lacet0 = null; this.replis = 0;   // (replis : les réapparitions où le point de choisirApparition n'était pas sûr)
     this._tireurs = new Set(); this._toucheurs = new Set(); this._zoneTouche = new Map(); this._candidats = null; this._mortsRecentes = [];
   }
   // une partie qu'on ne lance pas, et pourquoi (null : elle se lance) — le menu peut griser avec la raison
@@ -231,6 +231,13 @@ export class PartieFPS extends Partie {
       if (a && a.protegeT > this.t) a.protegeT = this.t;
     });
     this.sur('touche', (e) => { this._toucheurs.add(e.par); this._zoneTouche.set(e.cible, e.zone); });
+    // (L'APPARITION VUE — affichage, comme Partie._elimVue : la poupée de chiffon rendue, le corps remontré ; le même Player
+    // revient, sa poupée encore au sol en habillage Militaire — 4 s contre 3,0 s de réapparition — s'efface d'un coup)
+    this.sur('apparition', (e) => {
+      const a = this.acteurParId(e.a); if (!a) return;
+      if (a.poupee) { a.poupee.liberer?.(); a.poupee = null; }
+      if (a.joueur && a.joueur.mesh) a.joueur.mesh.visible = !a.local;
+    });
     this.phaseVers('presentation', this.dPresentation);
     this.annonce(this._bandeau(), 'presentation');
   }
@@ -316,7 +323,7 @@ export class PartieFPS extends Partie {
     let p = null;
     try { p = choisirApparition(this, a); } catch (e) { p = null; }
     if (p && this._sur(a, p)) return p;
-    this.replis = (this.replis || 0) + 1;         // (à F2, avec les apparitions de L-D, il ne devrait presque plus servir)
+    this.replis++;                                // (à F2, avec les apparitions de L-D, il ne devrait presque plus servir)
     const L = this.candidats(), notes = [], melee = this.mode === 'melee';
     for (const q of L) {
       let dE = Infinity, nE = 0, nA = 0, nM = 0;
@@ -340,8 +347,6 @@ export class PartieFPS extends Partie {
     const p = this._apparition(a);
     if (!p) { a.reapparitionT = this.t + REGLES_FPS.attente; return false; }
     delete a._attenteDepuis;
-    if (a.poupee) { a.poupee.liberer?.(); a.poupee = null; }
-    if (a.joueur && a.joueur.mesh) a.joueur.mesh.visible = !a.local;
     a.reapparaitre(p.x, p.y, p.z, p.lacet ?? 0, this.t);
     a.gele = false; if (a.arsenal) a.arsenal.bloque = false;
     if (a.local) { this.game.camYaw = p.lacet ?? 0; this.game.camPitch = 0; this.mortLocal = null; }
@@ -527,8 +532,6 @@ export class PartieFPS extends Partie {
       const D = departs(this.zone, this.cotes[eq], L.length, this.rng);
       L.forEach((a, k) => {
         const p = D[k];
-        if (a.poupee) { a.poupee.liberer?.(); a.poupee = null; }
-        if (a.joueur && a.joueur.mesh) a.joueur.mesh.visible = !a.local;
         a.reapparaitre(p.x, p.y, p.z, p.lacet, this.t);
         delete a._attenteDepuis;
         if (a.local) { this.game.camYaw = p.lacet; this.game.camPitch = 0; this.mortLocal = null; }
@@ -629,6 +632,9 @@ export class PartieFPS extends Partie {
   // ---------------------------------------------------------------- L'ÉTAT (§ 4.7) : celui de la base, plus le bloc des règles
   etat() {
     const e = super.etat();
+    // (les anneaux copiés en profondeur : la base ne copie que le 1er niveau, et la prise en cours se modifie EN PLACE — un
+    // instantané gardé par l'hôte de demain aurait bougé avec la partie)
+    e.points = this.points.map((p) => ({ ...p, capture: { ...p.capture }, presents: { ...p.presents } }));
     e.fps = { mode: this.mode, tJeu: this.tJeu, gagnant: this.gagnant, mi: this.miTempsFaite, minute: this.minuteDite, cotes: { ...this.cotes },
       mort: this.mortLocal ? { ...this.mortLocal } : null,
       ext: this.acteurs.map((a) => [a.id, { ...this._ext(a) }]),
