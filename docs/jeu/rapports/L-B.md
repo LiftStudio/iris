@@ -5,10 +5,13 @@ Branche `lot/L-B` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-B`), partie de `s
 
 ## Où j'en suis
 
-**RELECTURE EN COURS (23/10, 06:10, relecteur sévère)** — spec (§§ 3.1-3.2, 4.5.7, 5.5.2) et diff `socle...lot/L-B` relus ;
-corrections écrites (voir « Relecture » en bas), pas encore rejouées au navigateur : en attente d'un jeton (les trois pris par
-L-E, L-M, L-H). Ensuite : `&rapport=1&lot=L-B`, `&lot=S0`, jeu à la main (essai, combat, prop hunt, `?tel=1`), console,
-cadence ; puis section « Relecture » complétée et rapport final.
+**RELECTURE REPRISE (23/10, 08:10, repreneur du relecteur sévère : la session de 06:10 a été coupée)** — spec et diff relus
+à nouveau, les corrections de `eaa46c4` relues ; serveur `python serve.py 8132` lancé, en attente d'un jeton (les trois pris
+par L-C, L-H, L-F). Ensuite : `&rapport=1&lot=L-B` (20 tests), `&lot=S0`, jeu à la main (essai, combat, prop hunt,
+`?tel=1`), console, cadence ; puis section « Relecture » complétée et rapport final.
+
+(23/10, 06:10, relecteur sévère) — spec (§§ 3.1-3.2, 4.5.7, 5.5.2) et diff `socle...lot/L-B` relus ; corrections écrites
+(voir « Relecture » en bas), pas rejouées au navigateur (session coupée en attendant un jeton).
 
 **Construction FINIE (23/10, 04:58)** — les 19 critères passent au navigateur (`&rapport=1&lot=L-B` : `ok`, 19/19, aussi en profil
 téléphone `&tel=1`), `&rapport=1&lot=S0` passe ENCORE sur la branche (29/29), `verifier_proprietaires` passe ; onglet et
