@@ -87,6 +87,7 @@ export class Partie {
     pr('Plan de l’école', 0);
     if (P.nav) { this.nav = await Nav.obtenir(g, { progres: pr }); this.nav.restreindre(M.noeudsAutorises(this.nav, this.zone, this.id)); }
     if (P.navProps) { this.navProps = await Nav.obtenir(g, { rayon: 0.2, franchir: false }); this.navProps.restreindre(M.noeudsAutorises(this.navProps, this.zone, this.id)); }
+    M.preparerPartie?.();
     pr('Plan de l’école', 1);
     if (P.avatars) await preparerAvatars(g, this.opts.avatars || [], pr);
     if (P.catalogue) await preparerCatalogue(g, pr);
@@ -223,7 +224,7 @@ export class Partie {
     // 4. LES CONTACTS
     separer(this.acteursVivants, g.collisions);
     // 5. LES PORTES
-    this.monde.majPortes(dt, this.acteurs);
+    this.monde.majPortes(dt, this.acteurs, this);
     // 6. LES ARMES : 6a les tirs (effets DIFFÉRÉS), 6b appliqués dans l'ordre
     for (const a of this.acteurs) if (a.vivant && a.arsenal) a.arsenal.pas(dt, a.cmd, this);
     this.appliquerEffets();

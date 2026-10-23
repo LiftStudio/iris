@@ -49,6 +49,12 @@ export const TABLE_PORTES_FPS = {
   'salle Bjarne Stroustrup Si 2.6': 'fermee', 'local électrique (-1)': 'fermee', 'réservé au personnel (sas, sud)': 'fermee',
   'réservé au personnel (sas, ouest)': 'fermee',
 };
+// LE SENS D'OUVERTURE EN PARTIE, quand il n'est pas celui de la balade (F2, raccord L-D / L-M) : la grise du hall du −1 s'ouvre
+// en balade vers le hall (js/ecole_soussol.js, `libre: −1` — Haythem la tire à lui) ; ouverte à ANGLE_AUTO, son vantail de
+// 1 m barre en travers le hall large de 0,8 m : en combat (porte « ouverte », vantail solide) plus personne ne passait, et le
+// graphe des bots, généré vantaux compris, perdait tout le hall au nord de la porte. En partie elle s'ouvre vers la pause, où
+// la place ne manque pas.
+export const SENS_PARTIE = { 'hall -1 → pause': 1 };
 // LE PROP HUNT : 'auto' | 'fermee' | 'ouverte'. Les portes de pièce s'ouvrent pour tous ; la porte 6 est fermée (la rue est
 // hors du prop hunt) ; les culs-de-sac aussi ; une porte de la frontière de la zone l'est à l'entrée (la grise du hall ouest :
 // « auto » dans toute l'école, fermée au −1 et au RDC)
@@ -392,7 +398,7 @@ export class MondePartie {
     Object.assign(Q, { ok: true, nx, nz, tx: -nz, tz: nx, bx, bz, sol, s0, s1, cx: bx, cz: bz, hl: l / 2, parPorte: true });
   }
   // le côté où s'ouvre une porte forcée ou au départ d'une partie : son côté libre, sinon celui de sa face
-  _sens(P) { return P.libre || P.cote || 1; }
+  _sens(P) { return SENS_PARTIE[P.nom] || P.libre || P.cote || 1; }
 
   // ================================================================ LA RÈGLE D'UNE PORTE
   // la table, à défaut la règle par défaut ; une porte fixe garde l'état de sa construction ; une porte de la frontière de
@@ -516,8 +522,9 @@ export class MondePartie {
   // lentement quand il n'y a plus personne. Le premier acteur trouvé, dans l'ordre de la partie, dit le côté. Un événement
   // 'porte' { nom, x, y, z, ouvre, a } quand elle commence à s'ouvrir (`a` : l'acteur) et quand elle finit de se refermer :
   // « la porte qui s'ouvre seule » s'entend (les sons, l'ouïe des chasseurs — AJOUT au § 4.6)
-  majPortes(dt, acteurs) {
-    const partie = this.game.partie;
+  // (`partie` : celle qui simule — F2, demande de L-M : une partie re-simulée hors de game.partie, la killcam de L-Q, émettait
+  // ses 'porte' dans la partie en cours ; game.partie par défaut)
+  majPortes(dt, acteurs, partie = this.game.partie) {
     for (const P of this.pilotees) {
       let qui = null, ida = -1;
       for (const a of acteurs) {
@@ -526,7 +533,7 @@ export class MondePartie {
         if (p.y > P.base - 1.2 && p.y < P.base + 2.2 && Math.hypot(p.x - P.cx, p.z - P.cz) < RAYON_AUTO) { qui = p; ida = a.id; break; }
       }
       if (qui && P.k <= 0.001) {
-        const cote = (qui.x - P.cx) * P.nx + (qui.z - P.cz) * P.nz; P.sens = P.libre || (cote > 0 ? -1 : 1);
+        const cote = (qui.x - P.cx) * P.nx + (qui.z - P.cz) * P.nz; P.sens = SENS_PARTIE[P.nom] || P.libre || (cote > 0 ? -1 : 1);
         if (partie) partie.evt('porte', { nom: P.nom, x: P.cx, y: P.base, z: P.cz, ouvre: true, a: ida });
       }
       const k = Math.max(0, Math.min(1, P.k + (qui ? dt / DUREE : -dt / (DUREE * 1.6))));
@@ -590,6 +597,9 @@ export class MondePartie {
   // préréglage changé — la qualité automatique, un réglage — change ses programmes. noeudsAutorises est la seule méthode du
   // monde que Partie.preparer appelle à CHAQUE préparation, avant la compilation de la scène : c'est là ; trois fois rien
   // quand le programme existe déjà. Affichage, hors du pas.)
+  // À CHAQUE PRÉPARATION d'une partie (Partie.preparer, F2 — demande de L-M) : ce que le préréglage du moment doit avoir de
+  // compilé avant l'entrée ; aujourd'hui la rubalise (aussi appelée par noeudsAutorises, qui ne sert pas à toutes les parties)
+  preparerPartie() { this._compilerRubalise(); }
   _compilerRubalise() {
     const g = this.game, R = this.rubalise, fx = g && g.fx;
     if (!R || !g || !g._compilerAsync) return;
