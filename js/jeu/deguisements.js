@@ -546,6 +546,15 @@ export function credibilite(cle, x, y, z, cap, zone, opts = {}) {
   return clamp(k + K.sol, 0, 1);
 }
 
+// LA CRÉDIBILITÉ D'UN PROP là où il est, tel qu'il est tourné (la jauge DISCRÉTION de Haythem : ★ = ceil(5 · cred), 4 fois
+// par seconde, par PartieProp.majHud ; le soupçon des chasseurs, L-O) — sa pièce lue par la carte vivante
+export function credibiliteActeur(partie, acteur) {
+  if (!acteur || !acteur.prop || !acteur.corps) return 0;
+  const c = acteur.corps, Lu = partie && partie.game && partie.game.carte && partie.game.carte.lumieres;
+  const Z = Lu && Lu.zoneEn ? Lu.zoneEn(c.pos.x, c.pos.z, c.pos.y + 0.1) : null;
+  return credibilite(acteur.prop.cle, c.pos.x, c.pos.y, c.pos.z, acteur.prop.cap ?? c.ang ?? 0, Z ? Z.id : null, c.plaque ? { contreMur: true } : {});
+}
+
 // ---------------------------------------------------------------- LES CACHETTES
 let _bal = null;
 const balistique = () => (_bal && _bal.C === MEUBLES.collisions ? _bal : (_bal = new Balistique(MEUBLES.collisions)));
