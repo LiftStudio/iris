@@ -65,7 +65,7 @@ finie » (Marc-Antoine 1 020 points) : le gagnant n'y est pas nommé (DEMANDE L-
 Ennuyeux pour un joueur de prop hunt AUJOURD'HUI : les chasseurs bots ne tirent jamais (tir de test du minimal cassé, F2) — les
 props gagnent les six manches ; tout le reste de la boucle tient.
 
-## Où j'en suis
+## Où en était le constructeur (`ab06b92` ; la relecture, plus haut, fait foi)
 
 **FINI** (les six points du § 5.1 règle 5) :
 - (a) `&rapport=1&lot=L-F` : **17/17 sur PC** (54,6 s, 0 signalé) et **17/17 sous `?tel=1`** (émulation 375 × 812, 49,1 s,
@@ -162,14 +162,15 @@ joués (`journal`, `n`, `muets`) pour les tests et la mise au point.
 
 ## Le `__rapport`
 
-PC (`http://127.0.0.1:8139/?test=1&rapport=1&lot=L-F`) : `ok: true`, `total: 17`, `echecs: []`, `signales: []`, `ms: 54580`,
+(Relecture, sur `3ab871d` : PC 17/17, 72,4 s ; `?tel=1` 375 × 812 17/17, 73,6 s, téléphone vrai ; 0 signalé. Le tableau est à
+jour de la relecture.) Constructeur, sur `8e8d87e` — PC (`http://127.0.0.1:8139/?test=1&rapport=1&lot=L-F`) : `ok: true`, `total: 17`, `echecs: []`, `signales: []`, `ms: 54580`,
 qualité high. `?tel=1` (375 × 812) : `ok: true`, `total: 17`, `echecs: []`, `signales: []`, `ms: 49123`, téléphone vrai.
 
 | # | Critère (§ 5.5.9) | Mesure (PC ; `?tel=1` identique sauf mention) |
 |---|---|---|
 | 1 | phases, durées, rôles, premier rôle, zone par défaut | 25 phases dans l'ordre · traque de la manche 1 au chrono : 210 s · fin émise · prop → chasseur → prop, chasseur → prop · hasard (graines 1-6) chasseur, prop, prop, prop, chasseur, prop ; même graine, même rôle · zone par défaut e1 (réglage null) · e2 demandé → e1 (moins de 6 types) |
 | 2 | composition | N 4…8 → 1, 2, 2, 2, 3 chasseurs dans les deux rôles de Haythem, props sans avatar · chasseur seul : 1 c. 4, puis 2 chasseurs bots quand il est prop |
-| 3 | cachette | déplacement des chasseurs 0 m · 0 tir · caméra 0 rad · panneau (chrono 31,72, 5 rôles, 2 astuces qui changent en 8 s) · 0 son de prop reçu par un cerveau de chasseur · 4 sons tus, 0 joué · témoin à la traque : 15 frottements entendus, 15 reçus |
+| 3 | cachette | (relecture) regard libre sur 2,5 m au départ · déplacement des chasseurs 0 m · 0 tir · caméra 0 rad · panneau (chrono 31,72, 5 rôles, 2 astuces qui changent en 8 s) · 0 son de prop reçu par un cerveau de chasseur (l'espion posé AVANT la partie) · 30 sons tus, 0 joué · témoin à la traque : 9 frottements entendus, 9 reçus |
 | 4 | lâcher | humain → `tabouret_fictif` (60 dans sa pièce contre 10 + 80 poubelles ailleurs), avatar caché ; registre vide → carton |
 | 5 | vrai meuble, mur, grenade, 0 PV | PM-9 : 100 → 97, `faux` 3, −2 · FP-12 : 97 → 91, `faux` 6 (8 plombs), −2 · mur et sol 0 · grenade 0 · à 0 PV : éliminé (meuble), traque continue, suivi Imad · vivant à la manche suivante |
 | 6 | soin | touche 26 → 50 + 6,5 = 56,5 · à 99 : 100 (soin 1) |
@@ -178,11 +179,11 @@ qualité high. `?tel=1` (375 × 812) : `ok: true`, `total: 17`, `echecs: []`, `s
 | 9 | provocations | forcées au sifflet × 1,3 · décalages 0,03 / 5,42 / 2,73 s, puis 40 s, 20 s dans la dernière minute · dernier prop : 25,01 et 50,01 s après sa référence · canard +5 (compteur remis) · refusée à 2 s · sonnerie +10 à 4 s · sifflet +12 (chasseur à < 10 m) |
 | 10 | scanner | bandes 0, 1, 2 (ni le prop à 13 m ni celui du RDC) · ± 20° · semé · refusé à 1 s, 3 scans, charges 0, « Scanner vide » · bip à 8 m : 1, à 14 m : 0 |
 | 11 | barème | +10 · +6 · 2 × 100 et 1 × 40 (30 % ; rien à 20 %) · −2 · +50 +25 +50 au dernier prop, +50 au prop mort de l'équipe gagnante, rien au chasseur · +50 / +50 aux chasseurs gagnants |
-| 12 | changement de rôle | prop (E déguiser) → chasseur (profil combat, R recharger, purge, fronts vidés) → prop |
+| 12 | changement de rôle | prop (E déguiser) → chasseur (profil combat, R recharger, vue FPS) → prop ; purge à l'image suivante, 0 appel depuis la simulation, fronts vidés |
 | 13 | roue | 8 chiffres sans pas · souris et stick 0…7 · caméra immobile · T sans choix → −1 · provoc3 puis G : klaxon, klaxon · game.wheel fermée, 0 emote fantôme roue fermée et ouverte |
-| 14 | sons | durées 0,6 / 0,7 / 0,8 / 0,9 / 1,2 / 1,6 / 1,0 / 1,4 · 20 recettes · 24 voix (tél. 12) · dalle 900 Hz, gain × 0,18 = 0,35 × l'atténuation à 3,5 m · frottement à 9 m : rien |
+| 14 | sons | durées 0,6 / 0,7 / 0,8 / 0,9 / 1,2 / 1,6 / 1,0 / 1,4 · 20 recettes · 24 voix (tél. 12) · voix pleines : la provocation jouée quand même · dalle 900 Hz, gain × 0,18 = 0,35 × l'atténuation à 3,5 m · frottement à 9 m : rien |
 | 14b | rendu hors ligne (crête / efficace) | coucou 0,19/0,077 · sifflet 0,16/0,080 · klaxon 0,16/0,049 · canard 0,12/0,030 · rire 0,17/0,043 · sonnerie 0,13/0,045 · badumtss 0,36/0,040 · téléphone 0,07/0,041 · frottement 0,19/0,018 · pouf 0,41/0,044 · aïe 0,40/0,062 · crac 0,52/0,040 · bip 0,24/0,037 · craquement 0,11/0,011 · toc 0,23/0,040 · bonk 0,24/0,037 · lâcher 0,17/0,086 · bips 0,14/0,065 · ritournelles 0,16/0,051 et 0,09/0,034 ; aucun NaN |
-| 15 | déterminisme, état | cf95cec3 / cf95cec3 · état vrai en cachette, traque, révélation (250 s) et à la manche 2 (294 s, Haythem chasseur) |
+| 15 | déterminisme, état | 61050922 / 61050922 · état vrai en cachette, traque, révélation (250 s) et à la manche 2 (294 s, Haythem chasseur) · état d'une traque rendu dans une partie à sa présentation : armes débloquées, vue du prop à l'image |
 | 16 | chasseurs | `sprintLimite` vrai (chasseurs), faux (props) · double Maj et SOURIS 5 : pas de sprint tactique |
 
 À F2 (`apresFusion`) : « catalogue réel » (zone par défaut et une balle dans une VRAIE pose → `faux` sur elle), « poursuite »
