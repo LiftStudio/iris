@@ -6,11 +6,65 @@ Branche `lot/L-E` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-E`), partie de `s
 
 ## Où j'en suis
 
-**EN COURS — étape 4 (vérifications finales)**. Fait et commité : la passe de mesure de la rue, `partie_fps.js` et
-`partie_stand.js` complets, `test_combat.js` (16 critères + 3 `apresFusion`), **16/16 sur PC** (`&rapport=1&lot=L-E`), une
-partie jouée à la main dans le navigateur (équipes au −1 jusqu'à la fin, présentation sur toute l'école, domination : A prise,
-stand : « 20 cibles en 30 s » réussi, record). Reste : `&lot=S0` sur la branche, `&lot=L-E` sous `?tel=1`, vérificateur,
-rapport final, onglet et serveur fermés, jeton rendu.
+**FINI** (23/10, 04:30). Les six points de la définition de « fini » (§ 5.1, règle 5) sont tenus :
+- (a) `&rapport=1&lot=L-E` : **16/16 sur PC** (48,6 s, 0 signalé, qualité haute) et **16/16 sous `?tel=1`** (émulation mobile
+  375 × 812, 43,8 s, 0 signalé) ;
+- (b) `&rapport=1&lot=S0` sur la branche : **29/29** (136 s, 0 signalé ; balade au bit près avant et après les parties,
+  vue 3 et vue 1 : 0 / 0 ; le stand du socle compte 6 cibles) — un premier passage avait échoué au point 8 (« programmes
+  144 → 145 ») : la qualité automatique était passée de haute à moyenne pendant la mesure (onglet en arrière-plan, rAF à
+  4 images/s, cinq onglets de jeu ouverts par les agents) ; rejoué, vert ;
+- (c) `python -I tools/verifier_proprietaires.py lot/L-E` → `OK 4 fichiers` (fichiers et pureté) ;
+- (d) commits préfixés « L-E : », lignes d'attribution ; (e) ce rapport ; (f) onglet fermé, serveur 8137 arrêté, jeton 2
+  rendu à 04:28.
+Un repreneur n'a rien à finir : il part du dernier commit de `lot/L-E`. Les trois tests `apresFusion` sont pour F2.
+
+## Le `__rapport` (PC, `http://127.0.0.1:8137/?test=1&rapport=1&lot=L-E`)
+
+`ok: true`, `total: 16`, `echecs: []`, `signales: []`, `ms: 48615`, qualité high, téléphone false. Sous `?tel=1` : `ok: true`,
+16/16, `ms: 43808`, téléphone true (point 10 : « (?tel=1) … parties tél. 2 c. 2 → 4 · 1 + 3 → 4 · bots 5 · score 20 »).
+
+| # | Critère (§ 5.5.7) | Mesure (PC) |
+|---|---|---|
+| 1 | phases, rien avant le GO | décompte au pas 360 · manche 720 · peutTirer faux, 0 m, 0 tir avant ; après : 2,31 m, des tirs |
+| 2 | chacun pour soi, 6 bots au −1 | fin au score (99,3 s, meilleur 20), émise 1 fois · Σ élim. 88 = Σ morts 88 − 0 suicide · trié · gagnant = 1er |
+| 3 | équipes : +1, fin au score, tirs à travers un allié | défaut 40 / 20 (tél.) · 13 élim., 0 écart · fin au pas de la 8e (5–8) · 2 000 tirs : allié 0 dégât (tir direct 0), ennemi 2 000 touches |
+| 4 | réapparition, protection, régénération | 240 / 360 pas · protégé 0 · 0 · 10 · protection finie au premier tir · 479 pas sans soin, 343 pas de soin (2,86 s) |
+| 5 | barème, assistances | 100 · 125 (tête) · 125 (couteau) · 150 (> 30 m) · assistance 50 à 30 dégâts, rien à 29 · suicide −100 et équipe 6 → 5 · capture 150, défense 150, neutralisation 75 |
+| 6 | domination | 960 / 640 / 480 pas · disputé figé · 480 puis 1 440 · +20 en 30 s (2 anneaux) · `hud.points` · mi-temps à 75 (camps échangés) · fin à 150 · au temps : mi-temps 10 s, fin 20 s |
+| 7 | apparitions (10 min, 1 + 5, toute l'école) | 30 apparitions, 0 vue (7 replis) · 0 mort rapide sur 30 |
+| 8 | classes | dotations exactes ×4 · 40,2 / 29,4 / 19,5 / 10,9 % |
+| 9 | zones, refus | les 4 zones, chaque acteur à ≤ 6 m d'un départ de son camp · « la domination ne se joue que sur toute l'école (zone « Le −1 » refusée) » |
+| 10 | effectifs | PC 4 c. 4, 1 + 5, max 9 · tél. 2 c. 2, 1 + 3, max 5, score 20 |
+| 11 | stand | levée 18 pas · chute à la touche, tête × 2 (50 / 100 à 8 m) · 20 cibles en 4,72 s · record écrit · 10 têtes · 30 / 30 balles · réflexes 20 / 20 (28 ms) · stockage qui lève : 0 erreur · mannequin : 10 coups, zones et dégâts (tête 42, torse 33, ventre 30, jambes 27) |
+| 12 | déterminisme, état | 188bf2c8 / 188bf2c8 · état vrai en manche, mi-temps, fin (et au stand) |
+| 13 | schéma de `partie.hud` | 0 faute dans les 5 parties (équipes, chacun pour soi, domination, deux stands), carte de mort comprise · alliés 4 / 0 / 4 / 0 / 0 |
+| 14 | lignes du stand | 6 cibles, 12 lignes libres (`balle()` et toutes les formes) · 10 s sans exception |
+| 15 | munitions | 30 · 90 · jamais au-delà de 90 sur 60 éliminations |
+| 16 | anneaux | A 1,5 m au point · B 1,0 m au point · C 1,25 m à 1,5 m du point · meuble sur B : B → 2,25 m, libre à 1,0 m |
+
+Les trois tests `apresFusion`, lancés une fois à blanc avec `&fusion=1` contre les squelettes (pour voir qu'ils tournent) :
+apparitions réelles « 8 apparitions, 0 vue, 0 repli » ; 100 duels « id 0 : 41 · id 1 : 39 » (20 sans vainqueur en 20 s) ;
+10 min 4 c. 4 sur toute l'école : 0 élimination — au squelette les bots ne se trouvent pas sur toute l'école (voir les doutes) :
+c'est à F2, avec la navigation de L-D, qu'il doit passer.
+
+## Joué à la main (navigateur intégré, sans `?test=1`, vrai son)
+
+- **Équipes au −1** (`?partie=equipes&zone=ss`) : APPUIE → préparation → présentation (bandeau « MATCH À MORT PAR ÉQUIPES ·
+  SISR CONTRE SLAM · 40 ÉLIMINATIONS · 10:00 · LE −1 ») → décompte → GO ; Haythem piloté au script (il vise l'ennemi vu le
+  plus proche, sinon court vers lui) : 6 éliminations, une mort (« Gabriel 2 → Haythem »), réapparition 3,0 s plus tard ;
+  la partie menée à 40 (SLAM 40 – 36 SISR) : verdict « DÉFAITE » 2,5 s puis l'écran de fin (L-U) « Victoire des SLAM ».
+  Fil vérifié : éliminations, assistances, apparitions dans l'ordre.
+- **Toute l'école** : la caméra de la présentation part de la rue, 7 m derrière et 2,2 m au-dessus de Haythem, face à la
+  porte 6 (photo regardée), et finit dans ses yeux (7,04 → 0,00 m, courbe douce) ; le calque « CLIQUE POUR JOUER » s'est
+  bien posé au décompte (la capture du pointeur est refusée au navigateur intégré : la partie est restée gelée ; reprise
+  en se déclarant à la manette, sans capture).
+- **Domination** : Haythem dans l'anneau A (dessiné à la main pour la photo, en attendant L-H) : 8 s, « A PRISE », +150,
+  l'anneau passe au bleu, SISR 1 – 0 trois secondes plus tard.
+- **Stand** : « 20 CIBLES EN 30 S » — décompte, cibles qui se lèvent (panneaux posés à la main d'après `hud.cibles`),
+  20 touches (10 têtes) en 7,9 s : « RÉUSSI · 20 CIBLES EN 7,9 S · 2 617 PTS · NOUVEAU RECORD ! » ; l'entraînement libre :
+  les 6 silhouettes et le mannequin à côté des couloirs (photo regardée depuis la ligne).
+- Mesures relatives (cinq onglets de jeu ouverts par les agents) : 27,8 ms par image en moyenne qualité au −1, rAF bridé à
+  4 images/s quand l'onglet n'était pas devant ; `Partie.pas` du socle (point 10 de S0) 0,056 ms.
 
 ## Ce qui est construit
 
