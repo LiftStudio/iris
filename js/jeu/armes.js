@@ -275,14 +275,10 @@ export class Arsenal {
       this._recharge(partie, t, sprinte, veutTirer, peut);
       if (this.et === 'recharge') return;
     }
-    // 6. LE SPRINT : arme baissée ; en sortir — un tir, la visée, une recharge demandée, l'arrêt — coûte `sprintTir` (sprint
-    // tactique : `sprintTactTir`)
-    const ch = this.ch[this.i], res = this.res[this.i];
-    const capMax = f.chargeur + (f.recharge.parCartouche || ch === 0 ? 0 : 1);
-    const veutRecharger = !!cmd.recharger && res > 0 && ch < capMax;
+    // 6. LE SPRINT : arme baissée ; en sortir coûte `sprintTir` (sprint tactique : `sprintTactTir`)
     const tact = this._tactique(a, v);
     if (this.et === 'sprint') {
-      if (!sprinte || veutTirer || cmd.visee || veutRecharger) {
+      if (!sprinte || veutTirer || cmd.visee) {
         this._etat('pret', t, 0);
         this.tA = Math.max(this.tA, t + (this.spTac ? f.sprintTactTir : f.sprintTir)); this.sT = this.tA;
         if (veutTirer && !f.auto) this.tampon = this.tA;    // (le clic qui a fait sortir du sprint part au bout de la sortie)
@@ -292,7 +288,9 @@ export class Arsenal {
       return;
     }
     // 7. RECHARGER : sur le front, ou d'office à vide (la cadence du dernier tir finie)
-    if (veutRecharger || (res > 0 && ch === 0 && (this.et !== 'tir' || t + 1e-9 >= this.prochain))) {
+    const ch = this.ch[this.i], res = this.res[this.i];
+    const capMax = f.chargeur + (f.recharge.parCartouche || ch === 0 ? 0 : 1);
+    if (res > 0 && ((cmd.recharger && ch < capMax) || (ch === 0 && (this.et !== 'tir' || t + 1e-9 >= this.prochain)))) {
       if (this.et === 'pret' || this.et === 'tir') { this._recharger(f, t, partie); return; }
     }
     // 8. TIRER
