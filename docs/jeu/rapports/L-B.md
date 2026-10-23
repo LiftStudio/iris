@@ -5,11 +5,11 @@ Branche `lot/L-B` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-B`), partie de `s
 
 ## Où j'en suis
 
-**RELECTURE REPRISE (23/10, 08:10 → 09:25, repreneur du relecteur sévère : la session de 06:10 a été coupée)** — spec et diff
-relus à nouveau, les corrections de `eaa46c4` relues et rejouées ; jeton 1 pris à 08:25. Trouvé en jouant et corrigé : le
-saut sur un meuble bas (point 8 de « Relecture » : bonds et traversées de murs). `&rapport=1&lot=L-B` : 20/20 (31 106 ms) ;
-`&rapport=1&lot=S0` sur la branche : 29/29 (154 059 ms, onglet à 1 rAF/s) ; `verifier_proprietaires` OK. Reste : `?tel=1`,
-quelques images (glissade, mort, orbite), puis rapport final, onglet et serveur fermés, jeton rendu.
+**RELECTURE FINIE (23/10, 09:12, repreneur du relecteur sévère : la session de 06:10 avait été coupée)** — spec et diff relus
+à nouveau, les corrections de `eaa46c4` relues et rejouées ; trouvé en jouant et corrigé : le saut sur un meuble bas (point 8
+de « Relecture » : bonds et traversées de murs). Sur le code final (`4ad489d`) : `&rapport=1&lot=L-B` 20/20 (36 050 ms),
+`&tel=1` 20/20 (49 616 ms), `&rapport=1&lot=S0` sur la branche 29/29 (131 183 ms, balade au bit près) ;
+`verifier_proprietaires` OK 6 fichiers ; onglet fermé, serveurs (8132, récepteur 8232) arrêtés, jeton 1 rendu à 09:11.
 
 (23/10, 06:10, relecteur sévère) — spec (§§ 3.1-3.2, 4.5.7, 5.5.2) et diff `socle...lot/L-B` relus ; corrections écrites
 (voir « Relecture » en bas), pas rejouées au navigateur (session coupée en attendant un jeton).
@@ -253,7 +253,12 @@ la pureté (`verifier_proprietaires` : OK 6 fichiers), aucun TODO ni bouchon.
 ### Rejoué au navigateur (repreneur, 23/10, jeton 1, port 8132)
 
 - `?test=1&rapport=1&lot=L-B` AVANT le point 8 (`eaa46c4`, les corrections 1-7) : `{ ok: true, total: 20, ms: 50 705, echecs: [],
-  signales: [] }` ; APRÈS (`17df76e`) : `{ ok: true, total: 20, ms: 31 106, echecs: [], signales: [], qualite: 'high' }`.
+  signales: [] }` ; après (`17df76e`) : 20/20, 31 106 ms ; sur le code FINAL (`4ad489d`) : `{ ok: true, total: 20, ms: 36 050,
+  echecs: [], signales: [], telephone: false }` et `&tel=1` : `{ ok: true, total: 20, ms: 49 616, echecs: [], signales: [],
+  telephone: true }`.
+- `?test=1&rapport=1&lot=S0` sur la branche, code final : `{ ok: true, total: 29, ms: 131 183, echecs: [], signales: [] }`
+  (balade au bit près ; aussi 29/29 sur `17df76e`).
+- `python -I tools/verifier_proprietaires.py lot/L-B` → `OK 6 fichiers` ; fins de ligne CRLF gardées (aucune ligne LF seule).
 - Mesures nouvelles : test 3 « … bonds 0, traversées 0, dedans 0, posés sur un meuble 52 (restés 0), trous du sol 28 » ; test 8
   « œil du tir − caméra 0 m (sol lissé jusqu'à 20,4 cm des pieds) » ; test 10 « prop lancé 0,6 (humain bougé 0) » ; test 19
   « réapparition { jauge 1, endurance 100 } » ; test 20 « maintenue : 0,25° · souffle, lunette, 0,025° · pénalité 0,372° ;
@@ -262,8 +267,13 @@ la pureté (`verifier_proprietaires` : OK 6 fichiers), aucun TODO ni bouchon.
   0,18 ms en courant (budget 0,5 ms avec 7 bots).
 - Console : rien du lot (les « An unknown error occurred when fetching the script » du service worker, déjà au socle).
 - Joué (images faites à la main : le panneau du navigateur ne donne qu'1 rAF/s, fenêtre en arrière-plan) : la hanche et la
-  visée de la FA-24 (champ 58,7° → 48,5°, souris × 0,8), le saut sur les chaises de l'espace pause du 1er (posé à 0,2 m, glissé
-  hors du rang en 0,3 s).
+  visée de la FA-24 (champ 58,7° → 48,5°, souris × 0,8), le sprint dans le hall (6,59 m/s en 0,7 s, champ 63,1°), la glissade
+  (œil 0,85, roulis 3,3-3,6°, champ 62,1°), le saut sur les chaises de l'espace pause du 1er (posé à 0,2 m, glissé hors du
+  rang en 0,3 s), le haut de la volée 3,5 → 1,75 de l'escalier est (œil 11,7 cm bas au bord, 0 sur le palier à 1,25 m).
+- Photos regardées (`…/scratchpad/lbr/photos/`, `__jeu.photo` postée à un récepteur local) : `lbr_glissade.jpg` (le couloir du
+  hall, bas et penché, la boîte d'arme du socle à droite), `lbr_meuble.jpg` (posé sur les chaises, la baie de l'espace pause et
+  le 5/7 en face), `lbr_volee_haut.jpg` (au bord de la volée, la main courante), `lbr_volee_palier.jpg` (du palier, 1,25 m avant :
+  la volée qui descend, le mur orange, la main courante) ; rien ne saute ni ne traverse.
 
 ### Ce qui reste vrai et qu'on garde (noté, pas corrigé)
 
@@ -271,6 +281,11 @@ la pureté (`verifier_proprietaires` : OK 6 fichiers), aucun TODO ni bouchon.
   (0,77 : l'escalier est, 3,5 → 1,75), 13 cm au pied ; c'est l'arrondi de la cassure par la fenêtre de 2 m. On ne peut pas le
   réduire sans casser le critère 8 (la dérivée seconde ∝ 1 / fenêtre : 0,85 cm mesuré pour 1 cm permis à 1,6 m). Comme l'œil
   du tir est le même (point 1), le réticule ne ment pas ; la tête simulée (`touches.js`), elle, reste à sa place.
+- **Le « punch » d'une touche reçue est à l'affichage seulement** (§ 3.6 « punch de visée 1,2° × dégâts/30 rendu en 0,18 s » ;
+  § 4.5.7 le met dans `VueFPS.impulsion`, qui ne touche jamais `camPitch`) : pendant 0,18 s, l'image bouge et les balles
+  partent du regard de la commande — le réticule, au centre, ment d'au plus 2,4°. Gardé tel que le contrat le pose ; si
+  l'intégration veut un vrai « flinch » de Call of Duty, c'est à `lireCommande` de le consommer comme le recul (au pas, sur
+  l'événement `touche`).
 - **Les trous du sol du −1** (hors lot : `js/ecole_soussol.js` du lot R, ou ses dalles) : un sprint droit depuis un point libre
   du −1 finit au rez-de-chaussée dans 87 cas sur ≈ 500 SANS sauter (là où aucune dalle du −1 ne couvre, `solEn` rend 0 et le
   corps monte de 3,06 m dans un meuble du hall : vers (1,1 ; −1,0), (3,6 ; −1,0), (5,5 ; −1,0), (13,1 ; −3,8), (2,1 ; −16,7)) ;
