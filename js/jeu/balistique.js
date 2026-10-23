@@ -63,7 +63,7 @@ function entree(s, ox, oy, oz, dx, dy, dz, tMax) {
     if (a > b) { const q = a; a = b; b = q; }
     if (a > 0) dedans = false;
     t0 = a; t1 = b; axe = 1;
-    if (t1 < 0) return Infinity;
+    if (t1 < 0 || t0 >= tMax) return Infinity;              // (une forme d'un autre niveau : rejetée tout de suite)
   } else if (oy < s.y0 || oy > s.y1) return Infinity;
   if (s.t === 'c') {
     // le cylindre vertical : |(O + tD) − C|² = r² dans le plan
@@ -230,9 +230,8 @@ export class Balistique {
         p1 = c0 > ta && c0 < tb ? c0 : ta; p2 = c1 > ta && c1 < tb ? c1 : p1;
         if (p2 < p1) p2 = p1;
       }
-      const pts = [p0, p1, p2, p3];
       for (let m = 0; m < 3; m++) {
-        const p = pts[m], q = pts[m + 1];
+        const p = m === 0 ? p0 : m === 1 ? p1 : p2, q = m === 0 ? p1 : m === 1 ? p2 : p3;
         if (q - p < 1e-12) continue;
         const um = u0 + du * (p + q) / 2;
         let c0, c1, k = 0;

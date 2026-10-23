@@ -72,10 +72,13 @@ function brut(C, ax, ay, az, bx, by, bz, mode = 'balle') {
   for (const r of C.sols) {
     const I = intervalle(r.x0, r.x1, r.z0, r.z1, -Infinity, Infinity); if (!I) continue;
     let fA = null;
-    for (let t = I[0]; t <= Math.min(best, I[1]) + 1e-9; t += 0.01) {
+    const fin = Math.min(best, I[1]);
+    for (let t = I[0]; ; t += 0.01) {
+      if (t > fin) t = fin;                                          // (le dernier échantillon : le bord même du sol)
       const x = ax + ux * t, z = az + uz * t, f = ay + uy * t - C._hSol(r, Math.min(r.x1, Math.max(r.x0, x)), Math.min(r.z1, Math.max(r.z0, z)));
       if (fA !== null && t > 1e-6 && ((fA < 0 && f >= 0) || (fA > 0 && f <= 0))) { best = Math.min(best, t); break; }
       fA = f;
+      if (t >= fin) break;
     }
   }
   if (Math.abs(uy) > 1e-12) {
