@@ -34,7 +34,6 @@ import { niveauDe } from './constantes.js';
 import { melanger } from './rng.js';
 import { Balistique } from './balistique.js';
 import { zoneDe as zoneVue, zonesCachees, DEHORS } from '../ecole_visibilite.js';
-import { avecProfondeur, sceneOmbre } from '../ombre_cache.js';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const angle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -127,36 +126,21 @@ export async function preparerCatalogue(game, progres) {
   CATALOGUE.set(CARTON, typeCarton());
   _nExclus = -1;
   pr('Meubles', 0.3);
-  // LES PROGRAMMES : aucun de COULEUR — les matériaux des prototypes sont les jumeaux de ceux du décor (même signature, même
+  // LES PROGRAMMES : rien à compiler — les matériaux des prototypes sont les jumeaux de ceux du décor (même signature, même
   // programme, mêmes textures, déjà sur la carte). (Mesuré le 23/10 : Player.preparerRendu en compilait onze — les variantes
-  // du cran de repli —, les passes annexes de game._compilerTout sept, pour une cible qui n'est pas celle du rendu.) Restent
-  // les PASSES ANNEXES d'un objet mobile non animé — l'ombre portée (js/ombre_cache.js avecProfondeur) et l'ombre de contact
-  // (js/ombres_contact.js avecContact) : une ou deux variantes de profondeur que le décor, cuit, n'a pas — compilées ici en
-  // parallèle, comme celles d'un avatar (Game._compilerTout), et non à la première image d'un prop (relecture L-K du 23/10 :
-  // 10 à 15 ms d'image figée au premier meuble vu, spec § 4.1 règle 6). Les textures sont envoyées à la carte (déjà là :
-  // celles du décor). Une fois par session.
-  const prets = [];
+  // du cran de repli —, les passes annexes de game._compilerTout sept, pour une cible qui n'est pas celle du rendu ; les
+  // seules variantes qu'un prop demande en jeu sont deux à quatre programmes de PROFONDEUR des objets mobiles non animés —
+  // ombre portée, ombre de contact, avec ou sans carte —, compilés à sa première image : voir le rapport L-K, demande à
+  // L-H. Relecture du 23/10 : les compiler ici par les passes annexes d'un avatar — avecProfondeur, avecContact — en
+  // compile SEPT autres, de couleur et de profondeur, et pas ceux du rendu.) Les textures sont envoyées à la carte (déjà
+  // là : celles du décor), une fois par session.
   for (const T of CATALOGUE.values()) {
     if (_prepares.has(T.proto)) continue;
     _prepares.add(T.proto);
     for (const t of texturesDe(T.proto)) try { game.renderer && game.renderer.initTexture(t); } catch (e) { /* */ }
-    const p = compilerAnnexes(game, T.proto); if (p) prets.push(p);
   }
-  // (une compilation qui ne répond pas ne bloque pas la partie : 3 s au plus)
-  if (prets.length) await Promise.race([Promise.all(prets), new Promise((r) => setTimeout(r, 3000))]);
   pr('Meubles', 1);
   return CATALOGUE;
-}
-// les programmes des passes annexes d'un objet mobile (ceux de Game._compilerTout sans la couleur), pour la cible où elles
-// sont dessinées : la carte d'ombre (la doublure de scène de js/ombre_cache.js) et la carte des ombres de contact
-function compilerAnnexes(game, o) {
-  const comp = game && game._compilerAsync ? (x, s, e, cam) => game._compilerAsync(x, s, e, cam) : null;
-  if (!comp) return null;
-  const so = game._sceneOmbre || (game._sceneOmbre = sceneOmbre(game.scene));
-  const p = [avecProfondeur(o, (x) => comp(x === game.scene ? so : x, so, false))];
-  if (game.ombres && game.ombres.avecContact) p.push(game.ombres.avecContact(o, (x, cam) => comp(x, game.scene, false, cam)));
-  const L = p.filter(Boolean);
-  return L.length ? Promise.all(L) : null;
 }
 // les textures des matériaux d'un objet (envoyées à la carte sous la préparation : elles y sont déjà, ce sont celles du décor)
 function texturesDe(o) {

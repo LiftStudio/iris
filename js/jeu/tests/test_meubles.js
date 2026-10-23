@@ -174,10 +174,11 @@ export default function (jeu) {
       obtenu: `${types.size} types, ${H.length} poses hors du −1 (${v.types} clés, ${v.poses} poses en tout) · tailles ${tailles.join(' ; ') || 'justes'} (écarts justifiés au document : ${justes.join(' ; ') || 'aucun'}) · horsTolerance ${JSON.stringify(v.horsTolerance)} · oubliés L-M ${v.nonEtiquetes.filter(LM).map((e) => e.zone + ' (' + r3(e.x) + ' ; ' + r3(e.y) + ' ; ' + r3(e.z) + ')').join(', ') || 'aucun'} · autres ${JSON.stringify(autres)} · fautes ${fautes.join(', ') || 'aucune'}` };
   });
 
-  // 3. LE CATALOGUE : ≤ 600 ms, aucun programme de couleur (les passes annexes des objets mobiles, ≤ 3 variantes de
-  // profondeur, compilées là plutôt qu'à la première image d'un prop), une copie ≤ 12 appels (haute), 0 programme à la
-  // première image d'une copie
-  T('3 preparerCatalogue ≤ 600 ms, 0 programme de couleur, une copie ≤ 12 appels (haute), 0 à la première image', async (t) => {
+  // 3. LE CATALOGUE : ≤ 600 ms, aucun programme neuf, une copie ≤ 12 appels (haute) ; à la première image des copies, rien
+  // que des variantes de PROFONDEUR des objets mobiles non animés (three les dessine lui-même dans la carte d'ombre, une par
+  // face — avant, double — et par carte — avec, sans — : 6 au plus ; relecture L-K du 23/10 : 5 relevées onglet caché, 2
+  // onglet devant — demande à L-H)
+  T('3 preparerCatalogue ≤ 600 ms, 0 programme, une copie ≤ 12 appels (haute)', async (t) => {
     const prog = () => new Set((game.renderer.info.programs || []).map((p) => p.cacheKey));
     const p0 = prog(), t0 = performance.now();
     await preparerCatalogue(game);
@@ -204,11 +205,11 @@ export default function (jeu) {
         if (a > 12) trop.push(cle + ' ' + a + ' (' + T0.proto.children.length + ' maillages)');
       }
     } finally { game.freeCam = false; game.placerAuDepart(); fx.setQuality(q0, true); fx.auto = auto; }
-    const p2 = prog(), cat = [...p1].filter((k) => !p0.has(k)), neufs = [...p2].filter((k) => !p1.has(k));
-    t.note('programmes à la première image d’une copie', neufs.length);
-    const ok = t.temps('preparerCatalogue (ms)', ms, 600) && cat.every((k) => k.startsWith('depth')) && cat.length <= 3 && trop.length === 0 && neufs.length === 0;
-    return { ok, attendu: '≤ 600 ms · aucun programme de couleur au catalogue (≤ 3 variantes de profondeur des objets mobiles) · chaque copie déguisable ≤ 12 appels en haute (≤ 3 pour un meuble cousu seul : le −1, lot R) · 0 programme à la première image d’une copie',
-      obtenu: `${Math.round(ms)} ms · programmes ${p0.size} → ${p1.size} au catalogue (${cat.map((k) => k.split(',')[0]).join(', ') || 'aucun : déjà là'}), +${neufs.length} au rendu (${neufs.map((k) => k.split(',')[0]).join(', ') || 'aucun'}) · ${trop.length ? 'trop : ' + trop.join(', ') : 'toutes ≤ 12'} · ${appels.join(', ')}` };
+    const p2 = prog(), neufs = [...p2].filter((k) => !p1.has(k));
+    t.note('programmes de profondeur à la première image d’une copie', neufs.length);
+    const ok = t.temps('preparerCatalogue (ms)', ms, 600) && p1.size === p0.size && trop.length === 0 && neufs.every((k) => k.startsWith('depth')) && neufs.length <= 6;
+    return { ok, attendu: '≤ 600 ms · 0 programme compilé par le catalogue · chaque copie déguisable ≤ 12 appels en haute (≤ 3 pour un meuble cousu seul : le −1, lot R) · à la première image, au plus 6 variantes de profondeur (objets mobiles)',
+      obtenu: `${Math.round(ms)} ms · programmes ${p0.size} → ${p1.size} au catalogue, +${neufs.length} au rendu (${neufs.map((k) => k.split(',').slice(0, 6).join(',')).join(' ; ') || 'aucun'}) · ${trop.length ? 'trop : ' + trop.join(', ') : 'toutes ≤ 12'} · ${appels.join(', ')}` };
   }, { delai: 240 });
 
   // 4. CHAQUE PROTOTYPE POSÉ À LA PLACE DE SON ORIGINAL : boîtes à ± 1 mm, même programme
