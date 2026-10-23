@@ -22,6 +22,7 @@
 //            forcerZone (tests : une zone grisée gardée) } — un champ absent vient des derniers choix (settings.jeu.prop)
 import * as THREE from 'three';
 import { Partie } from './partie.js';
+import { Rng, melanger } from './rng.js';
 import { PAS, ZONES_JEU } from './constantes.js';
 import { Acteur } from './acteur.js';
 import { Arsenal, DOTATION_CHASSEUR, degatsDe } from './armes.js';
@@ -157,7 +158,8 @@ export class PartieProp extends Partie {
     const N = clamp(Math.round(o.acteurs || R.acteurs), R.acteursMin, R.acteursMax);
     this.N = N; this.nC = R.chasseurs(N); this.chasseurSeul = !!o.chasseurSeul;
     let r = o.premierRole || 'prop';
-    if (r === 'hasard') r = this.rng.next() < 0.5 ? 'prop' : 'chasseur';
+    // (au hasard SEMÉ : un tirage à lui — les premiers tirages d'un xorshift semé d'un petit entier sont tous proches de 0)
+    if (r === 'hasard') r = new Rng(melanger(this.graine, 0x7201e)).next() < 0.5 ? 'prop' : 'chasseur';
     this.roleH0 = humain ? (r === 'chasseur' ? 'chasseur' : 'prop') : null;
     const d0 = departs(this.zone, 'chasseurs', 1, this.rng)[0];
     const nPool = this.nC, fiches = this._fichesBots(N - (humain ? 1 : 0), nPool);

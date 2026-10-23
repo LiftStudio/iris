@@ -162,8 +162,8 @@ const BRUITS = {
   // un meuble qui court : il frotte sur le carrelage (bois, plastique, métal mêlés)
   frottement(ctx, out, q, b) {
     const f = 650 + Math.random() * 500;
-    souffle(ctx, out, q, b, { duree: 0.17, vol: 0.32, f, f1: f * 1.5, q: 1.4, attaque: 0.02 });
-    souffle(ctx, out, q, b, { duree: 0.14, vol: 0.16, type: 'lowpass', f: 320, q: 0.7, attaque: 0.01 });
+    souffle(ctx, out, q, b, { duree: 0.17, vol: 0.55, f, f1: f * 1.5, q: 1.4, attaque: 0.02 });
+    souffle(ctx, out, q, b, { duree: 0.14, vol: 0.28, type: 'lowpass', f: 320, q: 0.7, attaque: 0.01 });
     return 0.17;
   },
   // « pouf » : un changement de forme (une bouffée, un coup sourd)
@@ -195,9 +195,9 @@ const BRUITS = {
   },
   // le défigement : la chaise qui craque
   craquement(ctx, out, q, b) {
-    [0, 0.05, 0.11, 0.19].forEach((d, i) => souffle(ctx, out, q, b, { debut: d, duree: 0.03, vol: 0.2 - i * 0.03, f: 1700 + i * 200, q: 4, attaque: 0.001 }));
+    [0, 0.05, 0.11, 0.19].forEach((d, i) => souffle(ctx, out, q, b, { debut: d, duree: 0.03, vol: 0.45 - i * 0.06, f: 1700 + i * 200, q: 4, attaque: 0.001 }));
     const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 640; f.Q.value = 5; f.connect(out);
-    note(ctx, out, q, { type: 'sawtooth', f0: 95, f1: 145, duree: 0.25, vol: 0.22, attaque: 0.02, vers: f });
+    note(ctx, out, q, { type: 'sawtooth', f0: 95, f1: 145, duree: 0.25, vol: 0.5, attaque: 0.02, vers: f });
     return 0.25;
   },
   // « toc » : un meuble qui retombe d'un petit saut
@@ -215,7 +215,7 @@ const BRUITS = {
   // le lâcher des chasseurs : deux coups de sifflet d'arbitre
   lacher(ctx, out, q, b) {
     for (const [d, du] of [[0, 0.32], [0.42, 0.62]]) {
-      const a = note(ctx, out, q, { f0: 2900, debut: d, duree: du, vol: 0.26, attaque: 0.012, tenue: du * 0.8 });
+      const a = note(ctx, out, q, { f0: 2900, debut: d, duree: du, vol: 0.18, attaque: 0.012, tenue: du * 0.8 });
       lfo(ctx, a.frequency, q + d, du, 28, 190, 'triangle');
       souffle(ctx, out, q, b, { debut: d, duree: du, vol: 0.05, f: 3100, q: 3, tenue: du * 0.8 });
     }

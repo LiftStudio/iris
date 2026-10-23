@@ -126,11 +126,11 @@ export default function (jeu) {
   T('2 composition : arrondi(N/3) chasseurs, chasseur seul', async () => {
     const res = [];
     for (let N = 4; N <= 8; N++) {
-      await lancer({ acteurs: N, premierRole: 'prop' }); const a = P(), nP = compte(a, 'chasseur');
+      await lancer({ acteurs: N, premierRole: 'prop' }); const a = P(), nP = compte(a, 'chasseur'), nA = a.acteurs.length;
       await lancer({ acteurs: N, premierRole: 'chasseur' }); const b = P(), nC = compte(b, 'chasseur');
       // (les bots toujours props n'ont pas de corps d'élève)
       const sansAvatar = b.acteurs.filter((x) => !x.pool && !x.local).every((x) => !x.joueur);
-      res.push([`N ${N} : ${nP} / ${nC} chasseurs (${Math.round(N / 3)})`, nP === Math.round(N / 3) && nC === Math.round(N / 3) && a.acteurs.length === N && sansAvatar]);
+      res.push([`N ${N} : ${nP} / ${nC} chasseurs (${Math.round(N / 3)})`, nP === Math.round(N / 3) && nC === Math.round(N / 3) && nA === N && b.acteurs.length === N && sansAvatar]);
     }
     await lancer({ acteurs: 5, premierRole: 'chasseur', chasseurSeul: true }); const s = P();
     res.push([`chasseur seul : ${compte(s, 'chasseur')} chasseur, ${compte(s, 'prop')} props`, compte(s, 'chasseur') === 1 && compte(s, 'prop') === 4 && s.local.role === 'chasseur']);
@@ -302,7 +302,8 @@ export default function (jeu) {
     // un vrai meuble fictif à 0,9 m devant lui (visé), qui change de type entre deux essais
     const l = loc.cmd.lacet, P0 = ajouter(pose(A.cle, loc.pos.x - Math.sin(l) * 0.9, loc.pos.y, loc.pos.z - Math.cos(l) * 0.9));
     const E = ev(['deguise', 'refus']);
-    const essai = () => { P0.cle = P0.cle === A.cle ? B.cle : A.cle; game.camYaw = l; front(0, { deguiser: true }); };
+    // (le meuble visé : jamais la forme qu'il a déjà — celle-là ne change rien)
+    const essai = () => { P0.cle = loc.prop && loc.prop.cle === A.cle ? B.cle : A.cle; game.camYaw = l; front(0, { deguiser: true }); };
     for (let k = 0; k < 6; k++) { essai(); jeu.avancer(0.3); }
     const enCachette = E.L.filter((e) => e.type === 'deguise' && e.a === 0).length, chgC = loc.prop ? loc.prop.changements : -1;
     jusqua('traque');
@@ -404,7 +405,7 @@ export default function (jeu) {
     // le bip : Haythem prop, un chasseur bot qui scanne à 8 m (entendu), puis à 14 m (pas entendu)
     await lancer({ graine: 41, premierRole: 'prop' }); const p = P(), loc = p.local; jusqua('traque');
     const SP = p.aff.sonsProp, h = p.acteurs.find((a) => a.role === 'chasseur');
-    const bip = (d) => { const q = autour(loc.pos.x, loc.pos.y, loc.pos.z, d) || { x: loc.pos.x + d, y: loc.pos.y, z: loc.pos.z }; jeu.teleporter(h.id, q.x, q.y, q.z); const j0 = SP.n; front(h.id, { scanner: true }); return SP.journal.filter((j) => j.n > j0).filter((j) => j.nom === 'bip').length; };
+    const bip = (d) => { const q = autour(loc.pos.x, loc.pos.y, loc.pos.z, d) || { x: loc.pos.x + d, y: loc.pos.y, z: loc.pos.z }; jeu.teleporter(h.id, q.x, q.y, q.z); p.aff.sons.maj(5, game.camera); const j0 = SP.n; front(h.id, { scanner: true }); return SP.journal.filter((j) => j.n > j0).filter((j) => j.nom === 'bip').length; };
     const b8 = bip(8); jusquA(p.t + 8.1); const b14 = bip(14);
     jeu.quitter('balade');
     res.push([`bip à 8 m : ${b8}, à 14 m : ${b14}`, b8 === 1 && b14 === 0]);
