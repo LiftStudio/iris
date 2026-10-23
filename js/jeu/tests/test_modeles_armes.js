@@ -199,14 +199,17 @@ export default function (jeu) {
   });
 
   // 5. AUCUNE REQUÊTE, AUCUNE TEXTURE ; 20 exemplaires de plus = 0 matériau et 0 programme de plus (textures : celle des os de
-  // chaque squelette de vue rendu, et rien d'autre ; rendues par libererArme)
+  // chaque squelette de vue rendu, et rien d'autre ; rendues par libererArme). Les requêtes : un PerformanceObserver ouvert
+  // pendant le test (le tampon de performance.getEntriesByType plafonne à 250 entrées, que l'école dépasse au démarrage : une
+  // requête de plus n'y entrait plus, le compte « +0 » ne prouvait rien — relecture)
   jeu.ajouterTest('L-W', '5 · réseau, textures, partage', async () => {
-    const res0 = performance.getEntriesByType('resource').length;
+    const requetes = [], obs = new PerformanceObserver((l) => requetes.push(...l.getEntries()));
+    obs.observe({ type: 'resource' });
+    const plein = performance.getEntriesByType('resource').length;
     viderCacheArmes();
     const sc = new THREE.Scene(), tous = new Set(MATERIAUX_ARMES.tous), mats = new Set(), cartes = [];
     const premiers = [];
     for (const id of IDS_ARMES) for (const vue of [true, false]) { const g = creerArme(id, { pourVue: vue }); g.position.set(0, 0, 0); sc.add(g); premiers.push(g); }
-    const res1 = performance.getEntriesByType('resource').length;
     for (const g of premiers) for (const m of mailles(g)) {
       mats.add(m.material);
       for (const [k, x] of Object.entries(m.material)) if (x && x.isTexture) cartes.push(`${m.material.name}.${k}`);
@@ -222,10 +225,12 @@ export default function (jeu) {
     const C = rendreCible(game, sc);
     for (const g of premiers) libererArme(g);
     const D = rendreCible(game, sc);
-    const ok = res1 === res0 && cartes.length === 0 && etrangers === 0 && mats2.size === mats.size && B.programmes === A.programmes
+    await new Promise((r) => setTimeout(r, 300));                  // (une requête partie se termine après la création)
+    requetes.push(...obs.takeRecords()); obs.disconnect();
+    const ok = requetes.length === 0 && cartes.length === 0 && etrangers === 0 && mats2.size === mats.size && B.programmes === A.programmes
       && B.textures - A.textures === sq && C.textures === A.textures && D.textures === A.textures - sq0;
     return { ok, attendu: '0 requête, 0 carte, matériaux de MATERIAUX_ARMES ; +20 × 16 : 0 matériau, 0 programme, textures = 1 par squelette de vue (rendues)',
-      obtenu: `requêtes +${res1 - res0} · cartes ${cartes.length} · ${mats.size} matériaux (${etrangers} hors table) → ${mats2.size} · programmes ${A.programmes} → ${B.programmes} · `
+      obtenu: `requêtes ${requetes.length}${requetes.length ? ' (' + requetes.slice(0, 4).map((e) => e.name.split('/').pop()).join(', ') + ')' : ''} (tampon ${plein}) · cartes ${cartes.length} · ${mats.size} matériaux (${etrangers} hors table) → ${mats2.size} · programmes ${A.programmes} → ${B.programmes} · `
         + `textures ${A.textures} → ${B.textures} (+${B.textures - A.textures} pour ${sq} squelettes) → ${C.textures} → ${D.textures} · appels ${A.appels} → ${B.appels}` };
   });
 
