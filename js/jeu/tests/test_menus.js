@@ -180,7 +180,7 @@ export default function (jeu) {
       res.push([`6 amis (${amis.map((a) => a.dataset.ami).join(', ')})`, amis.length === 6 && egal(amis.map((a) => a.dataset.ami), FICHES_BOTS.map((f) => f.id))]);
       res.push(['portraits <img> assets/portraits/<id>.webp', imgs.every((im, i) => im && im.getAttribute('src') === `assets/portraits/${FICHES_BOTS[i].id}.webp`)]);
       res.push(['aucun coché → Haythem cloné', settings.data.jeu.combat.avatars.length === 0 && /clones de Haythem/.test(R.querySelector('[data-ligne="avatars"]').textContent)]);
-      amis[0].click(); amis[2].click();
+      R.querySelector('#rj-ami-gabriel').click(); R.querySelector('#rj-ami-marcantoine').click();     // (chaque clic redessine : on retrouve le bouton)
       res.push(['cochés : gabriel, marcantoine', egal(settings.data.jeu.combat.avatars, ['gabriel', 'marcantoine']) && R.querySelectorAll('.rj-ami.on').length === 2 && egal(M.optionsDe('combat').opts.avatars, ['gabriel', 'marcantoine'])]);
       // limite et temps, préréglés par mode
       res.push(['limite et temps préréglés', settings.data.jeu.combat.limites.equipes.score === (TELEPHONE ? 20 : 40) && settings.data.jeu.combat.limites.melee.score === 20

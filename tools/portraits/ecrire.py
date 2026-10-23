@@ -52,7 +52,7 @@ def ecrire(donnees, dossier, planche=None):
             b = decoder(portraits[ident])
             l, h, alpha = examiner(b)
             if (l, h) != (TAILLE, TAILLE):
-                fautes.append('%s : %d × %d (192 × 192 attendu)' % (ident, l, h))
+                fautes.append('%s : %dx%d (192x192 attendu)' % (ident, l, h))
             if not alpha:
                 fautes.append('%s : sans couche alpha' % ident)
             if len(b) > MAX_OCTETS:
@@ -60,7 +60,7 @@ def ecrire(donnees, dossier, planche=None):
             with open(os.path.join(dossier, ident + '.webp'), 'wb') as f:
                 f.write(b)
             n += 1
-            print('%-12s %6d octets  %d × %d  alpha %s' % (ident, len(b), l, h, 'oui' if alpha else 'NON'))
+            print('%-12s %6d octets  %dx%d  alpha %s' % (ident, len(b), l, h, 'oui' if alpha else 'NON'))
         except Exception as e:  # noqa: BLE001 (une image abîmée est une faute, pas un arrêt)
             fautes.append('%s : %s' % (ident, e))
     if planche and isinstance(donnees, dict) and donnees.get('planche'):
@@ -109,7 +109,7 @@ def ecouter(port, dossier, planche):
             pass
 
     serveur = http.server.HTTPServer(('127.0.0.1', port), Recepteur)
-    print('en attente de la page de l’outil sur 127.0.0.1:%d…' % port, flush=True)
+    print("en attente de la page de l'outil sur 127.0.0.1:%d..." % port, flush=True)
     while 'code' not in resultat:
         serveur.handle_request()
     serveur.server_close()
