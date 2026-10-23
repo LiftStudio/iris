@@ -94,6 +94,23 @@ export default function (jeu) {
         res.push([`${act} : A ouvre, B revient`, ouvert && !vu($(sel)) && vu($('#menu-jeu'))]);
       }
     });
+    // AU CLAVIER : js/input.js empêche l'action par défaut d'ENTRÉE (interagir), d'ESPACE et des flèches — le menu les prend
+    // avant lui (écoute en capture) : ↓ ↓ ENTRÉE ouvre COMBAT, ↑ va sur LANCER, ↑ sur un réglage, ENTRÉE le choisit (le
+    // focus reste sur lui après le nouveau rendu), ÉCHAP revient ; aucune de ces touches n'arrive au jeu
+    const touche = (code) => { const c = document.activeElement || document.body; for (const t of ['keydown', 'keyup']) c.dispatchEvent(new KeyboardEvent(t, { code, key: code, bubbles: true, cancelable: true })); };
+    document.activeElement?.blur?.(); game.input.purger();
+    const actif = () => document.activeElement || {};
+    touche('ArrowDown'); const k1 = actif().dataset?.act; touche('ArrowDown'); const k2 = actif().dataset?.act;
+    touche('Enter');
+    const okReg = vu($('#reglage-jeu')) && $('#reglage-jeu').dataset.screen === 'combat';
+    touche('ArrowUp'); const k3 = actif().dataset?.act;
+    touche('ArrowUp'); const ch = actif().dataset?.champ, v = actif().dataset?.v;
+    touche('ArrowLeft'); const ch2 = actif().dataset?.champ, v2 = actif().dataset?.v;
+    touche('Enter');
+    const okChoix = !!ch2 && v2 !== undefined && JSON.stringify(M._valeur(ch2)) === v2 && actif().dataset?.champ === ch2 && actif().dataset?.v === v2;
+    touche('Escape');
+    res.push([`clavier : ↓ ${k1}, ↓ ${k2}, ENTRÉE → réglages, ↑ ${k3}, ↑ ${ch}=${v}, ← ${ch2}=${v2}, ENTRÉE le choisit, ÉCHAP → accueil`, k1 === 'balade' && k2 === 'combat' && okReg && k3 === 'lancer'
+      && okChoix && vu($('#menu-jeu')) && !vu($('#reglage-jeu')) && game.input.pressedSet.size === 0]);
     const r = bilan(res);
     return { ok: r.ok, attendu: res.map((x) => x[0]).join(' · '), obtenu: r.ok ? 'tout vrai' : 'faux : ' + r.ko.join(' ; ') };
   });

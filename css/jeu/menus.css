@@ -75,6 +75,8 @@ body.pad-nav .mj-b.pad-focus { outline: none !important; box-shadow: none !impor
 .rj-raison { display: block; color: #ffb38a; margin-top: 3px; }
 .rj-raison b { font-weight: 500; }
 .rj-avert { display: block; color: var(--warn); margin-top: 3px; }
+/* le focus du CLAVIER (les flèches : js/jeu/menus_jeu.js _naviguer) : le même cadre que celui de la manette */
+.reglage-jeu button:focus-visible, .credits-jeu button:focus-visible, .fin-jeu button:focus-visible { outline: 3px solid #ffd166; outline-offset: 2px; }
 /* les compteurs (− 3 +) */
 .rj-pas { display: inline-flex; align-items: center; background: #0e121b; border: 1px solid var(--line); border-radius: 6px; padding: 3px; }
 .rj-pas button { width: 40px; height: 36px; border: 0; background: transparent; color: var(--text); font: 600 22px/1 var(--ui); cursor: pointer; border-radius: 4px; }

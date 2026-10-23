@@ -267,19 +267,64 @@ export class MenuJeu {
   _clavier(e) {
     const ouvert = (el) => el && !el.hidden;
     if (ouvert(document.getElementById('options')) || ouvert(document.getElementById('overlay'))) return;
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
     const pause = e.code === 'Escape' || ((this.game.input && this.game.input.bind && this.game.input.bind.pause) || []).includes(e.code);
     if (ouvert(this.finEl)) {
       if (pause) { e.preventDefault(); e.stopImmediatePropagation(); if (!this.finEl.classList.contains('bilan')) this._montrerBilan(); }
+      else if (this.finEl.classList.contains('bilan')) this._naviguer(e, this.finEl, '[data-act="rejouer"]');
       return;
     }
     if (this.game.mode !== 'menu') return;
     if (pause && (ouvert(this.regEl) || ouvert(this.credEl))) { e.preventDefault(); e.stopImmediatePropagation(); this.accueil(); return; }
-    // les flèches sur l'accueil : le focus d'un bouton au suivant (ENTRÉE ou ESPACE le valident, comme tout bouton)
-    if (ouvert(this.el) && (e.code === 'ArrowDown' || e.code === 'ArrowUp')) {
-      const L = [...this.el.querySelectorAll('.mj-b')], i = L.indexOf(document.activeElement);
-      const j = i < 0 ? (e.code === 'ArrowDown' ? 0 : L.length - 1) : (i + (e.code === 'ArrowDown' ? 1 : L.length - 1)) % L.length;
-      L[j].focus(); e.preventDefault();
+    if (ouvert(this.regEl)) this._naviguer(e, this.regEl, '[data-act="lancer"]');
+    else if (ouvert(this.credEl)) this._naviguer(e, this.credEl, '[data-act="retour"]');
+    else if (ouvert(this.el)) this._naviguer(e, this.el, '[data-act="balade"]');
+  }
+  // LE CLAVIER DANS UN ÉCRAN DU MENU : js/input.js empêche l'action par défaut des touches qu'il lie (ENTRÉE = interagir,
+  // ESPACE = sauter, les flèches, Tab) — un bouton focalisé ne se validait donc pas au clavier, et Tab ne parcourait rien.
+  // Les flèches mènent le focus au bouton le plus proche dans leur direction (comme la croix de la manette ; le premier
+  // appui le pose sur l'action principale de l'écran), ENTRÉE ou ESPACE valident le bouton focalisé. Écouté en capture :
+  // js/input.js ne voit pas ces touches-là.
+  _naviguer(e, ecran, defaut) {
+    const DIR = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
+    const act = document.activeElement, dedans = !!act && act.tagName === 'BUTTON' && ecran.contains(act) && !act.disabled;
+    if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') {
+      if (!dedans) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      if (!e.repeat) act.click();
+      return;
     }
+    const d = DIR[e.code]; if (!d) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    const L = [...ecran.querySelectorAll('button')].filter((b) => !b.disabled && b.getClientRects().length);
+    let cible = null;
+    if (!dedans) cible = ecran.querySelector(defaut) || L[0];
+    else {
+      // (l'écart DE TRAVERS se mesure entre les bords : deux boutons d'une même colonne, de largeurs différentes et alignés à
+      // gauche, se recouvrent en x — écart nul — même si leurs centres ne sont pas l'un sous l'autre)
+      // Dans une fiche qui DÉFILE (le corps des réglages, des crédits), on cherche d'abord dans elle, lignes cachées comprises
+      // (elles défilent jusqu'au focus) ; sinon, et depuis le dehors, parmi ce qui se voit — LANCER ne vole pas le focus à
+      // la ligne suivante, cachée sous le pli.
+      const a = act.getBoundingClientRect(), v = d[1] !== 0, boite = (b) => b.closest('.rj-corps, .cr-corps');
+      const vu = (b) => { const c = boite(b); if (!c) return true; const r = b.getBoundingClientRect(), k = c.getBoundingClientRect(); return r.bottom > k.top + 2 && r.top < k.bottom - 2; };
+      const meilleur = (C) => {
+        let best = Infinity, m = null;
+        for (const b of C) {
+          if (b === act) continue;
+          const r = b.getBoundingClientRect();
+          const le = v ? (r.top + r.height / 2 - a.top - a.height / 2) * d[1] : (r.left + r.width / 2 - a.left - a.width / 2) * d[0];
+          if (le < 4) continue;                       // (devant, dans la direction demandée)
+          const travers = v ? Math.max(0, Math.max(a.left, r.left) - Math.min(a.right, r.right)) : Math.max(0, Math.max(a.top, r.top) - Math.min(a.bottom, r.bottom));
+          if (!v && travers > 0) continue;            // (← → restent sur la ligne : au bout, rien ne bouge)
+          const note = le + 3 * travers;
+          if (note < best) { best = note; m = b; }
+        }
+        return m;
+      };
+      const B = boite(act);
+      cible = (B && meilleur(L.filter((b) => boite(b) === B))) || meilleur(L.filter((b) => (!B || boite(b) !== B) && vu(b)));
+    }
+    if (cible) { cible.focus(); cible.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
   }
 
   // ================================================================ L'ACCUEIL
@@ -543,7 +588,10 @@ export class MenuJeu {
       if (ch === 'jeu.combat.mode' && v === 'domination') this._poser('jeu.combat.zone', 'ecole');
     }
     this._jeu();                                    // (bornes : la somme des bots, les visages au plus)
+    // (le bouton focalisé — au clavier — retrouvé après le nouveau rendu : le même réglage, la même valeur)
+    const focalise = document.activeElement === b, sel = b.id ? '#' + b.id : `[data-champ="${ch}"]${b.dataset.v !== undefined ? `[data-v='${b.dataset.v}']` : ''}`;
     this._rendreReglage();
+    if (focalise) { const n = this.regCorps.querySelector(sel); if (n && !n.disabled) n.focus(); }
   }
   // LANCER : les réglages de l'écran en options de partie (§§ 4.5.12, 4.5.14), une graine neuve à chaque partie
   optionsDe(m = this.modeReglage) {
