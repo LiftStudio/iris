@@ -39,7 +39,9 @@ export const STAND = {
   ligne: { x: LX, y: -0.12, z: 3.75, lacet: -PI / 2 },
   couloirs: COULOIRS,
   cibles: POSES.map(([k, d, x, y, z]) => ({ x, y, z, cap: capVers(x, z, COULOIRS[k]), distance: d, couloir: k })),
-  mannequin: { x: 7.3, y: -0.12, z: 4.9, cap: -PI / 2, distance: 10 },
+  // (le mannequin à 10 m, À CÔTÉ des couloirs — au milieu, il cachait la cible à 25 m du 3e couloir depuis la ligne —,
+  // tourné vers le couloir du milieu ; vu de chaque place de la ligne, tête, buste et jambes)
+  mannequin: { x: 7.3, y: -0.12, z: 7.2, cap: capVers(7.3, 7.2, COULOIRS[1]), distance: 10 },
   // (Haythem reste dans la rue, côté chaussée : la façade, ses jardinières et ses portes hors de portée)
   bornes: { xMin: -3, xMax: 23, zMin: 2.35, zMax: 6 },
 };

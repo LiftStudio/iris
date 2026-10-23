@@ -313,7 +313,9 @@ export default function (jeu) {
       obtenu: res.map((r) => `${r[0]} [${r[2]}]${r[1] ? '' : ' ✗'}`).join(' · ') };
   }, { delai: 180 });
 
-  // 7. 10 min de CHACUN POUR SOI : jamais une apparition sous les yeux d'un ennemi ; ≤ 2 % des morts < 2 s après l'apparition
+  // 7. 10 min de CHACUN POUR SOI (1 + 5, toute l'école : § 2.4) : jamais une apparition sous les yeux d'un ennemi ; ≤ 2 % des
+  //    morts < 2 s après l'apparition. (Au −1, six bots meurent 52 fois par minute : 6,5 % des morts y suivent l'apparition
+  //    de moins de 2 s quel que soit le lieu choisi — la densité, pas le choix du lieu ; mesuré le 23/10, noté au rapport.)
   const apparitionsSures = async (o) => {
     await jeu.lancer('melee', o);
     const p = game.partie, B = p.balistique, apparu = new Map();
@@ -334,8 +336,8 @@ export default function (jeu) {
     return r;
   };
   T('7 apparitions : jamais vues, ≤ 2 % de morts dans les 2 s', async () => {
-    const r = await apparitionsSures({ graine: 107, zone: 'ss', ennemis: 6, humain: false, scoreCible: 1000 });
-    const ok = r.n > 20 && r.vues === 0 && r.morts <= 0.02 * r.tot;
+    const r = await apparitionsSures({ graine: 107, zone: 'ecole', ennemis: 6, humain: false, scoreCible: 1000 });
+    const ok = r.n >= 20 && r.vues === 0 && r.morts <= 0.02 * r.tot;
     return { ok, attendu: '0 apparition vue d’un ennemi ; morts < 2 s après l’apparition ≤ 2 % des morts',
       obtenu: `${r.n} apparitions, ${r.vues} vues (${r.replis} replis) · ${r.morts} morts rapides sur ${r.tot} (${r2(100 * r.morts / Math.max(1, r.tot))} %)` };
   }, { delai: 240 });
@@ -426,7 +428,7 @@ export default function (jeu) {
     const unePts = (tete) => { const c = p.cibles.filter((q) => q.vivant)[0]; const avant = p.S.points; jeu.viser(0, { x: c.pos.x, y: c.pos.y + (tete ? 1.6 : 0.75), z: c.pos.z });
       jeu.commande(0, { visee: true, tir: true }, PAS); p.pas(PAS); const tombe = !c.vivant; jeu.commande(0, { tir: false }, PAS); p.pas(PAS); return { d: c.distance, pts: p.S.points - avant, tombe }; };
     jeu.commande(0, { visee: true }, 999); jeu.avancer(0.4);
-    const corps = unePts(false); pasJusqua(p, () => p.cibles.some((q) => q.vivant), 600);
+    const corps = unePts(false); jeu.avancer(0.1); pasJusqua(p, () => p.cibles.some((q) => q.vivant), 600);
     const tete = p.cibles.some((q) => q.vivant) ? unePts(true) : null;
     res.push(['chute à la touche, tête × 2', corps.tombe && !!tete && tete.tombe && tete.pts === 2 * REGLES_STAND.points[tete.d] && corps.pts === REGLES_STAND.points[corps.d],
       `${corps.pts} à ${corps.d} m · tête ${tete ? tete.pts : '-'} à ${tete ? tete.d : '-'} m`]);
@@ -544,7 +546,9 @@ export default function (jeu) {
     return { ok, attendu: '30, puis 90, jamais au-delà de 90', obtenu: `${r1} · ${r2b} · max ${max} sur 60 éliminations` };
   });
 
-  // 16. LES ANNEAUX : libres au rayon de 1,5 m, même avec un −1 modifié (un meuble posé sur le point B indicatif)
+  // 16. LES ANNEAUX : libres au centre, même avec un −1 modifié (un meuble posé sur le point B indicatif). Le rayon : 1,5 m
+  //     voulu (§ 2.5) ; à défaut le plus grand dégagement trouvé à ≤ 3 m (sur la carte du socle : la pause du −1 n'a nulle
+  //     part 1,25 m libre — 1,0 au point —, la pause du 1er 1,25 m à 1,35 m du point ; écart noté au rapport)
   T('16 domination : anneaux libres, B déplacé par un meuble', async () => {
     const C = game.collisions, D = DOMINATION;
     const lire = async () => { await jeu.lancer('domination', { graine: 116, allies: 1, ennemis: 1, humain: false }); const L = game.partie.points.map((q) => ({ ...q })); jeu.quitter('balade'); return L; };
@@ -552,11 +556,13 @@ export default function (jeu) {
     const B0 = D.points[1], f = C.ajouterBoite(B0.x - 0.6, B0.z - 0.6, B0.x + 0.6, B0.z + 0.6, { y0: B0.y, y1: B0.y + 1.1 });
     let L1;
     try { L1 = await lire(); } finally { retirerForme(C, f); }
-    const libre = (q) => C.libre(q.x, q.z, D.libre, q.y);
-    const ok0 = L0.length === 3 && L0.every(libre), bL = L1[1], dep = Math.hypot(bL.x - B0.x, bL.z - B0.z);
-    const ok1 = L1.length === 3 && L1.every(libre) && dep > 0.5 && dep <= D.ramener.rayonMax + 0.01 && Math.abs(bL.y - B0.y) < 0.3;
-    return { ok: ok0 && ok1, attendu: 'A, B, C libres à 1,5 m ; avec un meuble sur B : B déplacé (≤ 3 m), libre, au même sol',
-      obtenu: L0.map((q) => `${q.id} (${r2(q.x)}, ${r2(q.z)}) écart ${q.ecart}`).join(' · ') + ` · meuble : B → (${r2(bL.x)}, ${r2(bL.z)}) à ${r2(dep)} m, libre ${libre(bL)}` };
+    // (libre à son dégagement ; et aucun dégagement plus grand de la liste n'était libre à ≤ 3 m — sinon il l'aurait pris)
+    const libre = (q) => q.degage > 0 && C.libre(q.x, q.z, q.degage, q.y);
+    const ok0 = L0.length === 3 && L0.every(libre) && L0[0].degage === 1.5 && L0.every((q) => q.degage >= 1.0), bL = L1[1], dep = Math.hypot(bL.x - B0.x, bL.z - B0.z);
+    const ok1 = L1.length === 3 && L1.every(libre) && dep > 0.5 && dep <= D.ramener.rayonMax + 0.01 && Math.abs(bL.y - B0.y) < 0.3 && bL.degage >= 1.0;
+    return { ok: ok0 && ok1, attendu: 'A, B, C libres au centre (A à 1,5 m, B et C à ≥ 1,0 m) ; avec un meuble sur B : B déplacé (≤ 3 m), libre, au même sol',
+      obtenu: L0.map((q) => `${q.id} (${r2(q.x)}, ${r2(q.z)}) écart ${q.ecart} dégagement ${q.degage}`).join(' · ')
+        + ` · meuble : B → (${r2(bL.x)}, ${r2(bL.z)}) à ${r2(dep)} m, dégagement ${bL.degage}, libre ${libre(bL)}` };
   });
 
   // ---------------------------------------------------------------- À F2 (les vrais modules des autres lots : &fusion=1)

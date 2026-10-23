@@ -46,7 +46,8 @@ export const REGLES_FPS = {
   bornes: { allies: [0, 4], ennemis: [1, 5] },     // (le menu : Alliés 0-4 / Ennemis 1-5 ; le plafond des bots : LIMITES)
   regenDelai: 4.0, regenPvS: 35,                   // (la protection d'apparition, 1,2 s, est posée par Acteur.reapparaitre)
   passer: 1.0,                                     // Espace / A : la caméra de mort passée au plus tôt 1 s après la mort
-  attente: 0.25, attenteMax: 2.0,                  // tous les lieux vus d'un ennemi : on réessaie toutes les 0,25 s, 2 s au plus
+  attente: 0.25, attenteMax: 1.0,                  // aucun lieu sûr : on réessaie toutes les 0,25 s, 1 s au plus
+  procheMin: 6, mortsRecentes: 5,                  // sûr = vu de personne et aucun ennemi à < 6 m ; une mort « récente » : < 5 s
   derniereMinute: 60,
   bareme: { elim: 100, tete: 25, couteau: 25, loin: 50, loinM: 30, assistance: 50, capture: 150, neutralisation: 75, defense: 50, suicide: -100 },
   // les classes des bots, tirées par la graine (§ 3.3) ; « Mixte » : alliés Réguliers, ennemis tirés entre Recrue et Aguerri
@@ -66,7 +67,10 @@ export const DOMINATION = {
   vitesses: [0, 1, 1.5, 2],                        // × à 1, 2, 3 et plus dans l'anneau
   retour: 0.5,                                     // une prise entamée puis abandonnée retombe à la moitié de sa vitesse
   tick: 3, hauteur: 1.6,                           // 1 point d'équipe toutes les 3 s par anneau tenu ; dans l'anneau = à ± 1,6 m de son sol
-  ramener: { rayonMax: 3, degageMin: 1.5 }, libre: 1.5, defense: 1.0,   // (défense : le tireur ou sa victime à r + 1 m d'un anneau tenu)
+  ramener: { rayonMax: 3, degageMin: 1.5 }, defense: 1.0,   // (défense : le tireur ou sa victime à r + 1 m d'un anneau tenu)
+  // le dégagement du centre : 1,5 m voulu (§ 2.5) ; à défaut le plus grand qu'on trouve à ≤ 3 m — mesuré le 23/10 sur la carte
+  // du socle : la pause du −1 n'a nulle part 1,25 m libre (1,0 au point indicatif), la pause du 1er 1,25 m à 1,35 m du point
+  libres: [1.5, 1.25, 1.0, 0.75],
 };
 
 const DEG = Math.PI / 180;
@@ -117,7 +121,7 @@ export class PartieFPS extends Partie {
     this.ext = new Map();                         // id → { serie, serieMax, suicides, tirsTouchants, captures, neutralisations, defenses }
     this.points = this.hud.points;                // (domination : le même tableau que hud.points — il entre dans l'état, § 4.7)
     this.mortLocal = null; this._lacet0 = null;
-    this._tireurs = new Set(); this._toucheurs = new Set(); this._zoneTouche = new Map(); this._candidats = null;
+    this._tireurs = new Set(); this._toucheurs = new Set(); this._zoneTouche = new Map(); this._candidats = null; this._mortsRecentes = [];
   }
   // une partie qu'on ne lance pas, et pourquoi (null : elle se lance) — le menu peut griser avec la raison
   static refus(o = {}) {
@@ -144,24 +148,27 @@ export class PartieFPS extends Partie {
       try { q = ramenerPoint(this.nav, d.x, d.y, d.z, D.ramener); } catch (e) { q = null; }
       q = this._degager(q || d, d);
       this.points.push({ id: d.id, nom: d.nom, x: q.x, y: q.y, z: q.z, r: d.r, possesseur: null, capture: { equipe: null, k: 0 }, tenu: 0,
-        presents: { A: 0, B: 0 }, ecart: Math.round(Math.hypot(q.x - d.x, q.z - d.z) * 100) / 100 });
+        presents: { A: 0, B: 0 }, ecart: Math.round(Math.hypot(q.x - d.x, q.z - d.z) * 100) / 100, degage: q.degage ?? 0 });
     }
   }
-  // un disque LIBRE de 1,5 m au même sol, cherché en spirale autour du point ramené (3 m au plus), sinon le point tel quel
+  // le centre d'un anneau : un disque LIBRE au même sol, du plus grand dégagement de la liste (1,5 m, sinon 1,25, 1,0, 0,75)
+  // trouvé à ≤ 3 m du point ramené, le plus proche de lui (en spirale, pas de 0,25 m) ; rien : le point tel quel
   _degager(q, d) {
-    const C = this.game.collisions, R = DOMINATION.libre;
-    if (!C) return { x: q.x, y: q.y, z: q.z };
+    const C = this.game.collisions, Rm = DOMINATION.ramener.rayonMax;
+    if (!C) return { x: q.x, y: q.y, z: q.z, degage: 0 };
     const sol = (x, z) => C.solEn(x, z, (q.y ?? d.y) + 0.3);
     const y0 = sol(q.x, q.z);
-    if (Math.abs(y0 - (q.y ?? d.y)) < 0.3 && C.libre(q.x, q.z, R, y0)) return { x: q.x, y: y0, z: q.z };
-    for (let r = 0.25; r <= DOMINATION.ramener.rayonMax + 1e-9; r += 0.25) {
-      const n = Math.max(8, Math.round(2 * Math.PI * r / 0.25));
-      for (let i = 0; i < n; i++) {
-        const a = (i / n) * 2 * Math.PI, x = q.x + r * Math.cos(a), z = q.z + r * Math.sin(a), y = sol(x, z);
-        if (Math.abs(y - d.y) < 0.3 && C.libre(x, z, R, y)) return { x, y, z };
+    for (const R of DOMINATION.libres) {
+      if (Math.abs(y0 - d.y) < 0.3 && C.libre(q.x, q.z, R, y0)) return { x: q.x, y: y0, z: q.z, degage: R };
+      for (let r = 0.25; r <= Rm + 1e-9; r += 0.25) {
+        const n = Math.max(8, Math.round(2 * Math.PI * r / 0.25));
+        for (let i = 0; i < n; i++) {
+          const a = (i / n) * 2 * Math.PI, x = q.x + r * Math.cos(a), z = q.z + r * Math.sin(a), y = sol(x, z);
+          if (Math.abs(y - d.y) < 0.3 && C.libre(x, z, R, y)) return { x, y, z, degage: R };
+        }
       }
     }
-    return { x: q.x, y: y0, z: q.z };
+    return { x: q.x, y: y0, z: q.z, degage: 0 };
   }
 
   // ---------------------------------------------------------------- les acteurs
@@ -292,27 +299,40 @@ export class PartieFPS extends Partie {
     }
     return false;
   }
-  // OÙ RÉAPPARAÎTRE : le point de choisirApparition (L-D) s'il n'est vu de personne ; sinon le meilleur lieu non vu de la
-  // zone (le plus loin du plus proche ennemi, près des alliés en équipe) ; tout est vu → null : on réessaie dans 0,25 s
-  // (au plus 2 s de retard, puis le moins mauvais)
+  // un lieu SÛR : vu de personne, et aucun ennemi à moins de 6 m (la hauteur comptée double : un autre étage est loin)
+  _sur(a, p) {
+    for (const b of this.acteurs) {
+      if (b === a || !b.vivant || !b.corps || b.role === 'cible' || !this.ennemis(b, a)) continue;
+      if (Math.hypot(b.pos.x - p.x, (b.pos.y - p.y) * 2, b.pos.z - p.z) < REGLES_FPS.procheMin) return false;
+    }
+    return !this._vu(a, p);
+  }
+  // OÙ RÉAPPARAÎTRE : le point de choisirApparition (L-D) s'il est SÛR ; sinon (le repli, compté) le meilleur lieu sûr de la
+  // zone selon le § 3.8 — en équipe, note = proximité des alliés (≤ 15 m) − 3 × danger (ennemis à ≤ 20 m, morts récentes à
+  // ≤ 8 m), au départage le plus loin du plus proche ennemi ; chacun pour soi : le plus loin du plus proche ennemi, moins
+  // les morts récentes — ; rien de sûr : on réessaie dans 0,25 s, et au bout d'1 s le meilleur lieu que personne ne voit
   _apparition(a) {
+    const R = REGLES_FPS;
     let p = null;
     try { p = choisirApparition(this, a); } catch (e) { p = null; }
-    if (p && !this._vu(a, p)) return p;
-    this.replis = (this.replis || 0) + 1;         // (compté : à F2, avec les apparitions de L-D, il ne devrait presque plus servir)
-    const L = this.candidats(), notes = [];
+    if (p && this._sur(a, p)) return p;
+    this.replis = (this.replis || 0) + 1;         // (à F2, avec les apparitions de L-D, il ne devrait presque plus servir)
+    const L = this.candidats(), notes = [], melee = this.mode === 'melee';
     for (const q of L) {
-      let dE = Infinity, nA = 0;
+      let dE = Infinity, nE = 0, nA = 0, nM = 0;
       for (const b of this.acteurs) {
         if (b === a || !b.vivant || !b.corps || b.role === 'cible') continue;
         const d = Math.hypot(b.pos.x - q.x, (b.pos.y - q.y) * 2, b.pos.z - q.z);
-        if (this.ennemis(a, b)) dE = Math.min(dE, d); else if (d < 15) nA++;
+        if (this.ennemis(a, b)) { dE = Math.min(dE, d); if (d <= 20) nE++; } else if (d <= 15) nA++;
       }
-      notes.push({ q, n: Math.min(dE, 40) + 2 * Math.min(nA, 2) });
+      for (const m of this._mortsRecentes) if (this.t - m.t <= R.mortsRecentes && Math.hypot(m.x - q.x, (m.y - q.y) * 2, m.z - q.z) <= 8) nM++;
+      const n = melee ? Math.min(dE, 40) - 3 * nM : Math.min(nA, 3) - 3 * (nE + nM) + 0.05 * Math.min(dE, 40);
+      notes.push({ q, n });
     }
     notes.sort((u, v) => v.n - u.n);
+    for (const { q } of notes) if (this._sur(a, q)) return q;
+    if (this.t - (a._attenteDepuis ?? this.t) < R.attenteMax - 1e-9) return null;
     for (const { q } of notes) if (!this._vu(a, q)) return q;
-    if (this.t - (a._attenteDepuis ?? this.t) < REGLES_FPS.attenteMax) return null;
     return p || (notes[0] && notes[0].q) || null;
   }
   _reapparaitre(a) {
@@ -339,6 +359,9 @@ export class PartieFPS extends Partie {
     if (!cible || cible.role === 'cible') return;
     cible.reapparitionT = this.t + this.reapparition;
     const xc = this._ext(cible); xc.serie = 0;
+    // (où l'on meurt : un lieu dangereux pour réapparaître pendant 5 s)
+    this._mortsRecentes.push({ x: cible.pos.x, y: cible.pos.y, z: cible.pos.z, t: this.t });
+    while (this._mortsRecentes.length && this.t - this._mortsRecentes[0].t > REGLES_FPS.mortsRecentes) this._mortsRecentes.shift();
     const dist = tireur && tireur !== cible ? Math.hypot(tireur.pos.x - cible.pos.x, tireur.pos.y - cible.pos.y, tireur.pos.z - cible.pos.z) : 0;
     if (cible.local) {
       this.mortLocal = { tueur: tireur && tireur !== cible ? tireur.nom : null, tueurId: e.par, arme: nomCourt(e.arme), armeId: e.arme || null,
@@ -607,7 +630,7 @@ export class PartieFPS extends Partie {
       // 5 dernières secondes — les assistances —, l'attente d'un lieu non vu)
       touches: this.acteurs.map((a) => [a.id, a.derniereTouche ? [a.derniereTouche.t, a.derniereTouche.par, a.derniereTouche.arme] : null,
         (a._aides || []).map((h) => [h.par, h.d, h.t]), a._attenteDepuis ?? null]),
-      zones: [...this._zoneTouche] };
+      zones: [...this._zoneTouche], morts: this._mortsRecentes.map((m) => ({ ...m })) };
     return e;
   }
   appliquer(e) {
@@ -625,6 +648,7 @@ export class PartieFPS extends Partie {
       if (att === null) delete a._attenteDepuis; else a._attenteDepuis = att;
     }
     this._zoneTouche = new Map(F.zones);
+    this._mortsRecentes = (F.morts || []).map((m) => ({ ...m }));
     for (const a of this.acteurs) if (a.arsenal) a.arsenal.bloque = !!a.gele;
   }
 }
