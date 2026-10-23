@@ -45,6 +45,7 @@ export const VISEE_PAR_ARME = { fa24: 2.4, pm9: 2.9, p17: 3.1, fp12: 2.5, tp50: 
 export const MOBILITE_COUTEAU = 1.1;
 export const SPRINT_TACT = { duree: 3.0, dureeLongue: 4.5, longues: ['pm9', 'p17'], plein: 4.0, utilisable: 1.2, armement: 0.25 };
 export const ENDURANCE = { max: 100, perte: 25, gain: 15, reprise: 20 };          // le sprint limité des chasseurs (§ 3.9)
+export const SURSAUT = { facteur: 0.7, duree: 0.3 };                                // la touche reçue (§ 3.6 ; F2)
 export const GLISSADE = { sprintMin: 0.25, vMin: 6.0, gain: 1.12, plancher: 6.6, plafond: 8.8, duree: 0.75, expo: 0.6, recharge: 0.9,
   viseeApres: 0.35, penteMax: 0.4, saut: 0.85, descente: 0.12, remontee: 0.2 };
 export const ACCROUPI = { descente: 0.16, remontee: 0.18, plafond: 1.85 };
@@ -201,6 +202,8 @@ export function appliquerCommande(acteur, cmd, dt, partie) {
   const vAcc = (ALLURES.accroupi + (ALLURES.accroupiVisee - ALLURES.accroupi) * vk) * mob;
   let v = vDebout + (vAcc - vDebout) * k;
   if (t < M.receptionFin) v *= RECEPTION.facteur;
+  // (F2, demande de L-C — § 3.6, le sursaut d'une touche reçue : la vitesse × 0,7 pendant 0,3 s ; L-C n'en fait que l'affichage)
+  const dT = acteur.derniereTouche; if (dT && t - dT.t >= 0 && t - dT.t < SURSAUT.duree) v *= SURSAUT.facteur;
   const vb = vBase(p);
   p.marche = !!cmd.marche && !sprint;
   p.sprintMul = (M.tact ? ALLURES.sprintTact : ALLURES.sprint) / ALLURES.course;
