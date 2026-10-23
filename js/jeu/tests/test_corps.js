@@ -247,8 +247,8 @@ export default function (jeu) {
   // 5. L'ACCROUPI : hanches abaissées de 0,42 ± 0,01 m, pieds au sol ± 2 cm
   T('5 accroupir(p, 1) : hanches −0,42 ± 0,01, pieds ± 2 cm', async () => {
     await jeu.lancer('essai', { graine: 5, mannequins: [], bots: 0, humain: false });
-    const p = game.partie, a = bot(p, 40, { x: 6, z: 4.5, classe: null });
-    await prets([a]); image(20);
+    const p = game.partie, a = bot(p, 40, { x: 6, z: 4.5, classe: null }), b = bot(p, 41, { x: 9, z: 4.5 });
+    await prets([a, b]); image(20);
     const A = a.joueur.avatar, h0 = new THREE.Vector3(), h1 = new THREE.Vector3(), f0 = {}, f1 = {};
     A.bone('Hips').getWorldPosition(h0);
     for (const c of ['Left', 'Right']) { f0[c] = A.bone(c + 'ToeBase').getWorldPosition(new THREE.Vector3()); }
@@ -258,12 +258,22 @@ export default function (jeu) {
     for (const c of ['Left', 'Right']) { f1[c] = A.bone(c + 'ToeBase').getWorldPosition(new THREE.Vector3()); }
     const bas = h0.y - h1.y, pieds = Math.max(f0.Left.distanceTo(f1.Left), f0.Right.distanceTo(f1.Right));
     const sol = C().solEn(a.pos.x, a.pos.z, a.pos.y + 0.3), hauteurPieds = Math.max(f1.Left.y, f1.Right.y) - sol;
-    // et en jeu : accroupi tenu (la simulation), la tête affichée
-    jeu.commande(40, { accroupi: true }, 2); image(30);
-    const tete = teteOs(a, new THREE.Vector3()).y - sol, sim = teteSimulee(a, new THREE.Vector3()).y - sol;
+    // et en jeu (relecture) : accroupi tenu (la simulation), arrêté, en marche, en pas chassés, visant haut et bas — la tête
+    // affichée là où les balles la touchent (js/jeu/accroupi.js centrerTete : 13,7 cm d'écart avant la relecture)
+    // (les deux corps : sans arme, et armé — le buste de trois quarts)
+    const T1 = new THREE.Vector3(), T2 = new THREE.Vector3(), E = [];
+    jeu.commande(40, { accroupi: true }, 2); jeu.commande(41, { accroupi: true }, 2); image(30);
+    const tete = teteOs(a, T1).y - sol, sim = teteSimulee(a, T2).y - sol;
+    for (const [c, tg] of [[{}, 0], [{ ay: 1 }, 0], [{ ax: 1 }, 0], [{ ay: -1 }, 0], [{}, 0.4], [{}, -0.4]]) {
+      for (const q of [a, b]) { jeu.viser(q.id, { lacet: 0, tangage: tg }); jeu.commande(q.id, { accroupi: true, ...c }, 1); }
+      image(20);
+      for (const q of [a, b]) E.push(teteOs(q, T1).distanceTo(teteSimulee(q, T2)));
+    }
     jeu.quitter('balade');
-    return { ok: Math.abs(bas - 0.42) <= 0.01 && pieds <= 0.02, attendu: 'hanches abaissées de 0,42 ± 0,01 m, pieds gardés ± 2 cm',
-      obtenu: `hanches −${r3(bas)} m · pieds déplacés ${(pieds * 100).toFixed(2)} cm (orteils à ${(hauteurPieds * 100).toFixed(1)} cm du sol) · accroupi en jeu : tête affichée ${r2(tete)} m, simulée ${r2(sim)} m` };
+    const eMax = Math.max(...E);
+    return { ok: Math.abs(bas - 0.42) <= 0.01 && pieds <= 0.02 && eMax <= 0.06,
+      attendu: 'hanches abaissées de 0,42 ± 0,01 m, pieds gardés ± 2 cm ; en jeu, tête affichée / simulée ≤ 6 cm accroupi (arrêt, marche, pas chassés, visée ± 0,4)',
+      obtenu: `hanches −${r3(bas)} m · pieds déplacés ${(pieds * 100).toFixed(2)} cm (orteils à ${(hauteurPieds * 100).toFixed(1)} cm du sol) · accroupi en jeu : tête affichée ${r2(tete)} m, simulée ${r2(sim)} m, écart max ${(eMax * 100).toFixed(1)} cm (${E.map((x) => (x * 100).toFixed(1)).join(' / ')})` };
   }, { delai: 60 });
 
   // 6. CENT POUPÉES à impulsions tirées (Militaire) : à plat en moins d'une seconde, jamais dans une forme, aucun NaN,
@@ -502,17 +512,22 @@ export default function (jeu) {
       obtenu: `profil ${r.profil} · vue 3 ${r.vue3.pos} / ${r.vue3.cam} · vue 1 ${r.vue1.pos} / ${r.vue1.cam} · même onglet ${r.identiques}` };
   }, { delai: 120 });
 
-  // 13. LA LISIBILITÉ : 10 photos d'un SISR et d'un SLAM clonés de Haythem, à 10, 20 et 30 m, au −1, au hall, dans la rue
-  // (jugées et notées au rapport ; window.__photosLC)
+  // 13. LA LISIBILITÉ : 10 photos d'un SISR et d'un SLAM clonés de Haythem, de 5 à 30 m, dans la rue, au hall, au −1, dans
+  // les couloirs (jugées et notées au rapport ; window.__photosLC). Relecture : les cadrages du constructeur (hall à 10 et
+  // 20 m, −1, couloir est) mettaient 6 photos sur 10 face à un mur ou derrière une porte — les plans sont ceux où la ligne de
+  // vue est LIBRE (cherchés au monde solide le 23/10 : le RDC n'a pas de vue intérieure de 20 m, le hall en a une de 14 m
+  // vers la salle d'attente), et chaque photo vérifie que les deux corps y sont : dessinés (la cadence) et vus de l'œil.
   T('13 lisibilité : 10 photos (SISR et SLAM clonés de Haythem)', async () => {
     await jeu.lancer('essai', { graine: 13, mannequins: [], bots: 0, humain: true, avatars: [] });
-    const p = game.partie;
+    const p = game.partie, B = p.balistique;
     const sisr = bot(p, 90, { equipe: 'A' }), slam = bot(p, 91, { equipe: 'B' });
     await prets([sisr, slam]);
     window.__photosLC = {};
-    // [lieu, caméra (x, y, z, lacet), direction des bots (dx, dz), distances]
-    const plans = [['rue', [-2.0, 0, 4.6], [1, 0], [10, 20, 30]], ['hall', [21.2, 0, -3.0], [-1, 0], [10, 20]],
-      ['moins1', [1.4, -3.06, -10.9], [1, 0], [10, 15]], ['couloir', [15.6, 0, -18.5], [0, 1], [10, 15]], ['proche', [-2.0, 0, 4.6], [1, 0], [5]]];
+    // [lieu, caméra (x, y, z), direction des bots (dx, dz), distances]
+    const plans = [['rue', [-2.0, 0, 4.6], [1, 0], [10, 20, 30]], ['hall', [16.0, 0, -2.5], [-0.924, -0.383], [7, 14]],
+      ['moins1', [0.5, -3.06, -2.5], [1, 0], [8, 12]], ['couloirEst', [15.5, 0, -2.0], [0, -1], [10]],
+      ['couloir2e', [14.0, 6.6, -5.5], [-1, 0], [10]], ['proche', [-2.0, 0, 4.6], [1, 0], [5]]];
+    const o = new THREE.Vector3(), vus = [];
     let n = 0;
     for (const [lieu, cam, dir, ds] of plans) {
       for (const d of ds) {
@@ -526,13 +541,18 @@ export default function (jeu) {
         image(20);
         for (let i = 0; i < 40; i++) game.carte.maj(1 / 60, p.jeuCarte);
         game.fx.render(1 / 60);
-        window.__photosLC[`${String(++n).padStart(2, '0')}_${lieu}_${d}m`] = jeu.photo(lieu + d);
+        const nom = `${String(++n).padStart(2, '0')}_${lieu}_${d}m`;
+        window.__photosLC[nom] = jeu.photo(lieu + d);
+        // (les deux corps dans la photo : dessinés, et leur buste vu de l'œil de Haythem)
+        p.local.oeil(o, true);
+        const v = [sisr, slam].filter((a) => a.dessine && B.vue(o.x, o.y, o.z, a.pos.x, a.pos.y + 1.3 * a.h / 1.73, a.pos.z)).length;
+        vus.push(nom + ' ' + v + '/2');
       }
     }
     jeu.quitter('balade');
     const L = Object.values(window.__photosLC);
-    return { ok: L.length === 10 && L.every((x) => typeof x === 'string' && x.length > 5000), attendu: '10 photos (jugées au rapport)',
-      obtenu: Object.keys(window.__photosLC).join(', ') };
+    return { ok: L.length === 10 && L.every((x) => typeof x === 'string' && x.length > 5000) && vus.every((x) => x.endsWith(' 2/2')),
+      attendu: '10 photos, les deux corps dessinés et vus sur chacune (jugées au rapport)', obtenu: vus.join(', ') };
   }, { delai: 120 });
 
   // 14. L'HABILLAGE : Airsoft, poupée 1,5 s puis effacement en 0,6 s ; Militaire, 4 s, enfoncement, disparition

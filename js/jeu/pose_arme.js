@@ -23,6 +23,7 @@
 import * as THREE from 'three';
 import { creerArme, REPERES } from './modeles_armes.js';
 import { ARMES } from './armes.js';
+import { centrerTete } from './accroupi.js';
 
 export const POSE_3E = {
   dos: { droit: 0.0, droitSprint: 0.12, penche: 0.25 },       // le dos (rad vers l'avant), le penché du groupe gardé
@@ -240,13 +241,10 @@ export function poserArme(acteur, dt) {
   } else if (!T) S.tTouche = null;
   ressort(S.sursaut, POSE_3E.sursaut.w, POSE_3E.sursaut.z, dt);
   p.mesh.getWorldQuaternion(_C); _Ci.copy(_C).invert(); A.repere(_C, _Ci);
-  if (S.sursaut.x) {
-    // dans le repère du corps : l'avant (z) et la gauche (x) ; rx > 0 penche en avant, rz > 0 couche vers sa droite
-    _a.set(S.sursaut.dx, 0, S.sursaut.dz).applyQuaternion(_Ci);
-    const rx = S.sursaut.x * _a.z, rz = -S.sursaut.x * _a.x;
-    A.ajouter('Spine1', rx * 0.5, 0, rz * 0.5); A.ajouter('Spine2', rx * 0.5, 0, rz * 0.5);
-  }
-  if (!arme) { S.relOk = false; return; }
+  // (accroupi : la tête ramenée au-dessus des pieds, où la simulation la compte — js/jeu/accroupi.js centrerTete —, puis le
+  // sursaut par-dessus, qu'elle n'efface pas)
+  const kA = acteur.accroupi || 0;
+  if (!arme) { centrerTete(p, kA); sursauter(A, S); S.relOk = false; return; }
 
   // ---- les transitions (sprint, recharge, gestes)
   const fiche = ARMES[id] || F;
@@ -279,6 +277,7 @@ export function poserArme(acteur, dt) {
   const joue = fusil ? kVise * (Ar.visee || 0) * POSE_3E.joue : 0;
   A.ajouter('Neck', reste * 0.4 + joue * 0.3, bl * 0.45, joue * 0.4);
   A.ajouter('Head', reste * 0.6 + joue * 0.5, bl * 0.55, joue * 0.8);
+  centrerTete(p, kA); sursauter(A, S);
   A.bone('Spine').updateMatrixWorld(true);
   // ---- 2. le repère de l'arme
   _r.crossVectors(_f, _up); if (_r.lengthSq() < 1e-8) _r.set(Math.cos(l), 0, -Math.sin(l)); _r.normalize();   // la droite
@@ -397,6 +396,15 @@ export function poserArme(acteur, dt) {
   // (la place de l'arme sur le corps, pour les images où il n'est pas posé)
   _mi.copy(p.mesh.matrixWorld).invert();
   S.rel.multiplyMatrices(_mi, arme.matrix); S.relOk = true;
+}
+
+// LE SURSAUT à la touche, sur le buste (dans le repère du corps : l'avant z et la gauche x ; rx > 0 penche en avant, rz > 0
+// couche vers sa droite)
+function sursauter(A, S) {
+  if (!S.sursaut.x) return;
+  _a.set(S.sursaut.dx, 0, S.sursaut.dz).applyQuaternion(_Ci);
+  const rx = S.sursaut.x * _a.z, rz = -S.sursaut.x * _a.x;
+  A.ajouter('Spine1', rx * 0.5, 0, rz * 0.5); A.ajouter('Spine2', rx * 0.5, 0, rz * 0.5);
 }
 
 // UN BOT NON POSÉ À CETTE IMAGE (js/jeu/cadence_acteurs.js) : son arme suit son corps, qui a bougé (Player.presenter)
