@@ -5,10 +5,10 @@ Branche `lot/L-K` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-K`, depuis `socle
 
 ## Où j'en suis
 
-**RELU — FINI** (23/10, relecteur sévère ; jeton_3 pris à 10:16:18, rendu à RENDU) — commits `L-K relecture : …` sur
+**RELU — FINI** (23/10, relecteur sévère ; jeton_3 pris à 10:16:18 dans la file normale, rendu à 11:32:59) — commits `L-K relecture : …` sur
 `lot/L-K`. Les six points de la définition de fini (§ 5.1 règle 5) :
 
-- (a) `?test=1&rapport=1&lot=L-K` : **16 / 16**, 0 signalé (PC, haute, 79 s, sur 018b51f) ; et sous `?tel=1` : TEL ;
+- (a) `?test=1&rapport=1&lot=L-K` : **16 / 16**, 0 signalé (PC, haute, 79 s, sur 018b51f) ; et sous `?tel=1` : **16 / 16**, 0 signalé (88 s ; 1c rejeux 21,5 / 22,4 / 13,4 ms) ;
 - (b) `?test=1&rapport=1&lot=S0` sur la branche : **29 / 29**, 0 signalé (sur 018b51f : balade vue 3 et vue 1 0 / 0, S0 · 8
   géo 1578 → 1578, programmes 145 → 145, 60 tirs ; S0 · 9 03041e41 / 03041e41) — passé avec `forcerImagesManuelles(true)`
   posé avant le départ des tests (l'onglet du volet n'est pas devant : voir Demandes, F2 / harnais) ;
@@ -205,7 +205,7 @@ enfants 307 → 307 · instantané identique · programmes 145 → 145 (60 tirs)
 neuf ; 8 : porte de 0,80 m (couloirEst | vestEst), baby-foot refusé (place), corbeille acceptée ; 9 : PV 49 pour 49 (blessé par
 `infliger`) ; 10 : 116 cachettes en 31 lots, pire 4,1 ms ; 11 : flash rouge, 147 → 147 programmes, extincteur:4 et :5 tournés
 de 17° et de 34° → 0,0°, pendus à 0,65 et 0,96 m, touchables dès 0,65 et 0,96 ; 14 : 0,039 ms. `lot=S0` **29 / 29**. `?tel=1`
-`lot=L-K` : TEL.
+`lot=L-K` : **16 / 16**, 0 signalé, 88 s (1b : les 22 relevés de la référence téléphone ; 1c rejeux 21,5 / 22,4 / 13,4 ms).
 
 ## Mesures (relatives)
 
