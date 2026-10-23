@@ -525,7 +525,7 @@ export default function (jeu) {
     try { jeu.avancer(10); await jeu.images(10); } catch (e) { err = String(e); }
     const nC = p.cibles.length;
     jeu.quitter('balade');
-    return { ok: !F.length && !err && nC === 9, attendu: '9 cibles, chaque ligne libre (balle() et toutes les formes) ; 10 s sans exception',
+    return { ok: !F.length && !err && nC === STAND.cibles.length && nC === 6, attendu: '6 cibles, chaque ligne libre (balle() et toutes les formes) ; 10 s sans exception',
       obtenu: F.length ? F.join(' · ') : `${nC} cibles, ${STAND.cibles.length * 2} lignes libres · ${err || '10 s sans exception'}` };
   });
 

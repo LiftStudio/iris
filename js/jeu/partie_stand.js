@@ -8,7 +8,7 @@
 //   « 10 TÊTES » (seules les têtes comptent ; une balle au corps fait tomber la cible : ratée ; 60 s au plus) ;
 //   « 30 BALLES À 15 M » (une seule cible qui ne tombe pas : le motif de recul à apprendre — touches, groupement, dérive) ;
 //   « RÉFLEXES » (20 cibles, une à la fois, debout 0,8 s : touches et temps de réaction).
-// Sans défi (`opts.defi` absent) : l'ENTRAÎNEMENT LIBRE — chaque couloir lève sa cible, la suivante (8 → 15 → 25 m) se lève
+// Sans défi (`opts.defi` absent) : l'ENTRAÎNEMENT LIBRE — chaque couloir lève sa cible, la suivante du couloir se lève
 // une seconde après la touche, sans fin. Chaque défi : « 3, 2, 1 » (le calque « CLIQUE POUR JOUER » l'attend au
 // clavier-souris), le défi, le verdict 2,5 s, puis l'événement `fin` (l'écran de fin de L-U : REJOUER relance le même).
 // LA PASSE DE MESURE (23/10, monde solide de `socle`) : la rue n'a que 1,5 m libre entre les vélos garés (x 15,95-19,4,
@@ -32,9 +32,11 @@ import { CLASSES, ARMES } from './armes.js';
 const LX = -2.7, PI = Math.PI;
 const capVers = (x, z, c) => Math.atan2(c.x - x, c.z - z);
 const COULOIRS = [{ x: LX, z: 2.85 }, { x: LX, z: 3.75 }, { x: LX, z: 5.8 }];
-const POSES = [[0, 8, 5.3, 0, 2.85], [0, 15, 12.3, 0, 2.85], [0, 25, 22.3, 0, 2.85],
-  [1, 8, 5.3, -0.12, 3.75], [1, 15, 12.3, -0.12, 3.75], [1, 25, 22.3, -0.12, 3.75],
-  [2, 8, 5.3, -0.12, 6.056], [2, 15, 12.3, -0.12, 6.28], [2, 25, 22.3, -0.12, 6.6]];
+// (six silhouettes, deux par distance, deux par couloir : 8 et 15 m sur le trottoir, 15 et 25 m au milieu, 8 et 25 m dans le
+// couloir en biais — depuis la ligne, aucune ne cache celle d'un autre couloir ; les neuf places mesurées restent valables)
+const POSES = [[0, 8, 5.3, 0, 2.85], [0, 15, 12.3, 0, 2.85],
+  [1, 15, 12.3, -0.12, 3.75], [1, 25, 22.3, -0.12, 3.75],
+  [2, 8, 5.3, -0.12, 6.056], [2, 25, 22.3, -0.12, 6.6]];
 export const STAND = {
   ligne: { x: LX, y: -0.12, z: 3.75, lacet: -PI / 2 },
   couloirs: COULOIRS,
@@ -142,7 +144,7 @@ export class PartieStand extends Partie {
     if (this.defi === 'libre') {
       this.phaseVers('manche', 0);
       this.annonce(this.D.nom, 'presentation');
-      for (const k of [0, 1, 2]) this._lever(this._pose(k, 8));
+      for (const k of [0, 1, 2]) this._lever(this.cibles.find((c) => c.couloir === k));
     } else {
       h.gele = true; if (h.arsenal) h.arsenal.bloque = true;
       this.phaseVers('decompte', R.decompte);
@@ -197,8 +199,9 @@ export class PartieStand extends Partie {
     const D = this.D;
     this.S.derniere = c.pose;
     if (this.defi === 'libre') {
-      const L = [8, 15, 25], n = L[(L.indexOf(c.distance) + 1) % L.length];
-      this.S.file.push({ t: this.t + D.relever, i: this._pose(c.couloir, n).pose });
+      // (la suivante du même couloir, de la plus proche à la plus lointaine, puis on recommence)
+      const L = this.cibles.filter((q) => q.couloir === c.couloir), n = L[(L.indexOf(c) + 1) % L.length];
+      this.S.file.push({ t: this.t + D.relever, i: n.pose });
     } else if (this.defi === 'vingt' || this.defi === 'tetes') this._planifier(D.delai);
     else if (this.defi === 'reflexes' && this.S.presentees < D.objectif) this._planifier(D.delai[0] + this.rng.next() * (D.delai[1] - D.delai[0]));
   }
