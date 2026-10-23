@@ -688,6 +688,7 @@ export function poserEtage1(ch, renderer = null) {
   const chaise = (x, y, dir, { mat = X.coque, sortie = null, nom = 'la chaise', recul = 0 } = {}) => {
     const [fx, fz] = DIR[dir];
     const g = new THREE.Group(); g.position.set(x, N1, -y); g.rotation.y = Math.atan2(fx, fz); groupe.add(g);
+    g.userData.meuble = { type: 'chaise-classe', nom: 'la chaise' };   // (prop hunt, L-K 23/10 : js/registre_meubles.js)
     g.position.x -= fx * recul; g.position.z -= fz * recul;
     maille(_geoAssise, mat, 0, 0.455, 0.01, 0, g);
     const d = maille(_geoDossier, mat, 0, 0.72, -0.2, 0, g); d.rotation.x = Math.PI / 2 - 0.16;
@@ -704,6 +705,7 @@ export function poserEtage1(ch, renderer = null) {
   const fauteuil = (x, y, dir, { sortie = null, nom = 'le fauteuil' } = {}) => {
     const [fx, fz] = DIR[dir];
     const g = new THREE.Group(); g.position.set(x, N1, -y); g.rotation.y = Math.atan2(fx, fz); groupe.add(g);
+    g.userData.meuble = { type: 'fauteuil-bureau', nom: 'le fauteuil de bureau' };   // (prop hunt, L-K)
     for (let k = 0; k < 5; k++) {
       const a = k / 5 * Math.PI * 2;
       maille(boiteM(0.3, 0.025, 0.04), X.anthracite, Math.cos(a) * 0.15, 0.06, Math.sin(a) * 0.15, -a, g);
@@ -783,6 +785,7 @@ export function poserEtage1(ch, renderer = null) {
   const extincteur = (x, y, face) => {
     const [fx, fz] = DIR[face];
     const g = new THREE.Group(); g.position.set(x + fx * 0.09, N1, -y + fz * 0.09); groupe.add(g);
+    g.userData.meuble = { type: 'extincteur', nom: 'l’extincteur', mural: true };   // (prop hunt, L-K)
     maille(new THREE.CylinderGeometry(0.075, 0.075, 0.48, 16), M.rougeEtiquette, 0, 1.2, 0, 0, g);
     maille(new THREE.CylinderGeometry(0.03, 0.045, 0.08, 10), M.noirMat, 0, 1.48, 0, 0, g);
     maille(boiteM(0.06, 0.06, 0.06), M.noirMat, -fx * 0.07, 1.35, -fz * 0.07, 0, g);
@@ -792,6 +795,7 @@ export function poserEtage1(ch, renderer = null) {
   // UNE PLANTE (sansevière : des feuilles en lames dressées dans un pot noir)
   const plante = (x, y, { h = 0.9 } = {}) => {
     const g = new THREE.Group(); g.position.set(x, N1, -y); groupe.add(g);
+    g.userData.meuble = { type: 'plante', nom: 'la plante' };   // (prop hunt, L-K)
     maille(new THREE.CylinderGeometry(0.17, 0.14, 0.36, 18), X.pot, 0, 0.18, 0, 0, g);
     maille(new THREE.CylinderGeometry(0.155, 0.155, 0.01, 18), new THREE.MeshStandardMaterial({ color: 0x3b2c20, roughness: 1 }), 0, 0.34, 0, 0, g, { ombre: false });
     const r2 = graine(Math.round(x * 100 + y * 7));

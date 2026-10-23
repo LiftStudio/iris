@@ -728,6 +728,7 @@ export function poserEtage2(ch, renderer = null) {
   // L'EXTINCTEUR (6 kg, rouge) posé bas contre un mur, ses pictogrammes au-dessus
   const extincteur = (x, y, face, h0 = 0.1) => {
     const g = new THREE.Group(); g.position.set(x, N2 + h0, -y); g.rotation.y = ROT[face]; fixe.add(g);
+    g.userData.meuble = { type: 'extincteur', nom: 'l’extincteur', mural: true };   // (prop hunt, L-K 23/10 : js/registre_meubles.js)
     maille(new THREE.CylinderGeometry(0.08, 0.08, 0.5, 16), X.extincteur, 0, 0.25, 0.1, 0, g);
     maille(new THREE.CylinderGeometry(0.03, 0.05, 0.08, 12), M.noirMat, 0, 0.54, 0.1, 0, g, { ombre: false });
     maille(boiteM(0.12, 0.03, 0.03), M.noirMat, 0.03, 0.6, 0.1, 0, g, { ombre: false });
@@ -968,6 +969,7 @@ export function poserEtage2(ch, renderer = null) {
   function chaiseVisiteur(x, y, dir) {
     const [fx, fz] = DIR[dir];
     const g = new THREE.Group(); g.position.set(x, N2, -y); g.rotation.y = Math.atan2(fx, fz); fixe.add(g);
+    g.userData.meuble = { type: 'chaise-visiteur', nom: 'la chaise visiteur' };   // (prop hunt, L-K)
     // (relecture du 14/10, q_0300 rejouée au même point de vue : sous les spots, les trois chaises jetaient sur le lino de
     // longues ombres nettes en biais ; la VO n'y montre qu'une pénombre douce sous les assises — l'ombre cuite du sol)
     const o = { ombre: false };
@@ -1005,6 +1007,7 @@ export function poserEtage2(ch, renderer = null) {
   const chaiseLuge = (x, y, dir, { trous = false, coque = X.coque1, pied = X.noir, sortie = null, nom = 'la chaise', rc = 0.2, dc = 0, ecusson = false, tire = 0 } = {}) => {
     const [fx, fz] = DIR[dir];
     const g = new THREE.Group(); g.position.set(x, N2, -y); g.rotation.y = Math.atan2(fx, fz); fixe.add(g);
+    g.userData.meuble = { type: 'chaise-ecusson', nom: 'la chaise', variante: coque === X.coque2 ? 'salle2' : coque === X.coque1 ? 'salle1' : null };   // (prop hunt, L-K)
     maille(_assise, coque, 0, 0.455, 0.02, 0, g);
     if (ecusson) {
       // le dossier naît au bord arrière de l'assise (0,49 m) et monte à 0,81 m, penché de 10° ; la coque d'une pièce :

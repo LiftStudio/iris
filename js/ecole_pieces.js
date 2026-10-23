@@ -873,6 +873,7 @@ function texSalissure() {
 // petit disque ; siège : l'assise à 49 cm.
 function chaiseBureau(ch, P, x, y, face, { accoudoirs = false, haut = false, tissu = null, nom = 'la chaise de bureau', sortie = null, rot = 0, rayon = 0.22 } = {}) {
   const g = groupe(ch, x, y, face); g.rotation.y += rot;
+  g.userData.meuble = { type: 'chaise-bureau', nom: 'la chaise de bureau' };   // (prop hunt, L-K 23/10 : js/registre_meubles.js)
   const T = tissu || P.tissu;
   for (let i = 0; i < 5; i++) {
     const a = i / 5 * Math.PI * 2 + 0.31;
@@ -954,6 +955,7 @@ function cadre(ch, P, mat, x, y, face, w, h, hc, { baguette = null, ep = 0.025 }
 // UNE PLANTE en pot (ficus lyrata) : pot blanc, terre, tronc, feuilles en violon en spirale
 function plante(ch, P, x, y, { h = 1.5, pot = 0.19, n = 16, graineN = 1 } = {}) {
   const g = groupe(ch, x, y, 'S');
+  g.userData.meuble = { type: 'plante', nom: 'la plante' };   // (prop hunt, L-K)
   maille(new THREE.CylinderGeometry(pot, pot * 0.8, pot * 2.1, 22), P.pot, 0, pot * 1.05, 0, 0, g);
   maille(new THREE.CylinderGeometry(pot * 0.93, pot * 0.93, 0.02, 22), P.terre, 0, pot * 2.1 - 0.025, 0, 0, g, { ombre: false });
   const r = graine(graineN * 13 + 5);
@@ -974,6 +976,7 @@ function plante(ch, P, x, y, { h = 1.5, pot = 0.19, n = 16, graineN = 1 } = {}) 
 // LA CORBEILLE (cylindre d'acier noir ou inox)
 function corbeille(ch, P, x, y, mat = null, r = 0.14, h = 0.34) {
   const g = groupe(ch, x, y);
+  g.userData.meuble = { type: 'corbeille', nom: 'la corbeille' };   // (prop hunt, L-K)
   maille(new THREE.CylinderGeometry(r, r * 0.9, h, 18), mat || P.noirMat, 0, h / 2, 0, 0, g);
   CY(g, P.plastique, r * 0.96, 0.012, 0, h - 0.004, 0, 18, { ombre: false });
   return g;
@@ -1254,6 +1257,7 @@ function bureauB(ch, P) {
 // LA CHAISE VISITEUR « luge » : tube chromé en traîneau, coque et dossier de tissu
 function chaiseLuge(ch, P, x, y, face, rot = 0, sortie = null) {
   const g = groupe(ch, x, y, face); g.rotation.y += rot;
+  g.userData.meuble = { type: 'chaise-luge', nom: 'la chaise' };   // (prop hunt, L-K)
   for (const s of [-1, 1]) {
     const pa = CY(g, P.chrome, 0.011, 0.5, s * 0.22, 0.012, 0.0, 8); pa.rotation.x = Math.PI / 2;
     for (const z of [0.21, -0.21]) CY(g, P.chrome, 0.011, 0.44, s * 0.22, 0.23, z * 0.95, 8);
@@ -1322,6 +1326,7 @@ function couloirService(ch, P) {
   C.ajouterBoite(0.03, -2.68, 0.6, -3.76, { y1: 0.75 });
   // l'extincteur et son pictogramme, la goulotte électrique, le plan d'évacuation, le coffret électrique
   const ex = groupe(ch, 0.11, 3.95, 'E');
+  ex.userData.meuble = { type: 'extincteur', nom: 'l’extincteur', mural: true };   // (prop hunt, L-K)
   CY(ex, P.rouge, 0.075, 0.48, 0, 1.2, 0, 16); CY(ex, P.noirMat, 0.04, 0.08, 0, 1.48, 0, 10);
   C.ajouterCercle(0.11, -3.95, 0.09, { y0: 0.9, y1: 1.6 });
   cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), SV.x0, 3.95, 'E', 0.16, 0.16, 1.85, { ep: 0.004 });
@@ -1465,6 +1470,7 @@ function localTechnique(ch, P) {
   }
   // l'extincteur CO2 près de la porte (au sud : au nord, le tableau électrique)
   const ex = groupe(ch, LT.x1 - 0.1, 8.32, 'W');
+  ex.userData.meuble = { type: 'extincteur', nom: 'l’extincteur', mural: true };   // (prop hunt, L-K)
   CY(ex, P.rouge, 0.07, 0.55, 0, 1.2, 0, 16); CY(ex, P.noirMat, 0.035, 0.1, 0, 1.52, 0, 10);
   const cor = CY(ex, P.noirMat, 0.03, 0.18, 0.08, 1.35, 0.0, 10); cor.rotation.z = 0.5;
   C.ajouterCercle(LT.x1 - 0.1, -8.32, 0.09, { y0: 0.9, y1: 1.6 });
@@ -2124,6 +2130,7 @@ function geoCoqueDC() {
 }
 function chaiseMoutarde(ch, D, x, y, face, sortie = null) {
   const g = groupe(ch, x, y, face), G = geoCoqueDC();
+  g.userData.meuble = { type: 'chaise-dc', nom: 'la chaise moutarde' };   // (prop hunt, L-K)
   maille(G.coque, D.moutarde, 0, 0, 0, 0, g);
   for (const sx of [-0.19, 0.19]) maille(G.luge, D.luge, sx, 0, 0, 0, g);
   const t = CY(g, D.luge, 0.009, 0.38, 0, 0.215, -0.215, 6, { ombre: false }); t.rotation.z = Math.PI / 2;
@@ -2135,6 +2142,7 @@ function chaiseMoutarde(ch, D, x, y, face, sortie = null) {
 // bleu marine dans leur cadre de tube
 function chaiseMarine(ch, D, x, y, face, sortie = null) {
   const g = groupe(ch, x, y, face);
+  g.userData.meuble = { type: 'chaise-marine', nom: 'la chaise marine' };   // (prop hunt, L-K)
   for (const [px, pz] of [[-0.215, 0.2], [0.215, 0.2], [-0.215, -0.2], [0.215, -0.2]]) CY(g, D.pied, 0.011, 0.45, px, 0.225, pz, 8);
   // (le dossier bas : son haut à 0,82 — photo r06)
   for (const px of [-0.215, 0.215]) { const t = CY(g, D.pied, 0.011, 0.37, px, 0.635, -0.232, 8); t.rotation.x = -0.12; }
@@ -2313,6 +2321,7 @@ function salleDavidClark(ch, P) {
   // ---- le mur sud (derrière l'appareil de la photo) : le tableau blanc où projette le vidéoprojecteur, l'extincteur ----
   tableauBlancMural(ch, P, 2.9, DC.y0, 'N', 2.4, texTableauReseau());
   const ex = groupe(ch, 6.45, DC.y0 + 0.09, 'N');
+  ex.userData.meuble = { type: 'extincteur', nom: 'l’extincteur', mural: true };   // (prop hunt, L-K)
   CY(ex, P.rouge, 0.075, 0.48, 0, 1.2, 0, 16); CY(ex, P.noirMat, 0.04, 0.08, 0, 1.48, 0, 10);
   C.ajouterCercle(6.45, -(DC.y0 + 0.09), 0.09, { y0: 0.9, y1: 1.6 });
   cadre(ch, P, new THREE.MeshStandardMaterial({ map: texPictoExtincteur(), roughness: 0.6 }), 6.45, DC.y0, 'N', 0.16, 0.16, 1.85, { ep: 0.004 });

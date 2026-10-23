@@ -695,6 +695,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
   const chaise = (x, y, dir, sortie, { tiree = 0, angle = 0, nom = 'la chaise' } = {}) => {
     const [fx, fy] = DIR[dir];
     const g = poser(x - fx * tiree, y - fy * tiree, Math.atan2(fx, -fy) + angle);
+    g.userData.meuble = { type: 'chaise-kahn', nom: 'la chaise' };   // (prop hunt, L-K 23/10 : js/registre_meubles.js)
     const s = maille(geoAssise, K.hetre, 0, 0.455, 0.0, 0, g); s.rotation.x = -Math.PI / 2;
     const d = maille(geoDos, K.hetre, 0, 0.72, -0.215, 0, g); d.rotation.x = -0.14;
     for (const sx of [-0.19, 0.19]) maille(geoLuge, K.luge, sx, 0, 0, 0, g);
@@ -909,6 +910,7 @@ export function poserKahn(ch, { groupe, lampes, renderer = null, ySud = 12.0, xP
     // l'extincteur à eau (u 4,6 ; de 0,45 à 1,15 m — VO f_0066, q_0230 : son milieu sous le bas des tableaux, et non à
     // 1,0-1,75 m comme le relevé), sa console, son tuyau noir ; le pictogramme carré à 2,0 m, le petit à 1,6 m
     const ge = poser(X(4.6), yN - 0.1, ROT.S);
+    ge.userData.meuble = { type: 'extincteur', nom: 'l’extincteur', mural: true };   // (prop hunt, L-K)
     maille(new THREE.CylinderGeometry(0.075, 0.075, 0.5, 16), M.rougeEtiquette, 0, 0.72, 0, 0, ge);
     maille(new THREE.CylinderGeometry(0.03, 0.045, 0.08, 10), M.noirMat, 0, 1.01, 0, 0, ge);
     tube(ge, M.noirMat, [[0.02, 0.99, 0.04], [0.08, 0.87, 0.06], [0.07, 0.57, 0.07], [0.05, 0.49, 0.05]], 0.009, 10);

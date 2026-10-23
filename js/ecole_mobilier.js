@@ -109,6 +109,7 @@ function matVoile() {
 function chaise(ch, x, y, face, couleur) {
   const M = ch.M, fx = face === 'S' ? 0 : face === 'N' ? 0 : face === 'E' ? 1 : -1, fz = face === 'S' ? 1 : face === 'N' ? -1 : 0;
   const g = new THREE.Group(); g.position.set(x, 0, -y); g.rotation.y = Math.atan2(fx, fz);
+  { const v = Object.keys(COQUE).find((k) => COQUE[k] === couleur) || null; g.userData.meuble = { type: 'chaise-coque', nom: 'la chaise coque ' + ({ blanc: 'blanche', canard: 'canard', grege: 'grège', citron: 'citron', noir: 'noire', rose: 'rose' }[v] || ''), variante: v, voile: false }; }   // (prop hunt, L-K 23/10 : js/registre_meubles.js ; son voile au sol est dans son groupe)
   if (!_matsCoque.has(couleur)) _matsCoque.set(couleur, new THREE.MeshStandardMaterial({ color: couleur, roughness: 0.38, side: THREE.DoubleSide }));
   // L'OMBRE DE LA COQUE. Ni dans l'ombre cuite au sol (vue de dessus, la coque faisait une tache noire de sa taille
   // posée sur des pieds fins), ni dans la carte d'ombre de la lumière principale (presque d'aplomb, elle découpait sous
@@ -211,6 +212,7 @@ export function poserMobilier(ch) {
     // (r03, 12/10 : toujours contre le mur sud, qui recule de 0,20 — y 4,88)
     const bx = 8.6, by = 5.08 + DY_R03, th = Math.PI;
     const borne = new THREE.Group(); borne.position.set(bx, 0, -by); borne.rotation.y = th; ch.decor.add(borne);
+    borne.userData.meuble = { type: 'borne', nom: 'la borne', mural: true };   // (prop hunt, L-K)
     maille(boiteM(0.62, 0.025, 0.42), M.noir, 0, 0.0125, 0.1, 0, borne);
     const fut = new THREE.Group(); fut.position.y = 0.025; fut.rotation.x = -0.025; borne.add(fut);
     // (relecture : fût de 1,795 ; l'écran n'en couvre que les deux tiers hauts — r02 agrandie : 175 px d'écran sur 275 de
@@ -236,6 +238,7 @@ export function poserMobilier(ch) {
   const br = new THREE.MeshStandardMaterial({ map: texBrochures(), roughness: 0.6 });
   const presentoir = (x, y, roulettes) => {
     const pres = new THREE.Group(); pres.position.set(x, 0, -y); pres.rotation.y = -Math.PI / 2; ch.decor.add(pres);
+    pres.userData.meuble = { type: 'presentoir', nom: 'le présentoir', mural: true };   // (prop hunt, L-K)
     const b0 = roulettes ? 0.07 : 0.02;
     // (13/10, relecture C2 — photo 01, le présentoir vu de chant depuis le C01 : son flanc n'est pas un panneau plein
     // de 36 cm — c'est un montant noir étroit, 12 cm, à l'arrière, et devant lui les tablettes inclinées et leurs
@@ -274,6 +277,7 @@ export function poserMobilier(ch) {
     // noire de haut en bas. Reculé de 18 cm vers l'ouest : de 10,77 à 11,62, toujours au bout du mur jaune.)
     const kx = 11.195, ky = 7.54, th = -0.105;
     const k = new THREE.Group(); k.position.set(kx, 0, -ky); k.rotation.y = th; ch.decor.add(k);
+    k.userData.meuble = { type: 'kakemono', nom: 'le kakémono', mural: true };   // (prop hunt, L-K)
     maille(boiteM(0.86, 0.085, 0.11), M.aluGris, 0, 0.0425, 0, 0, k);
     for (const s of [-1, 1]) maille(boiteM(0.04, 0.012, 0.3), M.aluGris, s * 0.36, 0.006, 0, 0, k, { ombre: false });
     maille(new THREE.CylinderGeometry(0.008, 0.008, 2.0, 8), M.aluGris, 0, 1.08, -0.035, 0, k, { ombre: false });
@@ -367,6 +371,7 @@ export function poserMobilier(ch) {
   // (et la même pose le met en y 6,78-6,98, sa tête en 6,90 : 9 cm plus au sud que le 13/10 ; ses plaques en y 6,92)
   const yE = 6.88, rougeExt = new THREE.MeshStandardMaterial({ color: 0x8a2219, roughness: 0.32, metalness: 0.1 }); rougeExt.name = 'extincteur rouge (hall ouest)';
   const ext = new THREE.Group(); ext.position.set(1.86, 0.83, -yE); ext.rotation.x = -0.12; ch.decor.add(ext);
+  ext.userData.meuble = { type: 'extincteur', nom: 'l’extincteur', mural: true, face: Math.PI / 2 };   // (prop hunt, L-K ; sa console au mur est à −x : sa façade, +x)
   maille(new THREE.CylinderGeometry(0.09, 0.09, 0.34, 18), rougeExt, 0, 0, 0, 0, ext);
   maille(new THREE.SphereGeometry(0.09, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), rougeExt, 0, 0.17, 0, 0, ext);
   maille(new THREE.CylinderGeometry(0.03, 0.045, 0.07, 10), M.noirMat, 0, 0.255, 0, 0, ext);
