@@ -162,21 +162,16 @@ function associerFormes(C) {
   }
 }
 
-// les types déguisables d'une zone de jeu : UN par type (sa variante la plus courante dans la zone) — le carton de secours
-// ne compte pas (une zone de moins de 6 types est grisée au menu, § 3.9)
+// les clés déguisables d'une zone de jeu (toutes ses variantes : la chaise coque canard comme la blanche), présentes dans la
+// zone et sans exemplaire oublié — le carton de secours ne compte pas
 export function typesDeguisables(zoneJeu) {
-  const P = piecesDe(zoneJeu), parType = new Map();
-  for (const p of MEUBLES.poses) {
-    if (!P.has(p.zone)) continue;
-    const T = MEUBLES.types.get(p.cle);
-    if (!deguisableDans(T, zoneJeu)) continue;
-    let m = parType.get(T.type); if (!m) parType.set(T.type, m = new Map());
-    m.set(p.cle, (m.get(p.cle) || 0) + 1);
-  }
-  const L = [];
-  for (const [, m] of parType) { let best = null, n = 0; for (const [cle, k] of m) if (k > n) { n = k; best = cle; } L.push(best); }
-  return L.sort();
+  const P = piecesDe(zoneJeu), L = new Set();
+  for (const p of MEUBLES.poses) if (P.has(p.zone) && !L.has(p.cle) && deguisableDans(MEUBLES.types.get(p.cle), zoneJeu)) L.add(p.cle);
+  return [...L].sort();
 }
+// les TYPES distincts qu'on y prend (la règle du menu : une zone de moins de 6 types est grisée, § 3.9 — six variantes de
+// chaise coque ne font qu'un type)
+export function typesDistincts(zoneJeu) { return [...new Set(typesDeguisables(zoneJeu).map((c) => MEUBLES.types.get(c).type))].sort(); }
 
 // ---------------------------------------------------------------- LES RAYONS (viser, toucher)
 // le rayon O + t·D contre une boîte orientée au sol (convention de js/collisions.js : c = cos −cap, s = sin −cap), de y0 à

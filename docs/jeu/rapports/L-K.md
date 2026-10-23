@@ -83,8 +83,10 @@ verrou, figé, 'frottement'), `ALLURES_PROP`.
    `carte_ecole.js` l. 1198-1222 (des commentaires seulement) mais dans `ecole_mobilier.js` l. 369 — étiqueté par L-K, comme
    le dit aussi § 5.3 l. 2018 ; « l'extincteur de la bande sud » (§ 5.3, `ecole_est.js` vers l. 1673) est posé par
    `poserBandeSud`, dans `js/ecole_ascenseur.js` (l. 421-430) : c'est celui « au pied de l'ascenseur », à L-M.
-2. **`typesDeguisables(zone)`** (§ 4.5.13 « → [cle] ») rend UNE clé par TYPE (sa variante la plus courante) : la règle « moins
-   de 6 types » compte des types (les chaises en écusson du 2e ont deux variantes).
+2. **`typesDeguisables(zone)`** (§ 4.5.13 « → [cle] ») rend TOUTES les clés déguisables de la zone (variantes comprises :
+   L-F s'en sert comme d'un ensemble de clés permises) ; **AJOUT** `typesDistincts(zone)` : les types distincts, pour la
+   règle « moins de 6 types → grisé » (§ 3.9 ; six couleurs de chaise coque ne font qu'un type) — c'est elle que le test 13
+   compte.
 3. **`credibilite`** : la formule de `conception_prophunt` § 9.4 recalée sur les six situations du test 7 (sinon une chaise
    tournée de 90° au bout de sa rangée vaut 0,78 > 0,5 et un distributeur au milieu d'une pièce 0,55 > 0,3) : de travers
    −0,35, entre-deux +0,05, mural dos au mur +0,2 (sans voisin), mural loin d'un mur −0,5, symétrie du type (un tabouret

@@ -9,7 +9,7 @@ import { Rng } from '../rng.js';
 import { PAS, ZONES_JEU } from '../constantes.js';
 import { MEUBLES, copieMeuble, fermerRegistre, rattraperRegistre, zonerRegistre, _bacASable, TAILLES_REFERENCE } from '../../registre_meubles.js';
 import {
-  CATALOGUE, preparerCatalogue, typesDeguisables, deguisableDans, viserMeuble, deguiser, retirerProp, majProps, credibilite, cachettes,
+  CATALOGUE, preparerCatalogue, typesDeguisables, typesDistincts, deguisableDans, viserMeuble, deguiser, retirerProp, majProps, credibilite, cachettes,
   candidatsMeubles, toucherPoses, typeDe, pivotDe, _refEstActeur, distPassage,
 } from '../deguisements.js';
 import { CorpsProp, deplacerProp, coinsLibres } from '../corps_prop.js';
@@ -128,7 +128,7 @@ export default function (jeu) {
     const autres = v.nonEtiquetes.filter((e) => !LM(e));
     const fautes = [];
     for (const z of ['e1', 'e2', 'rdc', 'ecole_int']) {
-      const P = piecesDe(z), L = new Set(typesDeguisables(z).map((c) => MEUBLES.types.get(c).type));
+      const P = piecesDe(z), L = new Set(typesDistincts(z));
       for (const e of v.nonEtiquetes) if (P.has(e.zone) && L.has(e.type)) fautes.push(z + ' ' + e.type);
     }
     const ok = types.size >= 18 && H.length >= 200 && tailles.length === 0 && v.horsTolerance.length === 0 && autres.length === 0 && fautes.length === 0;
@@ -496,11 +496,12 @@ export default function (jeu) {
   // 13. LES ZONES : sans le lot R le −1 a moins de 6 types (noté), le 2e aussi ; le 1er (repli) au moins 6
   T('13 typesDeguisables : ss < 6 (sans le lot R), e2 < 6, e1 ≥ 6', async () => {
     await preparer();
-    const ss = typesDeguisables('ss'), e2 = typesDeguisables('e2'), e1 = typesDeguisables('e1'), rdc = typesDeguisables('rdc');
+    const n = (z) => ({ cles: typesDeguisables(z), types: typesDistincts(z) });
+    const ss = n('ss'), e2 = n('e2'), e1 = n('e1'), rdc = n('rdc');
     const loteR = MEUBLES.poses.some((P) => P.zone && piecesDe('ss').has(P.zone));
-    const ok = (loteR || ss.length < 6) && e2.length < 6 && e1.length >= 6;
-    return { ok, attendu: 'ss < 6 sans le lot R · e2 < 6 · e1 ≥ 6',
-      obtenu: `ss ${ss.length}${loteR ? ' (lot R là)' : ''} · e2 ${e2.length} [${e2.join(', ')}] · e1 ${e1.length} [${e1.join(', ')}] · rdc ${rdc.length} [${rdc.join(', ')}]` };
+    const ok = (loteR || ss.types.length < 6) && e2.types.length < 6 && e1.types.length >= 6 && e1.cles.length >= e1.types.length;
+    const t = (o) => `${o.types.length} types (${o.cles.length} clés) [${o.types.join(', ')}]`;
+    return { ok, attendu: 'types distincts : ss < 6 sans le lot R · e2 < 6 · e1 ≥ 6', obtenu: `ss ${t(ss)}${loteR ? ' (lot R là)' : ''} · e2 ${t(e2)} · e1 ${t(e1)} · rdc ${t(rdc)}` };
   });
 
   // 14. CE QUE VOIT UN CHASSEUR : un prop parmi de vrais meubles de son type est indiscernable ; ≤ 0,05 ms pour 10 m
@@ -542,7 +543,7 @@ export default function (jeu) {
   }, { apresFusion: true, delai: 180 });
   T('F2 le −1 : types du lot R, 200 tirs reconnus par leur forme, aucun oublié', async () => {
     await preparer();
-    const ss = typesDeguisables('ss'), R = new Rng(36), P = posesDe('ss').filter((q) => [...MEUBLES.parForme.values()].includes(q.i));
+    const ss = typesDistincts('ss'), R = new Rng(36), P = posesDe('ss').filter((q) => [...MEUBLES.parForme.values()].includes(q.i));
     let ok200 = 0;
     const formes = [...MEUBLES.parForme.entries()];
     for (let k = 0; k < 200 && formes.length; k++) {
