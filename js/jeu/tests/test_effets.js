@@ -252,7 +252,7 @@ export default function (jeu) {
     const src = await fetch(new URL('../sons_jeu.js', import.meta.url), { cache: 'no-cache' }).then((r) => r.text());
     res.push([`${tirs} tirs en 10 s · au plus ${max} voix (≤ ${N})`, max <= N && tirs >= 990]);
     res.push([`${libres} libérées à leur fin (${enAvance} en avance, ${enRetard} en retard d'un pas), ${volees} volées`, libres > 100 && enAvance === 0 && enRetard === 0]);
-    res.push(['aucun onended dans sons_jeu.js', !/onended|'ended'/.test(src)]);
+    res.push(['aucun onended dans le code de sons_jeu.js', !/\.onended\s*=|addEventListener\(\s*['"]ended/.test(src)]);
     res.push([`${tampons} AudioBuffer créé(s) pendant les tirs`, tampons === 0]);
     res.push([`horloge ${r3(S.t)} s (contexte ${ctx.currentTime} s)`, true]);
     jeu.quitter('balade');
