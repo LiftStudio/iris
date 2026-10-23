@@ -6,10 +6,15 @@ port 8131 ; 23/10/2026. Fichiers du lot : `js/jeu/armes.js`, `js/jeu/balistique.
 
 ## Où j'en suis
 
-**RELECTURE en cours** (relecteur, 23/10, 05:30 ; même arbre, même branche, commits « L-A relecture : … ») : spec relue
-(§§ 3.3-3.5, 4.5.6, 4.6, 4.7, 5.1, 5.5.1) et diff `socle...lot/L-A` lu en entier ; propriétaires et pureté : `OK 6
-fichiers`. En attente d'un jeton du navigateur (les trois pris : L-U, L-K, L-H) pour rejouer les critères et jouer.
-Constats et corrections : section « Relecture » en fin de rapport.
+**RELU ET FINI** (relecteur sévère, 23/10, 05:30-06:20 ; même arbre, même branche, commits « L-A relecture : … ») :
+spec relue (§§ 3.3-3.5, 4.5.6, 4.6, 4.7, 5.1, 5.5.1), diff `socle...lot/L-A` lu en entier ; **six défauts corrigés**
+(couteau à travers une vitre, cadence unique pour deux armes, identifiant des grenades hors de l'état, flash qui
+aveuglait les alliés, recharge coupée sans 'fin', fêlures émises en lisant une liste partagée) et les tests complétés ;
+rejoué sur le code final : **L-A 19/19 sur PC (11,2 s) et sous `?tel=1` (10,9 s), 0 signalé ; S0 29/29 sur PC (68,5 s) et
+sous `?tel=1` (61,7 s), 0 signalé, balade au bit près (vue 3 et vue 1 : 0 / 0, avant et après les parties)** ;
+propriétaires et pureté `OK 6 fichiers` ; joué (essai : rafale, frag cuite, pompe à la hanche, changement d'arme au
+clavier, deux bots qui se battent) ; onglet fermé, serveur arrêté, jeton rendu. Détail : section « Relecture » en fin de
+rapport.
 
 **FINI (constructeur).** Les six points de la définition du § 5.1 (règle 5) sont tenus :
 - (a) `&rapport=1&lot=L-A` : **19/19 sur PC** (13,6 s, 0 signalé) et **19/19 sous `?tel=1`** (émulation 375 × 812,
@@ -232,9 +237,19 @@ regarder pour ce lot : il n'a ni maillage ni effet (impacts, traceurs, grenade e
 ### Où en est la relecture
 - Lu : la spec (§§ 3.3-3.5, 4.5.6, 4.6, 4.7, 5.1, 5.5.1), le diff complet `socle...lot/L-A` (6 fichiers), le squelette du
   socle de chaque fichier (signatures). `python -I tools/verifier_proprietaires.py lot/L-A` : `OK 6 fichiers`.
-- Corrigé (commits « L-A relecture : … », vérifiés hors navigateur par un banc node, monde synthétique) — voir
-  « Constats » ci-dessous.
-- Reste : rejouer les 19 critères (`&rapport=1&lot=L-A`) puis S0, jouer à l'écran (PC, `?tel=1`), corriger.
+- Corrigé (commits « L-A relecture : … », vérifiés d'abord hors navigateur par un banc node dans un monde synthétique —
+  couteau et vitre, fermeture des recharges, identifiants et flash, fêlures avec un abonné qui interroge le monde,
+  pistolet après un coup de TP-50, état de l'arsenal — puis par les tests du lot complétés) — voir « Constats ».
+- Rejoué (jeton_1, tenu de 06:09:39 à 06:17:56 ; attendu de 05:30 à 06:09, les trois pris par L-U, L-K puis L-I, L-H,
+  L-E, L-M ; onglet `tab-27` seul, fermé ; serveur 8131 arrêté). Tout sur le code final (HEAD avant ce rapport) :
+  - `&rapport=1&lot=L-A` : **ok, 19/19, 0 signalé** sur PC (11,2 s, qualité high) et sous `?tel=1` (375 × 812, 10,9 s).
+  - `&rapport=1&lot=S0` : **ok, 29/29, 0 signalé** sur PC (68,5 s) et sous `?tel=1` (61,7 s) ; balade au bit près avant
+    et après les parties (vue 3 0 / 0, vue 1 0 / 0) ; tirs simultanés (2 éliminations au même pas, dans les deux ordres) ;
+    cerveau minimal 42 éliminations ; `Partie.pas` 0,037 ms.
+  - Mesures nouvelles : couteau à travers une vitre « rien » (ni touche, ni fente passée) ; flash d'un allié : rien,
+    d'un ennemi : 2,4 s ; suite rejouée depuis l'état : 11ae0995 / 11ae0995 (grenade 34253 des deux côtés) ; P-17 tiré
+    0,4667 s après un coup de TP-50 (rangement 0,25 + sortie 0,20 + 2 pas ; avant : 1,33 s, le verrou du TP-50).
+    Les autres valeurs sont celles du constructeur, au chiffre près (balle 10 µs / 37,5 µs ; tirer 7,5 µs).
 
 ### Constats du code (relecture du diff) et ce qui a été fait
 Contrats (§ 4.5.6) : signatures, getters et événements posés comme écrit ; ajouts seulement (permis, § 4.1 règle 3).
@@ -259,7 +274,12 @@ les dispersions des quatre autres armes sont celles du constructeur (écart 5). 
 6. Code mort retiré : les compteurs `Balistique.stats` (jamais lus, incrémentés dans la boucle chaude), deux variables
    mortes des tests 2 et 11 ; `rayonActeurs` passe par `rayonVolume` (exporté, inutilisé). L'en-tête de `grenade.js`
    disait le champ `type` « gardé, doublé de `arme` » : il n'est plus émis (en-tête corrigé).
-7. Essayé puis retiré : faire sortir l'arsenal du sprint sur le front `recharger` (le front R est perdu en sprint). Tant
+7. **Une seule heure de « prochain tir » pour tout l'arsenal** : après un coup de TP-50 (verrou 1,33 s) ou de FP-12
+   (0,857 s), le pistolet sorti aussitôt (0,45 s) ne tirait qu'au bout du verrou de l'AUTRE arme — le geste « je change
+   pour le pistolet, c'est plus rapide » de Call of Duty ne marchait pas. Maintenant une heure par arme (`pr`, tableau
+   dans l'état ; un ancien état à un nombre est relu) ; le motif de recul repart du début au changement d'arme. Test 7
+   complété (P-17 0,4667 s après un coup de TP-50).
+8. Essayé puis retiré : faire sortir l'arsenal du sprint sur le front `recharger` (le front R est perdu en sprint). Tant
    que le CORPS sprinte encore, la recharge s'annule au pas suivant ('debut' puis 'annulee') : c'est au corps de couper le
    sprint sur ce front, comme pour la visée (demande à L-B, ci-dessous).
 
@@ -267,11 +287,47 @@ les dispersions des quatre autres armes sont celles du constructeur (écart 5). 
 - R1. La flash épargne les alliés du lanceur (§ 3.3 l. 410-416 ne le dit pas ; § 3.5 l. 453 « tir allié : désactivé »).
 - R2. Non chiffrés par le § 3 et posés par le constructeur, notés ici : la dispersion × 1,3 en glissade ; l'élan du
   lanceur ajouté à la vitesse de la grenade ; la visée bloquée 0,1 s après un décollage et 0,35 s en début de glissade ;
-  la visée permise pendant une recharge.
+  la visée permise pendant une recharge ; 'explosion' porte aussi `a` et `id`.
+- R3. La cadence est tenue par arme (§ 3.3 l. 399-403 parle d'UNE heure `prochain` : elle vaut pour l'arme en main).
+
+### Joué (essai, onglet devant, 524 × 306 affiché, 30-45 images/s sur la machine partagée)
+- `?partie=essai&graine=42`, après « Appuie pour commencer » : HUD « 0:00 · VIE 100 · FA-24 « Faucon » 30 / 90 » ; visée
+  posée sur le mannequin du hall (≈ 3,4 m), rafale tenue 0,75 s : 10 coups, la vue monte de 5,66° (la somme des 10
+  premiers `v` du motif, au centième), 4 touches au torse, le mannequin tombe à la 4e (HUD 20 / 90), les 6 suivantes au
+  mur derrière ; la vue redescend ensuite (rappel). Pas d'image figée : 28,9 ms médiane en tirant contre 29,9 au repos
+  (60 images chacun, 2 bots), `Partie.pas` 0,09 ms.
+- Frag cuite 0,5 s : lancée, un rebond franc contre le mur du hall (13,7 m/s), deux petits, elle explose 2,99 s après le
+  lancer (3,5 − 0,5) : deux mannequins tués, le troisième à 94. La grenade en vol ne se VOIT pas encore (pas de maillage :
+  L-H) — à vérifier à F2, c'est la première chose qu'un joueur remarquera.
+- Touche « 2 » (`Digit2`) : le P-17 sort (12 / 48). R sur un chargeur plein : recharge « tactique » à 13 (la règle du
+  § 3.3 l. 396 au pied de la lettre ; Battlefield le fait, Call of Duty peu — INT tranche s'il le faut).
+- Deux bots au cerveau minimal 20 s : 71 tirs, 67 touches, 1 élimination, 2 recharges (debut / insere / fin), aucun
+  'vide' répété, aucune erreur de console (les seules erreurs de la page sont l'enregistrement du service worker,
+  « An unknown error occurred when fetching the script », au chargement : hors du lot).
+- FP-12 (classe Défense), 20 coups par distance, au buste : à la hanche 2 m 20/20 tués, 3 m 20/20, **4 m 3/20, 5 m 0/20** ;
+  en visée 4 m 20/20, 5 m 11/20 (d'où la demande à INT ci-dessous).
+- Capsules (test 15) décomposées sur 154 images de course d'un errant (corps du squelette = Haythem et les couches de la
+  balade) : maillage exactement à `posAff`, tourné exactement au cap simulé ; l'os `Head` (+ 0,085) est en moyenne
+  **16,6 cm plus EN AVANT** que la tête simulée (qui avance déjà de 0,04 + 0,02·v), **± 19 cm sur le CÔTÉ** (moyenne
+  absolue ; moyenne signée 2 cm : le roulis des virages) et **7,5 cm plus BAS** ; l'écart avance croît avec la vitesse
+  (1,7 cm à 3,2 m/s, 14 cm à 4,1 m/s). C'est bien le penché et l'inclinaison des couches de la balade : la demande à L-C
+  tient (couper penché et inclinaison pour un acteur armé), sinon élargir l'avance de la tête (≈ 0,06 m par m/s).
 
 Demandes ajoutées par la relecture :
 - L-B : (e) le front `recharger` coupe le sprint du corps (sinon une recharge demandée en courant est perdue).
+- L-C : (précise la demande du constructeur) l'écart vient de l'avant (+ 16,6 cm au-delà de l'avance simulée), du côté
+  (± 19 cm dans les virages) et de la hauteur (− 7,5 cm) : couper le penché ET l'inclinaison des couches pour un acteur
+  armé. Bloquant à F2 (test `apresFusion` « F2 · capsules contre les vrais corps de L-C »).
+- L-H : la grenade en vol a besoin d'un maillage (événements 'grenade', 'rebond', 'explosion' : `id` commun) ; les
+  fêlures portent maintenant `plomb`.
 - INT (réglage) : à la hanche, la couronne du FP-12 est à 3,0° de l'axe (0,6 × 5,0°, critère 12) : 0,21 m à 4 m, plus que
-  le rayon du torse (0,165) ; un coup ne tue à la hanche que jusqu'à ≈ 3 m alors que la table des dégâts (18 par plomb
-  jusqu'à 5 m) est faite pour tuer jusqu'à 5 m. Pour le « pompe » de Call of Duty (il se tire à la hanche) : cône 3,0°
-  à la hanche, 2,2° en visée (couronne à 1,8° : 0,157 m à 5 m) — à décider au stand.
+  le rayon du torse (0,165) ; un coup ne tue à la hanche qu'à ≤ 3 m (4 m : 3 sur 20, mesuré) alors que la table des
+  dégâts (18 par plomb jusqu'à 5 m) est faite pour tuer jusqu'à 5 m. Pour le « pompe » de Call of Duty (il se tire à la
+  hanche) : cône 3,0° à la hanche, 2,2° en visée (couronne à 1,8° : 0,157 m à 5 m) — à décider au stand.
+- INT (à voir) : une frag CUITE quand on meurt disparaît avec l'arsenal (l'arsenal n'est plus appelé sur un mort) ; dans
+  Call of Duty elle tombe aux pieds et explose. Non demandé par la spec : à décider avec L-E.
+
+### Doutes de la relecture
+- Le test 2 garde ses exclusions élargies (formes sans décor, cages d'escalier, portes) : elles sont justifiées (le DDA
+  colle au monde solide au centimètre, test 1), mais elles ne sont pas celles du § 5.5.1 l. 2245-2247 ; F2 les valide.
+- Les temps sont relatifs (dix serveurs de lots tournaient, d'autres onglets de jeu étaient ouverts).
