@@ -355,7 +355,11 @@ vec3 fitPeindre(vec3 src) {
     col = mix(col, uFitD, clamp(centre, 0.0, 1.0));
     col = mix(col, uFitC, clamp(lis, 0.0, 1.0));
   }
-  return mix(src, fitL(fitTeinte(fitS(src), fitS(col))), uFitCorps.w);
+  // (23/10, lot L-C : le mélange avec le tissu d'origine se fait dans l'espace PERÇU — fitS, sRGB approché — et non en
+  // linéaire : en linéaire, une teinte à 60 % d'un bleu sur une chemise blanche restait presque blanche, la lumière du
+  // blanc l'emportant ; le tissu d'origine éteint, uFitCorps.w = 0, sort plus haut, inchangé)
+  vec3 s = fitS(src);
+  return fitL(mix(s, fitTeinte(s, fitS(col)), uFitCorps.w));
 }
 `;
 
@@ -399,5 +403,45 @@ export function equiperShader(mat) {
   return u;
 }
 
-// (IRIS : les tenues de la boutique de LA CAGE — appliquerFit, moyenne, silhouette — n'existent plus. Haythem garde sa
-// tenue d'origine ; equiperShader reste posé pour la tête et la peau, sa tenue « éteinte », uFitCorps.w = 0.)
+// (IRIS : les tenues de la boutique de LA CAGE — silhouette — n'existent plus. Haythem garde sa tenue d'origine ;
+// equiperShader reste posé pour la tête et la peau, sa tenue « éteinte », uFitCorps.w = 0.)
+
+// LES COULEURS D'ÉQUIPE (23/10, lot L-C : js/jeu/teintes.js) — appliquerFit et moyenne de LA CAGE (js/fit.js:403-437),
+// recopiés et taillés : sans `needsUpdate` (tout passe par des uniformes, partagés avec le programme par onBeforeCompile :
+// aucune réévaluation du programme, aucune compilation), le reste à l'identique. `f` : { haut, bas, bande, centre,
+// centreL, centreLis, force, coupe, bandeauY, bandeau, col, jambe, manche, cheville, lisere, contraste } ; `rep` : les
+// repères du squelette (reperes). Sans `f` ni `rep` : la tenue éteinte, celle d'origine.
+export function appliquerFit(mat, f, rep) {
+  const u = mat.__cage || equiperShader(mat);
+  if (!f || !rep) { u.uFitCorps.value.w = 0; return; }
+  u.uFitA.value.set(f.haut || '#ffffff');
+  u.uFitB.value.set(f.bas || f.haut || '#ffffff');
+  u.uFitC.value.set(f.bande || '#ffffff');
+  u.uFitD.value.set(f.centre || f.bande || '#ffffff');
+  u.uFitCentre.value.set(f.centreL || 0, f.centreLis || 0);
+  u.uFitCorps.value.set(rep.hanche, rep.poitrine, rep.cou, f.force === undefined ? 1 : f.force);
+  u.uFitCoupe.value.set(f.coupe === undefined ? 1.10 : f.coupe, f.bandeauY || 2.3, f.bandeau || 0, f.col || 0);
+  u.uFitBande.value.set(f.jambe || 0, f.manche || 0, f.cheville || 0, f.lisere || 0);
+  u.uFitTissu.value.set(moyenne(mat.userData && mat.userData.srcMap) || moyenne(mat.map) || 0.5,
+                        f.contraste === undefined ? 0.85 : f.contraste);
+}
+
+// Luminance moyenne de l'atlas d'origine, lue une fois et mise en cache SUR LA TEXTURE (jamais dans
+// userData : Material.copy passerait par JSON). Sert de niveau de reference pour que le contraste du tissu
+// soit conserve sans son niveau absolu. Cout : un canvas de 8x8.
+export function moyenne(tex) {
+  const img = tex && tex.image;
+  if (!img || !img.width) return 0;
+  if (tex.userData.moyFit !== undefined) return tex.userData.moyFit;
+  let m = 0.5;
+  try {
+    const c = document.createElement('canvas'); c.width = c.height = 8;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.drawImage(img, 0, 0, 8, 8);
+    const d = g.getImageData(0, 0, 8, 8).data;
+    let s = 0;
+    for (let i = 0; i < d.length; i += 4) s += (0.30 * d[i] + 0.59 * d[i + 1] + 0.11 * d[i + 2]) / 255;
+    m = s / (d.length / 4);   // deja en sRGB, comme l'espace de travail du shader (fitS)
+  } catch (e) { /* texture non lisible (CORS) : on garde 0,5 */ }
+  return (tex.userData.moyFit = m);
+}
