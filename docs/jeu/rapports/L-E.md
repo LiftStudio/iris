@@ -6,11 +6,15 @@ Branche `lot/L-E` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-E`), partie de `s
 
 ## Où j'en suis
 
-**RELECTURE EN COURS** (relecteur sévère, 23/10, 05:00 — commits « L-E relecture : … », section « Relecture » en fin de
-rapport). Fait : spécification relue (§§ 2.3-2.6, 3.5, 3.8, 4.5.12, 4.5.15, 4.6, 4.7, 5.1, 5.5.7), diff `socle...lot/L-E` relu en
-entier, vérificateur OK ; corrections commitées et REJOUÉES (jeton 1 pris à 05:56) : `&lot=L-E` **17/17 sur PC** (28,3 s, 0
-signalé) et **17/17 sous `?tel=1`** (27,8 s), `&lot=S0` **29/29** (65,0 s, balade 0 / 0 avant et après les parties). Reste :
-jouer à la main, finir la section « Relecture ».
+**RELU ET FINI** (relecteur sévère, 23/10, 06:10 — commits « L-E relecture : … », détail dans la section « Relecture » en fin
+de rapport). Spécification relue (§§ 2.3-2.6, 3.5, 3.8, 4.5.12, 4.5.15, 4.6, 4.7, 5.1, 5.5.7), diff `socle...lot/L-E` relu en
+entier ; sept corrections dans les fichiers du lot (calque de l'entraînement libre, frag du stand qui tuait Haythem pour de
+bon, départs du chacun pour soi à vue, état des anneaux partagé, affichage hors du pas, code mort, duel de F2 symétrique) ;
+rejoué (jeton 1, 05:56-06:09) : `&lot=L-E` **17/17 sur PC** (28,3 s) et **17/17 sous `?tel=1`** (27,8 s), 0 signalé ; `&lot=S0`
+**29/29** (65,0 s, balade 0 / 0 avant et après les parties) ; `&fusion=1` à blanc : 19/20, seul le 10 min sur toute l'école
+échoue au squelette (0 élimination, attendu : à F2) ; vérificateur `OK 4 fichiers` ; joué à la main ; onglet fermé, serveur
+8137 arrêté, jeton 1 rendu à 06:09. Trois demandes ajoutées (la pause par-dessus l'écran de fin, les effectifs du téléphone
+au menu, la rubalise au stand). Un repreneur n'a rien à finir pour L-E.
 
 Ce qui suit est l'état laissé par le constructeur :
 
@@ -256,6 +260,11 @@ rayon 3 cm ; regardé à l'écran depuis la ligne (boîtes posées à la main pu
 - `&rapport=1&lot=S0` : **29/29** (65,0 s, 0 signalé) — balade 0 / 0 (vue 3, vue 1) avant ET après les parties, programmes
   145 → 145, `Partie.pas` du socle 0,050 ms, stand du socle (6 cibles) vert.
 - `python -I tools/verifier_proprietaires.py lot/L-E` : `OK 4 fichiers`.
+- `&fusion=1`, à blanc contre les squelettes (pour voir qu'ils tournent) : apparitions réelles « 8 apparitions, 0 vue, 0
+  repli » ; 100 duels « id 0 : 41 · id 1 : 39 » ; 10 min 4 c. 4 sur toute l'école : 0 élimination (au squelette, les bots ne se
+  trouvent pas sur toute l'école : à F2 avec L-D et L-M). 93,5 s.
+- Le jeton : les trois pris de 04:59 à 05:56 ; essai toutes les 30 s d'abord (§ 5.1 règle 3), puis toutes les 5 s — à 30 s, chaque
+  jeton rendu était repris par un autre agent avant mon essai. Aucun jeton périmé repris (celui de L-C l'a été par L-U).
 
 ### Joué (sans `?test=1`, vrai son ; onglet en arrière-plan la plupart du temps — rAF bridé à 1 image/s par le panneau partagé :
 ### simulation par `__jeu.avancer`, images à la main, et l'onglet mis devant le temps de deux photos)
