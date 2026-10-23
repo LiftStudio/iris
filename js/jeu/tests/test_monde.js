@@ -350,8 +350,9 @@ export default function (jeu) {
       game.fx.calme = true;
       try {
         return poses.map((q) => {
-          // (trois rendus de chauffe — la carte d'ombre gardée en cache se refait après un changement de portes —, puis le moindre de deux)
-          poser(q); V.actif = true; rendre(); rendre(); rendre(); const appels = Math.min(rendre(), rendre()); const a = pixels();
+          // (huit rendus de chauffe — la carte d'ombre gardée en cache se refait après un changement de portes, la carte
+          // d'environnement d'une pièce se prend une face par image —, puis le moindre de trois)
+          poser(q); V.actif = true; for (let i = 0; i < 8; i++) rendre(); const appels = Math.min(rendre(), rendre(), rendre()); const a = pixels();
           let diff = 0;
           if (avecTri) { V.actif = false; rendre(); rendre(); const b = pixels(); for (let i = 0; i < a.length; i += 4) if (Math.max(Math.abs(a[i] - b[i]), Math.abs(a[i + 1] - b[i + 1]), Math.abs(a[i + 2] - b[i + 2])) > 48) diff++; V.actif = true; }
           return { appels, diff: diff / (a.length / 4) };
@@ -371,14 +372,19 @@ export default function (jeu) {
       cands.sort((a, b) => a[3] - b[3]);
       poses = [0, 0.2, 0.4, 0.6, 0.8, 1].map((f) => cands[Math.min(cands.length - 1, Math.round(f * (cands.length - 1)))]).filter(Boolean);
       const enPartie = mesurer(true), ouverte = P.k === 1;
+      // (le témoin : sans les portes pilotées, la pose la plus lointaine — à plus de 8 m — voit par la porte ouverte une salle
+      // que le tri a coupée)
+      const vis = carte().visibilite, Fo = vis.forcees; vis.forcees = null;
+      let temoin; try { const q = poses.length ? [poses[poses.length - 1]] : []; const P0 = poses; poses = q; temoin = mesurer(true)[0]; poses = P0; } finally { vis.forcees = Fo; }
       jeu.quitter('balade'); stabiliser();
       // (la glace de l'accueil, peinte en partie, l'est aussi le temps de la mesure en balade : ses rendus ne sont pas la pièce)
       const Mi = carte().miroirAccueil, c0 = Mi.coupe; Mi.coupe = true;
       let balade; try { carte().maj(0, game); balade = mesurer(false); } finally { Mi.coupe = c0; }
       const ecarts = enPartie.map((m, i) => m.appels - balade[i].appels), pires = enPartie.map((m) => m.diff);
-      const ok = ouverte && poses.length === 6 && ecarts.every((d) => d <= 60) && pires.every((d) => d < 0.004);
-      return { ok, attendu: 'porte ouverte ; six poses ; pixels différents avec / sans le tri < 0,4 % ; appels en partie − balade ≤ 60',
-        obtenu: `ouverte ${ouverte} · ${cands.length} poses possibles, distances ${poses.map((q) => q[3].toFixed(1))} m · appels +${ecarts.join(' +')} (balade ${balade.map((m) => m.appels)}) · pixels ${pires.map((d) => (d * 100).toFixed(2) + ' %').join(' ')}` };
+      const loin = poses.length && poses[poses.length - 1][3] > 8, sensible = !loin || (temoin && temoin.diff > 0.001);
+      const ok = ouverte && poses.length === 6 && ecarts.every((d) => d <= 60) && pires.every((d) => d < 0.004) && sensible;
+      return { ok, attendu: 'porte ouverte ; six poses ; pixels différents avec / sans le tri < 0,4 % ; appels en partie − balade ≤ 60 ; sans `forcees`, la pose lointaine voit un trou',
+        obtenu: `ouverte ${ouverte} · ${cands.length} poses possibles, distances ${poses.map((q) => q[3].toFixed(1))} m · appels +${ecarts.join(' +')} (balade ${balade.map((m) => m.appels)}) · pixels ${pires.map((d) => (d * 100).toFixed(2) + ' %').join(' ')} · témoin sans forcees ${temoin ? (temoin.diff * 100).toFixed(2) + ' %' : '—'}` };
     } finally { jeu.figerQualite(false); }
   });
 
