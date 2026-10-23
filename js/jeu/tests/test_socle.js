@@ -288,10 +288,16 @@ export default function (jeu) {
   }, { delai: 240 });
 
   // 9. L'ÉTAT ET LE DÉTERMINISME
+  // (et l'état des deux autres squelettes de règles : une manche d'équipes de bots au −1, une traque du prop hunt aux props
+  // déguisés — le contrat que L-E et L-F reprennent)
   T('9 verifierEtat, verifierDeterminisme(42, 30)', async () => {
     const e = await jeu.verifierEtat();
     const d = await jeu.verifierDeterminisme(42, 30);
-    return { ok: e && d.egal, attendu: 'état vrai · déterminisme égal', obtenu: `état ${e} · ${d.a} / ${d.b}` };
+    const eF = await jeu.verifierEtat({ mode: 'equipes', zone: 'ss', allies: 1, ennemis: 2, humain: false, secondes: 12 });
+    const eP = await jeu.verifierEtat({ mode: 'prophunt', zone: 'e1', acteurs: 5, humain: false, secondes: 40 });
+    const props = jeu._dernierEtat ? jeu._dernierEtat.e1.acteurs.filter((a) => a.prop).length : 0;
+    return { ok: e && d.egal && eF && eP && props >= 1, attendu: 'état vrai (essai, équipes, prop hunt en traque) · déterminisme égal',
+      obtenu: `état ${e} · ${d.a} / ${d.b} · équipes ${eF} · prop hunt ${eP} (${props} props déguisés)` };
   }, { delai: 240 });
 
   // 10. LE COÛT DE Partie.pas (1 + 3 mannequins + 2 bots)

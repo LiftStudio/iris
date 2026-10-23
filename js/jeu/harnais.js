@@ -11,7 +11,7 @@
 // compare à js/jeu/tests/reference_balade.json, enregistrée sur a8b22dd.
 import * as THREE from 'three';
 import { Player } from '../player.js';
-import { PAS, BORNES_JEU, ZONES_JEU } from './constantes.js';
+import { PAS } from './constantes.js';
 import { hacher } from './rng.js';
 import { MEUBLES, rattraperRegistre, zonerRegistre } from '../registre_meubles.js';
 import { pointsDe, POINTS_APPARITION } from './apparitions.js';

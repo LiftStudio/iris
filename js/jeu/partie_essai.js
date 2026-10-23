@@ -6,7 +6,6 @@
 // C'est le banc des tests du socle et des lots (`?partie=essai`, `__jeu.lancer('essai', …)`).
 //   opts : { graine, mannequins: [{ x, y, z }] | n, bots: n (2 au plus utiles), difficulte, classe ('assaut'), prop, humain = vrai }
 import { Partie } from './partie.js';
-import { POINTS_APPARITION } from './apparitions.js';
 import { TABLE_PORTES_FPS, TABLE_PORTES_PROP } from './monde_partie.js';
 import { Player } from '../player.js';
 
@@ -53,5 +52,3 @@ export class PartieEssai extends Partie {
   }
   regles(dt) { }
 }
-// (les lieux d'apparition, pour qui veut poser des mannequins ailleurs)
-PartieEssai.LIEUX = POINTS_APPARITION;

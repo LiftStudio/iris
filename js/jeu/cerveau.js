@@ -11,7 +11,7 @@
 //   - il VISE le buste avec l'erreur σ∞ de sa difficulté (un écart tiré à chaque balle, de loi de Rayleigh dont la
 //     MÉDIANE vaut σ∞) et une rotation bornée (°/s de sa difficulté) ; il tire par rafales de 3 à 5 avec 0,6 s de pause,
 //     compense le recul (`prendreRecul`) selon sa difficulté, recharge à vide (l'arsenal le fait d'office).
-import { Errant, Pilote } from './pilotage.js';
+import { Errant } from './pilotage.js';
 import { Rng, melanger } from './rng.js';
 import { ZONES_JEU } from './constantes.js';
 import { viderFronts } from './commande.js';

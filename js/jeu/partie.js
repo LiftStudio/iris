@@ -11,7 +11,7 @@
 // ÉVÉNEMENTS (`sur`) et lisent l'état ; `etat()` / `appliquer()` sont l'hôte autoritaire de demain (§ 4.7).
 import * as THREE from 'three';
 import { Rng, hacher } from './rng.js';
-import { PAS, TANGAGE_MAX, VERSION_ETAT, ZONES_JEU } from './constantes.js';
+import { PAS, TANGAGE_MAX, VERSION_ETAT } from './constantes.js';
 import { viderFronts } from './commande.js';
 import { Acteur, CorpsFixe } from './acteur.js';
 import { appliquerCommande, separer } from './mouvement.js';
@@ -30,7 +30,7 @@ import { poserArme } from './pose_arme.js';
 import { Poupee } from './poupee.js';
 import { CorpsProp, deplacerProp } from './corps_prop.js';
 import { majProps, preparerCatalogue, retirerProp } from './deguisements.js';
-import { Cerveau, CerveauBase } from './cerveau.js';
+import { Cerveau } from './cerveau.js';
 import { Errant } from './pilotage.js';
 import { entree } from '../settings.js';
 
@@ -39,7 +39,7 @@ const ANNEAU = 256;
 const DRAPEAUX = ['capFixe', 'sansRangs', 'audible', 'sansSouffle', 'elanAir', 'sprintMul', 'rayon', 'hautCorps', 'basCorps', 'apresPose'];
 // le monde en partie : un par session (ses barrières se calculent une fois)
 const _mondes = new WeakMap();
-const _v = new THREE.Vector3(), _w = new THREE.Vector3();
+const _v = new THREE.Vector3();
 
 export class Partie {
   static prerequis = { nav: true, navProps: false, avatars: true, catalogue: false };
@@ -362,6 +362,7 @@ export class Partie {
     if (this._calque && reprendre) { this.game.paused = false; this.game.input.purger(); }   // hors simulation (le calque, vu par Partie.image)
     this._calque = false;
   }
+  // (lu par js/manette.js et js/touch.js, L-I : A, Start ou un toucher sur le calque relancent sans capture — fermerCalque(vrai))
   get calqueOuvert() { return this._calque; }
   roueOuverte() { return false; }
   mouvementSouris(dx, dy) { }
