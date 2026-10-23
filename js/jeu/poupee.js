@@ -33,9 +33,14 @@ export const POUPEE = {
   // L'AFFAISSEMENT : un corps qui tient encore (adossé à un mur, accroché à un meuble) au-delà de `apres` s est tiré vers
   // le sol (`g` × la pesanteur en plus, pour le buste au-dessus de `haut` m) : il glisse le long du mur au lieu d'y rester
   // debout ; puis il se pose (amorti renforcé après `pose` s) et s'arrête au plus tard à `fin` s
-  affaisse: { apres: 0.3, g: 4.0, haut: 0.3 }, pose: { apres: 1.0, amorti: 0.94 }, fin: 3.0,
-  // LA BASCULE : un buste encore droit au-dessus du bassin (tombé à genoux) est poussé du côté où il penche (`a` m/s²)
-  bascule: { apres: 0.25, haut: 0.35, a: 12 },
+  affaisse: { apres: 0.2, g: 9.0, haut: 0.25 }, pose: { apres: 1.0, amorti: 0.94 }, fin: 3.0,
+  // LA BASCULE : un buste encore droit au-dessus du bassin (tombé à genoux) est poussé du côté où il penche (`a` m/s²) ;
+  // coincé au-delà de `coince` s (un coin, un couloir étroit, le dos à un mur et la tête vers l'autre), du côté où il a la
+  // place de s'allonger (`dirs` caps essayés). Relecture du 23/10 : sur 500 morts tirées (cinq graines), le réglage du
+  // constructeur (bascule 0,25 s, 0,35 m, 12 m/s² ; affaissement 0,3 s, × 4) en laissait 1 à 2 % assises plus d'une seconde,
+  // jusqu'à 2,4 s adossées au mur du couloir est (le test 6 tombait au téléphone : 1,13 s) ; celui-ci : 497 sur 500 à plat
+  // en moins d'une seconde (médiane 0,42 s), les trois autres en 1,04 à 1,21 s, dans le couloir est (1,2 m de large)
+  bascule: { apres: 0.15, haut: 0.25, a: 25, coince: 0.35, dirs: 12 },
   repos: { vitesse: 0.03, duree: 0.3 }, pasMax: 12,          // au repos : aucun point à plus de 3 cm/s pendant 0,3 s
 };
 const POINTS = ['Hips', 'Spine2', 'Head', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightArm', 'RightForeArm', 'RightHand',
@@ -155,8 +160,10 @@ export class Poupee {
     if (this.t > Bq.apres && P.Head.p.y - P.Hips.p.y > Bq.haut) {
       let dx = P.Head.p.x - P.Hips.p.x, dz = P.Head.p.z - P.Hips.p.z, n = Math.hypot(dx, dz);
       // (adossé à un mur depuis moins de 0,2 s : il bascule en s'en écartant, sinon il resterait plaqué contre lui)
-      if (this.t - this.murT < 0.2) { dx = this.murX; dz = this.murZ; n = Math.hypot(dx, dz) || 1; }
+      if (this.libreX !== undefined) { dx = this.libreX; dz = this.libreZ; n = 1; }
+      else if (this.t - this.murT < 0.2) { dx = this.murX; dz = this.murZ; n = Math.hypot(dx, dz) || 1; }
       else if (n < 0.04) { dx = this.dirX; dz = this.dirZ; n = 1; }
+      if (this.libreX === undefined && C && this.t > Bq.apres + Bq.coince) { this._degager(dx / n, dz / n); dx = this.libreX; dz = this.libreZ; n = 1; }
       const k = Bq.a * h * h / n;
       for (const q of [P.Head, P.Spine2]) { q.p.x += dx * k; q.p.z += dz * k; }
     }
@@ -208,6 +215,21 @@ export class Poupee {
     if (vMax < (POUPEE.repos.vitesse * h) ** 2) { this.reposT += h; if (this.reposT >= POUPEE.repos.duree) this.repos = true; }
     else this.reposT = 0;
     if (this.t >= POUPEE.fin) this.repos = true;
+  }
+
+  // COINCÉ : le cap où le buste a la place de s'allonger depuis les hanches (à 60 % et à 100 % de sa longueur, dans la bande
+  // de ses hanches), le plus proche du côté où penche déjà la tête (sinon de (ux, uz)) — jamais par-dessus ses jambes :
+  // adossé à un mur d'un couloir étroit, il glisse le long du couloir ; aucun : (ux, uz). Une fois par poupée.
+  _degager(ux, uz) {
+    const P = this.P, C = this.collisions, H = P.Hips.p, L = Math.max(0.5, H.distanceTo(P.Head.p)), N = POUPEE.bascule.dirs;
+    const hx = P.Head.p.x - H.x, hz = P.Head.p.z - H.z, hn = Math.hypot(hx, hz), vx = hn > 0.04 ? hx / hn : ux, vz = hn > 0.04 ? hz / hn : uz;
+    let best = -Infinity, bx = ux, bz = uz;
+    for (let i = 0; i < N; i++) {
+      const a = i * 2 * Math.PI / N, cx = Math.cos(a), cz = Math.sin(a), s = cx * vx + cz * vz;
+      if (s <= best || !C.libre(H.x + cx * L * 0.6, H.z + cz * L * 0.6, 0.12, H.y - 0.1, 0.35, 0) || !C.libre(H.x + cx * L, H.z + cz * L, 0.11, H.y - 0.1, 0.35, 0)) continue;
+      best = s; bx = cx; bz = cz;
+    }
+    this.libreX = bx; this.libreZ = bz;
   }
 
   // CACHÉE : son temps est fini (le corps a disparu)

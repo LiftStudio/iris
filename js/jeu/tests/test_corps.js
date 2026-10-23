@@ -260,7 +260,10 @@ export default function (jeu) {
     const sol = C().solEn(a.pos.x, a.pos.z, a.pos.y + 0.3), hauteurPieds = Math.max(f1.Left.y, f1.Right.y) - sol;
     // et en jeu (relecture) : accroupi tenu (la simulation), arrêté, en marche, en pas chassés, visant haut et bas — la tête
     // affichée là où les balles la touchent (js/jeu/accroupi.js centrerTete : 13,7 cm d'écart avant la relecture)
-    // (les deux corps : sans arme, et armé — le buste de trois quarts)
+    // (les deux corps : sans arme, et armé — le buste de trois quarts ; posés à chaque image, qu'ils soient ou non dans le
+    // cadre — au téléphone, l'écran en hauteur laisse le second hors du cadre, posé à 4 Hz : la cadence a son test, le 7)
+    const maj = p.cadence.maj.bind(p.cadence);
+    p.cadence.maj = (L, c, n) => { maj(L, c, n); for (const q of L) if (q.joueur && q.corps === q.joueur && !q.local && q.vivant) { q.aPoser = true; q.dessine = true; q.joueur.mesh.visible = true; q.joueur.leger = false; q.poseDt = 1 / 60; } };
     const T1 = new THREE.Vector3(), T2 = new THREE.Vector3(), E = [];
     jeu.commande(40, { accroupi: true }, 2); jeu.commande(41, { accroupi: true }, 2); image(30);
     const tete = teteOs(a, T1).y - sol, sim = teteSimulee(a, T2).y - sol;
