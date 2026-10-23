@@ -284,12 +284,14 @@ export default function (jeu) {
       rayons.push([o.x, o.y, o.z, D.x / l, D.y / l, D.z / l, l + 0.05, P]);
     }
     for (const [ox, oy, oz, dx, dy, dz, tm, P] of rayons) { const r = toucherPoses(ox, oy, oz, dx, dy, dz, tm); if (r) { trouvees++; if (r.pose === P) justes++; } }
-    // 5 cm à côté : un rayon vertical le long d'une face, hors de toute boîte
-    const dehors = (x, z, y) => !L.some((Q) => y > Q.y0 - 0.05 && y < Q.y1 + 0.05 && (() => { const lx = (x - Q.cx) * Q.c + (z - Q.cz) * Q.s, lz = -(x - Q.cx) * Q.s + (z - Q.cz) * Q.c; return Math.abs(lx) <= Q.hx && Math.abs(lz) <= Q.hz; })());
+    // 5 cm à côté : un rayon vertical le long d'une face, hors de toute boîte — sur TOUTE la hauteur du rayon (F2 : le −1 du lot
+    // R empile des meubles, les micro-ondes de l'étagère au-dessus d'un plan ; le rayon, du dessus de P + 0,5 jusqu'à son pied,
+    // touchait la boîte d'au-dessus, que le contrôle à mi-hauteur de P ne voyait pas)
+    const dehors = (x, z, ya, yb) => !L.some((Q) => Q.y1 > ya - 0.05 && Q.y0 < yb + 0.05 && (() => { const lx = (x - Q.cx) * Q.c + (z - Q.cz) * Q.s, lz = -(x - Q.cx) * Q.s + (z - Q.cz) * Q.c; return Math.abs(lx) <= Q.hx && Math.abs(lz) <= Q.hz; })());
     for (let k = 0; k < N && essais < 4 * N; essais++) {
       const P = L[R.int(L.length)], c = Math.cos(P.cap), s = Math.sin(P.cap), sx = R.next() < 0.5 ? 1 : -1;
-      const lx = sx * (P.hx + 0.05), x = P.cx + lx * c, z = P.cz - lx * s, cy = (P.y0 + P.y1) / 2;
-      if (!dehors(x, z, cy)) continue;
+      const lx = sx * (P.hx + 0.05), x = P.cx + lx * c, z = P.cz - lx * s;
+      if (!dehors(x, z, P.y0, P.y1 + 0.5)) continue;
       k++;
       if (toucherPoses(x, P.y1 + 0.5, z, 0, -1, 0, P.y1 - P.y0 + 0.5)) faux++;
     }
@@ -419,14 +421,10 @@ export default function (jeu) {
   function sousUneTable(Cc) {
     const cor = [...CATALOGUE.values()].find((T0) => T0.type === 'corbeille'), mi = [...CATALOGUE.values()].find((T0) => T0.type === 'tabouret-miura');
     if (!cor || !mi) return { ok: false, texte: 'pas de corbeille ou de Miura' };
-    for (const f of Cc.formes) {
-      if (f.off || !f.joueur || f.t !== 'b' || !Number.isFinite(f.y1)) continue;
-      const sol = Cc.solEn((f.x0 + f.x1) / 2, (f.z0 + f.z1) / 2, f.y0 + 0.1);
-      const dessous = f.y0 - sol, ep = f.y1 - f.y0;
-      if (dessous < 0.55 || dessous > 0.8 || ep > 0.15 || f.x1 - f.x0 < 0.6 || f.z1 - f.z0 < 0.5) continue;
+    const essayer = (f, sol, quoi) => {
       // de part et d'autre de la table, le long de x, au sol
-      const z = (f.z0 + f.z1) / 2, x0 = f.x0 - 0.4, x1 = (f.x0 + f.x1) / 2;
-      if (!Cc.libre(x0, z, cor.rayon, sol, cor.bande.haut, cor.bande.bas) || !Cc.libre(x1, z, cor.rayon, sol, cor.bande.haut, cor.bande.bas)) continue;
+      const z = (f.z0 + f.z1) / 2, x0 = f.x0 - 0.4, x1 = (f.x0 + f.x1) / 2, dessous = f.y0 - sol;
+      if (!Cc.libre(x0, z, cor.rayon, sol, cor.bande.haut, cor.bande.bas) || !Cc.libre(x1, z, cor.rayon, sol, cor.bande.haut, cor.bande.bas)) return null;
       const essai = (T0) => {
         const c = new CorpsProp(Cc, {}); c.porter(T0); c.pos.set(x0, sol, z); c.posPrec.copy(c.pos);
         const a = { id: 0, corps: c, prop: { T: T0, cap: 0, fige: false, verrou: false }, endurance: 100 }, cmd = creerCommande();
@@ -436,9 +434,25 @@ export default function (jeu) {
       };
       const xc = essai(cor), xm = essai(mi);
       const ok = xc > f.x0 + 0.1 && xm < f.x0 + 0.05;
-      return { ok, texte: `sous la table (${r3((f.x0 + f.x1) / 2)} ; ${r3(z)}, plateau ${r3(dessous)} m) : corbeille jusqu’en x ${r3(xc)}, Miura arrêté en ${r3(xm)} (bord ${r3(f.x0)})` };
+      return { ok, texte: `sous ${quoi} (${r3((f.x0 + f.x1) / 2)} ; ${r3(z)}, plateau ${r3(dessous)} m) : corbeille jusqu’en x ${r3(xc)}, Miura arrêté en ${r3(xm)} (bord ${r3(f.x0)})` };
+    };
+    for (const f of Cc.formes) {
+      if (f.off || !f.joueur || f.t !== 'b' || !Number.isFinite(f.y1)) continue;
+      const sol = Cc.solEn((f.x0 + f.x1) / 2, (f.z0 + f.z1) / 2, f.y0 + 0.1);
+      const dessous = f.y0 - sol, ep = f.y1 - f.y0;
+      if (dessous < 0.55 || dessous > 0.8 || ep > 0.15 || f.x1 - f.x0 < 0.6 || f.z1 - f.z0 < 0.5) continue;
+      const r = essayer(f, sol, 'la table'); if (r) return r;
     }
-    return { ok: false, texte: 'aucune table à plateau seul' };
+    // (F2 : le −1 du lot R n'a plus de table à plateau seul — ses meubles sont des boîtes pleines, mange-debout et tables
+    // hautes —, ni le reste de l'école : un plateau d'essai de 1 × 0,7 m à 0,70 m, posé le temps du test dans la rue, puis
+    // retiré — dernière forme du monde, les autres gardent leur rang)
+    const x0 = 6, z0 = 4.2, sol = Cc.solEn(6.5, 4.55, 0.3), n0 = Cc.formes.length, cles = new Set(Cc.grille.keys());
+    const f = Cc.ajouterBoite(x0, z0, x0 + 1, z0 + 0.7, { y0: sol + 0.7, y1: sol + 0.74 });
+    try { return essayer(f, sol, 'un plateau d’essai') || { ok: false, texte: 'aucune table à plateau seul, plateau d’essai pas libre' }; }
+    finally {
+      Cc.formes.length = n0;
+      for (const [k, Lg] of Cc.grille) { const i = Lg.indexOf(f); if (i >= 0) Lg.splice(i, 1); if (!Lg.length && !cles.has(k)) Cc.grille.delete(k); }
+    }
   }
   function pasLaPlace(Cc) {
     // le baby-foot d'essai (aux cotes de carte_props § 2), le temps du test
