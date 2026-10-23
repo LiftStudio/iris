@@ -29,7 +29,7 @@
 import * as THREE from 'three';
 import { MEUBLES, rattraperRegistre, zonerRegistre, copieMeuble, cleCase, CASE_GRILLE, familleDe } from '../registre_meubles.js';
 import { piecesDe, POINTS_APPARITION } from './apparitions.js';
-import { CorpsProp, coinsLibres } from './corps_prop.js';
+import { CorpsProp, coinsLibres, A_LA_SORTIE } from './corps_prop.js';
 import { niveauDe } from './constantes.js';
 import { melanger } from './rng.js';
 import { Balistique } from './balistique.js';
@@ -485,6 +485,7 @@ export function majProps(partie, dt) {
 }
 // la surbrillance retirée de la scène (retirerProp ; elle revient d'elle-même à la prochaine image qui vise un meuble)
 export function oublierAffichage() { for (const [, S] of _surb) if (S.parent) S.parent.remove(S); }
+A_LA_SORTIE.add(oublierAffichage);
 
 // ---------------------------------------------------------------- LA CRÉDIBILITÉ
 // le pas de la rangée d'une vraie pose (médiane de la distance à la plus proche semblable de la pièce), 0 si elle est seule

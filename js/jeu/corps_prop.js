@@ -121,8 +121,11 @@ export class CorpsProp {
     this.vel.set(0, 0, 0); this.plaque = true;
     return true;
   }
-  dispose() { this.C = null; }
+  // (la fin d'une partie : Partie.sortir libère chaque corps de prop — l'affichage des props s'y range, js/jeu/deguisements.js)
+  dispose() { this.C = null; for (const f of A_LA_SORTIE) { try { f(this); } catch (e) { /* (un rangement qui échoue n'empêche pas la sortie) */ } } }
 }
+// les rangements à faire quand un corps de prop est libéré (deguisements.js y met le retrait de la surbrillance)
+export const A_LA_SORTIE = new Set();
 
 // LES COINS d'un meuble posé (sa boîte orientée au sol) : tous libres ? (un baby-foot de 1,48 m dans une porte de 0,8 m :
 // « Pas la place » — le disque de 0,5 m ne suffit pas à le dire)
