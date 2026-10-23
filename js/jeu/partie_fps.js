@@ -1,118 +1,629 @@
 // =====================================================================
-//  LES RÈGLES DU COMBAT — squelette du socle S0 (22/10), rempli par le lot L-E (vague 3 : L-P)
+//  LES RÈGLES DU COMBAT — lot L-E (23/10 ; spec §§ 2.3-2.5, 3.5, 3.8, 4.5.12) ; vague 3 : L-P (progression, séries)
 // =====================================================================
-// Match à mort par équipes (SISR contre SLAM), chacun pour soi, domination (spec §§ 2.3-2.5, 3.5, 3.8). Le squelette :
-// équipes et chacun pour soi — présentation 3 s, décompte 3 s (précédé du calque « CLIQUE POUR JOUER » au clavier-souris,
-// vu par Partie.image), manche, fin au score ou au temps, réapparition au bout de 3,0 s (2,0 s chacun pour soi), un
-// chargeur rendu à chaque élimination ; la domination retombe sur les équipes, avec une annonce.
-//   opts : { mode: 'equipes'|'melee'|'domination', zone, allies, ennemis, difficulte, duree, scoreCible, classe, avatars, graine, humain = true }
+// Trois modes, tous en solo contre des bots : MATCH À MORT PAR ÉQUIPES (SISR bleu contre SLAM orange, +1 par élimination,
+// 40 ou 10:00), CHACUN POUR SOI (20 ou 10:00, podium des trois premiers), DOMINATION (trois anneaux — A le hall, B la pause
+// du −1, C la pause du 1er —, un point d'équipe toutes les 3 s par anneau tenu, mi-temps à 75 ou 5:00 où les camps
+// s'échangent, 150 ou 10:00). Une partie, seconde par seconde : PRÉSENTATION 3 s (la caméra file de derrière l'équipe
+// jusque dans les yeux de Haythem, le bandeau du mode) → DÉCOMPTE 3 s (on regarde, on ne bouge pas ; au clavier-souris,
+// le calque « CLIQUE POUR JOUER » l'attend : Partie.image) → MANCHE → (MI-TEMPS 5 s) → « VICTOIRE » 2,5 s → FIN (l'événement
+// `fin` et son bilan : l'écran de fin de L-U s'y abonne).
+// Ce que les règles tiennent, à chaque pas (étape 8 de Partie.pas, § 4.3.2) : la RÉGÉNÉRATION (4,0 s après le dernier
+// dégât, puis 35 PV/s : 0 → 100 en 2,86 s), la PROTECTION d'apparition (1,2 s, posée par Acteur.reapparaitre, finie au
+// premier tir), les RÉAPPARITIONS (3,0 s, 2,0 s en chacun pour soi ; Espace / A passe la caméra de mort au bout d'1 s) au
+// point de `choisirApparition` (L-D) — jamais sous les yeux d'un ennemi : s'il l'est, un repli parmi les lieux de la zone,
+// et à défaut on attend un quart de seconde —, le BARÈME (§ 3.8 : élimination 100, tête +25, couteau +25, au-delà de 30 m
+// +50, assistance 50, capture 150, neutralisation 75, défense 50 ; suicide −1 élimination), UN CHARGEUR rendu au tireur à
+// chaque élimination (§ 3.5, Arsenal.ajouterChargeur), les captures de la domination, la fin. Les dégâts, eux, ne passent
+// que par Partie.infliger (la protection, le tir allié coupé, les assistances à 30 dégâts en 5 s y sont déjà).
+// Tout est SIMULATION (fichier soumis à la pureté, § 4.1 règle 4) : le hasard est `partie.rng` ou un Rng semé par
+// `melanger(graine, id, …)`, le temps `partie.t`, les entrées la commande ; l'affichage lit `partie.hud` et les événements
+// (`phase`, `annonce`, `score`, `capture`, `apparition`, `fin`). Seule la caméra de la présentation (camera, une fois par
+// image) est de l'affichage. L'état de ces règles entre dans `etat()` (bloc `fps`) : l'hôte autoritaire de demain.
+//   opts : { mode: 'equipes'|'melee'|'domination', zone, allies, ennemis, difficulte, duree, scoreCible, classe, avatars, graine,
+//            humain = true, campHumain = 'A', appareil ('pc'|'tel' : les effectifs d'un appareil, sinon celui-ci) }
+import * as THREE from 'three';
 import { Partie } from './partie.js';
-import { departs, choisirApparition, pointsDe } from './apparitions.js';
-import { EQUIPES, ZONES_JEU } from './constantes.js';
+import { departs, choisirApparition, ramenerPoint, POINTS_APPARITION } from './apparitions.js';
+import { EQUIPES, ZONES_JEU, LIMITES, PIECES, BORNES_JEU } from './constantes.js';
 import { FICHES_BOTS, FICHE_HAYTHEM } from './avatars.js';
+import { ARMES, CLASSES } from './armes.js';
 import { TABLE_PORTES_FPS } from './monde_partie.js';
+import { Rng, melanger } from './rng.js';
 import { TELEPHONE } from '../appareil.js';
 
-const PRESENTATION = 3, DECOMPTE = 3;
-const BOTS_CLASSES = [['assaut', 0.4], ['infiltration', 0.3], ['defense', 0.2], ['tireur', 0.1]];
+// LES RÈGLES (§§ 3.5, 3.8 : valeurs de départ, réglées par la vague 3 et l'intégration)
+export const REGLES_FPS = {
+  presentation: 3, decompte: 3, miTemps: 5, annonceFin: 2.5,
+  modes: {
+    equipes: { nom: 'MATCH À MORT PAR ÉQUIPES', duree: 600, limite: { pc: 40, tel: 20 }, unite: 'ÉLIMINATIONS', reapparition: 3.0,
+      effectifs: { pc: { allies: 3, ennemis: 4 }, tel: { allies: 1, ennemis: 2 } } },
+    melee: { nom: 'CHACUN POUR SOI', duree: 600, limite: { pc: 20, tel: 20 }, unite: 'ÉLIMINATIONS', reapparition: 2.0,
+      effectifs: { pc: { allies: 0, ennemis: 5 }, tel: { allies: 0, ennemis: 3 } } },
+    domination: { nom: 'DOMINATION', duree: 600, limite: { pc: 150, tel: 150 }, unite: 'POINTS', reapparition: 3.0,
+      effectifs: { pc: { allies: 3, ennemis: 4 }, tel: { allies: 1, ennemis: 2 } } },
+  },
+  bornes: { allies: [0, 4], ennemis: [1, 5] },     // (le menu : Alliés 0-4 / Ennemis 1-5 ; le plafond des bots : LIMITES)
+  regenDelai: 4.0, regenPvS: 35,                   // (la protection d'apparition, 1,2 s, est posée par Acteur.reapparaitre)
+  passer: 1.0,                                     // Espace / A : la caméra de mort passée au plus tôt 1 s après la mort
+  attente: 0.25, attenteMax: 2.0,                  // tous les lieux vus d'un ennemi : on réessaie toutes les 0,25 s, 2 s au plus
+  derniereMinute: 60,
+  bareme: { elim: 100, tete: 25, couteau: 25, loin: 50, loinM: 30, assistance: 50, capture: 150, neutralisation: 75, defense: 50, suicide: -100 },
+  // les classes des bots, tirées par la graine (§ 3.3) ; « Mixte » : alliés Réguliers, ennemis tirés entre Recrue et Aguerri
+  classesBots: [['assaut', 0.4], ['infiltration', 0.3], ['defense', 0.2], ['tireur', 0.1]],
+  mixte: { allies: 'regulier', ennemis: ['recrue', 'regulier', 'aguerri'] },
+  difficultes: ['recrue', 'regulier', 'aguerri', 'veteran', 'mixte'],
+};
+// LA DOMINATION (§ 2.5) : les centres sont INDICATIFS, ramenés à la préparation (ramenerPoint, puis un disque libre de
+// 1,5 m cherché autour : le lot R refait le −1, B peut tomber dans un meuble neuf)
+export const DOMINATION = {
+  points: [
+    { id: 'A', nom: 'le hall', x: 14.88, y: 0, z: -3.12, r: 2.5 },
+    { id: 'B', nom: 'la pause du −1', x: 9.38, y: -3.06, z: -9.37, r: 3 },
+    { id: 'C', nom: 'la pause du 1er', x: 12.63, y: 3.5, z: -7.87, r: 3 },
+  ],
+  capture: 8, neutralisation: 4,                   // s, seul : un point neutre pris en 8 s ; un point adverse neutralisé en 4 s (puis 8 : 12 s)
+  vitesses: [0, 1, 1.5, 2],                        // × à 1, 2, 3 et plus dans l'anneau
+  retour: 0.5,                                     // une prise entamée puis abandonnée retombe à la moitié de sa vitesse
+  tick: 3, hauteur: 1.6,                           // 1 point d'équipe toutes les 3 s par anneau tenu ; dans l'anneau = à ± 1,6 m de son sol
+  ramener: { rayonMax: 3, degageMin: 1.5 }, libre: 1.5, defense: 1.0,   // (défense : le tireur ou sa victime à r + 1 m d'un anneau tenu)
+};
+
+const DEG = Math.PI / 180;
+const clampEntier = (v, [lo, hi]) => Math.max(lo, Math.min(hi, Math.round(Number.isFinite(+v) ? +v : lo)));
+const nomCourt = (id) => { const f = ARMES[id]; return f ? f.nom.split(' «')[0] : (id || null); };
+
+// LA CLASSE d'un bot, tirée par la graine : Assaut 40 %, Infiltration 30 %, Défense 20 %, Tireur 10 % (§ 3.3)
+export function tirerClasseBot(graine, id) {
+  let u = new Rng(melanger(graine >>> 0, id | 0, 0xc1a5)).next();
+  for (const [c, p] of REGLES_FPS.classesBots) { if (u < p) return c; u -= p; }
+  return 'assaut';
+}
+// LES EFFECTIFS d'une partie (le menu de L-U les montre ; § 3.10) : alliés 0-4, ennemis 1-5, au plus 9 bots sur PC (5 au
+// téléphone), avertissement au-delà de 7 (3) ; chacun pour soi : `ennemis` = les bots
+export function effectifs(mode, o = {}, tel = TELEPHONE) {
+  const R = REGLES_FPS, M = R.modes[mode] || R.modes.equipes, E = M.effectifs[tel ? 'tel' : 'pc'], Lim = LIMITES[tel ? 'tel' : 'pc'];
+  let allies = mode === 'melee' ? 0 : clampEntier(o.allies ?? E.allies, R.bornes.allies);
+  let ennemis = clampEntier(o.ennemis ?? E.ennemis, mode === 'melee' ? [1, Lim.bots] : R.bornes.ennemis);
+  while (allies + ennemis > Lim.bots) { if (ennemis > allies || allies === 0) ennemis--; else allies--; }
+  return { allies, ennemis, bots: allies + ennemis, max: Lim.bots, conseil: Lim.conseil, avertissement: allies + ennemis > Lim.conseil };
+}
+
+const _o = new THREE.Vector3(), _f = new THREE.Vector3(), _p = new THREE.Vector3(), _c = new THREE.Vector3();
 
 export class PartieFPS extends Partie {
   constructor(game, opts, deps) {
     super(game, opts, deps);
-    const o = this.opts;
+    const o = this.opts, R = REGLES_FPS;
     this.mode = o.mode === 'melee' || o.mode === 'domination' ? o.mode : 'equipes';
     this.id = this.mode;
-    if (this.mode === 'domination') { this.mode = 'equipes'; this._dominationRepli = true; }   // (L-E)
     this.zone = o.zone || 'ecole';
-    if (!ZONES_JEU[this.zone] || !ZONES_JEU[this.zone].modes.includes('combat')) this.zone = 'ecole';
-    this.duree = o.duree ?? 600;
-    this.scoreCible = o.scoreCible ?? (this.mode === 'melee' ? 20 : TELEPHONE ? 20 : 40);
-    this.reapparition = this.mode === 'melee' ? 2.0 : 3.0;
-    this.scores = this.mode === 'equipes' ? { A: 0, B: 0 } : null;
-    this.gagnant = null;
+    // (une zone inconnue, une zone du prop hunt, la domination hors de toute l'école : la partie est REFUSÉE, avec sa raison)
+    const refus = PartieFPS.refus({ ...o, mode: this.mode, zone: this.zone });
+    if (refus) throw new Error('[jeu] ' + refus);
+    this.tel = o.appareil ? o.appareil === 'tel' : TELEPHONE;
+    const M = R.modes[this.mode];
+    this.nomMode = M.nom;
+    this.duree = o.duree ?? M.duree;
+    this.scoreCible = o.scoreCible ?? M.limite[this.tel ? 'tel' : 'pc'];
+    this.miTempsCible = this.mode === 'domination' ? Math.ceil(this.scoreCible / 2) : null;
+    this.reapparition = M.reapparition;
+    this.dPresentation = o.presentation ?? R.presentation; this.dDecompte = o.decompte ?? R.decompte;
+    this.effectifs = effectifs(this.mode, o, this.tel);
+    this.scores = this.mode === 'melee' ? null : { A: 0, B: 0 };
+    this.camp = o.campHumain === 'B' ? 'B' : 'A';
+    this.cotes = { A: 'A', B: 'B' };              // le côté de départ de chaque équipe (échangé à la mi-temps)
+    this.tJeu = 0; this.chrono = this.duree; this.gagnant = null; this.miTempsFaite = false; this.minuteDite = false;
+    this.ext = new Map();                         // id → { serie, serieMax, suicides, tirsTouchants, captures, neutralisations, defenses }
+    this.points = this.hud.points;                // (domination : le même tableau que hud.points — il entre dans l'état, § 4.7)
+    this.mortLocal = null; this._lacet0 = null;
+    this._tireurs = new Set(); this._toucheurs = new Set(); this._zoneTouche = new Map(); this._candidats = null;
+  }
+  // une partie qu'on ne lance pas, et pourquoi (null : elle se lance) — le menu peut griser avec la raison
+  static refus(o = {}) {
+    const zone = o.zone || 'ecole', Z = ZONES_JEU[zone], mode = o.mode || 'equipes';
+    if (!REGLES_FPS.modes[mode]) return `mode de combat inconnu : « ${mode} »`;
+    if (!Z) return `zone de jeu inconnue : « ${zone} »`;
+    if (!Z.modes.includes('combat')) return `« ${Z.nom} » n’est pas une zone de combat`;
+    if (mode === 'domination' && zone !== 'ecole') return `la domination ne se joue que sur toute l’école (zone « ${Z.nom} » refusée)`;
+    if (o.difficulte && !REGLES_FPS.difficultes.includes(o.difficulte)) return `difficulté inconnue : « ${o.difficulte} »`;
+    return null;
   }
   tablePortes() { return TABLE_PORTES_FPS; }
-  _classeBot() { let u = this.rng.next(); for (const [c, p] of BOTS_CLASSES) { if (u < p) return c; u -= p; } return 'assaut'; }
-  _fiche(k) {
-    const ids = this.opts.avatars || [];
-    const F = ids.length ? FICHES_BOTS.filter((f) => ids.includes(f.id)) : [];
-    return F.length ? F[k % F.length] : FICHE_HAYTHEM;
+
+  // ---------------------------------------------------------------- la préparation : les anneaux de la domination
+  async preparer(progres) {
+    await super.preparer(progres);
+    if (this.mode === 'domination') this._poserAnneaux();
+  }
+  _poserAnneaux() {
+    const D = DOMINATION;
+    this.points.length = 0;
+    for (const d of D.points) {
+      let q = null;
+      try { q = ramenerPoint(this.nav, d.x, d.y, d.z, D.ramener); } catch (e) { q = null; }
+      q = this._degager(q || d, d);
+      this.points.push({ id: d.id, nom: d.nom, x: q.x, y: q.y, z: q.z, r: d.r, possesseur: null, capture: { equipe: null, k: 0 }, tenu: 0,
+        presents: { A: 0, B: 0 }, ecart: Math.round(Math.hypot(q.x - d.x, q.z - d.z) * 100) / 100 });
+    }
+  }
+  // un disque LIBRE de 1,5 m au même sol, cherché en spirale autour du point ramené (3 m au plus), sinon le point tel quel
+  _degager(q, d) {
+    const C = this.game.collisions, R = DOMINATION.libre;
+    if (!C) return { x: q.x, y: q.y, z: q.z };
+    const sol = (x, z) => C.solEn(x, z, (q.y ?? d.y) + 0.3);
+    const y0 = sol(q.x, q.z);
+    if (Math.abs(y0 - (q.y ?? d.y)) < 0.3 && C.libre(q.x, q.z, R, y0)) return { x: q.x, y: y0, z: q.z };
+    for (let r = 0.25; r <= DOMINATION.ramener.rayonMax + 1e-9; r += 0.25) {
+      const n = Math.max(8, Math.round(2 * Math.PI * r / 0.25));
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * 2 * Math.PI, x = q.x + r * Math.cos(a), z = q.z + r * Math.sin(a), y = sol(x, z);
+        if (Math.abs(y - d.y) < 0.3 && C.libre(x, z, R, y)) return { x, y, z };
+      }
+    }
+    return { x: q.x, y: y0, z: q.z };
+  }
+
+  // ---------------------------------------------------------------- les acteurs
+  // la fiche et le nom d'un bot : l'ami coché (dans l'ordre, un 2e « Gabriel 2 » au-delà de six), sinon Haythem cloné et
+  // teint — avec le nom d'un ami tout de même (le fil des éliminations ne dit pas « Haythem [FA-24] Haythem »)
+  _ficheBot(k) {
+    const ids = this.opts.avatars || [], F = ids.length ? FICHES_BOTS.filter((f) => ids.includes(f.id)) : [];
+    const L = F.length ? F : FICHES_BOTS, f = L[k % L.length], tour = Math.floor(k / L.length);
+    const nom = f.nom + (tour ? ' ' + (tour + 1) : '');
+    return F.length ? (tour ? { ...f, nom } : f) : { ...FICHE_HAYTHEM, nom };
+  }
+  _difficulte(id, allie) {
+    const d = this.opts.difficulte || 'regulier';
+    if (d !== 'mixte') return d;
+    if (allie) return REGLES_FPS.mixte.allies;
+    const L = REGLES_FPS.mixte.ennemis;
+    return L[Math.floor(new Rng(melanger(this.graine, id, 0x6d69)).next() * L.length)];
+  }
+  _ext(a) {
+    let x = this.ext.get(a.id);
+    if (!x) { x = { serie: 0, serieMax: 0, suicides: 0, tirsTouchants: 0, captures: 0, neutralisations: 0, defenses: 0 }; this.ext.set(a.id, x); }
+    return x;
   }
   peupler() {
-    const o = this.opts, humain = o.humain !== false;
-    const nA = this.mode === 'melee' ? 0 : (o.allies ?? (TELEPHONE ? 1 : 3)) + (humain ? 1 : 0);
-    const nB = this.mode === 'melee' ? 0 : (o.ennemis ?? (TELEPHONE ? 2 : 4));
-    let id = 0;
-    const diff = o.difficulte || 'regulier';
-    if (this.mode === 'equipes') {
-      const dA = departs(this.zone, 'A', nA, this.rng), dB = departs(this.zone, 'B', nB, this.rng);
-      for (let k = 0; k < nA; k++) {
-        const p = dA[k], loc = humain && k === 0;
-        this.ajouterActeur({ id: id++, nom: loc ? 'Haythem' : this._fiche(k).nom, fiche: loc ? FICHE_HAYTHEM : this._fiche(k), equipe: 'A', local: loc, humain: loc,
-          x: p.x, y: p.y, z: p.z, lacet: p.lacet, classe: loc ? o.classe || 'assaut' : this._classeBot(), cerveau: loc ? null : 'minimal', difficulte: diff });
-      }
-      for (let k = 0; k < nB; k++) {
-        const p = dB[k];
-        this.ajouterActeur({ id: id++, nom: this._fiche(k + nA).nom, fiche: this._fiche(k + nA), equipe: 'B', x: p.x, y: p.y, z: p.z, lacet: p.lacet,
-          classe: this._classeBot(), cerveau: 'minimal', difficulte: diff });
+    const o = this.opts, humain = o.humain !== false, E = this.effectifs;
+    const classeH = CLASSES[o.classe] ? o.classe : 'assaut';
+    let id = 0, kBot = 0;
+    const bot = (equipe, p, allie) => {
+      const i = id++, f = this._ficheBot(kBot++);
+      return this.ajouterActeur({ id: i, nom: f.nom, fiche: f, equipe, x: p.x, y: p.y, z: p.z, lacet: p.lacet, classe: tirerClasseBot(this.graine, i),
+        cerveau: 'minimal', difficulte: this._difficulte(i, allie) });
+    };
+    if (this.mode === 'melee') {
+      const n = E.ennemis + (humain ? 1 : 0), L = this._placerMelee(n);
+      for (let k = 0; k < n; k++) {
+        if (humain && k === 0) this.ajouterActeur({ id: id++, nom: 'Haythem', fiche: FICHE_HAYTHEM, equipe: null, local: true, humain: true, x: L[k].x, y: L[k].y, z: L[k].z,
+          lacet: L[k].lacet, classe: classeH });
+        else bot(null, L[k], false);
       }
     } else {
-      // chacun pour soi : chacun à un lieu différent de la zone
-      const n = (o.ennemis ?? (TELEPHONE ? 3 : 5)) + (humain ? 1 : 0);
-      const L = pointsDe(this.zone);
-      for (let k = 0; k < n; k++) {
-        const p = L.length ? L[k % L.length] : { x: 14.88, y: 0, z: -3.12 }, loc = humain && k === 0;
-        this.ajouterActeur({ id: id++, nom: loc ? 'Haythem' : this._fiche(k).nom, fiche: loc ? FICHE_HAYTHEM : this._fiche(k), equipe: null, local: loc, humain: loc,
-          x: p.x + (k >= L.length ? 1.5 : 0), y: p.y, z: p.z, lacet: 0, classe: loc ? o.classe || 'assaut' : this._classeBot(), cerveau: loc ? null : 'minimal', difficulte: diff });
+      const mon = humain ? this.camp : 'A', autre = mon === 'A' ? 'B' : 'A';
+      const nMon = E.allies + (humain ? 1 : 0), nAutre = E.ennemis;
+      const dM = departs(this.zone, this.cotes[mon], nMon, this.rng), dA = departs(this.zone, this.cotes[autre], nAutre, this.rng);
+      for (let k = 0; k < nMon; k++) {
+        if (humain && k === 0) this.ajouterActeur({ id: id++, nom: 'Haythem', fiche: FICHE_HAYTHEM, equipe: mon, local: true, humain: true, x: dM[k].x, y: dM[k].y, z: dM[k].z,
+          lacet: dM[k].lacet, classe: classeH });
+        else bot(mon, dM[k], true);
+      }
+      for (let k = 0; k < nAutre; k++) bot(autre, dA[k], false);
+    }
+    for (const a of this.acteurs) this._ext(a);
+    if (this.local) this._lacet0 = this.local.cmd.lacet;
+    this._geler(true);
+    this.chrono = this.duree;
+    // (les règles écoutent la simulation : l'élimination, le tir — la protection finie —, la touche — la zone, la précision)
+    this.sur('elim', (e) => this._elim(e));
+    this.sur('tir', (e) => {
+      this._tireurs.add(e.a);
+      const a = this.acteurParId(e.a);
+      if (a && a.protegeT > this.t) a.protegeT = this.t;
+    });
+    this.sur('touche', (e) => { this._toucheurs.add(e.par); this._zoneTouche.set(e.cible, e.zone); });
+    this.phaseVers('presentation', this.dPresentation);
+    this.annonce(this._bandeau(), 'presentation');
+  }
+  _bandeau() {
+    const M = REGLES_FPS.modes[this.mode], Z = ZONES_JEU[this.zone], mn = Math.floor(this.duree / 60), s = Math.round(this.duree % 60);
+    const camps = this.mode === 'melee' ? '' : ` · ${EQUIPES.A.nom} CONTRE ${EQUIPES.B.nom}`;
+    return `${M.nom}${camps} · ${this.scoreCible} ${M.unite} · ${mn}:${String(s).padStart(2, '0')} · ${Z.nom.toUpperCase()}`;
+  }
+  // tout le monde figé (présentation, décompte, mi-temps, fin) ou rendu au jeu : le corps ne bouge pas, l'arme ne tire pas
+  _geler(v) { for (const a of this.acteurs) { a.gele = v; if (a.arsenal) a.arsenal.bloque = v; } }
+
+  // ---------------------------------------------------------------- les lieux : départs du chacun pour soi, repli des réapparitions
+  // les lieux de la zone (les points de carte_monde § 8, les départs des camps, et leurs voisins à 1,5 m), libres et au
+  // même sol, dans la rue bornée ; calculés une fois par partie
+  candidats() {
+    if (this._candidats) return this._candidats;
+    const Z = ZONES_JEU[this.zone] || ZONES_JEU.ecole, P = new Set(Z.pieces === '*' ? PIECES : Z.pieces), C = this.game.collisions, B = BORNES_JEU;
+    const base = POINTS_APPARITION.filter((p) => P.has(p.zone)).map((p) => [p.x, p.y, p.z]);
+    for (const k of ['A', 'B']) for (const d of (Z.departs && Z.departs[k]) || []) base.push(d);
+    const L = [];
+    for (const [x0, y0, z0] of base) {
+      for (const [ox, oz] of [[0, 0], [1.5, 0], [-1.5, 0], [0, 1.5], [0, -1.5]]) {
+        const x = x0 + ox, z = z0 + oz;
+        if (x < B.xMin + 0.3 || x > B.xMax - 0.3 || z < B.zMin + 0.3 || z > B.zMax - 0.3) continue;
+        let y = y0;
+        if (C) { y = C.solEn(x, z, y0 + 0.3); if (Math.abs(y - y0) > 0.3 || !C.libre(x, z, 0.3, y)) continue; }
+        if (L.some((q) => Math.hypot(q.x - x, q.z - z) < 1.0 && Math.abs(q.y - y) < 1)) continue;
+        L.push({ x, y, z });
       }
     }
-    for (const a of this.acteurs) a.gele = true;
-    this.chrono = this.duree;
-    this.phaseVers('presentation', PRESENTATION);
-    this.annonce(this.mode === 'melee' ? 'CHACUN POUR SOI' : `MATCH À MORT PAR ÉQUIPES · ${EQUIPES.A.nom} CONTRE ${EQUIPES.B.nom}`, 'info');
-    if (this._dominationRepli) this.annonce('DOMINATION : bientôt — match à mort par équipes', 'info');
-    // (une élimination : un chargeur rendu au tireur, le score ; la réapparition programmée)
-    this.sur('elim', (e) => this._elim(e));
+    // (le regard : vers le milieu des lieux de la zone, au même niveau s'il y en a)
+    for (const q of L) {
+      const M = L.filter((r) => Math.abs(r.y - q.y) < 1.5), mx = M.reduce((s, r) => s + r.x, 0) / M.length, mz = M.reduce((s, r) => s + r.z, 0) / M.length;
+      q.lacet = Math.hypot(mx - q.x, mz - q.z) > 1 ? Math.atan2(-(mx - q.x), -(mz - q.z)) : 0;
+    }
+    this._candidats = L;
+    return L;
   }
+  // chacun pour soi, au départ : chacun au lieu le plus loin de ceux déjà placés (le premier tiré par la graine)
+  _placerMelee(n) {
+    const L = this.candidats(), out = [];
+    if (!L.length) { for (let k = 0; k < n; k++) out.push({ x: 14.88 + (k % 3) * 1.5, y: 0, z: -3.12 + Math.floor(k / 3) * 1.5, lacet: 0 }); return out; }
+    for (let k = 0; k < n; k++) {
+      let best = null;
+      if (!out.length) best = L[this.rng.int(L.length)];
+      else {
+        let bd = -1;
+        for (const q of L) {
+          let d = Infinity;
+          for (const p of out) d = Math.min(d, Math.hypot(q.x - p.x, (q.y - p.y) * 2, q.z - p.z));
+          if (d > bd + 1e-9) { bd = d; best = q; }
+        }
+      }
+      out.push({ x: best.x, y: best.y, z: best.z, lacet: best.lacet });
+    }
+    return out;
+  }
+  // un lieu VU d'un ennemi vivant (sa tête ou son buste, de l'œil de l'ennemi, à ≤ 60 m)
+  _vu(a, p) {
+    const B = this.balistique, h = (a.h || 1.73) / 1.73;
+    for (const b of this.acteurs) {
+      if (b === a || !b.vivant || !b.corps || b.role === 'cible' || !this.ennemis(b, a)) continue;
+      b.oeil(_o);
+      if (Math.hypot(_o.x - p.x, _o.y - p.y, _o.z - p.z) > 60) continue;
+      if (B.vue(_o.x, _o.y, _o.z, p.x, p.y + 1.5 * h, p.z) || B.vue(_o.x, _o.y, _o.z, p.x, p.y + 0.9 * h, p.z)) return true;
+    }
+    return false;
+  }
+  // OÙ RÉAPPARAÎTRE : le point de choisirApparition (L-D) s'il n'est vu de personne ; sinon le meilleur lieu non vu de la
+  // zone (le plus loin du plus proche ennemi, près des alliés en équipe) ; tout est vu → null : on réessaie dans 0,25 s
+  // (au plus 2 s de retard, puis le moins mauvais)
+  _apparition(a) {
+    let p = null;
+    try { p = choisirApparition(this, a); } catch (e) { p = null; }
+    if (p && !this._vu(a, p)) return p;
+    const L = this.candidats(), notes = [];
+    for (const q of L) {
+      let dE = Infinity, nA = 0;
+      for (const b of this.acteurs) {
+        if (b === a || !b.vivant || !b.corps || b.role === 'cible') continue;
+        const d = Math.hypot(b.pos.x - q.x, (b.pos.y - q.y) * 2, b.pos.z - q.z);
+        if (this.ennemis(a, b)) dE = Math.min(dE, d); else if (d < 15) nA++;
+      }
+      notes.push({ q, n: Math.min(dE, 40) + 2 * Math.min(nA, 2) });
+    }
+    notes.sort((u, v) => v.n - u.n);
+    for (const { q } of notes) if (!this._vu(a, q)) return q;
+    if (this.t - (a._attenteDepuis ?? this.t) < REGLES_FPS.attenteMax) return null;
+    return p || (notes[0] && notes[0].q) || null;
+  }
+  _reapparaitre(a) {
+    if (a._attenteDepuis === undefined) a._attenteDepuis = this.t;
+    const p = this._apparition(a);
+    if (!p) { a.reapparitionT = this.t + REGLES_FPS.attente; return false; }
+    delete a._attenteDepuis;
+    if (a.poupee) { a.poupee.liberer?.(); a.poupee = null; }
+    if (a.joueur && a.joueur.mesh) a.joueur.mesh.visible = !a.local;
+    a.reapparaitre(p.x, p.y, p.z, p.lacet ?? 0, this.t);
+    a.gele = false; if (a.arsenal) a.arsenal.bloque = false;
+    if (a.local) { this.game.camYaw = p.lacet ?? 0; this.game.camPitch = 0; this.mortLocal = null; }
+    a.cerveau?.reapparu?.();
+    this.evt('apparition', { a: a.id, x: p.x, y: p.y, z: p.z });
+    return true;
+  }
+
+  // ---------------------------------------------------------------- les éliminations et le barème (§ 3.8)
+  _valeur(a) { return this.mode === 'melee' ? this._net(a) : a.equipe && this.scores ? this.scores[a.equipe] : 0; }
+  _net(a) { return a.stats.elims - this._ext(a).suicides; }
   _elim(e) {
-    const tireur = this.acteurParId(e.par), cible = this.acteurParId(e.cible);
-    if (cible) cible.reapparitionT = this.t + this.reapparition;
-    if (tireur && tireur !== cible) {
-      tireur.arsenal?.ajouterChargeur();
-      tireur.stats.score += 100 + (e.tete ? 25 : 0);
-      if (this.scores && tireur.equipe) this.scores[tireur.equipe]++;
-      this.evt('score', { equipe: tireur.equipe, valeur: this.scores ? this.scores[tireur.equipe] : tireur.stats.elims, id: tireur.id, points: 100, raison: 'elim' });
-    } else if (cible) { cible.stats.elims = Math.max(0, cible.stats.elims - 1); }
+    const R = REGLES_FPS, B = R.bareme;
+    const tireur = e.par >= 0 ? this.acteurParId(e.par) : null, cible = this.acteurParId(e.cible);
+    if (!cible || cible.role === 'cible') return;
+    cible.reapparitionT = this.t + this.reapparition;
+    const xc = this._ext(cible); xc.serie = 0;
+    const dist = tireur && tireur !== cible ? Math.hypot(tireur.pos.x - cible.pos.x, tireur.pos.y - cible.pos.y, tireur.pos.z - cible.pos.z) : 0;
+    if (cible.local) {
+      this.mortLocal = { tueur: tireur && tireur !== cible ? tireur.nom : null, tueurId: e.par, arme: nomCourt(e.arme), armeId: e.arme || null,
+        zone: this._zoneTouche.get(cible.id) || (e.tete ? 'tete' : null), distance: Math.round(dist * 10) / 10,
+        vieTueur: tireur && tireur !== cible ? Math.ceil(tireur.vie) : 0, t: this.t, passerT: this.t + R.passer, suicide: !!tireur && tireur === cible };
+    }
+    // (hors de la manche — une grenade qui explose pendant la mi-temps ou après le verdict — : le score ne bouge plus)
+    if (this.phase !== 'manche') return;
+    // LE SUICIDE (sa propre grenade) : −1 élimination — au compte du chacun pour soi, au score de son équipe, et 100 points
+    if (tireur === cible) {
+      xc.suicides++;
+      cible.stats.score += B.suicide;
+      if (this.mode === 'equipes' && cible.equipe) this.scores[cible.equipe] = Math.max(0, this.scores[cible.equipe] - 1);
+      this.evt('score', { equipe: cible.equipe, valeur: this._valeur(cible), id: cible.id, points: B.suicide, raison: 'suicide' });
+      return;
+    }
+    if (!tireur) return;                          // (une mort sans tireur : ni crédit ni pénalité)
+    tireur.arsenal?.ajouterChargeur();            // (§ 3.5 : un chargeur de réserve de l'arme principale, plafonné)
+    const xt = this._ext(tireur);
+    xt.serie++; xt.serieMax = Math.max(xt.serieMax, xt.serie);
+    const couteau = e.arme === 'couteau', loin = dist > B.loinM, defense = this._defense(tireur, cible);
+    const pts = B.elim + (e.tete ? B.tete : 0) + (couteau ? B.couteau : 0) + (loin ? B.loin : 0) + (defense ? B.defense : 0);
+    if (defense) xt.defenses++;
+    tireur.stats.score += pts;
+    if (this.mode === 'equipes' && tireur.equipe) this.scores[tireur.equipe]++;
+    this.evt('score', { equipe: tireur.equipe, valeur: this._valeur(tireur), id: tireur.id, points: pts, raison: 'elim', tete: !!e.tete, couteau, loin, defense });
+    for (const id of e.assists || []) {
+      if (id === cible.id || id === tireur.id) continue;
+      const b = this.acteurParId(id); if (!b) continue;
+      b.stats.score += B.assistance;
+      this.evt('score', { equipe: b.equipe, valeur: this._valeur(b), id: b.id, points: B.assistance, raison: 'assistance' });
+    }
   }
+  // la DÉFENSE : une élimination dont le tireur ou la victime est dans un anneau que l'équipe du tireur tient
+  _defense(tireur, cible) {
+    if (this.mode !== 'domination' || !tireur.equipe) return false;
+    for (const P of this.points) {
+      if (P.possesseur !== tireur.equipe) continue;
+      for (const a of [tireur, cible]) if (Math.hypot(a.pos.x - P.x, a.pos.z - P.z) <= P.r + DOMINATION.defense && Math.abs(a.pos.y - P.y) < DOMINATION.hauteur) return true;
+    }
+    return false;
+  }
+
+  // ---------------------------------------------------------------- LES RÈGLES, à chaque pas (étape 8)
   regles(dt) {
-    if (this.phase === 'presentation' && this.phaseT >= this.phaseDuree) this.phaseVers('decompte', DECOMPTE);
-    else if (this.phase === 'decompte' && this.phaseT >= this.phaseDuree) {
-      for (const a of this.acteurs) a.gele = false;
-      this.phaseVers('manche', this.duree); this.annonce('GO !', 'go');
-    } else if (this.phase === 'manche') {
-      this.chrono = Math.max(0, this.duree - this.phaseT);
-      // les réapparitions
+    switch (this.phase) {
+      case 'presentation': if (this.phaseT >= this.phaseDuree - 1e-9) this.phaseVers('decompte', this.dDecompte); break;
+      case 'decompte': if (this.phaseT >= this.phaseDuree - 1e-9) this._go(); break;
+      case 'manche': this._manche(dt); break;
+      case 'mi_temps': if (this.phaseT >= this.phaseDuree - 1e-9) this._reprise(); break;
+      case 'fin_manche': if (this.phaseT >= this.phaseDuree - 1e-9) this._fin(); break;
+      default: break;
+    }
+    // (la précision : un tir du pas qui a touché quelqu'un — les plombs d'une même cartouche ne comptent qu'une fois)
+    for (const id of this._tireurs) if (this._toucheurs.has(id)) { const a = this.acteurParId(id); if (a) this._ext(a).tirsTouchants++; }
+    this._tireurs.clear(); this._toucheurs.clear();
+  }
+  _go() {
+    this._geler(false);
+    this.phaseVers('manche', Math.max(0, this.duree - this.tJeu));
+    this.annonce('GO !', 'go');
+  }
+  _manche(dt) {
+    const R = REGLES_FPS;
+    this.tJeu += dt;
+    this.chrono = Math.max(0, this.duree - this.tJeu);
+    for (const a of this.acteurs) {
+      if (a.role === 'cible') continue;
+      if (a.vivant) {
+        // LA RÉGÉNÉRATION : 4,0 s après le dernier dégât, 35 PV/s
+        if (a.vie < a.vieMax && this.t - (a.derniereTouche ? a.derniereTouche.t : -Infinity) >= R.regenDelai - 1e-9) a.vie = Math.min(a.vieMax, a.vie + R.regenPvS * dt);
+        continue;
+      }
+      // LA RÉAPPARITION (Espace / A : la caméra de mort passée, au plus tôt 1 s après la mort)
+      if (!a.reapparitionT) continue;
+      if (a.local && a.cmd.saut && this.t - a.mortT >= R.passer - 1e-9 && a.reapparitionT > this.t) a.reapparitionT = this.t;
+      if (this.t >= a.reapparitionT - 1e-9) this._reapparaitre(a);
+    }
+    if (this.mode === 'domination') this._dominer(dt);
+    if (!this.minuteDite && this.duree > 2 * R.derniereMinute && this.chrono <= R.derniereMinute) { this.minuteDite = true; this.annonce('DERNIÈRE MINUTE', 'info'); }
+    // LA FIN : au score ou au temps ; la MI-TEMPS de la domination : à la moitié du score ou du temps
+    let fin = this.chrono <= 1e-9;
+    if (this.scores) { if (this.scores.A >= this.scoreCible || this.scores.B >= this.scoreCible) fin = true; }
+    else if (this.acteurs.some((a) => a.role !== 'cible' && this._net(a) >= this.scoreCible)) fin = true;
+    if (fin) return this._finir();
+    if (this.mode === 'domination' && !this.miTempsFaite && (Math.max(this.scores.A, this.scores.B) >= this.miTempsCible || this.tJeu >= this.duree / 2 - 1e-9)) this._miTemps();
+  }
+
+  // ---------------------------------------------------------------- LA DOMINATION (§ 2.5)
+  _dominer(dt) {
+    const D = DOMINATION, V = D.vitesses;
+    for (const P of this.points) {
+      const n = { A: 0, B: 0 }, dedans = { A: [], B: [] };
       for (const a of this.acteurs) {
-        if (a.vivant || a.role === 'cible' || !a.reapparitionT || this.t < a.reapparitionT) continue;
-        const p = choisirApparition(this, a);
-        a.poupee = null;
+        if (!a.vivant || !a.corps || a.role === 'cible' || (a.equipe !== 'A' && a.equipe !== 'B')) continue;
+        if (Math.hypot(a.pos.x - P.x, a.pos.z - P.z) <= P.r && Math.abs(a.pos.y - P.y) < D.hauteur) { n[a.equipe]++; dedans[a.equipe].push(a); }
+      }
+      P.presents = n;
+      const seul = n.A > 0 && n.B === 0 ? 'A' : n.B > 0 && n.A === 0 ? 'B' : null, K = P.capture;
+      const T = P.possesseur ? D.neutralisation : D.capture;
+      if (n.A > 0 && n.B > 0) { /* disputé : figé */ }
+      else if (seul && seul !== P.possesseur) {
+        const v = V[Math.min(3, n[seul])];
+        if (K.equipe && K.equipe !== seul) {
+          // (la prise entamée par l'autre équipe se défait d'abord)
+          K.k -= dt * v / T;
+          if (K.k <= 1e-9) { K.k = 0; K.equipe = null; }
+        } else {
+          K.equipe = seul; K.k += dt * v / T;
+          if (K.k >= 1 - 1e-9) this._basculer(P, seul, dedans[seul]);
+        }
+      } else if (K.k > 0) {
+        // les tenants défendent (à leur vitesse), personne : la prise retombe (à la moitié)
+        const v = seul ? V[Math.min(3, n[seul])] : D.retour;
+        K.k -= dt * v / T;
+        if (K.k <= 1e-9) { K.k = 0; K.equipe = null; }
+      }
+      // les points tenus : 1 point d'équipe toutes les 3 s, par anneau
+      if (P.possesseur) {
+        P.tenu += dt;
+        while (P.tenu >= D.tick - 1e-9) {
+          P.tenu -= D.tick;
+          this.scores[P.possesseur]++;
+          this.evt('score', { equipe: P.possesseur, valeur: this.scores[P.possesseur], id: null, points: 1, raison: 'point', point: P.id });
+        }
+      }
+    }
+  }
+  // un anneau qui bascule : neutralisé (il était à l'autre équipe : la prise continue, 8 s de plus) ou pris
+  _basculer(P, eq, dedans) {
+    const B = REGLES_FPS.bareme, mon = this.local && this.local.equipe;
+    if (P.possesseur) {
+      const avant = P.possesseur;
+      P.possesseur = null; P.tenu = 0; P.capture = { equipe: eq, k: 0 };
+      for (const a of dedans) { a.stats.score += B.neutralisation; this._ext(a).neutralisations++; this.evt('score', { equipe: eq, valeur: this.scores[eq], id: a.id, points: B.neutralisation, raison: 'neutralisation', point: P.id }); }
+      this.evt('capture', { point: P.id, equipe: eq, etat: 'neutralise' });
+      if (mon) this.annonce(avant === mon ? `${P.id} PERDUE` : `${P.id} NEUTRALISÉE`, avant === mon ? 'mal' : 'bon');
+      else this.annonce(`${P.id} NEUTRALISÉE PAR LES ${EQUIPES[eq].nom}`, 'info');
+    } else {
+      P.possesseur = eq; P.tenu = 0; P.capture = { equipe: null, k: 0 };
+      for (const a of dedans) { a.stats.score += B.capture; this._ext(a).captures++; this.evt('score', { equipe: eq, valeur: this.scores[eq], id: a.id, points: B.capture, raison: 'capture', point: P.id }); }
+      this.evt('capture', { point: P.id, equipe: eq, etat: 'prise' });
+      if (mon) this.annonce(eq === mon ? `${P.id} PRISE` : `${P.id} PRISE PAR LES ${EQUIPES[eq].nom}`, eq === mon ? 'bon' : 'mal');
+      else this.annonce(`${P.id} PRISE PAR LES ${EQUIPES[eq].nom}`, 'info');
+    }
+  }
+  // LA MI-TEMPS : 5 s figées, les anneaux rendus neutres ; à la reprise les camps s'échangent (l'école n'est pas symétrique)
+  _miTemps() {
+    this.miTempsFaite = true;
+    this._geler(true);
+    for (const P of this.points) {
+      const avait = P.possesseur;
+      P.possesseur = null; P.tenu = 0; P.capture = { equipe: null, k: 0 };
+      if (avait) this.evt('capture', { point: P.id, equipe: null, etat: 'neutre' });
+    }
+    this.phaseVers('mi_temps', REGLES_FPS.miTemps);
+    this.annonce(`MI-TEMPS · ${EQUIPES.A.nom} ${this.scores.A} – ${this.scores.B} ${EQUIPES.B.nom} · LES CAMPS S’ÉCHANGENT`, 'mi_temps');
+  }
+  _reprise() {
+    this.cotes = { A: this.cotes.B, B: this.cotes.A };
+    for (const eq of ['A', 'B']) {
+      const L = this.acteurs.filter((a) => a.equipe === eq && a.role !== 'cible');
+      const D = departs(this.zone, this.cotes[eq], L.length, this.rng);
+      L.forEach((a, k) => {
+        const p = D[k];
+        if (a.poupee) { a.poupee.liberer?.(); a.poupee = null; }
         if (a.joueur && a.joueur.mesh) a.joueur.mesh.visible = !a.local;
         a.reapparaitre(p.x, p.y, p.z, p.lacet, this.t);
-        if (a.local) { this.game.camYaw = p.lacet; this.game.camPitch = 0; }
+        delete a._attenteDepuis;
+        if (a.local) { this.game.camYaw = p.lacet; this.game.camPitch = 0; this.mortLocal = null; }
+        a.cerveau?.reapparu?.();
         this.evt('apparition', { a: a.id, x: p.x, y: p.y, z: p.z });
-      }
-      // la fin : au score ou au temps
-      let fin = this.chrono <= 0;
-      if (this.scores) { for (const k of ['A', 'B']) if (this.scores[k] >= this.scoreCible) fin = true; }
-      else if (this.acteurs.some((a) => a.stats.elims >= this.scoreCible)) fin = true;
-      if (fin) {
-        const cl = this.acteurs.filter((a) => a.role !== 'cible').sort((x, y) => y.stats.elims - x.stats.elims);
-        this.gagnant = this.scores ? (this.scores.A === this.scores.B ? null : this.scores.A > this.scores.B ? 'A' : 'B') : cl[0] ? cl[0].id : null;
-        for (const a of this.acteurs) a.gele = true;
-        this.phaseVers('fin', 0);
-        this.evt('fin', { gagnant: this.gagnant, scores: this.scores ? { ...this.scores } : null });
-      }
+      });
     }
+    this._geler(false);
+    this.phaseVers('manche', Math.max(0, this.duree - this.tJeu));
+    this.annonce('2E MI-TEMPS · GO !', 'go');
   }
-  majHud() { super.majHud(); this.hud.chrono = this.chrono; }
+
+  // ---------------------------------------------------------------- LA FIN : « VICTOIRE » 2,5 s, puis l'événement `fin` et son bilan
+  _finir() {
+    const cl = this._classement();
+    if (this.scores) this.gagnant = this.scores.A === this.scores.B ? null : this.scores.A > this.scores.B ? 'A' : 'B';
+    else this.gagnant = cl[0] ? cl[0].id : null;
+    this._geler(true);
+    this.phaseVers('fin_manche', REGLES_FPS.annonceFin);
+    this.annonce(this._verdict(cl), 'fin');
+  }
+  _verdict(cl) {
+    const a = this.local;
+    if (this.scores) {
+      if (this.gagnant === null) return 'ÉGALITÉ';
+      if (a && a.equipe) return a.equipe === this.gagnant ? 'VICTOIRE' : 'DÉFAITE';
+      return `VICTOIRE DES ${EQUIPES[this.gagnant].nom}`;
+    }
+    if (!a) { const v = this.acteurParId(this.gagnant); return v ? `${v.nom.toUpperCase()} GAGNE` : 'FIN'; }
+    const r = cl.findIndex((c) => c.id === a.id) + 1;
+    return r === 1 ? 'VICTOIRE · 1ER' : r <= 3 ? `PODIUM · ${r}E` : `DÉFAITE · ${r}E`;
+  }
+  _fin() {
+    this.phaseVers('fin', 0);
+    this.evt('fin', { gagnant: this.gagnant, scores: this.scores ? { ...this.scores } : null, ...this.bilan() });
+  }
+  // LE BILAN (l'écran de fin de L-U ; la vague 3 y ajoute médailles et XP) : le classement, le podium, et Haythem
+  bilan() {
+    const cl = this._classement(), a = this.local;
+    const moi = a ? cl.find((c) => c.id === a.id) : null;
+    return { mode: this.mode, zone: this.zone, duree: this.tJeu, verdict: this._verdict(cl), classement: cl, podium: cl.slice(0, 3).map((c) => c.id),
+      local: moi ? { ...moi, rang: cl.indexOf(moi) + 1 } : null };
+  }
+  _classement() {
+    const L = this.acteurs.filter((b) => b.role !== 'cible').map((b) => {
+      const x = this._ext(b), s = b.stats;
+      return { id: b.id, nom: b.nom, equipe: b.equipe, elims: s.elims, morts: s.morts, assists: s.assists, score: s.score, role: b.role, vivant: b.vivant,
+        av: b.fiche ? b.fiche.id || null : null, tetes: s.tetes, suicides: x.suicides, net: s.elims - x.suicides, serie: x.serie, serieMax: x.serieMax,
+        ratio: Math.round(s.elims / Math.max(1, s.morts) * 100) / 100, tirs: s.tirs, precision: s.tirs ? Math.round(x.tirsTouchants / s.tirs * 1000) / 1000 : 0,
+        captures: x.captures, neutralisations: x.neutralisations, defenses: x.defenses };
+    });
+    if (this.mode === 'melee') L.sort((p, q) => q.net - p.net || q.score - p.score || p.morts - q.morts || p.id - q.id);
+    else L.sort((p, q) => q.score - p.score || q.elims - p.elims || p.morts - q.morts || p.id - q.id);
+    return L;
+  }
+
+  // ---------------------------------------------------------------- l'affichage : le HUD, la caméra de la présentation
+  majHud() {
+    super.majHud();
+    const H = this.hud;
+    H.chrono = this.chrono;
+    H.scores = this.scores ? { ...this.scores } : null;
+    H.classement = this._classement();
+    H.mort = this.mortLocal;
+    H.points = this.points;
+    // (en plus du § 4.5.15 : le mode, pour le bandeau et le tableau)
+    H.mode = { id: this.mode, nom: this.nomMode, zone: this.zone, scoreCible: this.scoreCible, duree: this.duree, miTemps: this.miTempsFaite,
+      camp: this.local ? this.local.equipe : null };
+  }
+  peutTirer(a) { return this.phase === 'manche' && super.peutTirer(a); }
+  // LA PRÉSENTATION : la caméra file de derrière Haythem (7 m en arrière, 2,2 m plus haut, gardée hors des murs) jusque dans
+  // ses yeux, en 3 s ; le regard est tenu au cap du départ (la vue à la 1re personne du décompte enchaîne sans saut)
+  camera(dt, poser) {
+    const a = this.local, g = this.game, C = g.collisions;
+    if (this.phase !== 'presentation' || !a || !a.vivant || !a.humain || a.corps !== a.joueur || this._lacet0 === null) return super.camera(dt, poser);
+    const l = this._lacet0, cam = g.camera;
+    g.camYaw = l; g.camPitch = 0;
+    a.oeil(_o, true);
+    _f.set(-Math.sin(l), 0, -Math.cos(l));
+    _p.copy(_o).addScaledVector(_f, -7); _p.y += 2.2;
+    if (C) { const k = C.rayonLibre(_o.x, _o.y, _o.z, _p.x, _p.y, _p.z, 0.25); _p.lerpVectors(_o, _p, Math.max(0, k - 0.04)); }
+    const u = Math.min(1, Math.max(0, this.phaseT / Math.max(1e-6, this.phaseDuree))), e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+    cam.position.lerpVectors(_p, _o, e);
+    _c.copy(_o).addScaledVector(_f, 12);
+    cam.lookAt(_c);
+    const v = this.vue.champV;
+    if (Math.abs(v - cam.fov) > 1e-6) { cam.fov = v; cam.updateProjectionMatrix(); }
+    cam.updateMatrixWorld();
+    return true;
+  }
+
+  // ---------------------------------------------------------------- L'ÉTAT (§ 4.7) : celui de la base, plus le bloc des règles
+  etat() {
+    const e = super.etat();
+    e.fps = { mode: this.mode, tJeu: this.tJeu, gagnant: this.gagnant, mi: this.miTempsFaite, minute: this.minuteDite, cotes: { ...this.cotes },
+      mort: this.mortLocal ? { ...this.mortLocal } : null,
+      ext: this.acteurs.map((a) => [a.id, { ...this._ext(a) }]),
+      // (ce que la simulation garde sur les acteurs hors de leur état : le dernier dégât — la régénération —, les dégâts des
+      // 5 dernières secondes — les assistances —, l'attente d'un lieu non vu)
+      touches: this.acteurs.map((a) => [a.id, a.derniereTouche ? [a.derniereTouche.t, a.derniereTouche.par, a.derniereTouche.arme] : null,
+        (a._aides || []).map((h) => [h.par, h.d, h.t]), a._attenteDepuis ?? null]),
+      zones: [...this._zoneTouche] };
+    return e;
+  }
+  appliquer(e) {
+    super.appliquer(e);
+    // (les anneaux : copiés en profondeur — la base ne copie que le premier niveau, et la prise en cours se modifie en place)
+    this.points = this.hud.points = this.hud.points.map((p) => ({ ...p, capture: { ...p.capture }, presents: { ...(p.presents || { A: 0, B: 0 }) } }));
+    const F = e.fps; if (!F) return;
+    this.tJeu = F.tJeu; this.gagnant = F.gagnant; this.miTempsFaite = F.mi; this.minuteDite = F.minute; this.cotes = { ...F.cotes };
+    this.mortLocal = F.mort ? { ...F.mort } : null;
+    this.ext = new Map(F.ext.map(([id, x]) => [id, { ...x }]));
+    for (const [id, dT, aides, att] of F.touches) {
+      const a = this.acteurParId(id); if (!a) continue;
+      a.derniereTouche = dT ? { t: dT[0], par: dT[1], arme: dT[2] } : null;
+      a._aides = aides.map(([par, d, t]) => ({ par, d, t }));
+      if (att === null) delete a._attenteDepuis; else a._attenteDepuis = att;
+    }
+    this._zoneTouche = new Map(F.zones);
+    for (const a of this.acteurs) if (a.arsenal) a.arsenal.bloque = !!a.gele;
+  }
 }
