@@ -242,4 +242,70 @@ rayon 3 cm ; regardé à l'écran depuis la ligne (boîtes posées à la main pu
 6. **Stand : Haythem tué par sa propre frag, pour de bon** — la grenade inflige ses dégâts par `Partie.infliger` (étape 7,
    sans `appliquerEffet`) et le stand n'a pas de réapparition : une frag aux pieds laissait Haythem mort jusqu'à la sortie,
    la caméra en orbite sur le mannequin. `PartieStand.infliger` : 0 dégât à Haythem (seul au stand). Contrôle au test 14.
+7. Constante morte (`DEG`) retirée de `partie_fps.js` ; test F2 des 100 duels rendu symétrique (la visée interne du cerveau
+   suit le téléport : chacun tournait depuis le cap de SON départ).
+
+### Rejoué (jeton 1, 05:56 ; port 8137 ; navigateur intégré, un onglet)
+
+- `&rapport=1&lot=L-E` : **17/17 sur PC** (28,3 s, qualité haute, 0 signalé) et **17/17 sous `?tel=1`** (émulation 375 × 812,
+  27,8 s, 0 signalé). Mesures identiques au constructeur aux points 1-8, 10-16 (le tirage des départs du chacun pour soi ne
+  change rien à la graine 102 du point 2 : 88 = 88 − 0, fin au score en 99,3 s) ; point 9 : chacun pour soi, 0 paire à vue au
+  départ sur toute l'école (4 paires sur 30 au −1 : six lieux dans une seule salle et ses passages, inévitable) ; point 12 :
+  `188bf2c8` / `188bf2c8`, instantané des anneaux figé ; point 14 : frag aux pieds, Haythem vivant ; point 17 : calque, gelé,
+  repart au clic, direct à la manette.
+- `&rapport=1&lot=S0` : **29/29** (65,0 s, 0 signalé) — balade 0 / 0 (vue 3, vue 1) avant ET après les parties, programmes
+  145 → 145, `Partie.pas` du socle 0,050 ms, stand du socle (6 cibles) vert.
+- `python -I tools/verifier_proprietaires.py lot/L-E` : `OK 4 fichiers`.
+
+### Joué (sans `?test=1`, vrai son ; onglet en arrière-plan la plupart du temps — rAF bridé à 1 image/s par le panneau partagé :
+### simulation par `__jeu.avancer`, images à la main, et l'onglet mis devant le temps de deux photos)
+
+- **Équipes, toute l'école** (`?partie=equipes&zone=ecole`) : bandeau « MATCH À MORT PAR ÉQUIPES · SISR CONTRE SLAM · 40
+  ÉLIMINATIONS · 10:00 · TOUTE L'ÉCOLE », la caméra finit dans les yeux de Haythem face à la porte 6 ; au décompte, le calque
+  « CLIQUE POUR JOUER » (photo) ; levé à la manette → GO, arme de vue revenue, `30 / 90`. Fin forcée à 39 + 1 : « VICTOIRE »
+  2,5 s puis l'écran de fin « Victoire des SISR ». **Défaut trouvé hors du lot** (voir les demandes) : la capture du pointeur
+  rendue à la fin (`index.js`) déclenche la PAUSE (`game.js:270`) PAR-DESSUS l'écran de fin — simulé par l'événement
+  `iris-pointeur` que le navigateur envoie alors : `#overlay` (z 30) couvre `#fin-jeu` (z 22) ; photo regardée.
+- **Équipes au −1, Haythem piloté au script** (il vise l'ennemi vu le plus proche, sinon court vers lui) : 15 éliminations en
+  18 s de jeu, réapparitions à 3,0 s, assistances au fil, chargeur rendu (réserve tenue à 90), `Partie.pas` 0,26 ms en
+  moyenne à 8 acteurs, 0 erreur ; partie poussée à 38 – 38 : « DÉFAITE », fin « Victoire des SLAM », bilan (rang 1, 11 / 2,
+  précision 0,683, série 11).
+- **Chacun pour soi au −1** : tué d'une balle à la tête par Gabriel à 13,4 m → carte `{ tueur: Gabriel, arme: FA-24, zone:
+  tete, distance: 13,4, vieTueur: 100 }`, réapparition dans 2,0 s ; Espace à 0,5 s : rien ; à 1,1 s : réapparu.
+- **Domination** : Haythem court de la rue à l'anneau A (porte 6 ouverte devant lui), « A PRISE » 8,0 s après y être entré,
+  +150 ; anneaux posés A (14,88 ; −3,12) 1,5 m, B (9,38 ; −9,37) 1,0 m, C (12,03 ; −6,50) 1,25 m. Dégagement balayé au pas de
+  5 cm dans les 3 m de chaque centre indicatif : le plus grand disque libre au même sol est 1,5 m pour A, **1,1 m pour B, 1,4 m
+  pour C** — le 1,5 m du § 2.5 est bien introuvable aux pauses (écart 2 du constructeur confirmé).
+- **Stand** : entraînement libre au clavier-souris → calque (correction 1) ; vue depuis la ligne (photo) : la rue vers l'est,
+  le mannequin debout sur la chaussée devant la voiture rouge, les cibles invisibles en attendant L-H ; « 20 CIBLES EN 30 S »
+  scripté : « RÉUSSI · 20 CIBLES EN 5,1 S · 2 598 PTS · NOUVEAU RECORD ! », puis l'écran de fin « Partie finie » (demande du
+  constructeur à F2 / L-U).
+- Réapparition : le choix (`choisirApparition` du squelette puis le repli de L-E) coûte 0,7 à 1,3 ms par apparition sur toute
+  l'école à 10 acteurs (67 lieux) : une pointe d'un pas, rare ; à revoir à F2 avec les champs de Dijkstra de L-D.
+- Console : aucune erreur du jeu ; seulement « An unknown error occurred when fetching the script » à chaque chargement (le
+  service worker sous le navigateur intégré, hors du lot, déjà là sur `socle`).
+
+### Demandes ajoutées par la relecture
+
+- **F2 / INT** (`js/game.js:270`, `js/jeu/index.js`) : à la fin d'une partie, `index.js` rend le pointeur → `pointerlockchange` →
+  `iris-pointeur { capture: false }` → `togglePause()` : l'écran PAUSE couvre l'écran de fin (et « Reprendre » redemande la
+  capture, donc le calque). Garde à poser : pas de pause sur la perte du pointeur quand `partie.phase === 'fin'` (ni par Échap).
+- **L-U / INT** (`js/settings.js` DEFAULTS, socle) : `jeu.combat.allies: 3, ennemis: 4` sont les effectifs du PC ; au téléphone,
+  `effectifs()` les ramène à 5 bots (2 + 1 c. 3) au lieu du 2 c. 2 du § 3.10 : le menu doit prendre `effectifs(mode, {},
+  TELEPHONE)` quand le joueur n'a rien choisi sur cet appareil.
+- **L-M / F2** : au stand (zone `ecole`, rue bornée à z ≤ 6), le 3e couloir file de z 5,8 à 6,6 et le mannequin est à z 7,2
+  (les vélos garés imposent ce biais) : une rubalise de la rue posée à z = 6 traverserait le couloir et passerait devant le
+  mannequin (rien ne l'arrête : les barrières sont `balle: false`, mais on la verrait). La couper au stand.
+
+### Doutes ajoutés
+
+- Stand avec `opts.arme` secondaire (P-17) ou après avoir sorti son P-17 : `Arsenal.ajouterChargeur` ne remplit que l'arme
+  PRINCIPALE, la réserve du pistolet n'est donc pas tenue pleine (60 balles en tout) ; il faudrait à L-A un
+  `ajouterChargeur(emplacement)` — rien d'autre ne le demande, noté seulement.
+- Au −1, avec le cerveau minimal qui touche presque à chaque balle (armes sans dispersion), un 4 c. 4 atteint 40 en 1 à 2
+  minutes : la limite du § 3.8 est pensée pour toute l'école ; si, avec L-J, le −1 reste aussi rapide, l'intégration pourra
+  vouloir une limite par zone.
+- La poupée de chiffon en habillage Militaire dure 4 s pour 3,0 s de réapparition (2,0 en chacun pour soi), et le bot revient
+  dans le même `Player` : elle s'efface d'un coup à la réapparition (l'abonné de la correction 3). En Airsoft (1,5 + 0,6 s),
+  seul le chacun pour soi la coupe de 0,1 s.
 
