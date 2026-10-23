@@ -621,7 +621,10 @@ export class SonsJeu {
       }
       case 'apparition': if (lui(e.a)) { this.rouvrir(0.5); this.jouer2d(RECETTES.apparition(B), G.apparition, false); } return;
       case 'recharge': {
+        // (les trois phases du § 4.6 ; une recharge ANNULÉE ou INTERROMPUE — des phases de plus chez L-A : le sprint, le
+        // tir au FP-12 — ne joue rien : relecture du 23/10, elle jouait le « clac » du chargeur en place ou la pompe)
         const a = P.acteurParId(e.a); if (!a || !a.arsenal || !a.arsenal.arme) return;
+        if (e.phase !== 'debut' && e.phase !== 'insere' && e.phase !== 'fin') return;
         const id = a.arsenal.arme.id, f = e.phase === 'debut' ? RECETTES.rechargeDebut(B, id) : e.phase === 'insere' ? RECETTES.rechargeInsere(B, id) : RECETTES.rechargeFin(B, id, e.tactique);
         this._corps(a, f, lui(e.a) ? G.rechargeLocal : G.recharge, R.recharge, dec, 1.0);
         return;

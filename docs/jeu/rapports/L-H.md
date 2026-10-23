@@ -244,6 +244,10 @@ Spécification relue (§§ 3.6, 3.10, 4.1, 4.5.17, 4.6, 5.1, 5.5.12), diff `socl
    bots »). Le § 3.1 dit « pas audibles à 4 m » pour la marche et « pas muets » accroupi ; CoD § 7.5 dit sprint 14, course
    9, marche 4, accroupi muet. Les bots l'entendent à 14 / 9 / 4 / 0 m : l'écart lui donnait l'avantage, contre
    l'équité du § 1 (arbitrage 4). Ramené à 14 / 9 / 4 / 0. Ses propres pas restent joués, accroupi compris, au milieu.
+5. **Une recharge annulée jouait le bruit du chargeur mis en place** (`sons_jeu.js`). Tout ce qui n'était ni 'debut' ni
+   'insere' jouait la recette de fin. La branche `lot/L-A` émet aussi 'annulee' (le sprint) et 'interrompue' (un tir
+   pendant le chargement du FP-12) : on aurait entendu le « clac » ou la pompe d'une recharge qui n'a pas eu lieu. Ces
+   phases ne jouent plus rien. Test 16 ajouté.
 
 ### Nettoyé
 

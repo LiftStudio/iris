@@ -606,6 +606,20 @@ export default function (jeu) {
       attendu: `passe-bas ${M.hz} Hz tout de suite, rouvert à + ${M.duree} s`, obtenu: `${bas ? bas.valeur + ' Hz à ' + r3(bas.quand - q0) + ' s' : 'aucun'} · ${haut ? 'rouvert à ' + r3(haut.quand - q0) + ' s' : 'jamais rouvert'}` };
   });
 
+  // 16. (relecture) UNE RECHARGE ANNULÉE OU INTERROMPUE (phases de plus chez L-A) ne joue rien — ni le « clac » ni la pompe
+  T('16 recharge annulée ou interrompue : muette', async () => {
+    const { p, S } = await essai({ mannequins: 1 });
+    const cam = game.camera, a = p.local; S.maj(1, cam);
+    const n0 = S.stats.creees;
+    for (const phase of ['annulee', 'interrompue']) p.evt('recharge', { a: a.id, phase, tactique: true });
+    S.maj(0, cam);
+    const n1 = S.stats.creees;
+    p.evt('recharge', { a: a.id, phase: 'fin', tactique: false }); S.maj(0, cam);
+    const n2 = S.stats.creees;
+    jeu.quitter('balade');
+    return { ok: n1 === n0 && n2 === n1 + 1, attendu: '0 voix pour annulee / interrompue, 1 pour fin', obtenu: `${n1 - n0} voix, puis ${n2 - n1} pour fin` };
+  });
+
   // 14. LA BALADE AU BIT PRÈS, la passe superposée éteinte, les pools hors de la scène
   T('14 balade au bit près, passe éteinte, rien du jeu dans la scène', async () => {
     jeu.quitter('balade'); await jeu.images(2);
