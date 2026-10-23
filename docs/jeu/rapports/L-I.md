@@ -24,8 +24,8 @@ Fait (commits `L-I : …`) :
    virage (au-delà de 0,9 pendant 0,25 s : × 1,35 en lacet, atteint en 0,3 s), × 0,55 en visée, × `facteurStick`, bornes
    `game.bornesTangage()` ; roue des provocations ouverte (ou LB tenu, profil prop) → le stick droit va à
    `partie.mouvementStick`, la caméra ne tourne pas ; calque « CLIQUE POUR JOUER » : A ou START le ferment SANS capture,
-   bouton muet jusqu'au relâchement ; L3 VERROUILLE le sprint tant que le stick gauche pousse vers l'avant (2e appui < 0,30 s
-   = sprint tactique ; tirer, viser, stick lâché ou tiré en arrière le rendent) ; vibrations sur ÉVÉNEMENTS de la partie
+   bouton muet jusqu'au relâchement ; L3 : le sprint (2e appui < 0,30 s
+   = sprint tactique, le verrou étant celui de `lireCommande`, L-B) ; vibrations sur ÉVÉNEMENTS de la partie
    (`VIBRATIONS_JEU` : tir faible 40 ms, touche reçue forte 120 ms, élimination et annonce une fois, explosion proche,
    flash) et plus aucune par `hoops-feedback` en partie ; la notification de branchement passe par le bandeau en partie
    (jamais `hud.feedback`) ; `aideBalade()` suit le profil (combat, prop). Valeurs : `STICK_JEU`, `VIBRATIONS_JEU`.
@@ -56,8 +56,9 @@ Fait (commits `L-I : …`) :
    0,5 / 0,8 / 120 ms.
 3. **Sprint verrouillé au doigt** : « verrouillé » lu à la manière de CoD Mobile — on peut lever le pouce, la course
    continue tout droit jusqu'à reposer le pouce (ou tirer, viser, s'accroupir).
-4. **L3 verrouillé à la manette** (§ 4.8 dit seulement « L3 (double) ») : le sprint d'un jeu de tir à la manette se
-   verrouille d'un clic (tenir L3 en visant du pouce gauche est intenable) ; le double appui reste le sprint tactique.
+4. **L3 à la manette** (§ 4.8 « L3 (double) ») : `js/manette.js` n'y ajoute RIEN — le verrou du sprint (un clic suffit,
+   comme Call of Duty) est celui de `lireCommande`, que L-B a écrit dans sa branche (`E.verrou`) ; une 2e logique côté manette
+   (essayée, puis retirée) se serait battue avec la sienne. Son test est à F2.
 5. **Les bascules au doigt** : VISER est une bascule (§ 4.8 « VISER (bascule) ») tant que la visée est « maintenue » au
    clavier (défaut) ; si Haythem choisit la bascule au clavier, le bouton envoie l'appui tel quel et `lireCommande` (L-B)
    bascule. ACCROUPI : l'appui tel quel (l'accroupi est déjà en bascule par défaut, `accroupiMaintenu: false`) ; une
