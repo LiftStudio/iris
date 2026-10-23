@@ -94,6 +94,9 @@ export class Poupee {
     if (!A || !A.ok || !player.mesh) return;
     this.A = A;
     const P = this.P = {};
+    // (un corps que la cadence ne dessine pas — `leger`, js/jeu/cadence_acteurs.js — a son groupe là où l'a laissé sa
+    // dernière pose, 0,25 s plus tôt au plus, 1,6 m au sprint : la poupée part de la position et du cap AFFICHÉS)
+    if (player.leger && player.posAff) { player.mesh.position.copy(player.posAff); player.mesh.rotation.y = player.angAff || 0; }
     player.mesh.updateMatrixWorld(true);
     for (const n of POINTS) { const b = A.bone(n); if (!b) continue; const q = b.getWorldPosition(new THREE.Vector3()); P[n] = { p: q.clone(), o: q.clone(), n, buste: n === 'Hips' || n === 'Spine2' || n === 'Head' }; }
     if (!P.Hips || !P.Spine2 || !P.Head || !P.LeftUpLeg || !P.RightUpLeg) { this.P = null; return; }
