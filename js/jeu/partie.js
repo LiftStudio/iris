@@ -37,8 +37,15 @@ import { entree } from '../settings.js';
 const ANNEAU = 256;
 // les drapeaux de partie du corps de Haythem, posés à l'entrée et RETIRÉS à la sortie (l'école telle qu'en balade)
 const DRAPEAUX = ['capFixe', 'sansRangs', 'audible', 'sansSouffle', 'elanAir', 'sprintMul', 'rayon', 'hautCorps', 'basCorps', 'apresPose'];
-// le monde en partie : un par session (ses barrières se calculent une fois)
+// le monde en partie : un par session (ses barrières se calculent une fois) ; `mondeDesParties` le rend préparé (le harnais
+// en a besoin hors partie — verifierNav, F2 : le graphe des bots se génère sur le monde des parties, vantaux de L-M)
 const _mondes = new WeakMap();
+export function mondeDesParties(g) {
+  let M = _mondes.get(g);
+  if (!M) { M = g.mondePartie || new MondePartie(g); _mondes.set(g, M); }
+  M.preparerSession();
+  return M;
+}
 const _v = new THREE.Vector3();
 
 export class Partie {
@@ -75,8 +82,7 @@ export class Partie {
   // ---------------------------------------------------------------- préparation, entrée, sortie
   async preparer(progres) {
     const g = this.game, P = this.constructor.prerequis, pr = progres || (() => {});
-    let M = _mondes.get(g);
-    if (!M) { M = new MondePartie(g); M.preparerSession(); _mondes.set(g, M); }
+    const M = mondeDesParties(g);
     this.monde = M;
     pr('Plan de l’école', 0);
     if (P.nav) { this.nav = await Nav.obtenir(g, { progres: pr }); this.nav.restreindre(M.noeudsAutorises(this.nav, this.zone, this.id)); }

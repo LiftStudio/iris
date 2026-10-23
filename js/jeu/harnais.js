@@ -18,6 +18,7 @@ import { pointsDe, POINTS_APPARITION } from './apparitions.js';
 import { BORNES_NAV, Nav } from './nav.js';
 import { entree } from '../settings.js';
 import { ASC } from '../ecole_ascenseur.js';
+import { mondeDesParties } from './partie.js';
 
 // LES FICHIERS DE TESTS, par lot, dans cet ordre (`&rapport=1` sans `&lot=` : tous) ; un fichier absent = pas de tests
 export const FICHIERS_TESTS = [['S0', 'test_socle.js'], ['L-A', 'test_armes.js'], ['L-B', 'test_mouvement.js'], ['L-W', 'test_modeles_armes.js'],
@@ -51,6 +52,12 @@ function espionAudio() {
   for (const m of ['start', 'stop']) {
     const f = AudioScheduledSourceNode.prototype[m];
     AudioScheduledSourceNode.prototype[m] = function (quand = 0, ...r) { noter(this, m, null, quand); return f.call(this, quand, ...r); };
+  }
+  // (F2, demande de L-H : AudioBufferSourceNode a SON start — start(quand, début, durée) —, qui masque celui de
+  // AudioScheduledSourceNode : les sons joués d'un tampon n'étaient pas notés)
+  if (typeof AudioBufferSourceNode !== 'undefined' && Object.prototype.hasOwnProperty.call(AudioBufferSourceNode.prototype, 'start')) {
+    const f = AudioBufferSourceNode.prototype.start;
+    AudioBufferSourceNode.prototype.start = function (quand = 0, ...r) { noter(this, 'start', null, quand); return f.call(this, quand, ...r); };
   }
   AudioParam.prototype.__espion = true;
 }
@@ -168,7 +175,9 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
       if (cible && cible.lacet !== undefined) { l = cible.lacet; t = cible.tangage || 0; }
       else {
         const b = typeof cible === 'number' ? acteur(cible) : null;
-        const x = b ? b.pos.x : cible.x, y = b ? b.pos.y + 1.27 * b.h / 1.73 : cible.y, z = b ? b.pos.z : cible.z;
+        // (un prop déguisé : le milieu de SA bande, pas un buste d'homme — F2, demande de L-K)
+        const bp = b && b.prop && b.corps && b.corps.haut !== undefined && !(b.corps instanceof Player);
+        const x = b ? b.pos.x : cible.x, y = b ? b.pos.y + (bp ? ((b.corps.bas || 0) + b.corps.haut) / 2 : 1.27 * b.h / 1.73) : cible.y, z = b ? b.pos.z : cible.z;
         const o = a.oeil(new THREE.Vector3());
         l = Math.atan2(-(x - o.x), -(z - o.z)); t = Math.atan2(-(y - o.y), Math.hypot(x - o.x, z - o.z));
       }
@@ -223,7 +232,9 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
     // n IMAGES mesurées ; sans rAF (onglet caché, ou forcé) : faites à la main, `valable: false`
     async images(n = 10) {
       const r = game.renderer, inf = r.info, auto = inf.autoReset;
-      const sansRaf = H.manuel || document.hidden || performance.now() - (H.dernierRaf || 0) > 250;
+      // (F2, demande de L-K : un onglet qui n'est pas devant a encore des rAF, mais à 1 par seconde — images(n) attendait
+      // alors 5 s des images qui ne venaient pas : l'INTERVALLE médian des derniers rAF au-delà de 50 ms → à la main)
+      const sansRaf = H.manuel || document.hidden || performance.now() - (H.dernierRaf || 0) > 250 || rafIntervalle() > 50;
       const ms = [], appels = [], tri = [];
       inf.autoReset = false;
       try {
@@ -269,6 +280,8 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
     // (CSR), noeudPres, depuisCache — : obtenu comme une partie l'obtient (le cache, sinon la génération), chronométré.
     // `o` : les options de Nav.obtenir (le graphe des props : { rayon: 0.2, franchir: false }).
     async verifierNav(o = {}) {
+      // (F2, demande de L-D : le monde des parties d'abord — ses vantaux et ses barrières, L-M —, comme Partie.preparer)
+      mondeDesParties(game);
       const t0 = performance.now(), nav = await Nav.obtenir(game, o), ms = performance.now() - t0, n = nav.nb, pas = nav.pas || 0.25;
       const comp = new Int32Array(n).fill(-1); let composantes = 0;
       for (let s = 0; s < n; s++) {
@@ -433,7 +446,14 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
     },
     // une PHOTO, juste après un rendu (fait ici, à la main, de la scène telle que la dernière image l'a posée : l'image est
     // encore dans le tampon, et ni la simulation ni la caméra n'avancent)
-    photo(nom = 'photo') { game.fx.render(1 / 60); return game.renderer.domElement.toDataURL('image/jpeg', 0.88); },
+    // (F2, demande de L-B : `envoyer` — une adresse, celle du récepteur du lot — y POSTe la photo { nom, donnees } ; la photo est
+    // rendue de toute façon)
+    photo(nom = 'photo', { envoyer = null } = {}) {
+      game.fx.render(1 / 60);
+      const d = game.renderer.domElement.toDataURL('image/jpeg', 0.88);
+      if (envoyer) fetch(envoyer, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nom, donnees: d }) }).catch(() => { /* pas de récepteur */ });
+      return d;
+    },
     mesurer(fn, n = 50) { const L = []; for (let i = 0; i < n; i++) { const t0 = performance.now(); fn(i); L.push(performance.now() - t0); } return { med: mediane(L), p95: centile(L, 0.95) }; },
     async qualite(nom) {
       const s = game.settings, q = QUALITES[nom] || nom;
@@ -615,7 +635,11 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
       }
       S.dernier.set(a.id, { x: q.x, y: q.y, z: q.z });
       if (p.tick % 12 === 0) {
-        const m = !c.libre(q.x, q.z, 0.25, q.y);
+        // (F2, demandes de L-D et L-K : les pieds du corps — saut compris, jumpY — et SON rayon, plafonné à 0,25 : un prop
+        // plaqué de 0,18 m contre un mur n'est pas « dans le mur » ; la bande du corps, celle d'un prop ou d'un humain)
+        const cc = a.corps, rr = Math.min(0.25, cc.rayon > 0 ? cc.rayon : 0.25);
+        const m = cc instanceof Player ? !c.libre(q.x, q.z, rr, q.y + (cc.jumpY || 0), cc.hautCorps, cc.basCorps)
+          : !c.libre(q.x, q.z, rr, q.y + (cc.jumpY || 0), cc.haut, cc.bas);
         const t = S.dansUnMur.get(a.id) || 0;
         S.dansUnMur.set(a.id, m ? t + 0.1 : 0);
         if (m && t + 0.1 > 0.2) S.murs.add(a.id);
@@ -627,7 +651,14 @@ export function installerHarnais(game, deps, api, { test = TEST } = {}) {
     }
   };
   // le rAF observé (images(n) sait s'il en a)
-  const raf = () => { H.dernierRaf = performance.now(); requestAnimationFrame(raf); };
+  // (les 9 derniers rAF : leur intervalle médian — un long calcul synchrone, avancer, ne fait qu'UN grand intervalle)
+  const rafT = [];
+  const rafIntervalle = () => {
+    if (rafT.length < 3) return 0;
+    const d = []; for (let i = 1; i < rafT.length; i++) d.push(rafT[i] - rafT[i - 1]);
+    return mediane(d);
+  };
+  const raf = () => { H.dernierRaf = performance.now(); rafT.push(H.dernierRaf); if (rafT.length > 9) rafT.shift(); requestAnimationFrame(raf); };
   requestAnimationFrame(raf);
   // au démarrage (après « APPUIE ») : sous &rapport=1, les tests du lot, puis window.__rapport
   H.demarre = async () => {
