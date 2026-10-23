@@ -224,7 +224,12 @@ export default function (jeu) {
       res.push(['pouce sur le joystick', tc.stickId === d.id]);
       d.bouge(x0, y0 - R * 0.5); imageSim(PAS);
       res.push(['à mi-course : pas de sprint', !c.sprint && !tc.sprintVerrou]);
-      d.bouge(x0, y0 - R * 1.2); imageSim(PAS);
+      // (relecture) au bord : le sprint, tenu — ni verrou ni sprint tactique (courir à fond ne les brûle pas)
+      d.bouge(x0, y0 - R * 1.05); imageSim(PAS);
+      res.push(['au bord : le sprint, sans verrou ni tactique', c.sprint && !tc.sprintVerrou && !c.sprintTact]);
+      d.bouge(x0, y0 - R * 0.7); imageSim(PAS);
+      res.push(['revenu à 70 % : plus de sprint (rien de verrouillé)', !c.sprint && !tc.sprintVerrou]);
+      d.bouge(x0, y0 - R * 1.3); imageSim(PAS);
       res.push(['au-delà du bord : verrouillé', tc.sprintVerrou && c.sprint]);
       res.push(['sprint tactique demandé (front)', c.sprintTact === true]);
       d.bouge(x0, y0 - R * 0.6); imageSim(PAS);
@@ -245,8 +250,8 @@ export default function (jeu) {
       res.push(['pouce reposé : la course s’arrête', !tc.sprintVerrou && !tc.courseAuto && !c.sprint]);
       f.leve(); imageSim(PAS);
       // vers le côté au bord : pas de verrou (le sprint d'un jeu de tir est vers l'avant)
-      const h = doigt(canvas(), x0, y0); h.bouge(x0 + R * 1.2, y0); imageSim(PAS);
-      res.push(['au bord sur le côté : pas de verrou', !tc.sprintVerrou]);
+      const h = doigt(canvas(), x0, y0); h.bouge(x0 + R * 1.3, y0); imageSim(PAS);
+      res.push(['au-delà du bord sur le côté : ni verrou ni sprint', !tc.sprintVerrou && !c.sprint]);
       h.leve(); imageSim(PAS);
     } finally { rendreD(); tc._desverrouillerSprint(); jeu.quitter('balade'); }
     return rendre(res);

@@ -24,9 +24,10 @@
 //    COUTEAU, SCORES (tenu), II. Le CHASSEUR du prop hunt : sans flash ni couteau, avec SCAN.
 //  - PROP : DÉGUISER (la place de TIR, mixte), FIGER, VERROU, PROVOQUER (appui long = la roue des provocations, que le
 //    pouce pointe en glissant — partie.mouvementSouris — ; appui bref = la dernière), SAUT, SCORES, II.
-//  - Le joystick poussé AU-DELÀ DE SON BORD vers l'avant VERROUILLE le sprint (et demande le sprint tactique : il part s'il
-//    est prêt) : on peut lever le pouce, Haythem continue de courir tout droit ; reposer le pouce, tirer, viser ou
-//    s'accroupir (la glissade) le rend.
+//  - Le joystick AU BORD vers l'avant : le sprint (tenu, comme en balade). Poussé AU-DELÀ DE SON BORD (le pouce sur le bord
+//    du rond, le socle flottant le suit) : le sprint VERROUILLÉ (et le sprint tactique demandé : il part s'il est prêt) ;
+//    on peut lever le pouce, Haythem continue de courir tout droit ; reposer le pouce, tirer, viser ou s'accroupir (la
+//    glissade) le rend.
 //  - Glisser ailleurs à droite vise aussi (0,006 × sensibilité rad/px, les deux axes ; en visée, la sensibilité suit la
 //    focale — Partie.souris — ; près d'un ennemi, le ralentissement de l'aide à la visée) ; le TIR AUTO et l'aimant sont
 //    dans js/jeu/assistance_visee.js. Un toucher sur le calque « CLIQUE POUR JOUER » relance SANS capture du pointeur.
@@ -88,7 +89,10 @@ export const TACTILE_JEU = {
   mixtes: new Set(['tir', 'gren']),  // emplacements en rôle mixte bouton + regard
   long: 0.28,                        // s : l'appui long sur PROVOQUER ouvre la roue (avant : bref = la dernière)
   gesteRoue: 14,                     // px : le pouce qui glisse avant l'appui long ouvre la roue tout de suite
-  verrou: { avant: 0.72, garde: 0.3, lache: 0.12 },   // sprint verrouillé : vers l'avant à < 44°, tenu tant que l'avant ≥ 0,3 de la poussée
+  // le sprint : AU BORD vers l'avant (< 44°), tenu comme en balade tant que l'avant ≥ 0,6 ; AU-DELÀ du bord (le pouce à 1,25
+  // course, là où le socle flottant se met à le suivre : le bord du rond qu'on voit), VERROUILLÉ, tenu tant que l'avant ≥ 0,3
+  // de la poussée (et la poussée ≥ 0,12)
+  verrou: { avant: 0.72, bord: 0.6, auDela: 1.25, garde: 0.3, lache: 0.12 },
   glissade: 0.15,                    // s : l'accroupi pressé en sprint verrouillé — le sprint tenu encore ce temps (la glissade part)
 };
 const DZ = 0.14;                              // zone morte du joystick, en part de sa course
@@ -650,6 +654,7 @@ export class TouchControls {
   _stickBouge(x, y) {
     const Rt = this.course;
     let dx = x - this.centre.x, dy = y - this.centre.y, l = Math.hypot(dx, dy);
+    const lb = l / Rt;                  // (relecture) la poussée BRUTE, au-delà du bord comprise (le sprint verrouillé, _sprintJeu)
     if (settings.controls.tactile.stick !== 'fixe' && l > Rt * SUIT) {
       const k = (l - Rt * SUIT) / l;
       this.centre.x += dx * k; this.centre.y += dy * k; dx -= dx * k; dy -= dy * k; l = Rt * SUIT;
@@ -662,19 +667,23 @@ export class TouchControls {
     this.axe.x = kx * a; this.axe.y = -ky * a; this.amp = a;
     const avant = this.sprint;
     // (23/10 : en partie, le sprint VERROUILLÉ — _sprintJeu)
-    if (this.game.partie) this.sprint = this._sprintJeu(m, a);
+    if (this.game.partie) this.sprint = this._sprintJeu(m, a, lb);
     else this.sprint = avant ? m > SPRINT_OFF : m >= SPRINT_ON;
     if (this.sprint !== avant) { this.stick.classList.toggle('sprint', this.sprint); if (this.sprint) this._vibrer(6); }
     this._appliquerAxe();
   }
-  // (23/10) LE SPRINT VERROUILLÉ : poussé au-delà du bord vers l'avant (à moins de 44°), il se verrouille — et demande le
-  // sprint tactique, qui part s'il est prêt (lireCommande, jamais pour un chasseur au sprint limité) ; il tient tant que la
-  // poussée reste vers l'avant, et continue pouce levé (_stickLeve)
-  _sprintJeu(m, a) {
+  // (23/10) LE SPRINT EN PARTIE. Le joystick AU BORD vers l'avant (à moins de 44°) : le sprint, tenu comme en balade (§ 4.8
+  // « bord du joystick » ; jamais de côté ni en arrière : un jeu de tir ne sprinte que devant lui). Poussé AU-DELÀ de son
+  // bord (§ 3.2 : le pouce à 1,25 course, le socle flottant se met à le suivre), il se VERROUILLE — et demande le sprint
+  // tactique, qui part s'il est prêt (lireCommande, jamais pour un chasseur au sprint limité) ; il tient tant que la poussée
+  // reste vers l'avant, et continue pouce levé (_stickLeve). (Relecture : le verrou partait dès le bord — courir à fond
+  // vers l'avant brûlait le sprint tactique à chaque fois et verrouillait la course.)
+  _sprintJeu(m, a, lb) {
     const V = TACTILE_JEU.verrou, avant = a > 0 ? this.axe.y / a : 0;
-    if (!this.sprintVerrou && m >= SPRINT_ON && avant >= V.avant) this._verrouillerSprint();
+    if (!this.sprintVerrou && lb >= V.auDela - 1e-6 && avant >= V.avant) this._verrouillerSprint();
     else if (this.sprintVerrou && (a < V.lache || avant < V.garde)) this._desverrouillerSprint();
-    return this.sprintVerrou;
+    if (this.sprintVerrou) return true;
+    return this.sprint ? m > SPRINT_OFF && avant >= V.bord : m >= SPRINT_ON && avant >= V.avant;
   }
   _verrouillerSprint() {
     this.sprintVerrou = true; this._finSprintT = 0;
