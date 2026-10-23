@@ -4,8 +4,19 @@ Branche `lot/L-M` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-M`, depuis `socle
 
 ## Relecture (23/10, relecteur sévère) — où j'en suis
 
-EN COURS (repreneur de la relecture, la première session coupée après `7adb331`). Jeton_3 pris à 08:51 (attendu depuis
-08:06 : les trois tenus par L-C, L-H, L-F, puis L-B), serveur 8144, un onglet.
+**FINI (relu, corrigé, rejoué).** Repreneur de la relecture (la première session coupée après `7adb331`). Jeton_3 pris à
+08:51 (attendu depuis 08:06 : les trois tenus par L-C, L-H, L-F, puis L-B), rendu à 09:26 ; onglet fermé, serveur 8144
+arrêté. Un repreneur n'a rien à reprendre : ce qui reste est à F2 et à la vague 3 (plus bas).
+
+**Rejoué sur le code final** (`015922a`, tests `72683ea`) :
+- `&rapport=1&lot=L-M` : **14/14 sur PC** (46,5 s, 0 signalé) et **14/14 sous `?tel=1`** (375 × 812, 87,2 s, 0 signalé).
+- `&rapport=1&lot=S0` : **29/29 sur PC** (82,0 s ; point 8 : programmes 148 → 148, la variante de repli de la rubalise
+  comptée dès la préparation) et **29/29 sous `?tel=1`** (72,7 s) ; balade au bit près (vue 3 et vue 1 : 0 / 0, points 1
+  et 27), `[optim] 4198 → 232`, 346 sièges.
+- `python -I tools/verifier_proprietaires.py lot/L-M` → `OK 7 fichiers`.
+- Mesures notables : test 5, 190 segments (15 passages enrubannés : 3 frontières de `rdc_rue` + 12 travées de la rue),
+  1 appel ; test 7, appels partie − balade +1 +1 +1 +1 +1 +41 (le +1 : la rubalise de la rue, dans la zone `ecole`),
+  témoin sans `forcees` coupé ; test 10, 14 poteaux, 12 travées, nus à 1,86 m des deux côtés, 0 point dans un plein.
 
 **Relu** contre §§ 3, 4.5.19, 4.6, 5.1, 5.3, 5.5.14 et le diff `socle...lot/L-M` : signatures exactes (`entrer` a un 3e
 paramètre facultatif, noté), ordre du pas (majPortes à l'étape 5), état `{ i, k, sens }` (+ `v`), déterminisme (ni
@@ -42,6 +53,25 @@ au sprint et en sautant dans les trois rubans de `rdc_rue` : arrêté à 0,35 m 
 de prop hunt au RDC (60 s simulées en 290 ms) : quatre portes pilotées, événements `porte` (Si 0.1 ouverte puis
 refermée, bureau B et passage tenus ouverts par un prop caché à 1,75 m et un chasseur — l'indice voulu). Console : seule
 l'inscription du service worker échoue (le navigateur intégré la refuse ; hors du lot).
+
+**Écarts ajoutés par la relecture** (au § 4.5.19 et au § 5.5.14) :
+- La rue bornée est TRACÉE (rubalise sur poteaux, même `InstancedMesh`, 35 cm au-delà de `BORNES_JEU`) : le document ne
+  le dit pas, mais une borne invisible au milieu de la chaussée est le pire de ce qu'un joueur de CoD peut rencontrer.
+  `this.rue`, `this.poteaux`, `_poteauxVus` ; montrée dans les zones avec rue seulement.
+- La rubalise d'un passage par une porte couvre la partie libre de la baie (`Q.s0`, `Q.s1`), la barrière toute la baie
+  (`Q.cx`, `Q.hl`).
+- `_compilerRubalise` compile aussi la variante de repli de la qualité automatique (`fx.avecRepli`).
+
+**Demandes ajoutées** :
+- **L-Q (vague 3, la killcam)** : `majPortes` émet `'porte'` par `game.partie` (sa signature `majPortes(dt, acteurs)` ne
+  reçoit pas la partie) : une partie re-simulée hors de `game.partie` émettrait ses événements de porte dans la partie
+  en cours — passer la partie à `majPortes` (signature à changer par F2) ou poser `monde.partie` à `Partie.entrer`.
+- **F2** : rejouer S0 point 8 SOUS CHARGE (plusieurs agents) — il dépend de la qualité automatique ; tout objet posé
+  dans la scène à l'entrée (bots, armes au sol, drone de la vague 3) doit compiler sa variante de repli à la préparation,
+  comme la rubalise et les avatars, sinon la première baisse en pleine partie l'y compile.
+
+**Doute ajouté** : la vrille de la rubalise de la rue reste un pur affichage ; les poteaux ne sont pas au monde solide
+(la borne arrête le corps 5 cm avant eux) — une balle les traverse.
 
 ## Où j'en suis (constructeur)
 
