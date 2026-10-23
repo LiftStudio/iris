@@ -11,8 +11,10 @@ travail, verts) et tranche les écarts 1 et 4 et les demandes ci-dessous.
 - `&rapport=1&lot=S0` sur la branche : **29/29 sur PC** et **29/29 sous `?tel=1`** (`8d738b9` : `modeles_armes.js` y est
   celui d'aujourd'hui, seuls les tests de L-W ont bougé depuis), balade au bit près avant et après les parties (1 et 27 :
   vue 3 0 / 0, vue 1 0 / 0), point 8 : programmes 147 → 147 (PC), 84 → 84 (tel)  ; rejoué sur PC au code final (`c597c31`) : **29/29**, 111,5 s, 0 signalé, vue 3 0 / 0, vue 1 0 / 0, programmes 147 → 147.
-- `python -I tools/verifier_proprietaires.py lot/L-W` → `OK 3 fichiers` ; fins de ligne CRLF comme les voisins ; tous les
-  commits préfixés (« L-W : », « L-W relecture : ») avec la ligne d'attribution.
+- `python -I tools/verifier_proprietaires.py lot/L-W` → `OK 3 fichiers` (`380497a` ; de `160cb2c` à `c597c31` il refusait
+  un commentaire du test qui citait le mot des lumières interdit dans `js/jeu/` — ma faute, reprise ; depuis `c597c31`, rejoué
+  au navigateur, seul ce commentaire et ce rapport ont changé) ; fins de ligne CRLF comme les voisins ; tous les commits
+  préfixés (« L-W : », « L-W relecture : ») avec la ligne d'attribution.
 - Navigateur : `jeton_3` de 06:27 à 06:49 (attente 06:00-06:27) ; onglet fermé, serveur 8133 et récepteur 8233 arrêtés.
 - Photos regardées (dans `C:/Users/hgami/Downloads/IRIS_lots/_photos/L-W/relecture/`) : `planche.jpg` / `planche_tel.jpg`
   (8 armes × 4 colonnes, 3e personne comprise), `courses.jpg` / `courses_tel.jpg` (test 10), `gros_*.jpg` (levier de la
