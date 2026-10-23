@@ -75,7 +75,8 @@ function versDoux(k, monte, tMonte, tDescend, dt) {
 
 // l'état de mouvement d'un acteur (ce que l'état sérialisable ne porte pas : rien qui décide d'une règle — le sprint tactique
 // en cours, l'épuisement, la glissade, le franchissement, les minuteries de visée et de réception, l'œil lissé)
-function etatMvt(a) {
+// (exportée — F2 : Acteur.appliquer y rend le sprint tactique en cours et l'épuisement, champs `tA` et `ep` de l'état § 4.7)
+export function etatMvt(a) {
   let M = a.mvt;
   if (!M) {
     M = a.mvt = { tact: false, tactArme: -Infinity, epuise: false, sprintT: 0, sprintFinT: -Infinity, sprinte: false, glisse: null, glisseFin: -Infinity,

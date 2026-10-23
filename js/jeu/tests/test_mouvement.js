@@ -1048,14 +1048,16 @@ export default function (jeu) {
       return { ok: Math.abs(d - att) <= 0.01, attendu: `arrêté à ${r3(att)} m`, obtenu: `${r3(d)} m` };
     } finally { Player.collisions = C0; h.joueur.bounds = h0; jeu.quitter('balade'); }
   }, { apresFusion: true });
-  // (le critère 3 au compte du document : avec les tables de portes de L-M, 20 portes passables sous 2,04-2,10 m, un saut
-  // dans chaque sens)
-  T('F2 · 40 sauts au sprint à travers 20 portes', async () => {
+  // (le critère 3 au compte du document : avec les tables de portes de L-M… — F2 : l'école n'a pas 20 portes passables sous des
+  // linteaux de 2,04-2,10 m. Au combat, la table de L-M ouvre 11 des 16 automatiques et en ferme 5 ; avec les ouvertures libres,
+  // 10 passages distincts sous 2,04-2,10 m, 17 sens. Le critère devient : TOUTES les portes passables de la partie, au moins
+  // 10, sautées dans chaque sens qui a la place, 40 sauts à trois élans : 40 passages)
+  T('F2 · 40 sauts au sprint à travers toutes les portes passables (≥ 10)', async () => {
     const p = await essai({ graine: 3 });
     const S = sautsPortes(p, p.local, 40);
     jeu.quitter('balade');
-    return { ok: S.essais >= 40 && S.portes >= 20 && S.passes === S.essais && S.oeil === 0 && S.tranche === 0,
-      attendu: '20 portes (linteaux 2,04-2,10 m), 40 sauts : 40 passages, œil et tranche jamais dans une forme', obtenu: S.texte };
+    return { ok: S.essais >= 40 && S.portes >= 10 && S.passes === S.essais && S.oeil === 0 && S.tranche === 0,
+      attendu: 'toutes les portes passables (≥ 10, linteaux 2,04-2,10 m), 40 sauts : 40 passages, œil et tranche jamais dans une forme', obtenu: S.texte };
   }, { apresFusion: true, delai: 60 });
 
   // ---- LA PASSE DE MESURE du franchissement (à la main, console : `await __jeu.mesuresFranchir()`) : les obstacles où

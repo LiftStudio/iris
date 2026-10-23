@@ -1655,7 +1655,8 @@ autres fichiers sont étiquetés par L-K (§ 5.3).
 ### 4.7 L'état sérialisable et le multijoueur plus tard (contrat du socle, testé par `verifierEtat`)
 ```js
 { v: 1, mode, zone, graine, tick, t, rng, phase, phaseT, manche, chrono, scores: { A, B } | null,
-  acteurs: [{ id, nom, av, eq, role, x, y, z, vx, vz, cap, lacet, tangage, jy, jv, air, acc, gl, tact /* jauge du sprint tactique */, en /* endurance */, vie, ar, viv, rT, pT,
+  acteurs: [{ id, nom, av, eq, role, x, y, z, vx, vz, cap, lacet, tangage, jy, jv, air, acc, gl, tact /* jauge du sprint tactique */, en /* endurance */,
+              tA /* sprint tactique en cours (F2) */, ep /* épuisé, chasseur (F2) */, vie, ar, viv, rT, pT,
               arme: { i, ch: [..], res: [..], et, t, vk, seq, chaleur, reculI, let, tac }, prop: { cle, cap, fige, verrou, pv, chg, pT } | null,
               st: { e, m, a, s } }],
   grenades: [{ id, a, type, x, y, z, vx, vy, vz, t }], portes: [{ i, k, sens }], points: [...], evenements: [...] }

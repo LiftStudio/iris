@@ -9,7 +9,7 @@
 import * as THREE from 'three';
 import { creerCommande } from './commande.js';
 import { niveauDe } from './constantes.js';
-import { hauteurOeil } from './mouvement.js';
+import { hauteurOeil, etatMvt } from './mouvement.js';
 
 export class Acteur {
   constructor(partie, { id, nom, equipe = null, role = 'combattant', fiche = null, local = false, humain = false }) {
@@ -84,6 +84,8 @@ export class Acteur {
     return { id: this.id, nom: this.nom, av: this.fiche ? this.fiche.id || null : null, eq: this.equipe, role: this.role,
       x: c.pos.x, y: c.pos.y, z: c.pos.z, vx: c.vel.x, vz: c.vel.z, cap: c.ang || 0, lacet: this.cmd.lacet, tangage: this.cmd.tangage,
       jy: c.jumpY || 0, jv: c.jumpVel || 0, air: !!c.airborne, acc: this.accroupi, gl: this.glisse, tact: this.jaugeTact, en: this.endurance,
+      // (F2, demande de L-B : le sprint tactique EN COURS et l'épuisement d'un chasseur, que la jauge et l'endurance ne disent pas)
+      tA: !!(this.mvt && this.mvt.tact), ep: !!(this.mvt && this.mvt.epuise),
       vie: this.vie, ar: this.armure, viv: this.vivant, rT: this.reapparitionT, pT: this.protegeT, mT: this.mortT, gel: this.gele,
       arme: A ? A.etat() : null,
       prop: P ? { cle: P.cle, cap: P.cap, fige: !!P.fige, verrou: !!P.verrou, pv: P.pv, chg: P.changements || 0, pT: P.provocT || 0 } : null,
@@ -98,6 +100,7 @@ export class Acteur {
     c.jumpY = e.jy; c.jumpVel = e.jv; c.airborne = e.air;
     this.cmd.lacet = e.lacet; this.cmd.tangage = e.tangage;
     this.accroupi = e.acc; this.glisse = e.gl; this.jaugeTact = e.tact; this.endurance = e.en;
+    if (e.tA !== undefined || e.ep !== undefined) { const M = etatMvt(this); M.tact = !!e.tA; M.epuise = !!e.ep; }
     this.vie = e.vie; this.armure = e.ar; this.vivant = e.viv; this.reapparitionT = e.rT; this.protegeT = e.pT;
     this.mortT = e.mT || 0; this.gele = !!e.gel;
     if (this.arsenal && e.arme) this.arsenal.appliquer(e.arme);
