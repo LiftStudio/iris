@@ -607,7 +607,9 @@ export class MondePartie {
     // (relecture : et sa variante du cran de REPLI de la qualité automatique — sans carte d'environnement —, comme un avatar
     // qui arrive, js/game.js Player.preparerRendu : posée dans la scène à l'entrée, la rubalise n'avait que la variante du
     // moment, et la première baisse automatique en pleine partie la compilait d'un coup — un programme de plus, S0 point 8)
-    if (fx && fx.auto && fx.avecRepli && fx._etatRepli && fx._etatRepli()) fx.avecRepli(R, (x) => g._compilerAsync(x));
+    // (F2 : même qualité automatique coupée — la préchauffe du décor, game.prechaufferScene → fx.precompilerRepli, compile la
+    // scène entière dans l'état de repli, rubalise comprise si elle y est : un programme de plus en pleine partie, L-W 9)
+    if (fx && fx.avecRepli && fx._etatRepli && fx._etatRepli()) fx.avecRepli(R, (x) => g._compilerAsync(x));
   }
 
   // ================================================================ L'AFFICHAGE (une fois par image)
