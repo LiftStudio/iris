@@ -277,3 +277,6 @@ OK. Onglet `tab-8` fermé, serveur 8136 arrêté, `jeton_1` rendu.
 - 05:31:23-05:31:50 : mon script d'attente lisait la DERNIÈRE date de `qui.txt` (celle de l'ancien preneur, citée par un
   jeton repris) et a cru `jeton_1` périmé alors que L-U le tenait depuis 05:24:23 : `qui.txt` réécrit à l'identique de
   celui de L-U 27 s plus tard ; aucune page ouverte entre-temps (L-U n'a rien perdu). Script corrigé (la PREMIÈRE date).
+- 06:17:57 : `jeton_1` pris (attente de 06:17 à cause de la file). 06:31:51-06:41:14 : un script d'attente arrêté par
+  l'outil (TaskStop) tournait encore sous Windows et a pris aussi `jeton_2` ; aucune page n'y a été ouverte (un seul
+  onglet, `tab-28`) ; rendu dès vu, les processus orphelins tués.
