@@ -417,7 +417,8 @@ export default function (jeu) {
       // la pause : racine overlay, la croix y promène le focus, B « tape » la pause (elle se referme)
       game.togglePause(); game.frame(1 / 60);
       const rO = n.racine(); const f0 = n.cur;
-      F.bouton('Down', true); game.frame(1 / 60); F.bouton('Down', false); game.frame(1 / 60);
+      // (la croix : vers le bas, ou vers la droite quand l'écran couché range les boutons en ligne)
+      for (const dir of ['Down', 'Right']) { if (n.cur !== f0) break; F.bouton(dir, true); game.frame(1 / 60); F.bouton(dir, false); game.frame(1 / 60); }
       res.push(['overlay navigable', !!rO && rO.id === 'overlay' && !!n.cur && n.cur !== f0, (rO && rO.id) + ' : ' + (f0 && f0.textContent) + ' → ' + (n.cur && n.cur.textContent)]);
       F.bouton('B', true); game.frame(1 / 60); F.bouton('B', false); game.frame(1 / 60); game.frame(1 / 60);
       res.push(['B sur la pause : refermée', !game.paused && document.getElementById('overlay').hidden]);
