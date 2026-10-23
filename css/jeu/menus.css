@@ -210,3 +210,16 @@ body.pad-nav .mj-b.pad-focus { outline: none !important; box-shadow: none !impor
 /* au doigt : de gros boutons (44 px au moins) */
 body.touch .mj-b { min-height: 44px; }
 body.touch .rj-seg button, body.touch .rj-pas button, body.touch .rj-bascule { min-height: 44px; }
+
+/* ---------------------------------------------------------------- LES OPTIONS (js/ui.js : onglet COMBAT, profils de Commandes) */
+/* les trois profils de touches de l'onglet COMMANDES (BALADE / COMBAT / PROP HUNT) */
+.sous-onglets { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 8px 4px; padding: 4px; background: #0e121b; border: 1px solid var(--line); border-radius: 8px; width: fit-content; max-width: calc(100% - 16px); }
+.sous-onglets button { background: transparent; border: 0; color: var(--muted); padding: 9px 18px; border-radius: 5px; cursor: pointer; font: 400 19px/1 var(--head); letter-spacing: 0.12em; }
+.sous-onglets button.on { background: var(--accent); color: #000; }
+.sous-onglets button:hover:not(.on) { color: var(--text); }
+/* l'avertissement Ctrl (une touche Ctrl liée : Ctrl + W ferme l'onglet) */
+.opt-avert { margin: 10px 8px 4px; padding: 10px 12px; border: 1px solid rgba(255, 209, 102, 0.55); border-radius: 8px; background: rgba(255, 209, 102, 0.08);
+  color: #ffe2a6; font-size: 13px; line-height: 1.45; }
+.opt-avert b { color: #fff; }
+/* la pastille de couleur du réticule */
+.reticule-pastille { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 7px; vertical-align: -1px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55); }
