@@ -348,6 +348,9 @@ export class Arsenal {
       while (this.nC > 0 && t + 1e-9 >= this.tC && this.res[this.i] > 0) {
         this.ch[this.i]++; this.res[this.i]--; this.nC--; this.tC += R.parCartouche; this.entre = true;
         partie.evt('recharge', { a: a.id, phase: 'insere', tactique: this.tact, n: 1 });
+        // (F2, demande de L-V — l'ordre de la pompe à vide aligné : début, cartouches, POMPE, fin ; la pompe commence avec la
+        // dernière cartouche entrée, la recharge dure R.pompe de plus — les sons de L-H et l'arme de vue la jouent ici)
+        if (this.nC === 0 && this.pp) partie.evt('recharge', { a: a.id, phase: 'pompe', tactique: this.tact });
       }
       if (veutTirer && peut && this.ch[this.i] > 0 && this.nC > 0) {
         // interrompue : la pompe d'abord si le tube était vide, sinon la main revient à la poignée
