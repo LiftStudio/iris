@@ -249,6 +249,8 @@ const RECETTES = {
 
 // ---------------------------------------------------------------- SonsJeu
 const MUET = 1e-4;
+// le genre d'une grenade ('frag' | 'flash') dans un événement `explosion` ou `grenade` (voir brancher)
+const genreGrenade = (e, quoi) => (e.type && e.type !== quoi ? e.type : e.grenade ?? e.genre ?? 'frag');
 const db = (x) => 20 * Math.log10(Math.max(MUET, x));
 
 export class SonsJeu {
@@ -293,9 +295,10 @@ export class SonsJeu {
     this.debrancher(); this.partie = partie;
     this._bus();
     this._tPrec = partie.t; this._phase = partie.phase; this._bips = -1; this._coeurT = 0; this._gren.clear();
-    const noter = (e) => { this._file.push(e); };
-    for (const type of ['tir', 'impact', 'touche', 'elim', 'recharge', 'arme', 'vide', 'pas', 'saut', 'reception', 'glissade', 'frole',
-      'grenade', 'explosion', 'flash', 'capture', 'apparition', 'fin']) this._des.push(partie.sur(type, noter));
+    // (l'événement noté AVEC son genre : Partie.evt fait { t, type, ...données }, et une explosion ou une grenade porte un
+    // champ `type` à elle — 'frag' | 'flash' — qui écrase celui de l'événement)
+    for (const quoi of ['tir', 'impact', 'touche', 'elim', 'recharge', 'arme', 'vide', 'pas', 'saut', 'reception', 'glissade', 'frole',
+      'grenade', 'explosion', 'flash', 'capture', 'apparition', 'fin']) this._des.push(partie.sur(quoi, (e) => { this._file.push({ quoi, e }); }));
   }
   debrancher() {
     for (const d of this._des) d();
@@ -451,7 +454,7 @@ export class SonsJeu {
     // 1. les événements notés depuis la dernière image, dans leur ordre, chacun à son moment dans l'image
     if (this._file.length) {
       const L = this._file; this._file = [];
-      if (P && ctx) for (const e of L) { try { this._evenement(e, P); } catch (err) { console.warn('[sons]', e.type, err); } }
+      if (P && ctx) for (const w of L) { try { this._evenement(w.quoi, w.e, P); } catch (err) { console.warn('[sons]', w.quoi, err); } }
     }
     // 2. l'état : les rebonds des grenades, le cœur, le décompte
     if (P && ctx && dt > 0) this._etat(P);
@@ -469,10 +472,10 @@ export class SonsJeu {
   _ennemi(id) { const P = this.partie, L = P && P.local, a = P && P.acteurParId(id); return !!(L && a && a !== L && P.ennemis(L, a)); }
   _dehors(x, y, z) { return z > 0.5 && y > -0.4 && y < 4; }                 // (la rue, devant la façade : x −3…23, z 0…6)
 
-  _evenement(e, P) {
+  _evenement(quoi, e, P) {
     const G = REGLAGES_SONS.gains, R = REGLAGES_SONS.rayons, B = this._B, L = P.local, dec = this._decalage(e);
     const lui = (id) => !!L && id === L.id;
-    switch (e.type) {
+    switch (quoi) {
       case 'tir': {
         const a = P.acteurParId(e.a); if (!a) return;
         if (e.arme === 'couteau') { this.jouer3d(e.ox, e.oy, e.oz, RECETTES.couteau(B), { gain: G.couteau, rayon: 10, retard: true, decalage: dec, occlusion: !lui(e.a) }); return; }
@@ -525,9 +528,9 @@ export class SonsJeu {
       case 'reception': { const a = P.acteurParId(e.a); if (a) this._corps(a, RECETTES.reception(B, Math.max(0.3, e.f ?? 0.6)), G.pas * (lui(e.a) ? 0.6 : 1), R.pas.course, dec, 0.3); return; }
       case 'glissade': { if (!e.debut && e.debut !== undefined) return; const a = P.acteurParId(e.a); if (a) this._corps(a, RECETTES.glissade(B), G.glissade, R.pas.sprint, dec, 0.4); return; }
       case 'frole': if (lui(e.a)) this.jouer3d(e.x, e.y, e.z, RECETTES.frole(B, this._gaz()), { gain: G.frole, rayon: R.frole, prioritaire: true, occlusion: false }); return;
-      case 'grenade': this.jouer3d(e.x, e.y, e.z, RECETTES.lancer(B, e.type !== 'flash'), { gain: G.grenade, rayon: R.grenade, retard: true, decalage: dec, occlusion: !lui(e.a) }); return;
+      case 'grenade': this.jouer3d(e.x, e.y, e.z, RECETTES.lancer(B, genreGrenade(e, 'grenade') !== 'flash'), { gain: G.grenade, rayon: R.grenade, retard: true, decalage: dec, occlusion: !lui(e.a) }); return;
       case 'explosion': {
-        const E = this._oreille, d = Math.hypot(e.x - E.x, e.y - E.y, e.z - E.z), flash = e.type === 'flash';
+        const E = this._oreille, d = Math.hypot(e.x - E.x, e.y - E.y, e.z - E.z), flash = genreGrenade(e, 'explosion') === 'flash';
         const f = flash ? RECETTES.flash(B) : this._gaz() ? RECETTES.fragGaz(B) : RECETTES.frag(B, d > 30);
         this.jouer3d(e.x, e.y, e.z, f, { gain: flash ? G.flash : G.explosion, rayon: flash ? R.flash : R.explosion, retard: true, decalage: dec, prioritaire: d < 15, hauteurOcc: 0.3 });
         const X = REGLAGES_SONS.etouffe.explosion;

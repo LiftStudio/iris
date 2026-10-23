@@ -400,7 +400,9 @@ export class Effets {
     for (const d of this._des) d();
     this._des = []; this.partie = partie; this._file.length = 0;
     this._creer(); this._poser(); this._vider();
-    for (const type of ['tir', 'impact', 'touche', 'elim', 'explosion', 'flash', 'faux']) this._des.push(partie.sur(type, (e) => { this._file.push(e); }));
+    // (l'événement noté AVEC son genre : Partie.evt fait { t, type, ...données }, et une explosion ou une grenade porte un
+    // champ `type` à elle — 'frag' | 'flash' — qui écrase celui de l'événement ; demande à F2 au rapport)
+    for (const quoi of ['tir', 'impact', 'touche', 'elim', 'explosion', 'flash', 'faux']) this._des.push(partie.sur(quoi, (e) => { this._file.push({ quoi, e }); }));
     this._fluidite();
   }
   debrancher() {
@@ -440,9 +442,9 @@ export class Effets {
     if (this._file.length) {
       const L = this._file; this._file = [];
       this._tirs.length = 0; this._points.length = 0;
-      for (const ev of L) if (ev.type === 'tir') this._tirs.push(ev);
-      for (const ev of L) if (ev.type === 'impact' || ev.type === 'touche') this._points.push(ev);
-      for (const ev of L) { try { this._evenement(ev, P); } catch (err) { console.warn('[effets]', ev.type, err); } }
+      for (const w of L) if (w.quoi === 'tir') this._tirs.push(w.e);
+      for (const w of L) if (w.quoi === 'impact' || w.quoi === 'touche') this._points.push(w.e);
+      for (const w of L) { try { this._evenement(w.quoi, w.e, P); } catch (err) { console.warn('[effets]', w.quoi, err); } }
       for (const ev of this._tirs) { try { this._traceur(ev, P); } catch (err) { console.warn('[effets] traceur', err); } }
     }
     // 2. ce qui vit : particules, traceurs, éclairs, douilles, impacts qui s'effacent, grenades, anneaux, cibles
@@ -451,8 +453,8 @@ export class Effets {
     this._majAnneaux(dt, P.hud && P.hud.points); this._majCibles(dt, P.hud && P.hud.cibles);
   }
 
-  _evenement(ev, P) {
-    switch (ev.type) {
+  _evenement(quoi, ev, P) {
+    switch (quoi) {
       case 'tir': return this._tir(ev, P);
       case 'impact': return this._impact(ev, P);
       case 'touche': return this._touche(ev, P);
@@ -771,7 +773,8 @@ export class Effets {
     this.stats.explosions++;
     if (!this._visible(ev.x, ev.y, ev.z, 120)) return;
     const r = Math.random, x = ev.x, y = ev.y + 0.15, z = ev.z, E = this.etincelles, F = this.fumees;
-    if (ev.type === 'flash') {
+    const genre = genreGrenade(ev, 'explosion');
+    if (genre === 'flash') {
       E.emettre(x, y, z, 0, 0, 0, 0.16, 3.5, 4.5, COUL.blanc, { cas: 2, a0: 1 });
       E.emettre(x, y, z, 0, 0, 0, 0.35, 1.5, 2.6, [2, 2, 2.2], { cas: 0, a0: 1 });
       for (let i = 0; i < 12; i++) E.emettre(x, y, z, (r() - 0.5) * 9, r() * 5, (r() - 0.5) * 9, 0.25 + r() * 0.25, 0.02, 0.01, COUL.blanc, { cas: 1, grav: 6, trainee: 0.02 });
@@ -803,7 +806,8 @@ export class Effets {
   // à l'image d'avant (elle a quitté la liste en explosant)
   _lanceur(ev, P) {
     let best = null, bd = 3;
-    for (const [id, g] of this._grenVues) { const d = Math.hypot(g.x - ev.x, g.y - ev.y, g.z - ev.z); if (g.type === ev.type && d < bd) { bd = d; best = id; } }
+    const genre = genreGrenade(ev, 'explosion');
+    for (const [id, g] of this._grenVues) { const d = Math.hypot(g.x - ev.x, g.y - ev.y, g.z - ev.z); if (g.type === genre && d < bd) { bd = d; best = id; } }
     if (best === null) return null;
     const g = this._grenVues.get(best); this._grenVues.delete(best);
     return P.acteurParId(g.a);
@@ -893,6 +897,10 @@ export class Effets {
     this._nCib = n; M.visible = n > 0;
   }
 }
+
+// le genre d'une grenade ('frag' | 'flash') dans un événement `explosion` ou `grenade` : son champ `type` — qui, chez Partie.evt,
+// écrase le nom de l'événement — ou, si F2 le renomme, `grenade` / `genre`
+export function genreGrenade(e, quoi) { return e.type && e.type !== quoi ? e.type : e.grenade ?? e.genre ?? 'frag'; }
 
 // ---------------------------------------------------------------- le monde solide, en lecture
 // un DÉCALQUE va sur une forme HAUTE (un mur : y1 − y0 > 1,8) ou un plafond (`joueur === false`), jamais sur un vantail
