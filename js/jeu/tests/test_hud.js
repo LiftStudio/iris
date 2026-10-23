@@ -295,11 +295,17 @@ export default function (jeu) {
       const cols = ['SCORE', 'É', 'M', 'A', 'RATIO', 'SÉRIE'].every((c) => ent[0] && ent[0].includes(c));
       const lignes = A.tableau.el.querySelectorAll('.ts-ligne').length;
       const ph = A.tableau.el.querySelector('.ts-portrait'), lp = ph ? parseFloat(getComputedStyle(ph).width) : 0;
+      // (relecture 23/10) l'en-tête aligné sur les lignes : chaque titre au-dessus de sa colonne, le nom de l'équipe au-dessus des noms
+      const c0 = A.tableau.el.querySelector('.ts-col:not([hidden])'), hT = [...c0.querySelectorAll('.ts-entete .ts-c')], l0 = c0.querySelector('.ts-ligne');
+      const vT = l0 ? [...l0.querySelectorAll('.ts-v')] : [], mil = (e) => { const b = e.getBoundingClientRect(); return (b.left + b.right) / 2; };
+      const aligne = hT.length === 6 && vT.length === 6 && hT.every((h, k) => egalA(mil(h), mil(vT[k]), 1))
+        && egalA(c0.querySelector('.ts-entete .ts-nom').getBoundingClientRect().left, l0.querySelector('.ts-nom').getBoundingClientRect().left, 1);
       const attendu = matchMedia('(max-width: 760px)').matches ? 24 : matchMedia('(max-width: 900px), (max-height: 520px)').matches ? 28 : 32;
       A.tableau.maj(p, false); const cache1 = !visible(A.tableau.el);
       res.push([`caché, tenu → montré, relâché → caché`, cache0 && montre && cache1]);
       res.push([`deux colonnes d’équipe (${ent.map((e) => e.split('SCORE')[0]).join(' | ')})`, deux]);
       res.push(['colonnes rang, portrait, nom, score, É, M, A, ratio, série', cols && !!A.tableau.el.querySelector('.ts-ligne .ts-rg') && !!A.tableau.el.querySelector('.ts-ligne .ts-nom')]);
+      res.push([`en-tête aligné sur les colonnes : ${aligne}`, aligne]);
       res.push([`${lignes} lignes pour ${p.hud.classement.length} acteurs ; portrait ${lp} px (${attendu} sur cet écran, 32 au PC)`, lignes === p.hud.classement.length && egalA(lp, attendu, 0.5)]);
       // (relecture 23/10) depuis la pause (« Tableau des scores ») : au-dessus de l'écran de pause, refermé par un clic, et
       // refermé quand la pause se ferme

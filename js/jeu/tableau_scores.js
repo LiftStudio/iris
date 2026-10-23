@@ -90,7 +90,9 @@ export class TableauScores {
       const G = this.eCols[gi];
       cacher(G.c, false);
       classe(G.c, 'eqA', eq === 'A'); classe(G.c, 'eqB', eq === 'B');
-      const ent = `<span class="ts-rg">#</span><span class="ts-nom">${eq ? (EQUIPES[eq] || {}).nom || eq : 'JOUEUR'}${eq && sc ? ` · ${sc[eq]}` : ''}</span>` + cols.map(([, t]) => `<span>${t}</span>`).join('');
+      // (la case vide du portrait : l'en-tête a les dix colonnes des lignes — sans elle, relecture 23/10, le nom de l'équipe
+      // tombait dans la colonne du portrait, « SCORE » au-dessus des noms et chaque titre une colonne trop à gauche)
+      const ent = `<span class="ts-rg">#</span><span class="ts-ph"></span><span class="ts-nom">${eq ? (EQUIPES[eq] || {}).nom || eq : 'JOUEUR'}${eq && sc ? ` · ${sc[eq]}` : ''}</span>` + cols.map(([, t]) => `<span class="ts-c">${t}</span>`).join('');
       if (G.h.__html !== ent) { G.h.__html = ent; G.h.innerHTML = `<span class="ts-pt"></span>` + ent; }
       const membres = cl.filter((c) => !eq || c.equipe === eq);
       let ordre = '';
