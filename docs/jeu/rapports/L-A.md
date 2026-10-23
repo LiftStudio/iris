@@ -6,13 +6,25 @@ port 8131 ; 23/10/2026. Fichiers du lot : `js/jeu/armes.js`, `js/jeu/balistique.
 
 ## Où j'en suis
 
-**JOUÉ ET VÉRIFIÉ — reste la fin (partie jouée à l'écran, captures, rapport final, onglet et jeton rendus).**
-- `&rapport=1&lot=L-A` : **19/19 sur PC** (13,6 s, 0 signalé) et **19/19 sous `?tel=1`** (375 × 812, 15,1 s, 0 signalé).
-- `&rapport=1&lot=S0` sur la branche : **29/29 sur PC** (88,5 s, 0 signalé ; balade au bit près avant et après les
-  parties) ; `?tel=1` : voir plus bas.
-- `python -I tools/verifier_proprietaires.py lot/L-A` : OK.
-- Jeton du navigateur : `jeton_3`, pris à 04:12:50 (attendu de 03:28 à 04:12 : les trois pris par L-D, L-G, L-V puis
-  L-E, L-B) ; un seul onglet (`tab-12`), serveur `python serve.py 8131` dans l'arbre.
+**FINI.** Les six points de la définition du § 5.1 (règle 5) sont tenus :
+- (a) `&rapport=1&lot=L-A` : **19/19 sur PC** (13,6 s, 0 signalé) et **19/19 sous `?tel=1`** (émulation 375 × 812,
+  15,1 s, 0 signalé) ;
+- (b) `&rapport=1&lot=S0` sur la branche : **29/29 sur PC** (88,5 s, 0 signalé) et **29/29 sous `?tel=1`** (133,8 s,
+  0 signalé) — balade au bit près avant et après les parties (vue 3 et vue 1 : 0 / 0), essai (13 tirs, 4 touches,
+  1 élimination), tirs simultanés (2 éliminations au même pas, dans les deux ordres), cerveau minimal (42 éliminations,
+  écart médian 1,97°) ;
+- (c) `python -I tools/verifier_proprietaires.py lot/L-A` : `OK 6 fichiers` (fichiers et pureté) ;
+- (d) commits préfixés « L-A : … » avec la ligne d'attribution ;
+- (e) ce rapport, commité ;
+- (f) onglet fermé (`tab-12`), serveur `python serve.py 8131` arrêté, jeton rendu (`jeton_3`, tenu de 04:12:50 à
+  04:43:39 ; attendu de 03:28 à 04:12, les trois pris par L-D, L-G, L-V puis L-E, L-B — une note de L-V dans
+  `_navigateur/` raconte que jeton_3 avait été partagé entre L-V et L-B avant moi : je l'ai pris libre, par `mkdir`).
+
+Joué à l'écran (essai, `?partie=essai&graine=42`, onglet devant, 45 images/s) : une rafale de FA-24 tenue sur le
+mannequin du hall fait monter la vue de 9,0° en 16 balles (le « 7 » du motif ; il faut tirer vers le bas), la réserve
+du HUD descend (30 → 23 → 14), la dispersion revient à 2,2° dès qu'on lâche ; frag cuite 0,4 s, lancée : 3 rebonds puis
+l'explosion ; couteau à 1,4 m : 150, la touche à 0,125 s ; flash : 3,09 s pour Haythem qui la regardait, 0,80 s pour
+les mannequins de dos. (Les effets, les sons et l'arme de vue sont ceux des squelettes : L-H, L-V.)
 
 ## Ce qui est construit
 
@@ -165,7 +177,16 @@ contre les vrais corps de L-C) sont écrits et sautés avant `&fusion=1`.
    vide) ; le clic qui l'a interrompue part alors.
 9. **`touches.capsules` d'un prop** : la boîte locale DÉCENTRÉE de T.boite tourne avec le meuble (le squelette ne prenait
    que sa hauteur) — à vérifier avec le vrai `majProps` de L-K (même convention de cap que `rotation.y`).
-10. **Grenade** : rebonds francs seulement au-dessus de 1 m/s, roulement freiné à 6 m/s² (non chiffrés au § 3.3).
+10. **Grenade** : rebonds francs seulement au-dessus de 1 m/s, roulement freiné à 6 m/s² (non chiffrés au § 3.3) ; un
+    filet l'arrête sous le −1 ou à 2 m hors des bornes du jeu (un trou du monde solide ne la fait plus tomber sans fin).
+11. **`EXCEPTIONS_PREFILTRE` posée dès la vague 2** (§ 5.5.1 l. 2283-2286 : « À F2 ») : le test 19 (ajouté) a trouvé, sur
+    10 000 paires de points libres, 37 lignes de vue que le pré-filtre disait cachées — les pièces fermées du
+    rez-de-chaussée vues de plus de 8 m de leur porte (r0|r0si 29, rue|r0si 4, r0|r0sv 4). Les exceptions couvrent les
+    quatre pièces fermées vues des six zones qui voient le rez-de-chaussée (24 paires) : le combat tient leurs portes
+    ouvertes, le prop hunt les ouvre pour tous. Elles deviennent inutiles (et sans effet) quand L-M branche
+    `visibilite.forcees`.
+12. **Test 15** : noté, il ne fait pas échouer (« bloquant à F2 seulement », l. 2279) ; le test `apresFusion` le rend
+    bloquant sur les vrais corps.
 
 ## Demandes
 
@@ -196,4 +217,7 @@ contre les vrais corps de L-C) sont écrits et sautés avant `&fusion=1`.
 
 ## Photos regardées
 
-(à venir : essai joué à la souris, tir en rafale — la montée du motif —, couteau, grenade.)
+Captures du panneau (onglet du lot, 524 × 306 affiché) : l'essai au départ, le mannequin du hall au centre de la visée
+(HUD « 0:00 · VIE 100 · FA-24 « Faucon » 30 / 90 ») ; la même vue à la 7e balle d'une rafale tenue (la vue a monté d'un
+cran, 23 / 90) et à la 16e (le mannequin est passé sous le centre : la montée du motif, 14 / 90). Rien d'autre à
+regarder pour ce lot : il n'a ni maillage ni effet (impacts, traceurs, grenade en vol : L-H ; l'arme : L-W, L-V).
