@@ -171,10 +171,20 @@ export default function (jeu) {
       for (const a of L) max = Math.max(max, a.joueur.couches.souffle);
     } finally { for (const m of Object.keys(compte)) son[m] = espion[m]; }
     const d = pousses.map((a) => r2(Math.hypot(a.pos.x - a.joueur.posPrec.x, a.pos.z - a.joueur.posPrec.z)));
+    // (le témoin : le même corps SANS le drapeau, poussé de même, entre bien dans le rang — la poussée y mène)
+    let temoin = 0;
+    if (pousses.length) {
+      const a = pousses[0], j = a.joueur, r = R[0], bb = r.ouvA ? 0 : 1, sg = bb ? -1 : 1, ex = bb ? r.bx : r.ax, ez = bb ? r.bz : r.az;
+      jeu.teleporter(a.id, ex - r.ux * sg * 0.15, r.sol, ez - r.uz * sg * 0.15, a.cmd.lacet);
+      j.sansRangs = false;
+      for (let i = 0; i < 120 && !j.rang; i++) image();
+      temoin = j.rang ? 1 : 0;
+      j.rang = null; j.sansRangs = true;
+    }
     jeu.quitter('balade');
     const sons = compte.pas + compte.crissement + compte.reception;
-    return { ok: rangs === 0 && sons === 0 && souffle === 0, attendu: '120 s : 0 entrée dans un rang, 0 son des couches d’un bot, jamais les mains sur les genoux (endurance à 5)',
-      obtenu: `${L.length} bots (${pousses.length} poussés dans les rangs de la S 1.3) · rangs ${rangs} · sons ${compte.pas}/${compte.crissement}/${compte.reception} · souffle ${souffle} (max ${max})` };
+    return { ok: rangs === 0 && sons === 0 && souffle === 0 && temoin === 1, attendu: '120 s : 0 entrée dans un rang, 0 son des couches d’un bot, jamais les mains sur les genoux (endurance à 5) ; le témoin sans le drapeau entre dans le rang',
+      obtenu: `${L.length} bots (${pousses.length} poussés dans les rangs de la S 1.3) · rangs ${rangs} · sons ${compte.pas}/${compte.crissement}/${compte.reception} · souffle ${souffle} (max ${max}) · témoin ${temoin ? 'entré' : 'PAS entré'}` };
   }, { delai: 240 });
 
   // 4. L'ARME EN MAIN : le canon dans la direction de la commande (≤ 0,5°), les mains sur les prises (≤ 2 cm), le coût,

@@ -21,7 +21,11 @@ export const TEINTE = {
   force: 0.6,                 // part de la teinte dans la tenue (spec § 3.6 : 60 %)
   bas: 0.42,                  // le pantalon : la couleur de l'équipe × 0,42
   coupe: 1.10,                // la coupure haut / bas, en hauteur de squelette (1 = la hanche : js/fit.js)
-  brassard: { hauteur: 0.08, depuisEpaule: 0.11, marge: 0.006, segments: 18, emissif: 0.22 },
+  brassard: { hauteur: 0.08, depuisEpaule: 0.12, marge: 0.005, centile: 0.93, segments: 18, emissif: 0.22 },
+  // le contraste du tissu gardé (js/fit.js uFitTissu.y : 0,85 dans LA CAGE) — à 0,85, une chemise blanche sur un atlas
+  // sombre restait blanche (sa luminance, bien au-dessus de la moyenne de l'atlas, était reportée telle quelle) : mesuré
+  // sur Koji et Ethan le 23/10, aucune teinte visible ; à 0,25 les plis restent, la couleur de l'équipe se lit
+  contraste: 0.25,
 };
 const MATS = new Map();       // équipe → MeshStandardMaterial (partagé)
 const GEOS = new Map();       // avatar + côté → { geo, cx, cz } (partagé)
@@ -63,10 +67,12 @@ function manche(model, os, y0, h) {
     }
   });
   if (n < 6) return null;
-  const cx = sx / n, cz = sz / n;
-  let r = 0;
-  for (let k = 0; k < pts.length; k += 2) r = Math.max(r, Math.hypot(pts[k] - cx, pts[k + 1] - cz));
-  return { cx, cz, r };
+  const cx = sx / n, cz = sz / n, R = [];
+  for (let k = 0; k < pts.length; k += 2) R.push(Math.hypot(pts[k] - cx, pts[k + 1] - cz));
+  // (le 93e centile, pas le plus loin : sous l'aisselle et dans les plis, quelques sommets de la manche s'écartent ; au
+  // plus loin, le brassard devenait une bouée — mesuré sur Gabriel : 6,2 cm au 85e centile, 8,4 au plus loin)
+  R.sort((p, q) => p - q);
+  return { cx, cz, r: R[Math.min(R.length - 1, Math.floor(R.length * TEINTE.brassard.centile))] };
 }
 // la géométrie du brassard d'un côté pour CET avatar (cylindre fermé : ses disques sont dans le bras, l'épaisseur visible
 // est la marge), en unités de l'os
@@ -100,7 +106,8 @@ export function teinteEquipe(player, equipe) {
   retirerTeinte(player);
   const M = player.avatarModel; if (!M) return;
   const c = couleur(equipe), rep = player.fitRep;
-  const f = c && rep ? { haut: c, bas: '#' + new THREE.Color(c).multiplyScalar(TEINTE.bas).getHexString(), force: TEINTE.force, coupe: TEINTE.coupe } : null;
+  const f = c && rep ? { haut: c, bas: '#' + new THREE.Color(c).multiplyScalar(TEINTE.bas).getHexString(), force: TEINTE.force, coupe: TEINTE.coupe,
+    contraste: TEINTE.contraste } : null;
   M.traverse((o) => { if (o.isSkinnedMesh && o.material && o.material.__cage && /look/i.test(o.material.name || '')) appliquerFit(o.material, f, rep); });
   if (!c) return;
   const mat = matBrassard(equipe), L = [];

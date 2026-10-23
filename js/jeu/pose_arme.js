@@ -28,6 +28,7 @@ export const POSE_3E = {
   dos: { droit: 0.0, droitSprint: 0.12, penche: 0.25 },       // le dos (rad vers l'avant), le penché du groupe gardé
   tangage: { part: [0.10, 0.15, 0.25], max: 0.6 },                // part du tangage prise par Spine / Spine1 / Spine2
   troisQuarts: { fusil: 0.55, pistolet: 0.08 },                   // le buste tourné vers la droite (rad)
+  joue: 0.22,                                                     // la tête penchée sur la crosse (rad)
   creux: 0.30,                                                    // le creux de l'épaule : de RightArm vers le milieu
   pistolet: { devant: 0.36, bas: 0.10, droite: 0.0 },             // la poignée du pistolet depuis le milieu des épaules (× e)
   prise: { doigts: 0.55, paume: 0.022 },                          // le creux de la paume : part de la main, hors de la paume (m × e)
@@ -207,8 +208,10 @@ export function poserArme(acteur, dt) {
   A.ajouter('Spine1', tb * Tg.part[1], -bl * 0.35, 0);
   A.ajouter('Spine2', tb * Tg.part[2], -bl * 0.35, 0);
   const reste = (t - tb * (Tg.part[0] + Tg.part[1] + Tg.part[2])) * kVise;
-  A.ajouter('Neck', reste * 0.4, bl * 0.45, 0);
-  A.ajouter('Head', reste * 0.6, bl * 0.55, 0);
+  // (la joue sur la crosse : la tête penchée vers l'arme, un fusil épaulé seulement)
+  const joue = fusil ? kVise * POSE_3E.joue : 0;
+  A.ajouter('Neck', reste * 0.4 + joue * 0.3, bl * 0.45, joue * 0.4);
+  A.ajouter('Head', reste * 0.6 + joue * 0.5, bl * 0.55, joue * 0.8);
   A.bone('Spine').updateMatrixWorld(true);
   // ---- 2. le repère de l'arme
   _r.crossVectors(_f, _up); if (_r.lengthSq() < 1e-8) _r.set(Math.cos(l), 0, -Math.sin(l)); _r.normalize();   // la droite

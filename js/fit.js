@@ -355,7 +355,11 @@ vec3 fitPeindre(vec3 src) {
     col = mix(col, uFitD, clamp(centre, 0.0, 1.0));
     col = mix(col, uFitC, clamp(lis, 0.0, 1.0));
   }
-  return mix(src, fitL(fitTeinte(fitS(src), fitS(col))), uFitCorps.w);
+  // (23/10, lot L-C : le mélange avec le tissu d'origine se fait dans l'espace PERÇU — fitS, sRGB approché — et non en
+  // linéaire : en linéaire, une teinte à 60 % d'un bleu sur une chemise blanche restait presque blanche, la lumière du
+  // blanc l'emportant ; le tissu d'origine éteint, uFitCorps.w = 0, sort plus haut, inchangé)
+  vec3 s = fitS(src);
+  return fitL(mix(s, fitTeinte(s, fitS(col)), uFitCorps.w));
 }
 `;
 
