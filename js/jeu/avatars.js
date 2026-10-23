@@ -74,9 +74,11 @@ function sonder(game, f) {
 async function preparerSonde(game, f) {
   const p = new Player(definition(f), game.scene);
   p.mesh.visible = false;                                      // (jamais à l'image : seuls ses programmes comptent)
-  for (let i = 0; i < 300 && !p._pretAvatar && !p.body.visible; i++) await attendre(0.02);   // le GLB lu (6 s au plus)
+  // le GLB lu (la promesse du cache des modèles : le corps s'y est abonné le premier, son avatar est donc posé quand elle
+  // rend la main — pas d'attente par minuterie : un onglet d'arrière-plan les ralentit à une par seconde), puis ses
+  // programmes et ses clips (Player._pretAvatar : 6 s au plus pour les clips)
+  await prechargerModele(f.model);
   if (p._pretAvatar) await Promise.race([p._pretAvatar, attendre(8)]);
-  for (let i = 0; i < 100 && p.avatarModel && !p.anim; i++) await attendre(0.02);              // les clips reciblés
   // le calage de la tête : la sonde au repos (clip d'attente), sa tête mesurée (os Head + 8,5 cm × h / 1,8 sur son axe)
   if (p.avatar && p.anim && !CALAGE.has(f.model)) {
     p.pos.set(0, 0, 0); p.vel.set(0, 0, 0);
@@ -95,32 +97,37 @@ async function preparerSonde(game, f) {
     opaciteCorps(p, 0.5);
     try { await Promise.race([game._compilerAsync(p.avatarModel), attendre(8)]); } finally { opaciteCorps(p, 1); }
   }
-  // UNE IMAGE VRAIE de la sonde, sous l'écran de préparation (il couvre l'image) : la compilation parallèle (Player.
-  // preparerRendu) ne couvre pas toutes les passes — mesuré le 23/10 : 3 programmes de profondeur (cheveux à alphaTest des
-  // amis, passes sans lumières) et 2 de matériaux simples naissaient au premier dessin d'un bot. Dessinée une fois opaque,
-  // une fois transparente, teinte, brassards et une arme en main : tout ce qu'un corps montrera.
-  if (p.avatarModel && game.fx && game.camera) await imageSonde(game, p);
   if (p.mesh.parent) p.mesh.parent.remove(p.mesh);
   return p;
 }
-async function imageSonde(game, p) {
-  const cam = game.camera, d = new THREE.Vector3();
+// UNE IMAGE VRAIE des sondes neuves, toutes ensemble, sous l'écran de préparation (il couvre l'image) : la compilation
+// parallèle (Player.preparerRendu) ne couvre pas toutes les passes — mesuré au traceur le 23/10 : 3 programmes de
+// profondeur (cheveux à alphaTest des amis, carte d'ombre sans lumières) et 2 de matériaux simples naissaient au premier
+// dessin d'un bot. Une IMAGE DU JEU (game.frame, et pas le seul rendu : les ombres de contact y posent la couche des mobiles,
+// sans laquelle le cache d'ombre — js/ombre_cache.js — ne dessine pas un corps neuf dans la carte d'ombre), deux fois
+// opaques, une fois transparentes, teintes, brassards et une arme en main : tout ce qu'un corps montrera. Trois images en
+// tout, quel que soit le nombre d'avatars.
+async function imageSondes(game, L) {
+  if (!L.length || !game.camera || !(game.frame || game.fx)) return;
+  const cam = game.camera, d = new THREE.Vector3(), C = game.collisions;
   cam.getWorldDirection(d); d.y = 0; if (d.lengthSq() < 1e-6) d.set(0, 0, -1); d.normalize();
-  const x = cam.position.x + d.x * 2.5, z = cam.position.z + d.z * 2.5, C = game.collisions;
-  const y = C ? C.solEn(x, z, cam.position.y - 1.2) : cam.position.y - 1.6;
   const arme = armeSonde(game.scene);
   try {
-    game.scene.add(p.mesh);
-    p.pos.set(x, y, z); p.setFacing(-d.x, -d.z); p.mesh.visible = true; p.avatarModel.visible = true;
-    teinteEquipe(p, 'A');
-    p.update(1 / 60); p.memoriser(); p.presenter(1);
-    if (arme) { arme.position.set(x + d.z * 0.4, y + 1.3, z - d.x * 0.4); arme.updateMatrixWorld(true); }
-    // (une IMAGE DU JEU, game.frame, et pas le seul rendu : les ombres de contact y posent la couche des mobiles, sans
-    // laquelle le cache d'ombre — js/ombre_cache.js — ne dessine pas la sonde dans la carte d'ombre : c'est là que naissaient
-    // les programmes de profondeur des cheveux, mesuré au traceur le 23/10)
-    for (const k of [1, 1, 0.5]) { opaciteCorps(p, k); try { if (game.frame) game.frame(1 / 60); else game.fx.render(1 / 60); } catch (e) { /* une image manquée n'empêche pas la partie */ } }
+    L.forEach((p, k) => {
+      const o = (k - (L.length - 1) / 2) * 0.8, x = cam.position.x + d.x * 3 + d.z * o, z = cam.position.z + d.z * 3 - d.x * o;
+      const y = C ? C.solEn(x, z, cam.position.y - 1.2) : cam.position.y - 1.6;
+      game.scene.add(p.mesh);
+      p.pos.set(x, y, z); p.setFacing(-d.x, -d.z); p.mesh.visible = true; p.avatarModel.visible = true;
+      teinteEquipe(p, k % 2 ? 'B' : 'A');
+      p.update(1 / 60); p.memoriser(); p.presenter(1);
+      if (k === 0 && arme) { arme.position.set(x + d.z * 0.4, y + 1.3, z - d.x * 0.4); arme.updateMatrixWorld(true); }
+    });
+    for (const k of [1, 1, 0.5]) {
+      for (const p of L) opaciteCorps(p, k);
+      try { if (game.frame) game.frame(1 / 60); else game.fx.render(1 / 60); } catch (e) { /* une image manquée n'empêche pas la partie */ }
+    }
   } finally {
-    opaciteCorps(p, 1); teinteEquipe(p, null); p.mesh.visible = false;
+    for (const p of L) { opaciteCorps(p, 1); teinteEquipe(p, null); p.mesh.visible = false; if (p.mesh.parent) p.mesh.parent.remove(p.mesh); }
     if (arme) libererArmeSonde(arme);
   }
 }
@@ -144,6 +151,10 @@ export async function preparerAvatars(game, ids, progres) {
   const un = async (f) => { await sonder(game, f); n++; pr('Les élèves arrivent', n / (tous.length + 1)); };
   await Promise.all(premiers.map(un));
   await Promise.all(suivants.map(un));
+  // l'image vraie des sondes neuves (une fois par session et par avatar)
+  const neuves = [];
+  for (const f of tous) { const p = await SONDES.get(f.model); if (p && p.avatarModel && !p._imagee && !neuves.includes(p)) { p._imagee = true; neuves.push(p); } }
+  await imageSondes(game, neuves);
   // ce que les corps montreront : teintes et brassards, armes à la 3e personne
   await preparerTeintes(game);
   await preparerArmes3e(game);
