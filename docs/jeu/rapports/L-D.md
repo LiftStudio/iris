@@ -271,3 +271,9 @@ OK. Onglet `tab-8` fermé, serveur 8136 arrêté, `jeton_1` rendu.
    refuse alors (`_sur` : vu de personne à 60 m, aucun ennemi à 6 m) et prend son repli — le choix de L-D ne servait pas.
 8. Test 1 : le graphe mesuré AVANT toute partie, donc sans les vantaux solides de `MondePartie.preparerSession` (L-M) :
    à F2, `verifierNav` mesurerait un autre graphe que celui des parties (autre empreinte).
+
+### Le jeton du navigateur (relecture)
+
+- 05:31:23-05:31:50 : mon script d'attente lisait la DERNIÈRE date de `qui.txt` (celle de l'ancien preneur, citée par un
+  jeton repris) et a cru `jeton_1` périmé alors que L-U le tenait depuis 05:24:23 : `qui.txt` réécrit à l'identique de
+  celui de L-U 27 s plus tard ; aucune page ouverte entre-temps (L-U n'a rien perdu). Script corrigé (la PREMIÈRE date).
