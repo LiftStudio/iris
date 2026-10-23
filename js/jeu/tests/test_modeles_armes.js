@@ -206,8 +206,9 @@ export default function (jeu) {
 
   // 5. AUCUNE REQUÊTE, AUCUNE TEXTURE ; 20 exemplaires de plus = 0 matériau et 0 programme de plus (textures : celle des os de
   // chaque squelette de vue rendu, et rien d'autre ; rendues par libererArme). Les requêtes : un PerformanceObserver ouvert
-  // pendant le test (le tampon de performance.getEntriesByType plafonne à 250 entrées, que l'école dépasse au démarrage : une
-  // requête de plus n'y entrait plus, le compte « +0 » ne prouvait rien — relecture)
+  // pendant le test (le tampon de performance.getEntriesByType plafonne à 250 entrées, et l'école en prend déjà 203 à ce test
+  // sur PC : après d'autres tests, ou une école plus lourde, une requête de plus n'y entrerait plus et « +0 » ne prouverait
+  // rien — relecture)
   jeu.ajouterTest('L-W', '5 · réseau, textures, partage', async () => {
     const requetes = [], obs = new PerformanceObserver((l) => requetes.push(...l.getEntries()));
     obs.observe({ type: 'resource' });

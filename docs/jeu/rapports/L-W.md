@@ -28,8 +28,8 @@ Jeton du navigateur : en attente depuis 06:00 (les trois pris par L-E, L-M, L-H)
 4. **Repère `oeilleton` du FP-12** (ajout, 0 ; 0,060 ; −0,035 : le centre de l'anneau arrière, sur la ligne de mire de la
    perle) : viser par la perle à 0,24 m (§ 4.5.9) met la crosse 0,68 m derrière la caméra ; par l'œilleton, 1,5 cm derrière
    l'œil (FA-24 : 4 cm). Donné à L-V et F2 pour trancher l'écart 4.
-5. **Test 5, « 0 requête »** : il comptait `performance.getEntriesByType('resource')`, dont le tampon plafonne (250 par défaut)
-   — plein, une requête de plus n'y entre plus et « +0 » ne prouve rien. Remplacé par un `PerformanceObserver` ouvert pendant
+5. **Test 5, « 0 requête »** : il comptait `performance.getEntriesByType('resource')`, dont le tampon plafonne (250 par défaut ;
+   203 déjà pris à ce test sur PC) — plein, une requête de plus n'y entre plus et « +0 » ne prouve rien. Remplacé par un `PerformanceObserver` ouvert pendant
    le test (`takeRecords` après 300 ms).
 6. **Planche (test 7)** : la 3e colonne s'appelait « vue du tireur » aussi pour le couteau et les grenades (c'est un
    trois-quarts arrière) ; et le modèle à la 3e PERSONNE — celui que le joueur voit sur tous les bots — n'était sur aucune
