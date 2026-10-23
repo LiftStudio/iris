@@ -289,8 +289,10 @@ export class Partie {
       if (this.phase === 'decompte' && this.besoinCapture() && !this.capte()) this.attendreClic();
       this._phaseVue = this.phase;
     }
-    // 1. qui est dessiné, qui est posé
+    // 1. qui est dessiné, qui est posé (et le corps que la caméra en orbite frôle, caché : CameraOrbite.cache, F2 — L-C)
     this.cadence.maj(this.acteurs, cam, this.imageN);
+    const oc = this.orbite.cache; this.orbite.cache = null;
+    if (oc && oc.mesh) oc.mesh.visible = false;
     // 2. les poses, sur la position AFFICHÉE
     for (const a of this.acteurs) if (a.aPoser && a.joueur && a.corps === a.joueur && dt > 0) a.joueur.poser(a.poseDt || dt, true);
     // 3. les poupées

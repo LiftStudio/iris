@@ -77,6 +77,9 @@ export class CameraOrbite {
       const plaf = C.plafondEn(x, z, pieds + 0.1);
       if (y > plaf - ORBITE.plafond) y = plaf - ORBITE.plafond;
     }
+    // (F2, demande de L-C : un mur qui rapproche la caméra à moins de 0,5 m du pivot la mettrait DANS le corps suivi — il est
+    // caché le temps de cette image : Partie.image le cache après la cadence, qui le remontre à l'image suivante)
+    this.cache = d < 0.5 && c.mesh ? c : null;
     cam.position.set(x, y, z);
     cam.lookAt(_p);
     // (le champ de la partie, celui de la hanche : la vue à la 1re personne a pu le laisser zoomé)
