@@ -5,9 +5,14 @@ Fichiers : `js/jeu/viewmodel.js`, `js/jeu/anim_vue.js` (remplis), `js/jeu/tests/
 
 ## Relecture (relecteur sévère, 23/10/2026) — où j'en suis
 
-**EN COURS — S0 en rejeu sur `ebdfde2`** (repreneur : reprendre ici ; s'il passe, il ne reste qu'à fermer onglet et
-serveurs, rendre le jeton et écrire « FINI » ici). `&rapport=1&lot=L-V` sur `ebdfde2` : **17/17 PC** (1280 × 720,
-haute, 81 s, onglet pas devant : images faites à la main) et **17/17 `?tel=1`** (375 × 812, moyenne, 75 s), 0 signalé.
+**FINI (relu)** — `ebdfde2` (code) et ce rapport. Les six points du § 5.1 règle 5 : (a) `&rapport=1&lot=L-V` **17/17
+PC** (1280 × 720, haute, 81 s ; onglet pas devant : images faites à la main, temps « non valables » mais aucun signalé) et
+**17/17 `?tel=1`** (375 × 812, moyenne, 75 s), 0 signalé ; (b) `&rapport=1&lot=S0` **29/29** sur `ebdfde2` (balade au bit
+près avant et après les parties : vue 3 0 / 0, vue 1 0 / 0 ; programmes 147 → 147 ; passe superposée après l'œil, composer
+et sans composer 1), 168 s ; (c) `python -I tools/verifier_proprietaires.py lot/L-V` → `OK 4 fichiers` ; (d) commits
+`L-V relecture : …` avec la ligne d'attribution ; (e) ce rapport ; (f) onglet fermé, serveurs 8134 et 8234 arrêtés, jeton 2
+rendu à 07:13:45 (relu `qui.txt` : le mien ; L-I l'a repris à 07:13:46). Un repreneur n'a rien à finir : F2 rejoue les
+deux tests `apresFusion` (« F2 recul » échouera tant que la demande 2 à L-A n'est pas faite) et tranche la demande 1.
 
 ### Ce que la relecture a vérifié
 - **Contrats (§ 4.5.9)** : les sept signatures du socle gardées telles quelles (`constructor(game)`, `preparer(progres)`,
