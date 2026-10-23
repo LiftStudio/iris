@@ -5,9 +5,10 @@ Branche `lot/L-D` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-D`, depuis `socle
 
 ## Où j'en suis — RELECTURE (relecteur sévère, 23/10, commits « L-D relecture : … »)
 
-Relecture en cours sur `9ca7414`. Fait : spec (§§ 3.7-3.8, 4.5.11, 5.1, 5.5.6) et diff `socle...lot/L-D` relus ;
-propriétaires OK. À faire, dans l'ordre : corriger (liste dans « Relecture » en bas), rejouer `&lot=L-D` puis `&lot=S0`,
-jouer (jeton), mettre ce rapport à jour. Un repreneur : la section « Relecture » en bas dit ce qui est corrigé et ce qui reste.
+Relecture de `9ca7414` FINIE : spec et diff relus, 16 constats corrigés (section « Relecture » en bas), tests ajoutés
+(7, 8, 9, 10, 17, 19 : 19 tests), `&rapport=1&lot=L-D` 19/19 sur PC (onglet devant), `&lot=S0` 29/29 sur PC et sous
+`?tel=1` (balade au bit près), propriétaires OK, joué (matchs de bots mesurés, photos) ; onglet et serveur fermés, jeton
+rendu (« Définition de fini », dernier passage de la relecture). Rien ne reste à L-D ; les demandes vont à F2, L-M, L-E.
 
 ## Où j'en suis — construction
 
@@ -89,10 +90,12 @@ jouer (jeton), mettre ce rapport à jour. Un repreneur : la section « Relecture
   à pied de tous ceux d'en face, à 1,5 m de ceux de son camp, hors des volées ; tournés vers le premier bout du chemin vers
   la base adverse (on part dans le bon couloir) ; mis en cache par graphe et masque. Les chasseurs : un camp seul.
 - `choisirApparition` (§ 3.8) : candidats = les 20 lieux + ≈ 12 nœuds par niveau échantillonnés du plus loin d'abord
-  (52 sur `ecole`) ; distances À PIED par Dijkstra BORNÉS depuis les acteurs (un par ennemi à 20 m, un pour les alliés à
-  15 m) au lieu d'un champ par candidat ; note = 1,0 × proximité − 3,0 × danger (× 3 vu, morts récentes à 8 m) ; jamais un
-  point à < 20 m à pied d'un ennemi qui le voit, ni à < 6 m d'un ennemi ; tirage parmi les 3 meilleurs (`partie.rng`) ;
+  (52 sur `ecole`), dans les pièces de la zone de jeu ; distances À PIED lues dans les CHAMPS des candidats (graphe à
+  rebours, calculés en tâche de fond pendant la présentation et le décompte ; avant, Dijkstra bornés depuis les acteurs) ;
+  note = 1,0 × proximité − 3,0 × danger (× 3 vu, morts récentes à 8 m) ; jamais un point à < 20 m à pied d'un ennemi qui
+  le voit, ni à < 6 m d'un ennemi ; d'abord ceux qu'aucun ennemi ne voit ; tirage parmi les 3 meilleurs (`partie.rng`) ;
   chacun pour soi : le plus loin à pied du plus proche ennemi que personne ne voit, exactement ; regard vers l'ennemi.
+  (Relecture : voir en bas.)
 - `ramenerPoint` : le nœud de dégagement ≥ `degageMin` le plus proche à ≤ `rayonMax` ; s'il n'y en a pas, RELEVÉ (le plus
   dégagé de la ronde) et dit : `{ x, y, z, degage, releve: true }` (voir écarts).
 - Sans graphe (`nb = 0`) : les replis du squelette.
@@ -240,7 +243,8 @@ de 4 cm d'un mur).
 - (c) `python -I tools/verifier_proprietaires.py lot/L-D` : `OK 6 fichiers (lot/L-D, L-D, base socle)`.
 - (d) commits « L-D : … » avec la ligne d'attribution.
 - (e) ce rapport, commité.
-- (f) onglet fermé, serveur du port 8136 arrêté, jeton `jeton_1` rendu (pris à 03:15, rafraîchi pendant les tests).
+- (f) onglet fermé, serveur du port 8136 arrêté, jeton `jeton_1` rendu (pris à 03:15, rafraîchi pendant les tests) ;
+  relecture : `tab-28` fermé, serveur 8136 arrêté, `jeton_1` (pris à 06:17:57) rendu à 06:58:29.
 
 ### Dernier passage
 
@@ -249,28 +253,120 @@ graphe des props 639 ms, cache IndexedDB 43,9 ms ; `verifierBots` 0 / 0 / 0 / 0,
 sur les franchissements ; couverts 0 faute). `&lot=S0` 29/29 (sur `202b9bd`, le pilotage inchangé depuis). Propriétaires :
 OK. Onglet `tab-8` fermé, serveur 8136 arrêté, `jeton_1` rendu.
 
+### Dernier passage (relecture)
+
+23/10, sur `51db6ab` (le code de la relecture, `ce9c554` + fins de ligne) : `&rapport=1&lot=L-D` (onglet devant) →
+**`ok: true`, 19/19**, 30,9 s, 0 échec, 2 signalés (génération 1 043 ms pour 1 000 ; réapparition avec les champs 3,7 ms
+pour 3) ; graphe 8 904 nœuds / 60 252 liens / 1 composante / 20 sur 20 / 0 cabine, cache IndexedDB 5,5 ms ; graphe des
+props 702 ms ; A* médiane 0,7 ms, p95 2,7 ; `verifierBots` 0 / 0 / 0 / 0, 0 coincé, 0 secours, 44 pièces ; Pilote 99/100
+dans le temps, 20/20 cibles bouchées ; départs 4 zones (−1 relâché, écart 5), 3 c. 9 qui se tiennent, 0 hors zone ;
+réapparition 0 faute / 1 000, 8,1 ms sans les champs, 2,6 avec, 0 vu évitable, chacun pour soi 100/100 ; ressenti
+4,99 m/s, 9 rad/s, 4 demi-tours ; décompte 0 / 0 / 0, champs finis au « GO ! ». `&lot=S0` sur `51db6ab` : **29/29** PC
+(69,7 s, balade vue 3 0 / 0, vue 1 0 / 0, `Partie.pas` 0,042 ms) et **29/29** `?tel=1` (83 s, balade 0 / 0).
+`?tel=1&lot=L-D` : 19/19 sur `24afafd` (avant les champs des candidats ; temps signalés, onglet derrière).
+`verifierDeterminisme` : équipes 4 c. 3 (40 s, réapparitions et tâche de fond) égal, chacun pour soi (30 s) égal.
+Propriétaires : `OK 6 fichiers`. Onglet `tab-28` fermé, serveur 8136 arrêté, `jeton_1` rendu à 06:58:29.
+
 ## Relecture (relecteur sévère, 23/10)
 
-### Constats sur `9ca7414` (à corriger : ✔ = corrigé, commité)
+Relu : spec §§ 3.7-3.8, 4.1, 4.5.11, 4.10, 5.1, 5.5.6 ; diff `socle...lot/L-D` en entier (6 fichiers) ; les usages des
+contrats par les autres lots de la vague (L-E `partie_fps`, L-F `partie_prop`, L-K `deguisements`, L-M `monde_partie`,
+lus sur leurs branches, sans y toucher). Contrats du § 4.5.11 : signatures posées EXACTEMENT (seuls des ajouts : 5e
+paramètre facultatif de `demander` et de `departs`, méthodes et champs neufs) ; état sérialisable : rien de L-D n'y entre
+(caches dérivés, recalculés) ; ordre du pas : pilote à l'étape 2, file et tâche de fond à l'étape 9 ; pureté : 0 faute
+(test 12 et `tools/verifier_proprietaires.py`). Valeurs du § 3 (§ 3.7 couverts 12 / 2-8 m / 1,0 / 1,6 ; § 3.8 note 1,0 ×
+proximité 15 m − 3,0 × danger 20 m, × 3 vu, morts 8 m, 3 meilleurs, ≈ 12 par niveau ; § 4.5.11 coincé 0,6 m en 3 s,
+× 10 pendant 10 s, face-à-face 1 m / −0,5 / 0,6 / 0,75 / 1,2, franchir < 15° et ≤ 0,6 m, 1 500 nœuds par tranche) :
+écrites telles quelles dans `REGLES_APPARITION` et les constantes en tête de `pilotage.js` / `nav.js`.
 
-1. `nav.restreindre` vidait la file des chemins SANS rappeler les demandeurs : un pilote en attente de son chemin
-   (`_attente`) restait figé pour toujours (ni chemin, ni surveillance « coincé ») dès qu'une partie restreint son graphe
-   en cours de route (L-F le fait au changement de zone du prop hunt, L-M peut le faire en verrouillant une porte).
-2. `champDepuis` / `champMulti` comptaient les liens pénalisés (× 10 pendant 10 s) : des distances « à pied » fausses
-   juste après un coincement — un ennemi derrière un lien pénalisé semblait loin, la réapparition pouvait tomber à
-   moins de 20 m de lui (le rapport disait « distances vraies »).
-3. L'errant (la patrouille du cerveau minimal) gardait son regard d'avant le combat : sortie d'un combat, la tête et le
-   corps du bot sautaient d'un coup vers l'ancien regard (jusqu'à 180° en un pas).
-4. L'errant lisait `arrive` / `coince` du pilote pour la destination D'AVANT quand la sienne venait de changer : au point
-   chaud entendu pendant une pause, il passait en « guet » sans y être allé (pas de sprint, pas de guet à l'arrivée).
-5. `departs` : un appel par camp, deux tirages si les `n` diffèrent au-delà de 6 (`K = max(6, n)` dans la clé) — les deux
-   camps pouvaient sortir de deux tirages différents, donc à moins de 15 m l'un de l'autre.
-6. Morts récentes de la réapparition lues dans l'anneau de 256 événements de la partie : en plein combat (tirs, pas,
-   impacts) il couvre 3 s, pas les 10 s voulues.
-7. `choisirApparition` pouvait rendre un point VU par un ennemi à plus de 20 m à pied (permis par le § 3.8) : L-E le
-   refuse alors (`_sur` : vu de personne à 60 m, aucun ennemi à 6 m) et prend son repli — le choix de L-D ne servait pas.
-8. Test 1 : le graphe mesuré AVANT toute partie, donc sans les vantaux solides de `MondePartie.preparerSession` (L-M) :
-   à F2, `verifierNav` mesurerait un autre graphe que celui des parties (autre empreinte).
+### Constats sur `9ca7414` et corrections (toutes commitées « L-D relecture : … »)
+
+1. ✔ `nav.restreindre` vidait la file des chemins SANS rappeler les demandeurs : un pilote qui attendait son chemin
+   restait figé pour toujours (ni chemin, ni surveillance « coincé ») dès qu'une partie restreint son graphe en route
+   (L-F le fait au changement de zone du prop hunt). Les demandes sont REPRISES sous le nouveau masque (une arrivée
+   devenue interdite rappelle null). Test 7.
+2. ✔ `champDepuis` / `champMulti` comptaient les liens pénalisés (× 10 pendant 10 s) : distances « à pied » fausses après
+   un coincement (un ennemi derrière un lien pénalisé semblait à 10 × sa distance). Champs = distances vraies.
+3. ✔ L'errant (la patrouille du cerveau minimal) gardait son regard d'avant le combat ou d'avant la réapparition : la tête
+   et le corps du bot sautaient d'un coup (jusqu'à 180° en un pas). Il reprend le lacet tenu par un autre. Test 17.
+4. ✔ L'errant jugeait `arrive` / `coince` du pilote pour la destination D'AVANT quand la sienne venait de changer : le
+   point chaud entendu pendant une pause passait en « guet » sans qu'il y aille (ni sprint, ni guet à l'arrivée).
+5. ✔ Le pilote suivait l'ancien chemin un pas après un saut de cible (un pas vers l'ancien but, puis demi-tour quand le
+   nouveau chemin arrivait) : l'ancien chemin et la demande en cours sont oubliés. Test 17 : 23 → 4 demi-tours.
+6. ✔ Le pilote d'un acteur GELÉ (présentation + décompte, 6 s) commandait la marche et se croyait coincé deux fois :
+   liens pénalisés, et la téléportation de secours possible au « GO ! » (le harnais comptait les 5 bots « coincés »).
+   Il demande son chemin (parti au « GO ! ») mais ne marche ni ne surveille. Test 19.
+7. ✔ Une cible hors d'atteinte au-delà du dernier nœud (dans un meuble, derrière un mur : un point chaud sur un banc)
+   faisait pousser le meuble 3 s, compter un coincement, puis téléporter : le pilote s'arrête au dernier nœud. Test 8.
+8. ✔ L'évitement contournait un corps qui s'en va devant soi sans qu'on le rattrape : le suiveur zigzaguait dans un couloir.
+9. ✔ La ronde autour du point chaud tirait ses nœuds à vol d'oiseau (6 m) : de l'autre côté d'un mur, donc au bout de
+   l'école par le couloir. À 2-6,5 m À PIED.
+10. ✔ `departs` : `n` dans la clé du cache — un appel à 4 et un à 9 tiraient deux fois, deux camps de deux tirages sans
+    garantie des 15 m. Les passes sont essayées à CHAQUE prise : les k premières ne dépendent plus du nombre. Test 9.
+11. ✔ Départs et candidats de la réapparition HORS de la zone de jeu quand le masque du graphe permet plus (le monde du
+    squelette permet tout : au −1, des bots réapparaissaient au 2e — 32 pièces visitées dans un match « −1 ») : filtrés
+    par les pièces de la zone (§ 3.8 « filtrés par la zone de jeu »). Test 9 ; match au −1 : 8 pièces, 0 apparition hors.
+12. ✔ Morts récentes lues dans l'anneau de 256 événements de la partie : en combat (tirs, pas, impacts) il ne couvre
+    que ≈ 3 s, pas les 10 s du § 3.8. Abonnées à `elim`.
+13. ✔ `choisirApparition` rendait des points VUS d'un ennemi à plus de 20 m à pied (permis par le § 3.8) ou à 6 m d'un
+    ennemi derrière un mur : L-E (`_sur`) les refuse et prend son repli. Maintenant : jamais à 6 m (à pied ni à vol
+    d'oiseau), et parmi les candidats, d'abord ceux qu'AUCUN ennemi ne voit (tête ou buste, 50 m). Test 10 (0 vu
+    évitable sur 200).
+14. ✔ À-COUPS à chaque réapparition : six Dijkstra et ≈ 150 rayons dans un seul pas — 10 à 29 ms (match 4 c. 3 : 20 pas
+    au-delà de 5 ms par minute). Le § 3.8 voulait des « champs de Dijkstra par point, en cache » : les champs VERS chaque
+    candidat (graphe à rebours, `Nav.champVers`) sont calculés en TÂCHE DE FOND (`Nav.fond`, 1 500 nœuds par pas à
+    l'étape 9) dès les départs, donc pendant la présentation et le décompte ; une réapparition LIT (2,6-3,7 ms, les rayons
+    de vue surtout). Match 4 c. 3 : pas le plus long 6 ms (29 avant), 1 pas > 5 ms par minute (20 avant). Avant la fin de
+    la tâche, l'ancien calcul. Tests 10 (les deux chemins) et 19.
+15. ✔ Test 1 mesurait le graphe AVANT toute partie, sans les vantaux solides de `MondePartie.preparerSession` (L-M) : une
+    autre empreinte que celle des parties à F2. Il lance et quitte un essai d'abord.
+16. ✔ Code mort : compteurs de mise au point de la génération (`stats`, `appelsFranchir`), `Nav.D`, `Pilote.secoursTotal`.
+    `nFranchir` vérifié (test 14).
+
+### Écarts ajoutés par la relecture (§ 3.8, § 4.5.11)
+
+- Réapparition : en plus du § 3.8, jamais à 6 m d'un ennemi (à pied ou à vol d'oiseau, la hauteur comptée double) et,
+  parmi les candidats permis, d'abord ceux qu'aucun ennemi ne voit (tête 1,6 m ou buste 0,9 m, à 50 m) — le plancher du
+  § 3.8 reste quand tout est vu. Regard : vers le plus proche ennemi PAR LE CHEMIN (le champ du candidat), sinon le large.
+- Champs : par candidat VERS lui (le graphe à rebours), en tâche de fond ; ≈ 3,7 Mo par graphe (Float64, 52 × 8 904).
+  `Nav` : AJOUTS `champVers`, `champVersPar`, `fond`, `enFond`, `_inverser` ; `apparitions.js` :
+  `completerChampsApparition(nav, zone)`, `candidatsApparition(nav, zone)` (2e paramètre facultatif).
+- Pilote : une cible bouchée au-delà du dernier nœud → arrivée au dernier nœud ; gelé → ni marche ni surveillance.
+
+### Demandes ajoutées par la relecture
+
+- **L-M / F2** : `nav.zone[i]` est l'indice dans `PIECES` (`constantes.js`). Aujourd'hui `lumieres.zones` a le même ordre
+  (47 = 47, vérifié dans le jeu), mais `noeudsAutorises` de L-M lit `lumieres.zones[zi].id` : si le lot R ajoute ou
+  déplace une zone du −1, les indices glissent. Lire `nav.pieceDe(i)` (la zone, sinon la RÉGION du seuil) ; F2/INT :
+  tenir `PIECES` à l'ordre de `lumieres.zones` à la fusion du lot R.
+- **F2 / S0** : `__jeu.verifierNav()` obtient le graphe sans que le monde des parties soit préparé (pas de vantaux de L-M
+  avant la 1re partie) : préparer `MondePartie` d'abord (le test 1 de L-D lance un essai pour cela).
+- **F2 / S0** : l'anneau d'événements (`ANNEAU` 256) ne couvre que ≈ 3 s de combat : qui lit `partie.evenements` pour
+  « les N dernières secondes » doit s'abonner (L-D le fait pour les morts).
+- **F2 / S0** : `Nav.obtenir` cède une image par `setTimeout(0)` avant la génération (l'écran de préparation) ; onglet
+  derrière celui d'un autre, ce délai est bridé (≈ 0,5 s) et compté dans « génération » : 1,4-1,6 s mesurés derrière,
+  0,98-1,05 s devant. Les temps de génération ne se jugent qu'onglet devant (INT).
+- **L-E** : le chacun pour soi du squelette n'appelle pas `departs` : les champs des candidats ne partent en tâche de fond
+  qu'à la 1re réapparition (un pas de ≈ 13 ms, une fois). Si le départ du chacun pour soi passe par `choisirApparition`
+  (§ 2.4), ils partent à la préparation ; sinon, appeler `completerChampsApparition(nav, zone)` à la préparation.
+- **L-E** : `_apparition` (repli si le point n'est pas « sûr ») ne devrait plus servir : `choisirApparition` applique
+  désormais ses critères (vu de personne à 50 m quand c'est possible, aucun ennemi à 6 m).
+
+### Joué (jeton 1, onglet `tab-28`, matchs de bots simulés au pas, mesurés du point de vue d'un joueur)
+
+| match (bots seuls) | durée | élim. | réapp. | vues | plus près à pied | pas > 5 ms | coincés / secours | hors zone |
+|---|---|---|---|---|---|---|---|---|
+| équipes 4 c. 4, école | 90 s | 50 | 40 | 0 | 19,9 m | — | 0 / 0 (après correction 6) | — |
+| chacun pour soi 1 + 5, école | 120 s | 46 | 44 | 0 | 24,7 m | 1 (la 1re réapparition) | 0 / 0 | — |
+| équipes 3 c. 4, −1 | 120 s | 86-88 | 85 | 6 (inévitables : le −1 n'a que 16 candidats) | 6,2 m | 0 | 0 / 0 | 0 % (8 pièces) |
+| équipes 3 c. 4, étages | 90 s | 33 | 32 | 0 | 17,6 m | — | 0 / 0 | — |
+
+`Partie.pas` moyen 0,18-0,37 ms (7-8 bots) ; demandes de chemin 1,7-2,4 /s ; 0 saut de regard > 9,5 rad/s en
+patrouille ; 3 à 14 reculs de face-à-face par match ; « arrêts d'un pas » 0,2 % des pas de marche (le pas où un nouveau
+chemin remplace l'ancien). Photos (`__jeu.photo()`, regardées, non gardées) : un bot qui court dans la pause du −1 entre
+les mange-debout ; l'orbite qui suit un bot dans la cage de l'escalier est (la caméra frôle le mur : L-B) ; une porte
+passée de près par un bot (la caméra derrière le chambranle : L-B). Console : seule l'erreur connue du service worker
+(S0). `?tel=1` : `&lot=L-D` 19/19.
 
 ### Le jeton du navigateur (relecture)
 
