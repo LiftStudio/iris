@@ -366,6 +366,12 @@ export default function (jeu) {
   // 13. LA PAUSE ET LA REPRISE ; LE CALQUE « CLIQUE POUR JOUER »
   T('13 pause, reprise, calque', async () => {
     const res = [];
+    // (la dernière entrée : le clavier et la souris — au téléphone, un onglet frais a le doigt, qui reprend sans capture)
+    const TC = window.__touch, doigt = TC ? TC.auDoigt : null;
+    if (TC) TC.auDoigt = false;
+    try { return await pauseReprise(res); } finally { if (TC) TC.auDoigt = doigt; }
+  });
+  async function pauseReprise(res) {
     await jeu.lancer('essai', { graine: 13, mannequins: 3 });
     await jeu.images(2);
     const p = game.partie;
@@ -394,6 +400,9 @@ export default function (jeu) {
       game.togglePause(); const t1 = p.t; game.togglePause();
       await jeu.images(5);
       res.push(['manette', !game.paused && calque.hidden && p.t > t1]);
+      // (le calque cliqué, la manette pour dernière entrée — ou au doigt — : il se ferme SANS capture, refusée ici)
+      p.attendreClic(); calque.click(); await jeu.images(2);
+      res.push(['calque sans capture (manette)', calque.hidden && !game.paused]);
     } finally { entree.manette = false; }
     jeu.quitter('balade');
     // (d) présentation → décompte : clavier-souris sans capture → calque, décompte gelé ; manette → décompte direct
@@ -416,7 +425,7 @@ export default function (jeu) {
     } finally { entree.manette = false; jeu.simulerCapture(null); jeu.quitter('balade'); }
     const ko = res.filter((r) => !r[1]).map((r) => r[0]);
     return { ok: ko.length === 0, attendu: res.map((r) => r[0]).join(', '), obtenu: ko.length ? 'faux : ' + ko.join(', ') : 'tout vrai' };
-  });
+  }
 
   // 14. LA PASSE SUPERPOSÉE
   T('14 passe superposée : balade éteinte, essai active (composer, léger, sans composer)', async () => {
@@ -791,7 +800,18 @@ export default function (jeu) {
   T('29 balade : HUD, tactile, touches, pause, menu = référence', async () => {
     const ref = jeu.reference[profil()], res = [];
     for (let i = 0; i < 3; i++) game.frame(1 / 60);
+    // (le HUD dans l'état de l'enregistrement — l'aide des touches dépend de la dernière entrée et des boutons à l'écran,
+    // js/touch.js nomBouton : au téléphone, le doigt pour dernière entrée — les touches tapées par les tests d'avant l'ont
+    // fait passer au clavier, « ESPACE » au lieu de « SAUT » — et les boutons tactiles pas encore montrés, comme au
+    // démarrage de a8b22dd, où l'aide dit « PAUSE » et non « II »)
+    const TC = window.__touch, doigt = TC ? TC.auDoigt : null, caches = [];
+    if (TC) {
+      TC.auDoigt = true;
+      for (const k in TC.el) { const e = TC.el[k]; if (e && e.hidden === false) { e.hidden = true; caches.push(e); } }
+      game.hud.setLobby();
+    }
     res.push(['HUD', window.__rejeuBalade.empreinteHud() === ref.hud]);
+    if (TC) { for (const e of caches) e.hidden = false; TC.auDoigt = doigt; game.hud.setLobby(); }
     const st = document.querySelector('.stamina');
     res.push(['sans body.combat, endurance visible', !document.body.classList.contains('combat') && !!st && getComputedStyle(st).display !== 'none']);
     const tact = window.__touch && window.__touch._contexte ? window.__touch._contexte() : null;
