@@ -25,7 +25,7 @@ import { creerArme, REPERES } from './modeles_armes.js';
 import { ARMES } from './armes.js';
 
 export const POSE_3E = {
-  dos: { droit: 0.05, droitSprint: 0.14, penche: 0.25 },       // le dos (rad vers l'avant), le penché du groupe gardé
+  dos: { droit: 0.0, droitSprint: 0.12, penche: 0.25 },       // le dos (rad vers l'avant), le penché du groupe gardé
   tangage: { part: [0.10, 0.15, 0.25], max: 0.6 },                // part du tangage prise par Spine / Spine1 / Spine2
   troisQuarts: { fusil: 0.55, pistolet: 0.08 },                   // le buste tourné vers la droite (rad)
   creux: 0.30,                                                    // le creux de l'épaule : de RightArm vers le milieu

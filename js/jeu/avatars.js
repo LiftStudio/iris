@@ -18,6 +18,7 @@
 // (géométries, textures, clips partagés ; matériaux clonés). La préparation compile aussi ce que les corps montreront
 // plus tard : la teinte et les brassards (js/jeu/teintes.js), les armes à la 3e personne (js/jeu/pose_arme.js) et la
 // variante transparente de l'effacement Airsoft (js/jeu/poupee.js) — aucun programme en pleine manche.
+import * as THREE from 'three';
 import { Player, prechargerModele } from '../player.js';
 import { HAYTHEM } from '../game.js';
 import { TELEPHONE } from '../appareil.js';
@@ -47,9 +48,17 @@ export const plafondAvatars = () => (TELEPHONE ? LIMITES.tel.avatars : LIMITES.p
 // (lu par les tests : ce que la dernière préparation a fait)
 export const avatarsPrets = () => ({ fiches: PRETS.fiches.map((f) => f.id), ...PRETS.mesures });
 
+// LE CALAGE DE LA TÊTE (mesuré sur la sonde, à la préparation) : les balles touchent un bot là où la SIMULATION compte sa
+// tête — 1,635 m × h / 1,73 au-dessus des pieds (js/jeu/touches.js, les proportions de Haythem) —, or les avatars des amis
+// ont la tête plus BASSE dans leur boîte (cheveux, tresses : `modelHeight` les compte) : mesuré au repos le 23/10, de
+// −2,7 cm (Koji, Djafar, Marc-Antoine) à −4,8 cm (Ethan), −1,2 cm pour Haythem. L'avatar est donc mis à l'échelle (× 1,01 à
+// 1,03, invisible) pour que sa tête soit là où on le touche : `modelHeight` divisé par k = tête simulée / tête mesurée.
+// Les fiches gardent leurs valeurs (LA CAGE js/roster.js) ; k vaut 1 pour un modèle jamais sondé.
+const CALAGE = new Map();                                      // modèle → k
+export const calageTete = (model) => CALAGE.get(model) || 1;
 // la définition d'un Player depuis une fiche (le modèle et sa taille ; les couleurs ne servent qu'au bonhomme de secours)
 function definition(f) {
-  return { ...HAYTHEM, id: f.id, name: f.nom, height: f.height, modelHeight: f.modelHeight, spd: f.spd, model: f.model,
+  return { ...HAYTHEM, id: f.id, name: f.nom, height: f.height, modelHeight: f.modelHeight / calageTete(f.model), spd: f.spd, model: f.model,
     color1: f.color1, color2: f.color2, skin: f.skin, discret: true };
 }
 // LES SONDES : un corps par avatar, chargé, reciblé, compilé (sa variante transparente avec), puis RETIRÉ DE LA SCÈNE mais
@@ -68,6 +77,18 @@ async function preparerSonde(game, f) {
   for (let i = 0; i < 300 && !p._pretAvatar && !p.body.visible; i++) await attendre(0.02);   // le GLB lu (6 s au plus)
   if (p._pretAvatar) await Promise.race([p._pretAvatar, attendre(8)]);
   for (let i = 0; i < 100 && p.avatarModel && !p.anim; i++) await attendre(0.02);              // les clips reciblés
+  // le calage de la tête : la sonde au repos (clip d'attente), sa tête mesurée (os Head + 8,5 cm × h / 1,8 sur son axe)
+  if (p.avatar && p.anim && !CALAGE.has(f.model)) {
+    p.pos.set(0, 0, 0); p.vel.set(0, 0, 0);
+    for (let i = 0; i < 12; i++) p.update(1 / 30);
+    const B = p.avatar.bone('Head');
+    if (B) {
+      p.mesh.updateMatrixWorld(true);
+      const v = B.getWorldPosition(new THREE.Vector3()), y = new THREE.Vector3().setFromMatrixColumn(B.matrixWorld, 1).normalize();
+      const tete = v.addScaledVector(y, 0.085 * p.h / 1.8).y - p.pos.y, k = 1.635 * p.h / 1.73 / tete;
+      if (Number.isFinite(k) && k > 0.9 && k < 1.1) CALAGE.set(f.model, k);
+    }
+  }
   // la variante transparente (l'effacement Airsoft) : compilée une fois, la sonde rendue opaque aussitôt
   if (p.avatarModel && game._compilerAsync) {
     p.avatarModel.visible = true;

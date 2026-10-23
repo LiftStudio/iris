@@ -290,23 +290,37 @@ export class Couches {
   // non penché comme le clip de course (mesuré le 23/10 sur Haythem : dos à 23° de la verticale en course, 29° au sprint,
   // la tête à 31 cm DEVANT les pieds et 11 cm plus bas ; 37 et 19 cm au sprint). Or les balles le touchent là où la
   // simulation compte sa tête : au-dessus de ses pieds (js/jeu/touches.js). On mesure l'inclinaison du dos (hanches → cou)
-  // par rapport à la VERTICALE DU MONDE — dans l'axe de son cap et de côté, le roulis du groupe compris — et on la ramène à
-  // `cible` (rad, vers l'avant) en tournant Spine, Spine1 et Spine2 (35 / 35 / 30 %), en deux passes (le pivot de chaque os
-  // n'est pas aux hanches) ; le cou et la tête rendent la correction (le regard du clip est gardé, l'arme le reprend).
+  // par rapport à la VERTICALE DU MONDE — dans l'axe de son cap et de côté, le roulis du groupe compris — et on l'amène
+  // à viser, depuis les hanches, le point au-dessus du centre des pieds (l'axe des boîtes de touche : le balancement de
+  // côté du bassin dans la course y est repris), avancé de `cible` (rad : le sprint penche un peu), en tournant Spine,
+  // Spine1 et Spine2 (35 / 35 / 30 %), en trois passes (le pivot de chaque os n'est pas aux hanches). Puis LA TÊTE :
+  // droite sur le cou (cou → sommet du crâne vertical, Neck et Head à moitié) — l'arme y ajoute ensuite le tangage de la
+  // visée (js/jeu/pose_arme.js).
   _droit(A, cible, dt) {
-    const H = A.bone('Hips'), N = A.bone('Neck');
-    if (!H || !N || !A.bone('Spine') || !A.bone('Spine1') || !A.bone('Spine2')) return;
+    const H = A.bone('Hips'), N = A.bone('Neck'), T = A.bone('Head');
+    if (!H || !N || !T || !A.bone('Spine') || !A.bone('Spine1') || !A.bone('Spine2')) return;
     const fn = Math.hypot(_av.x, _av.z) || 1, ux = _av.x / fn, uz = _av.z / fn, gx = uz, gz = -ux;   // l'avant, la gauche, à plat
-    let e0 = 0, l0 = 0;
-    for (let it = 0; it < 2; it++) {
+    // (le cou visé : au-dessus du centre des pieds — l'origine du groupe, l'axe des boîtes de touche —, avancé de `cible`)
+    const O = this.p.mesh.position;
+    for (let it = 0; it < 3; it++) {
       H.getWorldPosition(_h); N.getWorldPosition(_d); _d.sub(_h);
-      const e = Math.atan2(_d.x * ux + _d.z * uz, _d.y) - cible, l = Math.atan2(_d.x * gx + _d.z * gz, _d.y);
+      const hy = Math.max(0.2, _d.y), ox = O.x - _h.x, oz = O.z - _h.z;
+      const vAv = Math.atan2((ox * ux + oz * uz) + hy * Math.tan(cible), hy), vGa = Math.atan2(ox * gx + oz * gz, hy);
+      // (× 1,3 : les pivots des trois os étant au-dessus des hanches, une rotation de e n'incline le dos que de ≈ 0,75 e)
+      const e = 1.3 * (Math.atan2(_d.x * ux + _d.z * uz, _d.y) - vAv), l = 1.3 * (Math.atan2(_d.x * gx + _d.z * gz, _d.y) - vGa);
       if (!(Math.abs(e) + Math.abs(l) > 0.004)) break;           // (droit, ou une mesure NaN : on n'écrit rien)
       // (rx > 0 penche vers l'avant ; rz > 0 couche vers SA droite : un cou à sa gauche, l > 0, y revient)
       A.ajouter('Spine', -e * 0.35, 0, l * 0.35); A.ajouter('Spine1', -e * 0.35, 0, l * 0.35); A.ajouter('Spine2', -e * 0.3, 0, l * 0.3);
-      e0 += e; l0 += l;
     }
-    if (e0 || l0) { A.ajouter('Neck', e0 * 0.5, 0, -l0 * 0.5); A.ajouter('Head', e0 * 0.5, 0, -l0 * 0.5); }
+    // la tête droite : du cou au sommet du crâne (Head + 15 cm sur son axe), vertical
+    const s = this.p.h / 1.8;
+    for (let it = 0; it < 2; it++) {
+      N.getWorldPosition(_h); T.getWorldPosition(_d);
+      _w.setFromMatrixColumn(T.matrixWorld, 1).normalize(); _d.addScaledVector(_w, 0.15 * s).sub(_h);
+      const e = Math.atan2(_d.x * ux + _d.z * uz, _d.y), l = Math.atan2(_d.x * gx + _d.z * gz, _d.y);
+      if (!(Math.abs(e) + Math.abs(l) > 0.004)) break;
+      A.ajouter('Neck', -e * 0.5, 0, l * 0.5); A.ajouter('Head', -e * 0.5, 0, l * 0.5);
+    }
   }
 
   // MAINS SUR LES GENOUX. On garde les pieds EXACTEMENT où le clip les avait mis, on descend et on recule
