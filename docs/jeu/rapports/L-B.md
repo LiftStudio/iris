@@ -5,10 +5,11 @@ Branche `lot/L-B` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-B`), partie de `s
 
 ## Où j'en suis
 
-**RELECTURE REPRISE (23/10, 08:10, repreneur du relecteur sévère : la session de 06:10 a été coupée)** — spec et diff relus
-à nouveau, les corrections de `eaa46c4` relues ; serveur `python serve.py 8132` lancé, en attente d'un jeton (les trois pris
-par L-C, L-H, L-F). Ensuite : `&rapport=1&lot=L-B` (20 tests), `&lot=S0`, jeu à la main (essai, combat, prop hunt,
-`?tel=1`), console, cadence ; puis section « Relecture » complétée et rapport final.
+**RELECTURE REPRISE (23/10, 08:10 → 09:25, repreneur du relecteur sévère : la session de 06:10 a été coupée)** — spec et diff
+relus à nouveau, les corrections de `eaa46c4` relues et rejouées ; jeton 1 pris à 08:25. Trouvé en jouant et corrigé : le
+saut sur un meuble bas (point 8 de « Relecture » : bonds et traversées de murs). `&rapport=1&lot=L-B` : 20/20 (31 106 ms) ;
+`&rapport=1&lot=S0` sur la branche : 29/29 (154 059 ms, onglet à 1 rAF/s) ; `verifier_proprietaires` OK. Reste : `?tel=1`,
+quelques images (glissade, mort, orbite), puis rapport final, onglet et serveur fermés, jeton rendu.
 
 (23/10, 06:10, relecteur sévère) — spec (§§ 3.1-3.2, 4.5.7, 5.5.2) et diff `socle...lot/L-B` relus ; corrections écrites
 (voir « Relecture » en bas), pas rejouées au navigateur (session coupée en attendant un jeton).
@@ -165,6 +166,16 @@ courante droite, pas de marche qui saute), `lb_orbite_prop.jpg` (l'orbite du pro
   (`TABLE_PORTES_FPS` : les portes du combat ouvertes sur les chemins) ; le test « F2 · 40 sauts au sprint à travers 20
   portes » le rejoue sous `&fusion=1`. Une porte ouverte par table doit garder son LINTEAU (la forme au-dessus de
   l'ouverture) et une boîte mince le long du vantail ouvert, hors du passage (sinon `chercherPortes` ne la voit pas libre).
+- **F2 / INT (`js/collisions.js`, relecture du 23/10)** : `Collisions.resoudre` (donc `libre` et `deplacer`) est trompé par un
+  meuble COLLÉ À UN MUR : un disque dont le centre est entré dans la boîte (depuis le haut : un saut) est poussé par sa face la
+  plus proche DANS le mur, puis ressorti du mur au même point — `libre` le dit libre au milieu de la table (vu : la table
+  x 0,03-0,60 contre le mur x −0,30-0 du hall, disque à x 0,3), ou il ressort du côté du mur opposé (les 7 traversées du point 8
+  de la relecture). `mouvement.js` s'en garde (`chevauche`, et le corps ne redescend plus dans un meuble) ; mais `_sortir` d'un
+  centre DANS une boîte devrait choisir la face par où le disque est entré (la position d'avant le sous-pas), et `libre` dire
+  « pris » dès qu'une forme chevauche, sans juger au déplacement net. `mouvement.js` lit aussi `Collisions._parcourir` /
+  `_sortir` (comme `_hSol` et `sols`) : à garder tels quels, ou à exposer (`chevauche(x, z, r, pieds, haut, bas)`).
+- **F2 / lot R (`js/ecole_soussol.js`)** : les trous du sol du −1 (voir « Relecture », ce qui reste) — un corps qui sort des
+  dalles du −1 monte au rez-de-chaussée.
 - **F2 (socle)** : `harnais.js` n'a pas de `photo(nom)` qui enregistre : les photos de ce rapport ont été postées par la
   page (`fetch` POST du `toDataURL`) à un petit récepteur local du dossier temporaire. Un `__jeu.photo(nom, { envoyer })`
   vers le serveur du lot éviterait à chaque lot de refaire ce relais.
@@ -219,3 +230,48 @@ la pureté (`verifier_proprietaires` : OK 6 fichiers), aucun TODO ni bouchon.
    (visée maintenue ET basculée).
 7. Code mort retiré : `mvt.vit`, `mvt.enAir`, `mvt.solOeil` (devenu `decalOeil`), `VueFPS._champ`, `_zoom`, `_viseeE`, une
    variable du test 2.
+
+(Les points 1 à 7 : session de 06:10, coupée avant le navigateur ; repris et rejoués par le repreneur, ci-dessous.)
+
+8. **Un saut sur un meuble bas faisait BONDIR le corps, parfois À TRAVERS un mur** (`mouvement.js`, trouvé en jouant : sonde de
+   1 461 sauts au sprint depuis des points libres des quatre niveaux, graine 11). En l'air, le corps ne heurte qu'au-dessus de
+   pieds + `jumpY` + 0,25 (la bande de `Player.move`) : il SURVOLE une chaise (0,45), un banc (0,62), le bureau de l'accueil
+   (0,75) ; en redescendant, la bande entrait dans le meuble, dont le dessus n'est pas un sol, et `C.deplacer`, au pas suivant,
+   l'en sortait d'un coup par sa face la plus proche : **60 bonds de 0,1 à 1,0 m en un pas** (la caméra qui saute), dont **7 de
+   l'autre côté du mur** contre lequel le meuble est posé (tables du DC à x 0,47 contre le mur x 0,18-0,47 : on sortait de
+   l'école), et 16 corps arrêtés DANS un meuble. Corrigé (étape 9, (3) de `appliquerCommande`, `surMeuble`) : le corps qui
+   redescend sur une forme basse s'y POSE — `jumpY` tenu au plus bas où la bande est libre (dichotomie au mm), `jumpVel` à 0,
+   toujours « en l'air » pour `Player` — et il en GLISSE à 3 m/s vers la sortie la plus proche (8 directions, 1,25 m au plus,
+   atteinte par `C.deplacer` à la hauteur tenue : jamais à travers un mur ni vers le mur du meuble) ; coincé entre le meuble et
+   un linteau, le pas est annulé comme contre un mur. Le chevauchement est lu FORME PAR FORME (`chevauche` :
+   `Collisions._parcourir` / `_sortir` sur une copie) : `C.libre` est trompé par un meuble collé à un mur (demande ci-dessous).
+   Mesuré après : 0 bond, 0 traversée, 0 corps dans un meuble ; 52 sauts posés sur un meuble dans le test 3, tous redescendus
+   seuls touches lâchées (au plus 1,5 s ; 0,2 à 0,5 s le plus souvent). Test 3 complété (bonds, traversées, dedans, posés).
+   (Un CoD laisse monter sur une table ; ici on s'y pose le temps d'en glisser : le saut, la glissade et le sprint attendent
+   d'être redescendu — c'est voulu, pas de perchoir dans une manche.)
+
+### Rejoué au navigateur (repreneur, 23/10, jeton 1, port 8132)
+
+- `?test=1&rapport=1&lot=L-B` AVANT le point 8 (`eaa46c4`, les corrections 1-7) : `{ ok: true, total: 20, ms: 50 705, echecs: [],
+  signales: [] }` ; APRÈS (`17df76e`) : `{ ok: true, total: 20, ms: 31 106, echecs: [], signales: [], qualite: 'high' }`.
+- Mesures nouvelles : test 3 « … bonds 0, traversées 0, dedans 0, posés sur un meuble 52 (restés 0), trous du sol 28 » ; test 8
+  « œil du tir − caméra 0 m (sol lissé jusqu'à 20,4 cm des pieds) » ; test 10 « prop lancé 0,6 (humain bougé 0) » ; test 19
+  « réapparition { jauge 1, endurance 100 } » ; test 20 « maintenue : 0,25° · souffle, lunette, 0,025° · pénalité 0,372° ;
+  basculée : idem 0,374° · caméra − commande 8,7e-19 rad ».
+- Coût : `solLisse` 0,03-0,05 ms par pas (l'acteur local seulement) ; `Partie.pas` de l'essai (3 acteurs) 0,17 ms à l'arrêt,
+  0,18 ms en courant (budget 0,5 ms avec 7 bots).
+- Console : rien du lot (les « An unknown error occurred when fetching the script » du service worker, déjà au socle).
+- Joué (images faites à la main : le panneau du navigateur ne donne qu'1 rAF/s, fenêtre en arrière-plan) : la hanche et la
+  visée de la FA-24 (champ 58,7° → 48,5°, souris × 0,8), le saut sur les chaises de l'espace pause du 1er (posé à 0,2 m, glissé
+  hors du rang en 0,3 s).
+
+### Ce qui reste vrai et qu'on garde (noté, pas corrigé)
+
+- **L'œil en haut d'une volée** (écart 1) : arrêté au bord, jusqu'à **20 cm** sous sa hauteur en haut de la volée la plus raide
+  (0,77 : l'escalier est, 3,5 → 1,75), 13 cm au pied ; c'est l'arrondi de la cassure par la fenêtre de 2 m. On ne peut pas le
+  réduire sans casser le critère 8 (la dérivée seconde ∝ 1 / fenêtre : 0,85 cm mesuré pour 1 cm permis à 1,6 m). Comme l'œil
+  du tir est le même (point 1), le réticule ne ment pas ; la tête simulée (`touches.js`), elle, reste à sa place.
+- **Les trous du sol du −1** (hors lot : `js/ecole_soussol.js` du lot R, ou ses dalles) : un sprint droit depuis un point libre
+  du −1 finit au rez-de-chaussée dans 87 cas sur ≈ 500 SANS sauter (là où aucune dalle du −1 ne couvre, `solEn` rend 0 et le
+  corps monte de 3,06 m dans un meuble du hall : vers (1,1 ; −1,0), (3,6 ; −1,0), (5,5 ; −1,0), (13,1 ; −3,8), (2,1 ; −16,7)) ;
+  le test 3 les compte à part (« trous du sol ») — à vérifier à F2 sur le −1 refait.
