@@ -249,6 +249,24 @@ Spécification relue (§§ 3.6, 3.10, 4.1, 4.5.17, 4.6, 5.1, 5.5.12), diff `socl
    pendant le chargement du FP-12) : on aurait entendu le « clac » ou la pompe d'une recharge qui n'a pas eu lieu. Ces
    phases ne jouent plus rien. Test 16 ajouté.
 
+### Demandes des autres lots à L-H (lues dans leurs rapports, prises ici)
+
+- **L-M** (`'porte'` `{ nom, x, y, z, ouvre, a }`, un ajout au § 4.6) : SonsJeu s'y abonne. Une porte 'auto' qui commence
+  à s'ouvrir fait le pêne, le souffle du vantail et la ferrure ; une porte qui finit de se refermer, le battant et le pêne.
+  La voix est spatialisée et occultée, à 14 m au plus. C'est l'indice « la porte qui s'ouvre seule » du § 3.9. Test 17.
+- **L-V** (`versMonde('bouche' | 'ejection')`, un ajout de L-V) : l'éclair et le départ du traceur de Haythem en vue
+  FPS, et sa douille, partent de là quand l'arme de vue sait le dire. Le point est à la distance du repère, pas à
+  0,8 m. Sinon, le repère cherché par les effets, puis l'œil décalé. Test `apresFusion` F4.
+- **L-A** (écouter 'trajet', 'rebond', 'couteau', l'impact de vitre `traverse: true`, les `mat` 'sol' | 'plafond' |
+  'vitre' | 'meuble' | 'mur') : déjà fait par le constructeur. La branche `lot/L-A` émet bien l'impact de vitre
+  (`balistique.js` l. 346), la demande du constructeur à L-A est donc tenue. Pour la grenade en vol, un pool existe.
+- **L-E** (`hud.cibles` : `k`, `cap` = rotation.y, `touchee`, `mannequin` ; `hud.points`) : tenu. Le cap est relu sur le
+  stand : le carton regarde la ligne de tir et tombe en arrière.
+- **L-F** : (1) `dalle: 'faite'` et (2) `spatial` sont tenus. (3) SonsJeu ne siffle pas au prop hunt : `_etat` et `fin`
+  sortent sur `prophunt`. (4) « Libérer la plus faible plutôt que refuser » : c'est déjà la règle de `_place`. Une voix
+  n'est refusée que si elle est elle-même la plus faible. Le refus observé par L-F venait du squelette, dont l'horloge
+  des sons n'avançait pas.
+
 ### Nettoyé
 
 - `Effets` s'abonnait à `elim` et à `flash` sans rien en faire (deux abonnements morts) : retirés. La touche qui tue a

@@ -579,6 +579,9 @@ export class Effets {
   // et le départ du traceur tombent au bout du canon dessiné ; sans arme de vue, sous et à droite de l'œil
   _boucheVue(a, ev, out) {
     const D = 0.8, cam = this.game.camera, vm = this.partie && this.partie.aff && this.partie.aff.viewmodel;
+    // (relecture du 23/10 : l'arme de vue de L-V dit elle-même où son repère tombe dans la scène de jeu — `versMonde`, un
+    // ajout de L-V, à la distance du repère et non à 0,8 m ; sinon le repère cherché ici)
+    if (vm && vm.versMonde && vm.versMonde('bouche', out)) return out;
     const sup = vm && vm.superposition, bo = sup && sup.scene && sup.camera ? this._repereBouche(sup.scene) : null;
     if (bo) {
       bo.getWorldPosition(_v); _v.project(sup.camera);
@@ -631,7 +634,11 @@ export class Effets {
     const D = this.dou, R = REGLAGES_EFFETS.douille, M = this.pools.douilles, i = D.k; D.k = (D.k + 1) % M.count;
     const l = a.cmd.lacet, fx = -Math.sin(l), fz = -Math.cos(l), rx = Math.cos(l), rz = -Math.sin(l);
     let x, y, z;
-    if (q.fps) { const e = a.oeil(_n, true); x = e.x + rx * R.droite + fx * R.avant; y = e.y - R.bas; z = e.z + rz * R.droite + fz * R.avant; }
+    // (Haythem en vue FPS : la fenêtre d'éjection de l'arme de vue — `versMonde('ejection')` de L-V —, sinon œil + (0,12 droite,
+    // −0,08 bas, 0,35 avant), § 4.5.17)
+    const vm = q.fps && this.partie && this.partie.aff && this.partie.aff.viewmodel, ej = vm && vm.versMonde ? vm.versMonde('ejection', _n) : null;
+    if (ej) { x = ej.x; y = ej.y; z = ej.z; }
+    else if (q.fps) { const e = a.oeil(_n, true); x = e.x + rx * R.droite + fx * R.avant; y = e.y - R.bas; z = e.z + rz * R.droite + fz * R.avant; }
     else { const b = this._bouche(a, _n); x = b.x - fx * 0.45 + rx * 0.04; y = b.y + 0.03; z = b.z - fz * 0.45 + rz * 0.04; }
     const v = a.corps.vel || { x: 0, z: 0 }, [vr, vu, va] = R.vitesse;
     D.p[i * 3] = x; D.p[i * 3 + 1] = y; D.p[i * 3 + 2] = z;

@@ -620,6 +620,26 @@ export default function (jeu) {
     return { ok: n1 === n0 && n2 === n1 + 1, attendu: '0 voix pour annulee / interrompue, 1 pour fin', obtenu: `${n1 - n0} voix, puis ${n2 - n1} pour fin` };
   });
 
+  // 17. (relecture) LES PORTES 'auto' (l'événement `porte` de L-M, prop hunt) : une voix à la porte, occultée comme les autres,
+  // à l'ouverture et à la fermeture ; rien au-delà de son rayon
+  T('17 portes : un son à l’ouverture et à la fermeture', async () => {
+    const { p, S } = await essai({ mannequins: 1 });
+    const cam = game.camera, L = cam.position; S.maj(1, cam);
+    const R = REGLAGES_SONS.rayons.porte, res = [];
+    for (const ouvre of [true, false]) {
+      const n0 = S.stats.creees;
+      p.evt('porte', { nom: 'essai', x: L.x + 3, y: L.y - 1.6, z: L.z, ouvre, a: ouvre ? 1 : -1 }); S.maj(0, cam);
+      const v = S.voix[S.voix.length - 1];
+      res.push([`${ouvre ? 'ouverture' : 'fermeture'} : ${S.stats.creees - n0} voix à ${v ? r2(Math.hypot(v.x - L.x - 3, v.z - L.z)) : '—'} m de la porte, panoramique ${!!(v && v.panner)}`,
+        S.stats.creees === n0 + 1 && !!v && !!v.panner && Math.hypot(v.x - L.x - 3, v.z - L.z) < 1e-6]);
+    }
+    const n0 = S.stats.creees;
+    p.evt('porte', { nom: 'loin', x: L.x + R + 5, y: L.y - 1.6, z: L.z, ouvre: true, a: 1 }); S.maj(0, cam);
+    res.push([`à ${R + 5} m : ${S.stats.creees - n0} voix`, S.stats.creees === n0]);
+    jeu.quitter('balade');
+    return bilan(res, 'une voix spatialisée à la porte, à l’ouverture et à la fermeture ; rien au-delà du rayon');
+  });
+
   // 14. LA BALADE AU BIT PRÈS, la passe superposée éteinte, les pools hors de la scène
   T('14 balade au bit près, passe éteinte, rien du jeu dans la scène', async () => {
     jeu.quitter('balade'); await jeu.images(2);
@@ -650,6 +670,19 @@ export default function (jeu) {
     const v = new THREE.Vector3().setFromMatrixPosition(m), d = Math.hypot(v.x - b.x, v.y - b.y, v.z - b.z);
     jeu.quitter('balade');
     return { ok: d <= 0.05, attendu: '≤ 5 cm', obtenu: r3(d) + ' m' };
+  }, { apresFusion: true });
+  // l'éclair et la douille de Haythem en vue FPS au repère de la VRAIE arme de vue (L-V : `versMonde('bouche' | 'ejection')`)
+  T('F4 éclair FPS au repère de la vraie arme de vue (L-V)', async () => {
+    const { p, E } = await essai({ mannequins: 0 });
+    game.frame(1 / 60);
+    const vm = p.aff.viewmodel, loc = p.local, k = E.ecl.k, b = vm.versMonde && vm.versMonde('bouche', new THREE.Vector3());
+    const o = loc.oeil(new THREE.Vector3(), true), d = new THREE.Vector3(); game.camera.getWorldDirection(d);
+    p.evt('tir', { a: loc.id, arme: 'fa24', ox: o.x, oy: o.y, oz: o.z, dx: d.x, dy: d.y, dz: d.z, n: 1, seq: 0 });
+    E.maj(1 / 60);
+    const m = new THREE.Matrix4(); E.pools.eclairs.getMatrixAt(k, m);
+    const v = new THREE.Vector3().setFromMatrixPosition(m), e = b ? v.distanceTo(b) : Infinity;
+    jeu.quitter('balade');
+    return { ok: e <= 0.01, attendu: 'l’éclair à ≤ 1 cm de versMonde(« bouche »)', obtenu: b ? r3(e) + ' m' : 'pas de versMonde' };
   }, { apresFusion: true });
   // les impacts du VRAI DDA de L-A (forme et normale données) : sur 50 tirs de Haythem vers des murs, chaque décalque
   // sur sa forme (haute) et sa normale

@@ -28,7 +28,8 @@
 // (« tic », « ding »), élimination (son sourd + 2e tic), coup reçu (« thwack »), cœur sous 30 PV, explosions (frag,
 // flash ; acouphène et passe-bas 600 Hz rouvert en 2 s à moins de 8 m), flash reçue (300 Hz + acouphène), caméra de mort
 // (le son étouffé), décompte (bips), buzzer et sifflet de LA CAGE (js/audio.js), captures de la domination, grenades
-// (lancer, rebonds lus dans l'état), douilles (« tink », appelé par js/jeu/effets.js). Le prop hunt (provocations,
+// (lancer, rebonds lus dans l'état), douilles (« tink », appelé par js/jeu/effets.js), portes 'auto' (l'événement `porte`
+// de L-M : la porte qui s'ouvre seule s'entend). Le prop hunt (provocations,
 // frottements, « pouf », bip du scanner…) est à js/jeu/sons_prop.js (L-F), qui joue par `jouer3d`.
 import { TELEPHONE } from '../appareil.js';
 import { niveauDe, PAS } from './constantes.js';
@@ -47,11 +48,11 @@ export const REGLAGES_SONS = {
   // marche 4 (« pas audibles à 4 m »), accroupi muet : l'oreille de Haythem est celle des bots (relecture du 23/10 : 22 / 15
   // / 6 / 4 m lui donnaient l'avantage sur un bot qui l'entend à 14 / 9 / 4 / 0) ; ses pas à lui, toujours (au milieu)
   rayons: { tir: 75, pas: { sprint: 14, course: 9, marche: 4, accroupi: 0 }, impact: 25, recharge: 10, vide: 6, arme: 6, explosion: 90, flash: 60,
-    frole: 4, corps: 15, saut: 10, grenade: 25, douille: 12 },
+    frole: 4, corps: 15, saut: 10, grenade: 25, douille: 12, porte: 14 },
   // gains de base des voix (avant la loi de distance)
   gains: { tirLocal: 0.9, tir: 0.8, pas: 0.6, pasLocal: 0.3, impact: 0.55, recharge: 0.55, rechargeLocal: 0.6, vide: 0.5, arme: 0.45,
     explosion: 1, flash: 0.9, marqueur: 0.55, tete: 0.5, elim: 0.6, recu: 0.7, frole: 0.6, coeur: 0.5, phase: 0.6, capture: 0.4, douille: 0.35,
-    grenade: 0.5, saut: 0.3, glissade: 0.4, corps: 0.35, apparition: 0.25, couteau: 0.5 },
+    grenade: 0.5, saut: 0.3, glissade: 0.4, corps: 0.35, apparition: 0.25, couteau: 0.5, porte: 0.45 },
   // (la mort : étouffé le temps de la caméra de mort — 3 s, la désaturation du § 3.6 —, puis rouvert en 1 s ; une
   // réapparition plus tôt, à 2 s en chacun pour soi, rouvre tout de suite ; le spectateur du prop hunt, qui ne réapparaît
   // pas avant la manche suivante, entend la partie — relecture du 23/10 : sans réouverture, il restait à 450 Hz jusqu'à
@@ -247,6 +248,14 @@ const RECETTES = {
   douille: (B, cartouche) => (ctx, out, q) => cartouche ? ton(ctx, out, q, 'triangle', 1800, 1600, 0.03, 0.5, 0.001)
     : Math.max(ton(ctx, out, q, 'sine', 4200 + Math.random() * 300, 0, 0.04, 0.5, 0.0005), rafale(ctx, out, q, B.blanc, 'highpass', 5000, 0.8, 0.012, 0.2, 0.0005)),
   apparition: (B) => (ctx, out, q) => rafale(ctx, out, q, B.rose, 'lowpass', 800, 0.7, 0.45, 0.6, 0.12, 0, 2200),
+  // une PORTE 'auto' du prop hunt (l'événement `porte` de L-M) : qui s'ouvre — le pêne, le souffle du vantail, la ferrure —
+  // ou qui finit de se refermer — le battant contre l'huisserie et le pêne qui claque ; « la porte qui s'ouvre seule »
+  // s'entend (§ 3.9, un indice)
+  porte: (B, ouvre) => (ctx, out, q) => ouvre
+    ? Math.max(ton(ctx, out, q, 'square', 1500, 1300, 0.012, 0.18, 0.001), rafale(ctx, out, q, B.rose, 'lowpass', 520, 0.7, 0.55, 0.45, 0.12, 0.03, 300),
+      ton(ctx, out, q, 'triangle', 640, 560, 0.18, 0.05, 0.03, 0.08))
+    : Math.max(ton(ctx, out, q, 'sine', 95, 58, 0.14, 0.8, 0.002), rafale(ctx, out, q, B.rose, 'lowpass', 420, 0.7, 0.12, 0.6, 0.002),
+      ton(ctx, out, q, 'square', 1700, 1500, 0.01, 0.16, 0.001, 0.035), rafale(ctx, out, q, B.blanc, 'highpass', 3500, 0.8, 0.012, 0.12, 0.0005, 0.035)),
   bip: (fort) => (ctx, out, q) => ton(ctx, out, q, fort ? 'square' : 'sine', fort ? 1320 : 880, 0, fort ? 0.3 : 0.12, fort ? 0.25 : 0.45, 0.002),
   // la domination : un point pris par les nôtres (arpège majeur montant) ou par l'adversaire (mineur descendant)
   capture: (ami) => (ctx, out, q) => { let f = 0; const N = ami ? [523, 659, 784] : [523, 415, 349]; for (let i = 0; i < 3; i++) f = Math.max(f, ton(ctx, out, q, 'triangle', N[i], 0, 0.14, 0.5, 0.004, i * 0.09)); return f; },
@@ -371,7 +380,7 @@ export class SonsJeu {
     // (l'événement noté AVEC son genre : Partie.evt fait { t, type, ...données }, et une explosion ou une grenade porte un
     // champ `type` à elle — 'frag' | 'flash' — qui écrase celui de l'événement)
     for (const quoi of ['tir', 'impact', 'touche', 'elim', 'recharge', 'arme', 'vide', 'pas', 'saut', 'reception', 'glissade', 'frole',
-      'grenade', 'explosion', 'flash', 'capture', 'apparition', 'fin', 'couteau', 'rebond']) this._des.push(partie.sur(quoi, (e) => { this._file.push({ quoi, e }); }));
+      'grenade', 'explosion', 'flash', 'capture', 'apparition', 'fin', 'couteau', 'rebond', 'porte']) this._des.push(partie.sur(quoi, (e) => { this._file.push({ quoi, e }); }));
   }
   debrancher() {
     for (const d of this._des) d();
@@ -661,6 +670,8 @@ export class SonsJeu {
         this.jouer3d(e.x, e.y, e.z, RECETTES.rebond(B, f), { gain: G.grenade, rayon: R.grenade, retard: true, decalage: dec, hauteurOcc: 0.3 });
         return;
       }
+      // (un ajout de L-M au § 4.6 : une porte 'auto' qui commence à s'ouvrir, ou qui finit de se refermer — prop hunt)
+      case 'porte': this.jouer3d(e.x, (e.y || 0) + 1.0, e.z, RECETTES.porte(B, !!e.ouvre), { gain: G.porte, rayon: R.porte, retard: true, decalage: dec, hauteurOcc: 0.3 }); return;
       case 'grenade': this.jouer3d(e.x, e.y, e.z, RECETTES.lancer(B, genreGrenade(e, 'grenade') !== 'flash'), { gain: G.grenade, rayon: R.grenade, retard: true, decalage: dec, centre: lui(e.a) }); return;
       case 'explosion': {
         const E = this._oreille, d = Math.hypot(e.x - E.x, e.y - E.y, e.z - E.z), flash = genreGrenade(e, 'explosion') === 'flash';
