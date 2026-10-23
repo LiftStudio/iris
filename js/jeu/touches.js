@@ -158,7 +158,7 @@ export function rayonActeurs(acteurs, ox, oy, oz, dx, dy, dz, tMax, sauf, out) {
     capsules(a, _vols);
     for (let j = 0; j < _vols.length; j++) {
       const k = _vols[j];
-      const t = k.t === 'o' ? rayonBoite(ox, oy, oz, dx, dy, dz, k) : rayonCapsule(ox, oy, oz, dx, dy, dz, k);
+      const t = rayonVolume(ox, oy, oz, dx, dy, dz, k);
       if (t < best) { best = t; trouve = a; zone = k.zone; }
     }
   }

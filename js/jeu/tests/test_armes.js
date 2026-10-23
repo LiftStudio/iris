@@ -212,7 +212,7 @@ export default function (jeu) {
   // sans forme : feuillage, rampes, lampes, câbles — comptés à part)
   T('2 balle() contre les maillages de la scène (100 rayons)', async (t) => {
     jeu.quitter('balade');
-    const C0 = C(), B = nouvelleBalistique(), rng = new Rng(7), P = pointsLibres(C0, 300, rng), h = {}, m = {};
+    const C0 = C(), B = nouvelleBalistique(), rng = new Rng(7), P = pointsLibres(C0, 300, rng), m = {};
     const exclus = (o) => { for (let q = o; q; q = q.parent) { if (q === game.user.mesh || q.userData.dynamique) return true; } return false; };
     const maillages = [];
     game.scene.traverse((o) => { if ((o.isMesh || o.isInstancedMesh) && !o.isSkinnedMesh && !o.userData.suite && !exclus(o)) maillages.push(o); });
@@ -273,7 +273,7 @@ export default function (jeu) {
         if (Math.abs(tR - m.t) <= 0.10) ok++; else if (fautes.length < 6) fautes.push(`(${r3(a.x)}, ${r3(a.y)}, ${r3(a.z)}) → (${r3(b.x)}, ${r3(b.y)}, ${r3(b.z)}) : maillage ${r3(tR)} « ${H ? H.object.name || H.object.parent?.name || '?' : 'rien'} », balle ${r3(m.t)} (${m.mat})`);
       }
     } finally { for (const [M, s] of cotes) M.side = s; }
-    void h; await t.attendre(0);
+    await t.attendre(0);
     t.note('maillages : accord dans les cages d’escalier', `${escOk}/${escalier}`); t.note('maillages : accord sur les portes', `${portesOk}/${portes}`);
     return { ok: n >= 100 && ok / n >= 0.97, attendu: '≥ 97 % de 100 rayons comparés à ≤ 10 cm du premier maillage (exclus, comptés à part : verre, décor sans forme, forme sans décor, cages d’escalier, portes)',
       obtenu: `${ok}/${n} (${(100 * ok / Math.max(1, n)).toFixed(1)} %) · exclus : ${verre} verre, ${sansForme} décor sans forme, ${sansDecor} forme sans décor, ${escalier} dans une cage d'escalier (${escOk} d'accord), ${portes} sur une porte (${portesOk} d'accord)${fautes.length ? ' · écarts : ' + fautes.join(' ; ') : ''}` };
@@ -602,14 +602,13 @@ export default function (jeu) {
       avancer(p, 0.6); s.reculs.length = 0;
       const s0 = a.arsenal.tirSeq; s.c.tir = true;
       jusqua(p, () => a.arsenal.tirSeq - s0 >= n, 5); s.c.tir = false;
-      const tDernier = p.t; let cabre = a.arsenal.reculV;
+      let cabre = a.arsenal.reculV;
       p.pas(PAS); cabre = Math.max(cabre, a.arsenal.reculV);
       const montee = s.reculs.reduce((x, r) => x + r.v, 0), cote = s.reculs.reduce((x, r) => x + r.h, 0), parTir = s.reculs.map((r) => r.v / DEG);
       s.reculs.length = 0; avancer(p, 0.29);
       const avantRappel = s.reculs.reduce((x, r) => x + r.v, 0);
       s.reculs.length = 0; avancer(p, 0.36);
       const rappel = s.reculs.reduce((x, r) => x + r.v, 0);
-      void tDernier;
       p.retirerActeur(a);
       return { montee, cote, parTir, avantRappel, rappel, cabre };
     };

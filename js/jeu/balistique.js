@@ -138,7 +138,6 @@ export class Balistique {
     this._vt = []; this.nv = 0;
     this._h = { t: 0, forme: null, sol: null, nx: 0, ny: 0, nz: 0 };
     this._m = {}; this._cibles = []; this._hA = { acteur: null, zone: null, t: 0 };
-    this.stats = { rayons: 0, formes: 0, vues: 0, prefiltrees: 0 };
   }
 
   // ------------------------------------------------------------------ le parcours
@@ -148,7 +147,7 @@ export class Balistique {
     const C = this.C;
     h = h || this._h;
     h.forme = null; h.sol = null; h.nx = -dx; h.ny = -dy; h.nz = -dz;
-    this.nv = 0; this.stats.rayons++;
+    this.nv = 0;
     let best = this._sols(ox, oy, oz, dx, dy, dz, portee, h);
     // LA GRILLE, case après case
     const tour = ++C._tour;
@@ -169,7 +168,6 @@ export class Balistique {
           let traverse = false;
           if (mode === 1) { if (!s.camera || (s.vitre && !s.depoli)) continue; }
           else if (mode === 0 && s.vitre) traverse = true;
-          this.stats.formes++;
           const t = entree(s, ox, oy, oz, dx, dy, dz, best);
           if (t >= best) continue;
           if (traverse) {
@@ -284,9 +282,8 @@ export class Balistique {
   // `vue`. Vrai = rien entre les deux.
   vue(ax, ay, az, bx, by, bz) {
     const dx = bx - ax, dy = by - ay, dz = bz - az, L = Math.sqrt(dx * dx + dy * dy + dz * dz);
-    this.stats.vues++;
     if (L < 1e-6) return true;
-    if (this.prefiltre && this.cacheParZones(ax, ay, az, bx, by, bz)) { this.stats.prefiltrees++; return false; }
+    if (this.prefiltre && this.cacheParZones(ax, ay, az, bx, by, bz)) return false;
     return this.rayon(ax, ay, az, dx / L, dy / L, dz / L, L, 1, this._h) >= L - 1e-6;
   }
   // le pré-filtre seul : vrai si la zone de B est cachée de A selon les règles du rendu (et que la paire n'est pas une exception)
@@ -319,8 +316,9 @@ export class Balistique {
   // TRAVERSENT les alliés (§ 3.5 : seuls les ennemis du tireur sont des cibles, partie.ennemis) et les vitres : `traverse`
   // vrai si une vitre (claire ou dépolie) précède le point d'arrivée — Partie.resoudreTir applique alors × 0,8 —, et une
   // FÊLURE est posée sur chacune (événement 'impact', mat 'vitre', `traverse: true` : les effets y mettent l'étoile et le
-  // verre, les sons le tintement ; l'impact de la balle elle-même suit, par resoudreTir)
-  tirer(partie, tireur, ox, oy, oz, dx, dy, dz, portee, out) {
+  // verre, les sons le tintement ; l'impact de la balle elle-même suit, par resoudreTir). `plomb` (ajout, facultatif) : le
+  // numéro du plomb, recopié dans ces fêlures comme resoudreTir le recopie dans son impact
+  tirer(partie, tireur, ox, oy, oz, dx, dy, dz, portee, out, plomb = 0) {
     out = out || {};
     const m = this.balle(ox, oy, oz, dx, dy, dz, portee, this._m);
     const cibles = this._cibles;
@@ -334,7 +332,7 @@ export class Balistique {
       if (v.t >= tFin) break;
       traverse = true;
       partie.evt('impact', { x: ox + dx * v.t, y: oy + dy * v.t, z: oz + dz * v.t, nx: v.nx, ny: v.ny, nz: v.nz, mat: 'vitre', forme: v.forme.id ?? null,
-        plomb: 0, traverse: true });
+        plomb, traverse: true });
     }
     if (h) {
       out.acteur = h.acteur; out.zone = h.zone; out.t = h.t;
