@@ -249,7 +249,8 @@ export class Game {
     // (22/10, socle du jeu : en partie, la capture passe par la partie — pointeur brut, réponse rendue — et le clic tire au
     // lieu de faire glisser la caméra ; la souris capturée choisit dans la roue des provocations quand elle est ouverte)
     this._onClick = () => {
-      if (this.partie) { if (!this.paused && !this.input.blocked && document.pointerLockElement !== canvas) this.partie.capturer(); return; }
+      // (F2, demande de L-I : la capture n'est demandée que si la partie en a besoin — pas au doigt, pas à la manette)
+      if (this.partie) { if (!this.paused && !this.input.blocked && document.pointerLockElement !== canvas && this.partie.besoinCapture()) this.partie.capturer(); return; }
       if (this.mode === 'lobby' && !this.paused && !this.input.blocked && document.pointerLockElement !== canvas) { try { const r = canvas.requestPointerLock?.(); if (r && r.catch) r.catch(() => {}); } catch (e) { /* capture souris refusée (iframe, aperçu) */ } }
     };
     this._onDown = () => { if (!this.partie) this.dragging = true; };
