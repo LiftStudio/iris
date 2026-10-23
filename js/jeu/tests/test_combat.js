@@ -639,6 +639,8 @@ export default function (jeu) {
       const [a, b] = p.acteurs;
       for (const x of [a, b]) x.arsenal = new Arsenal(x, CLASSES.assaut);
       jeu.teleporter(a.id, -2.7, -0.12, 3.75, -Math.PI / 2); jeu.teleporter(b.id, 12.3, -0.12, 3.75, Math.PI / 2);
+      // (la visée interne du cerveau suit le téléport : sinon chacun tourne depuis le cap de SON départ, et le duel n'est plus symétrique)
+      for (const [x, l] of [[a, -Math.PI / 2], [b, Math.PI / 2]]) if (x.cerveau && x.cerveau.aim) x.cerveau.aim = { l, t: 0 };
       pasJusqua(p, () => !a.vivant || !b.vivant, 120 * 20);
       if (!a.vivant && !b.vivant) { g0++; g1++; deux++; } else if (!b.vivant) g0++; else if (!a.vivant) g1++;
       jeu.quitter('balade');

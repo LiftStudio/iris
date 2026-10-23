@@ -73,7 +73,6 @@ export const DOMINATION = {
   libres: [1.5, 1.25, 1.0, 0.75],
 };
 
-const DEG = Math.PI / 180;
 const clampEntier = (v, [lo, hi]) => Math.max(lo, Math.min(hi, Math.round(Number.isFinite(+v) ? +v : lo)));
 const nomCourt = (id) => { const f = ARMES[id]; return f ? f.nom.split(' «')[0] : (id || null); };
 
