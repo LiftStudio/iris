@@ -513,29 +513,31 @@ export default function (jeu) {
   }, { delai: 120 });
 
   // 13. LA LISIBILITÉ : 10 photos d'un SISR et d'un SLAM clonés de Haythem, de 5 à 30 m, dans la rue, au hall, au −1, dans
-  // les couloirs (jugées et notées au rapport ; window.__photosLC). Relecture : les cadrages du constructeur (hall à 10 et
-  // 20 m, −1, couloir est) mettaient 6 photos sur 10 face à un mur ou derrière une porte — les plans sont ceux où la ligne de
-  // vue est LIBRE (cherchés au monde solide le 23/10 : le RDC n'a pas de vue intérieure de 20 m, le hall en a une de 14 m
-  // vers la salle d'attente), et chaque photo vérifie que les deux corps y sont : dessinés (la cadence) et vus de l'œil.
+  // le couloir rouge du 2e (jugées et notées au rapport ; window.__photosLC). Relecture : les cadrages du constructeur (hall à
+  // 10 et 20 m, −1, couloir est) mettaient 6 photos sur 10 face à un mur ou derrière une porte. Les plans sont ceux où DEUX
+  // corps côte à côte (± 0,4 m) se voient de l'œil, buste, hanches et tête — cherchés au monde solide le 23/10, tous les
+  // 0,5 m et 16 caps : la plus longue vue intérieure est de 12 m (le fond du RDC, hors des bornes du jeu), 8 m au hall (vers
+  // la salle d'attente), 8 m au −1 (la pause, meublée), 10 m au 2e ; 20 et 30 m ne se trouvent que dans la rue. Chaque
+  // photo vérifie que les deux corps y sont : dessinés (la cadence) et vus de l'œil.
   T('13 lisibilité : 10 photos (SISR et SLAM clonés de Haythem)', async () => {
     await jeu.lancer('essai', { graine: 13, mannequins: [], bots: 0, humain: true, avatars: [] });
     const p = game.partie, B = p.balistique;
     const sisr = bot(p, 90, { equipe: 'A' }), slam = bot(p, 91, { equipe: 'B' });
     await prets([sisr, slam]);
     window.__photosLC = {};
-    // [lieu, caméra (x, y, z), direction des bots (dx, dz), distances]
-    const plans = [['rue', [-2.0, 0, 4.6], [1, 0], [10, 20, 30]], ['hall', [16.0, 0, -2.5], [-0.924, -0.383], [7, 14]],
-      ['moins1', [0.5, -3.06, -2.5], [1, 0], [8, 12]], ['couloirEst', [15.5, 0, -2.0], [0, -1], [10]],
-      ['couloir2e', [14.0, 6.6, -5.5], [-1, 0], [10]], ['proche', [-2.0, 0, 4.6], [1, 0], [5]]];
+    // [lieu, caméra (x, y, z), direction des bots (dx, dz), distances, écart de chaque corps à la ligne de vue]
+    const plans = [['rue', [-2.0, 0, 4.6], [1, 0], [10, 20, 30], 0.6], ['hall', [18.8, 0, -1.6], [-0.924, -0.383], [5, 8], 0.4],
+      ['moins1', [7.0, -3.06, -6.5], [-0.383, -0.924], [5, 8], 0.4], ['couloir2e', [14.0, 6.6, -5.5], [-1, 0], [6, 10], 0.4],
+      ['proche', [-2.0, 0, 4.6], [1, 0], [5], 0.6]];
     const o = new THREE.Vector3(), vus = [];
     let n = 0;
-    for (const [lieu, cam, dir, ds] of plans) {
+    for (const [lieu, cam, dir, ds, ec] of plans) {
       for (const d of ds) {
         const q = libre(cam[0], cam[1], cam[2]);
         const lacet = Math.atan2(-dir[0], -dir[1]);
         jeu.teleporter(0, q.x, q.y, q.z, lacet); game.camPitch = 0.02;
         const bx = q.x + dir[0] * d, bz = q.z + dir[1] * d, px = -dir[1], pz = dir[0];
-        const s1 = libre(bx + px * 0.6, q.y, bz + pz * 0.6), s2 = libre(bx - px * 0.6, q.y, bz - pz * 0.6);
+        const s1 = libre(bx + px * ec, q.y, bz + pz * ec), s2 = libre(bx - px * ec, q.y, bz - pz * ec);
         jeu.teleporter(90, s1.x, s1.y, s1.z, lacet + Math.PI); jeu.teleporter(91, s2.x, s2.y, s2.z, lacet + Math.PI);
         for (const id of [90, 91]) jeu.viser(id, { lacet: lacet + Math.PI, tangage: 0 });
         image(20);
