@@ -581,7 +581,14 @@ export default function (jeu) {
     for (let k = 0; k < 40; k++) SP.jouerProvocation(k % 8);
     const max = window.__chargement && window.__chargement.telephone ? 12 : 24;
     res.push([`voix ${S.voix.length} (max ${max})`, S.voix.length <= max]);
-    jeu.avancer(2);
+    // (relecture) les voix pleines de frottements : une provocation passe quand même (elle vole une voix)
+    S.maj(5, game.camera); jeu.avancer(0.5);
+    for (let k = 0; k < max + 6; k++) SP.jouer('frottement', loc.pos.x + 0.5, loc.pos.y, loc.pos.z, { rayon: 7, deProp: 1 });
+    const pleines = S.voix.length, n0 = SP.n;
+    p.evt('provocation', { a: 1, id: 'rire', n: 4, x: loc.pos.x + 2, y: loc.pos.y, z: loc.pos.z, forcee: false, rayon: 20, duree: 1.2, points: 0 });
+    const passe = SP.journal.some((j) => j.n > n0 && j.nom === 'rire');
+    res.push([`voix pleines (${pleines}) : provocation ${passe ? 'jouée' : 'refusée'}`, pleines === max && passe]);
+    S.maj(5, game.camera); jeu.avancer(2);
     // (d) la dalle : une même provocation sous les pieds de Haythem, au même niveau puis au niveau d'en dessous
     const x = loc.pos.x, y = loc.pos.y, z = loc.pos.z;
     J.vider(); SP.jouer('coucou', x, y, z, { rayon: 30, gain: 1 }); const A0 = J.entrees.slice();
@@ -596,7 +603,7 @@ export default function (jeu) {
     res.push([`frottement à 9 m (rayon 7) : ${v ? 'joué' : 'rien'}`, !v]);
     jeu.quitter('balade');
     const ko = res.filter((r) => !r[1]);
-    return { ok: !ko.length, attendu: 'durées 0,6 / 0,7 / 0,8 / 0,9 / 1,2 / 1,6 / 1,0 / 1,4 ± 0,05 ; ≤ 24 voix ; à travers la dalle 900 Hz et × 0,35 ; rien hors de portée',
+    return { ok: !ko.length, attendu: 'durées 0,6 / 0,7 / 0,8 / 0,9 / 1,2 / 1,6 / 1,0 / 1,4 ± 0,05 ; ≤ 24 voix, une provocation passe même voix pleines ; à travers la dalle 900 Hz et × 0,35 ; rien hors de portée',
       obtenu: res.map((r) => (r[1] ? '' : '✗ ') + r[0]).join(' · ') };
   });
 

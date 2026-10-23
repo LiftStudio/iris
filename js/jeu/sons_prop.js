@@ -265,7 +265,7 @@ export class SonsProp {
     const R = REGLAGES_SONS.rayons;
     S('provocation', (e) => {
       const P = PROVOCATIONS[e.n] || PROVOCATIONS.find((p) => p.id === e.id);
-      if (P) this.jouer(P.id, e.x, e.y, e.z, { rayon: e.rayon || P.rayon, gain: REGLAGES_SONS.provocation * (e.forcee ? REGLAGES_SONS.forcee : 1), deProp: e.a });
+      if (P) this.jouer(P.id, e.x, e.y, e.z, { rayon: e.rayon || P.rayon, gain: REGLAGES_SONS.provocation * (e.forcee ? REGLAGES_SONS.forcee : 1), deProp: e.a, prioritaire: true });
     });
     S('frottement', (e) => this.jouer('frottement', e.x, e.y, e.z, { rayon: R.frottement, gain: 0.6, deProp: e.a }));
     S('deguise', (e) => this.jouer('pouf', e.x, e.y, e.z, { rayon: R.pouf, gain: 0.8, deProp: e.a }));
@@ -296,7 +296,8 @@ export class SonsProp {
     return { x: p.x, y: s ? (Number.isFinite(s.solAff) ? s.solAff : p.y) : p.y - 1.6, z: p.z, lacet: g.camYaw || 0 };
   }
   // JOUER `nom` aux PIEDS (x, y, z) d'une source : `o` = { rayon, gain = 1, deProp (l'id du prop dont il vient), local
-  // (joué à l'oreille : un son du jeu, sans distance ni dalle) } — rend la voix de SonsJeu, ou null
+  // (joué à l'oreille : un son du jeu, sans distance ni dalle), prioritaire (une provocation : LE son de la règle, jamais
+  // refusé faute de voix — il en vole une) } — rend la voix de SonsJeu, ou null
   jouer(nom, x, y, z, o = {}) {
     const P = this.partie, S = this.sons, recette = RECETTES_PROP[nom];
     if (!P || !S || !recette) return null;
@@ -324,7 +325,7 @@ export class SonsProp {
       if (dalle) { const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 0.7; f.frequency.setValueAtTime(D.dalle.coupure, quand); f.connect(out); out = f; }
       const g = ctx.createGain(); g.gain.setValueAtTime(gain, quand); g.connect(out);
       return recette(ctx, g, quand, bruitDe(ctx));
-    }, { gain: 1, rayon: o.rayon || 30, prioritaire: !!o.local, dalle: dalle ? 'faite' : false });
+    }, { gain: 1, rayon: o.rayon || 30, prioritaire: !!(o.local || o.prioritaire), dalle: dalle ? 'faite' : false });
     if (v) { this.journal.push({ n: ++this.n, nom, t: P.t, x, y, z, dalle, gain }); if (this.journal.length > 64) this.journal.shift(); }
     return v;
   }
