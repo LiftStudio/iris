@@ -492,6 +492,26 @@ export default function (jeu) {
       obtenu: `${r2(vm)} m/s (${vites.length} pas), rotation max ${r2(rmax)} rad/s, demi-tours ${demiTours}` };
   });
 
+  // ---------------------------------------------------------------- 18. les couverts (en plus : L-J s'en servira)
+  T('18 couverts : dans l\'anneau 2-8 m, cachés de la menace à 1,0 m, la voyant à 1,6 m, triés du plus proche', async () => {
+    const N = await humains(), rng = new Rng(18), B = N.balistique; let essais = 0, rendus = 0, fautes = 0;
+    for (let k = 0; k < 60; k++) {
+      const u = auHasard(N, rng, (v) => N.niveau[v] >= -1 && N.niveau[v] <= 2), x = N.px[u], y = N.ph[u], z = N.pz[u];
+      // (la menace : à 6-12 m, vue depuis le bot)
+      const L = N.dans(x, y, z, 12, [], 0.6).filter((v) => { const d = Math.hypot(N.px[v] - x, N.pz[v] - z); return d >= 6 && B.vue(x, y + 1.6, z, N.px[v], N.ph[v] + 1.6, N.pz[v]); });
+      if (!L.length) continue;
+      const m = L[rng.int(L.length)], M = [{ x: N.px[m], y: N.ph[m] + 1.6, z: N.pz[m] }];
+      const C2 = N.couverts(x, y, z, M, rng, 6); essais++; rendus += C2.length;
+      let prec = -1;
+      for (const c of C2) {
+        const d = Math.hypot(N.px[c] - x, N.pz[c] - z);
+        if (d < 2 - 1e-6 || d > 8 + 1e-6 || B.vue(M[0].x, M[0].y, M[0].z, N.px[c], N.ph[c] + 1.0, N.pz[c]) || !B.vue(N.px[c], N.ph[c] + 1.6, N.pz[c], M[0].x, M[0].y, M[0].z) || d < prec - 1e-9) fautes++;
+        prec = d;
+      }
+    }
+    return { ok: essais >= 30 && rendus > 0 && fautes === 0, attendu: '≥ 30 essais, des couverts rendus, 0 faute', obtenu: `${essais} essais, ${rendus} couverts, ${fautes} fautes` };
+  });
+
   // ================================================================ À F2 (les vrais modules de la vague 2)
   T('F2 · verifierBots avec les tables de L-M (combat, portes figées) : mêmes seuils', async () => {
     const r = await jeu.verifierBots({ duree: 180, bots: 8, cerveau: 'errant' });

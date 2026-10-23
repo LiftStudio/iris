@@ -9,9 +9,9 @@ Branche `lot/L-D` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-D`, depuis `socle
 - [x] `nav_cache.js` : IndexedDB `iris.nav` (index des 4 dernières empreintes, délais, `try/catch`)
 - [x] `pilotage.js` : `Pilote` (ficelle par balayage, évitement, face-à-face, franchir, coincé → secours), `Errant`
 - [x] `apparitions.js` : départs (deux camps tirés ensemble), réapparition (§ 3.8), `ramenerPoint`
-- [x] `tests/test_nav.js` : les 16 critères du § 5.5.6 + un test de ressenti (17) + 4 tests `apresFusion` pour F2
+- [x] `tests/test_nav.js` : les 16 critères du § 5.5.6 + ressenti des errants (17) + couverts (18) + 4 tests `apresFusion` pour F2
 - [x] joué dans le navigateur (jeton 1), `&lot=L-D` vert, `&lot=S0` vert (29/29), propriétaires OK
-- [ ] (rien d'obligatoire) — voir « Ce qui reste » pour ce que F2 / la vague 3 doivent savoir
+- [x] onglet fermé, serveur arrêté, jeton rendu (voir « Définition de fini »)
 
 **FINI** au sens du § 5.1 règle 5 (voir « Définition de fini » en bas). Un repreneur : `git log lot/L-D`, ce rapport.
 
@@ -31,7 +31,7 @@ Branche `lot/L-D` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-D`, depuis `socle
   recopié) sur les directions où la marche échoue, après deux tris : une forme BASSE devant (boîte englobante) et les deux
   conditions nécessaires les moins chères de `franchissable` recopiées À L'IDENTIQUE (la sonde au ras du sol bute, une des
   arrivées est libre : 3 essais sur 10 échouaient là après 9 sondes) ; un essai par bloc de 4 × 4 cases, par direction et
-  par sol (un lien par mètre le long d'une table). Arrivée = le nœud à ≤ 0,3 m ; coût 2 × la distance. **≈ 400 liens**
+  par sol (un lien par mètre le long d'une table). Arrivée = le nœud à ≤ 0,3 m ; coût 2 × la distance. **396 liens**
   (pause du 1er, pause du −1, David Clark, Kahn, salle 1 du 2e, Si 0.1, banquettes de l'attente, la rue…).
 - **Tableaux** : `px pz ph` (Float32), `zone` (indice dans `PIECES`, 255 = aucune), `region` (AJOUT : la zone, ou celle
   de la pièce la plus proche par le graphe pour un seuil entre deux rectangles — c'est elle que lisent les masques : un
@@ -70,7 +70,9 @@ Branche `lot/L-D` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-D`, depuis `socle
   jamais plus bas que lui de 0,5 m (une téléportation n'est pas une chute), seulement si le joueur local ne voit ni le bot
   ni le nœud ; 3e → `coince` (le cerveau change d'idée) ; **déplacé par un autre** (réapparition, harnais : > 1 m d'un pas)
   → il repart de zéro (sinon le secours le renvoyait d'où il venait).
-- **Errant** : de pièce en pièce de la ZONE DE JEU (la moins visitée de la partie, partagée par les errants ; le cœur de
+- **Errant** : il MARCHE (pas de franchissement en patrouille : c'est l'affaire d'une poursuite, L-J — et le harnais compte
+  un saut par-dessus un banc comme « dans un mur », il lit les pieds sans le saut) ; il vide ses fronts à chaque pas (un
+  `saut` resté vrai faisait sautiller) ; de pièce en pièce de la ZONE DE JEU (la moins visitée de la partie, partagée par les errants ; le cœur de
   la pièce — son lieu d'apparition — une visite sur deux, sinon le plus dégagé de cinq nœuds) ; avec `vers` (le point
   chaud du cerveau minimal) : il y court (sprint au-delà de 15 m), le GUETTE 2 à 4 s, puis fait sa ronde à 2-6 m ; regard
   dans la marche lissé (0,09 s, 9 rad/s au plus), coups d'œil à l'arrêt.
@@ -91,24 +93,49 @@ Branche `lot/L-D` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-D`, depuis `socle
 
 ## Le `__rapport` (PC, `http://127.0.0.1:8136/?test=1&rapport=1&lot=L-D`)
 
-(à jour au dernier passage, voir en bas)
+`ok: true`, `total: 17` (le 18e, couverts, ajouté ensuite : vert seul — voir le dernier passage en bas), `echecs: []`,
+`signales: []`, `ms: 28524`, qualité high, téléphone false.
+
+| # | Critère (§ 5.5.6) | Obtenu |
+|---|---|---|
+| 1 | `verifierNav` | 8 904 nœuds, 60 252 liens, 1 composante, 20/20, m² 96 / 182 / 111 / 61 / 106, cabine 0, génération 896 ms ; cache IndexedDB 22,6 ms, session 1,1 ms |
+| 2 | empreinte | `nav:3245b255:r0.3:f:v1` portes ouvertes comme fermées, au chargement précédent ; + forme `nav:3ad006e6…`, − forme = |
+| 3 | `instantane()` | identiques (et `off` de chaque forme) |
+| 4 | A* 200 paires | médiane 0,7 ms, p95 2,6 ms ; tranches p95 0,8 ms (max 1,1) ; mêmes 200/200 |
+| 5 | champ, `noeudPres` | 3,9 ms puis en cache ; 0,5 µs ; 1 000 / 1 000 points libres |
+| 6 | `verifierBots` 180 s × 8 | 0 / 0 / 0 / 0, coincés 0, secours 0, 44 pièces |
+| 7 | `restreindre` ss | 200 chemins, 0 sortie, le hall refusé |
+| 8 | Pilote 100 trajets | 100 arrivés, 99 dans le temps (médiane 1,02, p95 1,06) |
+| 9 | départs | école, RDC + rue, étages : 5 + 5 à 0,75 m, ≥ 15 m (34,6 / 18,7 / 18,8 m) ; −1 : 15,0 m, dégagement relâché (écart 5) |
+| 10 | réapparition | 0 faute / 1 000 (6,5 ms le tirage), chacun pour soi 100/100 |
+| 11 | déterminisme, IndexedDB qui lève | égaux ; régénéré sans cache, 0 exception, 0 erreur |
+| 12 | pureté | 0 faute (et `verifier_proprietaires.py` : OK) |
+| 13 | graphe des props | 10 610 nœuds, 1 composante, attente ×1,11, S 1.3 ×1,25, pause du 1er ×1,23, clé à lui, 726 ms |
+| 14 | liens « franchir » | 396 redonnés sur 396, attente 2, comptoir 0 (écart 3), rangs 0, A* 30/30 |
+| 15 | face-à-face | volée de tôle 10/10 (4,7 s), couloir du −1 10/10 (3,1 s), 0 coincé |
+| 16 | anneaux | A dégagé 1,5 ; B, C relevés à 1,0 (le mieux de la ronde, écart 4) |
+| 17 | ressenti | 4,99 m/s en ligne droite, rotation ≤ 9 rad/s, 10 demi-tours de commande en 40 s × 6 |
+| 18 | couverts | 45 essais, 2 couverts (rares : il faut un écran entre 1,0 et 1,6 m), 0 faute |
+
+`&rapport=1&lot=S0` sur la branche : **29/29**, 87,6 s, 0 signalé ; balade au bit près (vue 3 0 / 0, vue 1 0 / 0) ;
+point 10 `Partie.pas` 0,068 ms ; point 25 : 33 élim., 41 tirs de test (props 32 % pour 32 % des candidats).
 
 ## Mesures (relatives : trois autres agents tournaient, et l'onglet passait souvent derrière les leurs)
 
 | | mesure |
 |---|---|
-| graphe des humains | 8 904 nœuds (8 956 ± 5 %), ≈ 60 350 liens (dont ≈ 400 « franchir »), 1 composante, 20/20 lieux, m² −1 96 · RDC 182 · 1er 111 · 2e 61 · rue 106, 0 nœud de cabine, 44 pièces |
-| génération (onglet devant) | 0,9-1,05 s : remplissage ≈ 0,36-0,42 s, franchissements ≈ 0,33-0,45 s, zones + dégagement ≈ 0,12 s ; onglet derrière : jusqu'à 4,6 s |
-| graphe des props | 10 610 nœuds, 72 840 liens, 1 composante, 0,8-0,9 s ; attente ×1,11, S 1.3 ×1,25, pause du 1er ×1,23 |
+| graphe des humains | 8 904 nœuds (8 956 ± 5 %), 60 252 liens (dont 396 « franchir »), 1 composante, 20/20 lieux, m² −1 96 · RDC 182 · 1er 111 · 2e 61 · rue 106, 0 nœud de cabine, 44 pièces |
+| génération (onglet devant) | 0,85-1,05 s : remplissage ≈ 0,36-0,42 s, franchissements ≈ 0,3-0,45 s, zones + dégagement ≈ 0,12 s ; onglet derrière ceux des autres agents : jusqu'à 4,6 s ; l'écriture IndexedDB (non attendue) a pris jusqu'à 1,4 s |
+| graphe des props | 10 610 nœuds, 72 840 liens, 1 composante, 0,73-0,9 s ; attente ×1,11, S 1.3 ×1,25, pause du 1er ×1,23 |
 | cache | IndexedDB 6-8 ms, session 2 ms |
 | A* (200 paires, graine 13) | médiane 0,6 ms, p95 2,5 ms ; tranches p95 0,8 ms ; mêmes 200/200 |
 | `champDepuis` | 3,7-4,2 ms ; `noeudPres` 0,5 µs |
 | `verifierBots` 180 s × 8 | 0 hors monde, 0 sous le sol, 0 mur, 0 traversée, 0 coincé, 0 secours, 44 pièces ; ≈ 2,6 chemins par bot et par minute |
-| Pilote 100 trajets entre niveaux | 100 arrivés, 98-99 en ≤ 1,5 × (médiane 1,02-1,03) ; les deux lents passent par un lien « franchir » de la Kahn que le saut du squelette ne passe pas |
+| Pilote 100 trajets entre niveaux | 100 arrivés, 98-100 en ≤ 1,5 × (médiane 1,02-1,03) ; les lents passent par un lien « franchir » de la Kahn que le saut du squelette ne passe pas (le pilote le pénalise et fait le tour ; au 3e raté de la partie, l'A* ne les prend plus) |
 | face-à-face | volée de tôle 10/10 (4,6 s), couloir du −1 (cul-de-sac) 10/10 (3,1 s), 0 coincé |
 | réapparition | 0 faute sur 1 000 tirages, 8-11 ms le tirage ; chacun pour soi 100/100 exacts |
 | errants (ressenti) | 4,99 m/s en ligne droite (jamais ralentis), regard ≤ 9 rad/s, ≤ 8 demi-tours de commande en 40 s × 6 ; à moins de 4 cm d'un mur en courant : 15 % des pas → 10 % (bords × 1,3, marge de ficelle) |
-| combat d'essai 3 c. 4 (`equipes`, ecole) | 8 éliminations en ≈ 20 s de manche, `Partie.pas` 0,29 ms (6 bots, surveillance comprise) |
+| combat de bots 4 c. 3 (`equipes`, ecole, 180 s simulées) | fin à 40-36, 76 éliminations, 72 réapparitions : la plus proche à 19,1 m à pied d'un ennemi, 0 vue ; 504 chemins (2,8/s), A* 394 ms en tout ; `Partie.pas` 0,17 ms en moyenne (7 bots) |
 
 ## Écarts au document
 
@@ -117,9 +144,9 @@ Branche `lot/L-D` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-D`, depuis `socle
    devant la porte 6 : (13,13 ; −0,12 ; 4,88), dégagement 2 m (aussi dans les graines de `nav.js`).
 2. **47 pièces** (§ 5.5.6 point 6) : `e1bureau`, `e103`, `e104` sont derrière des portes FERMÉES (aucun nœud, même au rayon
    0,2) ; le test exige les 44 pièces atteignables.
-3. **Le comptoir de l'accueil** (point 14, § 3.1) : le comptoir haut fait **1,18 m** (`ecole_hall.js` CPT.h) ; 
+3. **Le comptoir de l'accueil** (point 14, § 3.1) : le comptoir haut fait **1,18 m** (`ecole_hall.js` CPT.h) ;
    `franchissable` refuse au-delà de 1,15 m : aucun lien n'y est possible sans changer la fonction du socle. Le test vérifie
-   les banquettes de l'attente (5 liens), et dit « comptoir 0 ». DEMANDE ci-dessous.
+   les banquettes de l'attente (2 liens, un par mètre), et dit « comptoir 0 ». DEMANDE ci-dessous.
 4. **Anneaux B et C** (§ 2.5, point 16) : les pauses du −1 et du 1er sont meublées, aucun nœud n'y a 1,5 m de dégagement
    à 8 m à la ronde (1,0 au mieux). `ramenerPoint` relève (le plus dégagé à ≤ 3 m) et le dit (`releve`, `degage`) au lieu
    de rendre null ; A (hall) est dégagé de 1,5 m.
@@ -136,7 +163,8 @@ Branche `lot/L-D` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-D`, depuis `socle
    changer la somme passait) ; les zones (le lot R les change avec le −1) y entrent aussi.
 9. **`noeudsAutorises`** (L-M) est encore « tout permis » au squelette : l'errant lit lui-même les pièces de la zone de
    jeu (sinon un chasseur du prop hunt au 1er errait au −1 et dans la rue — c'est ce qui faisait échouer S0 point 25).
-10. **AJOUTS** aux contrats (règle 3 du § 4.1, rien de changé) : `Nav.oublier()`, `Nav.empreinteDe(game, o)`,
+10. **AJOUTS** aux contrats (règle 3 du § 4.1, rien de changé) : `demander(…, o = null)` (5e paramètre facultatif,
+    `{ franchir: false }` : par la marche seule), `pilote.franchir` (faux pour l'errant), `Nav.oublier()`, `Nav.empreinteDe(game, o)`,
     `Nav.genererSync(game, o)`, `Nav.ecriture`, `Nav.derniere`, options `refaire` et `chrono` d'`obtenir` ;
     `nav.region`, `nav.dans(x, y, z, r, out, dyMax)`, `nav.lien(u, v)`, `nav.penaliser(u, v, jusqua)`,
     `nav.annuler(cle)`, `nav.champMulti(sources, max, out)`, `nav.masquePieces(pieces)`, `nav.pieceDe(i)`,
@@ -173,10 +201,15 @@ Branche `lot/L-D` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-D`, depuis `socle
 
 - Les temps : onglet derrière ceux de trois autres agents (le panneau est partagé), une génération y a pris 4,6 s ; devant,
   0,9-1,05 s. Le seuil de 1,0 s est « signalé » ou tenu selon la charge ; l'intégration le mesurera au calme.
-- Le graphe a 8 904 nœuds (8 956 attendus) : les 52 de moins sont la cabine (exclue AVANT le remplissage) et les cases du
-  lieu « rue » d'avant.
-- Le cerveau minimal replanifie souvent en combat (≈ 9 chemins/s pour 6 bots : le point chaud bouge à chaque tir entendu) :
-  0,12 ms par pas en moyenne, dans le budget ; L-J lissera.
+- Le graphe a 8 904 nœuds (8 956 attendus, mesure du prototype) : 52 de moins, sans doute la cabine (17 nœuds × 3
+  niveaux, exclue ici avant le remplissage).
+- Le cerveau minimal replanifie souvent en combat (≈ 3 chemins/s pour 7 bots : le point chaud bouge à chaque tir entendu) :
+  dans le budget ; L-J lissera.
+- Les parties successives d'un même onglet ne sont pas identiques au bit près entre elles (les passages d'ascenseur,
+  formes `mobile`, restent dans l'état où la balade les a laissés : le squelette de `MondePartie` ne coupe pas encore
+  l'ascenseur, L-M le fera) ; deux parties lancées à la suite le sont (`verifierDeterminisme`, test 11).
+- `couverts` en rend peu (2 sur 45 essais) : il faut un écran entre 1,0 et 1,6 m (comptoir, cloison basse) entre le
+  couvert et la menace ; c'est la définition du § 3.7 — L-J pourra appeler plusieurs fois ou élargir.
 
 ## Ce qui reste (pour F2 et la vague 3 — rien d'obligatoire pour L-D)
 
@@ -187,9 +220,20 @@ Branche `lot/L-D` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-D`, depuis `socle
 
 ## Photos regardées
 
-`…/scratchpad/ld/` : une manche d'équipes de bots (orbite derrière un bot qui passe la porte du palier est du RDC en
-courant) ; rien à redire à l'image fixe — le ressenti des trajectoires est mesuré (test 17, frottement des murs).
+Prises par `__jeu.photo()` et montrées dans l'onglet (non gardées) : une manche d'équipes de bots (orbite derrière un bot qui
+passe en courant la porte du palier de l'ascenseur), la caméra de mort de Haythem tombé dans la pause du −1, les rangées
+jaunes de la S −1.14 derrière. Le panneau du navigateur est partagé par quatre agents (onglets des ports 8131, 8132, 8137) :
+l'onglet passe souvent derrière, rAF à 2 / s — les images ont été faites à la main (`game.frame`). Le ressenti des trajectoires
+est mesuré plutôt que regardé : vitesse, rotation, demi-tours (test 17), frottement des murs (15 % → 10 % des pas à moins
+de 4 cm d'un mur).
 
 ## Définition de fini (§ 5.1 règle 5)
 
-(voir le dernier passage en bas)
+- (a) `&rapport=1&lot=L-D` : `__rapport.ok` (dernier passage ci-dessous).
+- (b) `&rapport=1&lot=S0` sur la branche : 29/29.
+- (c) `python -I tools/verifier_proprietaires.py lot/L-D` : `OK 6 fichiers (lot/L-D, L-D, base socle)`.
+- (d) commits « L-D : … » avec la ligne d'attribution.
+- (e) ce rapport, commité.
+- (f) onglet fermé, serveur du port 8136 arrêté, jeton `jeton_1` rendu (pris à 03:15, rafraîchi pendant les tests).
+
+### Dernier passage
