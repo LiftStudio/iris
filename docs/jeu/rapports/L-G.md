@@ -2,7 +2,14 @@
 
 Branche `lot/L-G` (depuis `socle` = `socle-ok` e06258f), arbre `C:/Users/hgami/Downloads/IRIS_lots/L-G`, port 8140 ; 23/10/2026.
 
-## Où j'en suis
+## Où j'en suis — RELECTURE (23/10, relecteur sévère, commits « L-G relecture : … »)
+
+**EN COURS.** Code relu contre les §§ 3.5-3.6, 3.9, 4.5.15, 5.5.10 et le diff `socle...lot/L-G` ; premières corrections
+écrites (voir « Relecture » en fin de rapport), pas encore rejouées dans le navigateur (les trois jetons étaient pris à
+04:48 ; attente d'un jeton toutes les 30 s). Reste : rejouer `&rapport=1&lot=L-G` (PC, `?tel=1`), `&rapport=1&lot=S0`,
+jouer pour de vrai, compléter la section « Relecture », commit final.
+
+## Où j'en suis (constructeur)
 
 **FINI** (les six points du § 5.1 règle 5). Le HUD complet est construit, joué dans le navigateur intégré (essai, équipes,
 domination fabriquée, prop hunt prop et chasseur, tableau, mort, flash), PC et `?tel=1` :
@@ -187,3 +194,27 @@ anneau 0:13, LE TABOURET VERT, ●●○, 🔒, ★★★★☆ ; la roue, « So
 cachette : rôles, carte de la zone e1 et ses 9 pièces, astuces ; en traque : scanner, arcs, voir les sons, « VRAI MEUBLE
 −3 », l'astuce) ; tableau des scores (deux colonnes) ; `?tel=1` à 812 × 375 (score en une ligne, A B C dessous, mini-carte
 sous les boutons, munitions avant SAUT).
+
+## Relecture (23/10, relecteur sévère)
+
+### Défauts trouvés et corrigés
+1. **Le tableau ouvert depuis la pause était invisible, puis restait planté** (`tableau_scores.js`) : « Tableau des scores »
+   (§ 2.9, `Partie.boutonsPause` → `basculer`) l'ouvrait SOUS l'écran de pause (`#overlay`, z-index 30, voile à 72 % et flou ;
+   le tableau vit sous `#hud`, z-index 10) : rien de lisible ; et après « Reprendre », `_force` restait vrai — le tableau
+   couvrait la partie jusqu'à une nouvelle pause. Ouvert depuis la pause, il passe maintenant au-dessus d'elle (enfant de
+   `body`, `.ts-pause`, z-index 31), un clic (un toucher) le referme, la manette le referme par le même bouton (resté sous
+   son focus), et la reprise le ferme ; il redescend sous `#hud`. Test 7 complété.
+2. **Les plombs du FP-12 perdaient la tête** (`hud_jeu.js`, `_touche`) : 8 `touche` au même pas, chacun écrasait le marqueur
+   — un plomb à la tête suivi d'un plomb au torse donnait un marqueur de torse. Un coup = un marqueur, de tête si l'un des
+   plombs l'a prise (l'élimination aussi). Test 3 complété.
+3. **Le scanner ne disait pas sa bande** (`hud_prop.js`) : § 2.8 « un arc orange au bord du réticule, « 4-8 m » » — l'arc
+   était teinté, sans texte. La bande est écrite sur l'arc (« < 4 m », « 4-8 m », « 8-12 m »), droite quel que soit l'angle.
+   Test 8 complété.
+4. **Les portes de la carte de cachette** (`minicarte.js`, `dessinerZone`) : seules les portes automatiques étaient lues
+   (`portes.auto`) — au 1er il n'y en a aucune (le rapport du constructeur notait « portes 0 »). La carte lit
+   `Portes.liste()` (toutes, § 4.5.19, L-M) quand elle existe, sinon les automatiques : après F2, les portes du 1er
+   apparaîtront (À F2).
+5. **L'armure** (`hud.armure`, au contrat § 4.5.15 ; CoD § 9.1 « barre fine 100 PV (+ armure) ») n'était pas montrée : un
+   liseré bleu au-dessus de la barre de vie, qui la montre tant qu'il y en a. Test 5 complété.
+6. **Test 15** : le 2e allié « derrière un mur » était un point fixe à 25 m, qui pouvait être à vue (le test le notait sans
+   l'exiger) ; il est maintenant cherché derrière un mur (la balistique ne le voit pas) et le test exige qu'il soit montré.

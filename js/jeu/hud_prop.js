@@ -24,7 +24,7 @@ import { texte, classe, cacher, contenu, elt, Cadre, projeter, angleEcran, ECRAN
 import { actionKey } from '../settings.js';
 
 export const REGLAGES_HUD_PROP = {
-  etiquettes: 8, nom: 30, sons: { slots: 4, duree: 2, cercle: 0.42 }, scanner: { slots: 6, duree: 2, rayon: 64, couleurs: ['#ff3b30', '#ff8a1f', '#ffd166'] },
+  etiquettes: 8, nom: 30, sons: { slots: 4, duree: 2, cercle: 0.42 }, scanner: { slots: 6, duree: 2, rayon: 64, couleurs: ['#ff3b30', '#ff8a1f', '#ffd166'], bandes: ['< 4 m', '4-8 m', '8-12 m'] },
   faux: 1.3, repere: 0.7, astuces: 8, viseHz: 10,
 };
 // une icône pour la forme (d'après la clé ou le nom du meuble)
@@ -55,7 +55,7 @@ export class HudProp {
     const So = N('hp-sons'); this.eSons = [];
     for (let i = 0; i < REGLAGES_HUD_PROP.sons.slots; i++) { const a = N('hp-son s' + i, So); a.innerHTML = SVG_ARC_SON + '<b></b>'; this.eSons.push(a); }
     const Sc = N('hp-scans'); this.eScans = [];
-    for (let i = 0; i < REGLAGES_HUD_PROP.scanner.slots; i++) { const a = N('hp-scan-arc s' + i, Sc); a.innerHTML = SVG_ARC_SCAN; this.eScans.push(a); }
+    for (let i = 0; i < REGLAGES_HUD_PROP.scanner.slots; i++) { const a = N('hp-scan-arc s' + i, Sc); a.innerHTML = SVG_ARC_SCAN + '<b></b>'; this.eScans.push(a); }
     const Et = N('hp-etiquettes'); this.eEtiq = [];
     for (let i = 0; i < REGLAGES_HUD_PROP.etiquettes; i++) { const e = N('hp-etiq s' + i, Et); e.innerHTML = '<b></b><small></small>'; this.eEtiq.push(e); }
     // le point de visée et l'aide « E : devenir … »
@@ -205,6 +205,8 @@ export class HudProp {
       C.v('s' + s + 'r', r1(((ang % 360) + 540) % 360 - 180)); C.v('s' + s + 'o', r2(clamp((Rs.duree - age) / 0.4, 0, 1)));
       const bb = a.bande | 0, b = clamp(bb > 2 ? (bb <= 4 ? 0 : bb <= 8 ? 1 : 2) : bb, 0, 2);
       for (let k = 0; k < 3; k++) classe(this.eScans[s], 'b' + k, k === b);
+      // (la bande écrite sur l'arc, droite quel que soit l'angle : « 4-8 m », § 2.8)
+      texte(this.eScans[s].lastChild, Rs.bandes[b]);
     }
     // ---- « voir les sons » : un arc au bord de l'écran vers chaque provocation, 2 s ----
     const Rn = REGLAGES_HUD_PROP.sons;

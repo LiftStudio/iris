@@ -34,11 +34,25 @@ export class TableauScores {
     this.eCols = [0, 1].map(() => { const c = elt('div', 'ts-col', this.eCorps); const h = elt('div', 'ts-entete', c); const l = elt('div', 'ts-lignes', c); return { c, h, l }; });
     this.ePied = elt('div', 'ts-pied', B, '');
     hud.appendChild(R);
+    // (ouvert depuis la pause, au-dessus d'elle : un clic le referme — hors de la pause il ne reçoit aucun clic)
+    R.addEventListener('click', (e) => { if (!this._haut) return; e.stopPropagation(); this.basculer(this._partie); });
   }
   // la sortie de la partie (HudJeu.debrancher) : caché, oublié
-  cacher() { if (this.el) cacher(this.el, true); this._brancher(null); this.montre = false; }
-  // la pause : « Tableau des scores » l'ouvre et le ferme (Partie.boutonsPause)
-  basculer(partie) { this._force = !this._force; this.maj(partie, false); }
+  cacher() { if (this.el) cacher(this.el, true); this._brancher(null); this.montre = false; this._placer(); }
+  // la pause : « Tableau des scores » l'ouvre et le ferme (Partie.boutonsPause). (Relecture 23/10 : l'écran de pause —
+  // #overlay, z-index 30, voile sombre à 72 % et flou — le COUVRAIT, le tableau vivant sous #hud, z-index 10 : le bouton ne
+  // montrait rien, puis le tableau restait planté sur l'écran après « Reprendre ». Ouvert depuis la pause, il passe donc
+  // AU-DESSUS d'elle — enfant de body, z-index 31 — et un clic (un toucher) le referme ; la manette le referme par le même
+  // bouton, resté sous son focus ; la pause quittée, il redescend sous #hud, fermé.)
+  basculer(partie) { this._force = !this._force; this._placer(); this.maj(partie, false); }
+  _placer() {
+    const haut = !!this.el && this._force && !!this.game.paused;
+    if (!this.el || haut === !!this._haut) return;
+    this._haut = haut;
+    const hud = document.getElementById('hud');
+    if (haut) document.body.appendChild(this.el); else if (hud) hud.appendChild(this.el);
+    classe(this.el, 'ts-pause', haut);
+  }
   // les séries en cours (éliminations depuis la dernière mort), lues dans les événements de la partie
   _brancher(P) {
     for (const d of this._des) d(); this._des = [];
@@ -54,6 +68,9 @@ export class TableauScores {
   maj(partie, montre) {
     this._creer(); if (!this.el) return;
     if (partie !== this._partie) this._brancher(partie || null);
+    // (le tableau ouvert depuis la pause se ferme avec elle)
+    if (this._force && !this.game.paused) this._force = false;
+    this._placer();
     const on = !!partie && !!(montre || this._force);
     this.montre = on;
     cacher(this.el, !on);
@@ -96,7 +113,7 @@ export class TableauScores {
     for (let gi = groupes.length; gi < 2; gi++) cacher(this.eCols[gi].c, true);
     for (const [k, ln] of this._lignes) if (!vus.has(k)) { ln.el.remove(); this._lignes.delete(k); }
     classe(this.eCorps, 'deux', deux);
-    texte(this.ePied, this._force ? '' : 'relâche pour fermer');
+    texte(this.ePied, this._force ? 'clique pour revenir à la pause' : 'relâche pour fermer');
   }
   // une ligne par acteur (gardée) : point, rang, portrait 32 px, nom, les valeurs
   _ligne(c, P, cols) {

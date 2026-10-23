@@ -140,6 +140,9 @@ export default function (jeu) {
       res.push([`0,12 s : encore ${o6} à 0,06 s, ${varDe(R, 'mo')} à 0,125 s`, o6 > 0 && varDe(R, 'mo') === 0]);
       touche(true); A.hud.maj(0, H);
       res.push([`tête : × ${r2(varDe(R, 'mk') / k0)}`, varDe(R, 'mk') > k0 * 1.2]);
+      // (les plombs d'un même coup, l'un à la tête : un marqueur de tête)
+      A.hud.maj(0.5, H); touche(true); touche(false); A.hud.maj(0, H);
+      res.push([`plombs du même coup, l’un à la tête : × ${r2(varDe(R, 'mk') / k0)}`, varDe(R, 'mk') > k0 * 1.2]);
       A.hud.maj(0.5, H);
       elim(1); A.hud.maj(0, H);
       res.push([`élimination : rouge, × ${varDe(R, 'mk')}`, R.style.getPropertyValue('--mc').trim() === REGLAGES_HUD.marqueur.rouge && varDe(R, 'mk') >= 1.15]);
@@ -221,6 +224,9 @@ export default function (jeu) {
       const pleine = varDe(R, 'pvo');
       A.hud.maj(0, etat(p, { vie: 70, vieMax: 100 }));
       res.push([`vie pleine cachée (${pleine}), abîmée montrée (${varDe(R, 'pvo')}, ${varDe(R, 'pvk')})`, pleine === 0 && varDe(R, 'pvo') === 1 && varDe(R, 'pvk') === 0.7]);
+      A.hud.maj(0, etat(p, { vie: 100, vieMax: 100, armure: 50 }));
+      res.push([`armure 50 : la barre montrée (${varDe(R, 'pvo')}), le liseré à ${varDe(R, 'pak')}`, varDe(R, 'pvo') === 1 && varDe(R, 'pak') === 0.5]);
+      A.hud.maj(0, etat(p, { vie: 100, vieMax: 100, armure: 0 }));
       // (l'essai n'a pas de chrono : le test se fait passer pour un match)
       p.id = 'equipes';
       A.hud.maj(0, etat(p, { phase: 'manche', chrono: 31 })); const c31 = A.hud.eClock.classList.contains('low'), v31 = visible(A.hud.eClock);
@@ -295,6 +301,16 @@ export default function (jeu) {
       res.push([`deux colonnes d’équipe (${ent.map((e) => e.split('SCORE')[0]).join(' | ')})`, deux]);
       res.push(['colonnes rang, portrait, nom, score, É, M, A, ratio, série', cols && !!A.tableau.el.querySelector('.ts-ligne .ts-rg') && !!A.tableau.el.querySelector('.ts-ligne .ts-nom')]);
       res.push([`${lignes} lignes pour ${p.hud.classement.length} acteurs ; portrait ${lp} px (${attendu} sur cet écran, 32 au PC)`, lignes === p.hud.classement.length && egalA(lp, attendu, 0.5)]);
+      // (relecture 23/10) depuis la pause (« Tableau des scores ») : au-dessus de l'écran de pause, refermé par un clic, et
+      // refermé quand la pause se ferme
+      const el = A.tableau.el, zOv = parseInt(getComputedStyle(document.getElementById('overlay')).zIndex, 10) || 30;
+      A.tableau.basculer(p);
+      const zP = parseInt(getComputedStyle(el).zIndex, 10), dessus = visible(el) && el.parentNode === document.body && zP > zOv;
+      el.click(); const clic = !visible(el) && el.parentNode === document.getElementById('hud');
+      A.tableau.basculer(p); game.paused = false; A.tableau.maj(p, false);
+      const repris = !visible(el) && el.parentNode === document.getElementById('hud');
+      game.paused = true;
+      res.push([`pause : au-dessus de la pause (z ${zP} > ${zOv}) ${dessus}, fermé d’un clic ${clic}, fermé à la reprise ${repris}`, dessus && clic && repris]);
       rendre();
       ({ p, A, rendre } = await lancer('prophunt', { zone: 'e1', graine: 3 }));
       p.majHud(); A.tableau.maj(p, true);
@@ -302,7 +318,7 @@ export default function (jeu) {
       res.push([`prop hunt : ${entP[0] || '?'}`, entP.length === 1 && ['RÔLE', 'POINTS', 'TROUVÉS', 'SURVIE', 'PROVOC', 'VRAIS MEUBLES'].every((c) => entP[0].includes(c))]);
       A.tableau.maj(p, false);
     } finally { rendre(); }
-    return bilan(res, 'montré tant que Tab est tenu ; combat : deux équipes, rang · portrait 32 px · nom · score · É · M · A · ratio · série ; prop hunt : rôle, points, trouvés, survie, provocations, vrais meubles');
+    return bilan(res, 'montré tant que Tab est tenu ; combat : deux équipes, rang · portrait 32 px · nom · score · É · M · A · ratio · série ; prop hunt : rôle, points, trouvés, survie, provocations, vrais meubles ; depuis la pause : au-dessus d’elle, fermé par un clic et à la reprise');
   });
 
   // 8. LE HUD DU PROP HUNT : forme, ●●○, 🔒 / ❄, étoiles, « REPÉRÉ ! », ≤ 4 étiquettes, panneau de cachette noir, roue
@@ -348,6 +364,11 @@ export default function (jeu) {
       res.push([`roue : ${Ro.secteurs.length} secteurs, ${bon}/8 choix en surbrillance dans la même image`, Ro.secteurs.length === 8 && bon === 8 && Ro.secteurs[5].textContent.includes(PROVOCATIONS[5].label)]);
       P.maj(0, H({ roue: { ouverte: false, choix: 3 } }));
       res.push(['roue fermée → cachée ; game.wheel jamais ouverte', !visible(Ro.el) && !game.wheel.isOpen && !wheel0]);
+      // (relecture 23/10) le scanner : un arc devant, sa bande écrite dessus (« 4-8 m », § 2.8)
+      p.evt('scanner', { a: L.id, resultats: [{ dir: game.camYaw, bande: 1 }] });
+      P.maj(0, H({ role: 'chasseur', scanner: { charges: 2, t: 8 } }));
+      const sc = P.eScans[0];
+      res.push([`scanner : arc à ${varDe(P.el, 's0r')}°, « ${sc.lastChild.textContent} »`, varDe(P.el, 's0o') > 0 && varDe(P.el, 's0r') === 0 && sc.lastChild.textContent === '4-8 m' && sc.classList.contains('b1')]);
     } finally { rendre(); }
     return bilan(res, 'nom de forme, ●●○, 🔒 / ❄, ⌈d × 5⌉ étoiles, REPÉRÉ > 70 %, ≤ 4 étiquettes ; panneau noir z 12 (chrono, rôles, carte sans acteur, astuces) ; roue : 8 secteurs, choix dans la même image');
   });
@@ -507,10 +528,14 @@ export default function (jeu) {
       p.camera(0, true); const cam = game.camera; cam.updateMatrixWorld();
       const o = cam.position, f = new (cam.position.constructor)(); cam.getWorldDirection(f);
       const pt = (d, lat = 0, dy = 0) => ({ x: o.x + f.x * d + f.z * lat, y: o.y + f.y * d + dy, z: o.z + f.z * d - f.x * lat });
-      const a1 = { id: 1, nom: 'Gabriel', ...pt(10, 1) }, a2 = { id: 2, nom: 'Imad', ...pt(25, -1.5) }, a3 = { id: 3, nom: 'Koji', ...pt(-8) };
+      // (relecture 23/10 : le 2e allié est CHERCHÉ derrière un mur — un point de l'écran que la balistique ne voit pas —, au
+      // lieu d'un point fixe qui pouvait être à vue)
+      let p2 = null;
+      for (const d of [25, 18, 30, 12, 35, 8]) { for (const lat of [-1.5, 1.5, -4, 4, 0, -7, 7]) { const q = pt(d, lat); if (!p.balistique.vue(o.x, o.y, o.z, q.x, q.y, q.z)) { p2 = q; break; } } if (p2) break; }
+      const a1 = { id: 1, nom: 'Gabriel', ...pt(10, 1) }, a2 = { id: 2, nom: 'Imad', ...(p2 || pt(25, -1.5)) }, a3 = { id: 3, nom: 'Koji', ...pt(-8) };
       const libre = p.balistique.vue(o.x, o.y, o.z, a2.x, a2.y, a2.z);
       A.hud.maj(0, etat(p, { allies: [a1, a2, a3] }));
-      res.push([`${A.hud.chevrons} chevrons montrés sur 3 (le 2e ${libre ? 'à vue' : 'derrière un mur'}, le 3e derrière la caméra)`, A.hud.chevrons === 2 && varDe(A.hud.el, 'c2o') === 0]);
+      res.push([`${A.hud.chevrons} chevrons montrés sur 3 (le 2e ${libre ? 'à vue' : 'derrière un mur'}, le 3e derrière la caméra)`, !libre && A.hud.chevrons === 2 && varDe(A.hud.el, 'c1o') === 1 && varDe(A.hud.el, 'c2o') === 0]);
       let place = true; const ec = [];
       for (const [s, a] of [[0, a1], [1, a2]]) {
         const v = new (cam.position.constructor)(a.x, a.y, a.z).project(cam), x = (v.x + 1) / 2 * innerWidth, y = (1 - v.y) / 2 * innerHeight;

@@ -212,7 +212,7 @@ export class HudJeu {
     const F = N('hj-fil'); this.eFil = [];
     for (let i = 0; i < REGLAGES_HUD.fil.lignes; i++) { const l = N('hj-fil-l s' + i, F); this.eFil.push(l); }
     // la vie (au-dessus de la mini-carte), les munitions (bas droite)
-    this.eVie = N('hj-vie'); this.eVie.innerHTML = '<i class="hj-vie-f"></i><b></b>';
+    this.eVie = N('hj-vie'); this.eVie.innerHTML = '<i class="hj-vie-f"></i><i class="hj-vie-a"></i><b></b>';
     const M = this.eMun = N('hj-mun');
     this.eMunCh = elt('b', 'hj-mun-ch', M, ''); this.eMunRes = elt('span', 'hj-mun-res', M, '');
     this.eMunNom = elt('div', 'hj-mun-nom', M, ''); this.eMunGr = elt('div', 'hj-mun-gr', M, ''); this.eMunAide = elt('div', 'hj-mun-aide', M, '');
@@ -264,8 +264,11 @@ export class HudJeu {
     const L = this._local(), P = this.partie; if (!L) return;
     if (e.par === L.id && e.cible !== L.id) {
       const c = P.acteurParId(e.cible), prop = !!(c && (c.prop || c.role === 'prop'));
-      // (au prop hunt, le chasseur qui touche un prop : marqueur ROUGE, § 2.8)
-      if (!this._marque || this._marque.t0 !== this.t || !this._marque.elim) this._marque = { t0: this.t, tete: !!e.tete, elim: false, rouge: prop };
+      // (au prop hunt, le chasseur qui touche un prop : marqueur ROUGE, § 2.8 ; les plombs d'un même coup — le FP-12, 8 à la
+      // fois — font UN marqueur, plus grand si l'un d'eux a pris la tête)
+      const M = this._marque;
+      if (M && M.t0 === this.t) { M.tete = M.tete || !!e.tete; M.rouge = M.rouge || prop; }
+      else this._marque = { t0: this.t, tete: !!e.tete, elim: false, rouge: prop };
       if (P.id === 'stand' && c && c.role === 'cible') this._stand = { t0: this.t, zone: e.zone, degats: e.degats, d: Math.hypot(c.pos.x - L.pos.x, c.pos.z - L.pos.z) };
     }
     if (e.cible === L.id) {
@@ -290,7 +293,8 @@ export class HudJeu {
     if (!L) return;
     const TX = TEXTES[habillage(this.game)];
     if (e.par === L.id && e.cible !== L.id) {
-      this._marque = { t0: this.t, tete: !!e.tete, elim: true, rouge: true };
+      const M = this._marque;
+      this._marque = { t0: this.t, tete: !!e.tete || !!(M && M.t0 === this.t && M.tete), elim: true, rouge: true };
       const prop = !!(v && (v.prop || v.role === 'prop'));
       // (les règles s'abonnent à 'elim' AVANT le HUD : leurs `score` de cette élimination sont déjà arrivés — leurs points,
       // sinon les 100 du barème ; le « +25 » de la tête s'il n'est pas venu d'elles)
@@ -465,13 +469,14 @@ export class HudJeu {
     texte(this.eMunGr, gr);
   }
 
-  // ---- la vie (au-dessus de la mini-carte) : seulement abîmée ----
+  // ---- la vie (au-dessus de la mini-carte) : seulement abîmée (ou doublée d'une armure : le liseré bleu dessus, CoD § 9.1) ----
   _majVie(H, L, C, vivant) {
-    const vm = H.vieMax || 100, v = clamp(H.vie ?? vm, 0, vm), k = v / vm;
-    const abimee = vivant && k < 0.999;
+    const vm = H.vieMax || 100, v = clamp(Number.isFinite(H.vie) ? H.vie : vm, 0, vm), k = v / vm;
+    const ar = clamp(Number.isFinite(H.armure) ? H.armure : 0, 0, vm) / vm;
+    const abimee = vivant && (k < 0.999 || ar > 0);
     if (abimee) this._vieT = this.t;
     const o = abimee ? 1 : this._vieT !== undefined ? clamp(1 - (this.t - this._vieT - 1.2) / 0.5, 0, 1) : 0;
-    C.v('pvk', r2(k)); C.v('pvo', r2(o));
+    C.v('pvk', r2(k)); C.v('pvo', r2(o)); C.v('pak', r2(ar));
     C.v('cartT', tailleCarte(ECRAN.w, ECRAN.h, document.body.classList.contains('touch')));
     texte(this.eVie.lastChild, this._soins && this.t - this._soins.t0 < 1.2 ? `+${Math.round(this._soins.pv)}` : '');
     classe(this.eVie, 'basse', k < 0.3);

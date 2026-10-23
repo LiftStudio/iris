@@ -188,6 +188,7 @@ body:not(.combat) #voile-flash, body:not(.combat) #voile-cachette { display: non
   opacity: var(--pvo, 0); }
 .hj-vie-f { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(var(--pvk, 1)); background: linear-gradient(90deg, #e8ecf3, #fff); }
 .hj-vie.basse .hj-vie-f { background: linear-gradient(90deg, #c4161c, #ff3b30); }
+.hj-vie-a { position: absolute; left: 0; right: 0; top: -4px; height: 3px; transform-origin: 0 50%; transform: scaleX(var(--pak, 0)); background: #7fb2ff; box-shadow: 0 0 0 1px rgba(0,0,0,.5); }
 .hj-vie b { position: absolute; left: 100%; top: 50%; transform: translate(8px, -50%); font: 600 12px/1 Oswald, sans-serif; color: #7dffa8; text-shadow: var(--ombre); }
 .hj-mun { right: calc(18px + var(--sa-r, 0px)); bottom: calc(16px + var(--sa-b, 0px)); display: grid; grid-template-columns: auto auto; align-items: end; column-gap: 6px; text-align: right;
   text-shadow: var(--ombre); }
@@ -234,6 +235,9 @@ body:not(.combat) #voile-flash, body:not(.combat) #voile-cachette { display: non
 .hp-scan-arc svg { width: 100%; height: 100%; overflow: visible; }
 .hp-scan-arc path { fill: none; stroke: #ffd166; stroke-width: 7; stroke-linecap: round; filter: drop-shadow(0 0 5px currentColor); }
 .hp-scan-arc.b0 path { stroke: #ff3b30; } .hp-scan-arc.b1 path { stroke: #ff8a1f; } .hp-scan-arc.b2 path { stroke: #ffd166; }
+.hp-scan-arc b { position: absolute; left: 50%; top: 2px; transform: translate(-50%, -50%) rotate(calc(var(--r, 0) * -1deg)); white-space: nowrap;
+  font: 600 12px/1 Oswald, sans-serif; letter-spacing: .06em; color: #ffd166; text-shadow: var(--ombre); }
+.hp-scan-arc.b0 b { color: #ff6b5e; } .hp-scan-arc.b1 b { color: #ffad66; }
 .hp-scan-arc.s0 { --r: var(--s0r); --o: var(--s0o); } .hp-scan-arc.s1 { --r: var(--s1r); --o: var(--s1o); } .hp-scan-arc.s2 { --r: var(--s2r); --o: var(--s2o); }
 .hp-scan-arc.s3 { --r: var(--s3r); --o: var(--s3o); } .hp-scan-arc.s4 { --r: var(--s4r); --o: var(--s4o); } .hp-scan-arc.s5 { --r: var(--s5r); --o: var(--s5o); }
 .hp-etiquettes { inset: 0; }
@@ -325,6 +329,8 @@ body:not(.combat) #voile-flash, body:not(.combat) #voile-cachette { display: non
 /* ---------------------------------------------------------------- LE TABLEAU DES SCORES (Tab tenu) */
 .tableau-scores { position: absolute; inset: 0; z-index: 5; display: flex; align-items: flex-start; justify-content: center; padding: max(8vh, 40px) 16px 16px; pointer-events: none;
   background: radial-gradient(ellipse at center, rgba(5,7,11,.78), rgba(5,7,11,.9)); font-family: Oswald, system-ui, sans-serif; color: #fff; }
+/* (ouvert depuis la pause : au-dessus d'elle — #overlay, 30 —, un clic le referme) */
+.tableau-scores.ts-pause { position: fixed; z-index: 31; pointer-events: auto; cursor: pointer; background: radial-gradient(ellipse at center, rgba(5,7,11,.9), rgba(5,7,11,.96)); }
 .ts-boite { width: min(1080px, 100%); max-height: 100%; overflow: hidden; }
 .ts-tete { display: flex; align-items: baseline; gap: 18px; padding: 0 4px 8px; border-bottom: 2px solid rgba(255,200,69,.8); margin-bottom: 10px; }
 .ts-titre { font: 400 34px/1 'Bebas Neue', Impact, sans-serif; letter-spacing: .08em; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }

@@ -258,7 +258,8 @@ export class MiniCarte {
     if (!niveaux.length) return res;
     // l'emprise de chaque niveau (ses pièces), côte à côte
     const larg = Wc / niveaux.length;
-    const portes = (g.carte && g.carte.portes && g.carte.portes.auto) || [];
+    // (TOUTES les portes : `Portes.liste()` de L-M, § 4.5.19 ; le squelette n'a que les automatiques — au 1er, aucune)
+    const Pt = g.carte && g.carte.portes, portes = (Pt && (typeof Pt.liste === 'function' ? Pt.liste() : Pt.auto)) || [];
     niveaux.forEach((n, i) => {
       const Zs = parNiv.get(n);
       let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
@@ -280,12 +281,15 @@ export class MiniCarte {
       // les portes (celles du niveau, dans une pièce de la zone)
       const sol = (NIVEAUX.find((N) => N.n === n) || NIVEAUX[1]).sol;
       for (const Q of portes) {
-        if (typeof Q.cx !== 'number' || Math.abs((Q.base || 0) - sol) > 1.2) continue;
+        // (une porte de la liste : { cx, cz, base, nx, nz } comme les automatiques, sinon son groupe et sa rotation)
+        const G = Q && Q.g && Q.g.position, cx = Q && typeof Q.cx === 'number' ? Q.cx : G ? G.x : NaN, cz = Q && typeof Q.cz === 'number' ? Q.cz : G ? G.z : NaN;
+        const base = Q && typeof Q.base === 'number' ? Q.base : G ? G.y : 0, rot = Q && typeof Q.rot === 'number' ? Q.rot : Q && Q.g ? Q.g.rotation.y : 0;
+        if (!Number.isFinite(cx) || !Number.isFinite(cz) || Math.abs(base - sol) > 1.2) continue;
         // (de part et d'autre du seuil : une porte qui ouvre sur une pièce de la zone en est)
-        const nx = Q.nx || 0, nz = Q.nz || 0, y = (Q.base || 0) + 0.1;
-        const Za = Lu.zoneEn(Q.cx + nx * 0.4, Q.cz + nz * 0.4, y), Zb = Lu.zoneEn(Q.cx - nx * 0.4, Q.cz - nz * 0.4, y);
+        const nx = Q.nx ?? Math.sin(rot), nz = Q.nz ?? Math.cos(rot), y = base + 0.1;
+        const Za = Lu.zoneEn(cx + nx * 0.4, cz + nz * 0.4, y), Zb = Lu.zoneEn(cx - nx * 0.4, cz - nz * 0.4, y);
         if (!(Za && ids.has(Za.id)) && !(Zb && ids.has(Zb.id))) continue;
-        const [a, b] = P(Q.cx, Q.cz);
+        const [a, b] = P(cx, cz);
         x.beginPath(); x.arc(a, b, 3, 0, Math.PI * 2); x.fillStyle = COUL.porte; x.fill();
         res.portes++;
       }
