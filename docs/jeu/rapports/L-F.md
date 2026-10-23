@@ -6,11 +6,13 @@ Branche `lot/L-F` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-F`), partie de `s
 ## Relecture (relecteur sévère, 23/10) — où j'en suis
 
 **EN COURS.** Relu : la spec (§§ 2.7-2.9, 3.9, 4.1, 4.3, 4.5.5, 4.5.13-4.5.17, 4.6, 4.7, 4.10, 5.1, 5.5.9) et tout le diff
-`socle...lot/L-F` ; `verifier_proprietaires` OK (4 fichiers). Corrigé à la lecture (commit « L-F relecture : … ») : l'état
-garde les colonnes du prop hunt (survie, provocations, vrais meubles) ; un prop figé (ou verrouillé) le reste en changeant de
-forme ; le scanner refusé avec sa raison hors de la traque ; « Voir les sons » ne montre que ce qu'on entendrait (rayon de la
-provocation, `dalle`) ; Haythem éliminé qui suit un prop : l'orbite aux chiffres du prop. Reste : rejouer L-F et S0 (PC,
-`?tel=1`) et jouer pour de vrai (jeton du navigateur, tous pris à 06:17).
+`socle...lot/L-F` ; `verifier_proprietaires` OK (4 fichiers). Corrigé à la lecture (commits « L-F relecture : … », de
+`74bc40a` à `eb084a4`) : l'état garde les colonnes du prop hunt (survie, provocations, vrais meubles) ; un prop figé (ou
+verrouillé) le reste en changeant de forme ; le scanner refusé avec sa raison hors de la traque ; « Voir les sons » ne
+montre que ce qu'on entendrait (rayon de la provocation, `dalle`) ; Haythem éliminé qui suit un prop : l'orbite aux chiffres
+du prop ; le chasseur bot sourd enveloppe SON oreille (pas celle du prototype) ; l'atténuation de secours bornée à 60 m ; au
+téléphone 5 bots au plus. Tests 2, 8, 10 complétés. Serveur 8139 lancé ; reste : un jeton du navigateur (tous pris depuis
+06:15), puis L-F et S0 (PC, `?tel=1`) et le jeu en vrai.
 
 ## Où j'en suis
 
