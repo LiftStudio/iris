@@ -105,8 +105,14 @@ export function installerJeu(game, deps) {
       p.sur('fin', (e) => {
         if (game.partie !== p) return;
         if (document.pointerLockElement) document.exitPointerLock?.();
-        const g = e.gagnant;
-        menu.fin({ texte: g === null || g === undefined ? 'Égalité' : typeof g === 'string' ? (g === 'A' ? 'Victoire des SISR' : g === 'B' ? 'Victoire des SLAM' : g === 'props' ? 'Les props gagnent' : 'Les chasseurs gagnent') : 'Partie finie' });
+        // (F2, demandes de L-E, L-F et L-U : l'événement ENTIER — gagnant, scores, bilan — et un texte qui dit le gagnant :
+        // le nom d'un acteur quand `gagnant` est un id — chacun pour soi, prop hunt —, le verdict du défi au stand)
+        const g = e.gagnant, nom = typeof g === 'number' ? ((p.acteurParId(g) || {}).nom || null) : null;
+        const texte = p.id === 'stand' ? (p.resultat ? p._verdict(p.resultat) : 'Stand terminé')
+          : g === null || g === undefined ? 'Égalité'
+          : typeof g === 'string' ? (g === 'A' ? 'Victoire des SISR' : g === 'B' ? 'Victoire des SLAM' : g === 'props' ? 'Les props gagnent' : 'Les chasseurs gagnent')
+          : nom ? (p.local && g === p.local.id ? 'Tu gagnes la partie' : `Victoire de ${nom}`) : 'Partie finie';
+        menu.fin({ ...e, texte });
       });
       tactile();
       return p.etat();
