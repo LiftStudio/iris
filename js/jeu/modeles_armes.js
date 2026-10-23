@@ -83,13 +83,17 @@ const MAT_3E = { poli: 'acier', lentille: 'acier', verre: null, blanc: null };
 // Ajouts (règle 3 : on ajoute, on ne change rien) : `mainD` (0, 0, 0) des armes à feu ; `saisieChargeur` (là où la main
 // gauche prend le chargeur : son flanc gauche, au tiers bas) ; `saisieLevier` (le levier d'armement, le levier de culasse) ;
 // `saisieGlissiere` (les stries arrière du P-17). `courseMainG` (FP-12) : la course de la pompe, que la main gauche suit.
+// `oeilleton` (FP-12, relecture) : le centre de l'anneau arrière, sur la ligne de mire de la perle (même hauteur 0,06) — viser
+// la PERLE à 0,24 m de l'œil (§ 4.5.9) mettrait la crosse 0,68 m derrière la caméra ; viser par l'œilleton la met à 1,5 cm
+// derrière l'œil, comme la FA-24 (4 cm) : à trancher par L-V et F2 (écart 4 du rapport).
 const V = (x, y, z) => [x, y, z];
 export const REPERES = {
   fa24: { mainD: V(0, 0, 0), mainG: V(0, -0.025, -0.34), bouche: V(0, 0.035, -0.64), visee: V(0, 0.088, -0.08), ejection: V(0.03, 0.05, -0.06), crosse: V(0, 0.03, 0.20),
     saisieChargeur: V(-0.015, -0.152, -0.133), saisieLevier: V(-0.028, 0.053, 0.064) },
   pm9: { mainD: V(0, 0, 0), mainG: V(0, -0.03, -0.24), bouche: V(0, 0.03, -0.40), visee: V(0, 0.075, -0.05), ejection: V(0.03, 0.045, -0.05), crosse: V(0, 0.03, 0.18),
     saisieChargeur: V(-0.013, -0.150, -0.093), saisieLevier: V(-0.040, 0.034, -0.130) },
-  fp12: { mainD: V(0, 0, 0), mainG: V(0, -0.03, -0.42), bouche: V(0, 0.03, -0.78), visee: V(0, 0.06, -0.70), ejection: V(0.03, 0.04, -0.08), crosse: V(0, 0.02, 0.22), courseMainG: 0.09 },
+  fp12: { mainD: V(0, 0, 0), mainG: V(0, -0.03, -0.42), bouche: V(0, 0.03, -0.78), visee: V(0, 0.06, -0.70), ejection: V(0.03, 0.04, -0.08), crosse: V(0, 0.02, 0.22), courseMainG: 0.09,
+    oeilleton: V(0, 0.060, -0.035) },
   tp50: { mainD: V(0, 0, 0), mainG: V(0, -0.03, -0.36), bouche: V(0, 0.03, -0.85), visee: V(0, 0.075, -0.02), ejection: V(0.03, 0.05, -0.05), crosse: V(0, 0.03, 0.24),
     saisieChargeur: V(-0.014, -0.062, -0.100), saisieLevier: V(0.042, 0.010, 0.057) },
   p17: { mainD: V(0, 0, 0), mainG: V(-0.02, -0.04, 0.01), bouche: V(0, 0.035, -0.13), visee: V(0, 0.058, 0.04), ejection: V(0.015, 0.04, -0.03),
@@ -122,7 +126,9 @@ export const COURSES_OS = {
   pm9: { chargeur: { y: -0.26 }, culasse: { z: 0.060 }, detente: { rx: -0.32 } },
   fp12: { pompe: { z: 0.09 }, detente: { rx: -0.30 } },
   tp50: { culasse: { rz: 60 * DEG, z: 0.08 }, chargeur: { y: -0.12 }, detente: { rx: -0.28 } },
-  p17: { glissiere: { z: 0.03 }, chargeur: { y: -0.16 }, detente: { rx: -0.30 } },
+  // (le chargeur du P-17 sort dans l'axe de la poignée, 15° vers l'arrière : tiré tout droit, il traverserait le devant de la
+  // poignée dès 2,6 cm — relecture)
+  p17: { glissiere: { z: 0.03 }, chargeur: { y: -0.16 * Math.cos(15 * DEG), z: 0.16 * Math.sin(15 * DEG) }, detente: { rx: -0.30 } },
   couteau: {}, frag: { goupille: { x: 0.06 } }, flash: { goupille: { x: 0.06 } },
 };
 const NOMS_OS = ['chargeur', 'culasse', 'glissiere', 'pompe', 'detente', 'goupille'];
@@ -466,6 +472,8 @@ const PLANS = {
     // le levier d'armement (os culasse) : la barre en T sous l'arrière du rail, son loquet à gauche
     A.boite('acier', [0, 0.053, 0.064], [0.046, 0.007, 0.012], { c: 0.002, os: 'culasse' });
     A.boite('acier', [-0.026, 0.053, 0.066], [0.009, 0.010, 0.016], { c: 0.002, os: 'culasse' });
+    // (en vue, sa tige dans le boîtier : tiré de 7,5 cm, le T reste relié au boîtier au lieu de flotter sur le tube — relecture)
+    A.boite('acier', [0, 0.055, 0.020], [0.008, 0.003, 0.080], { os: 'culasse', vue: true });
     // flanc droit (la fenêtre d'éjection, l'assistance de fermeture), flanc gauche (sélecteur, arrêtoir, goupilles)
     A.boite('acier', [0.0253, 0.040, -0.060], [0.0016, 0.017, 0.052], { vue: true });
     A.cyl('acier', [0.027, 0.047, 0.030], 0.0055, 0.024, { seg: 10, vue: true });
@@ -613,6 +621,9 @@ const PLANS = {
     A.boite('polymere', [0.0166, 0.036, -0.050], [0.002, 0.012, 0.050], { vue: true });   // la fenêtre d'éjection
     // la culasse (os) : corps poli, chapeau, levier et sa boule
     A.cyl('poli', [0, Y, 0.049], 0.0115, 0.038, { seg: 16, os: 'culasse' });
+    // (en vue, le corps se prolonge dans le boîtier jusqu'à −0,05 : reculée de 8 cm, la culasse sort du boîtier au lieu de
+    // flotter 7,5 cm derrière lui — relecture)
+    A.cyl('poli', [0, Y, -0.010], 0.0112, 0.080, { seg: 16, os: 'culasse', vue: true });
     A.cyl('acier', [0, Y, 0.066], 0.0125, 0.008, { seg: 16, os: 'culasse' });
     A.barre('acier', [0.008, 0.028, 0.050], [0.037, 0.012, 0.056], 0.0045, { os: 'culasse' });
     A.sphere('acier', [0.042, 0.010, 0.057], 0.0095, { w: 14, h: 10, os: 'culasse' });
@@ -669,6 +680,10 @@ const PLANS = {
     for (let i = 0; i < 5; i++) A.boite('polymere', [0, 0.037, -0.098 - i * 0.004], [0.0292, 0.020, 0.0016], { os: 'glissiere', vue: true });
     A.boite('polymere', [0.004, 0.0552, -0.035], [0.012, 0.0008, 0.030], { os: 'glissiere', vue: true });     // la fenêtre d'éjection
     A.boite('poli', [0.004, 0.0548, -0.035], [0.010, 0.002, 0.026], { vue: true });                        // le canon dedans (fixe)
+    // le canon et le guide du ressort, FIXES, dans la glissière au repos : ils paraissent quand elle recule (3 cm au tir, en
+    // arrière tant que L-V la tient à vide) — sans eux la couronne flottait 2,5 cm devant la glissière reculée (relecture)
+    A.cyl('poli', [0, Y, -0.1005], 0.0058, 0.060, { seg: 14, vue: true });                               // z −0,1305-−0,0705
+    A.cyl('acier', [0, 0.026, -0.1145], 0.0032, 0.040, { seg: 10, vue: true });                           // z −0,1345-−0,0945
     // le cran (deux oreilles, deux points) et le guidon (un point), sur la glissière
     A.boite('acier', [0, 0.0565, 0.044], [0.022, 0.003, 0.010], { c: 0.0006, os: 'glissiere' });
     for (const sx of [-1, 1]) {
@@ -776,7 +791,9 @@ export function creerArme(id, { pourVue = false } = {}) {
       m = new THREE.SkinnedMesh(lot.geo, mat);
       m.bind(squelette, IDENTITE);
       m.frustumCulled = false;                       // (la boîte de l'arme de vue ne suit pas ses os ; elle est toujours devant l'œil)
-      m.boundingBox = lot.geo.boundingBox; m.boundingSphere = lot.geo.boundingSphere;   // (celles du repos : le tri seulement)
+      // (celles du repos, le tri seulement ; COPIÉES : SkinnedMesh.computeBoundingBox() les réécrit sur place, os compris — sur
+      // l'objet de la géométrie partagée, il fausserait la boîte de toutes les autres armes — relecture)
+      m.boundingBox = lot.geo.boundingBox.clone(); m.boundingSphere = lot.geo.boundingSphere.clone();
     } else {
       m = new THREE.Mesh(lot.geo, mat);
       m.castShadow = true; m.receiveShadow = true;

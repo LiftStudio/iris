@@ -4,7 +4,8 @@
 // Lancés par le harnais sous `?test=1&rapport=1&lot=L-W` (window.__rapport), PC puis `?tel=1`. Les tests ne cliquent jamais
 // à l'écran : tout passe par window.__jeu et par creerArme. Les rendus de contrôle se font dans une petite cible à part
 // (jamais à l'écran) ; la planche photo (point 7) passe par __jeu.photo, l'arme dessinée en superposition dans un studio
-// (fond dégradé, carte d'environnement de RoomEnvironment — aucune lumière ajoutée), et reste dans window.__plancheArmes.
+// (fond dégradé, carte d'environnement de RoomEnvironment — aucune lumière ajoutée), et reste dans window.__plancheArmes ;
+// celle des pièces mobiles en bout de course (test 10, relecture) dans window.__plancheCourses.
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { creerArme, libererArme, viderCacheArmes, REPERES, OS_ARMES, COURSES_OS, ENCOMBREMENTS, IDS_ARMES, MATERIAUX_ARMES } from '../modeles_armes.js';
@@ -26,6 +27,65 @@ function rendreCible(game, scene) {
   try { r.setRenderTarget(rt); r.render(scene, cam); }
   finally { r.setRenderTarget(prec); r.info.autoReset = auto; }
   return { appels: r.info.render.calls, triangles: r.info.render.triangles, programmes: r.info.programs ? r.info.programs.length : 0, textures: r.info.memory.textures };
+}
+
+// LE STUDIO DES PHOTOS (tests 7 et 10) : une superposition dessinée par le jeu (__jeu.photo : bloom, sortie, étalonnage), la
+// carte d'environnement de RoomEnvironment, un fond dégradé collé à la caméra (couleurs aux sommets) — aucune lumière ajoutée
+// (`Light(` est interdit dans js/jeu/ hors viewmodel.js), aucune texture ; une planche de `nc` × `nl` cases, chaque photo
+// mesurée contre la même photo sans l'arme (la part de l'image qui est l'arme : vignette et grain compris)
+function studio(jeu, game, nc, nl) {
+  const r = game.renderer, fx = game.fx;
+  const pm = new THREE.PMREMGenerator(r), env = pm.fromScene(new RoomEnvironment(), 0.04).texture; pm.dispose();
+  const sc = new THREE.Scene(); sc.environment = env; sc.environmentIntensity = 0.85;
+  const cam = new THREE.PerspectiveCamera(22, game.camera.aspect, 0.01, 50); sc.add(cam);
+  const fg = new THREE.PlaneGeometry(2, 2), haut = new THREE.Color(0x8d939b), bas = new THREE.Color(0x3c4046), col = [];
+  for (let i = 0; i < 4; i++) { const c = i < 2 ? haut : bas; col.push(c.r, c.g, c.b); }
+  fg.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  const fm = new THREE.MeshBasicMaterial({ vertexColors: true, depthWrite: false, toneMapped: false });
+  const fond = new THREE.Mesh(fg, fm); fond.position.z = -40; fond.scale.set(60, 60, 1); fond.renderOrder = -1; cam.add(fond);   // (60 m de côté à 40 m : tout le cadre, même à 52°)
+  const sup = { scene: sc, camera: cam };
+  fx.superpositions.push(sup);
+  const W = 400, H = Math.round(400 / cam.aspect), cv = document.createElement('canvas'); cv.width = nc * W; cv.height = nl * H;
+  const cx = cv.getContext('2d'); cx.font = '600 15px system-ui, sans-serif'; cx.textBaseline = 'top';
+  const charger = (src) => new Promise((ok, ko) => { const im = new Image(); im.onload = () => ok(im); im.onerror = ko; im.src = src; });
+  const b = new THREE.Box3(), s = new THREE.Sphere();
+  return {
+    scene: sc,
+    // la caméra en orbite (az −90 : à −X, le flanc gauche ; −35 : devant, à gauche ; −140 : derrière, à gauche), à la distance
+    // qui fait tenir l'arme dans le cadre (sa sphère dans la largeur, sa hauteur dans la hauteur ; `marge` en plus)
+    cadrer(g, az, el, marge = 1.06) {
+      g.updateMatrixWorld(true);
+      b.makeEmpty(); for (const m of mailles(g)) { m.geometry.computeBoundingBox(); b.union(m.geometry.boundingBox); }
+      b.getBoundingSphere(s);
+      cam.fov = 22;
+      const tv = Math.tan(cam.fov * Math.PI / 360), th = tv * game.camera.aspect;
+      const d = Math.max(s.radius / Math.sin(Math.atan(th)), (b.max.y - b.min.y) * 0.62 / tv) * marge;
+      const a = az * Math.PI / 180, e = el * Math.PI / 180;
+      cam.position.set(s.center.x + d * Math.cos(e) * Math.sin(a), s.center.y + d * Math.sin(e), s.center.z - d * Math.cos(e) * Math.cos(a));
+      cam.lookAt(s.center);
+    },
+    // la vue du tireur : la caméra là où la met la pose de hanche (repère caméra 0,135 ; −0,125 ; −0,32 ; lacet 0,035), 52°
+    // (écran en hauteur, ?tel=1 : le champ horizontal d'un 16:9 gardé, sinon l'arme, à droite, sort du cadre)
+    tireur() {
+      const a0 = game.camera.aspect;
+      cam.fov = a0 >= 16 / 9 ? 52 : 2 * Math.atan(Math.tan(26 * Math.PI / 180) * (16 / 9) / a0) * 180 / Math.PI;
+      cam.position.set(-0.135, 0.125, 0.32).applyAxisAngle(new THREE.Vector3(0, 1, 0), -0.035); cam.rotation.set(0, -0.035, 0);
+    },
+    async photo(g, j, i, titre) {
+      cam.aspect = game.camera.aspect; cam.updateProjectionMatrix(); cam.updateMatrixWorld(true);
+      g.visible = false; const vide = await charger(jeu.photo('fond')); g.visible = true;
+      cx.drawImage(vide, j * W, i * H, W, H);
+      const ref = cx.getImageData(j * W, i * H, W, H).data;
+      const im = await charger(jeu.photo(titre));
+      cx.drawImage(im, j * W, i * H, W, H);
+      const px = cx.getImageData(j * W, i * H, W, H).data;
+      let n = 0; for (let k = 0; k < px.length; k += 16) if (Math.abs(px[k] - ref[k]) + Math.abs(px[k + 1] - ref[k + 1]) + Math.abs(px[k + 2] - ref[k + 2]) > 48) n++;
+      cx.fillStyle = 'rgba(0,0,0,0.55)'; cx.fillRect(j * W, i * H, W, 22); cx.fillStyle = '#fff'; cx.fillText(titre, j * W + 6, i * H + 4);
+      return n / (px.length / 16);
+    },
+    planche() { return cv.toDataURL('image/jpeg', 0.9); },
+    fermer() { const k = fx.superpositions.indexOf(sup); if (k >= 0) fx.superpositions.splice(k, 1); env.dispose(); fg.dispose(); fm.dispose(); },
+  };
 }
 
 export default function (jeu) {
@@ -186,70 +246,29 @@ export default function (jeu) {
     return { ok, attendu: '≤ 5 ms par arme (à froid)', obtenu: `pire ${quel} ${pire.toFixed(2)} ms · en cache ${cache.toFixed(3)} ms · ` + Object.entries(M).map(([k, v]) => `${k} ${v}`).join(' · ') };
   });
 
-  // 7. LA PLANCHE PHOTO : 8 armes × 3 vues (flanc gauche — celui que voit le joueur —, trois-quarts avant, la vue du tireur),
-  // chacune par __jeu.photo (le rendu du jeu : bloom, sortie, étalonnage), l'arme en superposition dans un studio
+  // 7. LA PLANCHE PHOTO : 8 armes × 3 vues (flanc gauche — celui que voit le joueur —, trois-quarts avant, la vue du tireur ;
+  // trois-quarts arrière pour le couteau et les grenades), chacune par __jeu.photo (le rendu du jeu : bloom, sortie,
+  // étalonnage), l'arme en superposition dans un studio ; plus une 4e colonne, le modèle À LA 3e PERSONNE (celui des bots :
+  // ses pièces simplifiées et ses matériaux réduits ne se voyaient sur aucune photo — relecture)
   jeu.ajouterTest('L-W', '7 · planche photo', async () => {
-    const r = game.renderer, fx = game.fx;
-    const pm = new THREE.PMREMGenerator(r), env = pm.fromScene(new RoomEnvironment(), 0.04).texture; pm.dispose();
-    const sc = new THREE.Scene(); sc.environment = env; sc.environmentIntensity = 0.85;
-    const cam = new THREE.PerspectiveCamera(22, game.camera.aspect, 0.01, 50); sc.add(cam);
-    // le fond : un grand carré dégradé collé à la caméra (couleurs aux sommets ; aucune texture)
-    const fg = new THREE.PlaneGeometry(2, 2), haut = new THREE.Color(0x8d939b), bas = new THREE.Color(0x3c4046), col = [];
-    for (let i = 0; i < 4; i++) { const c = i < 2 ? haut : bas; col.push(c.r, c.g, c.b); }
-    fg.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-    const fm = new THREE.MeshBasicMaterial({ vertexColors: true, depthWrite: false, toneMapped: false });
-    const fond = new THREE.Mesh(fg, fm); fond.position.z = -40; fond.scale.set(60, 60, 1); fond.renderOrder = -1; cam.add(fond);   // (60 m de côté à 40 m : tout le cadre, même à 52°)
-    const sup = { scene: sc, camera: cam };
-    fx.superpositions.push(sup);
-    const W = 400, H = Math.round(400 / cam.aspect), cv = document.createElement('canvas'); cv.width = 3 * W; cv.height = 8 * H;
-    const cx = cv.getContext('2d'); cx.font = '600 15px system-ui, sans-serif'; cx.textBaseline = 'top';
-    const vues = ['flanc gauche', 'trois-quarts avant', 'vue du tireur'], contenu = [];
-    const charger = (src) => new Promise((ok, ko) => { const im = new Image(); im.onload = () => ok(im); im.onerror = ko; im.src = src; });
-    const b = new THREE.Box3(), s = new THREE.Sphere();
+    const vues = (id, j) => ['flanc gauche', 'trois-quarts avant', ARMES_FEU.includes(id) ? 'vue du tireur' : 'trois-quarts arrière', '3e personne (bots)'][j];
+    const S = studio(jeu, game, 4, IDS_ARMES.length), contenu = [];
     try {
       for (let i = 0; i < IDS_ARMES.length; i++) {
-        const id = IDS_ARMES[i], g = creerArme(id, { pourVue: true }); sc.add(g); g.updateMatrixWorld(true);
-        b.makeEmpty(); for (const m of mailles(g)) { m.geometry.computeBoundingBox(); b.union(m.geometry.boundingBox); }
-        b.getBoundingSphere(s);
-        for (let j = 0; j < 3; j++) {
-          if (j === 2 && ARMES_FEU.includes(id)) {
-            // la vue du tireur : la caméra là où la met la pose de hanche (repère caméra 0,135 ; −0,125 ; −0,32 ; lacet 0,035), 52°
-            // (écran en hauteur, ?tel=1 : le champ horizontal d'un 16:9 gardé, sinon l'arme, à droite, sort du cadre)
-            const a0 = game.camera.aspect;
-            cam.fov = a0 >= 16 / 9 ? 52 : 2 * Math.atan(Math.tan(26 * Math.PI / 180) * (16 / 9) / a0) * 180 / Math.PI;
-            cam.position.set(-0.135, 0.125, 0.32).applyAxisAngle(new THREE.Vector3(0, 1, 0), -0.035); cam.rotation.set(0, -0.035, 0);
-          } else {
-            const [az, el] = j === 0 ? [-90, 8] : j === 1 ? [-35, 24] : [-140, 30];
-            // (la distance qui fait tenir l'arme dans le cadre : sa sphère dans la largeur, sa hauteur dans la hauteur)
-            cam.fov = 22;
-            const tv = Math.tan(cam.fov * Math.PI / 360), th = tv * game.camera.aspect;
-            const d = Math.max(s.radius / Math.sin(Math.atan(th)), (b.max.y - b.min.y) * 0.62 / tv) * 1.06;
-            const a = az * Math.PI / 180, e = el * Math.PI / 180;
-            // (az −90 : la caméra à −X, le flanc gauche ; −35 : devant, à gauche ; −140 : derrière, à gauche)
-            cam.position.set(s.center.x + d * Math.cos(e) * Math.sin(a), s.center.y + d * Math.sin(e), s.center.z - d * Math.cos(e) * Math.cos(a));
-            cam.lookAt(s.center);
-          }
-          cam.aspect = game.camera.aspect; cam.updateProjectionMatrix(); cam.updateMatrixWorld(true);
-          // (la part de l'image qui est l'arme : la même photo sans elle, comparée pixel à pixel — vignette et grain compris)
-          g.visible = false; const vide = await charger(jeu.photo('fond')); g.visible = true;
-          cx.drawImage(vide, j * W, i * H, W, H);
-          const ref = cx.getImageData(j * W, i * H, W, H).data;
-          const im = await charger(jeu.photo(`${id} ${vues[j]}`));
-          cx.drawImage(im, j * W, i * H, W, H);
-          const px = cx.getImageData(j * W, i * H, W, H).data;
-          let n = 0; for (let k = 0; k < px.length; k += 16) if (Math.abs(px[k] - ref[k]) + Math.abs(px[k + 1] - ref[k + 1]) + Math.abs(px[k + 2] - ref[k + 2]) > 48) n++;
-          contenu.push(n / (px.length / 16));
-          cx.fillStyle = 'rgba(0,0,0,0.55)'; cx.fillRect(j * W, i * H, W, 22); cx.fillStyle = '#fff'; cx.fillText(`${NOMS[id]} · ${vues[j]}`, j * W + 6, i * H + 4);
+        const id = IDS_ARMES[i];
+        let g = null;
+        for (let j = 0; j < 4; j++) {
+          // (la version de vue pour les trois premières, celle de la 3e personne pour la dernière)
+          if (j === 0 || j === 3) { if (g) { S.scene.remove(g); libererArme(g); } g = creerArme(id, { pourVue: j === 0 }); S.scene.add(g); }
+          if (j === 2 && ARMES_FEU.includes(id)) S.tireur(); else S.cadrer(g, ...(j === 0 ? [-90, 8] : j === 1 ? [-35, 24] : j === 2 ? [-140, 30] : [-60, 14]));
+          contenu.push(await S.photo(g, j, i, `${NOMS[id]} · ${vues(id, j)}`));
         }
-        sc.remove(g); libererArme(g);
+        S.scene.remove(g); libererArme(g);
       }
-    } finally {
-      const k = fx.superpositions.indexOf(sup); if (k >= 0) fx.superpositions.splice(k, 1);
-      env.dispose(); fg.dispose(); fm.dispose();
-    }
-    window.__plancheArmes = cv.toDataURL('image/jpeg', 0.9);
+    } finally { S.fermer(); }
+    window.__plancheArmes = S.planche();
     const vides = contenu.filter((c) => c < 0.01).length;
-    return { ok: vides === 0 && window.__plancheArmes.length > 20000, attendu: '24 photos, l’arme visible sur chacune (≥ 1 % de l’image)',
+    return { ok: vides === 0 && contenu.length === 32 && window.__plancheArmes.length > 20000, attendu: '24 photos de vue + 8 à la 3e personne, l’arme visible sur chacune (≥ 1 % de l’image)',
       obtenu: `${contenu.length} photos · ${vides} vides · part de l’arme ${contenu.map((c) => Math.round(c * 100)).join('/')} % · planche ${Math.round(window.__plancheArmes.length / 1024)} Ko (window.__plancheArmes)` };
   });
 
@@ -293,6 +312,34 @@ export default function (jeu) {
     jeu.quitter('balade'); jeu.figerQualite(false);
     const ok = modeles === 8 && !!a && appels === a.userData.appels && appels <= 6 && prog1 === prog0 && tirs > 5;
     return { ok, attendu: '8 armes de creerArme (SkinnedMesh), l’arme en main ≤ 6 appels, programmes constants', obtenu: `${modeles}/8 modèles · ${a ? a.userData.arme : '—'} ${appels} appels · programmes ${prog0} → ${prog1} (${tirs} tirs)` };
+  });
+
+  // 10. LES PIÈCES MOBILES EN BOUT DE COURSE (relecture) : chaque os poussé au bout de son geste (COURSES_OS ; la culasse du
+  // TP-50 levée de 60° ET reculée de 8 cm ; les chargeurs à 40 % de leur course, à la sortie du puits), en vue du tireur et de
+  // flanc, dans le studio : une planche à regarder (window.__plancheCourses) — rien ne flotte (la couronne du P-17, la culasse
+  // du TP-50 et le levier de la FA-24 flottaient derrière ou devant leur pièce), rien ne traverse (le chargeur du P-17, tiré
+  // tout droit, sortait par le devant de la poignée)
+  jeu.ajouterTest('L-W', '10 · pièces mobiles en bout de course', async () => {
+    const ids = ['fa24', 'pm9', 'fp12', 'tp50', 'p17', 'frag', 'flash'];
+    const S = studio(jeu, game, 2, ids.length), contenu = [];
+    try {
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i], g = creerArme(id, { pourVue: true }), os = g.userData.os; S.scene.add(g);
+        for (const [n, c] of Object.entries(COURSES_OS[id])) {
+          const b = os[n], f = n === 'chargeur' ? 0.4 : 1;
+          b.rotation.set(c.rx || 0, 0, c.rz || 0); b.position.x += f * (c.x || 0); b.position.y += f * (c.y || 0); b.position.z += f * (c.z || 0);
+        }
+        for (let j = 0; j < 2; j++) {
+          if (j === 0 && ARMES_FEU.includes(id)) S.tireur(); else S.cadrer(g, j === 0 ? -140 : -90, j === 0 ? 30 : 8, 1.15);
+          contenu.push(await S.photo(g, j, i, `${NOMS[id]} · ${Object.keys(COURSES_OS[id]).join(', ')} au bout · ${j === 0 ? (ARMES_FEU.includes(id) ? 'vue du tireur' : 'trois-quarts arrière') : 'flanc gauche'}`));
+        }
+        S.scene.remove(g); libererArme(g);
+      }
+    } finally { S.fermer(); }
+    window.__plancheCourses = S.planche();
+    const vides = contenu.filter((c) => c < 0.01).length;
+    return { ok: vides === 0 && contenu.length === 2 * ids.length, attendu: `${2 * ids.length} photos, l’arme visible sur chacune (planche à regarder : rien ne flotte, rien ne traverse)`,
+      obtenu: `${contenu.length} photos · ${vides} vides · part de l’arme ${contenu.map((c) => Math.round(c * 100)).join('/')} % · planche ${Math.round(window.__plancheCourses.length / 1024)} Ko (window.__plancheCourses)` };
   });
 
   // ---- À F2 (apresFusion : le VRAI module de l'autre lot) ----
