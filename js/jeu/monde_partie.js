@@ -96,14 +96,19 @@ const dansZone = (pieces, id) => (pieces === null ? true : !!(pieces && id && pi
 // les lumières de la carte (leur zoneEn), posées par MondePartie : regleParDefaut s'en sert pour les côtés d'une porte
 let _lum = null;
 // LES DEUX CÔTÉS d'une porte : la pièce à 0,6 m de part et d'autre de son centre, le long de sa normale (0,9 puis 1,2 m si
-// le premier point tombe hors de toute pièce : dans un mur épais) ; gardés sur la porte (`cotes`)
+// le premier point tombe hors de toute pièce : dans un mur épais) ; gardés sur la porte (`cotes`), avec son centre MONDE
+// (`wx`, `wz` : celui de son groupe — une porte fixe posée dans un repère décalé, js/ecole_soussol.js decaler, garde un
+// `cz` de son repère ; les automatiques y sont reprises, pas les autres)
+const _w = new THREE.Vector3();
 export function cotesPorte(porte, lumieres = _lum) {
   if (porte.cotes) return porte.cotes;
   const L = lumieres; if (!L || !L.zoneEn) return [null, null];
+  porte.wx = porte.cx; porte.wz = porte.cz;
+  if (porte.g && porte.g.parent) { porte.g.updateWorldMatrix(true, false); porte.g.getWorldPosition(_w); porte.wx = _w.x; porte.wz = _w.z; }
   const y = (porte.base || 0) + 0.1, c = [];
   for (const s of [-1, 1]) {
     let id = null;
-    for (const d of [0.6, 0.9, 1.2]) { const Z = L.zoneEn(porte.cx + s * d * porte.nx, porte.cz + s * d * porte.nz, y); if (Z) { id = Z.id; break; } }
+    for (const d of [0.6, 0.9, 1.2]) { const Z = L.zoneEn(porte.wx + s * d * porte.nx, porte.wz + s * d * porte.nz, y); if (Z) { id = Z.id; break; } }
     c.push(id);
   }
   return (porte.cotes = c);
@@ -278,7 +283,7 @@ export class MondePartie {
     for (const P of this.toutes) {
       const [a, b] = P.cotes || [];
       if (!((a === Q.a && b === Q.b) || (a === Q.b && b === Q.a)) || Math.abs((P.base || 0) - Q.y) > 1.3) continue;
-      const d = Math.hypot(P.cx - (Q.bx ?? Q.x), P.cz - (Q.bz ?? Q.z));
+      const d = Math.hypot((P.wx ?? P.cx) - (Q.bx ?? Q.x), (P.wz ?? P.cz) - (Q.bz ?? Q.z));
       if (d < bd) { bd = d; best = P; }
     }
     return best;
