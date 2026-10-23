@@ -275,25 +275,28 @@ export class MondePartie {
   _lignesRue() {
     const C = this.game.collisions, B = BORNES_JEU, m = 0.35, zB = B.zMax + m, xO = B.xMin - m, xE = B.xMax + m;
     const sol = (x, z) => C.solEn(x, z, 0.3);
-    // le nu de la façade sur la ligne x : le dernier point libre en remontant de la borne vers l'école (un vélo, un bac — moins
-    // de 0,5 m plein — ne l'arrête pas)
+    // le nu de la façade sur la ligne x : le dernier point libre en remontant de la borne vers l'école, avant 2,5 m de plein
+    // (relecture : la voiture garée à l'est, 1,7 m de large, à cheval sur la borne x 23, l'arrêtait — la ligne s'arrêtait là)
     const nu = (x) => {
       let z = zB, plein = 0;
-      for (let s = zB; s > -2; s -= 0.03) { if (C.libre(x, s, 0.04, sol(x, s))) { z = s; plein = 0; } else if ((plein += 0.03) > 0.5) break; }
+      for (let s = zB; s > -3; s -= 0.03) { if (C.libre(x, s, 0.04, sol(x, s))) { z = s; plein = 0; } else if ((plein += 0.03) > 2.5) break; }
       return z;
     };
     const L = [], P = [];
     const poteau = (x, z, h, ang) => { if (!P.some((q) => Math.hypot(q.x - x, q.z - z) < 0.1)) P.push({ x, z, sol: h, ang }); };
-    // une ligne de (x0, z0) à (x1, z1), en tronçons de même sol
+    // une ligne de (x0, z0) à (x1, z1), en tronçons LIBRES de même sol : coupée où le sol change, et de part et d'autre d'un
+    // obstacle (la voiture : c'est elle qui borne, le ruban ne la traverse pas)
     const ligne = (x0, z0, x1, z1) => {
       const lg = Math.hypot(x1 - x0, z1 - z0); if (lg < 0.3) return;
       const tx = (x1 - x0) / lg, tz = (z1 - z0) / lg, n = Math.ceil(lg / 0.05), ang = Math.atan2(tz, tx);
-      let s0 = 0, h0 = sol(x0, z0);
+      const pt = (s) => { const x = x0 + tx * s, z = z0 + tz * s, h = sol(x, z); return { h, libre: C.libre(x, z, 0.04, h) }; };
+      let s0 = 0, a = pt(0), h0 = a.h;
       for (let i = 1; i <= n; i++) {
-        const s = Math.min(lg, i * 0.05), h = sol(x0 + tx * s, z0 + tz * s), saute = Math.abs(h - h0) > 0.05;
-        if (!saute && i < n) continue;
-        const s1 = saute ? s - 0.025 : lg;
-        if (s1 - s0 > 0.2) {
+        const s = Math.min(lg, i * 0.05), b = pt(s), obst = b.libre !== a.libre, coupe = obst || (b.libre && Math.abs(b.h - h0) > 0.05);
+        if (!coupe && i < n) continue;
+        // (contre un obstacle, le bout reculé de 15 cm : le socle du poteau, 28 cm le long de la ligne, n'y mord pas)
+        const s1 = !coupe ? lg : obst ? (a.libre ? s - 0.2 : s) : s - 0.025;
+        if (a.libre && s1 - s0 > 0.2) {
           // (une travée par paire de poteaux : chacune sa flèche et sa vrille — un seul ruban de 26 m tournait d'un bloc)
           const k = Math.ceil((s1 - s0) / 3.5);
           for (let j = 0; j <= k; j++) {
@@ -301,10 +304,11 @@ export class MondePartie {
             if (j < k) L.push({ cle: 'rue', bx: x0, bz: z0, tx, tz, s0: u, s1: s0 + (s1 - s0) * (j + 1) / k, sol: h0 });
           }
         }
-        s0 = s1; h0 = h;
+        s0 = obst && !a.libre ? s + 0.15 : s1; a = b; h0 = b.h;
       }
     };
-    ligne(xO, nu(xO), xO, zB); ligne(xO, zB, xE, zB); ligne(xE, zB, xE, nu(xE));
+    // (de la façade — 16 cm devant son nu, pour le socle — à l'angle, le long de la chaussée, puis de l'angle à l'autre façade)
+    ligne(xO, nu(xO) + 0.16, xO, zB); ligne(xO, zB, xE, zB); ligne(xE, zB, xE, nu(xE) + 0.16);
     this.rue = L; this.poteaux = P;
   }
   // LA LIMITE d'un passage. Les pièces sont des rectangles alignés sur les axes (carte_ecole.js l. 2345-2385) : leur limite
