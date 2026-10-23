@@ -304,9 +304,10 @@ export class Arsenal {
       return;
     }
     // 7. RECHARGER : sur le front, ou d'office à vide (la cadence du dernier tir finie)
+    // (F2 : une arme sans recharge — le couteau tenu en main, une dotation de test de L-B — ne recharge pas)
     const ch = this.ch[this.i], res = this.res[this.i];
-    const capMax = f.chargeur + (f.recharge.parCartouche || ch === 0 ? 0 : 1);
-    if (res > 0 && ((cmd.recharger && ch < capMax) || (ch === 0 && (this.et !== 'tir' || t + 1e-9 >= this.prochain)))) {
+    const capMax = f.recharge ? f.chargeur + (f.recharge.parCartouche || ch === 0 ? 0 : 1) : 0;
+    if (f.recharge && res > 0 && ((cmd.recharger && ch < capMax) || (ch === 0 && (this.et !== 'tir' || t + 1e-9 >= this.prochain)))) {
       if (this.et === 'pret' || this.et === 'tir') { this._recharger(f, t, partie); return; }
     }
     // 8. TIRER

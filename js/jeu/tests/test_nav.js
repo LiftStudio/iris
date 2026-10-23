@@ -469,7 +469,8 @@ export default function (jeu) {
       }
     } finally { for (let j = 0; j < garde.length; j += 2) garde[j].off = garde[j + 1]; }
     const attente = liens.filter(([u, v]) => N.pieceDe(u) === 'attente' && N.pieceDe(v) === 'attente').length;
-    // le comptoir haut de l'accueil : 1,18 m (js/ecole_hall.js CPT.h) — au-dessus des 1,15 m de `franchissable` : aucun lien
+    // le comptoir haut de l'accueil : 1,18 m (js/ecole_hall.js CPT.h) — F2, demande de L-D : `franchissable` va jusqu'à 1,20 m,
+    // le comptoir a ses liens (le § 3.1 le nomme, L-J le franchit au § 5.7.1 point 13)
     const comptoir = liens.filter(([u, v]) => { const mx = (N.px[u] + N.px[v]) / 2, mz = (N.pz[u] + N.pz[v]) / 2; return Math.abs(N.ph[u]) < 0.3 && mx > 16.7 && mx < 18.1 && mz > -3.65 && mz < -1.05; }).length;
     // les rangs serrés (js/player.js Player.rangs) : aucune arrivée sur la ligne d'un rang, entre ses bouts
     let rangs = 0;
@@ -499,8 +500,8 @@ export default function (jeu) {
       let fr = false; for (let i = 1; i < L.length; i++) { const q = N.lien(L[i - 1], L[i]); if (q >= 0 && N.typeLien[q] === 1) fr = true; }
       if (fr) pris++;
     }
-    const ok = liens.length > 0 && liens.length === N.nFranchir && verifies === liens.length && attente >= 1 && rangs === 0 && candidats > 0 && pris === candidats;
-    return { ok, attendu: 'tous redonnés à ≤ 0,3 m, ≥ 1 sur les banquettes de l\'attente, 0 dans un rang, A* les prend (le comptoir : 0, il fait 1,18 m)',
+    const ok = liens.length > 0 && liens.length === N.nFranchir && verifies === liens.length && attente >= 1 && comptoir >= 1 && rangs === 0 && candidats > 0 && pris === candidats;
+    return { ok, attendu: 'tous redonnés à ≤ 0,3 m, ≥ 1 sur les banquettes de l\'attente, ≥ 1 sur le comptoir (1,18 m), 0 dans un rang, A* les prend',
       obtenu: `${liens.length} liens, ${verifies} redonnés${faux.length ? ' (faux ' + faux.join(' ; ') + ')' : ''}, attente ${attente}, comptoir ${comptoir}, rangs ${rangs}, A* ${pris}/${candidats}` };
   });
 

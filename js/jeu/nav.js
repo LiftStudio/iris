@@ -37,7 +37,7 @@ import { hacher } from './rng.js';
 import { lireNav, ecrireNav } from './nav_cache.js';
 
 export const BORNES_NAV = { xMin: -3, xMax: 23, zMin: -24.5, zMax: 6 };
-export const VERSION_NAV = 1;
+export const VERSION_NAV = 2;                       // (F2 : 2 — franchissable jusqu'à 1,20 m, le comptoir de l'accueil)
 
 const NIVEAU_RUE = 3;
 const DEGAGES = [0.5, 0.75, 1, 1.5, 2];                 // les rayons libres essayés (m) ; en deçà, le rayon du graphe
@@ -104,7 +104,7 @@ function basDevant(C, x, h, z, ux, uz) {
   C._parcourir(Math.min(x, ex) - 0.35, Math.min(z, ez) - 0.35, Math.max(x, ex) + 0.35, Math.max(z, ez) + 0.35, (s) => {
     if (bas || s.off || !s.joueur) return;
     const y1 = s.y1 - h;
-    if (y1 >= 0.4 && y1 <= 1.2 && s.y0 - h < 0.45) bas = true;
+    if (y1 >= 0.4 && y1 <= 1.25 && s.y0 - h < 0.45) bas = true;
   });
   return bas;
 }

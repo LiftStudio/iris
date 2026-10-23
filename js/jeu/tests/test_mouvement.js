@@ -1170,7 +1170,10 @@ export default function (jeu) {
   // (l'approche, ≥ 0,5 m) et `apres` (la sortie, ≥ 0,7 m) — la vitesse de sprint est posée au départ, l'élan n'a pas
   // besoin de piste. Rend [{ x, y, z, nx, nz (le sens), linteau, avant, apres }], deux sens par porte s'ils ont la place.
   function chercherPortes(c) {
-    const L = [], auto = (game.carte && game.carte.portes && game.carte.portes.auto) || [];
+    // (F2 : avec le monde en partie de L-M, une porte automatique « fermée » par la table de la partie — les toilettes, le local
+    // au combat — reste close : elle n'est pas un passage ; les « ouvertes » ont leurs vantaux solides, la place libre les voit)
+    const M = game.partie && game.partie.monde, ferme = (P) => !!(M && M.regles && M.regles.get(P.nom) === 'fermee');
+    const L = [], auto = ((game.carte && game.carte.portes && game.carte.portes.auto) || []).filter((P) => !ferme(P));
     const V = auto.map((P) => P.forme).filter((f) => f && !f.off);
     for (const f of V) f.off = true;
     try {

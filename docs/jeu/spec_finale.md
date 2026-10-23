@@ -320,7 +320,7 @@ pas en partie (sinon `gasMul` ralentit et les couches posent les mains sur les g
   −2,5 cm. Pas de dégâts de chute. (Rappel : `Player.move` passe `pos.y + jumpY` comme pieds à `C.deplacer`,
   `player.js:704` : on passe vraiment par-dessus ce qui est bas.)
 - **Franchissement** (Espace face à un obstacle, ou sprint + avancer contre lui 0,15 s) : formes dont `y1 − pieds` est
-  entre 0,45 et 1,15 m (tables, bureaux, banquettes, comptoir de l'accueil, jardinières) ; sonde `C.deplacer` de 0,5 m
+  entre 0,45 et 1,20 m (F2 : 1,15 → 1,20, le comptoir de l'accueil fait 1,18 m) (tables, bureaux, banquettes, comptoir de l'accueil, jardinières) ; sonde `C.deplacer` de 0,5 m
   bloquée à < 0,8 m, ligne `rayonLibre` à `y1 + 0,25` libre sur 1,4 m, arrivée à 0,9-1,3 m au-delà avec `C.libre` et
   `|solEn − pieds| < 0,3`. Mouvement scripté 0,45 s (0,38 s sous 0,7 m), arc de caméra +0,35 m, sortie à 70 % de la vitesse
   d'entrée. Les rangs serrés (arrivée jamais libre) sont refusés d'eux-mêmes. Pas de position couchée. **Ce critère est

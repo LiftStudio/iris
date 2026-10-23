@@ -73,7 +73,7 @@ export class VueFPS {
   }
   // LA SENSIBILITÉ DE LA SOURIS (rad/px, les mêmes sur les deux axes) : 0,0025 × sens, et en visée la focale — tan(champV_ADS/2)
   // / tan(champV_hanche/2) × sensVisee (la cible glisse à la même vitesse à l'écran quel que soit le zoom). Posée sur la
-  // partie à l'entrée (Partie.souris, que lit js/game.js _onMove) : voir le rapport L-B, demande à F2.
+  // partie : Partie.souris, que lit js/game.js _onMove, délègue ici (F2).
   souris() {
     const F = this._reglages(), sens = F.sens ?? 0.45, sv = F.sensVisee ?? 1;
     const { zoom, e } = this._zoomDe(this.acteur);
@@ -108,8 +108,8 @@ export class VueFPS {
       }));
       // la réception d'une chute : le creux de −3 cm
       this._des.push(P.sur('reception', (e) => { if (e.a === id && (e.chute || 0) > VUE.reception.chute) this._creux.v = -vCreux; }));
-      // la sensibilité de la visée qui suit la focale (Partie.souris, lue par js/game.js) — rendue à la sortie
-      if (!Object.prototype.hasOwnProperty.call(P, 'souris')) { P.souris = () => this.souris(); this._partieSouris = P; }
+      // (F2 : la sensibilité de la visée qui suit la focale — Partie.souris délègue à VueFPS.souris, demande de L-B : plus de
+      // pose sur l'instance)
     }
     this._cacher();
   }
@@ -118,7 +118,6 @@ export class VueFPS {
     if (this._sup && g.fx && g.fx.superpositions) { const i = g.fx.superpositions.indexOf(this._sup); if (i >= 0) g.fx.superpositions.splice(i, 1); }
     this._sup = null;
     for (const d of this._des) d(); this._des = [];
-    if (this._partieSouris) { delete this._partieSouris.souris; this._partieSouris = null; }
     const j = this.acteur && this.acteur.joueur;
     if (j && j.mesh) { j.mesh.visible = true; j.vuePremiere = false; }
     if (this.acteur) g.camera.rotation.reorder('XYZ');

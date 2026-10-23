@@ -340,8 +340,10 @@ export class Partie {
 
   // ---------------------------------------------------------------- les entrées et le pointeur
   // (rad/px, les mêmes sur les deux axes ; l'inversion du tangage, `controls.invertY`, reste à js/game.js _onMove, qui
-  // l'applique après — la rendre ici l'annulait. En visée, la sensibilité suit la focale : L-B ; le squelette, sensVisee)
+  // l'applique après — la rendre ici l'annulait. En visée, la sensibilité suit la focale : VueFPS.souris, L-B — F2, demande
+  // de L-B : la partie lui délègue tant que la vue FPS suit un acteur ; sinon, la formule du squelette)
   souris() {
+    if (this.vue && this.vue.souris && this.vue.acteur) return this.vue.souris();
     const s = this.game.settings, f = (s && s.controls && s.controls.fps) || {};
     const sens = f.sens ?? 0.45, a = this.local && this.local.arsenal;
     const k = 0.0025 * sens * (a && a.visee > 0 ? (f.sensVisee ?? 1) : 1);

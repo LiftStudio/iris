@@ -168,7 +168,12 @@ export function appliquerCommande(acteur, cmd, dt, partie) {
   } else acteur.accroupi = versDoux(acteur.accroupi || 0, false, ACCROUPI.descente, ACCROUPI.remontee, dt);
   const k = acteur.accroupi;
   // ---- 4. LE SPRINT : celui de la commande, s'il est possible (debout, vers l'avant, ni visée ni tir) ----
-  let sprint = !!cmd.sprint && avant && !cmd.visee && !cmd.tir && k < 0.3 && !M.glisse;
+  // (F2, demande de L-A (e) : le front `recharger` coupe le sprint du corps quand une recharge peut partir — l'arme baissée du
+  // sprint la perdait — ; coupé tant que la recharge dure, sprint tenu ou verrouillé ; relâcher puis reprendre le sprint
+  // l'annule, comme dans Call of Duty)
+  if (cmd.recharger && A && A.peutRecharger && A.peutRecharger()) M.sprintCoupe = true;
+  if (M.sprintCoupe && (!cmd.sprint || !(cmd.recharger || (A && A.et === 'recharge')))) M.sprintCoupe = false;
+  let sprint = !!cmd.sprint && avant && !cmd.visee && !cmd.tir && k < 0.3 && !M.glisse && !M.sprintCoupe;
   if (acteur.sprintLimite) {
     // (les chasseurs du prop hunt : sprint à ENDURANCE, −25/s, +15/s ; à 0, plus de sprint avant 20 ; jamais tactique)
     if (acteur.endurance <= 0) M.epuise = true;
@@ -554,8 +559,9 @@ export function separer(acteurs, collisions) {
 //   1. la sonde : le disque du joueur (0,3 m) poussé de 0,5 m vers l'avant ; bloqué = il avance de moins de 0,48 m (la face
 //      de l'obstacle est donc à moins de 0,8 m des pieds) ;
 //   2. la hauteur de l'obstacle h : la plus petite base `bas` de la bande du corps (au-dessus des pieds) qui laisse passer
-//      la sonde, cherchée par dichotomie au centimètre ; h doit être entre 0,45 et 1,15 m (plus bas, on marche dessus ;
-//      plus haut, c'est un mur ou un meuble à contourner) ;
+//      la sonde, cherchée par dichotomie au centimètre ; h doit être entre 0,45 et 1,20 m (plus bas, on marche dessus ;
+//      plus haut, c'est un mur ou un meuble à contourner — F2, demande de L-D : 1,20 et non 1,15, le comptoir de l'accueil,
+//      que le § 3.1 nomme et que L-J franchit au § 5.7.1 point 13, fait 1,18 m) ;
 //   3. l'arrivée : à 0,9, 1,0… 1,3 m AU-DELÀ de la face de l'obstacle, le premier point libre (C.libre au rayon 0,3) dont
 //      le sol est à moins de 0,3 m des pieds ; les rangs serrés (arrivée jamais libre) sont refusés d'eux-mêmes ;
 //   4. le passage au-dessus : la ligne des pieds à l'arrivée, à h + 0,25 au-dessus des pieds, libre (rayonLibre, sphère de
@@ -570,11 +576,11 @@ export function franchissable(collisions, x, y, z, dx, dz) {
   const sonde = (bas) => { _s.x = x; _s.z = z; C.deplacer(_s, ux * 0.5, uz * 0.5, R, null, y, 1.6, bas); return (_s.x - x) * ux + (_s.z - z) * uz; };
   const a0 = sonde(0.25);
   if (a0 >= 0.48) return null;                                  // rien devant
-  if (sonde(1.16) < 0.48) return null;                          // trop haut : un mur
-  let lo = 0.25, hi = 1.16;
+  if (sonde(1.21) < 0.48) return null;                          // trop haut : un mur
+  let lo = 0.25, hi = 1.21;
   while (hi - lo > 0.01) { const m = (lo + hi) / 2; if (sonde(m) >= 0.48) hi = m; else lo = m; }
   const h = hi;
-  if (h < 0.45 || h > 1.15) return null;
+  if (h < 0.45 || h > 1.20) return null;
   const face = Math.max(0, a0) + R;
   for (let s = 0.9; s <= 1.3001; s += 0.1) {
     const ax = x + ux * (face + s), az = z + uz * (face + s);
