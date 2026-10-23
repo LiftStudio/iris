@@ -185,6 +185,9 @@ function texRubalise() {
   return t;
 }
 
+// (un poteau : la même boîte, couchée sur son long côté — 1,25 m de haut, 5 cm de côté —, sur un socle gris de 28 cm)
+const POTEAU = { h: 1.25, c: 0.05, socle: 0.28, ep: 0.035 };
+const BLANC = new THREE.Color(1, 1, 1), GRIS = new THREE.Color(0.16, 0.16, 0.17);
 const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _p = new THREE.Vector3(), _s = new THREE.Vector3(), _e = new THREE.Euler();
 const _a = new THREE.Vector3(), _b = new THREE.Vector3();
 
@@ -202,6 +205,7 @@ export class MondePartie {
     this.frontieres = [];            // les passages frontières de la zone en cours
     this.verrous = new Map();        // nom → règle d'avant le verrou (verrouiller)
     this.rubalise = null; this.rubans = [];
+    this.rue = []; this.poteaux = []; this._poteauxVus = [];   // la rue bornée tracée : ses rubans, ses poteaux (_lignesRue)
     this._dansMonde = []; this._neuves = []; this._balade = null; this._dedans = false; this._t = 0;
     // (la génération du graphe des bots — L-D, F2 — en a besoin pendant la préparation, quand game.partie est encore nul)
     if (game) game.mondePartie = this;
@@ -249,15 +253,56 @@ export class MondePartie {
       const f = vitres.find((v) => Math.abs(centre(v, 'x') - D.x) <= 0.05 && Math.abs((v.y0 + v.y1) / 2 - D.y) <= 0.05 && Math.abs(centre(v, 'z') - D.z) <= 0.05);
       if (f) this.depolis.push(f); else this.depolisAbsents.push(D);
     }
-    // LA RUBALISE : un InstancedMesh, compilé ici (sous l'écran de préparation)
+    // LA RUE BORNÉE, tracée (relecture)
+    this._lignesRue();
+    // LA RUBALISE : un InstancedMesh, compilé ici (sous l'écran de préparation) — ses couleurs d'instance posées AVANT la
+    // compilation (le programme les compte : blanc, la rubalise et ses poteaux ; gris, le socle d'un poteau)
     const geo = new THREE.BoxGeometry(RUBAN.seg, RUBAN.h, RUBAN.ep);
     const mat = new THREE.MeshStandardMaterial({ map: texRubalise(), roughness: 0.5, metalness: 0 });
     mat.name = 'rubalise (jeu)';
     const R = new THREE.InstancedMesh(geo, mat, RUBAN.max);
     R.name = 'rubalise (zone de jeu)'; R.count = 0; R.castShadow = false; R.receiveShadow = true;
     R.userData.dynamique = true; R.frustumCulled = false;
+    for (let i = 0; i < RUBAN.max; i++) R.setColorAt(i, BLANC);
     this.rubalise = R;
     this._compilerRubalise();
+  }
+  // LA RUE BORNÉE (relecture du 23/10) : la limite de BORNES_JEU tracée dans la rue — sans elle, un mur invisible au milieu de
+  // la chaussée (z 6) et en travers des trottoirs (x −3 et 23). Une rubalise sur poteaux à 35 cm au-delà de la borne (le
+  // corps, de rayon 0,3, s'arrête contre elle), du nu des façades à l'angle ; coupée où le sol change (la bordure du
+  // trottoir, 12 cm) ; un poteau à chaque bout et tous les 3,5 m au plus (`this.rue`, `this.poteaux` ; montrés dans les zones
+  // avec rue seulement)
+  _lignesRue() {
+    const C = this.game.collisions, B = BORNES_JEU, m = 0.35, zB = B.zMax + m, xO = B.xMin - m, xE = B.xMax + m;
+    const sol = (x, z) => C.solEn(x, z, 0.3);
+    // le nu de la façade sur la ligne x : le dernier point libre en remontant de la borne vers l'école (un vélo, un bac — moins
+    // de 0,5 m plein — ne l'arrête pas)
+    const nu = (x) => {
+      let z = zB, plein = 0;
+      for (let s = zB; s > -2; s -= 0.03) { if (C.libre(x, s, 0.04, sol(x, s))) { z = s; plein = 0; } else if ((plein += 0.03) > 0.5) break; }
+      return z;
+    };
+    const L = [], P = [];
+    const poteau = (x, z, h, ang) => { if (!P.some((q) => Math.hypot(q.x - x, q.z - z) < 0.1)) P.push({ x, z, sol: h, ang }); };
+    // une ligne de (x0, z0) à (x1, z1), en tronçons de même sol
+    const ligne = (x0, z0, x1, z1) => {
+      const lg = Math.hypot(x1 - x0, z1 - z0); if (lg < 0.3) return;
+      const tx = (x1 - x0) / lg, tz = (z1 - z0) / lg, n = Math.ceil(lg / 0.05), ang = Math.atan2(tz, tx);
+      let s0 = 0, h0 = sol(x0, z0);
+      for (let i = 1; i <= n; i++) {
+        const s = Math.min(lg, i * 0.05), h = sol(x0 + tx * s, z0 + tz * s), saute = Math.abs(h - h0) > 0.05;
+        if (!saute && i < n) continue;
+        const s1 = saute ? s - 0.025 : lg;
+        if (s1 - s0 > 0.2) {
+          L.push({ cle: 'rue', bx: x0, bz: z0, tx, tz, s0, s1, sol: h0 });
+          const k = Math.ceil((s1 - s0) / 3.5);
+          for (let j = 0; j <= k; j++) { const u = s0 + (s1 - s0) * j / k; poteau(x0 + tx * u, z0 + tz * u, h0, ang); }
+        }
+        s0 = s1; h0 = h;
+      }
+    };
+    ligne(xO, nu(xO), xO, zB); ligne(xO, zB, xE, zB); ligne(xE, zB, xE, nu(xE));
+    this.rue = L; this.poteaux = P;
   }
   // LA LIMITE d'un passage. Les pièces sont des rectangles alignés sur les axes (carte_ecole.js l. 2345-2385) : leur limite
   // aussi. Le long de chaque axe, de part et d'autre du centre du passage (1,5 m), la suite des pièces — lues au SOL de chaque
@@ -412,15 +457,17 @@ export class MondePartie {
     couperAscenseur(carte.chantier);
     // LES PIÈCES FERMÉES du RDC montrées quand une porte pilotée est ouverte
     if (vis) vis.forcees = new Set(this.portes);
-    // LA RUE BORNÉE
+    // LA RUE BORNÉE, et sa rubalise sur poteaux
     this.bornes = Z.rue ? BORNES_JEU : null;
     if (this.bornes) u.bounds = this.bornes;
+    if (this.bornes) this.rubans.push(...this.rue);
+    this._poteauxVus = this.bornes ? this.poteaux : [];
     // LA GLACE peinte
     if (Mi) Mi.coupe = true;
     // LES DÉPOLIS
     for (const f of this.depolis) f.depoli = true;
     // LA RUBALISE
-    this._poserRubans(0);
+    this._poserRubans(0, true);
     if (this.rubalise && this.rubalise.count > 0) g.scene.add(this.rubalise);
   }
 
@@ -439,7 +486,7 @@ export class MondePartie {
     if (carte.miroirAccueil) carte.miroirAccueil.coupe = B.miroir;
     g.user.bounds = B.bornes;
     if (this.rubalise && this.rubalise.parent) this.rubalise.parent.remove(this.rubalise);
-    this.pilotees = []; this.frontieres = []; this.rubans = []; this.regles.clear(); this.verrous.clear();
+    this.pilotees = []; this.frontieres = []; this.rubans = []; this._poteauxVus = []; this.regles.clear(); this.verrous.clear();
     this.bornes = null; this.zone = null; this.mode = null; this.table = null; this._balade = null;
   }
 
@@ -543,8 +590,9 @@ export class MondePartie {
     if (dt > 0 && this.rubalise && this.rubalise.count) { this._t += dt; this._poserRubans(this._t); }
   }
   // LES RUBANS : deux par passage ouvert de la frontière (à 0,92 et 1,18 m), en segments de 50 cm d'un bout libre à l'autre ;
-  // une flèche de 3 cm au milieu, un vrillage lent de ± 0,18 rad (chaque ruban sa phase)
-  _poserRubans(t) {
+  // une flèche de 3 cm au milieu, un vrillage lent de ± 0,18 rad (chaque ruban sa phase) ; puis les poteaux de la rue bornée
+  // (fixes ; leurs couleurs posées à l'entrée, `couleurs`)
+  _poserRubans(t, couleurs = false) {
     const R = this.rubalise; if (!R) return;
     let n = 0;
     for (let q = 0; q < this.rubans.length; q++) {
@@ -560,6 +608,18 @@ export class MondePartie {
           R.setMatrixAt(n++, _m4.compose(_p, _q, _s));
         }
       }
+    }
+    const nr = n;
+    for (const T of this._poteauxVus) {
+      if (n + 2 > RUBAN.max) break;
+      _p.set(T.x, T.sol + POTEAU.h / 2, T.z); _q.setFromEuler(_e.set(0, -T.ang, Math.PI / 2, 'YXZ'));
+      R.setMatrixAt(n++, _m4.compose(_p, _q, _s.set(POTEAU.h / RUBAN.seg, POTEAU.c / RUBAN.h, POTEAU.c / RUBAN.ep)));
+      _p.set(T.x, T.sol + POTEAU.ep / 2, T.z); _q.setFromEuler(_e.set(0, -T.ang, 0, 'YXZ'));
+      R.setMatrixAt(n++, _m4.compose(_p, _q, _s.set(POTEAU.socle / RUBAN.seg, POTEAU.ep / RUBAN.h, POTEAU.socle / RUBAN.ep)));
+    }
+    if (couleurs && R.instanceColor) {
+      for (let i = 0; i < n; i++) R.setColorAt(i, i >= nr && (i - nr) % 2 ? GRIS : BLANC);
+      R.instanceColor.needsUpdate = true;
     }
     R.count = n;
     // (n'envoyer que les segments posés : les 1 024 matrices font 64 Ko à chaque image)

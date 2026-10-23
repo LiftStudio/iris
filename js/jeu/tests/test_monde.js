@@ -450,16 +450,23 @@ export default function (jeu) {
     const B0 = { ...game.user.bounds };
     await essai({ zone: 'rdc_rue', mannequins: [{ x: 11.63, y: 0, z: -4.62 }] });
     const p = game.partie, rue = game.user.bounds === BORNES_JEU && p.acteurParId(1).joueur.bounds === BORNES_JEU;
+    // (relecture : la borne TRACÉE — une rubalise sur poteaux à 35 cm au-delà de chaque borne de la rue, du nu des façades à
+    // l'angle : x −3 et 23 depuis moins de 2,2 m de l'école, z 6 d'un bout à l'autre ; aucun poteau en deçà de la borne)
+    const B = BORNES_JEU, M = p.monde, T = M._poteauxVus, Rr = M.rubans.filter((q) => q.cle === 'rue');
+    const horsBorne = T.every((q) => q.x <= B.xMin - 0.3 || q.x >= B.xMax + 0.3 || q.z >= B.zMax + 0.3);
+    const nuO = Math.min(...T.filter((q) => q.x < B.xMin).map((q) => q.z)), nuE = Math.min(...T.filter((q) => q.x > B.xMax).map((q) => q.z));
+    const sud = Rr.filter((q) => Math.abs(q.tz) < 1e-6).reduce((s, q) => s + q.s1 - q.s0, 0);
+    const trace = T.length >= 9 && Rr.length >= 3 && horsBorne && nuO < 2.2 && nuE < 2.2 && sud > B.xMax - B.xMin && !!M.rubalise.parent;
     jeu.quitter('balade');
     const rendue = egal({ ...game.user.bounds }, B0);
     await essai({ zone: 'ss' });
-    const sansRue = egal({ ...game.user.bounds }, B0);
+    const sansRue = egal({ ...game.user.bounds }, B0), sansTrace = !game.partie.monde._poteauxVus.length && !game.partie.monde.rubans.some((q) => q.cle === 'rue');
     jeu.quitter('balade');
     const jour = C().formes.filter((f) => f.t === 'b' && Math.abs(f.x0 - 2.0) < 1e-6 && f.camera === false && f.y1 === 5.2);
     const L = carte().portes.liste().filter((P) => P.forme), vitres = L.filter((P) => P.vitree), autres = L.filter((P) => !P.vitree);
-    const ok = rue && rendue && sansRue && jour.length === 1 && jour[0].balle === false && vitres.length >= 6 && vitres.every((P) => P.forme.vitre === true) && autres.every((P) => !P.forme.vitre);
-    return { ok, attendu: 'rue : BORNES_JEU (Haythem et bots), rendues ; sans rue : inchangées ; le jour : balle === false ; modèles vitrés : vitre === true, les autres non',
-      obtenu: `rue ${rue} · rendues ${rendue} · −1 ${sansRue} · jour ${jour.length} (balle ${jour[0] && jour[0].balle}) · vitrées ${vitres.length} : ${vitres.map((P) => P.nom + (P.forme.vitre ? '' : ' NON'))} · autres vitrées ${autres.filter((P) => P.forme.vitre).length}` };
+    const ok = rue && trace && rendue && sansRue && sansTrace && jour.length === 1 && jour[0].balle === false && vitres.length >= 6 && vitres.every((P) => P.forme.vitre === true) && autres.every((P) => !P.forme.vitre);
+    return { ok, attendu: 'rue : BORNES_JEU (Haythem et bots), tracée (rubalise sur poteaux au-delà des bornes, des façades à l’angle), rendues ; sans rue : inchangées, rien de tracé ; le jour : balle === false ; modèles vitrés : vitre === true, les autres non',
+      obtenu: `rue ${rue} · tracée ${trace} (${T.length} poteaux, ${Rr.length} tronçons, au-delà ${horsBorne}, nus ${nuO.toFixed(2)} / ${nuE.toFixed(2)}, z 6 sur ${sud.toFixed(1)} m) · rendues ${rendue} · −1 ${sansRue} (tracé ${!sansTrace}) · jour ${jour.length} (balle ${jour[0] && jour[0].balle}) · vitrées ${vitres.length} : ${vitres.map((P) => P.nom + (P.forme.vitre ? '' : ' NON'))} · autres vitrées ${autres.filter((P) => P.forme.vitre).length}` };
   });
 
   // 12. LES VANTAUX SOLIDES : 20 balles dans des vantaux ouverts du combat → arrêtées ; 20 pilotes qui les frôlent → aucune
