@@ -473,10 +473,12 @@ export class Viewmodel {
     const il = this.inertieL.pas(dt, cl), it = this.inertieT.pas(dt, ct);
     _R.y += il; _R.x += it; _P.x -= il * 0.06; _P.y += it * 0.05;
     // le balancement en huit : latéral 12 mm à f/2, vertical 8 mm à f, f = 1,15 + 0,35 v ; × 2,5 au sprint, × 0,1 en visée
+    // (12 mm à la course, 5 m/s, et moins en marchant ; plafonné là : le sprint fait 30 mm, pas 2,5 × 1,32 × 12 = 40 —
+    // relecture du 23/10)
     const v = e.enAir ? 0 : e.vitesse, fq = 1.15 + 0.35 * v;
     this._phase = (this._phase + Math.PI * fq * dt) % (2 * Math.PI);          // (θ avance à f/2 : un pas = π)
     const kb = (1 + 1.5 * wSprint) * (1 - 0.9 * kv) * (1 - 0.7 * wGlisse) * (e.accroupi > 0.5 ? 0.7 : 1);
-    this._amp = amortir(this._amp, borne(v / 5, 0, 1.4) * kb, 0.12, dt);
+    this._amp = amortir(this._amp, borne(v / 5, 0, 1) * kb, 0.12, dt);
     const th = this._phase, A = this._amp;
     _P.x += 0.012 * A * Math.sin(th); _P.y += 0.008 * A * Math.sin(2 * th) - 0.003 * A;
     _R.z += -0.6 * DEG * A * Math.sin(th); _R.x += 0.4 * DEG * A * Math.sin(2 * th);
@@ -745,8 +747,10 @@ export class Viewmodel {
       const n = performance.now(), d = Math.min(0.1, (n - avant) / 1000); avant = n;
       pivot.rotation.set(0.12, pivot.rotation.y + 0.6 * d, 0, 'YXZ');
     };
+    // (sa superposition à elle — vitrine(null) ne retire pas celle de VueFPS — sauf si la scène est déjà dessinée : en
+    // partie, elle le serait deux fois)
     if (!this._supV) this._supV = { scene: this.scene, camera: this.camera };
-    if (fx && fx.superpositions && !fx.superpositions.includes(this._supV)) fx.superpositions.push(this._supV);
+    if (fx && fx.superpositions && !fx.superpositions.some((s) => s.scene === this.scene)) fx.superpositions.push(this._supV);
     this.cachee = false; this.diag.montree = true;
   }
 

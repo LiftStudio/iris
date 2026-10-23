@@ -191,7 +191,30 @@ function fp12() {
     { t: f.pompe, rx: 0 }]);
   // la pompe après chaque coup (857 ms entre deux) : en arrière 0,12-0,30, en avant 0,30-0,46
   const apresTir = piste(0.62, [{ t: 0 }, { t: 0.12 }, { t: 0.30, culT: 1, rx: 2 * DEG, x: -0.006 }, { t: 0.46, culT: 0, rx: 0, x: 0 }, { t: 0.62 }]);
-  return { debut, cartouche, fin, pompe, apresTir };
+  // (le contrat du § 4.5.9 : `rechargeTact` et `rechargeVide` sont des pistes — ici la recharge d'UNE cartouche, et celle
+  // du tube vide, 7 cartouches et la pompe, mises bout à bout ; l'arme de vue, elle, joue les morceaux, au compte de
+  // cartouches de la recharge en cours)
+  const P = ARMES.fp12.chargeur;
+  const rechargeTact = enchainer([debut, cartouche, fin]);
+  const rechargeVide = enchainer([debut, ...Array(P).fill(cartouche), fin, pompe]);
+  return { debut, cartouche, fin, pompe, apresTir, rechargeTact, rechargeVide };
+}
+// des pistes jouées BOUT À BOUT (les clés décalées ; à une jointure, la 1re clé de la suivante remplace la dernière de la
+// précédente — elles valent la même chose, les morceaux s'enchaînent sans saut)
+function enchainer(L) {
+  const K = [];
+  let t0 = 0;
+  for (const P of L) {
+    for (const k of P.cles) {
+      const t = t0 + k.t;
+      if (K.length && Math.abs(K[K.length - 1].t - t) < 1e-9) K.pop();
+      K.push({ t, v: Float64Array.from(k.v) });
+    }
+    t0 += P.duree;
+  }
+  const P = { duree: t0, voies: L[0].voies, i: L[0].i, cles: K, m: null };
+  tangentes(P);
+  return P;
 }
 // LE TP-50, LA CULASSE 0,25 s APRÈS LE COUP : la main droite quitte la poignée pour le levier (dl), le lève de 60° en
 // 0,15 s, recule la culasse de 8 cm en 0,12 s (l'étui part), la ramène, rabat le levier, revient à la poignée — dans les
@@ -207,7 +230,7 @@ const INSPECTION = piste(3.0, [{ t: 0 }, { t: 0.5, ry: 0.85, rz: 0.35, x: -0.06,
 
 const chronosArme = (id) => {
   const f = ARMES[id], C = { sortie: sortie(f.sortie), rangement: rangement(f.rangement) };
-  if (id === 'fp12') return { ...C, ...fp12(), rechargeTact: null, rechargeVide: null };
+  if (id === 'fp12') return { ...C, ...fp12() };
   const R = rechargeArme(id);
   C.rechargeTact = R.tact; C.rechargeVide = R.vide;
   if (id === 'tp50') C.apresTir = tp50();

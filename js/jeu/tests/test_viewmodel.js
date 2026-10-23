@@ -11,6 +11,7 @@
 import * as THREE from 'three';
 import { REPERES } from '../modeles_armes.js';
 import { Viewmodel, CHAMP_VUE } from '../viewmodel.js';
+import { CHRONOS, VOIES, evaluer } from '../anim_vue.js';
 import { ARMES } from '../armes.js';
 
 const DEG = Math.PI / 180;
@@ -141,8 +142,14 @@ export default function (jeu) {
   const game = window.__game;
   const T = (nom, fn, opts) => jeu.ajouterTest('L-V', nom, fn, opts);
 
-  // 1. LES APPELS de la superposition : ≤ 8 dans tous les états (bras 2 + arme ≤ 6 ; avec la boîte du socle : 3)
+  // 1. LES APPELS de la superposition : ≤ 8 dans tous les états (bras 2 + arme ≤ 6 ; avec la boîte du socle : 3) — comptés
+  // qualité figée en moyenne (§ 4.10.1)
   T('1 appels de la superposition ≤ 8', async () => {
+    jeu.figerQualite(true);
+    const q0 = game.fx.quality;
+    try { await jeu.qualite('moyenne'); return await test1(); } finally { await jeu.qualite(nomQ(q0)); jeu.figerQualite(false); }
+  });
+  const test1 = async () => {
     const p = await essai(jeu), vm = p.aff.viewmodel;
     let max = 0, pire = '', hanche = 0, bras = 0;
     const L = [];
@@ -159,8 +166,8 @@ export default function (jeu) {
     if (vm.bras) vm.bras.groupe.traverse((o) => { if (o.isMesh) bras++; });
     jeu.quitter('balade');
     return { ok: max <= 8 && hanche >= 1 && bras === 2, attendu: '≤ 8 appels dans chaque état (bras 2 + arme ≤ 6) ; boîte du socle : 3 à la hanche',
-      obtenu: `${L.length} états · max ${max} (${pire}) · hanche ${hanche} · bras ${bras} maillages` };
-  });
+      obtenu: `${L.length} états · max ${max} (${pire}) · hanche ${hanche} · bras ${bras} maillages · qualité ${game.fx.quality}` };
+  };
 
   // 2. LES LUMIÈRES de la scène de l'arme : 3, les mêmes, pendant 60 s qui parcourent tous les états ; la scène de JEU intacte
   T('2 trois lumières pendant 60 s de tous les états', async () => {
@@ -291,22 +298,26 @@ export default function (jeu) {
     let tInsere = null;
     const des = p.sur('recharge', (ev) => { if (ev.a === 0 && ev.phase === 'insere') tInsere = A.tEtat; });
     jeu.commande(0, { recharger: true }, 1 / 60);
-    let partV = null, placeV = null, n = 0, vue = false;
+    // (« ± 1 image » de la vraie : l'image où on le voit et la précédente encadrent l'heure, à la durée de CETTE image près —
+    // les images de la boucle ne font pas toutes 1/60 s)
+    let partV = null, placeV = null, n = 0, vue = false, sAvant = 0, dPart = img, dPlace = img;
     while (n++ < 600) {
       await jeu.images(1);
       if (A.etatArme !== 'recharge') { if (vue) break; continue; }
       vue = true;
       const s = A.tEtat;
-      if (partV === null && vm.diag.chargeur > 0.002) partV = s;
-      if (partV !== null && placeV === null && s > 1.0 && vm.diag.chargeur < 0.0002) placeV = s;
+      if (partV === null && vm.diag.chargeur > 0.002) { partV = s; dPart = Math.max(img, s - sAvant); }
+      if (partV !== null && placeV === null && s > 1.0 && vm.diag.chargeur < 0.0002) { placeV = s; dPlace = Math.max(img, s - sAvant); }
+      sAvant = s;
     }
     des();
     jeu.quitter('balade');
     const pr = (x) => (x === null ? '—' : r3(x));
     const ok = part !== null && Math.abs(part - 0.55) <= img + 1e-6 && place !== null && Math.abs(place - 1.35) <= img + 1e-6
-      && partV !== null && Math.abs(partV - 0.55) <= 2 * img && placeV !== null && Math.abs(placeV - 1.35) <= 2 * img;
-    return { ok, attendu: 'départ 0,55 ± 1 image, en place 1,35 ± 1 image (fabriqué) ; la vraie recharge à ± 2 images (balles entrées à 1,35)',
-      obtenu: `fabriqué : part ${pr(part)} s, en place ${pr(place)} s · vraie : part ${pr(partV)} s, en place ${pr(placeV)} s, balles entrées ${pr(tInsere)} s` };
+      && partV !== null && Math.abs(partV - 0.55) <= dPart + 1e-6 && placeV !== null && Math.abs(placeV - 1.35) <= dPlace + 1e-6
+      && tInsere !== null && Math.abs(tInsere - 1.35) <= dPlace + 1e-6;
+    return { ok, attendu: 'départ 0,55 ± 1 image, en place 1,35 ± 1 image (fabriqué, et la vraie recharge : balles entrées à 1,35)',
+      obtenu: `fabriqué : part ${pr(part)} s, en place ${pr(place)} s · vraie : part ${pr(partV)} s (image ${pr(dPart)}), en place ${pr(placeV)} s (image ${pr(dPlace)}), balles entrées ${pr(tInsere)} s` };
   });
 
   // 8. LE RECUL VISUEL : pics du piston et du cabré du § 3.4 à ± 5 %, retour sous 2 % en ≤ 0,25 s (le ressort de l'arme de vue,
@@ -329,8 +340,32 @@ export default function (jeu) {
       ok = ok && bon;
       L.push(`${id} piston ${r3(pPic * 100)}/${r3(R.piston * 100)} cm · cabré ${r3(cPic)}/${R.cabre}° · retour ${r3(retour)} s`);
     }
+    // LA CAMÉRA REÇOIT 15 % DU CABRÉ, et l'arme montre le même : le cabré de l'arsenal (`reculV`, nul au squelette) posé ici
+    // par le ressort de la fiche (ω 35, ζ 0,55, pic 2,2°), lu par VueFPS.poser et par l'arme de vue dans les vraies images
+    // (le vrai ressort de L-A : test « F2 recul »)
+    const A = p.local.arsenal, Rf = ARMES.fa24.recul, w = 35, z = 0.55, wd = w * Math.sqrt(1 - z * z), tp = Math.atan(wd / (z * w)) / wd;
+    const pulse = (s) => Math.exp(-z * w * s) * Math.sin(wd * s) / (Math.exp(-z * w * tp) * Math.sin(wd * tp));
+    let sR = -1, camPire = 0, armePire = 0, vus = 0, picVu = 0;
+    Object.defineProperty(A, 'reculV', { configurable: true, get: () => (sR > 0 ? Rf.cabre * pulse(sR) : 0) });
+    try {
+      calmer(vm, etat(), 1);
+      for (let k = 0; k <= 20; k++) {
+        sR = k / 60;
+        await jeu.images(1);
+        const rv = A.reculV, cam = (game.camera.rotation.x + game.camPitch) / DEG;
+        picVu = Math.max(picVu, rv);
+        if (rv > 0.1 * Rf.cabre) {
+          vus++;
+          camPire = Math.max(camPire, Math.abs(cam / (0.15 * rv) - 1));
+          armePire = Math.max(armePire, Math.abs(vm.diag.cabre / rv - 1));
+        }
+      }
+    } finally { delete A.reculV; }
+    const okCam = vus >= 5 && camPire <= 0.01 && armePire <= 0.01;
+    L.push(`caméra : ${vus} images, écart à 15 % ${r3(camPire * 100)} % · arme = reculV à ${r3(armePire * 100)} % (pic ${r3(picVu)}°)`);
     jeu.quitter('balade');
-    return { ok, attendu: 'piston et cabré = § 3.4 ± 5 % ; sous 2 % en ≤ 0,25 s', obtenu: L.join(' ; ') };
+    return { ok: ok && okCam, attendu: 'piston et cabré = § 3.4 ± 5 % ; sous 2 % en ≤ 0,25 s ; la caméra reçoit 15 % du cabré (± 1 %), l’arme le même',
+      obtenu: L.join(' ; ') };
   });
 
   // 9. LA LUNETTE DU TP-50 : visée ≥ 0,85 → l'arme de vue cachée ; < 0,85 → montrée
@@ -486,9 +521,47 @@ export default function (jeu) {
       obtenu: `mode ${mode} · superposée ${dedans} · lacet ${r3(a)} → ${r3(b)} · arme seule ${montree} · lumières du jeu ${l0} → ${l1} · retirée ${dehors}` };
   });
 
+  // 16. LES CONTRATS DES PISTES (relecture du 23/10 ; § 4.5.9) : CHRONOS complet pour les cinq armes (rechargeTact,
+  // rechargeVide, sortie, rangement : des pistes à clés), leurs temps ceux des FICHES (recharges, rangement, couteau 0,60 s,
+  // grenade : lancer 0,35, remontée 0,25), le chargeur EN PLACE à l'heure des balles entrées (`recharge.ajout`) et parti
+  // avant ; `evaluer` en Hermite MONOTONE (jamais au-delà des deux clés qui encadrent l'instant)
+  T('16 contrats des pistes : CHRONOS complet, temps des fiches, Hermite monotone', async () => {
+    const fautes = [], v = new Float64Array(VOIES.length), ck = VOIES.indexOf('ck');
+    const egal = (a, b) => Math.abs(a - b) < 1e-9;
+    for (const id of ARMES_VUE) {
+      const C = CHRONOS[id], r = ARMES[id].recharge;
+      for (const k of ['rechargeTact', 'rechargeVide', 'sortie', 'rangement']) if (!C[k] || !(C[k].cles.length >= 2) || !Number.isFinite(C[k].duree)) fautes.push(`${id}.${k}`);
+      if (fautes.length) continue;
+      const tact = r.parCartouche ? r.debut + r.parCartouche + r.fin : r.tact, vide = r.parCartouche ? r.debut + r.parCartouche * ARMES[id].chargeur + r.fin + r.pompe : r.vide;
+      if (!egal(C.rechargeTact.duree, tact) || !egal(C.rechargeVide.duree, vide) || !egal(C.rangement.duree, ARMES[id].rangement)) fautes.push(`${id} durées`);
+      if (!r.parCartouche) for (const P of [C.rechargeTact, C.rechargeVide]) {
+        if (!(Math.abs(evaluer(P, r.ajout, v)[ck]) < 1e-6) || !(evaluer(P, r.ajout - 0.1, v)[ck] > 0.5) || !(evaluer(P, 0.55 * r.ajout / 1.35 + 0.01, v)[ck] > 0.5)) fautes.push(`${id} chargeur`);
+      }
+    }
+    if (!egal(CHRONOS.couteau.coup.duree, ARMES.couteau.coup) || !egal(CHRONOS.grenade.lancer.duree, 0.35) || !egal(CHRONOS.grenade.remontee.duree, 0.25)) fautes.push('couteau / grenade');
+    // Hermite monotone : 40 points entre chaque paire de clés de chaque piste
+    let n = 0, depasse = 0;
+    const toutes = [];
+    for (const C of Object.values(CHRONOS)) for (const P of (C.cles ? [C] : Object.values(C))) if (P && P.cles) toutes.push(P);
+    for (const P of toutes) {
+      const K = P.cles, o = new Float64Array(P.voies.length);
+      for (let j = 1; j < K.length; j++) for (let s = 1; s < 40; s++) {
+        evaluer(P, K[j - 1].t + (K[j].t - K[j - 1].t) * s / 40, o); n++;
+        for (let i = 0; i < o.length; i++) if (o[i] < Math.min(K[j - 1].v[i], K[j].v[i]) - 1e-9 || o[i] > Math.max(K[j - 1].v[i], K[j].v[i]) + 1e-9) { depasse++; break; }
+      }
+    }
+    return { ok: fautes.length === 0 && depasse === 0 && n > 1000, attendu: 'pistes présentes, temps des fiches, chargeur en place aux balles entrées ; 0 dépassement entre deux clés',
+      obtenu: `${fautes.length ? 'fautes : ' + fautes.join(', ') : 'contrats tenus'} · ${toutes.length} pistes, ${n} points, ${depasse} dépassement(s)` };
+  });
+
   // ---------------------------------------------------------------- À F2 (les vrais modules des autres lots)
   // L-W : ≤ 8 appels avec les vraies armes ; les repères posés par L-W = la table REPERES ; les mains tenues (≤ 1 cm)
   T('F2 vraies armes : ≤ 8 appels, repères = table, mains ≤ 1 cm', async () => {
+    jeu.figerQualite(true);
+    const q0 = game.fx.quality;
+    try { await jeu.qualite('moyenne'); return await testF2armes(); } finally { await jeu.qualite(nomQ(q0)); jeu.figerQualite(false); }
+  }, { apresFusion: true });
+  const testF2armes = async () => {
     const p = await essai(jeu), vm = p.aff.viewmodel;
     let max = 0, ecart = 0, main = 0;
     for (const id of ARMES_VUE) {
@@ -499,7 +572,7 @@ export default function (jeu) {
     }
     jeu.quitter('balade');
     return { ok: max <= 8 && ecart <= 0.001 && main <= 0.01, attendu: '≤ 8 appels ; repères ± 1 mm ; mains ≤ 1 cm', obtenu: `${max} appels · repères ${r3(ecart * 1000)} mm · mains ${r3(main * 100)} cm` };
-  }, { apresFusion: true });
+  };
   // L-A et L-B : le cabré de l'arsenal (reculV) est celui que montre l'arme, la caméra en reçoit 15 % (VueFPS) ; les états réels
   // de l'arsenal (couteau, lancer) montrés par leur geste
   T('F2 recul de l’arsenal, caméra à 15 % ; couteau et grenade réels', async () => {
