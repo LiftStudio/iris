@@ -417,7 +417,7 @@ export class Partie {
       // (§ 3.5 : × 0,8 quand la balle a traversé une vitre, claire ou dépolie — `traverse`, posé par la balistique)
       const d = res.t, deg = degatsDe(fiche, d, res.zone) * (res.traverse ? 0.8 : 1);
       this.differer({ genre: 'degats', cible: res.acteur.id, degats: deg, par: tireur.id, arme: fiche.id, zone: res.zone,
-        x: res.x, y: res.y, z: res.z, dx, dy, dz, plomb });
+        x: res.x, y: res.y, z: res.z, dx, dy, dz, plomb, seq: tireur.arsenal ? tireur.arsenal.tirSeq : 0 });
     } else if (res.mat !== 'rien') {
       // (`arme` : l'arme du coup — F2, demandes de L-H et L-A : l'impact d'un coup de COUTEAU sur le décor se reconnaît, ni
       // décalque de balle ni bruit d'impact de balle)
@@ -459,7 +459,14 @@ export class Partie {
     d = Math.min(d, cible.vie);
     cible.vie -= d; cible.derniereTouche = { t: this.t, par, arme };
     (cible._aides || (cible._aides = [])).push({ par, d, t: this.t });
-    if (tireur) { tireur.stats.touches++; tireur.stats.degats += d; }
+    // (F2, demande de L-U : un COUP touche une fois — les plombs d'un même coup de FP-12, `seq`, ne comptent qu'une touche ; la
+    // précision, touches / tirs, ne passe plus 100 %)
+    if (tireur) {
+      const s = o && o.seq, multi = o && o.plomb !== undefined && arme && (ARMES[arme] || {}).plombs > 1;
+      if (!multi || tireur._seqTouche !== s) tireur.stats.touches++;
+      if (multi) tireur._seqTouche = s;
+      tireur.stats.degats += d;
+    }
     const tete = zone === 'tete';
     this.evt('touche', { par, cible: cible.id, zone, degats: d, x, y, z, tete, dx, dz });
     if (cible.vie <= 1e-9) {
