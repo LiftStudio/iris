@@ -826,8 +826,9 @@ export class Effets {
     const r = Math.random, x = ev.x, y = ev.y + 0.15, z = ev.z, E = this.etincelles, F = this.fumees;
     const genre = genreGrenade(ev, 'explosion');
     if (genre === 'flash') {
-      E.emettre(x, y, z, 0, 0, 0, 0.16, 3.5, 4.5, COUL.blanc, { cas: 2, a0: 1 });
-      E.emettre(x, y, z, 0, 0, 0, 0.35, 1.5, 2.6, [2, 2, 2.2], { cas: 0, a0: 1 });
+      // (l'étoile et la lueur relevées à 0,4 m du sol : leurs quads tournés vers la caméra ne s'y enfoncent plus)
+      E.emettre(x, y + 0.25, z, 0, 0, 0, 0.16, 3.5, 4.5, COUL.blanc, { cas: 2, a0: 1 });
+      E.emettre(x, y + 0.25, z, 0, 0, 0, 0.35, 1.5, 2.6, [2, 2, 2.2], { cas: 0, a0: 1 });
       for (let i = 0; i < 12; i++) E.emettre(x, y, z, (r() - 0.5) * 9, r() * 5, (r() - 0.5) * 9, 0.25 + r() * 0.25, 0.02, 0.01, COUL.blanc, { cas: 1, grav: 6, trainee: 0.02 });
       for (let i = 0; i < 4; i++) F.emettre(x, y, z, (r() - 0.5) * 0.8, 0.3 + r() * 0.3, (r() - 0.5) * 0.8, 2 + r(), 0.4, 1.4 + r() * 0.6, [0.55, 0.55, 0.56], { cas: 0, a0: 0.45, frein: 1.5 });
       return;
@@ -843,14 +844,21 @@ export class Effets {
       if (y - sol < 0.6) this._decalque(x, sol + 0.002, z, 0, 1, 0, 1, 1.4, coul);
       return;
     }
-    // la frag : le cœur (lueur), la boule de feu, la fumée qui monte, les étincelles, les débris, la brûlure au sol
-    E.emettre(x, y, z, 0, 0, 0, 0.1, 2.4, 3.2, [3.5, 2.4, 1.3], { cas: 0, a0: 1 });
-    E.emettre(x, y, z, 0, 0, 0, 0.12, 1.8, 2.6, [4, 2.6, 1.2], { cas: 2, a0: 0.9 });
-    for (let i = 0; i < 6; i++) F.emettre(x + (r() - 0.5) * 0.5, y + r() * 0.4, z + (r() - 0.5) * 0.5, (r() - 0.5) * 2, 0.5 + r(), (r() - 0.5) * 2, 0.32 + r() * 0.15, 0.6, 2.0 + r() * 0.6, COUL.feu, { cas: 0, a0: 1, frein: 4 });
-    for (let i = 0; i < 9; i++) F.emettre(x + (r() - 0.5) * 0.8, y + r() * 0.5, z + (r() - 0.5) * 0.8, (r() - 0.5) * 1.6, 0.5 + r() * 0.6, (r() - 0.5) * 1.6, 2.6 + r() * 1.4, 0.8, 3 + r() * 1.2, COUL.fumee, { cas: 0, a0: 0.9, frein: 1.2, grav: -0.12 });
-    for (let i = 0; i < 26; i++) E.emettre(x, y, z, (r() - 0.5) * 16, r() * 9, (r() - 0.5) * 16, 0.35 + r() * 0.5, 0.02, 0.012, COUL.etincelle, { cas: 1, grav: 9.81, trainee: 0.022 });
-    for (let i = 0; i < 12; i++) F.emettre(x, y, z, (r() - 0.5) * 9, 1 + r() * 5, (r() - 0.5) * 9, 0.7 + r() * 0.5, 0.03, 0.03, [0.12, 0.11, 0.1], { cas: 3, grav: 9.81 });
-    for (let i = 0; i < 3; i++) F.emettre(x, sol + 0.1, z, (r() - 0.5) * 4, 0.2, (r() - 0.5) * 4, 1.4 + r(), 0.5, 2.2, COUL.poussiere, { cas: 1, a0: 0.5, frein: 2 });
+    // la frag : l'éclair (deux lueurs et l'étoile), les flammes vives et la boule de feu, la colonne de poussière et de terre,
+    // la fumée qui monte, les étincelles, les débris, la brûlure au sol. (Relecture du 23/10, vu au navigateur : centrée à
+    // 15 cm du sol, la moitié de chaque lueur tournée vers la caméra était sous le sol, et une table la cachait toute ; à
+    // 5 m dans la rue, une boule de 1 m à peine, sans éclair : tout part maintenant à 0,5-0,6 m, plus grand et plus vif.
+    // Au téléphone, moitié moins de particules : ses pools sont de 48 et 40.)
+    const n = (k) => Math.max(1, Math.round(k * (TELEPHONE ? 0.5 : 1))), yc = Math.max(y, sol + 0.55);
+    E.emettre(x, yc, z, 0, 0, 0, 0.12, 3.6, 5.2, [7, 4.4, 2.1], { cas: 0, a0: 1 });
+    E.emettre(x, yc, z, 0, 0, 0, 0.32, 2.4, 3.8, [2.6, 1.3, 0.45], { cas: 0, a0: 0.85 });
+    E.emettre(x, yc, z, 0, 0, 0, 0.09, 2.6, 3.4, [6, 4, 2], { cas: 2, a0: 1 });
+    for (let i = 0; i < n(6); i++) E.emettre(x + (r() - 0.5) * 0.6, yc - 0.2 + r() * 0.5, z + (r() - 0.5) * 0.6, (r() - 0.5) * 2.4, 1.2 + r() * 2.2, (r() - 0.5) * 2.4, 0.22 + r() * 0.14, 0.7, 1.7 + r() * 0.6, [5, 2.1, 0.5], { cas: 0, a0: 0.9, frein: 3.5 });
+    for (let i = 0; i < n(7); i++) F.emettre(x + (r() - 0.5) * 0.6, yc - 0.2 + r() * 0.6, z + (r() - 0.5) * 0.6, (r() - 0.5) * 2.4, 0.8 + r() * 1.6, (r() - 0.5) * 2.4, 0.34 + r() * 0.18, 0.8, 2.2 + r() * 0.8, COUL.feu, { cas: 0, a0: 1, frein: 4 });
+    for (let i = 0; i < n(10); i++) F.emettre(x + (r() - 0.5) * 0.8, yc + r() * 0.6, z + (r() - 0.5) * 0.8, (r() - 0.5) * 1.8, 0.7 + r() * 1.0, (r() - 0.5) * 1.8, 3 + r() * 1.6, 1.0, 3.4 + r() * 1.4, COUL.fumee, { cas: 0, a0: 0.9, frein: 1.2, grav: -0.15 });
+    for (let i = 0; i < n(8); i++) F.emettre(x + (r() - 0.5) * 0.6, sol + 0.15, z + (r() - 0.5) * 0.6, (r() - 0.5) * 5, 1.2 + r() * 3.4, (r() - 0.5) * 5, 1.4 + r() * 1.2, 0.5, 2.2 + r() * 1.0, COUL.poussiere, { cas: 1, a0: 0.6, frein: 2.4 });
+    for (let i = 0; i < n(30); i++) E.emettre(x, yc, z, (r() - 0.5) * 18, r() * 10, (r() - 0.5) * 18, 0.35 + r() * 0.5, 0.025, 0.014, COUL.etincelle, { cas: 1, grav: 9.81, trainee: 0.022 });
+    for (let i = 0; i < n(14); i++) F.emettre(x, sol + 0.2, z, (r() - 0.5) * 9, 2 + r() * 6, (r() - 0.5) * 9, 0.8 + r() * 0.6, 0.035, 0.035, [0.12, 0.11, 0.1], { cas: 3, grav: 9.81 });
     if (y - sol < 0.6) this._decalque(x, sol + 0.002, z, 0, 1, 0, 3, REGLAGES_EFFETS.impact.brulure, COUL.brule);
   }
   // le lanceur d'une grenade (l'événement d'explosion ne le dit pas) : la grenade de ce type vue en vol le plus près de là
