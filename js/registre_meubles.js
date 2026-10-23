@@ -82,7 +82,7 @@ const LONG_MAX = 1.0, LONG_SUR_PLACE = 1.6, MATERIAUX_MAX = 4;
 // L'ÉTAT DU REGISTRE (un objet : le test L-K 1 rejoue la construction dans un bac à sable, sans toucher au vrai)
 let _nEtats = 0;
 const nouvelEtat = () => ({
-  id: ++_nEtats,                     // (le tampon `userData._registre` des maillages non étiquetés déjà notés)
+  id: ++_nEtats,
   vus: new WeakSet(),                // chaque étiqueté n'est vu qu'une fois
   references: [],                    // les meubles cousus SEULS (racine de leur couture) : copiés plus tard, déjà cousus
   libres: [],                        // les signatures des maillages non étiquetés : { cle, x, y, z, nomMat }
@@ -135,19 +135,7 @@ class Hache {
   constructor() { this.a = 0x811c9dc5; this.b = 0x01000193 ^ 0x5bd1e995; }
   n(v) { v |= 0; this.a = Math.imul(this.a ^ v, 16777619); this.b = Math.imul(this.b ^ (v >>> 3 | v << 29), 0x5bd1e995) ^ (this.b >>> 15); return this; }
   get valeur() { return (this.a >>> 0).toString(16).padStart(8, '0') + (this.b >>> 0).toString(16).padStart(8, '0'); }
-  get nombre() { return (this.a >>> 0) * 2097152 + ((this.b >>> 0) & 0x1fffff); }   // (53 bits : une clé de Map sans chaîne)
 }
-// trois sommets d'une géométrie au mm (le premier, celui du milieu, le dernier) : une empreinte en temps constant — deux
-// géométries faites du même code ont les mêmes ; lire toute la boîte de chaque maillage du décor coûtait 680 000 sommets
-function hacherSommets(H, g) {
-  const p = g.attributes.position, n = p.count;
-  if (!n) return H.n(0);
-  for (const i of [0, n >> 1, n - 1]) H.n(r3(p.getX(i))).n(r3(p.getY(i))).n(r3(p.getZ(i)));
-  return H;
-}
-// la signature d'UN maillage (la même pour un maillage de prototype et pour un maillage oublié du décor)
-const cleMaillage = (o) => hacherSommets(new Hache().n(nSommets(o.geometry)).n(nIndices(o.geometry)).n(idMat(Array.isArray(o.material) ? o.material[0] : o.material)), o.geometry).nombre;
-
 // LE REPÈRE DE POSE d'un objet : sa position monde et son seul cap (l'angle autour de Y de son axe +z local)
 function capDe(M) {
   M.decompose(_p, _q, _s);
@@ -208,9 +196,8 @@ function signaturePieces(maillages, Mpose) {
 // (les attributs dont le matériau se sert : une boîte sans carte n'a que faire de ses UV — les garder séparerait sa famille
 // de celle d'un cylindre du même matériau)
 const CARTES_UV = ['map', 'normalMap', 'bumpMap', 'roughnessMap', 'metalnessMap', 'alphaMap', 'emissiveMap', 'aoMap', 'lightMap', 'specularMap', 'displacementMap'];
-function geometriePropre(o) {
-  const m = o.material;
-  const g = o.geometry, q = new THREE.BufferGeometry();
+function geometriePropre(g, m, M) {
+  const q = new THREE.BufferGeometry();
   for (const k of Object.keys(g.attributes)) {
     const garde = k === 'position' || k === 'normal' || (k === 'uv' && CARTES_UV.some((c) => m[c])) || (k === 'uv1' && (m.aoMap || m.lightMap))
       || (k === 'color' && m.vertexColors) || (k === 'tangent' && m.normalMap);
@@ -218,15 +205,15 @@ function geometriePropre(o) {
   }
   if (g.index) q.setIndex(g.index.clone());
   if (!q.attributes.normal) q.computeVertexNormals();
-  q.applyMatrix4(o.matrixWorld);
+  q.applyMatrix4(M);
   return q;
 }
+// les matériaux d'un meuble, dans l'ordre où ses maillages les montrent (le rang d'une famille)
+const materiauxDe = (src) => { const L = []; for (const e of src) if (!Array.isArray(e.mat) && !L.includes(e.mat)) L.push(e.mat); return L; };
 // LA MÊME GÉOMÉTRIE COUSUE sous d'autres matériaux (une variante de couleur) : les maillages du modèle, chacun avec le
 // matériau de la famille de même rang dans le nouveau meuble (même structure : la signature géométrique le garantit)
-function recolorer(modele, proto) {
-  const mats = [];
-  proto.traverse((o) => { if (o.isMesh && !Array.isArray(o.material) && !mats.includes(o.material)) mats.push(o.material); });
-  const plat = new THREE.Group();
+function recolorer(modele, src) {
+  const mats = materiauxDe(src), plat = new THREE.Group();
   for (const c of modele.children) {
     const m = c.clone(false);
     const k = c.userData._rangMat;
@@ -236,73 +223,87 @@ function recolorer(modele, proto) {
   plat.updateMatrixWorld(true);
   return plat;
 }
-function aplatir(proto) {
-  proto.updateMatrixWorld(true);
-  const familles = new Map(), aPart = [], rangs = [];
-  proto.traverse((o) => {
-    if (!o.isMesh) return;
-    const g = o.geometry, m = o.material;
-    if (!Array.isArray(m) && !rangs.includes(m)) rangs.push(m);
-    if (!g || !g.attributes.position || Array.isArray(m) || o.isSkinnedMesh || o.isInstancedMesh || (g.morphAttributes && Object.keys(g.morphAttributes).length)) { aPart.push(o); return; }
+// LE PROTOTYPE COUSU, fait directement des maillages de l'original (rien n'est cloné que leurs attributs utiles) : chacun
+// ramené dans le repère du prototype (`invP` × sa matrice monde), regroupé par matériau, ordre de rendu et attributs
+function aplatir(src, invP) {
+  const familles = new Map(), aPart = [], rangs = materiauxDe(src), M = new THREE.Matrix4();
+  for (const e of src) {
+    const g = e.g, m = e.mat;
+    M.multiplyMatrices(invP, e.Mw);
+    if (e.o || !g || !g.attributes.position || (g.morphAttributes && Object.keys(g.morphAttributes).length)) { aPart.push({ e, M: M.clone() }); continue; }
     // (l'ombre portée n'entre pas dans la clé : une roulette sans ombre cousue avec le reste du piètement en porte une, à 2 cm
     // près — un maillage de plus coûterait 3 à 4 appels à chaque copie ; `horsAOSol` ne vaut que pour l'ombre cuite du décor)
-    const q = geometriePropre(o);
-    const cle = [m.uuid, o.renderOrder, !!o.userData.sansNormales, Object.keys(q.attributes).sort().join(',')].join('#');
+    const q = geometriePropre(g, m, M);
+    const cle = [m.uuid, e.ordre, e.ud.sansNormales, Object.keys(q.attributes).sort().join(',')].join('#');
     if (!familles.has(cle)) familles.set(cle, []);
-    familles.get(cle).push({ o, q });
-  });
+    familles.get(cle).push({ e, q });
+  }
   const plat = new THREE.Group();
   for (const [, L] of familles) {
     // (une famille qui mêle des géométries indexées et d'autres non : toutes à plat — mergeGeometries veut l'un ou l'autre)
-    if (L.some((e) => e.q.index) && L.some((e) => !e.q.index)) for (const e of L) if (e.q.index) { const n = e.q.toNonIndexed(); e.q.dispose(); e.q = n; }
+    if (L.some((x) => x.q.index) && L.some((x) => !x.q.index)) for (const x of L) if (x.q.index) { const n = x.q.toNonIndexed(); x.q.dispose(); x.q = n; }
     let g = null;
-    try { g = L.length > 1 ? mergeGeometries(L.map((e) => e.q), false) : L[0].q; } catch (e) { g = null; }
-    if (L.length > 1) for (const e of L) if (e.q !== g) e.q.dispose();
-    if (!g) { for (const e of L) aPart.push(e.o); continue; }
-    const M = L[0].o, mesh = new THREE.Mesh(g, M.material);
-    mesh.castShadow = L.some((e) => e.o.castShadow); mesh.receiveShadow = L.some((e) => e.o.receiveShadow); mesh.renderOrder = M.renderOrder;
-    mesh.userData = { ...M.userData, _rangMat: rangs.indexOf(M.material) }; mesh.name = M.name || '';
+    try { g = L.length > 1 ? mergeGeometries(L.map((x) => x.q), false) : L[0].q; } catch (err) { g = null; }
+    if (L.length > 1) for (const x of L) if (x.q !== g) x.q.dispose();
+    if (!g) { for (const x of L) { M.multiplyMatrices(invP, x.e.Mw); aPart.push({ e: x.e, M: M.clone() }); } continue; }
+    const O = L[0].e, mesh = new THREE.Mesh(g, O.mat);
+    mesh.castShadow = L.some((x) => x.e.ombre); mesh.receiveShadow = L.some((x) => x.e.recoit); mesh.renderOrder = O.ordre;
+    mesh.userData = { ...O.ud, _rangMat: rangs.indexOf(O.mat) }; mesh.name = O.nom || '';
     plat.add(mesh);
   }
-  for (const o of aPart) {
-    const c = o.clone(false); o.matrixWorld.decompose(c.position, c.quaternion, c.scale);
-    c.userData = { ...o.userData }; plat.add(c);
+  for (const { e, M: Mo } of aPart) {
+    let c;
+    if (e.o) { const ud = e.o.userData; e.o.userData = {}; try { c = e.o.clone(false); } finally { e.o.userData = ud; } }
+    else { c = new THREE.Mesh(e.g, e.mat); c.castShadow = e.ombre; c.receiveShadow = e.recoit; c.renderOrder = e.ordre; c.userData = { ...e.ud }; }
+    Mo.decompose(c.position, c.quaternion, c.scale); plat.add(c);
+    MEUBLES.stats.clones++;
   }
   plat.updateMatrixWorld(true);
   return plat;
 }
 
-// UN TYPE NEUF : le prototype (la racine clonée SANS son étiquette — userData passe par JSON.stringify, et les `formes` du
-// lot R sont des formes du monde solide), posé dans son repère, sa boîte exacte, et ce qui s'en déduit (§ 3.9)
+// UN TYPE NEUF : le prototype — les maillages de l'original cousus dans son repère (aucune étiquette n'y passe : un
+// clone porterait userData par JSON.stringify, et les `formes` du lot R sont des formes du monde solide) —, sa boîte
+// exacte, et ce qui s'en déduit (§ 3.9)
 function creerType(cle, E, variante, racines, Mbase, sig, geo = null) {
-  const type = E.type, maillages = racines.flatMap((r) => (r.isMesh ? [r] : maillagesDe(r)));
-  // la boîte dans le repère de la racine tourné de son cap : son bas donne l'origine du prototype
-  _inv.copy(Mbase).invert();
-  const deja = geo ? _E.cousus.get(geo) : null;
-  const b0 = deja ? deja.b0.clone() : boiteExacte(maillages, _inv, new THREE.Box3());
+  // À LA COUTURE, rien que ce qui disparaîtrait : les géométries et matériaux de l'original (références : la couture ne fait
+  // que dispose() les géométries — leurs tableaux restent), la matrice monde de chaque pièce. Le prototype, sa boîte et ce
+  // qui s'en déduit se font à la préparation (achever) : la construction de l'école n'en paie rien.
+  const maillages = racines.flatMap((r) => (r.isMesh ? [r] : maillagesDe(r)));
+  const T = {
+    cle, type: E.type, variante, nom: E.nom || E.type, famille: familleDe(E.type), E, geo, Mbase: Mbase.clone(), signature: sig, empreinte: sig,
+    sources: maillages.map((o) => ({ g: o.geometry, mat: o.material, Mw: o.matrixWorld.clone(), ombre: o.castShadow, recoit: o.receiveShadow, ordre: o.renderOrder,
+      ud: { horsAOSol: !!o.userData.horsAOSol, sansNormales: !!o.userData.sansNormales }, o: o.isSkinnedMesh || o.isInstancedMesh || Array.isArray(o.material) ? o : null, nom: o.name })),
+    aAchever: true, proto: null, boite: null, taille: null, dy: 0, accroche: 0, source: null,
+  };
+  MEUBLES.types.set(cle, T);
+  return T;
+}
+// ACHEVER UN TYPE (à la préparation) : sa boîte exacte dans le repère de sa racine (son bas : l'origine du prototype), le
+// prototype cousu par matériau (ou la géométrie d'une variante de couleur déjà cousue), la boîte monde de l'original, ce
+// qui se déduit de la taille (§ 3.9), et les poses de ses exemplaires
+function achever(T) {
+  if (!T.aAchever) return;
+  T.aAchever = false;
+  const E = T.E, type = T.type, src = T.sources;
+  _inv.copy(T.Mbase).invert();
+  const deja = T.geo ? _E.cousus.get(T.geo) : null;
+  const b0 = deja ? deja.b0.clone() : boiteSources(src, _inv, new THREE.Box3());
   const dy = b0.isEmpty() ? 0 : b0.min.y;
-  const Mp = new THREE.Matrix4().multiplyMatrices(Mbase, new THREE.Matrix4().makeTranslation(0, dy, 0));
+  const Mp = new THREE.Matrix4().multiplyMatrices(T.Mbase, new THREE.Matrix4().makeTranslation(0, dy, 0));
   const invP = new THREE.Matrix4().copy(Mp).invert();
-  const proto = new THREE.Group(); proto.name = 'prototype ' + cle;
-  for (const r of racines) {
-    const ud = r.userData; r.userData = {};
-    let c;
-    try { c = r.clone(true); } finally { r.userData = ud; }
-    _m.multiplyMatrices(invP, r.matrixWorld); _m.decompose(c.position, c.quaternion, c.scale);
-    c.matrixAutoUpdate = true;
-    proto.add(c);
-    MEUBLES.stats.clones++;
-  }
-  proto.updateMatrixWorld(true);
   // (la plus grosse pièce de l'ORIGINAL : sa signature reconnaît un exemplaire oublié du décor)
   let grosse = null;
-  for (const o of maillages) if (!o.material || !o.material.transparent) if (!grosse || nSommets(o.geometry) > nSommets(grosse.geometry)) grosse = o;
-  const cleM = grosse && nSommets(grosse.geometry) >= 8 ? cleMaillage(grosse) : null;
+  for (const e of src) if (!e.mat || !e.mat.transparent) if (!grosse || nSommets(e.g) > nSommets(grosse.g)) grosse = e;
+  const cleM = grosse && nSommets(grosse.g) >= 8 ? (() => {
+    const A = grosse.g.attributes.position, n = A.count, m = Array.isArray(grosse.mat) ? grosse.mat[0] : grosse.mat;
+    return { ni: n + ':' + nIndices(grosse.g), mat: sigMat(m), a: [A.getX(0), A.getY(0), A.getZ(0), A.getX(n >> 1), A.getY(n >> 1), A.getZ(n >> 1)] };
+  })() : null;
   // LE PROTOTYPE COUSU par matériau (comme fusionnerLocal) : une copie coûte un appel de dessin par matériau et par passe
   // (une chaise de 22 maillages en coûterait 88 en haute), et ses pièces restent exactement à leur place
-  const plat = deja ? recolorer(deja.plat, proto) : aplatir(proto);
-  plat.name = proto.name;
-  if (geo && !deja) _E.cousus.set(geo, { plat, b0: b0.clone() });
+  const plat = deja ? recolorer(deja.plat, src) : aplatir(src, invP);
+  plat.name = 'prototype ' + T.cle;
+  if (T.geo && !deja) _E.cousus.set(T.geo, { plat, b0: b0.clone() });
   // (la boîte du prototype : celle de l'original dans le repère de sa racine, ramenée à son bas — les mêmes sommets)
   const boite = b0.isEmpty() ? new THREE.Box3() : b0.clone().translate(_v.set(0, -dy, 0));
   if (boite.isEmpty()) boite.set(new THREE.Vector3(-0.2, 0, -0.2), new THREE.Vector3(0.2, 0.4, 0.2));
@@ -316,20 +317,31 @@ function creerType(cle, E, variante, racines, Mbase, sig, geo = null) {
   // au-delà de 4 matériaux opaques elle dépasserait 12 appels en haute, le budget d'un prop, spec § 5.5.8 point 3)
   const opaques = plat.children.filter((m) => m.isMesh && !(m.material && m.material.transparent)).length;
   if (deguisable && opaques > MATERIAUX_MAX) { deguisable = false; raison = 'trop de matériaux (' + opaques + ' : plus de 12 appels par copie)'; }
-  const T = {
-    cle, type, variante, nom: E.nom || type, famille: familleDe(type), proto: plat, boite, taille, volume,
+  Object.assign(T, {
+    proto: plat, boite, taille, volume,
     rayon: Math.min(0.5, Math.max(0.15, Math.max(l, p) / 2 * 0.9)), haut: h,
     bande: { bas: Math.min(0.25, 0.4 * h), haut: Math.max(h, 0.5) },
     pv: Math.round(Math.min(145, Math.max(60, 40 + 90 * k3))),
     vitesse: 4.6 * Math.min(1.05, Math.max(0.72, 1.15 - 0.35 * k3)),
     mural: !!(E.mural ?? propriete(type, 'mural')), surPlace: !!surPlace, voile: E.voile !== false,
     deguisable, raison, deguisableBase: deguisable, raisonBase: raison, symetrie: propriete(type, 'symetrie') ?? null,
-    accroche: 0, dos: Math.max(0.02, -boite.min.z), dy, signature: sig, empreinte: sig, maillages: plat.children.length,
-    cleMaillage: cleM,
-    source: null,
-  };
-  MEUBLES.types.set(cle, T);
-  return T;
+    dos: Math.max(0.02, -boite.min.z), dy, maillages: plat.children.length, cleMaillage: cleM,
+  });
+  // (l'original, pour le test L-K 4 : sa boîte monde exacte, au sommet près)
+  const bm = boiteSources(src, new THREE.Matrix4(), new THREE.Box3());
+  T.source = { i: T.premiere, min: bm.min.toArray(), max: bm.max.toArray() };
+  T.sources = null; T.E = { type: E.type, nom: E.nom, variante: E.variante, mural: E.mural, surPlace: E.surPlace, voile: E.voile };
+  for (const P of MEUBLES.poses) if (P.cle === T.cle) poserAcheve(P, T);
+}
+// la boîte exacte des pièces gardées (opaques d'abord), dans le repère `inv`
+function boiteSources(src, inv, out) {
+  out.makeEmpty();
+  const F = { isMesh: true, geometry: null, matrixWorld: null, material: null };
+  for (const passe of [0, 1]) {
+    for (const e of src) { if (passe === 0 && e.mat && e.mat.transparent) continue; F.geometry = e.g; F.matrixWorld = e.Mw; etendre(out, F, inv); }
+    if (!out.isEmpty()) break;
+  }
+  return out;
 }
 
 // LA CLÉ D'UN EXEMPLAIRE : son type, sa variante (donnée, ou dérivée de la signature)
@@ -345,16 +357,20 @@ function cleDe(E, sig) {
   return { cle, variante, neuf: true };
 }
 
-// LA POSE d'un exemplaire (repère monde Mbase de sa racine ; le type donne le bas et la boîte)
+// LA POSE d'un exemplaire : sa matrice gardée (repère monde Mbase de sa racine), ses mesures quand son type est achevé
 function poserExemplaire(T, Mbase, objet) {
-  Mbase.decompose(_p, _q, _s);
-  const cap = capDe(Mbase), x = _p.x, z = _p.z, y0 = _p.y + T.dy;
-  const P = { i: MEUBLES.poses.length, cle: T.cle, x, y: y0, z, cap, zone: null, cx: 0, cz: 0, hx: T.taille.x / 2, hz: T.taille.z / 2,
-    y0, y1: y0 + T.taille.y, c: Math.cos(-cap), s: Math.sin(-cap), pas: 0 };
-  centrer(P, T);
+  const P = { i: MEUBLES.poses.length, cle: T.cle, x: 0, y: 0, z: 0, cap: 0, zone: null, cx: 0, cz: 0, hx: 0, hz: 0, y0: 0, y1: 0, c: 1, s: 0, pas: 0, Mbase: Mbase.clone() };
   MEUBLES.poses.push(P);
+  if (T.premiere === undefined) T.premiere = P.i;
   if (objet && !objet.isMesh) _E.instances.push({ objet, P });
+  if (!T.aAchever) poserAcheve(P, T);
   return P;
+}
+function poserAcheve(P, T) {
+  P.Mbase.decompose(_p, _q, _s);
+  const cap = capDe(P.Mbase), y0 = _p.y + T.dy;
+  Object.assign(P, { x: _p.x, y: y0, z: _p.z, cap, hx: T.taille.x / 2, hz: T.taille.z / 2, y0, y1: y0 + T.taille.y, c: Math.cos(-cap), s: Math.sin(-cap) });
+  centrer(P, T);
 }
 // le centre au sol de la boîte orientée : le centre de la boîte du prototype, tourné de cap
 function centrer(P, T) {
@@ -388,11 +404,6 @@ function noter(racines, E) {
   if (!T) T = creerType(k.cle, E, k.variante, racines, Mbase, sig, S.geo);
   const P = poserExemplaire(T, Mbase, racines.length === 1 ? R0 : null);
   P.empreinte = sig;
-  if (!T.source) {
-    // (l'original, pour le test L-K 4 : sa boîte monde exacte, au sommet près)
-    const bm = boiteExacte(maillages, new THREE.Matrix4(), new THREE.Box3());
-    T.source = { i: P.i, min: bm.min.toArray(), max: bm.max.toArray() };
-  }
   for (const f of E.formes || []) if (f && !MEUBLES.parForme.has(f)) MEUBLES.parForme.set(f, P.i);
   MEUBLES.stats.etiquetes++;
   return P;
@@ -401,30 +412,40 @@ function noter(racines, E) {
 // LE PARCOURS d'un sous-arbre avant sa couture : les étiquetés, et la signature de chaque maillage non étiqueté
 // (`libres` : noter les maillages non étiquetés — pas sous un groupe `nofuse` vu depuis la scène : un niveau déjà cousu, dont
 // les originaux ont été notés à sa propre couture, et dont les blocs ne sont pas des meubles)
-function parcourir(o, racine, parties, libres) {
-  const u = o.userData, E = u && u.meuble ? etiquette(o) : null;
-  if (E) {
-    if (_E.vus.has(o)) return;
-    _E.vus.add(o);
-    if (E.partie) { let L = parties.get(E.partie); if (!L) parties.set(E.partie, L = { E, racines: [] }); L.racines.push(o); return; }
-    if (o === racine) { _E.references.push(o); MEUBLES.stats.references++; return; }
-    noter([o], E);
-    return;
-  }
-  if (libres && o !== racine && u && u.nofuse) libres = false;
-  // (un maillage non étiqueté : sa signature et sa place — position LOCALE et parent : le monde ne se lit que pour les
-  // rares qui ressemblent à un meuble, à la préparation ; la couture recalcule toutes les matrices juste après)
-  if (libres && o.isMesh && u._registre !== _E.id && o.geometry && !u.dynamique && !u.suite) {
-    u._registre = _E.id;
-    const n = nSommets(o.geometry);
-    if (n >= 8 && n <= 40000) {
-      const mat = Array.isArray(o.material) ? o.material[0] : o.material;
-      _E.libres.push({ cle: cleMaillage(o), parent: o.parent, lx: o.position.x, ly: o.position.y, lz: o.position.z, nomMat: (mat && mat.name) || '' });
-      MEUBLES.stats.libres++;
+function parcourir(racine, parties) {
+  // (une pile plutôt qu'une récursion : 13 000 objets à la construction de l'école, la plupart des maillages du décor)
+  const pile = [racine], libresPile = [true], L = _E.libres;
+  while (pile.length) {
+    const o = pile.pop();
+    let libres = libresPile.pop();
+    const u = o.userData, m = u.meuble;
+    if (m) {
+      if (_E.vus.has(o)) continue;
+      _E.vus.add(o);
+      const E = typeof m === 'string' ? { type: m } : m;
+      if (E.partie) { let P = parties.get(E.partie); if (!P) parties.set(E.partie, P = { E, racines: [] }); P.racines.push(o); continue; }
+      if (o === racine) { _E.references.push(o); MEUBLES.stats.references++; continue; }
+      noter([o], E);
+      continue;
     }
+    if (libres && o !== racine && u.nofuse) libres = false;
+    // (un maillage non étiqueté : rien de calculé ici — ses comptes de sommets et d'indices, son matériau, deux sommets lus
+    // tels quels, sa position LOCALE et son parent ; la signature n'est bâtie, à la préparation, que pour les rares qui ont
+    // les comptes de la grosse pièce d'un prototype, et le monde ne se lit que pour eux ; la couture recalcule toutes les
+    // matrices juste après. Un maillage vu deux fois — un vantail cousu seul puis revu depuis la scène — n'est qu'en double.)
+    if (libres && o.isMesh && !u.dynamique && !u.suite) {
+      const g = o.geometry, A = g && g.attributes.position;
+      const n = A ? A.count : 0;
+      if (n >= 8 && n <= 40000) {
+        const T = A.array, inter = A.isInterleavedBufferAttribute, k = inter ? A.offset : 0, km = k + (n >> 1) * (inter ? A.data.stride : 3);
+        L.push({ n, idx: g.index ? g.index.count : 0, mat: Array.isArray(o.material) ? o.material[0] : o.material, a0: T[k], a1: T[k + 1], a2: T[k + 2], a3: T[km], a4: T[km + 1], a5: T[km + 2],
+          parent: o.parent, lx: o.position.x, ly: o.position.y, lz: o.position.z });
+      }
+    }
+    const C = o.children;
+    for (let k = C.length - 1; k >= 0; k--) { pile.push(C[k]); libresPile.push(libres); }
   }
-  const C = o.children;
-  for (let k = 0; k < C.length; k++) parcourir(C[k], racine, parties, libres);
+  MEUBLES.stats.libres = L.length;
 }
 
 // AVANT CHAQUE COUTURE (racine comprise) : fusionnerLocal et optimiserDecor l'appellent en première ligne
@@ -432,7 +453,7 @@ export function fermerRegistre(racine) {
   if (!racine || !racine.traverse) return;
   MEUBLES.stats.coutures++;
   const parties = new Map();
-  parcourir(racine, racine, parties, true);
+  parcourir(racine, parties);
   for (const [, L] of parties) { noter(L.racines, L.E); MEUBLES.stats.parties++; }
 }
 
@@ -446,6 +467,8 @@ export function rattraperRegistre(scene) {
     scene.traverse((o) => { if (o.userData && o.userData.meuble && !_E.vus.has(o) && !o.userData.dynamique) L.push(o); });
     for (const o of L) { _E.vus.add(o); const E = etiquette(o); if (E && !E.partie) { noter([o], E); MEUBLES.stats.rattrapes++; } }
   }
+  // (les types notés à la couture, achevés ici : prototypes, boîtes, poses)
+  for (const [, T] of MEUBLES.types) achever(T);
   // (les racines restées dans la scène : leur pose relue sur la matrice d'aujourd'hui)
   for (const { objet, P } of _E.instances) {
     if (!objet.parent) continue;
@@ -453,23 +476,24 @@ export function rattraperRegistre(scene) {
     const T = MEUBLES.types.get(P.cle), M = objet.matrixWorld, cap = capDe(M);
     M.decompose(_p, _q, _s);
     if (Math.abs(_p.x - P.x) > 1e-3 || Math.abs(_p.z - P.z) > 1e-3 || Math.abs(_p.y + T.dy - P.y0) > 1e-3 || Math.abs(ang(cap - P.cap)) > 1e-3) {
-      P.x = _p.x; P.z = _p.z; P.y0 = _p.y + T.dy; P.y1 = P.y0 + T.taille.y; P.cap = cap; P.c = Math.cos(-cap); P.s = Math.sin(-cap);
-      centrer(P, T); MEUBLES.stats.recales++;
+      P.Mbase.makeRotationY(cap).setPosition(_p.x, _p.y, _p.z); poserAcheve(P, T); MEUBLES.stats.recales++;
     }
   }
   // LES OUBLIÉS : un maillage non étiqueté qui a la signature de la plus grosse pièce d'un prototype ; ou, pour les
   // extincteurs, un matériau qui le dit (ils n'ont pas tous la même géométrie : celui de l'ascenseur, de L-M)
   const parCle = new Map();
-  for (const [, T] of MEUBLES.types) if (T.cleMaillage) parCle.set(T.cleMaillage, T);
+  for (const [, T] of MEUBLES.types) if (T.cleMaillage) { const k = T.cleMaillage; if (!parCle.has(k.ni)) parCle.set(k.ni, []); parCle.get(k.ni).push(T); }
   for (const L of _E.libres) {
-    const T = parCle.get(L.cle);
+    const nomMat = (L.mat && L.mat.name) || '';
+    const a = [L.a0, L.a1, L.a2, L.a3, L.a4, L.a5];
+    const T = (parCle.get(L.n + ':' + L.idx) || []).find((U) => U.cleMaillage.mat === sigMat(L.mat) && U.cleMaillage.a.every((v, i) => Math.abs(v - a[i]) < 5e-4)) || null;
     let type = T ? T.type : null;
-    if (!type && /extincteur/i.test(L.nomMat)) type = 'extincteur';
+    if (!type && /extincteur/i.test(nomMat)) type = 'extincteur';
     if (!type) continue;
     // (un même meuble oublié a plusieurs pièces : une entrée par meuble, à 0,6 m près)
     if (L.x === undefined) { if (L.parent) { L.parent.updateWorldMatrix(true, false); _v.set(L.lx, L.ly, L.lz).applyMatrix4(L.parent.matrixWorld); } else _v.set(L.lx, L.ly, L.lz); L.x = _v.x; L.y = _v.y; L.z = _v.z; L.parent = null; }
     if (MEUBLES.nonEtiquetes.some((e) => e.type === type && Math.hypot(e.x - L.x, e.z - L.z) < 0.6 && Math.abs(e.y - L.y) < 1)) continue;
-    MEUBLES.nonEtiquetes.push({ type, cle: T ? T.cle : null, zone: null, x: L.x, y: L.y, z: L.z, materiau: L.nomMat });
+    MEUBLES.nonEtiquetes.push({ type, cle: T ? T.cle : null, zone: null, x: L.x, y: L.y, z: L.z, materiau: nomMat });
   }
   // LES TAILLES hors tolérance (± 10 % de la table de référence) : le type n'est plus déguisable
   MEUBLES.horsTolerance.length = 0;
