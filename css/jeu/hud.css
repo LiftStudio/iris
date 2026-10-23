@@ -406,6 +406,13 @@ body.touch .hj-fil-l { top: calc(var(--tc-haut, 64px) + 4px); }
 body.touch .hp-scan { right: calc(var(--tc-droite, 278px) + 8px); }
 body.touch .hp-touches { display: none; }
 @media (max-width: 760px) { .ts-corps.deux { grid-template-columns: 1fr; gap: 6px; } .ts-ligne { height: 28px; } .ts-portrait, .ts-portrait img { width: 24px; height: 24px; } }
+/* (un téléphone tenu en hauteur — « JOUER QUAND MÊME » — : la rangée du prop sortait de l'écran par l'œil ; elle passe sur deux
+   lignes, centrées) */
+@media (max-width: 480px) {
+  .hp-bloc { flex-wrap: wrap; justify-content: center; row-gap: 4px; white-space: normal; }
+  .hp-jauges { padding-left: 8px; gap: 8px; }
+  body.touch .hp-bloc { bottom: calc(118px + var(--sa-b, 0px)); }   /* (au-dessus du joystick et de SAUT) */
+}
 /* (moins de mouvement demandé : les textes ne clignotent plus ; le battement de la vignette reste — c'est une information de
    jeu, la vie sous 30 PV, et il ne déplace rien) */
 @media (prefers-reduced-motion: reduce) { .hp-oeil.repere b, .hj-mun-aide.recharge { animation: none; } }

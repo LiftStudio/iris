@@ -4,10 +4,12 @@ Branche `lot/L-G` (depuis `socle` = `socle-ok` e06258f), arbre `C:/Users/hgami/D
 
 ## Où j'en suis — RELECTURE (23/10, relecteur sévère, commits « L-G relecture : … »)
 
-**EN COURS.** Code relu contre les §§ 3.5-3.6, 3.9, 4.5.15, 5.5.10 et le diff `socle...lot/L-G` ; premières corrections
-écrites (voir « Relecture » en fin de rapport), pas encore rejouées dans le navigateur (les trois jetons étaient pris à
-04:48 ; attente d'un jeton toutes les 30 s). Reste : rejouer `&rapport=1&lot=L-G` (PC, `?tel=1`), `&rapport=1&lot=S0`,
-jouer pour de vrai, compléter la section « Relecture », commit final.
+**FINI, relu.** Les six points du § 5.1 règle 5 tenus après la relecture : `&rapport=1&lot=L-G` **17/17 sur PC et sous
+`?tel=1`** (les 16 critères et un test 17 ajouté), `&rapport=1&lot=S0` **29/29 sur PC et sous `?tel=1`** (balade au bit
+près), `verifier_proprietaires` → `OK 7 fichiers`, commits « L-G relecture : … », ce rapport commité, onglet et serveur
+fermés, jeton du navigateur (`jeton_3`) rendu. Quinze défauts corrigés (dont trois vus seulement en jouant : le tableau
+ouvert depuis la pause, son en-tête décalé, le stand) — tout est dans la section « Relecture » en fin de rapport, avec les
+écarts et les demandes ajoutés. Un repreneur n'a rien à finir.
 
 ## Où j'en suis (constructeur)
 
@@ -197,24 +199,108 @@ sous les boutons, munitions avant SAUT).
 
 ## Relecture (23/10, relecteur sévère)
 
-### Défauts trouvés et corrigés
+Relu : les §§ 2.3-2.9, 3.5-3.6, 3.8-3.10, 4.1, 4.5.15, 4.6, 4.10, 5.1, 5.5.10 de la spécification, CoD §§ 7.4, 7.6, 9.1-9.2, et
+le diff complet `git diff socle...lot/L-G` (7 fichiers, tous du lot). Rejoué : `&rapport=1&lot=L-G` et `&rapport=1&lot=S0`,
+sur PC et sous `?tel=1`. Joué dans le navigateur intégré (fenêtre du panneau 374 × 218 ; émulations 1280 × 720, 812 × 375
+au doigt, 375 × 812) : équipes dans la rue et au −1 (élimination, carte de mort désaturée, arcs et vignette à 1 PV,
+chevrons à travers les murs, mini-carte et ping rouge, 10 éliminations de bots au fil), tableau tenu par Tab et ouvert
+depuis la pause, prop hunt prop (déguisé, roue tenue par T, révélation), prop hunt chasseur (panneau de cachette, scanner,
+« VRAI MEUBLE −3 »), stand de tir ; dispositions mesurées (rectangles) à 1280 × 720 et 812 × 375 au doigt.
+
+### Contrôlé, sans défaut
+- **Contrats § 4.5.15** : `HudJeu` / `HudProp` `constructor(game)`, `brancher(partie)`, `debrancher()` (un paramètre
+  facultatif ajouté, `garder`), `maj(dt, hud)` ; `RoueProvocations(parent).maj(roue, provocations)` ; `TableauScores(game)
+  .maj(partie, montre)` (+ `basculer` du socle, + `cacher`) ; `MiniCarte(game).preparer(nav)`, `maj(dt, partie)` (+ `cacher`,
+  `dessinerZone`). Rien n'est appelé depuis la simulation ; le HUD lit `partie.hud` et les événements du § 4.6 (`touche`,
+  `elim`, `score`, `annonce`, `fin`, `capture`, `apparition`, `soin`, `tir`, `provocation`, `scanner`, `faux`), en ids.
+- **Valeurs du § 3.6** dans `REGLAGES_HUD` : marqueur 2 × 10 px à 6 px, 0,12 s, tête plus grand, élimination `#ff3b30`
+  0,22 s × 1,15, « +100 » 1,5 s empilés, arc 30° à 120 px 1,6 s ∝ dégâts, vignette `(1 − vie/60) × 0,85` et 1,2 Hz sous 30,
+  grenade ≤ 7 m, chevrons `#3d8bff` 14 → 8 px, 4 au plus, nom ≤ 15 m ; Airsoft « TOUCHÉ » par défaut.
+- **Propriétaires et pureté** : `python -I tools/verifier_proprietaires.py lot/L-G` → `OK 7 fichiers` ; aucun fichier de
+  simulation touché ; fins de ligne CRLF partout, comme les voisins.
+- **Écritures** : 0,8 écriture DOM par image (critère 1), 0 lecture de mise en page ; HUD 0,34 à 0,49 ms par image (tel 0,47 à 0,51 ; relatif, onglet derrière un autre).
+
+### Défauts trouvés et corrigés (dans les fichiers du lot)
 1. **Le tableau ouvert depuis la pause était invisible, puis restait planté** (`tableau_scores.js`) : « Tableau des scores »
    (§ 2.9, `Partie.boutonsPause` → `basculer`) l'ouvrait SOUS l'écran de pause (`#overlay`, z-index 30, voile à 72 % et flou ;
    le tableau vit sous `#hud`, z-index 10) : rien de lisible ; et après « Reprendre », `_force` restait vrai — le tableau
-   couvrait la partie jusqu'à une nouvelle pause. Ouvert depuis la pause, il passe maintenant au-dessus d'elle (enfant de
-   `body`, `.ts-pause`, z-index 31), un clic (un toucher) le referme, la manette le referme par le même bouton (resté sous
-   son focus), et la reprise le ferme ; il redescend sous `#hud`. Test 7 complété.
-2. **Les plombs du FP-12 perdaient la tête** (`hud_jeu.js`, `_touche`) : 8 `touche` au même pas, chacun écrasait le marqueur
+   couvrait la partie jusqu'à une nouvelle pause. Ouvert depuis la pause, il passe au-dessus d'elle (enfant de `body`,
+   `.ts-pause`, z-index 31), un clic (un toucher) le referme, la manette le referme par le même bouton (resté sous son
+   focus), et la reprise le ferme ; il redescend sous `#hud`. Vu en jouant ; test 7 complété.
+2. **L'en-tête du tableau décalé d'une colonne** (vu en jouant) : il n'avait pas la case du portrait — le nom de l'équipe
+   tombait dans la colonne du portrait (« SIS… »), « SCORE » au-dessus des noms, chaque titre une colonne trop à gauche, la
+   série sans titre. Case ajoutée, titres centrés ; test 7 vérifie l'alignement au pixel. Fond du tableau plus opaque
+   (le score, le chrono et la carte transparaissaient dessous).
+3. **Les plombs du FP-12 perdaient la tête** (`hud_jeu.js`, `_touche`) : 8 `touche` au même pas, chacun écrasait le marqueur
    — un plomb à la tête suivi d'un plomb au torse donnait un marqueur de torse. Un coup = un marqueur, de tête si l'un des
    plombs l'a prise (l'élimination aussi). Test 3 complété.
-3. **Le scanner ne disait pas sa bande** (`hud_prop.js`) : § 2.8 « un arc orange au bord du réticule, « 4-8 m » » — l'arc
-   était teinté, sans texte. La bande est écrite sur l'arc (« < 4 m », « 4-8 m », « 8-12 m »), droite quel que soit l'angle.
-   Test 8 complété.
-4. **Les portes de la carte de cachette** (`minicarte.js`, `dessinerZone`) : seules les portes automatiques étaient lues
-   (`portes.auto`) — au 1er il n'y en a aucune (le rapport du constructeur notait « portes 0 »). La carte lit
-   `Portes.liste()` (toutes, § 4.5.19, L-M) quand elle existe, sinon les automatiques : après F2, les portes du 1er
-   apparaîtront (À F2).
-5. **L'armure** (`hud.armure`, au contrat § 4.5.15 ; CoD § 9.1 « barre fine 100 PV (+ armure) ») n'était pas montrée : un
-   liseré bleu au-dessus de la barre de vie, qui la montre tant qu'il y en a. Test 5 complété.
-6. **Test 15** : le 2e allié « derrière un mur » était un point fixe à 25 m, qui pouvait être à vue (le test le notait sans
-   l'exiger) ; il est maintenant cherché derrière un mur (la balistique ne le voit pas) et le test exige qu'il soit montré.
+4. **Les messages de la qualité automatique en annonce géante** (vu au stand : « TROP LENT : QUALITÉ → BASSE » en 44 px au
+   milieu de l'écran) : `game._dire` les envoie en cls `'info'` (`game.js:289-292`) ; seuls `'warn'` / `'bad'` allaient à la
+   petite ligne d'alerte. Le HUD écoute les mêmes événements (`hoops-qualite-*`, en capture sur `window` avant `game.js`, puis
+   sur `document` après lui) : ce qui arrive à `_pousserAnnonce` pendant leur envoi va à la ligne d'alerte. Test 17.
+5. **Le bandeau de la balade figé sur la présentation** : `#hud-feedback` (« IRIS — REZ-DE-CHAUSSÉE » au retour en balade)
+   encore en train de s'effacer au lancement d'une partie restait à mi-opacité au milieu de la présentation (en partie
+   personne ne l'écrit, § 4.1 r. 13). `body.combat #hud-feedback` caché, avec les cinq du socle (`hud.css`).
+6. **Le stand** (vu en jouant) : une silhouette qui tombe faisait « +100 TOUCHÉ » et une ligne au fil (« Haythem [FA-24]
+   Cible 8 m ») ; la dernière balle disait « 1 DÉGÂTS » (la silhouette n'a qu'1 PV, `infliger` rabote) ; un chrono « 0:00 »
+   rouge restait affiché sans défi. Marqueur rouge seul (et les points des règles s'ils viennent), dégâts de l'arme à cette
+   distance et à cette zone (`degatsDe`), chrono montré seulement s'il court. Test 17.
+7. **« GO ! » et les longues annonces** : `.go` en 64 px fixes (44 px sur petit écran) ; « LES CHASSEURS SONT LÂCHÉS » passait
+   SOUS le bloc du score (ordre d'empilement) et débordait. Taille `clamp(30px, 7vw, 64px)`, annonces, présentation et
+   décompte au-dessus des blocs, la carte de mort au-dessus d'elles.
+8. **La carte de mort** : sans rien de la mort (état rendu, HUD branché après coup), elle disait « TOUCHÉ PAR NULL » ; le
+   chasseur tombé à 0 PV à force de tirer sur de vrais meubles (§ 2.8) aurait lu « TU T'ES TOUCHÉ TOI-MÊME ». Maintenant
+   « TOUCHÉ » (« ÉLIMINÉ » en Militaire) et « TROP DE TIRS SUR DE VRAIS MEUBLES ». Test 13 complété.
+9. **Le scanner ne disait pas sa bande** (`hud_prop.js`) : § 2.8 « un arc orange au bord du réticule, « 4-8 m » » — l'arc
+   était teinté, sans texte. La bande est écrite sur l'arc (« < 4 m », « 4-8 m », « 8-12 m »), droite quel que soit
+   l'angle. Test 8 complété.
+10. **La discrétion d'un prop encore humain** : ★★★☆☆ affichées pendant la cachette alors qu'il n'a pas de déguisement à
+    juger — cachées tant qu'il est humain. **Le chrono de la cachette** (30 à 50 s) était rouge du début à la fin (« rouge
+    sous 30 s ») : rouge sous 10 s, avec l'annonce « 10 SECONDES ! ».
+11. **Les portes de la carte de cachette** (`minicarte.js`, `dessinerZone`) : seules les portes automatiques étaient lues
+    (`portes.auto`) — au 1er il n'y en a aucune (« portes 0 »). La carte lit `Portes.liste()` (toutes, § 4.5.19, L-M) quand
+    elle existe, sinon les automatiques : après F2, les portes du 1er apparaîtront (À F2).
+12. **L'armure** (`hud.armure`, au contrat ; CoD § 9.1 « barre fine 100 PV (+ armure) ») n'était pas montrée : un liseré bleu
+    au-dessus de la barre de vie, qui la montre tant qu'il y en a. Test 5 complété.
+13. **Test 15** : le 2e allié « derrière un mur » était un point fixe à 25 m qui pouvait être à vue (le test le notait sans
+    l'exiger) ; il est cherché derrière un mur (la balistique ne le voit pas) et doit être montré.
+14. **Code mort** : imports inutilisés (`REGLAGES_HUD` dans `hud_prop.js`, `NIVEAUX` et `angleEcran` dans le test), réglages
+    jamais lus (`scanner.rayon`, `scanner.couleurs` — doublons du CSS —, `sons.cercle`, `mort.entree`,
+    `reticule.epaisseur`), paramètre `fps` inutile de `_majMarques`, l'en-tête de `hud_prop.js` qui annonçait l'écoute de
+    `deguise`.
+15. **La rangée du prop sur un téléphone tenu en hauteur** (« JOUER QUAND MÊME » de l'écran « Tourne ton téléphone ») : à
+    375 px de large elle sortait de l'écran par l'œil, et touchait le joystick ; sous 480 px elle passe sur deux lignes,
+    au-dessus du joystick et de SAUT.
+
+### Le `__rapport` de la relecture
+- `&rapport=1&lot=L-G` : **17/17 sur PC** (374 × 218, 14,0 s, 0 signalé) et **17/17 sous `?tel=1`** (812 × 375 au doigt,
+  13,9 s, 0 signalé) — 16 critères et le test 17 (stand, qualité automatique) ; le test F2 reste `apresFusion`.
+- `&rapport=1&lot=S0` sur la branche : **29/29 sur PC** (97,6 s, 0 signalé ; balade au bit près) et **29/29 sous `?tel=1`** (émulation mobile 375 × 812,
+  124,7 s ; 1 temps « non valable », onglet derrière celui d'un autre lot) — joués sur `465dbe0` ; le dernier commit ne
+  change que deux règles CSS du prop hunt sous `max-width: 480px`, sans effet en balade.
+- `python -I tools/verifier_proprietaires.py lot/L-G` → `OK 7 fichiers`.
+
+### Écarts ajoutés au document (en plus des 10 du constructeur)
+11. **Le tableau ouvert depuis la pause** est un enfant de `body` (z-index 31) le temps de la pause (l. 2667 « tout le DOM
+    sous `#hud` ») : sous `#hud`, l'écran de pause le couvre.
+12. **`body.combat` cache aussi `#hud-feedback`** (le § 4.5.15 en nomme cinq) : le bandeau de la balade, que personne n'écrit
+    en partie, restait figé.
+13. **Les silhouettes du stand** ne font ni ligne au fil ni « +100 » (le § 3.6 ne le dit pas ; § 2.6 « touchée = elle tombe »).
+14. **Le chrono de la cachette** rouge sous 10 s (le « rouge sous 30 s » du § 4.5.15 est celui d'une manche).
+
+### Demandes de la relecture
+- **F2 / L-E / L-F (`peupler`)** : sans avatars cochés, TOUS les bots s'appellent « Haythem » (le clone de `FICHE_HAYTHEM`) —
+  le fil lit « Haythem [FA-24] Haythem », le tableau huit « Haythem », les étiquettes du prop hunt aussi. Un nom distinct
+  par clone (« Haythem 2 », « Haythem 3 »… ou le nom de l'équipe et un numéro).
+- **INT (`game.js:289-292`)** : les messages de la qualité automatique en cls `'qualite'` (ou `'warn'`) plutôt que `'info'`
+  — le HUD les reconnaît aujourd'hui par leurs événements (`hoops-qualite-*`).
+- **L-F** : `hud.prop.provocT` vaut 0 dans le squelette : l'anneau de provocation reste « 0:00 » rouge jusqu'à la fusion.
+- **F2 / L-I** : le tableau ouvert depuis la pause au-dessus d'elle — vérifier à la manette (le focus reste sur « Tableau
+  des scores » : A le referme ; B ferme la pause, et la reprise referme le tableau).
+
+### Notes
+- Console : seule l'erreur connue du service worker (« An unknown error occurred when fetching the script », une par
+  chargement, comme à S0) ; aucune erreur du HUD.
+- Le panneau partagé n'avait pas mon onglet devant (un autre lot l'avait) : rAF à 1 image par seconde ; les parties ont été
+  jouées en images faites à la main (`game.frame(1/60)`, comme le harnais), les temps de `maj` mesurés par le critère 1.
+- Les bots au cerveau minimal font 10 éliminations en 10 s au −1 (équilibre : L-J, vague 3).
