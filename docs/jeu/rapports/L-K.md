@@ -5,14 +5,104 @@ Branche `lot/L-K` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-K`, depuis `socle
 
 ## Où j'en suis
 
-**RELECTURE EN COURS** (23/10, relecteur sévère, à partir de 10:16 ; jeton_3 tenu depuis 10:16:18) — commits
-`L-K relecture : …` sur `lot/L-K`. Fait : relu la spec (§§ 3.9, 4.1, 4.5.13, 4.6, 4.7, 5.1-5.3, 5.5.8), tout le diff
-`socle...lot/L-K`, rejoué L-K (16 / 16 avant et après les corrections), joué au 1er et au RDC en prop et en chasseur ;
-corrigé quatre défauts de jeu et cinq tests (section « Relecture » ci-dessous). Reste : S0 sur la branche, `?tel=1`, le
-rapport final, onglet, serveur et jeton. Un repreneur relance `?test=1&rapport=1&lot=L-K` puis `lot=S0` sur 8138.
+**RELU — FINI** (23/10, relecteur sévère ; jeton_3 pris à 10:16:18, rendu à RENDU) — commits `L-K relecture : …` sur
+`lot/L-K`. Les six points de la définition de fini (§ 5.1 règle 5) :
+
+- (a) `?test=1&rapport=1&lot=L-K` : **16 / 16**, 0 signalé (PC, haute, 79 s, sur 018b51f) ; et sous `?tel=1` : TEL ;
+- (b) `?test=1&rapport=1&lot=S0` sur la branche : **29 / 29**, 0 signalé (sur 018b51f : balade vue 3 et vue 1 0 / 0, S0 · 8
+  géo 1578 → 1578, programmes 145 → 145, 60 tirs ; S0 · 9 03041e41 / 03041e41) — passé avec `forcerImagesManuelles(true)`
+  posé avant le départ des tests (l'onglet du volet n'est pas devant : voir Demandes, F2 / harnais) ;
+- (c) `python -I tools/verifier_proprietaires.py lot/L-K` : « OK 12 fichiers » ;
+- (d) commits `L-K relecture : …` (après les `L-K : …` du constructeur), chacun avec la ligne `Co-Authored-By` ;
+- (e) ce rapport (section « Relecture » ci-dessous ; le reste est celui du constructeur, complété là où la relecture l'a
+  changé — marqué « (relecture) ») ;
+- (f) onglet fermé, serveurs 8138 et récepteur de photos arrêtés, jeton_3 rendu.
+
+Un successeur n'a rien à reprendre dans le lot ; ce qui reste est chez d'autres lots (Demandes) et à la fusion (Reste).
 
 (Le constructeur avait écrit, 23/10 10:10 : FINI — L-K 16 / 16, S0 29 / 29 sur la branche, propriétaires OK, joué ; commit
-aa76798.)
+aa76798. La relecture y a trouvé cinq défauts de jeu et six tests trop larges : section suivante.)
+
+## Relecture (23/10, relecteur sévère)
+
+Méthode : relu la spec (§§ 3.9, 4.1, 4.5.13, 4.6, 4.7, 5.1-5.3, 5.5.8), tout `git diff socle...lot/L-K` (12 fichiers),
+`python -I tools/verifier_proprietaires.py lot/L-K`, les fins de ligne (`git ls-files --eol` : chaque fichier garde les
+siennes, CRLF partout sauf `ecole_etage1.js` en LF) ; rejoué `lot=L-K` avant (16 / 16) et après chaque correction, `lot=S0`,
+`?tel=1` ; JOUÉ au 1er (prop puis chasseur) et au RDC (extincteurs), photos en 1280 × 720 (le canevas agrandi le temps d'une
+image, `__jeu.photo` envoyée à un petit récepteur local du dossier de session).
+
+### Ce qui était faux — corrigé (commits `L-K relecture : …`)
+1. **Un prop touché retrouvait toute sa vie en changeant de forme.** `deguiser` lisait la proportion sur `prop.pv`, que
+   `Partie.infliger` ne touche jamais (il entame `acteur.vie`) : un Miura touché à 50 / 90 redevenait un carton à 77 / 77 —
+   soin illimité, la mécanique du chasseur annulée. Lu sur `acteur.vie / acteur.vieMax` (rejoué : 50 / 90 → 43 / 77). Le
+   test 9 cachait le défaut (il réglait `vie` ET `prop.pv` à la main) : il passe maintenant par `Partie.infliger`.
+2. **Un extincteur plaqué au mur était invulnérable.** Au verrou, l'extincteur monte à sa hauteur d'accroche
+   (conception_prophunt § 6.5) — mais seulement à l'AFFICHAGE (`majProps`) : son volume de touche (`js/jeu/touches.js`
+   `capsules`, posé sur `pos.y + jumpY`) restait au sol, de 0 à 0,56 m ; les balles qui l'atteignaient au mur, à 0,65-1,21 m,
+   passaient au travers, et celles tirées dans le mur nu, dessous, le touchaient. L'accroche passe dans la SIMULATION :
+   `CorpsProp.plaquer` pose `jumpY = accroche` (`porter(T)` la lit sur le type ; `decrocher()` le repose au sol quand le
+   verrou se relâche, `porter` quand la forme change) — l'état la garde déjà (`jy`, § 4.7), et tout ce qui lit `jumpY` le voit
+   là-haut : l'affichage (`presenter`), le volume de touche, la boîte qu'on vise (`boiteProp`), le pivot.
+3. **Le voile d'un meuble pendu flottait à 0,65 m** (enfant de la racine montée) ; en plein saut il montait avec le meuble.
+   Il reste au sol (`position.y = 0,004 − hauteur affichée`) et disparaît sous un meuble qui pend (le vrai extincteur
+   n'assombrit pas le sol cuit).
+4. **L'extincteur du hall ouest se plaquait tourné de 90°** (photo `relecture_4_…` : l'étiquette de profil, la boucle du
+   tuyau vers la pièce, à côté du vrai, de face) : son code (`ecole_mobilier.js` l. 372) a sa console contre le mur à −x et sa
+   façade à +x, alors que le registre et `plaquer` prennent le −z du prototype pour le dos. Sondé sur les 15 exemplaires
+   muraux (le mur le plus proche dans les quatre directions locales) : c'est le SEUL meuble mural de la carte dont le dos
+   n'est pas −z. AJOUT à l'étiquette : `face` (l'angle de la façade dans le repère de la racine, ici π/2), lu par `noter` et
+   au recalage du rattrapage — le prototype est tourné pour que son +z soit la façade (la copie posée à `P.cap` retombe
+   toujours sur l'original : test 4 au mm), et tout ce qui suppose « dos = −z » (`dos`, `plaquer`, `contreMurEn`,
+   `coinsLibres`) devient juste (photo `relecture_5_…` : les deux extincteurs jumeaux).
+5. **Tourné de plus de 20°, un meuble mural se plaquait de TRAVERS.** `plaquer` prenait pour cap la direction de la sonde
+   la plus proche (une des quatre directions du meuble) : juste si l'aimant (< 20°) l'avait déjà mis d'équerre, sinon le
+   meuble restait tourné de 34° contre le mur. La normale du mur se cherche par un éventail de rayons autour de cette sonde
+   (± 45° de 5° en 5°, puis à 1° près ; à moins de 3° d'un axe du monde, l'axe) : 0,2-0,9 ms (médiane 0,4), une fois au
+   verrou. Test 11 : extincteur:4 et extincteur:5 tournés de 17° puis de 34° → au cap du vrai à 0,0°, pendus à 0,65 et
+   0,96 m (les vrais aussi), boîte de touche dès 0,65 et 0,96, sans voile.
+6. **Tests qui passaient à vide ou trop large** :
+   - 1c mesurait le coût du registre sur une réplique de COPIES COUSUES (3 à 12 maillages par meuble) quand l'original en a
+     4 à 40 — et `noter` paie chaque maillage d'un étiqueté ; la mesure, unique, prenait aussi le ramasse-miettes des 12 000
+     objets de la réplique (15 à 49 ms selon la charge). La réplique a maintenant les maillages de l'original (`T.pieces`,
+     2 268 en tout), deux images passent, trois rejeux, jugé sur la médiane : 33 / 16,9 / 13,9 ms → 16,9 ;
+   - 4 (« même clé de programme ») ne contrôlait que les matériaux déjà dessinés (`if (pr && …)`) : chaque copie est maintenant
+     COMPILÉE pour la cible du rendu (`Game._compilerAsync`) — 0 programme créé sur les 46 types, chacun de ses matériaux sur un
+     programme de la liste ;
+   - 8 prenait la PREMIÈRE porte de 0,6 à 0,9 m (une de 0,60 m) : maintenant celle dont l'ouverture est la plus proche de
+     0,8 m (couloirEst | vestEst, 0,80 m), et la corbeille témoin y passe (sinon c'est la porte qui serait bouchée) ;
+   - 11 ne vérifiait pas le flash rouge (« flash pas vu » et le test passait) : relevé à l'image qui suit la touche (il dure
+     80 ms), exigé ; plus les extincteurs pendus (points 2 à 5) ;
+   - 3 : la borne « ≤ 3 variantes de profondeur à la première image » ne tenait pas onglet caché (5 relevées : face avant /
+     double × avec / sans carte) : 6 au plus, expliqué ;
+   - 1b n'avait pas de référence téléphone (`?tel=1` : échec « pas de référence ») : relevée sur `socle-ok` e06258f servi sur
+     8138 (copie `git archive` dans le dossier de session, un fichier de test réduit à 1a et 1b), dans les conditions de la
+     suite ; à page fraîche, les deux arbres donnent aussi les mêmes 22 relevés.
+7. **`cachettes`** : lots de 3,2 à 5,9 ms (signalé) avec un budget de 110 requêtes ; 75 → pire lot 4,1-4,9 ms (31 lots).
+
+### Essayé, retiré
+- Précompiler au catalogue les passes annexes des props (ombre portée, contact) comme celles d'un avatar
+  (`avecProfondeur`, `ombres.avecContact` de `Game._compilerTout`) : SEPT programmes compilés (couleur et profondeur pour une
+  doublure de scène) et AUCUN de ceux du rendu — three dessine les objets mobiles dans la carte d'ombre avec ses propres
+  matériaux de profondeur. Retiré (commit 3b3957a) ; la demande à L-H est précisée (Demandes).
+
+### Vérifié sans faute
+- Signatures du § 4.5.13 toutes posées (S0 · 11 : 0 manquant) ; des AJOUTS seulement (`toucherPoses(…, forme)` et
+  `zonerRegistre(lumieres, collisions)` gardent leur `length`) ; événements `deguise` { a, cle, x, y, z }, `frottement`
+  { a, x, y, z }, `saut` { a, f } conformes au § 4.6 (`refus` ajouté) ; état : rien de neuf hors du § 4.7 (`prop` sérialisé
+  par le socle, l'accroche passe par `jy`) ; `verifierEtat` et `verifierDeterminisme(42, 30)` égaux (S0 · 9) ; pureté et
+  propriétaires : « OK 12 fichiers » ; aucun `TODO`, aucun bouchon ; `_bacASable` et `_refEstActeur` ne servent qu'aux tests
+  (nommés comme tels).
+- Valeurs du § 3.9 : PV `round(clamp(40 + 90·∛V, 60, 145))`, vitesse `4,6 × clamp(1,15 − 0,35·∛V, 0,72, 1,05)`, rayon,
+  bande, marche 1,4 silencieuse, sprint ×1,2 (100, −33/s, +15/s, seuil 20), saut 1,8 m/s, frottement tous les 0,4 m au-delà
+  de 1,2 m/s — à la lettre ; voile 0,35 / 0,2, surbrillance 0,22 × 1,015, tressaillement 0,15 s ± 3°, flash 80 ms, mort 0,4 s.
+- Joué : le Miura copié est indiscernable des vrais (`relecture_2_…`) ; la surbrillance du meuble visé se voit sans crier
+  (`relecture_1_…`) ; en chasseur, deux balles au milieu du Miura d'un bot (26 chacune) → 38 / 90, la suivante l'élimine, il
+  rétrécit en 0,4 s (25 images) puis disparaît ; aucun programme compilé en visant ni au flash ; au premier meuble vu au RDC,
+  une variante de profondeur compilée (≈ 10 ms d'image, demande L-H) ; console : rien du lot (quatre « An unknown error
+  occurred when fetching the script » au chargement : le service worker, pas L-K).
+- Ce qui reste ennuyeux pour un joueur et n'est pas de L-K : les props bots plantés à leur point d'apparition (L-O), rien à
+  l'écran pour « Pas la place » ni pour le meuble visé hors de la surbrillance (L-G), la caméra orbitale qui passe dans les
+  murs du couloir (L-B, squelette).
 
 ## Fait
 
@@ -109,6 +199,14 @@ rendu : registre, variantes, toucherPoses, crédibilité, 792 000 pas de corps d
 `lot=S0` sur la branche (10:09) : `ok: true`, `total: 29`, 0 échec, 0 signalé ; S0 · 8 « géo 1578 → 1578 · tex 511 → 511 ·
 enfants 307 → 307 · instantané identique · programmes 145 → 145 (60 tirs) ».
 
+(relecture) Après les corrections, sur 018b51f (PC, haute, onglet du volet non devant, images faites à la main) :
+`lot=L-K` **16 / 16**, 0 signalé, 79 s — 1b 22 relevés identiques ; 1c 16,9 ms (rejeux 33 / 16,9 / 13,9, 2 268 maillages
+étiquetés) ; 3 : 16 ms, 141 → 141 au catalogue, +2 de profondeur au rendu ; 4 : 46 types tout juste, compilés sans programme
+neuf ; 8 : porte de 0,80 m (couloirEst | vestEst), baby-foot refusé (place), corbeille acceptée ; 9 : PV 49 pour 49 (blessé par
+`infliger`) ; 10 : 116 cachettes en 31 lots, pire 4,1 ms ; 11 : flash rouge, 147 → 147 programmes, extincteur:4 et :5 tournés
+de 17° et de 34° → 0,0°, pendus à 0,65 et 0,96 m, touchables dès 0,65 et 0,96 ; 14 : 0,039 ms. `lot=S0` **29 / 29**. `?tel=1`
+`lot=L-K` : TEL.
+
 ## Mesures (relatives)
 
 - **Registre à la construction** : 15,4-15,5 ms rejoué sur la réplique (navigateur, `fermerRegistre` seul ; seuil 30) ; la
@@ -122,6 +220,8 @@ enfants 307 → 307 · instantané identique · programmes 145 → 145 (60 tirs)
 - **Décor** : aux onze endroits, appels et triangles identiques à `socle-ok` (22 relevés) ; `[optim]` identique.
 - **En jouant** : Haythem Miura — PV 90, crédibilité 0,60 au milieu de l'espace pause, 0,83 contre le mange-debout ; 4 balles
   au milieu du tabouret : 4 touches, flash, tressaillement, éliminé (90 → 0), rétréci.
+- **(relecture)** `plaquer` (l'éventail qui trouve la normale du mur) : 0,2-0,9 ms, médiane 0,4, une fois par verrou ;
+  extincteur plaqué au hall ouest : crédibilité 0,77.
 
 ## Écarts au document
 
@@ -156,7 +256,8 @@ enfants 307 → 307 · instantané identique · programmes 145 → 145 (60 tirs)
    du décor, déjà compilés ; `Player.preparerRendu` en compilait onze (les variantes du cran de repli) et
    `game._compilerTout` sept, pour une cible qui n'est pas celle du rendu. Restent deux ou trois programmes de PROFONDEUR (les
    objets mobiles non animés : ombre portée, ombre de contact), compilés à la première image d'une copie — mesuré et borné
-   (test 3 : ≤ 3, tous `depth…`) ; demande à L-H.
+   (test 3 : ≤ 3, tous `depth…`) ; demande à L-H. (relecture : 5 relevées onglet caché — borne portée à 6 ; la voie des
+   avatars essayée au catalogue ne les compile pas, voir Relecture.)
 9. **Étiquette à pièces** (`partie`, `cap`) : les distributeurs de la niche du 1er sont des boîtes du repère du niveau, sans
    groupe — les envelopper aurait touché la géométrie de la carte.
 10. **Tailles de référence** (test 2) : celles du document sortent de boîtes d'extraction polluées (le mange-debout voisin du
@@ -179,6 +280,17 @@ enfants 307 → 307 · instantané identique · programmes 145 → 145 (60 tirs)
     zones, de l'écran PRÉPARATION, à part) ; 3 relève le fond juste avant chaque copie (relevé une fois, il dérivait de 3
     appels et faisait échouer des copies de 9 appels).
 
+17. **(relecture) Étiquette `face`** (ajout au § 4.5.13 : `{ …, face? }`) : l'angle de la façade d'un meuble dans le repère de
+    sa racine (défaut 0, le +z) ; le prototype est tourné pour que son +z soit la façade et son −z le dos. Posé sur l'extincteur
+    du hall ouest (`ecole_mobilier.js` l. 374, π/2), le seul meuble mural dont le dos n'est pas −z.
+18. **(relecture) L'accroche par `jumpY`** : un meuble mural plaqué au verrou pend à sa hauteur d'accroche dans la SIMULATION
+    (`jumpY = T.accroche`, `airborne` faux) et non plus à l'affichage seul — sans quoi son volume de touche restait au sol.
+    `CorpsProp` gagne `accroche` et `decrocher()` ; le corps ne bouge pas tant qu'il pend (conception_prophunt § 6.5).
+19. **(relecture) Tests** : 1b a une référence téléphone ; 1c rejoue sur une réplique aux maillages de l'original, trois fois,
+    jugé sur la médiane ; 3 tolère 6 variantes de profondeur à la première image (5 relevées) ; 4 compile chaque copie ; 8
+    prend la porte la plus proche de 0,8 m et une corbeille témoin ; 9 blesse par `Partie.infliger` ; 11 exige le flash et
+    plaque les extincteurs pendus du RDC (tournés de 17° et de 34°).
+
 ## Demandes
 
 - **L-F** : `PartieProp._deguiser` (socle) remplace le corps AVANT `deguiser` — refusé, l'humain devient un `CorpsProp` sans
@@ -198,6 +310,36 @@ enfants 307 → 307 · instantané identique · programmes 145 → 145 (60 tirs)
 - **F2 / harnais** : `__jeu.tirer(id, { cible })` vise un prop à hauteur d'homme — 4 balles par-dessus un tabouret Miura, 0
   touche ; viser le milieu de sa boîte (`y + T.haut / 2`). Et la surbrillance : retirée à la sortie par `retirerProp` et
   `A_LA_SORTIE` (corps de prop libéré) ; une partie quittée sans AUCUN prop la laisserait dans la scène (instantané).
+- **(relecture) L-F** : `prop.pv` (§ 4.7) n'est jamais entamé — `Partie.infliger` ne touche que `acteur.vie` ; il reste la
+  vie au moment du déguisement. `deguiser` lit maintenant `vie / vieMax` (le soin par changement de forme est fermé) ; à
+  `PartieProp` de garder `prop.pv = vie` après chaque dégât (ou de ne plus le sérialiser), sinon l'état rendu à un invité dit
+  faux.
+- **(relecture) L-A** (`js/jeu/touches.js` `capsules`) : la boîte d'un prop est centrée sur son pivot `(pos.x, pos.z)` ; celle
+  du meuble l'est en `pos + rot(cap)·(centre de T.boite)` (`boiteProp` de `deguisements.js`, `centrer` du registre) — 10 cm
+  plus loin pour la borne, 9 cm pour l'extincteur du 2e (0,18 m de fond : la moitié de sa boîte de touche dans le mur), 4 cm
+  pour les chaises coques ; et un meuble plaqué est AFFICHÉ `decal` plus loin (≤ 1,5 cm, plus ce que son disque l'empêche
+  d'avancer). Centrer la boîte comme `boiteProp` (et y ajouter `corps.decal` quand `corps.plaque`).
+- **(relecture) L-H** (précise la demande ci-dessus) : à la première image d'une copie de meuble, three compile ses variantes
+  de PROFONDEUR des objets mobiles non animés — 5 relevées onglet caché (face avant / double × avec / sans carte : fauteuil
+  de bureau, plante:2, chaise de la Kahn, chaise moutarde), 2 onglet devant ; ≈ 10 ms d'image au premier meuble vu de sa
+  sorte. La voie des avatars (`Game._compilerTout` : `avecProfondeur`, `ombres.avecContact`) ne les fait PAS (essayé : sept
+  autres programmes, aucun de ceux-là) — three dessine les mobiles dans la carte d'ombre avec ses propres matériaux de
+  profondeur. Les précompiler par ce chemin-là (une image de la carte d'ombre où sont posées les copies de `CATALOGUE`, sous
+  l'écran PRÉPARATION), et retirer alors la tolérance du test L-K 3 (« ≤ 6 à la première image » → 0).
+- **(relecture) F2 / harnais** : (1) `images(n)` dans un onglet qui n'est pas devant (le volet partagé : un autre agent y
+  tient le sien) — rAF n'y arrive que par à-coups, `sansRaf` est faux à l'instant de l'appel, qui attend alors 10 images rAF
+  qui ne viennent pas, 5 s chaque fois : S0 · 8 n'a eu que 7 tirs en 10 s (échoué deux fois ainsi, vert avec
+  `forcerImagesManuelles(true)` posé avant les tests). Prendre les images à la main quand le dernier INTERVALLE de rAF
+  dépasse 250 ms, pas seulement la dernière date. (2) La surveillance « dans un mur » (`!C.libre(x, z, 0,25, y)` plus de
+  0,2 s) prendra pour fautif tout prop de rayon < 0,25 plaqué à un mur (l'extincteur, 0,15, se tient à 0,155 m du mur) : y
+  prendre le rayon du corps.
+- **(relecture) F2 / INT** (règle 3 du § 4.1 : une signature figée qui change de sens) : `credibilite(…, opts)` — le contrat
+  écrit `{ contreMur = false } = {}` ; L-K lit `contreMur` absent sur le monde solide (Écart 3). Les cerveaux (L-O)
+  l'appellent sans `opts` pour les vraies poses : à entériner au contrat, ou L-O passe `{ contreMur }` lui-même.
+- **(relecture) Lot R et L-M** : l'étiquette accepte `face` (Écart 17). Un meuble MURAL dont le code tourne la façade
+  ailleurs que vers +z (le dos ailleurs qu'à −z) doit la donner, sinon sa copie plaquée au verrou se tourne de travers. L-M :
+  l'extincteur de `js/ecole_ascenseur.js` l. 421-430 est fait de maillages posés à plat (sans groupe) — l'étiqueter par
+  pièces (`partie`, `cap` de sa façade, comme les distributeurs de la niche du 1er) donne le bon repère sans `face`.
 
 ## Doutes
 
@@ -207,9 +349,15 @@ enfants 307 → 307 · instantané identique · programmes 145 → 145 (60 tirs)
   1 passage vert ; le test rejoué seul sur la branche : stable (1578 → 1578, 144 → 144). L-K n'ajoute rien à la scène hors
   du prop hunt (`majProps` n'agit que sur les props ; le mode essai ne prépare pas le catalogue) : je crois à la charge (le
   volet caché, les onglets des autres lots, la qualité automatique), sans l'avoir prouvé.
+  (relecture) Expliqué : l'onglet du volet n'est pas devant, son rAF arrive par à-coups, et `images(n)` prend le chemin rAF,
+  attend des images qui ne viennent pas (5 s) — 7 tirs au lieu de 60 ; avec `forcerImagesManuelles(true)`, vert deux fois
+  sur deux (60 tirs). Rien de L-K (demande F2 / harnais).
 - **Le coût réel de la construction** : la réplique du test 1c (copies cousues — 4 à 12 maillages au lieu de 20 à 40 —, code
   déjà chaud) mesure 15 ms ; la vraie construction, mesurée dans Node sur la vraie carte, 29-55 ms (machine chargée, code
   froid). Le critère est tenu tel que le test l'écrit ; l'écart est là.
+  (relecture) La réplique a maintenant les maillages de l'original (2 268) : 33 ms au premier rejeu (le code froid du bac à
+  sable), 14-19 ms ensuite ; la vraie construction reste entre les deux, sans horloge pour la mesurer (fichier
+  « simulation »).
 - **Oubliés** : un maillage non étiqueté n'est reconnu que si son matériau (au contenu) a déjà paru sur un meuble étiqueté à
   sa couture ou avant, ou s'il se dit extincteur (Écart 14).
 - **Budget d'une copie** : « deux passes d'ombre au pire » est mesuré (11 puis 14 une image sur deux pour l'extincteur du hall
@@ -223,6 +371,7 @@ Rien dans le lot. Hors du lot, à la fusion (F2, `&fusion=1`) : les deux tests `
 props de L-D ; le −1 du lot R — types, `parForme`, aucun oubli), l'étiquette de L-M, et le −1 déguisable (aujourd'hui 0
 type : le lot R n'est pas sur la branche). Pas lancé : `?tel=1` pour L-K (rien n'y dépend du téléphone : registre et requêtes
 sans rendu, copies ≤ 12 appels en haute).
+(relecture) `?tel=1` lancé : voir « Où j'en suis » (1b a maintenant sa référence téléphone).
 
 ## Photos regardées
 
@@ -239,3 +388,16 @@ Dans `C:/Users/hgami/Downloads/IRIS_lots/_photos/L-K/` (captures du volet, 524 �
 
 Vu aussi : la surbrillance du meuble visé (`partie.viseMeuble` = « le tabouret Miura », pose 25), l'ombre et le voile des
 copies (test 11), les props bots touchés par les chasseurs bots (carton 77, chaise de hêtre 89).
+
+(relecture) Dans le même dossier, en 1280 × 720 :
+
+6. `relecture_1_surbrillance_du_miura_vise.jpg` — Haythem en carton dans l'espace pause du 1er, le Miura visé à 1,3 m en
+   surbrillance (blanc additif à 0,22) : lisible, pas criard.
+7. `relecture_2_haythem_miura_parmi_les_vrais.jpg` — devenu Miura (E) : la copie au premier plan, les vrais derrière ;
+   indiscernable (crédibilité 0,47 au milieu du passage, il faut le pousser contre un mange-debout).
+8. `relecture_3_chasseur_miura_d_un_bot.jpg` — Haythem chasseur depuis la porte de l'est : le Miura d'un bot planté dans
+   l'axe du passage (L-O) ; touché de deux balles (38 / 90), éliminé à la troisième, rétréci en 0,4 s.
+9. `relecture_4_extincteur_plaque_AVANT_tourne_de_90.jpg` — AVANT la correction : l'extincteur plaqué à côté du vrai,
+   tourné de 90° (étiquette de profil).
+10. `relecture_5_extincteur_plaque_corrige.jpg` — APRÈS : plaqué depuis 34° de travers, au cap du vrai, pendu à 0,65 m comme
+    lui, sans voile au sol : deux jumeaux.
