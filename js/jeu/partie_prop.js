@@ -269,6 +269,12 @@ export class PartieProp extends Partie {
     const C = [], P = [];
     for (const a of this.acteurs) ((a.local ? roleH === 'chasseur' : chasse.has(a)) ? C : P).push(a);
     const dC = departs(this.zone, 'chasseurs', Math.max(1, C.length), this.rng), dP = this._lieuxProps(P.length);
+    // (les chasseurs tournés vers le cœur de la zone — les lieux d'où partent les props —, pas vers le mur du palier)
+    const L = pointsDe(this.zone);
+    if (L.length) {
+      const cx = L.reduce((s, q) => s + q.x, 0) / L.length, cz = L.reduce((s, q) => s + q.z, 0) / L.length;
+      for (const d of dC) if (Math.hypot(cx - d.x, cz - d.z) > 0.5) d.lacet = Math.atan2(-(cx - d.x), -(cz - d.z));
+    }
     C.forEach((a, k) => this._poserRole(a, 'chasseur', dC[k], { coequipier: !!loc && roleH === 'chasseur' && !a.local }));
     P.forEach((a, k) => this._poserRole(a, 'prop', dP[k]));
     // Haythem : la vue de son rôle (à la 1re manche, Partie.entrer la pose), le regard, ses touches (profil changé : purgé)
