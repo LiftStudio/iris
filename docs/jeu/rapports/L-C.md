@@ -5,6 +5,10 @@ Spécification : `docs/jeu/spec_finale.md` § 5.5.5 (lot), § 4.5.10 (contrats),
 
 ## Où j'en suis
 
+**RELECTURE EN COURS** (23/10, depuis 06:35, relecteur sévère, commits « L-C relecture : … ») — spec et diff relus,
+propriétaires OK ; en attente d'un jeton du navigateur pour rejouer les 14 critères et jouer. Voir la section
+« Relecture » en fin de rapport (constats, corrections, ce qui reste). Le constructeur avait conclu :
+
 **FINI** (23/10, 06:27) — les six points du § 5.1 règle 5 sont tenus :
 
 | | |
@@ -152,3 +156,15 @@ mains sur les vraies prises.
   (`document.hidden` reste faux dans le panneau) : la préparation de 1re fois (6-11 s) y est signalée, 1,5-2 s ailleurs.
 - La teinte « à 60 % » reste pâle sur une chemise blanche (bleu clair, orange pâle) : lisible avec les brassards ; F2 jugera
   avec les chevrons de L-G.
+
+## Relecture (23/10, relecteur sévère)
+
+### Où en est la relecture
+
+1. Spec relue (§ 5.5.5, § 4.5.10, §§ 3.6, 3.10, 4.3, 5.1) et diff `socle...lot/L-C` lu en entier (11 fichiers) : fait.
+2. `python -I tools/verifier_proprietaires.py lot/L-C` : `OK 11 fichiers` ; fins de ligne CRLF partout, comme les voisins.
+3. Rejeu des critères et partie jouée : en attente d'un jeton.
+
+### Constats de lecture
+
+(au fil de l'eau)
