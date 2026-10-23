@@ -1,24 +1,212 @@
 /* =====================================================================
-   LES MENUS DU JEU — socle S0 (22/10), rempli par le lot L-U
+   LES MENUS DU JEU — lot L-U (23/10 ; js/jeu/menus_jeu.js, spec §§ 2.1, 2.2, 2.9, 4.5.16)
    =====================================================================
-   Le menu principal sur l'école vivante (à gauche, le titre IRIS et les portes du jeu), l'écran PRÉPARATION DE LA PARTIE
-   (une barre), l'écran de fin. Le squelette : des boutons lisibles, rien de plus. */
-.menu-jeu {
-  position: fixed; left: 0; top: 0; bottom: 0; z-index: 20; display: flex; flex-direction: column; justify-content: center; gap: 10px;
-  padding: 24px max(16px, 5vw); background: linear-gradient(90deg, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0)); width: min(460px, 100vw); box-sizing: border-box;
+   Le menu principal sur l'école vivante (à gauche le titre IRIS et les portes du jeu, à droite la fiche de la porte
+   visée ; un fondu au noir à chaque coupe de la caméra du menu), les RÉGLAGES de partie (une fiche comme celle des
+   Options : lignes, groupes de choix, compteurs, bascules, les visages des amis), PRÉPARATION DE LA PARTIE (étapes,
+   barre, astuce), la FIN (bandeau, puis podium, chiffres et boutons) et les CRÉDITS. Même langue que css/style.css :
+   Bebas Neue pour les titres, Oswald pour le reste, l'orange de l'accent. Empilement : HUD 10, tactile 15, écrans 20-24,
+   calque « CLIQUE POUR JOUER » 25, pause 30, options 40 (les menus restent SOUS la pause et les options). */
+
+/* le fondu au noir de la caméra du menu : sur l'image, sous les écrans ; en balade et en partie (body.en-jeu), jamais */
+#menu-fondu { position: fixed; inset: 0; z-index: 9; background: #000; opacity: 0; pointer-events: none; }
+body.en-jeu #menu-fondu { display: none; }
+
+/* ---------------------------------------------------------------- L'ACCUEIL */
+.menu-jeu { position: fixed; inset: 0; z-index: 20; display: flex; justify-content: space-between; align-items: stretch; pointer-events: none;
+  font-family: var(--ui); color: var(--text); }
+.mj-col { pointer-events: auto; width: min(560px, 100vw); box-sizing: border-box; display: flex; flex-direction: column;
+  padding: max(26px, 6vh, env(safe-area-inset-top)) 24px max(22px, 4vh, env(safe-area-inset-bottom)) max(20px, 5vw, env(safe-area-inset-left));
+  background: linear-gradient(90deg, rgba(5, 7, 11, 0.88) 0%, rgba(5, 7, 11, 0.62) 58%, rgba(5, 7, 11, 0) 100%); }
+.mj-titre { font: 400 clamp(54px, 14vh, 150px)/0.85 var(--head); letter-spacing: 0.06em; color: #fff; margin: 0;
+  text-shadow: 0 6px 40px rgba(0, 0, 0, 0.6); animation: mjTitre 0.7s cubic-bezier(0.2, 0.9, 0.25, 1) both; }
+.mj-titre::after { content: ""; display: block; width: 96px; height: 5px; margin-top: 14px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+.mj-sous { margin-top: 12px; font: 500 13px/1.3 var(--ui); letter-spacing: 0.3em; color: var(--muted); }
+.mj-xp { margin-top: 14px; }
+.mj-liste { margin: auto 0; padding: 3vh 0; display: flex; flex-direction: column; gap: 1px; align-items: flex-start; }
+.mj-b { position: relative; background: transparent; border: 0; border-radius: 4px; padding: 5px 26px 5px 18px; cursor: pointer; text-align: left;
+  color: rgba(242, 244, 248, 0.74); font: 400 clamp(26px, 5.4vh, 48px)/1.04 var(--head); letter-spacing: 0.07em;
+  transition: color 0.15s, transform 0.2s cubic-bezier(0.2, 0.9, 0.25, 1), text-shadow 0.2s;
+  animation: mjEntree 0.5s cubic-bezier(0.2, 0.9, 0.25, 1) both; animation-delay: calc(var(--i, 0) * 45ms + 140ms); }
+.mj-b::before { content: ""; position: absolute; left: 0; top: 16%; bottom: 16%; width: 4px; border-radius: 2px; background: var(--accent);
+  transform: scaleY(0); transition: transform 0.18s; }
+.mj-b:hover, .mj-b:focus-visible, .mj-b.pad-focus { color: #fff; transform: translateX(10px); outline: none; text-shadow: 0 0 24px rgba(240, 164, 23, 0.45); }
+.mj-b:hover::before, .mj-b:focus-visible::before, .mj-b.pad-focus::before { transform: scaleY(1); }
+body.pad-nav .mj-b.pad-focus { outline: none !important; box-shadow: none !important; }
+/* (les deux portes « système » un cran plus bas et plus petites : le jeu d'abord) */
+.mj-b[data-act="options"] { margin-top: 14px; }
+.mj-b[data-act="options"], .mj-b[data-act="credits"] { font-size: clamp(20px, 3.6vh, 30px); color: rgba(242, 244, 248, 0.56); }
+.mj-aide { font: 400 12px/1.7 var(--ui); color: var(--muted); letter-spacing: 0.05em; }
+.mj-aide kbd { font-size: 11px; padding: 1px 6px; min-width: 20px; border-bottom-width: 2px; }
+.mj-aide .pad-g { margin-right: 2px; }
+.mj-info { pointer-events: none; align-self: flex-end; box-sizing: border-box; width: min(370px, 32vw); padding: 18px 22px;
+  margin: 0 max(20px, 4vw, env(safe-area-inset-right)) max(26px, 6vh) 0; background: rgba(10, 13, 20, 0.66); border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid var(--accent); border-radius: 8px; backdrop-filter: blur(6px); animation: mjEntree 0.5s 0.4s both; }
+.mj-info-t { font: 400 30px/1 var(--head); letter-spacing: 0.08em; color: #fff; }
+.mj-info-x { margin-top: 8px; font: 400 14px/1.5 var(--ui); color: #cdd3de; }
+@keyframes mjEntree { from { opacity: 0; translate: -18px 0; } to { opacity: 1; translate: 0 0; } }
+@keyframes mjTitre { from { opacity: 0; letter-spacing: 0.22em; } to { opacity: 1; letter-spacing: 0.06em; } }
+
+/* ---------------------------------------------------------------- LES RÉGLAGES DE PARTIE ET LES CRÉDITS */
+.reglage-jeu, .credits-jeu { position: fixed; inset: 0; z-index: 21; display: grid; place-items: center; grid-template-columns: minmax(0, 1fr);
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  box-sizing: border-box; background: rgba(5, 7, 11, 0.5); backdrop-filter: blur(3px); font-family: var(--ui); color: var(--text); }
+.rj-boite, .cr-boite { width: min(1060px, 100%); max-height: 100%; box-sizing: border-box; display: flex; flex-direction: column;
+  background: linear-gradient(180deg, rgba(20, 26, 40, 0.97), rgba(14, 18, 27, 0.97)); border: 1px solid var(--line); border-radius: 12px;
+  padding: 22px 26px; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); animation: fadeIn 0.25s ease-out; }
+.rj-tete { display: flex; align-items: center; gap: 18px; border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 4px; flex: none; }
+.rj-titre { font: 400 44px/1 var(--head); letter-spacing: 0.1em; margin: 0; }
+.rj-fil { margin-left: auto; color: var(--muted); letter-spacing: 0.18em; font-size: 12px; text-transform: uppercase; text-align: right; }
+.rj-corps { overflow: auto; flex: 1 1 auto; min-height: 0; padding: 2px 6px 4px 0; }
+.rj-ligne { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr); gap: 16px; align-items: center; padding: 12px 8px;
+  border-bottom: 1px solid rgba(39, 48, 70, 0.6); }
+.rj-ligne.rj-large { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.rj-ligne.rj-tete-ligne { margin: 8px 0 2px; border: 1px solid rgba(240, 164, 23, 0.28); border-radius: 8px;
+  background: linear-gradient(90deg, rgba(240, 164, 23, 0.12), rgba(240, 164, 23, 0) 75%); }
+.rj-lbl { font-size: 15px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
+.rj-lbl small { display: block; text-transform: none; letter-spacing: 0; color: var(--muted); font-weight: 400; font-size: 12.5px; margin-top: 3px; line-height: 1.45; }
+.rj-ctl { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 10px; min-width: 0; }
+.rj-large .rj-ctl { justify-content: flex-start; }
+.rj-seg { flex-wrap: wrap; max-width: 100%; }
+.rj-seg button { padding: 9px 15px; }
+.rj-raison { display: block; color: #ffb38a; margin-top: 3px; }
+.rj-raison b { font-weight: 500; }
+.rj-avert { display: block; color: var(--warn); margin-top: 3px; }
+/* les compteurs (− 3 +) */
+.rj-pas { display: inline-flex; align-items: center; background: #0e121b; border: 1px solid var(--line); border-radius: 6px; padding: 3px; }
+.rj-pas button { width: 40px; height: 36px; border: 0; background: transparent; color: var(--text); font: 600 22px/1 var(--ui); cursor: pointer; border-radius: 4px; }
+.rj-pas button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.08); }
+.rj-pas button:disabled { opacity: 0.28; cursor: default; }
+.rj-pas-v { min-width: 34px; text-align: center; font: 400 26px/1 var(--head); color: var(--accent2); }
+.rj-pas-n { padding: 0 10px 0 2px; color: var(--muted); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+.rj-duo, .rj-trio { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+/* les bascules (un bouton : la manette les atteint comme le reste) */
+.rj-bascule { display: inline-flex; align-items: center; gap: 10px; background: #0e121b; border: 1px solid var(--line); border-radius: 6px;
+  padding: 7px 13px 7px 8px; color: var(--muted); cursor: pointer; font: 600 13px/1 var(--ui); letter-spacing: 0.08em; }
+.rj-bascule i { position: relative; flex: none; width: 40px; height: 22px; border-radius: 11px; background: #242c3f; border: 1px solid #3a4560; transition: background 0.15s; }
+.rj-bascule i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #9aa3b5; transition: left 0.15s, background 0.15s; }
+.rj-bascule.on { color: var(--text); border-color: rgba(240, 164, 23, 0.55); }
+.rj-bascule.on i { background: rgba(240, 164, 23, 0.35); border-color: var(--accent); }
+.rj-bascule.on i::after { left: 20px; background: var(--accent); }
+/* les visages des amis (cochés : en couleur ; décochés : en gris) */
+.rj-amis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; width: 100%; }
+.rj-ami { position: relative; display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 12px 6px 10px; min-width: 0;
+  background: #0e121b; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); cursor: pointer; font: 600 13px/1.1 var(--ui);
+  letter-spacing: 0.05em; transition: border-color 0.12s, background 0.12s, color 0.12s; }
+.rj-ami:hover:not(:disabled) { border-color: #4a5672; }
+.rj-ami:disabled { opacity: 0.45; cursor: default; }
+.rj-ami b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.rj-ami-img { display: block; width: min(84px, 100%); aspect-ratio: 1; border-radius: 50%; overflow: hidden;
+  background: radial-gradient(circle at 50% 35%, #2b3448, #141a28 70%); filter: grayscale(0.9) brightness(0.72); transition: filter 0.15s; }
+.rj-ami.on { color: #fff; border-color: var(--accent); background: rgba(240, 164, 23, 0.1); }
+.rj-ami.on .rj-ami-img { filter: none; }
+.rj-coche { position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; border-radius: 4px; border: 1px solid #3a4560; display: grid; place-items: center; }
+.rj-ami.on .rj-coche { background: var(--accent); border-color: var(--accent); }
+.rj-ami.on .rj-coche::after { content: "✓"; color: #000; font: 700 13px/1 var(--ui); }
+.portrait { display: block; width: 100%; height: 100%; object-fit: cover; }
+.portrait-initiale { display: grid; place-items: center; width: 100%; height: 100%; background: linear-gradient(135deg, var(--c1), var(--c2));
+  color: rgba(255, 255, 255, 0.92); font: 400 40px/1 var(--head); text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35); }
+.rj-records { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; width: 100%; }
+.rj-records div { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; background: #0e121b; border: 1px solid var(--line); border-radius: 8px; }
+.rj-records span { font-size: 11.5px; letter-spacing: 0.14em; color: var(--muted); }
+.rj-records b { font: 400 24px/1 var(--head); letter-spacing: 0.04em; color: var(--accent2); }
+.rj-pied { display: flex; align-items: center; gap: 18px; padding-top: 14px; border-top: 1px solid var(--line); margin-top: 6px; flex: none; }
+.rj-resume { flex: 1; min-width: 0; color: #cdd3de; font-size: 13px; line-height: 1.45; letter-spacing: 0.08em; text-transform: uppercase; }
+.rj-lancer { min-width: 220px; }
+/* les crédits : des blocs en deux colonnes qui défilent */
+.cr-corps { overflow: auto; flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 4px 28px;
+  align-content: start; padding: 8px 6px 6px 0; }
+.cr-bloc { margin: 8px 0 12px; }
+.cr-bloc h3 { color: var(--accent2); margin: 0 0 8px; }
+.cr-bloc p { margin: 0 0 8px; color: #cdd3de; font: 400 14px/1.55 var(--ui); }
+.cr-bloc b { color: #fff; font-weight: 600; }
+.cr-bloc code { font-size: 12.5px; color: #e8ebf2; }
+.credits-list { margin: 0; padding-left: 18px; color: #cdd3de; font: 400 14px/1.6 var(--ui); }
+
+/* ---------------------------------------------------------------- PRÉPARATION DE LA PARTIE */
+.prep-jeu { position: fixed; inset: 0; z-index: 22; display: grid; place-items: center; color: #fff; font-family: var(--ui);
+  background: radial-gradient(ellipse at center, rgba(5, 7, 11, 0.7), rgba(5, 7, 11, 0.93)); }
+.pj-boite { width: min(560px, 92vw); display: flex; flex-direction: column; gap: 14px; animation: fadeIn 0.25s ease-out; }
+.pj-titre { font: 400 42px/1 var(--head); letter-spacing: 0.1em; margin: 0; }
+.pj-mode { color: var(--accent2); letter-spacing: 0.2em; font-size: 13px; min-height: 1em; }
+.pj-etapes { list-style: none; margin: 2px 0; padding: 0; display: grid; gap: 7px; }
+.pj-etapes li { display: flex; align-items: center; gap: 11px; color: var(--muted); font-size: 15px; letter-spacing: 0.04em; transition: color 0.2s; }
+.pj-etapes li::before { content: ""; flex: none; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #3a4560; box-sizing: content-box; }
+.pj-etapes li.en-cours { color: #fff; }
+.pj-etapes li.en-cours::before { border-color: var(--accent); border-top-color: transparent; animation: pjTourne 0.8s linear infinite; }
+.pj-etapes li.fait { color: #cdd3de; }
+.pj-etapes li.fait::before { background: var(--good); border-color: var(--good); }
+.prep-jeu-barre { width: 100%; height: 6px; background: rgba(255, 255, 255, 0.14); border-radius: 3px; overflow: hidden; }
+.prep-jeu-plein { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.25s ease-out; }
+.pj-etape { display: none; }
+.pj-astuce { color: #cdd3de; font-size: 13.5px; line-height: 1.5; min-height: 3em; }
+@keyframes pjTourne { to { transform: rotate(360deg); } }
+
+/* ---------------------------------------------------------------- LA FIN (bandeau 2,5 s, puis le bilan) */
+.fin-jeu { position: fixed; inset: 0; z-index: 24; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 18px; padding: 16px; background: rgba(5, 7, 11, 0.32); color: #fff; font-family: var(--ui); transition: background 0.5s; cursor: default; }
+.fin-jeu.bilan { background: rgba(5, 7, 11, 0.84); backdrop-filter: blur(6px); justify-content: flex-start; overflow: auto;
+  padding: max(5vh, 16px) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+.fj-bandeau { text-align: center; }
+.fj-titre { font: 400 clamp(64px, 15vh, 150px)/0.9 var(--head); letter-spacing: 0.08em; text-shadow: 0 8px 50px rgba(0, 0, 0, 0.7);
+  animation: fjTitre 0.6s cubic-bezier(0.2, 0.9, 0.25, 1.2) both; }
+.fin-jeu.victoire .fj-titre { color: var(--accent2); }
+.fin-jeu.defaite .fj-titre { color: #ff6b5e; }
+.fj-sous { margin-top: 10px; letter-spacing: 0.24em; font-size: 16px; color: #e8ebf2; text-transform: uppercase; animation: fadeIn 0.5s 0.25s both; }
+.fin-jeu.bilan .fj-titre { font-size: clamp(42px, 8vh, 82px); animation: none; }
+.fj-bilan { display: none; width: min(1000px, 100%); flex-direction: column; gap: 22px; align-items: center; }
+.fin-jeu.bilan .fj-bilan { display: flex; animation: fadeIn 0.35s ease-out both; }
+.fj-podium { display: flex; justify-content: center; align-items: flex-end; gap: 16px; padding-top: 18px; }
+.fj-marche { --eq: var(--accent); display: flex; flex-direction: column; align-items: center; gap: 6px; width: 172px; box-sizing: border-box; padding: 14px 10px 12px;
+  background: rgba(20, 26, 40, 0.88); border: 1px solid var(--line); border-top: 3px solid var(--eq); border-radius: 10px; }
+.fj-r1 { padding-bottom: 30px; transform: translateY(-16px); box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45); }
+.fj-vignette { width: 92px; height: 92px; border-radius: 50%; overflow: hidden; border: 2px solid var(--eq); background: #141a28; }
+.fj-r1 .fj-vignette { width: 118px; height: 118px; }
+.fj-rang { font: 400 32px/1 var(--head); color: var(--eq); }
+.fj-nom { font-weight: 600; letter-spacing: 0.04em; text-align: center; }
+.fj-nom i { color: var(--muted); font-style: normal; font-weight: 400; }
+.fj-score { color: var(--muted); font-size: 13px; }
+.fj-chiffres { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; width: 100%; }
+.fj-chiffres div { display: flex; flex-direction: column; align-items: center; padding: 12px 6px; background: rgba(20, 26, 40, 0.78); border: 1px solid var(--line); border-radius: 8px; }
+.fj-chiffres b { font: 400 34px/1 var(--head); color: #fff; letter-spacing: 0.03em; }
+.fj-chiffres span { margin-top: 5px; font-size: 11.5px; letter-spacing: 0.13em; color: var(--muted); text-transform: uppercase; text-align: center; }
+.fj-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+@keyframes fjTitre { from { opacity: 0; transform: scale(1.25); } to { opacity: 1; transform: none; } }
+
+/* ---------------------------------------------------------------- ÉCRANS ÉTROITS ET TÉLÉPHONES */
+@media (max-width: 760px), (max-height: 520px) {
+  .mj-info { display: none; }
+  .mj-col { width: min(640px, 100vw); }
+  .rj-boite, .cr-boite { padding: 12px 14px; border-radius: 10px; }
+  .rj-titre { font-size: 30px; }
+  .rj-tete { gap: 12px; padding-bottom: 8px; }
+  .rj-ligne { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 9px 4px; }
+  .rj-ctl, .rj-duo, .rj-trio { justify-content: flex-start; }
+  .rj-amis { grid-template-columns: repeat(6, minmax(70px, 1fr)); overflow-x: auto; padding-bottom: 4px; }
+  .rj-records { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rj-pied { padding-top: 10px; gap: 12px; }
+  .rj-lancer { min-width: 0; padding: 10px 26px; font-size: 22px; }
+  .fj-chiffres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .fj-marche { width: 118px; padding: 10px 6px; }
+  .fj-vignette { width: 60px; height: 60px; }
+  .fj-r1 .fj-vignette { width: 76px; height: 76px; }
 }
-.menu-jeu[hidden], .prep-jeu[hidden], .fin-jeu[hidden] { display: none; }
-.menu-jeu-titre, .prep-jeu-titre, .fin-jeu-titre { font: 400 64px/1 'Bebas Neue', Oswald, system-ui, sans-serif; color: #fff; letter-spacing: 0.05em; margin-bottom: 10px; }
-.prep-jeu-titre, .fin-jeu-titre { font-size: 36px; }
-.menu-jeu-liste { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
-.menu-jeu-bouton {
-  font: 400 26px/1.1 'Bebas Neue', Oswald, system-ui, sans-serif; letter-spacing: 0.05em; color: #fff; background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 4px; padding: 8px 18px; cursor: pointer; min-width: 220px; text-align: left;
+/* un téléphone en paysage : l'accueil sur deux colonnes de portes (six boutons de 44 px ne tiennent pas l'un sous l'autre) */
+@media (max-height: 520px) {
+  .mj-liste { display: grid; grid-template-columns: auto auto; column-gap: 26px; padding: 2vh 0; }
+  .mj-b[data-act="options"] { margin-top: 0; }
+  .mj-titre::after { margin-top: 8px; height: 4px; }
+  .mj-sous { margin-top: 8px; }
+  .pj-titre { font-size: 32px; }
+  .fin-jeu.bilan { padding-top: 12px; }
+  .fj-podium { padding-top: 4px; }
+  .fj-r1 { transform: none; padding-bottom: 12px; }
 }
-.menu-jeu-bouton:hover, .menu-jeu-bouton.pad-focus { background: rgba(255, 255, 255, 0.22); }
-.prep-jeu, .fin-jeu {
-  position: fixed; inset: 0; z-index: 22; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
-  background: rgba(0, 0, 0, 0.55); color: #fff; font: 500 16px/1.3 Oswald, system-ui, sans-serif;
+@media (max-width: 520px) {
+  .rj-fil { display: none; }
+  .rj-seg button { padding: 9px 11px; }
 }
-.prep-jeu-barre { width: min(420px, 80vw); height: 6px; background: rgba(255, 255, 255, 0.2); border-radius: 3px; overflow: hidden; }
-.prep-jeu-plein { height: 100%; width: 0; background: #fff; }
+/* au doigt : de gros boutons (44 px au moins) */
+body.touch .mj-b { min-height: 44px; }
+body.touch .rj-seg button, body.touch .rj-pas button, body.touch .rj-bascule { min-height: 44px; }
