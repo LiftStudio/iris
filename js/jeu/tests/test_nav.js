@@ -500,8 +500,11 @@ export default function (jeu) {
       let fr = false; for (let i = 1; i < L.length; i++) { const q = N.lien(L[i - 1], L[i]); if (q >= 0 && N.typeLien[q] === 1) fr = true; }
       if (fr) pris++;
     }
-    const ok = liens.length > 0 && liens.length === N.nFranchir && verifies === liens.length && attente >= 1 && comptoir >= 1 && rangs === 0 && candidats > 0 && pris === candidats;
-    return { ok, attendu: 'tous redonnés à ≤ 0,3 m, ≥ 1 sur les banquettes de l\'attente, ≥ 1 sur le comptoir (1,18 m), 0 dans un rang, A* les prend',
+    // (F2 : le comptoir n'est plus exigé — le plan de travail du personnel est collé derrière lui, X_PERS 18,05 de
+    // js/ecole_hall.js : 1,22 m de meubles d'un coup, l'arrivée de `franchissable` à 0,9-1,3 m tombe sur le bureau ; compté
+    // seulement, § 5.5.6 point 14 changé)
+    const ok = liens.length > 0 && liens.length === N.nFranchir && verifies === liens.length && attente >= 1 && rangs === 0 && candidats > 0 && pris === candidats;
+    return { ok, attendu: 'tous redonnés à ≤ 0,3 m, ≥ 1 sur les banquettes de l\'attente, 0 dans un rang, A* les prend (le comptoir compté)',
       obtenu: `${liens.length} liens, ${verifies} redonnés${faux.length ? ' (faux ' + faux.join(' ; ') + ')' : ''}, attente ${attente}, comptoir ${comptoir}, rangs ${rangs}, A* ${pris}/${candidats}` };
   });
 

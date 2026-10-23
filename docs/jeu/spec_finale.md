@@ -2493,8 +2493,9 @@ maximale au plus proche ennemi, vu de personne) ; `ramenerPoint` (anneaux de dom
     des humains dans les pièces meublées (salle d'attente, S 1.3, pause du 1er), clé de cache distincte ; génération
     ≤ 1,0 s (temps).
 14. Liens « franchir » (graphe des humains) : chacun vérifié par `franchissable` (arrivée à ≤ 0,3 m de son nœud) ;
-    ≥ 1 lien sur le comptoir de l'accueil et sur les banquettes de la salle d'attente ; 0 sur un rang serré ; A* qui les
-    emprunte quand le détour à pied est > 2 × plus long.
+    ≥ 1 lien sur les banquettes de la salle d'attente (F2 : plus sur le comptoir de l'accueil — le plan de travail du
+    personnel est collé derrière lui, 1,22 m à franchir d'un coup, l'arrivée à 0,9-1,3 m tombe sur le bureau) ; 0 sur un rang
+    serré ; A* qui les emprunte quand le détour à pied est > 2 × plus long.
 15. Face-à-face : deux `Pilote` envoyés l'un vers l'autre dans la volée de tôle (0,85 m) puis dans un couloir étroit : 20
     essais, 20 croisements réussis en ≤ 6 s, 0 coincé.
 16. `ramenerPoint` : les 3 anneaux de domination ramenés à ≤ 3 m d'un nœud de dégagement ≥ 1,5 m ; `C.libre` au rayon de
@@ -2970,8 +2971,9 @@ chaleur par zone.
 10. Domination, 10 min : chaque point pris au moins une fois par chaque camp ; ≥ 30 % du temps des bots en OBJECTIF.
 11. Un « Haythem » piloté par un cerveau Aguerri contre des Réguliers : 1,5 à 3 éliminations par minute (le rythme du § 2.3).
 12. `verifierDeterminisme(42, 60)` égal ; Mixte : alliés Réguliers, ennemis tirés entre Recrue et Aguerri.
-13. Franchissement : Haythem (scripté) passe par-dessus le comptoir de l'accueil pour semer un bot qui le traque : le bot
-    le suit par le lien « franchir » (≤ 2 s de retard) au lieu de faire le tour, 9 fois sur 10.
+13. Franchissement : Haythem (scripté) passe par-dessus un obstacle franchissable (F2 : les banquettes de la salle d'attente
+    — le comptoir de l'accueil n'a pas de lien, le bureau du personnel est derrière lui) pour semer un bot qui le traque : le
+    bot le suit par le lien « franchir » (≤ 2 s de retard) au lieu de faire le tour, 9 fois sur 10.
 
 #### 5.7.2 L-O — L'IA DU PROP HUNT (port 8152, ≈ 800 lignes, 2,5 j)
 **Construit** : `CerveauChasseur` (§ 3.9, prop § 9 : soupçon sur les props vivants ET les vraies poses des pièces voisines,
