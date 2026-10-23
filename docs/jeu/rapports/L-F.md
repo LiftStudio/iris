@@ -6,10 +6,10 @@ Branche `lot/L-F` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-F`), partie de `s
 ## Où j'en suis
 
 **FINI** (les six points du § 5.1 règle 5) :
-- (a) `&rapport=1&lot=L-F` : **17/17 sur PC** (50,7 s, 0 signalé) et **17/17 sous `?tel=1`** (émulation 375 × 812, 44,9 s,
-  0 signalé) — les 16 critères du § 5.5.9, plus 14 bis (chaque son rendu hors ligne) ; 3 tests `apresFusion` pour F2.
-- (b) `&rapport=1&lot=S0` sur la branche : **29/29 sur PC** (77,7 s, 0 signalé ; balade au bit près, points 1, 27, 29) et sous
-  `?tel=1` (voir « Le `__rapport` »).
+- (a) `&rapport=1&lot=L-F` : **17/17 sur PC** (54,6 s, 0 signalé) et **17/17 sous `?tel=1`** (émulation 375 × 812, 49,1 s,
+  0 signalé), sur le dernier code (`8e8d87e`) — les 16 critères du § 5.5.9, plus 14 bis (chaque son rendu hors ligne) ; 3 tests `apresFusion` pour F2.
+- (b) `&rapport=1&lot=S0` sur la branche : **29/29 sur PC** (86,9 s) et **29/29 sous `?tel=1`** (78,4 s), 0 signalé ; balade
+  au bit près (points 1 et 27 : 0 / 0, vue 3 et vue 1), point 25 « 40 tirs de test, props 33 % pour 33 % des candidats ».
 - (c) `python -I tools/verifier_proprietaires.py lot/L-F` → OK (fichiers et pureté).
 - (d) commits préfixés « L-F : », lignes d'attribution ; (e) ce rapport ; (f) onglet et serveur fermés, jeton rendu.
 
@@ -99,8 +99,8 @@ joués (`journal`, `n`, `muets`) pour les tests et la mise au point.
 
 ## Le `__rapport`
 
-PC (`http://127.0.0.1:8139/?test=1&rapport=1&lot=L-F`) : `ok: true`, `total: 17`, `echecs: []`, `signales: []`, `ms: 50657`,
-qualité high. `?tel=1` (375 × 812) : `ok: true`, `total: 17`, `echecs: []`, `signales: []`, `ms: 44931`, téléphone vrai.
+PC (`http://127.0.0.1:8139/?test=1&rapport=1&lot=L-F`) : `ok: true`, `total: 17`, `echecs: []`, `signales: []`, `ms: 54580`,
+qualité high. `?tel=1` (375 × 812) : `ok: true`, `total: 17`, `echecs: []`, `signales: []`, `ms: 49123`, téléphone vrai.
 
 | # | Critère (§ 5.5.9) | Mesure (PC ; `?tel=1` identique sauf mention) |
 |---|---|---|
@@ -126,9 +126,10 @@ qualité high. `?tel=1` (375 × 812) : `ok: true`, `total: 17`, `echecs: []`, `s
 (le critère 16 entier : 6 m d'avance tenus 4 s, puis ≤ 0,5 m/s — il dépend du sprint à endurance de L-B et de la vitesse d'un
 type de L-K ; le squelette sprinte sans fin), « sons spatialisés » (`sonsJeu.spatial`, panneau sur la voix).
 
-S0 sur la branche : PC 29/29 (77,7 s) — 1 balade au bit près (0 / 0), 9 prop hunt en traque vrai (3 props déguisés), 23 roue
-tout vrai, 25 « 48 élim., écart 1,97°, 40 tirs de test, props 33 % pour 33 % des candidats », 27 et 29 vrais. `?tel=1` : voir
-plus bas (rejoué à la fin).
+S0 sur la branche : PC 29/29 (86,9 s) — 1 balade au bit près (0 / 0), 9 « état vrai · 03041e41 / 03041e41 · prop hunt vrai
+(3 props déguisés) », 23 roue tout vrai, 25 « 48 élim., écart 1,97°, 40 tirs de test, props 33 % pour 33 % des candidats »,
+27 et 29 vrais ; `?tel=1` 29/29 (78,4 s ; 25 : 34 élim., 40 tirs de test). (Un temps, S0 point 25 a échoué : les départs des
+props évitaient les portes à 1,3 m et la pause orange du 1er n'en avait plus — ramené à 0,75 m, écart 5.)
 
 ## Le jeu en vrai (navigateur intégré, `?partie=prophunt&zone=e1&graine=3`, sans `?test=1`)
 
