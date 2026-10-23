@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IRIS · l'outil des portraits</title>
+<!-- L'OUTIL DES PORTRAITS (lot L-U, 23/10 ; spec § 4.5.16, arbitrage 40) : les bustes des sept avatars (Haythem et ses six
+     amis) rendus UNE fois, 192 × 192 sur fond transparent, en WebP — le jeu n'affiche ensuite que ces images
+     (assets/portraits/<id>.webp, js/jeu/portraits.js) : jamais un 2e contexte WebGL, jamais un avatar chargé au menu.
+     À servir depuis la racine d'IRIS (python serve.py <port>, puis /tools/portraits/) ; ?envoyer=<port> poste le
+     résultat à `python -I tools/portraits/ecrire.py --ecouter <port> assets/portraits/`. À refaire seulement si un
+     avatar change. -->
+<style>
+  body { margin: 18px; background: #12161f; color: #e8ebf2; font: 14px/1.5 system-ui, sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 6px; letter-spacing: .04em; }
+  #etat { color: #9aa3b5; margin: 0 0 14px; }
+  #planche { display: flex; flex-wrap: wrap; gap: 14px; }
+  figure { margin: 0; text-align: center; font-size: 12px; color: #9aa3b5; }
+  figure img { display: block; width: 192px; height: 192px; border-radius: 8px; margin-bottom: 4px;
+    background: repeating-conic-gradient(#2a2f3a 0% 25%, #353b48 0% 50%) 50% / 16px 16px; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "../../vendor/three/build/three.module.js",
+  "three/addons/": "../../vendor/three/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<h1>Portraits des avatars</h1>
+<p id="etat">Préparation…</p>
+<div id="planche"></div>
+<script type="module" src="outil.js"></script>
+</body>
+</html>
