@@ -84,7 +84,7 @@ export default function (jeu) {
       scruter(dt = 1 / 60) { m.scruter(game, dt); },
       rendre() {
         delete m.pads; delete m.vibrer;
-        m.toutRelacher(); m.muets.clear(); m.index = null; m.ctx = null; m.axe = null; m.sprintVerrou = null; m._sprintPrec = false;
+        m.toutRelacher(); m.muets.clear(); m.index = null; m.ctx = null; m.axe = null;
         m.annoncees.delete(0); m.nav.quitter(); m.passerAuClavier();
       },
     };
@@ -243,7 +243,8 @@ export default function (jeu) {
     return rendre(res);
   });
 
-  // 5. LA MANETTE EN PARTIE : les boutons du combat, L3 (verrouillé, double = tactique), bornes ± 1,48, 3,6 rad/s (^1,8),
+  // 5. LA MANETTE EN PARTIE : les boutons du combat, L3 (double = tactique ; son verrou est celui de lireCommande, L-B : à
+  //    F2), bornes ± 1,48, 3,6 rad/s (^1,8),
   //    accélération × 1,35, × 0,55 en visée
   T('5 manette en partie : boutons, L3, bornes, vitesse, accélération, visée', async () => {
     settings.controls.fps.tirAuto = false;
@@ -267,15 +268,6 @@ export default function (jeu) {
       F.bouton('L3', true); F.scruter(); jeu.avancer(PAS); const tact = c.sprintTact; F.bouton('L3', false); F.scruter(); jeu.avancer(PAS);
       res.push(['L3 double → sprint tactique', tact === true]);
       jeu.avancer(0.5);
-      // L3 verrouillé : un appui, stick vers l'avant → le sprint tenu ; le stick tiré en arrière, ou RT : rendu
-      F.stick('g', 0, -1); F.scruter(); jeu.avancer(PAS);
-      F.bouton('L3', true); F.scruter(); jeu.avancer(PAS); F.bouton('L3', false);
-      let tenu = true; for (let i = 0; i < 30; i++) { F.scruter(); jeu.avancer(PAS); tenu = tenu && c.sprint; }
-      F.stick('g', 0, 0.8); F.scruter(); jeu.avancer(PAS); const rendu = !c.sprint;
-      F.stick('g', 0, -1); F.bouton('L3', true); F.scruter(); jeu.avancer(PAS); F.bouton('L3', false); F.scruter(); jeu.avancer(PAS);
-      F.bouton('RT', true); F.scruter(); jeu.avancer(PAS); const rt = !c.sprint; F.bouton('RT', false); F.stick('g', 0, 0); F.scruter(); jeu.avancer(PAS);
-      res.push(['L3 verrouillé vers l’avant (0,25 s tenu)', tenu]); res.push(['stick en arrière : rendu', rendu]); res.push(['RT : rendu', rt]);
-      jeu.avancer(0.3);
       // les bornes du tangage : ± 1,48
       F.stick('d', 0, 1); for (let i = 0; i < 90; i++) F.scruter(); const bas = game.camPitch;
       F.stick('d', 0, -1); for (let i = 0; i < 120; i++) F.scruter(); const haut = game.camPitch;
@@ -709,6 +701,21 @@ export default function (jeu) {
       g.leve(); d.leve();
       res.push(['glissade', gl > 0.5, 'glisse ' + r3(gl)]);
     } finally { rendreD(); tc._desverrouillerSprint(); jeu.quitter('balade'); }
+    return rendre(res);
+  }, { apresFusion: true });
+  // L3 à la manette : le sprint VERROUILLÉ par lireCommande (L-B) — un appui, stick vers l'avant : tenu ; stick en arrière, RT : rendu
+  T('F2 · L3 verrouille le sprint (lireCommande de L-B), stick en arrière ou RT le rendent', async () => {
+    settings.controls.fps.tirAuto = false;
+    const p = await essai(), c = p.local.cmd, res = [], F = fausseManette();
+    try {
+      F.stick('g', 0, -1); F.scruter(); jeu.avancer(PAS);
+      F.bouton('L3', true); F.scruter(); jeu.avancer(PAS); F.bouton('L3', false);
+      let tenu = true; for (let i = 0; i < 30; i++) { F.scruter(); jeu.avancer(PAS); tenu = tenu && c.sprint; }
+      F.stick('g', 0, 0.8); F.scruter(); jeu.avancer(PAS); const rendu = !c.sprint;
+      F.stick('g', 0, -1); F.bouton('L3', true); F.scruter(); jeu.avancer(PAS); F.bouton('L3', false); F.scruter(); jeu.avancer(PAS);
+      F.bouton('RT', true); F.scruter(); jeu.avancer(PAS); const rt = !c.sprint; F.bouton('RT', false); F.stick('g', 0, 0); F.scruter(); jeu.avancer(PAS);
+      res.push(['L3 verrouillé vers l’avant (0,25 s tenu)', tenu]); res.push(['stick en arrière : rendu', rendu]); res.push(['RT : rendu', rt]);
+    } finally { F.rendre(); jeu.quitter('balade'); }
     return rendre(res);
   }, { apresFusion: true });
   // la roue dessinée par L-G suit le stick (le secteur choisi en surbrillance dans la même image)

@@ -22,9 +22,8 @@
 // lacet, atteint en 0,3 s), × 0,55 en visée, × le RALENTISSEMENT de l'aide à la visée (js/jeu/assistance_visee.js
 // facteurStick), entre les bornes de la partie (game.bornesTangage : ± 1,48, un prop −0,7 / 1,25). La ROUE DES PROVOCATIONS
 // ouverte (LB tenu, Haythem prop) : le stick droit la pointe (partie.mouvementStick), la caméra ne tourne pas. Le calque
-// « CLIQUE POUR JOUER » : A ou START le ferment et la partie repart SANS capture du pointeur. L3 VERROUILLE le sprint tant
-// que le stick gauche pousse vers l'avant (un 2e appui dans les 0,30 s : le sprint tactique — la règle du double appui de
-// lireCommande) ; tirer ou viser le relâche. Les VIBRATIONS viennent des ÉVÉNEMENTS de la partie seulement (son tir :
+// « CLIQUE POUR JOUER » : A ou START le ferment et la partie repart SANS capture du pointeur. (L3 : le sprint, que
+// lireCommande verrouille et dont le double appui fait le sprint tactique — js/jeu/entrees_jeu.js.) Les VIBRATIONS viennent des ÉVÉNEMENTS de la partie seulement (son tir :
 // faible, 40 ms ; une touche reçue : forte, 120 ms ; une élimination, une annonce : une seule fois) — plus aucune par
 // `hoops-feedback`, que la partie n'envoie plus (pas de double vibration). La balade, elle, ne change pas d'une ligne.
 import { settings, entree, PAD_BOUTONS, actionKey } from './settings.js';
@@ -55,7 +54,6 @@ export const STICK_JEU = {
   vitesse: 3.6,                                   // rad/s stick à fond, sensibilité 1 (lacet ET tangage)
   accel: { seuil: 0.9, attente: 0.25, montee: 0.3, gain: 1.35 },   // accélération de virage (lacet)
   visee: 0.55,                                    // en visée (entre les deux selon la visée de l'arme)
-  sprint: { lache: 0.25, avant: 0.35 },           // L3 verrouillé : relâché sous 25 % de poussée, ou à plus de ~70° de l'avant
 };
 // [fort, faible, ms] par événement de la partie (Haythem) — jamais plus de 0,6 en fort ni 200 ms, comme en balade
 export const VIBRATIONS_JEU = {
@@ -145,8 +143,8 @@ export class Manette {
     this.ctx = null;
     this.nav = new NavMenus(this);
     // (23/10, lot L-I) en partie : `regardBouge` (le stick droit poussé à cette image : le SUIVI de l'aide à la visée le
-    // lit), le temps passé au-delà de 0,9 (accélération de virage), le code du sprint verrouillé, la partie écoutée
-    this.regardBouge = false; this.accelT = 0; this.sprintVerrou = null; this._sprintPrec = false;
+    // lit), le temps passé au-delà de 0,9 (accélération de virage), la partie écoutée (vibrations)
+    this.regardBouge = false; this.accelT = 0;
     this._partie = null; this._desabonner = null;
 
     // branchement / débranchement. Chrome n'annonce une manette qu'au premier appui : l'événement vaut activité.
@@ -205,7 +203,7 @@ export class Manette {
     if (partie !== this._partie) this._ecouter(partie);
     const gp = this.lire();
     if (!gp) {
-      this.axe = null; this.sprintVerrou = null;
+      this.axe = null;
       if (this.injectes.size) this.toutRelacher();
       if (capture) { const fn = capture.fn; capture = null; fn(null); }     // débranchée pendant une réaffectation
       return;
@@ -260,7 +258,6 @@ export class Manette {
       if (ctx === 'roue') this.roue(game, d, fronts);
     } else this.axe = null;
 
-    if (ctx === 'jeu' && partie) this._sprintJeu(etats, g); else { this.sprintVerrou = null; this._sprintPrec = false; }
     this.injecter(etats, permis);
     if (ctx === 'menu') {
       const basNav = bas.map((v, i) => v && !this.muets.has('Pad:' + PAD_BOUTONS[i]));
@@ -323,7 +320,7 @@ export class Manette {
   // reste planté, et un bouton enfoncé au moment de la coupure (sprint) le resterait pour toujours.
   perdue() {
     const g = this.game, pilotait = entree.manette;
-    this.toutRelacher(); this.muets.clear(); this.axe = null; this.ctx = null; this.sprintVerrou = null; this._sprintPrec = false;
+    this.toutRelacher(); this.muets.clear(); this.axe = null; this.ctx = null;
     this.index = null;
     if (pilotait) this.passerAuClavier();
     document.dispatchEvent(new CustomEvent('hoops-manette', { detail: { connectee: false } }));
@@ -383,32 +380,12 @@ export class Manette {
     this.input.presser(c); this.aRelacher.push(c);
   }
 
-  // ---- (23/10) le sprint verrouillé, en partie ----
-  // Un appui sur le bouton du sprint (L3) le TIENT enfoncé pour le jeu tant que le stick gauche pousse vers l'avant ; un
-  // nouvel appui pendant qu'il est tenu refait un front (deux appuis en moins de 0,30 s : le sprint tactique, la règle du
-  // double appui de lireCommande) ; tirer, viser, le stick lâché (< 25 %) ou tiré vers l'arrière le relâchent.
-  _sprintJeu(etats, g) {
-    const inp = this.input, codes = (inp.bind.sprint || []).filter((c) => c && c.startsWith('Pad:'));
-    if (!codes.length) { this.sprintVerrou = null; this._sprintPrec = false; return; }
-    const phys = codes.some((c) => etats.get(c)), front = phys && !this._sprintPrec;
-    this._sprintPrec = phys;
-    const tient = (id) => (inp.bind[id] || []).some((c) => c && c.startsWith('Pad:') && etats.get(c));
-    const S = STICK_JEU.sprint, avant = -g.y;              // (l'axe Y du stick pointe vers le bas)
-    const c = codes.find((k) => etats.get(k)) || codes[0];
-    if (front && !this.muets.has(c)) {
-      if (this.sprintVerrou && this.injectes.has(this.sprintVerrou)) { inp.relacher(this.sprintVerrou); inp.presser(this.sprintVerrou); }
-      this.sprintVerrou = c;
-    }
-    if (this.sprintVerrou && (g.m < S.lache || avant < S.avant * g.m || tient('tir') || tient('visee'))) this.sprintVerrou = null;
-    if (this.sprintVerrou) etats.set(this.sprintVerrou, true);
-  }
-
   // ---- (23/10) les vibrations de la partie ----
   // Abonnées à SES événements (spec § 4.5.18) : Haythem tire, est touché, élimine ; une annonce ; une explosion ou une flash
   // près de lui. Une partie neuve : de nouveaux abonnements (Partie.sortir les efface tous).
   _ecouter(p) {
     if (this._desabonner) { try { this._desabonner(); } catch (e) { /* partie déjà finie */ } }
-    this._desabonner = null; this._partie = p || null; this.sprintVerrou = null; this.accelT = 0;
+    this._desabonner = null; this._partie = p || null; this.accelT = 0;
     if (!p || !p.sur) return;
     const V = VIBRATIONS_JEU, moi = (id) => !!p.local && id === p.local.id, v = (x, k = 1) => this.vibrer(x[0] * k, x[1] * k, x[2]);
     const L = [
