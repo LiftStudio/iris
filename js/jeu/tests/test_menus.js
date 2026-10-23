@@ -318,6 +318,17 @@ export default function (jeu) {
     const res = [], F = $('#fin-jeu');
     jeu.quitter('balade'); for (let i = 0; i < 120; i++) game.carte.maj(1 / 60, game);
     const avant = jeu.instantane();
+    // LA PRÉCISION du bilan : deux tirs de FP-12 (huit plombs chacun) à 2,5 m — les statistiques de l'acteur comptent un
+    // tir et jusqu'à huit touches par coup ; le bilan compte des touches sur des plombs : jamais plus de 100 %
+    const pf = await combatCourt({ classe: 'defense' }), H = pf.local, E = pf.acteurs.find((a) => a.equipe === 'B'), C = game.collisions;
+    let place = null;
+    for (let k = 0; k < 16 && !place; k++) {
+      const a = k * Math.PI / 8, x = H.pos.x + 2.5 * Math.sin(a), z = H.pos.z + 2.5 * Math.cos(a), y = C.solEn(x, z, H.pos.y + 0.5);
+      if (Math.abs(y - H.pos.y) < 0.2 && C.libre(x, z, 0.35, y) && C.rayonLibre(H.pos.x, H.pos.y + 1.4, H.pos.z, x, y + 1.3, z, 0.05)) place = { x, y, z };
+    }
+    if (place) { jeu.teleporter(E.id, place.x, place.y, place.z); jeu.tirer(H.id, { n: 2, cible: E.id }); }
+    const precF = +((menu().bilan(pf).chiffres.find(([n]) => n === 'précision') || [])[1] || '').replace(/\D/g, '');
+    res.push([`précision au FP-12 : ${precF} % (${H.stats.touches} touches pour ${H.stats.tirs} tirs)`, !!place && H.stats.touches > H.stats.tirs && precF > 0 && precF <= 100]);
     let p = await combatCourt();
     finir(p);
     res.push([`écran de fin (${$('.fj-titre', F)?.textContent} · ${$('.fj-sous', F)?.textContent})`, vu(F) && !vu($('#overlay')) && game.partie === p && p.phase === 'fin' && /VICTOIRE/.test($('.fj-titre', F).textContent)]);
