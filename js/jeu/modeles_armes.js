@@ -21,8 +21,10 @@
 // REPÈRE de chaque arme : origine = la PRISE DE LA MAIN DROITE (le creux entre pouce et index, en haut de la poignée), sur
 // le plan médian ; −Z vers la bouche, +Y en haut, +X à droite du tireur. En vue FPS la caméra voit le DESSUS et le flanc
 // GAUCHE (l'arme est à droite de l'œil) : les détails sont mis là d'abord. Les REPÈRES (table du § 4.5.8, au mm près) sont
-// des Object3D sous `userData.reperes` ; en vue, ceux qui suivent une pièce mobile sont enfants de son os (la main gauche du
-// FP-12 sur la pompe, les saisies du chargeur, du levier, de la glissière, l'anneau des grenades).
+// des Object3D sous `userData.reperes`, TOUS enfants directs du groupe, `position` = la table (le contrat tel que le socle
+// l'a posé, et que L-V compare) ; en vue, ceux qui suivent une pièce mobile ont en plus un JUMEAU enfant de son os, sous
+// `userData.reperesMobiles` (la main gauche du FP-12 sur la pompe, les saisies du chargeur, du levier, de la glissière,
+// l'anneau des grenades).
 //
 // Ce que la spec ne pouvait pas tenir à la fois (rapport L-W, écarts) : le FP-12 mesure 0,95 m mais ses repères crosse
 // (+0,22) et bouche (−0,78) sont à 1,00 m l'un de l'autre — la couche finit à +0,215 et la couronne du canon à −0,745
@@ -100,7 +102,7 @@ export const REPERES = {
     saisieChargeur: V(-0.012, -0.100, 0.029), saisieGlissiere: V(-0.0145, 0.040, 0.030) },
   couteau: { mainD: V(0, 0, 0) }, frag: { mainD: V(0, 0, 0), goupille: V(0.02, 0.05, 0) }, flash: { mainD: V(0, 0, 0), goupille: V(0.02, 0.06, 0) },
 };
-// en vue, les repères portés par une pièce mobile (enfants de son os : ils la suivent)
+// en vue, les repères portés par une pièce mobile : leurs jumeaux de `userData.reperesMobiles`, enfants de son os (ils la suivent)
 const PORTES = { fa24: { saisieChargeur: 'chargeur', saisieLevier: 'culasse' }, pm9: { saisieChargeur: 'chargeur', saisieLevier: 'culasse' },
   fp12: { mainG: 'pompe' }, tp50: { saisieChargeur: 'chargeur', saisieLevier: 'culasse' }, p17: { saisieChargeur: 'chargeur', saisieGlissiere: 'glissiere' },
   frag: { goupille: 'goupille' }, flash: { goupille: 'goupille' } };
@@ -801,17 +803,21 @@ export function creerArme(id, { pourVue = false } = {}) {
     m.name = g.name + ' ' + lot.mat;
     g.add(m);
   }
-  // les repères (en vue, ceux d'une pièce mobile sont enfants de son os)
-  const reperes = {};
+  // les repères : tous enfants directs du groupe, `position` = la table ; en vue, ceux d'une pièce mobile ont un jumeau enfant
+  // de son os (`reperesMobiles`). (Le constructeur les avait mis SOUS l'os à la place : leur `position` devenait relative au
+  // pivot — la main gauche du FP-12 à 42 cm de la table pour qui lit `position`, comme le test F2 de L-V — relecture.)
+  const reperes = {}, mobiles = pourVue ? {} : null;
   for (const [nom, p] of Object.entries(REPERES[cle] || {})) {
     if (!Array.isArray(p)) continue;
-    const r = new THREE.Object3D(); r.name = nom;
+    const r = new THREE.Object3D(); r.name = nom; r.position.set(p[0], p[1], p[2]); g.add(r); reperes[nom] = r;
     const porteur = pourVue && PORTES[cle] ? PORTES[cle][nom] : null;
-    if (porteur && os[porteur]) { const q = OS_ARMES[cle][porteur]; r.position.set(p[0] - q[0], p[1] - q[1], p[2] - q[2]); os[porteur].add(r); }
-    else { r.position.set(p[0], p[1], p[2]); g.add(r); }
-    reperes[nom] = r;
+    if (porteur && os[porteur]) {
+      const q = OS_ARMES[cle][porteur], j = new THREE.Object3D(); j.name = nom + ' (suit ' + porteur + ')';
+      j.position.set(p[0] - q[0], p[1] - q[1], p[2] - q[2]); os[porteur].add(j); mobiles[nom] = j;
+    }
   }
   g.userData.reperes = reperes;
+  g.userData.reperesMobiles = mobiles;
   g.userData.os = os;
   g.userData.arme = id;
   g.userData.squelette = squelette;

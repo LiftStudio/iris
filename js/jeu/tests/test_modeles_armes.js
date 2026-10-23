@@ -105,7 +105,8 @@ export default function (jeu) {
     return { ok: fautes.length === 0, attendu: 'vue ≤ 6 appels et ≤ 8 000 triangles ; 3e personne ≤ 3 et ≤ 1 500', obtenu: fautes.length ? fautes.join(' · ') : L.join(' · ') };
   });
 
-  // 2. LES REPÈRES au mm près, et les os selon l'arme (en vue, les repères portés suivent leur os)
+  // 2. LES REPÈRES au mm près — enfants directs du groupe, `position` ET position dans l'arme (le test F2 de L-V lit `position`)
+  // —, et les os selon l'arme ; en vue, les jumeaux de `reperesMobiles` suivent leur os, les repères ne bougent pas
   jeu.ajouterTest('L-W', '2 · repères et os', async () => {
     const fautes = []; let ecart = 0, suivis = 0;
     const w = new THREE.Vector3(), w0 = new THREE.Vector3();
@@ -115,11 +116,15 @@ export default function (jeu) {
         if (!Array.isArray(p)) continue;
         const R = g.userData.reperes[nom];
         if (!R) { fautes.push(`${id} : repère ${nom} absent`); continue; }
-        const d = R.getWorldPosition(w).distanceTo(w0.set(p[0], p[1], p[2])); ecart = Math.max(ecart, d);
-        if (d > 0.001) fautes.push(`${id} ${vue ? 'vue' : '3e'} ${nom} à ${r3(d * 1000)} mm`);
+        const d = Math.max(R.getWorldPosition(w).distanceTo(w0.set(p[0], p[1], p[2])), R.position.distanceTo(w0)); ecart = Math.max(ecart, d);
+        if (d > 0.001 || R.parent !== g) fautes.push(`${id} ${vue ? 'vue' : '3e'} ${nom} à ${r3(d * 1000)} mm${R.parent !== g ? ', pas enfant du groupe' : ''}`);
       }
-      const os = g.userData.os;
-      if (!vue) { if (os !== null) fautes.push(`${id} 3e : des os`); libererArme(g); continue; }
+      const os = g.userData.os, mob = g.userData.reperesMobiles;
+      if (!vue) { if (os !== null || mob !== null) fautes.push(`${id} 3e : des os`); libererArme(g); continue; }
+      for (const [nom, J] of Object.entries(mob)) {
+        const p = REPERES[id][nom], d = J.getWorldPosition(w).distanceTo(w0.set(p[0], p[1], p[2]));
+        if (d > 0.001 || !J.parent || !J.parent.isBone) fautes.push(`${id} : jumeau ${nom} à ${r3(d * 1000)} mm`);
+      }
       for (const n of NOMS_OS) {
         const b = os ? os[n] : undefined, voulu = !!OS_ARMES[id][n];
         if (voulu && !(b && b.isBone && b.name === n)) fautes.push(`${id} : os ${n} absent`);
@@ -128,9 +133,10 @@ export default function (jeu) {
       // chaque os bougé de sa course : ses repères le suivent d'autant, les autres ne bougent pas
       for (const [n, c] of Object.entries(COURSES_OS[id])) {
         const b = os[n], av = {};
-        for (const [nom, R] of Object.entries(g.userData.reperes)) av[nom] = R.getWorldPosition(new THREE.Vector3());
+        const tous = [...Object.entries(g.userData.reperes), ...Object.entries(mob).map(([nom, J]) => [nom + ' (mobile)', J])];
+        for (const [nom, R] of tous) av[nom] = R.getWorldPosition(new THREE.Vector3());
         b.position.x += c.x || 0; b.position.y += c.y || 0; b.position.z += c.z || 0; g.updateMatrixWorld(true);
-        for (const [nom, R] of Object.entries(g.userData.reperes)) {
+        for (const [nom, R] of tous) {
           let porte = false; R.traverseAncestors((a) => { if (a === b) porte = true; });
           const d = R.getWorldPosition(w).sub(av[nom]);
           if (porte) { suivis++; if (Math.abs(d.x - (c.x || 0)) + Math.abs(d.y - (c.y || 0)) + Math.abs(d.z - (c.z || 0)) > 1e-6) fautes.push(`${id} : ${nom} ne suit pas ${n}`); }
@@ -142,8 +148,8 @@ export default function (jeu) {
     }
     // la main gauche du FP-12 sur la pompe : courseMainG = la course de l'os
     if (Math.abs(REPERES.fp12.courseMainG - COURSES_OS.fp12.pompe.z) > 1e-9) fautes.push('FP-12 : courseMainG ≠ la course de la pompe');
-    return { ok: fautes.length === 0, attendu: 'repères = REPERES ± 1 mm ; os de OS_ARMES (Bone), aucun en 3e ; repères portés qui suivent leur os',
-      obtenu: fautes.length ? fautes.slice(0, 12).join(' · ') : `écart max ${r3(ecart * 1000)} mm · ${suivis} repères portés suivis` };
+    return { ok: fautes.length === 0 && suivis === 11, attendu: 'repères = REPERES ± 1 mm (enfants du groupe) ; os de OS_ARMES (Bone), aucun en 3e ; 11 jumeaux mobiles qui suivent leur os',
+      obtenu: fautes.length ? fautes.slice(0, 12).join(' · ') : `écart max ${r3(ecart * 1000)} mm · ${suivis} jumeaux mobiles suivis` };
   });
 
   // 3. L'ENCOMBREMENT (longueur selon −Z) à ± 3 %, dans les deux versions
