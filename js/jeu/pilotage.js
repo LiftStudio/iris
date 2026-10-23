@@ -55,6 +55,7 @@ export class Pilote {
     this._surs = [];                                         // les derniers nœuds sûrs passés (le secours)
     this.mode = 'route'; this._refuge = null; this._autre = null; this._tAttente = 0;
     this._franchi = null;                                    // { de, a, t } : le franchissement en cours
+    this._finBouchee = false;                                // la cible au-delà du dernier nœud est hors d'atteinte : le but est ce nœud
     this.dir = null;                                          // la direction voulue (monde, unitaire) : l'errant y met son regard
     this.cle = 'pilote:' + acteur.id;
     this.franchir = true;                                    // (faux : par la marche seule — l'errant)
@@ -66,12 +67,12 @@ export class Pilote {
     const c = this.cible;
     const saute = !c || Math.hypot(c.x - x, c.z - z) > 1.0 || Math.abs(c.y - y) > 1.2;
     if (!c) this.cible = { x, y, z }; else { c.x = x; c.y = y; c.z = z; }
-    if (saute) { this._arrive = false; this._coince = false; this.coincements = 0; this._replan = true; this._tPlan = -1; if (this.mode !== 'route') this._finFace(); }
+    if (saute) { this._arrive = false; this._coince = false; this._finBouchee = false; this.coincements = 0; this._replan = true; this._tPlan = -1; if (this.mode !== 'route') this._finFace(); }
     else if (this._plan && (Math.hypot(this._plan.x - x, this._plan.z - z) > 1.5 || Math.abs(this._plan.y - y) > 1.2)) this._replan = true;
   }
   stop() {
     this.cible = null; this._arrive = false; this._coince = false; this.chemin = []; this.k = 0; this.vise = 0; this._plan = null;
-    this._attente = false; this._replan = false; this._direct = false; this._ref = null; this.dir = null; this._finFace();
+    this._attente = false; this._replan = false; this._direct = false; this._ref = null; this.dir = null; this._finBouchee = false; this._finFace();
     if (this.nav && this.nav.annuler) this.nav.annuler(this.cle);
   }
   get arrive() { return this._arrive; }
@@ -93,11 +94,13 @@ export class Pilote {
     const D = this._vu;
     if (D && Math.hypot(p.x - D.x, p.z - D.z) > 1 + Math.abs(p.y - D.y)) {
       this.chemin = []; this.k = 0; this.vise = 0; this._surs.length = 0; this._ref = null; this.coincements = 0; this._franchi = null;
-      this._replan = true; this._tPlan = -1; this._arrive = false; if (this.mode !== 'route') this._finFace(false);
+      this._replan = true; this._tPlan = -1; this._arrive = false; this._finBouchee = false; if (this.mode !== 'route') this._finFace(false);
     }
     if (!D) this._vu = { x: p.x, y: p.y, z: p.z }; else { D.x = p.x; D.y = p.y; D.z = p.z; }
-    // L'ARRIVÉE (hystérésis, sur le même sol)
-    const memeSol = Math.abs(c.y - p.y) < 1.2, d = Math.hypot(c.x - p.x, c.z - p.z);
+    // L'ARRIVÉE (hystérésis, sur le même sol) — à la cible, ou au dernier nœud quand la cible est BOUCHÉE (ci-dessous)
+    const L0 = this.chemin, fin = this._finBouchee && L0.length ? L0[L0.length - 1] : -1;
+    const bx = fin >= 0 ? N.px[fin] : c.x, by = fin >= 0 ? N.ph[fin] : c.y, bz = fin >= 0 ? N.pz[fin] : c.z;
+    const memeSol = Math.abs(by - p.y) < 1.2, d = Math.hypot(bx - p.x, bz - p.z);
     if (this.mode === 'route') {
       if (this._arrive) { if (!(memeSol && d < this.arret + this.marge)) this._arrive = false; }
       else if (memeSol && d < this.arret) this._arrive = true;
@@ -123,7 +126,12 @@ export class Pilote {
       for (let j = Math.min(L.length - 1, this.k + FICELLE_N); j > this.k; j--) if (this._passe(L[j], p)) { this.k = j + 1; break; }
       if (this.k >= L.length) {
         if (this.mode === 'recul') { this.mode = 'attente'; this._tAttente = 0; return; }
-        tx = c.x; tz = c.z;                                   // (après le dernier nœud : la cible elle-même)
+        // (après le dernier nœud : la cible elle-même, si un balayage y mène — revu toutes les 0,25 s ; sinon, une cible
+        // dans un meuble ou derrière un mur, le dernier nœud est le plus près qu'on en soit : c'est lui le but, au lieu de
+        // pousser le meuble 3 s, d'être pris pour coincé, puis téléporté)
+        if (t >= this._tFicelle) { this._tFicelle = t + FICELLE_T; this._finBouchee = !this._balayerVers(p.x, p.y, p.z, c.x, c.y, c.z, 0, 0.6); }
+        const w = L[L.length - 1];
+        if (this._finBouchee) { tx = N.px[w]; tz = N.pz[w]; } else { tx = c.x; tz = c.z; }
       } else {
         if (t >= this._tFicelle || this.vise < this.k) { this._tFicelle = t + FICELLE_T; this.vise = this._ficelle(p); }
         if (this.vise < this.k) this.vise = this.k;
@@ -163,7 +171,7 @@ export class Pilote {
   _recu(liste) {
     this._attente = false;
     if (!liste || !liste.length) { this.chemin = []; this._coince = true; return; }
-    this.chemin = liste; this.k = 0; this.vise = 0; this._tFicelle = -1; this._franchi = null;
+    this.chemin = liste; this.k = 0; this.vise = 0; this._tFicelle = -1; this._franchi = null; this._finBouchee = false;
   }
   // un nœud passé : à 0,35 m, sur son sol
   _passe(v, p) { const N = this.nav; return Math.hypot(N.px[v] - p.x, N.pz[v] - p.z) < PROCHE && Math.abs(N.ph[v] - p.y) < 0.6; }
@@ -194,8 +202,10 @@ export class Pilote {
   // le corps irait-il tout droit de (x, y, z) au nœud v ? (tronçons de 0,35 m, le sol suivi, pas de descente > 0,35 m.)
   // Avec une marge : le disque balayé a `marge` de plus que le corps ; il part du corps poussé hors des murs à ce rayon (s'il
   // en est à moins de la marge : sinon, refusé) et peut finir à `marge` du nœud (un nœud le long d'un mur est à 0,3 m de lui)
-  _balayer(x, y, z, v, marge = 0) {
-    const N = this.nav, C = this._C, r = this._r + marge, bx = N.px[v], bz = N.pz[v], by = N.ph[v];
+  _balayer(x, y, z, v, marge = 0) { const N = this.nav; return this._balayerVers(x, y, z, N.px[v], N.ph[v], N.pz[v], marge, 0.35); }
+  // (vers un point quelconque ; `dyFin` : l'écart de sol permis à l'arrivée)
+  _balayerVers(x, y, z, bx, by, bz, marge, dyFin) {
+    const C = this._C, r = this._r + marge;
     _Q.x = x; _Q.z = z;
     if (marge > 0) { C.resoudre(_Q, r, null, y); if (Math.hypot(_Q.x - x, _Q.z - z) > marge + 0.02) return false; x = _Q.x; z = _Q.z; }
     const L = Math.hypot(bx - x, bz - z);
@@ -210,7 +220,7 @@ export class Pilote {
       if (h2 < h - 0.35 || h2 > h + 0.45) return false;
       h = h2;
     }
-    return Math.abs(h - by) < 0.35;
+    return Math.abs(h - by) < dyFin;
   }
 
   // ---------------------------------------------------------------- le franchissement
@@ -447,16 +457,22 @@ export class Errant {
   commande(dt, cmd) {
     const a = this.acteur, P = this.pilote, t = this.partie.t;
     viderFronts(cmd);                              // (les fronts ne vivent qu'un pas : un `saut` resté vrai faisait sautiller)
+    // (le lacet a été tenu par un autre depuis le dernier pas — le cerveau en combat, une réapparition — : le regard repart
+    // de là ; sinon, le combat fini, la tête et le corps sautaient d'un coup vers le regard d'avant le combat)
+    if (this._lacetPose !== undefined && Math.abs(angle(cmd.lacet - this._lacetPose)) > 1e-9) this.regard = cmd.lacet;
     // LA DESTINATION
-    const v = this.vers ? this.vers(a) : null;
+    const v = this.vers ? this.vers(a) : null, avant = this.dest;
     if (v) {
       if (!this.versPt || Math.hypot(v.x - this.versPt.x, v.z - this.versPt.z) > 3 || Math.abs(v.y - this.versPt.y) > 1.5) {
         this.versPt = { x: v.x, y: v.y, z: v.z }; this.mode = 'vers'; this.dest = { ...this.versPt };
       }
     } else if (this.mode === 'vers' || this.mode === 'guet' || this.mode === 'ronde') { this.versPt = null; this.dest = null; }
     if (!this.dest) this._choisirPiece();
-    if (P.coince) { P.stop(); if (this.mode === 'vers' || this.mode === 'guet') this._choisirRonde(); else this._choisirPiece(); }
-    else if (P.arrive) {
+    // (`arrive` et `coince` sont ceux de la destination d'AVANT : une destination neuve n'est ni atteinte ni bouchée — sinon
+    // le point chaud entendu pendant une pause passait en « guet » sans qu'il y soit allé)
+    const neuve = this.dest !== avant;
+    if (!neuve && P.coince) { P.stop(); if (this.mode === 'vers' || this.mode === 'guet') this._choisirRonde(); else this._choisirPiece(); }
+    else if (!neuve && P.arrive) {
       // (arrivé au point chaud : il GUETTE 2 à 4 s, le regard qui balaie, puis fait sa ronde autour)
       if (this.mode === 'vers') { this.mode = 'guet'; this.rondeT = t + 2 + this.rng.next() * 2; }
       else if (this.mode === 'guet' || this.mode === 'ronde') { if (t >= this.rondeT) this._choisirRonde(); }
@@ -480,7 +496,7 @@ export class Errant {
       cmd.ay = P.dir.x * fx + P.dir.z * fz; cmd.ax = P.dir.x * rx + P.dir.z * rz;
       cmd.sprint = P.sprint && cmd.ay > 0.7 && !P._franchi;
     }
-    cmd.lacet = this.regard; cmd.tangage = 0;
+    cmd.lacet = this.regard; cmd.tangage = 0; this._lacetPose = cmd.lacet;
     cmd.marche = false; cmd.tir = false; cmd.visee = false; cmd.accroupi = false;
   }
 }

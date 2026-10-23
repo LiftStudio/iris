@@ -471,11 +471,15 @@ export class Nav {
 
   // ---------------------------------------------------------------- la zone de jeu
   // le masque des nœuds permis (Uint8Array de `nb`, 1 = permis) : la zone de jeu moins les pièces fermées (js/jeu/
-  // monde_partie.js noeudsAutorises) ; null : tout. Les champs en cache sont oubliés.
+  // monde_partie.js noeudsAutorises) ; null : tout. Les champs en cache sont oubliés ; les demandes de la file sont
+  // REPRISES sous le nouveau masque (relecture : vidée sans rappel, un pilote qui attendait son chemin restait figé pour
+  // toujours — une arrivée devenue interdite rend null, le pilote passe à autre chose)
   restreindre(masque) {
     this.masque = masque && masque.length === this.nb ? masque : null;
     if (this.masque && this.masque.every((v) => v)) this.masque = null;
-    this._champs.clear(); this._parZone = null; this._file.length = 0;
+    this._champs.clear(); this._parZone = null;
+    for (const q of this._file) q.parti = false;
+    if (this._r2) this._r2.fini = true;
     if (this.rayon >= 0.25) Nav.derniere = this;            // (le graphe des humains de la partie qui se prépare : js/jeu/apparitions.js departs)
   }
   permis(i) { return !this.masque || this.masque[i] === 1; }
@@ -594,7 +598,9 @@ export class Nav {
   // une demande retirée de la file (le bot s'est arrêté)
   annuler(cle) { const F = this._file; for (let i = 0; i < F.length; i++) if (F[i].cle === cle) { F.splice(i, 1); if (i === 0 && this._r2) this._r2.fini = true; return; } }
   // DIJKSTRA COMPLET depuis un nœud (la distance à pied de tous les nœuds de la zone : Infinity hors d'atteinte), en
-  // cache tant que le masque ne change pas (les points d'apparition)
+  // cache tant que le masque ne change pas (les points d'apparition). Les champs sont des distances à pied VRAIES : ni les
+  // bords ni les liens pénalisés d'un coincement n'y entrent (sinon, 10 s durant, un ennemi derrière un lien pénalisé
+  // semblait à 10 × sa distance — une réapparition à côté de lui)
   champDepuis(id) {
     const u = this._noeud(id);
     if (u < 0) return new Float64Array(this.nb).fill(Infinity);
@@ -618,7 +624,7 @@ export class Nav {
     const R = this._rC, g = R.g;
     out.fill(Infinity);
     R.tour = (R.tour + 1) >>> 0; if (R.tour === 0) { R.vu.fill(0); R.ferme.fill(0); R.tour = 1; }
-    const tour = R.tour, D = this.debut, Li = this.liens, K = this.cout, M = this.masque, P = this._penal, pen = P.size > 0;
+    const tour = R.tour, D = this.debut, Li = this.liens, K = this.cout, M = this.masque;
     R.n = 0; R.a = -1;
     for (const u of L) { if (R.vu[u] === tour) continue; g[u] = 0; R.vu[u] = tour; R._pousser(u, 0); }
     while (R.n > 0) {
@@ -631,9 +637,7 @@ export class Nav {
       for (let j = D[u]; j < D[u + 1]; j++) {
         const v = Li[j];
         if ((M && !M[v]) || R.ferme[v] === tour) continue;
-        let c = K[j];
-        if (pen) { const f = P.get(j); if (f !== undefined && this.t < f) c *= PENALITE; }
-        const gv = gu + c;
+        const gv = gu + K[j];
         if (R.vu[v] === tour && gv >= g[v]) continue;
         R.vu[v] = tour; g[v] = gv; R._pousser(v, gv);
       }
