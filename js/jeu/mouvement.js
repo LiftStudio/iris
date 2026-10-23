@@ -46,7 +46,8 @@ export const ENDURANCE = { max: 100, perte: 25, gain: 15, reprise: 20 };        
 export const GLISSADE = { sprintMin: 0.25, vMin: 6.0, gain: 1.12, plancher: 6.6, plafond: 8.8, duree: 0.75, expo: 0.6, recharge: 0.9,
   viseeApres: 0.35, penteMax: 0.4, saut: 0.85, descente: 0.12, remontee: 0.2 };
 export const ACCROUPI = { descente: 0.16, remontee: 0.18, plafond: 1.85 };
-export const SAUT = { v: 3.15, vMin: 1.2, marge: 0.08, teteVol: 0.05, tete: 1.73, hautTete: 1.78, basTete: 1.35, pasTete: 0.02, viseeApres: 0.1, hautCorpsAir: 1.35 };
+export const SAUT = { v: 3.15, vMin: 1.2, marge: 0.08, teteVol: 0.05, tete: 1.73, hautTete: 1.78, basTete: 1.35, pasTete: 0.02, viseeApres: 0.1, hautCorpsAir: 1.35,
+  glisseMeuble: 3.0, dichotomie: 0.001 };                                        // (le corps posé sur un meuble : étape 9, (3))
 export const RECEPTION = { chute: 0.3, facteur: 0.85, duree: 0.12 };
 export const FRANCHIR = { duree: 0.45, dureeBas: 0.38, bas: 0.7, arc: 0.35, sortie: 0.7, contre: 0.15, essai: 0.1 };
 export const PAS_ACTEUR = { course: 0.7, marche: 0.45, accroupiMin: 1.3 };
@@ -112,7 +113,7 @@ export function appliquerCommande(acteur, cmd, dt, partie) {
   if (!p || acteur.corps !== p) return;
   const M = etatMvt(acteur), t = partie.t, C = partie.game && partie.game.collisions;
   const s = (p.h || OEIL.taille) / OEIL.taille;
-  const x0 = p.pos.x, z0 = p.pos.z;
+  const x0 = p.pos.x, y0 = p.pos.y, z0 = p.pos.z;
   // (une mort, une réapparition, une téléportation : la glissade, le franchissement, le sprint tactique et l'œil repartent ; on
   // réapparaît la jauge du sprint tactique et l'endurance pleines, comme dans Call of Duty)
   if (M.mortT !== acteur.mortT || Math.hypot(x0 - M.px, z0 - M.pz) > 1) {
@@ -231,18 +232,24 @@ export function appliquerCommande(acteur, cmd, dt, partie) {
   }
   // ---- 8. LA GRAVITÉ, EXACTE : Player.simuler intègre `jumpVel −= g·dt ; jumpY += jumpVel·dt` ; la parabole veut
   //         `jumpY += jumpVel·dt − g·dt²/2` — on lui rend g·dt²/2 d'avance (apogée 0,5057 m, et non 0,4926) ----
-  const enAirAvant = p.airborne;
+  const enAirAvant = p.airborne, jy0 = p.jumpY;
   if (enAirAvant) p.jumpY += 0.5 * G * dt * dt;
   p.simuler(dt);
-  // ---- 9. LE SAUT BORNÉ EN VOL : le plafond, puis la tranche de tête contre les linteaux ----
-  if (p.airborne && C) {
-    const pieds = p.pos.y, h = SAUT.tete * s;
-    const plaf = C.plafondEn(p.pos.x, p.pos.z, pieds);
-    if (pieds + p.jumpY + h + SAUT.teteVol > plaf) { p.jumpY = Math.max(0, plaf - pieds - h - SAUT.teteVol); p.jumpVel = Math.min(0, p.jumpVel); }
-    const r = p.rayon ?? 0.3;
-    let n = 0, cogne = false;
-    while (p.jumpY > 0 && n++ < 80 && !C.libre(p.pos.x, p.pos.z, r, pieds + p.jumpY, SAUT.hautTete * s, SAUT.basTete * s)) { p.jumpY = Math.max(0, p.jumpY - SAUT.pasTete); cogne = true; }
-    if (cogne) p.jumpVel = Math.min(0, p.jumpVel);
+  // ---- 9. LE SAUT BORNÉ EN VOL : le plafond, puis la tranche de tête contre les linteaux, puis le corps sur un meuble ----
+  if (C && (p.airborne || enAirAvant)) {
+    const pieds = p.pos.y, h = SAUT.tete * s, r = p.rayon ?? 0.3;
+    if (p.airborne) {
+      const plaf = C.plafondEn(p.pos.x, p.pos.z, pieds);
+      if (pieds + p.jumpY + h + SAUT.teteVol > plaf) { p.jumpY = Math.max(0, plaf - pieds - h - SAUT.teteVol); p.jumpVel = Math.min(0, p.jumpVel); }
+      let n = 0, cogne = false;
+      while (p.jumpY > 0 && n++ < 80 && !C.libre(p.pos.x, p.pos.z, r, pieds + p.jumpY, SAUT.hautTete * s, SAUT.basTete * s)) { p.jumpY = Math.max(0, p.jumpY - SAUT.pasTete); cogne = true; }
+      if (cogne) p.jumpVel = Math.min(0, p.jumpVel);
+    }
+    // (3) le corps qui redescend sur une forme BASSE qu'il survolait (une chaise, un banc, une table : leur dessus n'est pas
+    //     un sol, solEn ne le connaît pas) s'y POSE au lieu d'y entrer — sinon C.deplacer, au pas suivant, l'en sortait d'un
+    //     coup par la face la plus proche : jusqu'à 1 m en un pas, et DE L'AUTRE CÔTÉ du mur contre lequel le meuble est posé
+    //     (23/10, relecture : 60 « bonds » sur 1 461 sauts au sprint, 7 à travers un mur)
+    if (chevauche(C, p.pos.x, p.pos.z, r, pieds + p.jumpY, SAUT.hautCorpsAir * s)) surMeuble(p, C, s, r, jy0, x0, y0, z0, dt);
     M.hautVol = Math.max(M.hautVol, p.jumpY);
   }
   // ---- 10. LA RÉCEPTION ----
@@ -254,6 +261,61 @@ export function appliquerCommande(acteur, cmd, dt, partie) {
     M.hautVol = 0;
   }
   finPas(acteur, p, M, C, t, x0, z0, dt, partie, sprint);
+}
+
+// LE CORPS POSÉ SUR UN MEUBLE (étape 9, (3)) : la plus basse hauteur de saut où le corps en l'air est libre, entre celle où la
+// gravité l'amenait et celle du déplacement de ce pas (dichotomie, 1 mm), sans vitesse verticale — le corps tient sur le dessus
+// du meuble, en l'air pour Player (le saut et la glissade attendent qu'il en descende) ; et il en GLISSE, à 3 m/s au plus, vers
+// la sortie la plus proche (une des 8 directions : le premier point à 1,25 m au plus où le corps redescend libre, et qu'on
+// atteint par C.deplacer à la hauteur tenue — jamais à travers un mur, jamais vers le mur contre lequel le meuble est posé).
+// Coincé entre le meuble et un linteau (aucune hauteur libre pour la tête) : le pas est annulé, comme contre un mur.
+const _q = { x: 0, z: 0 }, SORTIES = [0.15, 0.3, 0.45, 0.6, 0.8, 1.0, 1.25];
+function surMeuble(p, C, s, r, jy0, x0, y0, z0, dt) {
+  const pieds = p.pos.y, hc = SAUT.hautCorpsAir * s, bas = p.jumpY;
+  const libre = (j) => !chevauche(C, p.pos.x, p.pos.z, r, pieds + j, hc);
+  const tete = (j) => pieds + j + SAUT.tete * s + SAUT.teteVol <= C.plafondEn(p.pos.x, p.pos.z, pieds)
+    && C.libre(p.pos.x, p.pos.z, r, pieds + j, SAUT.hautTete * s, SAUT.basTete * s);
+  if (jy0 > bas && libre(jy0) && tete(jy0)) {
+    let lo = bas, hi = jy0;
+    while (hi - lo > SAUT.dichotomie) { const m = (lo + hi) / 2; if (libre(m)) hi = m; else lo = m; }
+    p.jumpY = hi; p.jumpVel = 0; p.airborne = true;
+    // la sortie la plus proche (les 8 directions, de l'est dans le sens trigonométrique : déterministe)
+    let bd = Infinity, bx = 0, bz = 0;
+    for (let k = 0; k < 8; k++) {
+      const ux = Math.cos(k * Math.PI / 4), uz = Math.sin(k * Math.PI / 4);
+      for (const d of SORTIES) {
+        if (d >= bd) break;
+        if (chevauche(C, p.pos.x + ux * d, p.pos.z + uz * d, r, pieds + bas, hc)) continue;
+        _q.x = p.pos.x; _q.z = p.pos.z; C.deplacer(_q, ux * d, uz * d, r, null, pieds + hi, hc);
+        if ((_q.x - p.pos.x) * ux + (_q.z - p.pos.z) * uz >= d - 0.02) { bd = d; bx = ux; bz = uz; }
+        break;
+      }
+    }
+    if (bd < Infinity) {
+      const L = Math.min(bd, SAUT.glisseMeuble * dt);
+      C.deplacer(p.pos, bx * L, bz * L, r, null, pieds + hi, hc);
+      p.pos.y = C.solEn(p.pos.x, p.pos.z, p.pos.y);
+    }
+  } else {
+    p.pos.set(x0, y0, z0); p.vel.x = 0; p.vel.z = 0;
+    p.jumpY = jy0; p.jumpVel = 0; p.airborne = jy0 > 0;
+  }
+}
+// le disque (x, z, r) chevauche-t-il une forme du joueur dans la bande [pieds + bas, pieds + haut] ? Lu forme par forme
+// (Collisions._parcourir / _sortir sur une copie), et non par C.libre, qu'un meuble collé à un mur trompe : le disque dont le
+// centre est entré dans la table est poussé par sa face la plus proche DANS le mur, puis ressorti du mur au même point — il
+// paraît libre, au milieu de la table (demande à F2 / INT pour js/collisions.js). (1 mm de marge : un corps posé contre un mur
+// le touche à r près.) Aucune autre requête au monde solide dans le rappel (§ 4.1 règle 8).
+const _t = { x: 0, z: 0 }, BAS_CORPS = 0.25;                                     // (js/collisions.js BAS_CORPS)
+function chevauche(C, x, z, r, pieds, haut, bas = BAS_CORPS) {
+  const yb = pieds + bas, yh = pieds + haut, rr = r - 1e-3;
+  let oui = false;
+  C._parcourir(x - r, z - r, x + r, z + r, (f) => {
+    if (oui || f.off || !f.joueur || f.y0 >= yh || f.y1 <= yb) return;
+    _t.x = x; _t.z = z;
+    if (C._sortir(f, _t, rr)) oui = true;
+  });
+  return oui;
 }
 
 // la fin de chaque pas : la visée bloquée (glissade, décollage, franchissement), l'allure, les pas, l'œil lissé

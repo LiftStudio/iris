@@ -269,6 +269,19 @@ export default function (jeu) {
     const bas = pointsLibres(rng, 400, (x, y, z, pl) => pl - y >= 2.15 && pl - y <= 2.45);
     const tous = pointsLibres(rng, 400);
     let sauts = 0, sousBas = 0, fautesTete = 0, fautesTranche = 0, refus = 0, refusAttendus = 0, pasAir = 0, franchis = 0;
+    // (relecture du 23/10) les sauts SUR les meubles bas : aucun « bond » (plus de 9 cm en un pas : le corps sorti d'un coup d'une
+    // forme où il était redescendu), aucune traversée de mur, jamais dedans à l'arrivée ; posé sur un meuble, les touches
+    // lâchées, il en redescend seul en 2 s au plus — hors des trous du sol (le sol qui change de niveau sous le corps : le −1 du
+    // lot R, hors de ses dalles, rend le rez-de-chaussée)
+    let bonds = 0, traversees = 0, dedansFin = 0, poses = 0, posesLongs = 0, trous = 0;
+    const traverse = (x0, z0, x1, z1, y) => { const k = Math.ceil(Math.hypot(x1 - x0, z1 - z0) / 0.02); for (let u = 1; u < k; u++) if (!c().libre(x0 + (x1 - x0) * u / k, z0 + (z1 - z0) * u / k, 0.01, y, 1.75, 1.2)) return true; return false; };
+    let trou = false;
+    const pasSaut = () => {
+      const j = a.corps, x0 = j.pos.x, y0 = j.pos.y, z0 = j.pos.z;
+      p.pas(PAS);
+      if (trou || Math.abs(j.pos.y - y0) > 0.5) { trou = true; return; }        // (le corps tombé dans un trou du sol : la suite n'est plus le saut)
+      if (Math.hypot(j.pos.x - x0, j.pos.z - z0) > 0.09) { bonds++; if (traverse(x0, z0, j.pos.x, j.pos.z, y0)) traversees++; }
+    };
     const R = SAUT;
     for (let i = 0; i < 2000; i++) {
       const L = i < 1000 ? bas : tous; if (!L.length) break;
@@ -283,6 +296,7 @@ export default function (jeu) {
       if (a.mvt && a.mvt.franchit) { franchis++; if (vs === 0) refusAttendus--; for (let n = 0; n < 80 && a.mvt.franchit; n++) p.pas(PAS); lacher(a); continue; }
       if (!a.corps.airborne) { refus++; lacher(a); continue; }
       sauts++; if (i < 1000) sousBas++;
+      trou = false;
       for (let n = 0; n < 150 && a.corps.airborne; n++) {
         const j = a.corps, pl = c().plafondEn(j.pos.x, j.pos.z, j.pos.y);
         // (une tête DANS le plafond sans saut — un dessous de volée plus bas que 1,78 m, où l'on passe debout — n'est pas une faute
@@ -290,8 +304,13 @@ export default function (jeu) {
         if (j.jumpY > 1e-9 && j.pos.y + R.tete + j.jumpY > pl - R.teteVol + 1e-6) fautesTete++;
         if (j.jumpY > 0 && !c().libre(j.pos.x, j.pos.z, j.rayon ?? 0.3, j.pos.y + j.jumpY, R.hautTete, R.basTete)) fautesTranche++;
         pasAir++;
-        p.pas(PAS);
+        pasSaut();
       }
+      // (encore en l'air après 1,25 s : posé sur un meuble — les touches lâchées, il doit en redescendre seul)
+      if (a.corps.airborne) { poses++; forcer(a, { lacet: l }); let k = 0; while (a.corps.airborne && k < 240) { pasSaut(); k++; } if (a.corps.airborne) posesLongs++; }
+      for (let n = 0; n < 6; n++) pasSaut();
+      if (trou) trous++;
+      else if (dedans(c(), a.pos.x, a.pos.z, 0.3, a.pos.y)) dedansFin++;
       lacher(a);
     }
     // (c) 40 sauts au sprint sous des linteaux de 2,04-2,10 m : toutes les portes PASSABLES de la branche (les portes fermées en
@@ -299,11 +318,12 @@ export default function (jeu) {
     const S = sautsPortes(p, a, 40);
     jeu.quitter('balade');
     const okA = Math.abs(libreR.h - 0.505) <= 0.005 && Math.abs(libreR.t - 0.642) <= 0.01 && pc(libreR.v1, libreR.att) <= 0.05;
-    const okB = sauts + franchis >= 1900 && sousBas >= 900 && fautesTete === 0 && fautesTranche === 0 && refus === refusAttendus;
+    const okB = sauts + franchis >= 1900 && sousBas >= 900 && fautesTete === 0 && fautesTranche === 0 && refus === refusAttendus
+      && bonds === 0 && traversees === 0 && dedansFin === 0 && posesLongs === 0;
     const okC = S.essais >= 40 && S.portes >= 10 && S.passes === S.essais && S.oeil === 0 && S.tranche === 0;
-    return { ok: okA && okB && okC, attendu: 'apogée 0,505 ± 0,005 m, 0,642 ± 0,01 s, élan τ 0,45 · 2 000 sauts (1 000 sous 2,2-2,4 m) : tête ≥ 5 cm sous le plafond, tranche libre, refus = v < 1,2 · 40 sauts sous les linteaux des portes passables (≥ 10) : 40 passages, œil et tranche jamais dans une forme',
+    return { ok: okA && okB && okC, attendu: 'apogée 0,505 ± 0,005 m, 0,642 ± 0,01 s, élan τ 0,45 · 2 000 sauts (1 000 sous 2,2-2,4 m) : tête ≥ 5 cm sous le plafond, tranche libre, refus = v < 1,2 ; sur les meubles bas : 0 bond, 0 traversée, 0 dedans, redescendu seul · 40 sauts sous les linteaux des portes passables (≥ 10) : 40 passages, œil et tranche jamais dans une forme',
       obtenu: `apogée ${r4(libreR.h)} m en ${r3(libreR.t)} s · élan ${r2(libreR.v1)} m/s (attendu ${r2(libreR.att)}) · ${sauts} sauts (${sousBas} sous plafond bas, ${pasAir} pas en l'air) : tête ${fautesTete}, tranche ${fautesTranche}, refus ${refus}/${refusAttendus}, franchis ${franchis}`
-        + ` · ${S.texte}` };
+        + ` ; bonds ${bonds}, traversées ${traversees}, dedans ${dedansFin}, posés sur un meuble ${poses} (restés ${posesLongs}), trous du sol ${trous} · ${S.texte}` };
   }, { delai: 240 });
 
   // 4. LA RÉCEPTION d'une chute > 0,3 m : vitesse × 0,85 pendant 0,12 s, événement `reception`
@@ -1069,6 +1089,13 @@ export default function (jeu) {
     return { obstacles: out, rangs };
   };
 
+  // le corps (disque r, bande 0,25-1,6 au-dessus des pieds) DANS une forme ? Forme par forme (C.libre est trompé par un meuble
+  // collé à un mur : voir js/jeu/mouvement.js chevauche)
+  function dedans(c, x, z, r, pieds) {
+    let oui = false;
+    c._parcourir(x - r, z - r, x + r, z + r, (f) => { if (oui || f.off || !f.joueur || f.y0 >= pieds + 1.6 || f.y1 <= pieds + 0.25) return; if (c._sortir(f, { x, z }, r - 0.01)) oui = true; });
+    return oui;
+  }
   // ---- les lieux cherchés dans le monde solide ----
   // les VOLÉES (rampes de solEn) : départ 1 m avant le pied (ou au pied), arrivée au-delà du haut, le long de l'axe
   function volees(c) {
