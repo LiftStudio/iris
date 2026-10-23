@@ -54,7 +54,7 @@ page `http://127.0.0.1:8139/?test=1&rapport=1&lot=L-F`.
   les props seuls bougent ; changements illimités ; « 10 SECONDES ! ») → **traque** → **révélation** 6 s → manche suivante,
   ou **fin** (`fin` : `gagnant` = l'id du meilleur total, `scores` = { points, manches, classement }). Les durées se comptent en
   PAS (`_fini`, `_franchi`) : 35 s de cachette au 1er = 35 s ± 0.
-- **Chasseurs pendant la cachette** : figés à leur départ (tournés vers le cœur de la zone), arme BLOQUÉE (ni tir, ni recharge,
+- **Chasseurs pendant la cachette** : figés à leur départ (tournés vers la porte de leur pièce, au cap qui voit le plus loin), arme BLOQUÉE (ni tir, ni recharge,
   ni changement), caméra fixe (celle de `Partie.camera`), `hud.prop.cachette` rempli (chrono, zone, manche, tableau des rôles
   avec les scores, deux astuces qui changent toutes les 8 s) — y compris pendant la présentation, pour que le panneau de L-G
   soit là dès la 1re image —, et **SOURDS aux props** : le cerveau de chaque chasseur bot est enveloppé (`entendre` filtré par
@@ -84,8 +84,9 @@ page `http://127.0.0.1:8139/?test=1&rapport=1&lot=L-F`.
   (seul survivant) ; chasseur — +100 prop éliminé, +40 l'aide (un autre chasseur à ≥ 25 % des dégâts du prop), −2 par coup
   dans un vrai meuble ; +50 à chaque membre de l'équipe gagnante (morts compris). Événements `score`.
 - **Fins** : props tous morts → chasseurs ; chrono à 0 avec un prop → props ; chasseurs tous morts → props.
-- **Profil de touches** changé ET purgé à chaque nouvelle manche (`game.appliquerProfil({ purger: true })`), la vue suivie
-  (VueFPS + arme de vue pour le chasseur ; orbite pour le prop), le regard posé.
+- **Profil de touches** changé ET purgé à chaque changement de rôle de Haythem (`game.appliquerProfil({ purger: true })`), la vue
+  suivie (VueFPS + arme de vue pour le chasseur ; orbite pour le prop) — À L'IMAGE (`_suivreRole`, au début de `camera`),
+  jamais depuis `regles` (relecture) ; le regard posé par la simulation.
 - **Spectateur** (Haythem éliminé) : un coéquipier vivant, saut / déguiser / un clic = le suivant.
 - **Caméra du prop** : orbite aux chiffres du prop (pivot max(0,5 ; 0,75 h), recul clamp(1,4 + 1,6 max(l, h, p), 2,0, 3,6)) ;
   Haythem prop encore humain est posé une fois par image si la cadence ne l'a pas fait (celle du socle ne pose jamais
@@ -222,7 +223,9 @@ caché la manche suivante (montré, clips coupés) ; Haythem prop humain n'étai
 - **L-U / F2** : `index.js` affiche « Partie finie » pour le prop hunt (`gagnant` est un id) : montrer le nom du gagnant et le
   podium (`scores.classement`).
 - **L-K** : `deguiser` incrémente `prop.changements` ; `PartieProp` le réécrit (son compteur de la traque) — le laisser à la
-  partie. `viserMeuble` qui rend `{ acteur }` (un coéquipier visé) est accepté comme forme copiable.
+  partie. `viserMeuble` qui rend `{ acteur }` (un coéquipier visé) est accepté comme forme copiable. (relecture) `deplacerProp`
+  n'émet pas `reception` à l'atterrissage d'un petit saut : `SonsProp` y joue le « toc » à 6 m (§ 3.9) — émettre
+  `reception` { a, f } pour un prop ; `CorpsProp.endurance` est remise à 100 par `PartieProp` à chaque manche.
 - **L-O** : garder `PartieProp.sourd` (les chasseurs bots sont enveloppés à la création : un cerveau qui s'abonne autrement
   doit le respecter) ; exposer `oeil(acteur) → 0..1` pour la jauge ŒIL ; `CerveauCacheur.cle` (le type voulu) est lu par
   `_changerForme` (validé : déguisable dans la zone, ou le carton).
