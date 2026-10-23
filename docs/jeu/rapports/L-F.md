@@ -5,7 +5,10 @@ Branche `lot/L-F` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-F`), partie de `s
 
 ## Relecture (relecteur sévère, 23/10) — où j'en suis
 
-**EN COURS (repreneur, 08:04) — reste : `&lot=L-F` et `&lot=S0` sous `?tel=1`, puis onglet, serveur et jeton.**
+**FINI (relecture, 08:51)** — les six points du § 5.1 règle 5 : (a) `&lot=L-F` 17/17 sur PC et sous `?tel=1` ; (b) `&lot=S0`
+29/29 sur PC et sous `?tel=1`, balade au bit près ; (c) `verifier_proprietaires` OK ; (d) commits « L-F relecture : … » avec
+l'attribution ; (e) ce rapport ; (f) onglet `tab-35` fermé, serveur 8139 arrêté, jeton 3 rendu (08:51). Ce qui reste
+n'est pas à L-F : « Demandes » (d'abord le tir de test du chasseur minimal, F2).
 Jeton 3 repris (pris à 07:24:29 par la session coupée de la relecture, `qui.txt` rafraîchi), serveur 8139 relancé, onglet
 `tab-35` (celui de la session coupée).
 
@@ -46,11 +49,14 @@ rayons des petits bruits ; dalle × 0,35 / 900 Hz) : toutes conformes.
    en vole une, `jouer3d` `prioritaire`). Test 14 : 24 voix pleines de frottements, la provocation est jouée.
 
 **Rejoué** (navigateur intégré, onglet de fond — `rafParSeconde` 0, images faites par le harnais) :
-- `&rapport=1&lot=L-F` sur `3ab871d` : **17/17 sur PC** (72,4 s, 0 signalé) ; `?tel=1` : voir plus bas.
+- `&rapport=1&lot=L-F` sur `3ab871d` : **17/17 sur PC** (72,4 s, 0 signalé) et **17/17 sous `?tel=1`** (375 × 812, 73,6 s,
+  téléphone vrai, 0 signalé ; 12 voix, la provocation jouée voix pleines).
 - `&rapport=1&lot=S0` sur `6245de0` : **29/29 sur PC** (148,5 s, 0 signalé) — balade au bit près (points 1 et 27 : vue 3
   0 / 0, vue 1 0 / 0), 8 « programmes 145 → 145 (54 tirs) », 9 « prop hunt vrai (3 props déguisés) », 25 « 40 tirs de test,
   props 33 % pour 33 % des candidats ». (Un passage à 1 280 × 720 émulé avait donné 28/29 : point 8 « programmes 144 → 145 »
   en mode `essai` — aucun code de L-F n'y dessine ; la taille de l'onglet change ce que la caméra voit du décor : noté pour F2.)
+  **29/29 sous `?tel=1`** (375 × 812, 99,5 s ; balade 0 / 0 vue 3 et vue 1, profil tel ; 8 « programmes 83 → 83 » ; 25
+  « 34 élim., 40 tirs de test » ; 2 temps notés « non valables », onglet de fond).
 - `verifierDeterminisme(42, 60)` : `61050922 / 61050922`.
 
 **Joué** (`?partie=prophunt&zone=e1&graine=3`, sans `?test=1`, 1 280 × 720, mené par `__jeu.avancer` / `images` / vraies
