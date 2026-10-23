@@ -366,6 +366,7 @@ export default function (jeu) {
       vues = 0; S.maj(0, cam); const n1 = vues;
       // une voix sous −30 dB (gain 0,01 à 25 m) : jamais testée
       for (let k = 0; k < 50 && S.voix.some((v) => v.aVerifier); k++) S.maj(0, cam);
+      S.maj(1, cam);                           // (les voix finies libérées : au téléphone, 12 voix au plus — la plus faible serait refusée)
       const faible = S.jouer3d(L.x + 25, L.y, L.z, SINUS(), { gain: 0.01, rayon: 60 });
       let vuesFaible = 0; B.vue = function (ax, ay, az, bx, by, bz) { if (faible && Math.abs(bx - faible.x) < 1e-6 && Math.abs(bz - faible.z) < 1e-6) vuesFaible++; vues++; return vue.call(this, ax, ay, az, bx, by, bz); };
       for (let k = 0; k < 30; k++) S.maj(0, cam);
