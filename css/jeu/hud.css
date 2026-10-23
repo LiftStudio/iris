@@ -250,31 +250,33 @@ body.combat #hud-streak { display: none !important; }
 .hp-vise span:empty { display: none; }
 .hp-faux { left: 50%; top: calc(50% + 44px); transform: translateX(-50%) scale(var(--fk, 1)); opacity: var(--fo, 0); white-space: nowrap;
   font: 400 26px/1 'Bebas Neue', Oswald, sans-serif; letter-spacing: .08em; color: #ff6b5e; text-shadow: var(--ombre); }
-.hp-bloc { left: 50%; bottom: calc(16px + var(--sa-b, 0px)); transform: translateX(-50%); display: grid; grid-template-columns: auto auto auto; grid-template-rows: auto auto; align-items: center;
-  column-gap: 12px; padding: 8px 16px 6px; background: linear-gradient(180deg, rgba(5,7,11,.72), rgba(5,7,11,.5)); border-top: 2px solid #7ed957; min-width: 260px; }
-.hp-icone { font-size: 30px; line-height: 1; grid-row: 1; }
-.hp-forme b { display: block; font: 400 24px/1 'Bebas Neue', Oswald, sans-serif; letter-spacing: .06em; color: #fff; text-shadow: var(--ombre); }
-.hp-chg { display: block; margin-top: 2px; font: 500 13px/1 Oswald, sans-serif; letter-spacing: .3em; color: #7ed957; }
-.hp-etat { display: flex; gap: 6px; font-size: 20px; }
-.hp-etat span { opacity: .28; filter: grayscale(1); } .hp-etat span.on { opacity: 1; filter: none; }
-.hp-touches { grid-column: 1 / 4; margin-top: 5px; font: 500 11px/1.2 Oswald, sans-serif; letter-spacing: .06em; color: #aeb6c4; text-align: center; white-space: nowrap; }
-.hp-provoc { left: calc(50% - 240px); bottom: calc(18px + var(--sa-b, 0px)); width: 64px; text-align: center; }
-.hp-provoc svg { width: 54px; height: 54px; transform: rotate(-90deg); }
+.hp-bloc { left: 50%; bottom: calc(26px + var(--sa-b, 0px)); transform: translateX(-50%); display: flex; align-items: center; gap: 12px; white-space: nowrap;
+  padding: 7px 14px; background: linear-gradient(180deg, rgba(5,7,11,.74), rgba(5,7,11,.52)); border-top: 2px solid #7ed957; max-width: calc(100vw - 24px); }
+.hp-icone { font-size: 28px; line-height: 1; }
+.hp-forme b { display: block; font: 400 22px/1 'Bebas Neue', Oswald, sans-serif; letter-spacing: .06em; color: #fff; text-shadow: var(--ombre); }
+.hp-chg { display: block; margin-top: 3px; font: 500 12px/1 Oswald, sans-serif; letter-spacing: .12em; color: #7ed957; }
+.hp-etat { display: flex; gap: 5px; font-size: 18px; }
+.hp-etat span { opacity: .25; filter: grayscale(1); } .hp-etat span.on { opacity: 1; filter: none; }
+.hp-touches { left: 50%; bottom: calc(6px + var(--sa-b, 0px)); transform: translateX(-50%); white-space: nowrap; font: 500 11px/1.2 Oswald, sans-serif; letter-spacing: .06em; color: #aeb6c4; text-shadow: var(--ombre); }
+.hp-provoc { position: relative; width: 46px; height: 46px; flex: none; text-align: center; }
+.hp-provoc svg { width: 46px; height: 46px; transform: rotate(-90deg); }
 .hp-provoc circle { fill: none; stroke-width: 4; }
 .hp-provoc .f { stroke: rgba(255,255,255,.16); }
 .hp-provoc .v { stroke: var(--or); stroke-dasharray: 113.1; stroke-dashoffset: calc((1 - var(--pk, 0)) * 113.1); stroke-linecap: round; }
 .hp-provoc.urgent .v { stroke: var(--rouge); }
-.hp-provoc b { position: absolute; left: 0; right: 0; top: 17px; font: 400 18px/1 'Bebas Neue', Oswald, sans-serif; text-shadow: var(--ombre); }
-.hp-provoc small { display: block; font: 500 9px/1 Oswald, sans-serif; letter-spacing: .12em; color: #c9d0dc; margin-top: 2px; }
-.hp-disc { left: calc(50% + 178px); bottom: calc(54px + var(--sa-b, 0px)); text-align: left; text-shadow: var(--ombre); }
+.hp-provoc b { position: absolute; left: 0; right: 0; top: 12px; font: 400 17px/1 'Bebas Neue', Oswald, sans-serif; text-shadow: var(--ombre); }
+.hp-provoc small { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); font: 500 8px/1.4 Oswald, sans-serif; letter-spacing: .12em; color: #c9d0dc; }
+.hp-jauges { display: flex; align-items: center; gap: 12px; padding-left: 12px; border-left: 1px solid rgba(255,255,255,.18); }
+.hp-jauges > [hidden] { display: none !important; }
+.hp-disc { text-align: left; text-shadow: var(--ombre); }
 .hp-disc small, .hp-scan small { display: block; font: 500 10px/1 Oswald, sans-serif; letter-spacing: .16em; color: #c9d0dc; }
-.hp-disc span { font-size: 18px; letter-spacing: .1em; color: var(--or); }
-.hp-oeil { left: calc(50% + 178px); bottom: calc(14px + var(--sa-b, 0px)); display: flex; align-items: center; gap: 8px; }
-.hp-oeil svg { width: 40px; height: 25px; }
+.hp-disc span { font-size: 17px; letter-spacing: .08em; color: var(--or); }
+.hp-oeil { display: flex; align-items: center; gap: 6px; }
+.hp-oeil svg { width: 36px; height: 23px; }
 .hp-oeil .c { fill: rgba(5,7,11,.6); stroke: #fff; stroke-width: 1.6; }
 .hp-oeil .r { fill: var(--rouge); transform-origin: 0 100%; transform: scaleY(var(--oe, 0)); transform-box: fill-box; }
 .hp-oeil .p { fill: #fff; }
-.hp-oeil b { font: 400 22px/1 'Bebas Neue', Oswald, sans-serif; letter-spacing: .08em; color: var(--rouge); text-shadow: var(--ombre); display: none; }
+.hp-oeil b { font: 400 20px/1 'Bebas Neue', Oswald, sans-serif; letter-spacing: .08em; color: var(--rouge); text-shadow: var(--ombre); display: none; }
 .hp-oeil.repere b { display: inline; animation: hj-clign .5s steps(2) infinite; }
 .hp-scan { right: calc(18px + var(--sa-r, 0px)); bottom: calc(150px + var(--sa-b, 0px)); text-align: right; text-shadow: var(--ombre); }
 .hp-scan span { display: block; font-size: 15px; letter-spacing: .25em; color: var(--or); }
@@ -317,10 +319,11 @@ body.combat #hud-streak { display: none !important; }
 
 /* ---------------------------------------------------------------- LE TABLEAU DES SCORES (Tab tenu) */
 .tableau-scores { position: absolute; inset: 0; z-index: 5; display: flex; align-items: flex-start; justify-content: center; padding: max(8vh, 40px) 16px 16px; pointer-events: none;
-  background: radial-gradient(ellipse at center, rgba(5,7,11,.35), rgba(5,7,11,.7)); font-family: Oswald, system-ui, sans-serif; color: #fff; }
+  background: radial-gradient(ellipse at center, rgba(5,7,11,.78), rgba(5,7,11,.9)); font-family: Oswald, system-ui, sans-serif; color: #fff; }
 .ts-boite { width: min(1080px, 100%); max-height: 100%; overflow: hidden; }
 .ts-tete { display: flex; align-items: baseline; gap: 18px; padding: 0 4px 8px; border-bottom: 2px solid rgba(255,200,69,.8); margin-bottom: 10px; }
-.ts-titre { font: 400 34px/1 'Bebas Neue', Impact, sans-serif; letter-spacing: .08em; font-weight: 400; }
+.ts-titre { font: 400 34px/1 'Bebas Neue', Impact, sans-serif; letter-spacing: .08em; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ts-score { white-space: nowrap; }
 .ts-score { font: 400 26px/1 'Bebas Neue', Impact, sans-serif; letter-spacing: .05em; color: #ffc845; }
 .ts-chrono { margin-left: auto; font: 400 26px/1 'Bebas Neue', Impact, sans-serif; color: #e8ecf3; }
 .ts-corps { display: grid; grid-template-columns: 1fr; gap: 14px; }
@@ -354,7 +357,18 @@ body.combat #hud-streak { display: none !important; }
   .vc-titre { font-size: 28px; } .vc-chrono { font-size: 38px; } .vc-milieu { grid-template-columns: 1fr 1.6fr; }
   .ts-entete, .ts-ligne { grid-template-columns: 4px 18px 30px minmax(60px, 1.4fr) repeat(6, minmax(26px, .5fr)); gap: 4px; padding: 0 4px; }
   .ts-ligne { height: 34px; font-size: 13px; } .ts-portrait, .ts-portrait img { width: 28px; height: 28px; }
-  .ts-titre { font-size: 26px; } .ts-v { font-size: 16px; }
+  .ts-titre { font-size: 22px; } .ts-score, .ts-chrono { font-size: 20px; } .ts-v { font-size: 16px; }
+  .tableau-scores { padding-top: 10px; }
+  .hp-bloc { gap: 8px; padding: 5px 10px; } .hp-forme b { font-size: 17px; } .hp-icone { font-size: 22px; } .hp-disc small { display: none; }
+  .hp-touches { display: none; }
+}
+@media (max-height: 520px) {
+  #voile-cachette { padding: 8px 12px; }
+  .vc-boite { gap: 6px; } .vc-haut { padding-bottom: 4px; }
+  .vc-titre { font-size: 22px; } .vc-chrono { font-size: 30px; }
+  .vc-col h4 { font-size: 10px; margin-bottom: 3px; } .vc-col p { font-size: 12px; margin-bottom: 1px; }
+  .vc-carte canvas { max-height: 38vh; } .vc-bas p { font-size: 11px; line-height: 1.3; margin-bottom: 2px; }
+  .vc-manche { display: none; }
 }
 /* au doigt (js/touch.js : body.touch ; --tc-haut sous la rangée du haut, --tc-droite la grappe de tir) : la mini-carte en
    haut à gauche sous les boutons, la vie dessous ; le score au centre ; les munitions à gauche de la grappe */
@@ -365,8 +379,7 @@ body.touch .hj-score .hj-eq { min-width: 170px; }
 body.touch .hj-dom { top: auto; bottom: calc(110px + var(--sa-b, 0px)); }
 body.touch .hj-mun { right: calc(var(--tc-droite, 278px) + 8px); }
 body.touch .hj-fil-l { top: calc(var(--tc-haut, 64px) + 4px); }
-body.touch .hp-provoc { left: calc(50% - 190px); }
-body.touch .hp-disc, body.touch .hp-oeil { left: auto; right: calc(var(--tc-droite, 278px) + 8px); }
 body.touch .hp-scan { right: calc(var(--tc-droite, 278px) + 8px); }
 body.touch .hp-touches { display: none; }
+@media (max-width: 760px) { .ts-corps.deux { grid-template-columns: 1fr; gap: 6px; } .ts-ligne { height: 28px; } .ts-portrait, .ts-portrait img { width: 24px; height: 24px; } }
 @media (prefers-reduced-motion: reduce) { .hj-vignette.bat .hj-vignette-bat, .hp-oeil.repere b, .hj-mun-aide.recharge { animation: none; } }

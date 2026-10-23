@@ -279,8 +279,10 @@ export class MiniCarte {
       const sol = (NIVEAUX.find((N) => N.n === n) || NIVEAUX[1]).sol;
       for (const Q of portes) {
         if (typeof Q.cx !== 'number' || Math.abs((Q.base || 0) - sol) > 1.2) continue;
-        const Zq = Lu.zoneEn(Q.cx, Q.cz, (Q.base || 0) + 0.1);
-        if (!Zq || !ids.has(Zq.id)) continue;
+        // (de part et d'autre du seuil : une porte qui ouvre sur une pièce de la zone en est)
+        const nx = Q.nx || 0, nz = Q.nz || 0, y = (Q.base || 0) + 0.1;
+        const Za = Lu.zoneEn(Q.cx + nx * 0.4, Q.cz + nz * 0.4, y), Zb = Lu.zoneEn(Q.cx - nx * 0.4, Q.cz - nz * 0.4, y);
+        if (!(Za && ids.has(Za.id)) && !(Zb && ids.has(Zb.id))) continue;
         const [a, b] = P(Q.cx, Q.cz);
         x.beginPath(); x.arc(a, b, 3, 0, Math.PI * 2); x.fillStyle = COUL.porte; x.fill();
         res.portes++;

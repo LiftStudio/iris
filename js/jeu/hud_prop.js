@@ -61,16 +61,17 @@ export class HudProp {
     // le point de visée et l'aide « E : devenir … »
     this.eVise = N('hp-vise'); this.eVise.innerHTML = '<i></i><span></span>';
     this.eFaux = N('hp-faux', R, '');
-    // le bloc du prop (bas centre)
+    // le bloc du prop (bas centre) : l'anneau de provocation, la forme et ses changements, verrou et gel, la discrétion et
+    // l'œil ; les touches dessous
     const Bl = this.eBloc = N('hp-bloc');
+    this.eProvoc = elt('div', 'hp-provoc', Bl); this.eProvoc.innerHTML = SVG_ANNEAU + '<b></b><small>PROVOC.</small>';
     this.eIcone = elt('span', 'hp-icone', Bl, ''); const f = elt('div', 'hp-forme', Bl);
     this.eNom = elt('b', null, f, ''); this.eChg = elt('span', 'hp-chg', f, '');
     const et = elt('div', 'hp-etat', Bl); this.eVerrou = elt('span', 'hp-verrou', et, '🔒'); this.eFige = elt('span', 'hp-fige', et, '❄');
-    this.eTouches = elt('div', 'hp-touches', Bl, '');
-    // l'anneau de provocation, la discrétion, l'œil
-    this.eProvoc = N('hp-provoc'); this.eProvoc.innerHTML = SVG_ANNEAU + '<b></b><small>PROVOCATION</small>';
-    this.eDisc = N('hp-disc'); this.eDisc.innerHTML = '<small>DISCRÉTION</small><span></span>';
-    this.eOeil = N('hp-oeil'); this.eOeil.innerHTML = SVG_OEIL + '<b>REPÉRÉ !</b>';
+    const jg = this.eJauges = elt('div', 'hp-jauges', Bl);
+    this.eDisc = elt('div', 'hp-disc', jg); this.eDisc.innerHTML = '<small>DISCRÉTION</small><span></span>';
+    this.eOeil = elt('div', 'hp-oeil', jg); this.eOeil.innerHTML = SVG_OEIL + '<b>REPÉRÉ !</b>';
+    this.eTouches = N('hp-touches', R, '');
     // le scanner du chasseur
     this.eScan = N('hp-scan'); this.eScan.innerHTML = '<small>SCANNER</small><span></span><em></em>';
     hud.appendChild(R);
@@ -141,13 +142,14 @@ export class HudProp {
     if (Pr && prop) {
       const nom = Pr.nomForme || (Pr.forme ? (DG.typeDe?.(Pr.forme) || {}).nom : null);
       texte(this.eIcone, Pr.forme ? icone(Pr.forme + ' ' + (nom || '')) : '🧍');
-      texte(this.eNom, nom ? String(nom).toUpperCase() : 'HUMAIN — VISE UN MEUBLE');
+      texte(this.eNom, nom ? String(nom).toUpperCase() : 'HUMAIN');
       const max = (REGLAGES_PROP.changements && REGLAGES_PROP.changements.traque) || 3;
       const reste = Math.max(0, max - (Pr.changements | 0));
-      texte(this.eChg, phase === 'traque' ? '●'.repeat(reste) + '○'.repeat(Math.max(0, max - reste)) : phase === 'cachette' || phase === 'presentation' ? '∞' : '');
+      texte(this.eChg, !Pr.forme ? 'vise un meuble' : phase === 'traque' ? '●'.repeat(reste) + '○'.repeat(Math.max(0, max - reste)) : phase === 'cachette' || phase === 'presentation' ? 'changements : ∞' : '');
       classe(this.eVerrou, 'on', !!Pr.verrou); classe(this.eFige, 'on', !!Pr.fige);
       texte(this.eTouches, `${actionKey('deguiser')} SE DÉGUISER · ${actionKey('verrou')} VERROU · ${actionKey('figer')} FIGER · ${actionKey('provoquer')} PROVOQUER`);
     }
+    cacher(this.eTouches, !(Pr && prop));
     // ---- l'anneau de provocation (le temps qu'il reste avant la provocation forcée) ----
     const pm = Pr && Pr.provocMax > 0 ? Pr.provocMax : 0, pk = pm ? clamp((Pr.provocT || 0) / pm, 0, 1) : 0;
     cacher(this.eProvoc, !(prop && pm && phase === 'traque'));
@@ -161,6 +163,7 @@ export class HudProp {
     cacher(this.eOeil, !(prop && A.oeil && phase === 'traque'));
     C.v('oe', r2(oe));
     classe(this.eOeil, 'repere', oe > REGLAGES_HUD_PROP.repere);
+    cacher(this.eJauges, this.eDisc.__h && this.eOeil.__h);
     // ---- le point de visée et l'aide « E : devenir … » (le meuble visé : `hud.prop.vise` si les règles le donnent, sinon
     //      viserMeuble, 10 fois par seconde — une lecture, comme les bots la feraient) ----
     let vise = null;
@@ -293,6 +296,9 @@ export class RoueProvocations {
     if (!ouverte) { this._choix = null; return; }
     const L = provocations || [];
     if (this._liste !== L) this._construire(L);
+    // (420 px de diamètre : réduite sur un petit écran, à l'ouverture seulement)
+    const k = Math.round(Math.min(1, ECRAN.h / 470, ECRAN.w / 520) * 100) / 100;
+    if (k !== this._k) { this._k = k; this.el.style.transform = k < 1 ? `scale(${k})` : ''; }
     const c = typeof roue.choix === 'number' ? roue.choix : -1;
     if (c === this._choix) return;
     this._choix = c;
