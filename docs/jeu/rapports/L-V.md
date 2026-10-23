@@ -5,10 +5,86 @@ Fichiers : `js/jeu/viewmodel.js`, `js/jeu/anim_vue.js` (remplis), `js/jeu/tests/
 
 ## Relecture (relecteur sévère, 23/10/2026) — où j'en suis
 
-**EN COURS** (repreneur : reprendre ici). Jeton 2 pris à 06:41. Rejoué sur `3b2e79f` : `&rapport=1&lot=L-V` **17/17** PC
-(1280 × 720, haute, 29 s) et **17/17** `?tel=1` (375 × 812, moyenne, 27 s), 0 signalé ; `&lot=S0` **29/29** (balade 0 / 0
-avant et après). Corrections faites (voir « Relecture : ce qui a été corrigé » plus bas, à écrire) ; reste : jouer avec
-les vrais modules de L-A, L-B, L-W (copie hors git), photos, rapport.
+**EN COURS — S0 en rejeu sur `ebdfde2`** (repreneur : reprendre ici ; s'il passe, il ne reste qu'à fermer onglet et
+serveurs, rendre le jeton et écrire « FINI » ici). `&rapport=1&lot=L-V` sur `ebdfde2` : **17/17 PC** (1280 × 720,
+haute, 81 s, onglet pas devant : images faites à la main) et **17/17 `?tel=1`** (375 × 812, moyenne, 75 s), 0 signalé.
+
+### Ce que la relecture a vérifié
+- **Contrats (§ 4.5.9)** : les sept signatures du socle gardées telles quelles (`constructor(game)`, `preparer(progres)`,
+  `get superposition`, `montrer`, `cacher`, `maj(dt, etat)`, `vitrine(idArme)`), caméra 52° / 0,01 / 5, trois lumières
+  (hémisphère, clé, bouche à 0), PMREM de `RoomEnvironment` fait une fois, `environmentIntensity` qui suit la clé ;
+  `POSES_VUE` relu chiffre par chiffre contre les l. 1208-1210 (hanche, visée, sprint, sprint tactique, glissade = hanche +
+  (−0,02 ; −0,03 ; 0) roulis −0,25, franchissement) ; ancres D / G, 0,45 m, ≥ 4° ; `evaluer(piste, t, out)` ; `maj` ne
+  commande jamais une règle et n'écrit rien de la partie (il lit l'état, `camYaw` / `camPitch`, `carte.lumieres.zoneEn`).
+- **Valeurs (§ 3.2, 3.4, 4.5.9)** : recul visuel piston / cabré / roulis lus dans les fiches, ressort ω 35 ζ 0,55 au pic
+  exact ; inertie −0,0016 × °/s, ±3°, ω 18 ζ 0,8 ; huit 12 mm à f/2 et 8 mm à f, f = 1,15 + 0,35 v, visée × 0,1 ; pas chassé
+  3° ; réception −2,5 cm ; respiration ±1,5 mm à 0,25 Hz ; lunette à 85 % ; vitrine 0,6 rad/s ; clé par pièce (les 31 clés
+  de `CLE_PIECE` sont bien des pièces de `PIECES`) lissée 0,4 s ; temps des recharges = fiches (test 16).
+- **Propriétaires et pureté** : `python -I tools/verifier_proprietaires.py lot/L-V` → `OK 4 fichiers` ; `viewmodel.js`
+  n'est pas un fichier « simulation » (son `Math.random` du roulis et son `performance.now` sont de l'affichage) ; fins de
+  ligne CRLF comme les voisins ; aucun TODO ; un champ mort trouvé (`bal` des poses, lu par personne : corrigé).
+
+### Ce que la relecture a corrigé (commits `L-V relecture : …`)
+1. `d8ba63b` — **`CHRONOS.fp12.rechargeTact` / `rechargeVide` étaient `null`** (le contrat, l. 1199, veut des pistes) :
+   deux pistes mises bout à bout (`enchainer`) — une cartouche (1,07 s) et le tube vide (7 cartouches + pompe, 4,04 s) ;
+   l'arme de vue joue toujours les morceaux, au compte de la recharge en cours. **Balancement du sprint** : la vitesse
+   multipliait encore le × 2,5 (à 6,6 m/s : 2,5 × 1,32 × 12 = 40 mm au lieu de 30) — plafonnée à 1 (12 mm à la course).
+   **Vitrine** en partie : elle poussait une 2e superposition de la même scène (dessinée deux fois). **Tests** : 1 et
+   « F2 vraies armes » comptent les appels qualité figée en moyenne (§ 4.10.1, ils ne le faisaient pas) ; 7 : la vraie
+   recharge à ± 1 image (la durée de l'image où on la voit) au lieu de ± 2, et les balles entrées à 1,35 ; 8 : **la caméra
+   reçoit 15 % du cabré** vérifié DÈS MAINTENANT (le `reculV` de l'arsenal posé sur l'instance par le ressort de la fiche,
+   lu par la vraie `VueFPS.poser` et par l'arme de vue : 0 % d'écart) au lieu d'être laissé à F2 ; 16 (neuf) : contrats
+   des pistes (CHRONOS complet, temps des fiches, chargeur en place à `recharge.ajout`, Hermite monotone : 0 dépassement
+   sur 12 441 points).
+2. `208f020` — le balancement lit le `bal` des poses mêlées (franchissement × 0,5).
+3. `3b2e79f` — **l'arsenal FINI de L-A (branche `lot/L-A`) aurait cassé deux gestes à F2** : (a) il passe à l'arme qui
+   vient à la fin du RANGEMENT (le squelette : à la fin de la sortie) — l'arme de vue lisait le rangement sur l'arme
+   montrée : P-17 → FA-24, la FA-24 était rangée une 2e fois (0,15-0,20 s) ; elle range maintenant l'arme tenue au DÉPART
+   du changement ; (b) son `tEtat` REPART au lâcher de la grenade et il dit `phaseLancer` / `grenade` — l'arme de vue
+   rejouait la goupille après le lancer et lançait 0,45 s après la vraie grenade ; elle lit `phaseLancer` quand il existe.
+   La goupille passe de 0,30 à 0,15 s (celle de l'arsenal : une flash part à 0,15). Test 17 (neuf).
+4. `ebdfde2` — **les pouces** de la main qui tient (0,5 / 0,3 / 0,2 → 0,8 / 0,8 / 0,6 ; grenade et couteau 0,7 / 0,7 /
+   0,6) : tendu au-dessus de la poignée, le pouce faisait avec l'index un « V » à chaque recharge, et un « doigt pointé »
+   sur la grenade (vu avec les vraies armes de L-W). Test « F2 recul » : la crête de `reculV` contre la fiche (critère 8)
+   et la frag réelle lancée sans goupille rejouée.
+
+### Joué (navigateur intégré, jeton 2 pris à 06:41)
+- **Sur la branche** (la boîte du socle), PC et téléphone en PAYSAGE (812 × 375 : le vrai jeu au téléphone ; en hauteur
+  il demande de tourner) : tir en courant, visée et tir, recharge, sprint, changement, P-17 — 0 erreur de console.
+- **Avec les vrais modules de L-A, L-B et L-W** : une COPIE hors git (`scratchpad/lvr/prefusion` : l'arbre L-V et, par-
+  dessus, les fichiers `js/` de ces trois branches), servie sur 8134 à la place de l'arbre : `&rapport=1&lot=L-V&fusion=1`
+  **19/19** (7 appels au pire avec les vraies armes, repères = table, mains 0 cm) avant d'ajouter la crête au test
+  « F2 recul », puis **18/19 : la crête de `reculV` de L-A vaut 1,198° pour 2,2°** (demande 2). Joué : recharges FA-24
+  pas à pas et P-17, couteau, frag cuite puis lancée, sprint ; 0 erreur. Ce qui se voit : visée nette (point rouge au
+  centre), recharge lisible (le chargeur part avec la main, revient, tape), couteau et lancer francs ; **le sprint fait
+  disparaître l'arme** (demande 1) ; pendant la recharge, l'index tendu le long du pontet se voit (sorti de la détente :
+  gardé).
+- Photos dans `C:/Users/hgami/AppData/Local/Temp/claude/C--/d2516763-f01d-443a-9d38-fe9a0c124e7f/scratchpad/lvr/` :
+  `p_tel1.jpg` (téléphone, boîte du socle), `p_pf1.jpg` et `p_pf2.jpg` (recharges FA-24 et P-17, vraies armes),
+  `p_pf3.jpg` (couteau, frag, sprint), `p_pf4.jpg` (après les pouces), `p_pg.jpg` (pouce de la poignée, trois réglages),
+  `p_pouce.jpg`, `p_mains.jpg` (mains vues de côté, de dessous, de face), `p_sprint.jpg` (quatre poses de sprint).
+
+### Demandes de la relecture
+1. **F2 (§ 4.5.9 l. 1209) — la pose de SPRINT cache l'arme** : avec les vraies armes de L-W, 7,3 % des sommets de la FA-24
+   dans le cône de la caméra de l'arme (PM-9 4,5 %, FP-12 0, TP-50 4,1, P-17 1,3 ; hanche 80 à 85 %) — à chaque sprint
+   l'arme disparaît, ce qu'un joueur de CoD prend pour un bogue. Proposition vue à l'écran (`p_sprint.jpg`, colonne « a »,
+   l'arme en travers, canon à gauche) : **(0,10 ; −0,14 ; −0,30) rot (−0,30 ; 0,65 ; 0,35)** → 67 à 79 %. Non changée
+   ici : un défaut du document va à F2 (§ 5.1 règle 7).
+2. **L-A — la crête de `reculV` vaut 0,54 × la fiche** (1,198° pour 2,2°) : `IMPULSION = ω / 0,5215` est juste pour la
+   solution exacte, mais l'Euler semi-implicite à 120 Hz (c·dt = 0,32) mange la crête ; et le × (0,9 à 1,1) tiré au hasard
+   sort du ± 5 % du critère 8. Intégrer exactement (comme `Ressort` de `viewmodel.js`) ou régler l'impulsion sur le
+   schéma ; aléa ≤ ± 5 %. Le test « F2 recul » échouera jusque-là (la caméra, elle, reçoit bien 15 % de ce qu'il donne).
+3. **F2 — la pompe du FP-12 à vide** : L-A compte début, cartouches, POMPE, fin ; L-H joue la pompe à `fin` ; l'arme de
+   vue montre début, cartouches, fin, pompe (les 0,45 dernières s) : mêmes durées, à aligner si on l'entend.
+4. **L-B** (rappel du constructeur) : `etatArme()` sans `vers`, `duree`, `tactique`, `tirSeq`, `chargeur`, `grenade`,
+   `phaseLancer` — l'arme de vue les lit dans l'arsenal ; L-A a `versArme`, `grenade`, `phaseLancer`, `cuisson` : les
+   recopier dans `etatArme()` suffit.
+
+### Coordination du navigateur (relecture)
+Jeton attendu 1 h 45 (04:57 → 06:41) : à un essai toutes les 30 s, les autres agents le prenaient toujours avant (certains
+essaient toutes les 5 à 10 s) ; passé à 10 s (écart à la règle 3, noté). Vu à 06:37 : **L-D relecture tenait deux jetons**
+(1 et 2). Un seul onglet ouvert ici (`tab-31`) ; `qui.txt` réécrit toutes les 20 min environ. Récepteur de photos de
+session sur 8234 (comme le constructeur).
 
 ## Où j'en suis
 
