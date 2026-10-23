@@ -395,6 +395,13 @@ export default function (jeu) {
     const mem = () => ({ ...game.renderer.info.memory, enfants: game.scene.children.length });
     let m0 = null, figes = 0, nonDebout = 0, armes = 0;
     const L = a.joueur.avatar.bone('LeftUpLeg'), q0 = new THREE.Quaternion();
+    // (F2 : les géométries du DÉCOR envoyées pour la première fois pendant les morts — l'orbite qui suit la poupée montre un
+    // coin de la rue jamais vu — ne sont pas une fuite : comptées à part, comme au point 8 du socle ; 1758 → 1800 sur un
+    // rapport, 1833 → 1833 rejoué)
+    const envoyees = new Set(), aeL = THREE.BufferGeometry.prototype.addEventListener;
+    const dynamique = (o) => { for (let k = o; k; k = k.parent) if (k.userData && k.userData.dynamique) return true; return false; };
+    THREE.BufferGeometry.prototype.addEventListener = function (t, f) { if (t === 'dispose' && m0) envoyees.add(this); return aeL.call(this, t, f); };
+    try {
     for (let n = 0; n < 50; n++) {
       // tué d'une balle au torse, depuis l'ouest
       p.infliger(a, 500, { par: -1, arme: 'fa24', zone: 'torse', x: a.pos.x, y: a.pos.y + 1.2, z: a.pos.z, dx: 1, dy: 0, dz: 0 });
@@ -416,7 +423,10 @@ export default function (jeu) {
       if (n === 4) m0 = mem();
       if (n % 5 === 4) await attendre(0);
     }
+    } finally { THREE.BufferGeometry.prototype.addEventListener = aeL; }
     const m1 = mem();
+    let decorNeuf = 0; game.scene.traverse((o) => { if (o.geometry && envoyees.has(o.geometry) && !dynamique(o)) { envoyees.delete(o.geometry); decorNeuf++; } });
+    m1.geometries -= decorNeuf;
     jeu.quitter('balade');
     const pc = (x, y) => Math.abs(x - y) / Math.max(1, x);
     return { ok: figes === 0 && nonDebout === 0 && armes === 50 && m0.enfants === m1.enfants && pc(m0.geometries, m1.geometries) <= 0.02 && pc(m0.textures, m1.textures) <= 0.02,
