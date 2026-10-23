@@ -13,7 +13,8 @@
 //   - l'AIMANT D'ADS : au front de la visée, une cible à < 7° et < 30 m → la visée tourne de 70 % de l'écart pendant le temps
 //     d'ADS de l'arme (courbe 1 − (1 − u)³, celle de la visée) ; une cible qui bouge est suivie pendant ce temps ;
 //   - le TIR AUTO (au doigt seulement, réglage controls.fps.tirAuto, vrai au téléphone) : le réticule SUR un ennemi à ≤ 30 m
-//     pendant 0,12 s → cmd.tir ; il tient tant que le réticule y reste (0,05 s de grâce : le recul l'en sort une image).
+//     pendant 0,12 s → cmd.tir ; il tient tant que le réticule y reste (0,05 s de grâce : le recul l'en sort une image) — une
+//     arme semi-automatique, il la bat (un front un pas sur deux : sinon une seule balle).
 // `corriger(cmd, game, dt)` est appelée par lireCommande (js/jeu/entrees_jeu.js, étape 2 du pas) : elle réécrit
 // game.camYaw / camPitch ET cmd.lacet / tangage (sinon la commande suivante, relue sur game, annulerait l'aimant). Elle ne lit
 // ni l'horloge ni le hasard, et pas Input (le seul lecteur en est lireCommande) : « le regard bouge » est un drapeau que la
@@ -35,7 +36,7 @@ const _o = new THREE.Vector3(), _L = [];
 const _etats = new WeakMap();
 const etat = (p) => {
   let S = _etats.get(p);
-  if (!S) { S = { viseeAvant: false, aimant: null, suivi: null, tirSur: -1, tirT: 0, perduT: 0, tirAuto: false, cible: null }; _etats.set(p, S); }
+  if (!S) { S = { viseeAvant: false, aimant: null, suivi: null, tirSur: -1, tirT: 0, perduT: 0, tirAuto: false, bat: false, cible: null }; _etats.set(p, S); }
   return S;
 };
 const R = () => (reglages.controls && reglages.controls.fps) || {};
@@ -130,7 +131,7 @@ export function corriger(cmd, game, dt) {
   const a = p.local;
   const actif = aideActive() && a && a.local && a.vivant && !a.prop && a.arsenal && a.corps === a.joueur && p.profil === 'combat';
   const visee = !!cmd.visee;
-  if (!actif) { S.viseeAvant = visee; S.aimant = null; S.suivi = null; S.tirSur = -1; S.tirT = 0; S.tirAuto = false; return cmd; }
+  if (!actif) { S.viseeAvant = visee; S.aimant = null; S.suivi = null; S.tirSur = -1; S.tirT = 0; S.tirAuto = false; S.bat = false; return cmd; }
   const aide = R().aideVisee !== false;
   let l = game.camYaw, t = game.camPitch;
   // 1. L'AIMANT D'ADS : au front de la visée, la cible à < 7° et < 30 m ; 70 % de l'écart rattrapés pendant le temps d'ADS
@@ -165,8 +166,16 @@ export function corriger(cmd, game, dt) {
     if (s) { if (s.id !== S.tirSur) { S.tirSur = s.id; S.tirT = 0; } else S.tirT += dt; S.perduT = 0; }
     else if (S.tirSur >= 0) { S.perduT += dt; if (S.perduT > AIDE.tirAuto.grace) { S.tirSur = -1; S.tirT = 0; } }
     S.tirAuto = S.tirSur >= 0 && S.tirT >= AIDE.tirAuto.delai - 1e-9;
-    if (S.tirAuto) cmd.tir = true;
-  } else { S.tirSur = -1; S.tirT = 0; S.tirAuto = false; }
+    // (relecture, 23/10) une arme SEMI-AUTOMATIQUE (P-17, FP-12, TP-50) ne part qu'au FRONT de la gâchette (js/jeu/armes.js,
+    // tampon 0,1 s) : tenue par le tir auto, une seule balle partait, puis plus rien, le réticule sur l'ennemi. Le tir auto
+    // la BAT donc un pas sur deux (un front toutes les 1/60 s : la cadence de l'arme reste la seule limite) ; le doigt qui
+    // tient TIR lui-même garde la main.
+    if (!S.tirAuto) S.bat = false;
+    else if (!cmd.tir) {
+      const f = a.arsenal.arme;
+      if (f && !f.auto) { S.bat = !S.bat; cmd.tir = S.bat; } else cmd.tir = true;
+    }
+  } else { S.tirSur = -1; S.tirT = 0; S.tirAuto = false; S.bat = false; }
   // le regard réécrit : la caméra ET la commande (bornes du tangage de la partie)
   if (l !== game.camYaw || t !== game.camPitch) {
     const [lo, hi] = game.bornesTangage ? game.bornesTangage() : [-1.48, 1.48];

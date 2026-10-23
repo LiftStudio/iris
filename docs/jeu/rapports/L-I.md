@@ -5,7 +5,11 @@ Branche `lot/L-I` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-I`), partie de `s
 
 ## Où j'en suis
 
-**FINI.** Les six points de la définition du § 5.1 règle 5 sont tenus :
+**RELECTURE EN COURS** (relecteur sévère, 23/10 dès 06:20 ; section « Relecture » plus bas) : diff `socle...lot/L-I` relu
+contre §§ 3.2, 3.6, 4.5.18, 4.8, 5.5.13 ; propriétaires OK ; 1er défaut corrigé (tir auto et armes semi-automatiques) ;
+en attente d'un jeton du navigateur pour rejouer les critères et jouer.
+
+(Constructeur, avant la relecture) **FINI.** Les six points de la définition du § 5.1 règle 5 sont tenus :
 - (a) `&rapport=1&lot=L-I` : **13/13 sur PC** (8,8 s), **13/13 sous `?tel=1` à 812 × 375** (16,6 s) et **13/13 sous `?tel=1`
   en émulation mobile 375 × 812** (11,4 s), 0 signalé ;
 - (b) `&rapport=1&lot=S0` sur cette branche : **29/29 sur PC** (82,2 s) et **29/29 sous `?tel=1` à 812 × 375** (69,8 s), 0
@@ -146,3 +150,16 @@ déguisé : FIGER, VERROU — Haythem en carton de secours au sol). Captures du 
 
 Rien pour L-I. À F2 : les cinq tests `apresFusion`, les demandes ci-dessus, et la partie entière au doigt sur un vrai
 téléphone (§ 6.2 ✋).
+
+## Relecture (relecteur sévère, 23/10/2026)
+
+Relu : le diff complet `socle...lot/L-I` (7 fichiers), contre §§ 3.2, 3.6, 4.1, 4.5.18, 4.6, 4.8, 5.1, 5.5.13 ;
+`python -I tools/verifier_proprietaires.py lot/L-I` → OK 7 fichiers.
+
+### Défauts trouvés et corrigés (commits `L-I relecture : …`)
+
+1. **Tir auto et armes semi-automatiques** (`js/jeu/assistance_visee.js`) : le tir auto TENAIT `cmd.tir` ; le P-17, le
+   FP-12 et le TP-50 ne partent qu'au front de la gâchette (`Arsenal.pas`, tampon 0,1 s) — une seule balle partait, puis
+   plus rien, le réticule posé sur l'ennemi (au téléphone, l'arme de poing devenait inutilisable). Le tir auto bat
+   maintenant la gâchette d'une semi-automatique un pas sur deux (la cadence de l'arme reste la seule limite) ; le doigt
+   qui tient TIR garde la main. Test 3 (f) : P-17, 4 balles en 0,62 s à 400 coups/min (1 avant).
