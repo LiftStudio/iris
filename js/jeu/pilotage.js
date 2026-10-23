@@ -1,131 +1,417 @@
 // =====================================================================
-//  LE PILOTAGE — squelette du socle S0 (22/10), rempli par le lot L-D (vague 3 : L-J)
+//  LE PILOTAGE DES BOTS (lot L-D, 23/10 ; spec §§ 3.7, 4.5.11 ; LA CAGE js/ai.js l. 88-107 ; vague 3 : L-J)
 // =====================================================================
-// Le PILOTE mène un acteur vers un point (spec § 4.5.11 ; LA CAGE js/ai.js l. 88-107) : il ne vise pas — c'est le cerveau
-// qui tient le lacet — il donne l'AXE relatif au lacet (un bot qui vise court en pas chassés), s'arrête avec hystérésis,
-// et se dit COINCÉ quand il a fait moins de 0,6 m en 3 s. L'ERRANT est un cerveau d'essai qui va de lieu en lieu (les
-// points d'apparition de la zone) ou vers une destination préférée `vers(acteur)` (le cerveau minimal y met le point
-// chaud). Le squelette : la ligne droite (le monde solide fait glisser le long des murs) ; coincé, l'errant change de
-// destination. L-D : le graphe, la ficelle tirée par balayage, l'évitement, les face-à-face, les franchissements.
-import { pointsDe, POINTS_APPARITION } from './apparitions.js';
+// Le PILOTE mène un acteur vers un point par le graphe (js/jeu/nav.js). Il NE VISE PAS : le cerveau tient le lacet, le
+// pilote donne l'AXE relatif à ce lacet (un bot qui vise court en pas chassés) — la commande, rien d'autre (ni position
+// écrite, sauf le secours ci-dessous). Ce qu'il fait, dans l'ordre d'un pas :
+//   - ARRIVÉE avec hystérésis (LA CAGE moveTo) : arrivé à `arret`, il ne repart qu'au-delà de `arret + marge` — sans cela
+//     un bot posté oscille autour de son point, et l'animation avec lui ;
+//   - le CHEMIN demandé à la file de la partie (`nav.demander` : il arrive à l'étape 9 du pas, une tranche de 1 500 nœuds)
+//     quand la cible a sauté de plus d'un mètre ou glissé de plus de 1,5 m depuis la demande ; en attendant, l'ancien ;
+//   - LA FICELLE TIRÉE par BALAYAGE `C.deplacer` (la même physique que le corps) jusqu'à 12 nœuds plus loin, toutes les
+//     0,25 s, par dichotomie (4 balayages au plus), en suivant le sol tronçon par tronçon : un raccourci qui saute un bord
+//     de palier (une descente de plus de 0,35 m) est refusé, un franchissement jamais sauté. (Avec des `libre()`
+//     échantillonnés au lieu du balayage : 6 trajets sur 60 bloqués, carte_monde § 7.) Trajets 5 % plus courts ;
+//   - l'ÉVITEMENT des autres corps à 0,6 m devant (un pas de côté, jamais vers un vide) ;
+//   - le FACE-À-FACE dans un passage étroit (deux pilotes à moins de 1 m qui avancent l'un vers l'autre, sur des nœuds de
+//     dégagement < 0,6 m — la volée de tôle fait 0,85 m) : celui de plus petit `id` recule jusqu'au nœud le plus proche de
+//     dégagement ≥ 0,75 m qui ne le rapproche pas de l'autre, attend que l'autre soit passé (≥ 1,2 m, et qui s'éloigne),
+//     puis reprend ;
+//   - les liens « FRANCHIR » : aligné sur le lien (< 15°), le front `saut` à ≤ 0,6 m de l'obstacle (le franchissement
+//     scripté est celui de js/jeu/mouvement.js) ; raté → le lien pénalisé, un autre chemin ;
+//   - COINCÉ (moins de 0,6 m en 3 s alors qu'il veut avancer) : nouveau chemin, le lien où il bute pénalisé × 10 pendant
+//     10 s ; au 2e coincement d'affilée, TÉLÉPORTÉ au dernier nœud sûr (à 1,5 m au moins en arrière) — SEULEMENT hors de la
+//     vue du joueur local (le harnais compte les téléportations) ; sinon `coince` : le cerveau change d'idée.
+// L'ERRANT est le cerveau d'essai (et la patrouille du cerveau minimal) : de PIÈCE en pièce — la moins visitée de la partie,
+// tirée par la graine —, ou vers `vers(acteur)` (le point chaud), puis une ronde autour ; le regard dans la marche, lissé,
+// et des coups d'œil quand il s'arrête. Fichier de SIMULATION : hasard semé, temps de la partie, aucune entrée.
 import { Rng, melanger } from './rng.js';
+import { pointsDe, POINTS_APPARITION } from './apparitions.js';
 
-// LES 46 PASSAGES d'une pièce à l'autre (carte_monde § 7, tirés du graphe : centre en PLAN x, y et hauteur) — le
-// squelette en fait un graphe de RÉGIONS : l'errant va de passage en passage jusqu'à la pièce de sa destination, en ligne
-// droite dans chaque pièce (L-D le remplace par le vrai graphe)
-const P_PLAN = [['attente|bureauB', 12.88, 2.5, 0], ['attente|c01', 12.47, 7.78, 0], ['attente|hall', 13.25, 3.63, 0], ['attente|hallO', 5.75, 6.62, 0],
-  ['attente|si01', 10, 3.52, 0], ['c01|local', 11.5, 9, 0], ['c01|pmr', 11.49, 11.21, 0], ['c05|dc', 5.14, 12.74, 0], ['c05|hallO', 5.25, 9, 0], ['c05|wcH', 6, 11, 0],
-  ['couloirEst|descenteEst', 17, 9.88, -0.12], ['couloirEst|hall', 15.22, 7.49, 0], ['couloirEst|vestEst', 15.19, 10.75, 0], ['couloirSS|hallSS', 2, 10, -3.06],
-  ['descenteEst|escEstSS', 18.75, 9.88, -1.45], ['e1couloir|e1pause', 4.75, 5.69, 3.5], ['e1couloir|palier1', 1.38, 6.75, 3.05], ['e1est|e1pause', 13.5, 8.03, 3.5],
-  ['e1est|escEst2', 16.03, 10.51, 3.49], ['e1kahn|e1pause', 10.44, 13, 3.5], ['e1pause|e1salle', 10.83, 5.01, 3.5], ['e2couloir|e2s1', 12.45, 6.49, 6.6],
-  ['e2couloir|e2s2', 10.54, 4.49, 6.6], ['e2couloir|e2sas', 14.62, 6.49, 6.6], ['e2palier|e2sas', 14.75, 8, 6.6], ['e2palier|escEst3', 16, 9.88, 6.6],
-  ['escEst|escEst2', 17.5, 9.88, 2.46], ['escEst|vestEst', 16, 11.63, 0], ['escEst2|escEst3', 17, 9.88, 6.02], ['escEstSS|palierSSE', 17, 11.63, -2.93],
-  ['escalier|hallO', 2.96, 9.01, 0], ['escalier|palier1', 1.36, 9, 1.98], ['escalierSS|hallSS', 0.81, 10, -2.91], ['escalierSS|palierSS', 0.83, 5.98, -0.09],
-  ['hall|porche', 15.13, 0.75, 0], ['hallO|palierSS', 1.5, 5.49, 0], ['hallO|passage', 3.55, 4, 0], ['hallO|wcF', 6, 8.5, 0], ['hallSS|pauseSS', 2.51, 10.79, -3.06],
-  ['palierSSE|sasSS', 15.38, 10.75, -3.06], ['passage|rue', 3.26, -0.5, 0], ['passage|service', 1.5, 1.3, 0], ['passageSS|pauseSS', 13.01, 8.74, -3.06],
-  ['passageSS|sasSS', 13.99, 9.74, -3.06], ['pauseSS|salleSS', 9.76, 14.5, -3.06], ['porche|rue', 14.83, -0.5, 0]];
-export const PASSAGES = P_PLAN.map(([k, x, y, h]) => { const [a, b] = k.split('|'); return { a, b, x, y: h, z: -y }; });
-const VOISINS = new Map();
-for (const P of PASSAGES) for (const [u, v] of [[P.a, P.b], [P.b, P.a]]) { if (!VOISINS.has(u)) VOISINS.set(u, []); VOISINS.get(u).push({ z: v, p: P }); }
-// le chemin de pièces de `de` à `a` (largeur d'abord) : la liste des passages à franchir, ou null
-export function routePieces(de, a) {
-  if (!de || !a || de === a) return [];
-  const prec = new Map([[de, null]]), file = [de];
-  for (let i = 0; i < file.length; i++) {
-    const u = file[i];
-    for (const { z, p } of VOISINS.get(u) || []) {
-      if (prec.has(z)) continue;
-      prec.set(z, { u, p }); file.push(z);
-      if (z === a) {
-        const L = []; let w = a;
-        while (prec.get(w)) { const e = prec.get(w); L.unshift(e.p); w = e.u; }
-        return L;
-      }
-    }
-  }
-  return null;
-}
+const FICELLE_T = 0.25, FICELLE_N = 12;
+const PROCHE = 0.35;                       // un nœud est passé à 0,35 m
+const COINCE_T = 3, COINCE_D = 0.6;        // § 4.5.11
+const PENAL_T = 10;
+const SECOURS_RECUL = 1.5;                 // le nœud sûr : à 1,5 m au moins en arrière
+const EVITE = 0.6;
+const FACE_D = 1.0, FACE_DEG = 0.6, REFUGE_DEG = 0.75, PASSE_D = 1.2, ATTENTE_MAX = 4;
+const SAUT_FACE = 0.6, FRANCHIR_MAX = 1.6;
+const angle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+const _Q = { x: 0, z: 0 };
 
 export class Pilote {
   constructor(acteur, nav, balistique) {
     this.acteur = acteur; this.nav = nav; this.balistique = balistique;
+    this.partie = acteur.partie || null;
     this.cible = null; this.sprint = false; this.arret = 0.3; this.marge = 0.3;
-    this._arrive = false; this._coince = false; this._ref = null; this._t = 0;
+    this._arrive = false; this._coince = false;
+    this.chemin = []; this.k = 0; this.vise = 0;            // les nœuds ; le prochain à passer ; celui que vise la ficelle
+    this._plan = null; this._attente = false; this._tPlan = -1; this._replan = false; this._direct = false;
+    this._tFicelle = -1; this._ref = null; this._tRef = 0; this.coincements = 0; this.secours = 0;
+    this._surs = [];                                         // les derniers nœuds sûrs passés (le secours)
+    this.mode = 'route'; this._refuge = null; this._autre = null; this._tAttente = 0;
+    this._franchi = null;                                    // { de, a, t } : le franchissement en cours
+    this.dir = null;                                          // la direction voulue (monde, unitaire) : l'errant y met son regard
+    this.cle = 'pilote:' + acteur.id;
   }
-  // `o` = { sprint, arret = 0,3, marge = 0,3 }
+  // `o` = { sprint, arret = 0,3, marge = 0,3 } — appelé à chaque pas par le cerveau : la même cible ne replanifie rien
   allerA(x, y, z, o) {
     const { sprint = false, arret = 0.3, marge = 0.3 } = o || {};
-    const nouveau = !this.cible || Math.hypot(this.cible.x - x, this.cible.z - z) > 0.5;
-    this.cible = { x, y, z }; this.sprint = !!sprint; this.arret = arret; this.marge = marge;
-    if (nouveau) { this._arrive = false; this._coince = false; this._ref = null; this._t = 0; }
+    this.sprint = !!sprint; this.arret = arret; this.marge = marge;
+    const c = this.cible;
+    const saute = !c || Math.hypot(c.x - x, c.z - z) > 1.0 || Math.abs(c.y - y) > 1.2;
+    if (!c) this.cible = { x, y, z }; else { c.x = x; c.y = y; c.z = z; }
+    if (saute) { this._arrive = false; this._coince = false; this.coincements = 0; this._replan = true; this._tPlan = -1; if (this.mode !== 'route') this._finFace(); }
+    else if (this._plan && (Math.hypot(this._plan.x - x, this._plan.z - z) > 1.5 || Math.abs(this._plan.y - y) > 1.2)) this._replan = true;
   }
-  stop() { this.cible = null; this._arrive = false; this._coince = false; }
+  stop() {
+    this.cible = null; this._arrive = false; this._coince = false; this.chemin = []; this.k = 0; this.vise = 0; this._plan = null;
+    this._attente = false; this._replan = false; this._direct = false; this._ref = null; this.dir = null; this._finFace();
+    if (this.nav && this.nav.annuler) this.nav.annuler(this.cle);
+  }
   get arrive() { return this._arrive; }
   get coince() { return this._coince; }
-  // l'axe vers la cible, relatif au lacet de la commande (x à droite, y en avant)
+  get pos() { return this.acteur.corps && this.acteur.corps.pos; }
+  get _C() { return (this.nav && this.nav.C) || (this.balistique && this.balistique.C) || null; }
+  get _r() { return (this.nav && this.nav.rayon) || 0.3; }
+
+  // ---------------------------------------------------------------- le pas
   pas(dt, cmd) {
-    const a = this.acteur, c = this.cible;
+    const a = this.acteur, P = this.partie, N = this.nav, c = this.cible, p = this.pos;
     cmd.ax = 0; cmd.ay = 0; cmd.amp = 0; cmd.sprint = false;
-    if (!c || !a.corps) return;
-    const p = a.corps.pos, dx = c.x - p.x, dz = c.z - p.z, d = Math.hypot(dx, dz);
-    this._arrive = this._arrive ? d < this.arret + this.marge : d < this.arret;
-    if (this._arrive) { this._ref = null; this._t = 0; return; }
-    const l = cmd.lacet, fx = -Math.sin(l), fz = -Math.cos(l), rx = Math.cos(l), rz = -Math.sin(l);
-    const ux = dx / d, uz = dz / d;
-    cmd.ay = ux * fx + uz * fz; cmd.ax = ux * rx + uz * rz; cmd.amp = 1;
-    cmd.sprint = this.sprint && cmd.ay > 0.7;
-    // coincé : moins de 0,6 m en 3 s
-    if (!this._ref) { this._ref = { x: p.x, z: p.z }; this._t = 0; }
-    this._t += dt;
-    if (this._t >= 3) {
-      this._coince = Math.hypot(p.x - this._ref.x, p.z - this._ref.z) < 0.6;
-      this._ref = { x: p.x, z: p.z }; this._t = 0;
+    this.dir = null;
+    if (!c || !p) return;
+    const t = P ? P.t : 0;
+    if (N) N.t = t;
+    // L'ARRIVÉE (hystérésis, sur le même sol)
+    const memeSol = Math.abs(c.y - p.y) < 1.2, d = Math.hypot(c.x - p.x, c.z - p.z);
+    if (this.mode === 'route') {
+      if (this._arrive) { if (!(memeSol && d < this.arret + this.marge)) this._arrive = false; }
+      else if (memeSol && d < this.arret) this._arrive = true;
+      if (this._arrive) { this._ref = null; return; }
+    }
+    // LE CHEMIN
+    if (this.mode === 'route' && this._replan && !this._attente && t >= this._tPlan) this._planifier(t);
+    // LE FACE-À-FACE (le recul, l'attente)
+    if (this.mode === 'attente') { this._attendre(dt, t); if (this.mode === 'attente') return; }
+    if (this.mode === 'route') this._faceAFace(t);
+    // LE POINT VISÉ
+    let tx, tz;
+    const L = this.chemin, nb = N && N.nb;
+    if (this._direct || !nb || (!L.length && !this._attente)) { tx = c.x; tz = c.z; }
+    else if (!L.length) return;                               // (le premier chemin arrive au pas prochain)
+    else {
+      // les nœuds passés
+      while (this.k < L.length && this._passe(L[this.k], p)) { this._noterSur(L[this.k], p); this.k++; }
+      if (this.k >= L.length) {
+        if (this.mode === 'recul') { this.mode = 'attente'; this._tAttente = 0; return; }
+        tx = c.x; tz = c.z;                                   // (après le dernier nœud : la cible elle-même)
+      } else {
+        if (t >= this._tFicelle || this.vise < this.k) { this._tFicelle = t + FICELLE_T; this.vise = this._ficelle(p); }
+        if (this.vise < this.k) this.vise = this.k;
+        const v = L[this.vise];
+        tx = N.px[v]; tz = N.pz[v];
+      }
+    }
+    let dx = tx - p.x, dz = tz - p.z, l = Math.hypot(dx, dz);
+    if (l < 1e-6) return;
+    dx /= l; dz /= l;
+    // LE FRANCHISSEMENT : sur un lien « franchir », aligné, le saut à ≤ 0,6 m de l'obstacle
+    if (L.length && this.k > 0 && this.k < L.length && N.typeLien) {
+      const u = L[this.k - 1], v = L[this.k], j = N.lien(u, v);
+      if (j >= 0 && N.typeLien[j] === 1) this._franchir(cmd, u, v, p, dx, dz, t);
+    }
+    // L'ÉVITEMENT des autres corps (un pas de côté, jamais vers un vide)
+    [dx, dz] = this._eviter(p, dx, dz);
+    this.dir = { x: dx, z: dz };
+    const lac = cmd.lacet, fx = -Math.sin(lac), fz = -Math.cos(lac), rx = Math.cos(lac), rz = -Math.sin(lac);
+    cmd.ay = dx * fx + dz * fz; cmd.ax = dx * rx + dz * rz; cmd.amp = 1;
+    cmd.sprint = this.sprint && cmd.ay > 0.7 && !this._franchi;
+    // COINCÉ ?
+    this._surveiller(dt, t, p);
+  }
+
+  // ---------------------------------------------------------------- le chemin
+  _planifier(t) {
+    const N = this.nav, p = this.pos, c = this.cible;
+    this._replan = false; this._tPlan = t + 0.5; this._plan = { x: c.x, y: c.y, z: c.z };
+    if (!N || !N.nb) { this._direct = true; return; }
+    let de = N.noeudPres(p.x, p.y, p.z, 1.5); if (de < 0) de = N.noeudPres(p.x, p.y, p.z, 3);
+    let a = N.noeudPres(c.x, c.y, c.z, 1.5); if (a < 0) a = N.noeudPres(c.x, c.y, c.z, 3);
+    if (de < 0 || a < 0) { this._direct = true; this.chemin = []; return; }
+    this._direct = false; this._attente = true;
+    N.demander(this.cle, de, a, (liste) => this._recu(liste));
+  }
+  _recu(liste) {
+    this._attente = false;
+    if (!liste || !liste.length) { this.chemin = []; this._coince = true; return; }
+    this.chemin = liste; this.k = 0; this.vise = 0; this._tFicelle = -1; this._franchi = null;
+  }
+  // un nœud passé : à 0,35 m, sur son sol
+  _passe(v, p) { const N = this.nav; return Math.hypot(N.px[v] - p.x, N.pz[v] - p.z) < PROCHE && Math.abs(N.ph[v] - p.y) < 0.6; }
+  _noterSur(v, p) {
+    const S = this._surs, N = this.nav;
+    if (N.degage[v] < this._r + 0.1 && S.length) return;
+    const der = S[S.length - 1];
+    if (der === undefined || Math.hypot(N.px[der] - N.px[v], N.pz[der] - N.pz[v]) > 0.75) { S.push(v); if (S.length > 6) S.shift(); }
+  }
+  // LA FICELLE : le nœud le plus loin (≤ 12 devant, jamais au-delà d'un franchissement) qu'un balayage atteint
+  _ficelle(p) {
+    const N = this.nav, L = this.chemin, k = this.k;
+    let hi = Math.min(L.length - 1, k + FICELLE_N);
+    for (let j = k + 1; j <= hi; j++) { const q = N.lien(L[j - 1], L[j]); if (q >= 0 && N.typeLien[q] === 1) { hi = j - 1; break; } }
+    if (hi <= k) return k;
+    if (this._balayer(p.x, p.y, p.z, L[hi])) return hi;
+    let lo = k;
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (this._balayer(p.x, p.y, p.z, L[m])) lo = m; else hi = m; }
+    return lo;
+  }
+  // le corps irait-il tout droit de (x, y, z) au nœud v ? (tronçons de 0,35 m, le sol suivi, pas de descente > 0,35 m)
+  _balayer(x, y, z, v) {
+    const N = this.nav, C = this._C, r = this._r, bx = N.px[v], bz = N.pz[v], by = N.ph[v];
+    const L = Math.hypot(bx - x, bz - z);
+    if (L < 1e-6) return Math.abs(by - y) < 0.45;
+    const n = Math.max(1, Math.ceil(L / 0.35)), sx = (bx - x) / n, sz = (bz - z) / n;
+    _Q.x = x; _Q.z = z;
+    let h = y;
+    for (let i = 1; i <= n; i++) {
+      const ex = x + sx * i, ez = z + sz * i;
+      C.deplacer(_Q, ex - _Q.x, ez - _Q.z, r, null, h);
+      if (Math.hypot(_Q.x - ex, _Q.z - ez) > 0.03) return false;
+      const h2 = C.solEn(_Q.x, _Q.z, h);
+      if (h2 < h - 0.35 || h2 > h + 0.45) return false;
+      h = h2;
+    }
+    return Math.abs(h - by) < 0.35;
+  }
+
+  // ---------------------------------------------------------------- le franchissement
+  _franchir(cmd, u, v, p, dx, dz, t) {
+    const N = this.nav, C = this._C;
+    const lx = N.px[v] - N.px[u], lz = N.pz[v] - N.pz[u], ll = Math.hypot(lx, lz) || 1, ux = lx / ll, uz = lz / ll;
+    if (!this._franchi || this._franchi.v !== v) this._franchi = { u, v, t, saute: false };
+    const F = this._franchi;
+    // (raté : 1,6 s sur le lien sans être passé → pénalisé, un autre chemin)
+    if (t - F.t > FRANCHIR_MAX) { N.penaliser(u, v, t + PENAL_T); this._franchi = null; this._replan = true; this._tPlan = -1; this.chemin = []; return; }
+    if (F.saute || this.acteur.corps.airborne) return;
+    // aligné (< 15°) et la face à ≤ 0,6 m : le saut (la face : un disque poussé de 0,8 m bute)
+    if (dx * ux + dz * uz < Math.cos(15 * Math.PI / 180)) return;
+    _Q.x = p.x; _Q.z = p.z;
+    C.deplacer(_Q, ux * 0.8, uz * 0.8, this._r, null, p.y);
+    const avance = (_Q.x - p.x) * ux + (_Q.z - p.z) * uz;
+    // (la face, du centre du corps : avance + rayon ≤ 0,6 m)
+    if (avance + this._r <= SAUT_FACE) { cmd.saut = true; F.saute = true; }
+  }
+
+  // ---------------------------------------------------------------- l'évitement
+  _eviter(p, dx, dz) {
+    const P = this.partie, a = this.acteur;
+    if (!P) return [dx, dz];
+    let ox = 0, oz = 0;
+    const px = -dz, pz = dx;
+    for (const b of P.acteurs) {
+      if (b === a || !b.vivant || !b.corps || b.role === 'cible') continue;
+      const q = b.corps.pos;
+      if (Math.abs(q.y - p.y) > 1.2) continue;
+      const rx = q.x - p.x, rz = q.z - p.z, d = Math.hypot(rx, rz);
+      if (d > 1.2 || d < 1e-6) continue;
+      const devant = rx * dx + rz * dz, lat = rx * px + rz * pz, R = (b.corps.rayon ?? 0.3) + this._r;
+      if (devant <= 0 || devant > EVITE + R || Math.abs(lat) > R + 0.05) continue;
+      const cote = Math.abs(lat) > 0.04 ? -Math.sign(lat) : a.id < b.id ? 1 : -1, w = 0.9 * (1 - d / 1.2);
+      ox += px * cote * w; oz += pz * cote * w;
+    }
+    if (!ox && !oz) return [dx, dz];
+    let nx = dx + ox, nz = dz + oz;
+    const n = Math.hypot(nx, nz); if (n < 1e-6) return [dx, dz];
+    nx /= n; nz /= n;
+    // (jamais vers un vide : le sol à 0,4 m dans la nouvelle direction reste celui-ci)
+    const C = this._C;
+    if (C) { const h = C.solEn(p.x + nx * 0.4, p.z + nz * 0.4, p.y); if (h < p.y - 0.3 || h > p.y + 0.45) return [dx, dz]; }
+    return [nx, nz];
+  }
+
+  // ---------------------------------------------------------------- le face-à-face
+  _faceAFace(t) {
+    const N = this.nav, P = this.partie, a = this.acteur, p = this.pos;
+    if (!N || !N.nb || !P || !this.chemin.length || !this._dirPrec) return;
+    for (const b of P.acteurs) {
+      if (b === a || b.id < a.id || !b.vivant || !b.corps) continue;      // (le plus petit id recule : c'est lui qui regarde)
+      const Q = b.cerveau && b.cerveau.pilote;
+      if (!Q || Q.mode !== 'route' || !Q._dirPrec || Q._arrive) continue;
+      const q = b.corps.pos;
+      if (Math.abs(q.y - p.y) > 1.2 || Math.hypot(q.x - p.x, q.z - p.z) > FACE_D) continue;
+      const d1 = this._dirPrec, d2 = Q._dirPrec;
+      if (d1.x * d2.x + d1.z * d2.z > -0.5) continue;
+      // (l'un vers l'autre : chacun a l'autre devant lui)
+      if ((q.x - p.x) * d1.x + (q.z - p.z) * d1.z <= 0) continue;
+      const na = N.noeudPres(p.x, p.y, p.z, 1), nbb = N.noeudPres(q.x, q.y, q.z, 1);
+      if (na < 0 || nbb < 0 || N.degage[na] >= FACE_DEG || N.degage[nbb] >= FACE_DEG) continue;
+      const R = this._refugeDe(na, q);
+      if (!R) continue;
+      this.mode = 'recul'; this._autre = b; this._refuge = R; this._sauve = { chemin: this.chemin, k: this.k };
+      this.chemin = R; this.k = 0; this.vise = 0; this._tFicelle = -1; this._ref = null;
+      return;
     }
   }
-}
+  // le chemin (par la marche) jusqu'au nœud le plus proche de dégagement ≥ 0,75 m qui ne rapproche pas de l'autre
+  _refugeDe(de, q) {
+    const N = this.nav, pere = new Map([[de, -1]]), file = [de];
+    const d0 = Math.hypot(N.px[de] - q.x, N.pz[de] - q.z);
+    for (let i = 0; i < file.length && i < 600; i++) {
+      const u = file[i];
+      if (u !== de && N.degage[u] >= REFUGE_DEG && Math.hypot(N.px[u] - q.x, N.pz[u] - q.z) >= d0 - 0.05) {
+        const L = []; for (let w = u; w >= 0; w = pere.get(w)) L.push(w);
+        return L.reverse();
+      }
+      for (let j = N.debut[u]; j < N.debut[u + 1]; j++) {
+        const v = N.liens[j];
+        if (N.typeLien[j] || pere.has(v) || !N.permis(v)) continue;
+        pere.set(v, u); file.push(v);
+      }
+    }
+    return null;
+  }
+  _attendre(dt, t) {
+    const b = this._autre, p = this.pos;
+    this._tAttente += dt;
+    const Q = b && b.cerveau && b.cerveau.pilote;
+    let passe = !b || !b.vivant || !b.corps || !Q;
+    if (!passe) {
+      const q = b.corps.pos, d = Math.hypot(q.x - p.x, q.z - p.z), D = Q._dirPrec;
+      passe = d >= PASSE_D && (!D || (q.x - p.x) * D.x + (q.z - p.z) * D.z > 0);
+    }
+    if (passe || this._tAttente > ATTENTE_MAX) this._finFace(true);
+  }
+  _finFace(reprendre = false) {
+    if (this.mode === 'route') return;
+    this.mode = 'route'; this._autre = null; this._refuge = null; this._sauve = null;
+    if (reprendre) { this.chemin = []; this._replan = true; this._tPlan = -1; this._ref = null; }
+  }
 
-// L'ERRANT : de lieu en lieu dans la zone de la partie (ou vers `vers(acteur)`), le regard dans sa marche
+  // ---------------------------------------------------------------- coincé, le secours
+  _surveiller(dt, t, p) {
+    this._dirPrec = this.dir;
+    if (!this._ref) { this._ref = { x: p.x, z: p.z }; this._tRef = 0; return; }
+    this._tRef += dt;
+    if (Math.hypot(p.x - this._ref.x, p.z - this._ref.z) > COINCE_D) { this._ref.x = p.x; this._ref.z = p.z; this._tRef = 0; this.coincements = 0; return; }
+    if (this._tRef < COINCE_T) return;
+    this._ref.x = p.x; this._ref.z = p.z; this._tRef = 0;
+    this.coincements++;
+    const N = this.nav, L = this.chemin;
+    if (N && N.nb && L.length && this.k < L.length) {
+      const u = this.k > 0 ? L[this.k - 1] : N.noeudPres(p.x, p.y, p.z, 1.5), v = L[Math.min(L.length - 1, Math.max(this.k, this.vise))];
+      if (u >= 0) { N.penaliser(u, L[this.k], t + PENAL_T); if (v !== L[this.k]) N.penaliser(L[Math.max(0, this.vise - 1)], v, t + PENAL_T); }
+    }
+    if (this.coincements >= 2 && this._secours()) this.coincements = 0;
+    else if (this.coincements >= 3) this._coince = true;
+    if (this.mode !== 'route') this._finFace(false);
+    this.chemin = []; this._replan = true; this._tPlan = -1; this._direct = false;
+  }
+  // la téléportation au dernier nœud sûr, à 1,5 m au moins en arrière, si le joueur local ne voit ni le bot ni le nœud
+  _secours() {
+    const N = this.nav, P = this.partie, a = this.acteur, p = this.pos, B = this.balistique;
+    if (!N || !N.nb || !P) return false;
+    let v = -1;
+    for (let i = this._surs.length - 1; i >= 0; i--) { const s = this._surs[i]; if (Math.hypot(N.px[s] - p.x, N.pz[s] - p.z) >= SECOURS_RECUL && N.permis(s)) { v = s; break; } }
+    if (v < 0) return false;
+    const L = P.local;
+    if (L && L !== a && L.vivant && L.corps && B) {
+      const o = L.oeil(this._o || (this._o = { x: 0, y: 0, z: 0, set(x, y, z) { this.x = x; this.y = y; this.z = z; return this; } }));
+      if (B.vue(o.x, o.y, o.z, p.x, p.y + 1.6, p.z) || B.vue(o.x, o.y, o.z, N.px[v], N.ph[v] + 1.6, N.pz[v])) return false;
+    }
+    const c = a.corps;
+    c.pos.set(N.px[v], N.ph[v], N.pz[v]); c.vel.set(0, 0, 0);
+    if (c.posPrec) c.posPrec.copy(c.pos);
+    c.solAff = N.ph[v]; c.jumpY = 0; c.jumpVel = 0; c.airborne = false;
+    this.secours++; Pilote.secoursTotal++;
+    this._surs.length = 0; this._ref = null;
+    return true;
+  }
+}
+Pilote.secoursTotal = 0;
+
+// ======================================================================================================== L'ERRANT
+// les visites des pièces par partie (les errants d'une même partie se répartissent l'école)
+const _visites = new WeakMap();
 export class Errant {
   constructor(acteur, partie, { vers } = {}) {
     this.acteur = acteur; this.partie = partie; this.vers = vers || null;
     this.pilote = new Pilote(acteur, partie.nav, partie.balistique);
     this.rng = new Rng(melanger(partie.graine || 1, acteur.id, 0x4572));
-    this.dest = null; this._detour = 0; this.route = []; this._cleRoute = null;
+    this.dest = null; this.mode = null; this.versPt = null; this.rondeT = 0; this.zoneDest = -1;
+    this.regard = acteur.cmd.lacet || 0; this.coupDOeilT = 0; this.coupDOeil = 0;
   }
-  _zone(x, y, z) { const Lu = this.partie.game.carte && this.partie.game.carte.lumieres; const Z = Lu && Lu.zoneEn ? Lu.zoneEn(x, z, y + 0.1) : null; return Z ? Z.id : null; }
-  _choisir() {
+  get etat() { return this.mode || 'errance'; }
+  _nav() { const N = this.partie.nav; return N && N.nb ? N : null; }
+  // la prochaine pièce : la moins visitée de la partie (hors celle où il est), un nœud dégagé au hasard dedans
+  _choisirPiece() {
+    const N = this._nav(), a = this.acteur;
+    if (!N) { this._choisirPoint(); return; }
+    let V = _visites.get(this.partie); if (!V) _visites.set(this.partie, V = new Map());
+    const ici = N.noeudPres(a.pos.x, a.pos.y, a.pos.z, 2), zi = ici >= 0 ? N.zone[ici] : 255;
+    const Z = N.piecesPermises().filter((z) => z !== zi);
+    if (!Z.length) { this._choisirPoint(); return; }
+    let min = Infinity; for (const z of Z) min = Math.min(min, V.get(z) || 0);
+    const pool = Z.filter((z) => (V.get(z) || 0) === min), z = pool[this.rng.int(pool.length)];
+    V.set(z, (V.get(z) || 0) + 1);
+    let best = -1, bd = -1;
+    for (let k = 0; k < 5; k++) { const v = N.aleatoireDans(z, this.rng); if (v >= 0 && N.degage[v] > bd) { bd = N.degage[v]; best = v; } }
+    if (best < 0) { this._choisirPoint(); return; }
+    this.zoneDest = z; this.mode = 'piece';
+    this.dest = { x: N.px[best], y: N.ph[best], z: N.pz[best] };
+  }
+  // (sans graphe : de lieu d'apparition en lieu d'apparition, comme le squelette)
+  _choisirPoint() {
     const L0 = pointsDe(this.partie.zone || 'ecole'), L = L0.length ? L0 : POINTS_APPARITION, p = this.acteur.pos;
     const pool = L.filter((q) => Math.hypot(q.x - p.x, q.z - p.z) > 2 || Math.abs(q.y - p.y) > 1.5);
     const q = (pool.length ? pool : L)[this.rng.int((pool.length ? pool : L).length)];
-    this.dest = { x: q.x, y: q.y, z: q.z };
+    this.mode = 'piece'; this.dest = { x: q.x, y: q.y, z: q.z };
   }
-  // la route de pièces vers la destination (refaite quand la destination ou la pièce de départ changent)
-  _router() {
-    const a = this.acteur.pos, d = this.dest;
-    const za = this._zone(a.x, a.y, a.z), zd = this._zone(d.x, d.y, d.z);
-    const cle = za + '>' + zd + '>' + Math.round(d.x) + ',' + Math.round(d.z);
-    if (cle === this._cleRoute) return;
-    this._cleRoute = cle;
-    this.route = (za && zd && routePieces(za, zd)) || [];
+  // la ronde autour du point chaud : un nœud à 3-10 m de lui, à pied
+  _choisirRonde() {
+    const N = this._nav(), c = this.versPt;
+    if (!N || !c) { this._choisirPiece(); return; }
+    const L = N.dans(c.x, c.y, c.z, 10, this._tmp || (this._tmp = []), 1.2).filter((v) => Math.hypot(N.px[v] - c.x, N.pz[v] - c.z) >= 3 && N.degage[v] >= 0.5);
+    if (!L.length) { this._choisirPiece(); return; }
+    const v = L[this.rng.int(L.length)];
+    this.mode = 'ronde'; this.rondeT = this.partie.t + 4 + this.rng.next() * 5;
+    this.dest = { x: N.px[v], y: N.ph[v], z: N.pz[v] };
   }
   commande(dt, cmd) {
-    const a = this.acteur, P = this.pilote;
-    let cible = null;
-    if (this._detour > 0) this._detour -= dt;
-    else if (this.vers) cible = this.vers(a);
-    if (cible) this.dest = { x: cible.x, y: cible.y, z: cible.z };
-    if (!this.dest || (P.arrive && !this.route.length)) { if (!cible) this._choisir(); }
-    if (P.coince) { this._choisir(); this._detour = 6; P.stop(); this._cleRoute = null; }
-    this._router();
-    // le prochain passage de la route, sinon la destination
-    while (this.route.length && Math.hypot(this.route[0].x - a.pos.x, this.route[0].z - a.pos.z) < 0.6) this.route.shift();
-    const v = this.route.length ? this.route[0] : this.dest;
-    P.allerA(v.x, v.y, v.z, { sprint: false, arret: this.route.length ? 0.3 : 0.6 });
-    // le regard dans la marche
-    const p = a.pos, dx = v.x - p.x, dz = v.z - p.z;
-    if (Math.hypot(dx, dz) > 0.2) cmd.lacet = Math.atan2(-dx, -dz);
-    cmd.tangage = 0;
+    const a = this.acteur, P = this.pilote, t = this.partie.t;
+    // LA DESTINATION
+    const v = this.vers ? this.vers(a) : null;
+    if (v) {
+      if (!this.versPt || Math.hypot(v.x - this.versPt.x, v.z - this.versPt.z) > 3 || Math.abs(v.y - this.versPt.y) > 1.5) {
+        this.versPt = { x: v.x, y: v.y, z: v.z }; this.mode = 'vers'; this.dest = { ...this.versPt };
+      }
+    } else if (this.mode === 'vers' || this.mode === 'ronde') { this.versPt = null; this.dest = null; }
+    if (!this.dest) this._choisirPiece();
+    if (P.coince) { P.stop(); if (this.mode === 'vers') this._choisirRonde(); else this._choisirPiece(); }
+    else if (P.arrive) {
+      if (this.mode === 'vers') this._choisirRonde();
+      else if (this.mode === 'ronde') { if (t >= this.rondeT) this._choisirRonde(); }
+      else if (t >= (this._repos || 0)) { if (this._repos) { this._repos = 0; this._choisirPiece(); } else this._repos = t + 0.6 + this.rng.next() * 1.4; }
+    }
+    const d = this.dest, p = a.pos, loin = Math.hypot(d.x - p.x, d.z - p.z);
+    P.allerA(d.x, d.y, d.z, { sprint: this.mode === 'vers' && loin > 15, arret: this.mode === 'vers' ? 1.0 : 0.5, marge: 0.4 });
     P.pas(dt, cmd);
+    // LE REGARD : dans la marche (lissé, 9 rad/s au plus) ; à l'arrêt, des coups d'œil
+    let voulu = this.regard;
+    if (P.dir) voulu = Math.atan2(-P.dir.x, -P.dir.z);
+    else {
+      if (t >= this.coupDOeilT) { this.coupDOeilT = t + 1.2 + this.rng.next() * 2.2; this.coupDOeil = angle(this.regard + (this.rng.next() - 0.5) * 2.4); }
+      voulu = this.coupDOeil;
+    }
+    const e = angle(voulu - this.regard), pasMax = 9 * dt, k = 1 - Math.exp(-dt / (P.dir ? 0.09 : 0.25));
+    this.regard = angle(this.regard + Math.max(-pasMax, Math.min(pasMax, e * k)));
+    // (la commande d'axe a été posée pour l'ancien lacet : elle est retournée vers le nouveau, la direction voulue reste la même)
+    if (P.dir) {
+      const l = this.regard, fx = -Math.sin(l), fz = -Math.cos(l), rx = Math.cos(l), rz = -Math.sin(l);
+      cmd.ay = P.dir.x * fx + P.dir.z * fz; cmd.ax = P.dir.x * rx + P.dir.z * rz;
+      cmd.sprint = P.sprint && cmd.ay > 0.7 && !P._franchi;
+    }
+    cmd.lacet = this.regard; cmd.tangage = 0;
     cmd.marche = false; cmd.tir = false; cmd.visee = false; cmd.accroupi = false;
   }
 }
