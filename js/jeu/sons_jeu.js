@@ -370,13 +370,12 @@ export class SonsJeu {
   debrancher() {
     for (const d of this._des) d();
     this._des = []; this._file.length = 0;
-    // les voix en cours s'éteignent (fondu court), le bus se rouvre
+    // les voix en cours coupées TOUT DE SUITE (la partie s'en va ; une chaîne gardée pour un fondu manquait à la partie
+    // suivante, lancée dans la même tâche par les tests), leurs chaînes rendues ; le bus se rouvre
     const A = this.audio, ctx = A && A.ctx;
-    for (const v of this._voix) this._voler(v);
-    this._voix.length = 0;
-    // (hors partie, plus de `maj` pour les débrancher : elles le sont après leur fondu)
-    const M = this._mourantes.splice(0);
-    if (M.length) setTimeout(() => { for (const m of M) this._liberer(m.v); }, 80);
+    for (const v of this._voix) this._liberer(v);
+    for (const m of this._mourantes) this._liberer(m.v);
+    this._voix.length = 0; this._mourantes.length = 0;
     if (ctx && this.filtreBus) { const f = this.filtreBus.frequency; f.cancelScheduledValues(0); f.setValueAtTime(20000, ctx.currentTime); }
     this._etouffeJusque = 0;
     this.partie = null;

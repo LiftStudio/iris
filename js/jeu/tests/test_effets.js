@@ -116,37 +116,47 @@ export default function (jeu) {
   // 1. PROGRAMMES CONSTANTS pendant 10 s à 100 tirs/s, avec impacts, traceurs, douilles, éclairs, étincelles, explosions
   T('01 programmes constants : 10 s à 100 tirs/s, tous les effets', async (t) => {
     // (la qualité figée : sinon js/fx.js precompilerRepli compile en tâche de fond, toutes les 3 s, les variantes du
-    // préréglage de repli des objets arrivés — les pools du jeu compris —, et le compte bouge sans que rien ne fige)
+    // préréglage de repli des objets arrivés — les pools du jeu compris —, et le compte bouge sans que rien ne fige ;
+    // et une PASSE DE CHAUFFE de 2 s d'abord, comme les cycles du test 8 du socle : à la toute première partie d'un onglet
+    // frais, les corps des bots, leurs ombres, l'arme de vue… finissent de compiler — ce ne sont pas les effets)
     jeu.figerQualite(true);
     const { p, E } = await essai({ mannequins: 3, bots: 2 });
     const F = formes(), a = p.acteurParId(1), res = [];
     p.hud.points = [{ id: 'A', x: p.local.pos.x + 3, y: p.local.pos.y, z: p.local.pos.z - 3, r: 2.5, possesseur: 'A', capture: { equipe: 'B', k: 0.4 } }];
     p.hud.cibles = [{ id: 90, x: p.local.pos.x - 2, y: p.local.pos.y, z: p.local.pos.z - 4, cap: 0, k: 1, touchee: false }];
     const avant = habillage('militaire');
-    await jeu.images(10);
-    const p0 = game.renderer.info.programs.length;
     const cibles = [F.mur && surFace(F.mur), F.vitre && surFace(F.vitre), F.meuble && surFace(F.meuble), F.plafond && surFace(F.plafond, true)].filter(Boolean);
     const mats = ['mur', 'vitre', 'meuble', 'plafond'];
     let tirs = 0, explosions = 0;
-    jeu.commande(0, { tir: true }, 10);
-    const t0 = performance.now();
-    try {
-      for (let k = 0; k < 600 && performance.now() - t0 < 30000; k++) {
-        if (k === 300) habillage('airsoft');
-        // 100 tirs par seconde : ≈ 1,7 par image (et ceux de Haythem, qui tient la détente)
+    // une passe : `n` images à 100 tirs/s (≈ 1,7 par image), Haythem qui tient la détente, une explosion toutes les 2 s
+    // (frag, puis flash), une grenade lancée par un bot, l'habillage changé à mi-chemin
+    const passe = async (n) => {
+      jeu.commande(0, { tir: true }, n / 60);
+      const t0 = performance.now();
+      for (let k = 0; k < n && performance.now() - t0 < 30000; k++) {
+        habillage(k < n / 2 ? 'militaire' : 'airsoft');
         for (let j = 0; j < (k % 3 === 2 ? 1 : 2); j++) { const i = (k * 2 + j) % cibles.length; tirVers(p, a, cibles[i], { mat: mats[i], forme: null, arme: ['fa24', 'pm9', 'fp12', 'tp50', 'p17'][k % 5] }); tirs++; }
-        if (k % 120 === 60) { const o = p.local.pos; p.evt('explosion', { x: o.x + 2, y: o.y + 0.1, z: o.z - 3, r: 6.5, type: k % 240 === 60 ? 'frag' : 'flash' }); explosions++; }
+        if (k % 120 === 60 || (n < 200 && k % 40 === 20)) { const o = p.local.pos; p.evt('explosion', { x: o.x + 2, y: o.y + 0.1, z: o.z - 3, r: 6.5, type: explosions % 2 ? 'flash' : 'frag' }); explosions++; }
         if (k === 30) p.grenades.lancer(p.acteurParId(4) || a, 'frag', 2);
         await jeu.images(1);
       }
+    };
+    let cles0 = null;
+    try {
+      await passe(120);
+      await jeu.images(10);
+      cles0 = new Set(game.renderer.info.programs.map((x) => x.cacheKey));
+      tirs = 0; explosions = 0;
+      await passe(600);
     } finally { habillage(avant); jeu.figerQualite(false); }
-    const p1 = game.renderer.info.programs.length, s = E.stats;
-    res.push([`programmes ${p0} → ${p1}`, p0 === p1]);
+    const neufs = game.renderer.info.programs.filter((x) => !cles0.has(x.cacheKey)).map((x) => x.name);
+    const s = E.stats;
+    res.push([`programmes ${cles0.size} → ${game.renderer.info.programs.length}${neufs.length ? ' (neufs : ' + neufs.join(', ') + ')' : ''}`, neufs.length === 0]);
     res.push([`${tirs} tirs émis + ${jeu.compteurs().tirs} de la partie, ${s.decalques} décalques, ${s.traceurs} traceurs, ${s.douilles} douilles, ${s.eclairs} éclairs, ${s.gerbes} gerbes, ${explosions} explosions`,
       s.decalques > 50 && s.traceurs > 50 && s.douilles > 20 && s.eclairs > 50 && s.gerbes > 50 && explosions >= 4]);
     jeu.quitter('balade');
-    return bilan(res, 'programmes constants pendant 10 s à 100 tirs/s (impacts, traceurs, douilles, éclairs, étincelles, explosions, anneaux, cibles)');
-  }, { delai: 120 });
+    return bilan(res, 'programmes constants pendant 10 s à 100 tirs/s (impacts, traceurs, douilles, éclairs, étincelles, explosions, anneaux, cibles), après 2 s de chauffe');
+  }, { delai: 150 });
 
   // 2. 1 000 IMPACTS : un appel, ≤ 0,2 ms de mise à jour pour 256 actifs, le plus vieux recyclé
   T('02 1 000 impacts : 1 appel, mise à jour, recyclage', async (t) => {
