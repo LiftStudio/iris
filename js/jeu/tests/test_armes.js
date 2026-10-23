@@ -15,6 +15,7 @@ import { ARMES, degatsDe, tirage, Arsenal } from '../armes.js';
 import { FICHES_BOTS } from '../avatars.js';
 import { Balistique, MODE, EXCEPTIONS_PREFILTRE, nomZone } from '../balistique.js';
 import { capsules, teteSimulee } from '../touches.js';
+import { dansUneForme as dansUneFormePleine } from '../grenade.js';
 import { BORNES_NAV } from '../nav.js';
 import { zoneDe } from '../../ecole_visibilite.js';
 
@@ -220,7 +221,11 @@ export default function (jeu) {
     const cotes = new Map();
     for (const o of maillages) for (const M of [].concat(o.material)) if (M && !cotes.has(M)) { cotes.set(M, M.side); M.side = THREE.DoubleSide; }
     const rc = new THREE.Raycaster();
-    let ok = 0, n = 0, verre = 0, sansForme = 0, escalier = 0, escOk = 0, sansDecor = 0, portes = 0, portesOk = 0;
+    let ok = 0, n = 0, verre = 0, sansForme = 0, escalier = 0, escOk = 0, sansDecor = 0, portes = 0, portesOk = 0, plafondR = 0, plafondROk = 0;
+    // (F2 : le PLAFOND DE LA PAUSE DU −1 refait par le lot R — soffite au sud, poutres — n'a pas de forme au monde solide à sa
+    // mesure : le plafond de collision est celui d'avant, et les poutres n'en ont pas. Un rayon dont un impact tombe dans le haut
+    // de la pause du −1, à plus de 2 m du sol, est compté à part et noté — demande au lot R / INT au rapport F2)
+    const dansPlafondR = (x, y, z) => y > NIVEAUX[0].sol + 2.0 && piece(x, NIVEAUX[0].sol + 0.5, z) === 'pauseSS';
     const estPorte = (o) => { for (let q = o; q; q = q.parent) if (/^porte|vantail/i.test(q.name || '')) return true; const M = [].concat(o.material)[0]; return !!(M && /vantail|porte/i.test(M.name || '')); };
     const rc2 = new THREE.Raycaster(), _a = new THREE.Vector3(), _u = new THREE.Vector3();
     const maillagePres = (q) => {
@@ -263,6 +268,7 @@ export default function (jeu) {
         if (m.vitres) { const v = B._vt[0]; m.t = v.t; m.x = a.x + d.x * v.t; m.y = a.y + d.y * v.t; m.z = a.z + d.z * v.t; m.nx = v.nx; m.ny = v.ny; m.nz = v.nz; m.mat = 'vitre'; m.forme = v.forme; }
         const tR = H ? H.distance : L;
         if ((H && dansEscalier(H.point.x, H.point.y, H.point.z)) || (m.mat !== 'rien' && dansEscalier(m.x, m.y, m.z))) { escalier++; if (Math.abs(tR - m.t) <= 0.10) escOk++; continue; }
+        if ((H && dansPlafondR(H.point.x, H.point.y, H.point.z)) || (m.mat !== 'rien' && dansPlafondR(m.x, m.y, m.z))) { plafondR++; if (Math.abs(tR - m.t) <= 0.10) plafondROk++; continue; }
         // (les PORTES : leur boîte n'est pas leur vantail — plus épaisse, et une porte automatique ouverte n'en a pas ; le
         // combat les reprend toutes, js/jeu/monde_partie.js, L-M)
         if ((m.forme && m.forme.mobile) || (H && estPorte(H.object))) { portes++; if (Math.abs(tR - m.t) <= 0.10) portesOk++; continue; }
@@ -275,8 +281,9 @@ export default function (jeu) {
     } finally { for (const [M, s] of cotes) M.side = s; }
     await t.attendre(0);
     t.note('maillages : accord dans les cages d’escalier', `${escOk}/${escalier}`); t.note('maillages : accord sur les portes', `${portesOk}/${portes}`);
+    t.note('maillages : accord sous le plafond de la pause du −1 (lot R)', `${plafondROk}/${plafondR}`);
     return { ok: n >= 100 && ok / n >= 0.97, attendu: '≥ 97 % de 100 rayons comparés à ≤ 10 cm du premier maillage (exclus, comptés à part : verre, décor sans forme, forme sans décor, cages d’escalier, portes)',
-      obtenu: `${ok}/${n} (${(100 * ok / Math.max(1, n)).toFixed(1)} %) · exclus : ${verre} verre, ${sansForme} décor sans forme, ${sansDecor} forme sans décor, ${escalier} dans une cage d'escalier (${escOk} d'accord), ${portes} sur une porte (${portesOk} d'accord)${fautes.length ? ' · écarts : ' + fautes.join(' ; ') : ''}` };
+      obtenu: `${ok}/${n} (${(100 * ok / Math.max(1, n)).toFixed(1)} %) · exclus : ${verre} verre, ${sansForme} décor sans forme, ${sansDecor} forme sans décor, ${escalier} dans une cage d'escalier (${escOk} d'accord), ${portes} sur une porte (${portesOk} d'accord), ${plafondR} sous le plafond de la pause du −1 (${plafondROk} d'accord)${fautes.length ? ' · écarts : ' + fautes.join(' ; ') : ''}` };
   }, { delai: 300 });
 
   // 3. 400 RAYONS VERTICAUX : arrêtés par un sol ou un plafond avant le niveau voisin
@@ -303,7 +310,8 @@ export default function (jeu) {
   T('4 vitres claires et dépolies, formes camera:false et balle:false', async () => {
     const p = await essaiVide(4), C0 = C(), B = p.balistique, m = {};
     // les vitres dont les deux côtés sont libres sur 0,8 m (le tir part d'un côté, la cible est de l'autre)
-    const vitres = C0.formes.filter((s) => s.vitre && !s.off && s.t !== 'c' && Number.isFinite(s.y1));
+    // (F2 : les dépolies de la table de L-M — posées en partie, forme.depoli — ne sont pas des claires)
+    const vitres = C0.formes.filter((s) => s.vitre && !s.depoli && !s.off && s.t !== 'c' && Number.isFinite(s.y1));
     const essais = [];
     for (const s of vitres) {
       let cx, cz, nx, nz;
@@ -753,7 +761,8 @@ export default function (jeu) {
       for (let i = 0; i < 600 && game.partie === p; i++) { p.pas(PAS); g = p.grenades.liste.find((x) => x.a === a.id) || g; if (!p.grenades.liste.length) break; if (g && g.posee) break; }
       if (!g) continue;
       n++;
-      const libre = C0.libre(g.x, g.z, 0.03, g.y, 0.03, -0.03), sol = g.y >= C0.solEn(g.x, g.z, g.y) - 0.05;
+      // (F2 : hors des formes PLEINES — une forme `balle: false`, le jour d'un escalier, une grenade la traverse comme une balle)
+      const libre = !dansUneFormePleine(C0, g.x, g.y, g.z), sol = g.y >= C0.solEn(g.x, g.z, g.y) - 0.05;
       if (libre) horsFormes++; if (sol) surSol++;
       if ((!libre || !sol) && fautes.length < 4) fautes.push(`(${r3(g.x)}, ${r3(g.y)}, ${r3(g.z)}) libre ${libre} sol ${sol}`);
       p.grenades.appliquer([]);

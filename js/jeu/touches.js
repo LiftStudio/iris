@@ -61,8 +61,11 @@ export function capsules(acteur, out) {
     const T = acteur.prop.T, b = T.boite, cap = acteur.prop.cap || 0;
     const hy = (b.max.y - b.min.y) / 2, ox = (b.max.x + b.min.x) / 2, oz = (b.max.z + b.min.z) / 2;
     const co = Math.cos(cap), si = Math.sin(cap);
+    // (F2, demande de L-K : un meuble PLAQUÉ au mur est dessiné décalé — corps.decal, le dos à 1,5 cm du mur — : sa boîte de
+    // touche le suit, on touche ce qu'on voit)
+    const dx = c.plaque && c.decal ? c.decal.x : 0, dz = c.plaque && c.decal ? c.decal.z : 0;
     // (la boîte locale décentrée tourne avec le meuble : son centre au monde, puis ses demi-tailles dans son repère)
-    boite(vol(out, 0), 'torse', x + ox * co + oz * si, y + b.min.y + hy, z - ox * si + oz * co, (b.max.x - b.min.x) / 2, hy, (b.max.z - b.min.z) / 2, co, si);
+    boite(vol(out, 0), 'torse', x + dx + ox * co + oz * si, y + b.min.y + hy, z + dz - ox * si + oz * co, (b.max.x - b.min.x) / 2, hy, (b.max.z - b.min.z) / 2, co, si);
     out.length = 1;
     return out;
   }

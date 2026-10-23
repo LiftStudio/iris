@@ -39,6 +39,22 @@ function distSegment(px, py, pz, x, y0, y1, z) {
   return Math.hypot(px - x, py - y, pz - z);
 }
 
+// (F2, raccord : la grenade DANS une forme pleine — ni éteinte, ni `balle: false`, que les grenades traversent comme les balles :
+// le jour d'un escalier — ; sa sphère de 4 cm, à 1 cm près. Sur la base fusionnée, 3 lancers sur 50 du test 14 de L-A finissaient
+// dans un meuble ou une table : posée à son rayon le long de la normale d'une face, au coin de deux boîtes, elle entrait dans
+// l'autre, et le rayon du pas suivant, parti du dedans, ne la voyait plus.)
+export function dansUneForme(C, x, y, z, r = RAYON - 0.01) {
+  let dans = false;
+  if (!C || !C._parcourir) return false;
+  C._parcourir(x - r, z - r, x + r, z + r, (s) => {
+    if (dans || s.off || s.balle === false || y + r <= s.y0 || y - r >= s.y1) return;
+    if (s.t === 'b') dans = x > s.x0 - r && x < s.x1 + r && z > s.z0 - r && z < s.z1 + r;
+    else if (s.t === 'c') dans = Math.hypot(x - s.x, z - s.z) < s.r + r;
+    else { const lx = (x - s.cx) * s.c + (z - s.cz) * s.s, lz = -(x - s.cx) * s.s + (z - s.cz) * s.c; dans = Math.abs(lx) < s.hx + r && Math.abs(lz) < s.hz + r; }
+  });
+  return dans;
+}
+
 export class Grenades {
   constructor(partie) { this.partie = partie; this._liste = []; }
   get liste() { return this._liste; }
@@ -77,6 +93,7 @@ export class Grenades {
   // du sol (un rayon vers le bas de son rayon + 2 cm) : posée sur lui, elle roule, freinée, et s'arrête sous 0,4 m/s
   _voler(g, dt) {
     const P = this.partie, B = P.balistique, f = ARMES[g.type];
+    const x0 = g.x, y0 = g.y, z0 = g.z, dedans0 = B ? dansUneForme(B.C, x0, y0, z0) : true;
     g.vy -= G * dt;
     let reste = dt;
     for (let k = 0; k < 4 && reste > 1e-9; k++) {
@@ -100,6 +117,8 @@ export class Grenades {
       }
     }
     if (!B) return;
+    // (le pas qui la ferait ENTRER dans une forme pleine est rendu : elle reste où elle était, l'élan horizontal perdu, et tombe)
+    if (!dedans0 && dansUneForme(B.C, g.x, g.y, g.z)) { g.x = x0; g.y = y0; g.z = z0; g.vx = 0; g.vz = 0; if (g.vy > 0) g.vy = 0; }
     // (le filet : sous le sol du −1, ou à 2 m hors des bornes du jeu — un trou du monde solide —, elle s'arrête là)
     if (g.y < FOND || g.x < BORNES_JEU.xMin - 2 || g.x > BORNES_JEU.xMax + 2 || g.z < BORNES_JEU.zMin - 2 || g.z > BORNES_JEU.zMax + 2) {
       g.vx = 0; g.vy = 0; g.vz = 0; g.posee = true; return;

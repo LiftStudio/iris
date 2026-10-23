@@ -107,6 +107,11 @@ export const DOTATION_CHASSEUR = { principale: 'pm9', secondaire: 'fp12', letale
 export const GESTES = { goupille: 0.15, lancer: 0.35, remontee: 0.25, sortieRecharge: 0.10 };
 // le ressort VISUEL (§ 3.2) : ω 35 rad/s, ζ 0,55 — une vitesse initiale de crête × ω / 0,5215 donne une crête de `crête`
 const OMEGA = 35, ZETA = 0.55, IMPULSION = OMEGA / 0.5215;
+// (F2, demande de L-V : le ressort intégré EXACTEMENT sur un pas — la solution de x'' + 2ζωx' + ω²x = 0 sur PAS, ses
+// coefficients constants —, et non plus par Euler semi-implicite, qui mangeait le quart de la crête à 120 Hz : 0,72 × la
+// fiche au lieu de 1. La crête tombe à t* = 34 ms, à 0,05 % près sur l'échantillon du 4e pas.)
+const RES_A = ZETA * OMEGA, RES_B = OMEGA * Math.sqrt(1 - ZETA * ZETA);
+const RES_E = Math.exp(-RES_A * PAS), RES_C = Math.cos(RES_B * PAS), RES_S = Math.sin(RES_B * PAS);
 const BASCULE = 0.12;              // s : l'interpolation de la base de la dispersion entre deux allures
 
 // LES DÉGÂTS d'une balle (d'un plomb) : le palier de la distance × le coefficient de la zone
@@ -172,6 +177,13 @@ export class Arsenal {
   get visee() { const k = 1 - this.vk; return 1 - k * k * k; }        // (la courbe 1 − (1 − t)³ ; `vk` est le temps linéaire)
   get dispersion() { return this._s; }                                // rad, demi-angle courant (le réticule dit la vérité)
   get reculV() { return this.rv; } get reculH() { return this.rh; }  // degrés, ressort VISUEL (cabré > 0 ; à droite > 0)
+  // (F2, demande de L-A (e) — lu par js/jeu/mouvement.js : le front `recharger` coupe le sprint du corps quand une recharge
+  // peut partir, sinon l'arme baissée du sprint la perdait) une recharge peut-elle partir maintenant ?
+  peutRecharger() {
+    const f = this.arme; if (!f || !f.recharge) return false;
+    const ch = this.ch[this.i], res = this.res[this.i], capMax = f.chargeur + (f.recharge.parCartouche || ch === 0 ? 0 : 1);
+    return res > 0 && ch < capMax && (this.et === 'pret' || this.et === 'tir' || this.et === 'sprint');
+  }
   get piston() { return this.ps; } get roulis() { return this.ro; }  // m (l'arme recule) ; degrés
   get tirSeq() { return this.seq; }
   get letales() { return this.let; }
@@ -415,7 +427,8 @@ export class Arsenal {
     if (this.rT0 >= 0) { this.cumV -= this.rFait; this.rT0 = -1; this.rFait = 0; this.rTot = 0; }
     this.aV += v * DEG; this.aH += h * DEG; this.cumV += v * DEG;
     // le ressort visuel : le cabré et le piston de la fiche, un roulis d'un côté ou de l'autre, le coup de côté du motif
-    this.rvV += M.cabre * IMPULSION * (0.9 + 0.2 * R.next());
+    // (F2, demande de L-V : l'aléa du cabré tenu à ± 5 %, celui du critère des pics)
+    this.rvV += M.cabre * IMPULSION * (0.95 + 0.1 * R.next());
     this.psV += M.piston * IMPULSION;
     this.roV += (R.next() < 0.5 ? -1 : 1) * M.roulis * IMPULSION * (0.5 + 0.5 * R.next());
     this.rhV += h * 2 * IMPULSION;
@@ -433,13 +446,19 @@ export class Arsenal {
     this.aV -= voulu - this.rFait; this.rFait = voulu;
     if (k >= 1 - 1e-9) { this.cumV = 0; this.rT0 = -1; this.rFait = 0; this.rTot = 0; this.reculI = 0; }
   }
-  // le ressort visuel (Euler semi-implicite à 120 Hz : ω·dt = 0,29, stable)
+  // le ressort visuel, intégré exactement sur le pas (au pas fixe PAS ; un autre dt — jamais aujourd'hui — prend les mêmes
+  // formules à ses coefficients)
   _ressorts(dt) {
-    const w2 = OMEGA * OMEGA, c = 2 * ZETA * OMEGA;
-    this.rvV += (-w2 * this.rv - c * this.rvV) * dt; this.rv += this.rvV * dt;
-    this.rhV += (-w2 * this.rh - c * this.rhV) * dt; this.rh += this.rhV * dt;
-    this.psV += (-w2 * this.ps - c * this.psV) * dt; this.ps += this.psV * dt;
-    this.roV += (-w2 * this.ro - c * this.roV) * dt; this.ro += this.roV * dt;
+    let E = RES_E, Cc = RES_C, Ss = RES_S;
+    if (Math.abs(dt - PAS) > 1e-12) { E = Math.exp(-RES_A * dt); Cc = Math.cos(RES_B * dt); Ss = Math.sin(RES_B * dt); }
+    const w2 = OMEGA * OMEGA, un = (x, v) => {
+      const B = (v + RES_A * x) / RES_B;
+      return [E * (x * Cc + B * Ss), E * (v * Cc - (RES_A * v + w2 * x) / RES_B * Ss)];
+    };
+    [this.rv, this.rvV] = un(this.rv, this.rvV);
+    [this.rh, this.rhV] = un(this.rh, this.rhV);
+    [this.ps, this.psV] = un(this.ps, this.psV);
+    [this.ro, this.roV] = un(this.ro, this.roV);
   }
 
   // LA DISPERSION courante (rad) : la base de l'allure (interpolée en 0,12 s), × 0,8 accroupi, + la chaleur ; × 1,3 en
