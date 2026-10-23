@@ -5,11 +5,21 @@ Branche `lot/L-I` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-I`), partie de `s
 
 ## Où j'en suis
 
-**EN COURS — étape 6 : le code et les tests sont écrits et commités, PAS ENCORE JOUÉS au navigateur** (les trois jetons
-étaient pris : L-C, L-K, L-G ; attente en cours, serveur prêt sur 8143). `python -I tools/verifier_proprietaires.py lot/L-I`
-→ OK. Un repreneur : prendre un jeton (§ 5.1 règle 3), ouvrir `http://127.0.0.1:8143/?test=1&rapport=1&lot=L-I` (PC) puis
-la même adresse avec `&tel=1` sous l'émulation mobile (812 × 375), corriger ce qui échoue, puis `&lot=S0` (PC et tel),
-jouer pour de vrai (une partie au doigt, une à la manette simulée), rendre le jeton, finir ce rapport.
+**FINI.** Les six points de la définition du § 5.1 règle 5 sont tenus :
+- (a) `&rapport=1&lot=L-I` : **13/13 sur PC** (8,8 s), **13/13 sous `?tel=1` à 812 × 375** (16,6 s) et **13/13 sous `?tel=1`
+  en émulation mobile 375 × 812** (11,4 s), 0 signalé ;
+- (b) `&rapport=1&lot=S0` sur cette branche : **29/29 sur PC** (82,2 s) et **29/29 sous `?tel=1` à 812 × 375** (69,8 s), 0
+  signalé (balade au bit près, entrées, cycles, tactile et HUD de la balade = la référence) ;
+- (c) `python -I tools/verifier_proprietaires.py lot/L-I` → `OK 7 fichiers` ;
+- (d) commits préfixés `L-I : …`, ligne d'attribution ; (e) ce rapport ; (f) onglet fermé, serveur arrêté, jeton rendu
+  (`jeton_2`, pris à 05:40:40, rendu à 05:52:30 ; attente de 05:09 à 05:40, les trois jetons pris — L-C, L-K, L-G, puis
+  L-U et L-H).
+
+Joué pour de vrai dans le navigateur intégré (812 × 375, `?tel=1`) : un glissé de la souris sur TIR (41 px) → le regard
+tourne de 0,246 rad (0,006 rad/px) et une balle part ; au prop hunt, DÉGUISER touché → Haythem devient le carton, FIGER et
+VERROU apparaissent, FIGER touché → « BOUGER », le prop figé. (Le navigateur intégré envoie des clics de SOURIS : le joystick,
+qui ne se prend qu'au doigt, et l'appui long de PROVOQUER ont été joués par les tests, aux événements de pointeur `touch`
+fabriqués — le chemin de `js/touch.js` en entier.)
 
 Fait (commits `L-I : …`) :
 1. `js/jeu/assistance_visee.js` — l'aide à la visée, à la manette et au doigt, jamais à la souris : RALENTISSEMENT
@@ -82,3 +92,57 @@ Fait (commits `L-I : …`) :
   est (0, 1), amplitude 1. À garder si la lecture change.
 - **L-G** : au doigt, `--tc-droite` (la grappe de tir de la partie, ≈ 256 px à l'unité) et `--tc-haut` (sous II et SCORES)
   sont tenus par `js/touch.js` pour le groupe à l'écran.
+
+## Le `__rapport` (`http://127.0.0.1:8143/?test=1&rapport=1&lot=L-I`, puis `&tel=1`)
+
+PC : `ok: true`, `total: 13`, `echecs: []`, `signales: []`, 8 780 ms. `?tel=1` à 812 × 375 : `ok: true`, 13, 16 563 ms.
+`?tel=1` en émulation mobile (375 × 812, toucher émulé) : `ok: true`, 13, 11 359 ms. (Sur PC, sans `js/touch.js`, les
+critères 2, 4, 10 et 11 disent « joué sous ?tel=1 » ; l'aide à la visée et la manette se jouent partout.)
+
+| # | Critère (spec § 5.5.13) | Mesuré (`?tel=1`, 812 × 375) |
+|---|---|---|
+| 1 | trois contextes présents, sans recouvrement, dans l'écran | combat 11 boutons, chasseur 10 (SCAN, ni flash ni couteau), prop 7 (5 encore humain) · 0 recouvrement, 0 dehors aux trois tailles · écart mini 9,6 / 10,6 / 14,0 px · à l'écran : les 11 du combat |
+| 2 | TIR mixte : 100 px → 0,006 × s rad/px, tir tenu | −0,600000 rad pour −0,600000 · tangage inchangé · tir tenu tout le glissé · relâché au lever |
+| 3 | tir auto 0,12 s ≤ 30 m ; jamais à la souris | mannequin à 3,4 m : 1er tir à 0,133 s (16 pas) · à côté (après la grâce), hors de portée, à la souris, coupé : 0 tir |
+| 4 | joystick au-delà du bord → sprint verrouillé (tactique) ; ACCROUPI en sprint → glissade | mi-course : rien · au bord : verrou + front `sprintTact` · 60 % vers l'avant : tenu · pouce levé : court tout droit (ay 1, amp 1) · ACCROUPI : accroupi ET sprint au même pas, sprint rendu 0,15 s après · pouce reposé : arrêt · au bord sur le côté : pas de verrou |
+| 5 | manette en partie | RT tir, LT visée, L3 sprint, R3 couteau, RB létale, LB tactique, Y arme, X recharger, B accroupi, A saut, Back scores · L3 double → tactique · bornes ± 1,48 · 1,435 rad/s pour 3,6 × 0,6^1,8 · 3,6 → 4,51 → 4,86 rad/s (× 1,35) · visée × 0,55 (0,789 rad/s) |
+| 6 | assistance : × 0,55 / × 0,7, suivi + 45 %, aimant 70 % ; souris identique au bit près | 0,7 dans le cône (8,5° à 3,4 m), 1 hors du cône, 0,55 en visée, 1 caché / hors de portée / à la souris · suivi : écart max 1,1e-16 rad à 0,45 × la vitesse de la cible, rien quand le regard ne bouge pas · aimant 5° → 1,5° (30 %), commande réécrite, rien à 9° · souris : 40 pas identiques au bit près avec et sans l'aide |
+| 7 | vibrations | tir [0 ; 0,35 ; 40 ms] · touche reçue [0,5 ; 0,8 ; 120 ms] · annonce 1 · élimination 1 · `hoops-feedback` en partie : 0 vibration, aucun émis |
+| 8 | balade : tactile = référence ; manette −0,1 / 0,9 et 2,9 rad/s ; racines ; B sur la pause | `_contexte()` = référence · aucune racine en balade · 2,9 rad/s · −0,1 / 0,9 · overlay (Reprendre → Options), B la referme · options, B les ferme · téléphone, B le range |
+| 9 | racines du jeu ; B revient | menu-jeu (focus BALADE, la croix descend les 6) · reglage-jeu, credits-jeu (écrans d'essai inscrits comme ceux de L-U) : B revient · data-retour-action : l'action tapée · fin-jeu navigable |
+| 10 | menu : calque caché ; partie : montré | caché au menu · TIR à l'écran en partie · la balade rendue (= référence) |
+| 11 | au doigt seul : menu → COMBAT → LANCER → bot touché → II → Reprendre sans capture → II → Quitter → menu | équipes lancées du menu · aucun calque au décompte · 4 touches · pause · reprise : 0 capture demandée, 0 `requestPointerLock` · menu · 0 événement clavier |
+| 12 | manette : débranchée → pause ; Start → reprise sans capture ; A ferme le calque | pause · reprise sans capture, la partie avance · calque au décompte, A le ferme, le décompte repart, sans saut |
+| 13 | roue des provocations : manette et doigt | LB ouvre · 8 directions → 0…7 · caméra immobile · LB relâché → 5 · jamais `game.wheel` · doigt : appui long ouvre, glissé bas-droite → 3, levé → 3, bref → 8 (la dernière) |
+
+## À F2 (tests `apresFusion`, lancés avec `&fusion=1`)
+
+Joués ici sur le squelette pour vérifier qu'ils tournent sans exception (`&fusion=1`, `?tel=1`) : « aide à la visée sur les
+vrais bustes » passe déjà (0,7 centré ; tir auto : 4 touches) ; les quatre autres échouent comme prévu sans les vrais
+modules — les écrans de L-U (« null → null » : le squelette lance la partie au lieu d'ouvrir les réglages), la vraie
+glissade et le vrai sprint tactique de L-B (6,2 m/s, glisse 0), le verrou de L3 de `lireCommande` (L-B), la roue dessinée
+par L-G (0 secteur en surbrillance). F2 : les rejouer après L-B, L-G et L-U ; ✋ une manche à la manette seule (critère
+« À F2 » du § 5.5.13) — la manette simulée des tests ne remplace pas une vraie manette dans les mains.
+
+## Doutes
+
+- **La roue de L-G** : le test F2 cherche dans `#hud` un conteneur `.roue-provocations` (ou une classe « roue ») et un
+  secteur marqué (`choix`, `on` ou `aria-selected`) ; si L-G marque autrement, ajuster le sélecteur du test (pas le jeu).
+- **`--tc-droite` en partie** (≈ 247 px à 812 × 375) : la grappe de tir est plus large que celle de la balade ; le HUD de
+  L-G pose les munitions à sa gauche — à regarder ensemble à F2 sur un vrai téléphone.
+- **Le pouce gauche et le tir auto** : au téléphone, `tirAuto` est vrai par défaut ; un prop resté humain est une cible (il
+  est visiblement un humain), un prop déguisé jamais.
+
+## Photos regardées
+
+Dans le navigateur intégré (émulation 812 × 375, réduite dans le panneau) : l'essai au hall (TIR rouge sous le pouce, SAUT
+et ACCROUPI au bord, VISER en bas, P-17 à gauche de TIR, RECHARGER au-dessus, GRENADE / FLASH / COUTEAU en haut à droite, II
+et SCORES en haut à gauche, rien sur le joystick) ; le prop hunt à la pause du 1er (DÉGUISER vert, PROVOQUER, SAUT ; puis
+déguisé : FIGER, VERROU — Haythem en carton de secours au sol). Captures du panneau :
+`C:/Users/hgami/.claude/projects/C--/d2516763-f01d-443a-9d38-fe9a0c124e7f/tool-results/mcp-Claude_Browser-blob-1792727346006-f1ge6d.png`
+(combat) et `…-1792727523334-36wiyb.png` (prop déguisé).
+
+## Ce qui reste
+
+Rien pour L-I. À F2 : les cinq tests `apresFusion`, les demandes ci-dessus, et la partie entière au doigt sur un vrai
+téléphone (§ 6.2 ✋).
