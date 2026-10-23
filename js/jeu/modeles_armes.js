@@ -30,9 +30,9 @@
 // dépasse la bouche de 2,5 cm et la couche la crosse de 1,5 cm ; sa crosse « en fil repliée » est montrée DÉPLIÉE (la
 // crosse en +0,18 l'exige), sa charnière à gauche dit qu'elle se replie.
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const DEG = Math.PI / 180;
+const _m4 = new THREE.Matrix4(), _m4b = new THREE.Matrix4();
 const UN = new THREE.Vector3(1, 1, 1);
 export const IDS_ARMES = ['fa24', 'pm9', 'fp12', 'tp50', 'p17', 'couteau', 'frag', 'flash'];
 // l'encombrement (longueur selon −Z, § 3.3) : les modèles le tiennent à ± 3 % (test 3 de L-W)
@@ -181,16 +181,17 @@ function chanfrein0(l, h, p, c) {
   return g;
 }
 // un cylindre le long de Z (le rayon `rArriere` côté +Z, `rAvant` côté −Z)
+const X90 = new THREE.Matrix4().makeRotationX(Math.PI / 2), YM90 = new THREE.Matrix4().makeRotationY(-Math.PI / 2);
 function cylindreZ(rArriere, rAvant, long, seg, ouvert = false) {
   const g = new THREE.CylinderGeometry(rArriere, rAvant, long, seg, 1, ouvert);
-  g.rotateX(Math.PI / 2);
+  transformer(g, X90);
   return g;
 }
 // un TOUR le long de Z : le profil [[r, z]…] tourné autour de l'axe (un solide fermé : il part de l'axe et y revient, ou
 // boucle sur lui-même) ; l'orientation des faces est remise par le volume signé
 function tour(profil, seg) {
   const g = new THREE.LatheGeometry(profil.map(([r, z]) => new THREE.Vector2(Math.max(0, r), z)), seg);
-  g.rotateX(Math.PI / 2);
+  transformer(g, X90);
   return g;
 }
 // un PROFIL DE CÔTÉ [[z, y]…] extrudé selon X (épaisseur `ep`, centré) ; biseau arrondi sans dépasser le contour ; trous ;
@@ -202,8 +203,7 @@ function profilCote(points, ep, { biseau = 0, segBiseau = 2, trous = [], cis = n
   const bt = Math.min(biseau, ep * 0.45);
   const g = new THREE.ExtrudeGeometry(S, { depth: Math.max(1e-4, ep - 2 * bt), bevelEnabled: bt > 0, bevelThickness: bt, bevelSize: bt,
     bevelOffset: -bt, bevelSegments: segBiseau, curveSegments: 4 });
-  g.translate(0, 0, -(ep - 2 * bt) / 2);
-  g.rotateY(-Math.PI / 2);                                       // (forme x → arme z, forme y → y, profondeur → x)
+  transformer(g, _m4b.makeTranslation(0, 0, -(ep - 2 * bt) / 2).premultiply(YM90));   // (forme x → arme z, forme y → y, profondeur → x)
   return g;
 }
 // un PROFIL DE FACE [[x, y]…] extrudé selon Z (épaisseur `ep`, centré)
@@ -213,7 +213,7 @@ function profilFace(points, ep, { biseau = 0, segBiseau = 2, trous = [] } = {}) 
   const bt = Math.min(biseau, ep * 0.45);
   const g = new THREE.ExtrudeGeometry(S, { depth: Math.max(1e-4, ep - 2 * bt), bevelEnabled: bt > 0, bevelThickness: bt, bevelSize: bt,
     bevelOffset: -bt, bevelSegments: segBiseau, curveSegments: 4 });
-  g.translate(0, 0, -(ep - 2 * bt) / 2);
+  transformer(g, _m4b.makeTranslation(0, 0, -(ep - 2 * bt) / 2));
   return g;
 }
 // le corps de la frag : une sphère « quadrillée » (8 colonnes, 6 rangs d'ananas : les sillons enfoncés de 6 %)
@@ -311,6 +311,15 @@ function nettoyer(g) {
   g.setAttribute('position', new THREE.BufferAttribute(P2.slice(0, 9 * garde), 3));
   if (N2) g.setAttribute('normal', new THREE.BufferAttribute(N2.slice(0, 9 * garde), 3));
 }
+// une géométrie indexée mise à plat (position et normale seulement : les uv n'ont rien à porter)
+function desindexer(g) {
+  const I = g.index.array, n = I.length, P = g.attributes.position.array, N = g.attributes.normal.array;
+  const P2 = new Float32Array(3 * n), N2 = new Float32Array(3 * n);
+  for (let i = 0; i < n; i++) { const a = 3 * I[i], b = 3 * i; P2[b] = P[a]; P2[b + 1] = P[a + 1]; P2[b + 2] = P[a + 2]; N2[b] = N[a]; N2[b + 1] = N[a + 1]; N2[b + 2] = N[a + 2]; }
+  const h = new THREE.BufferGeometry();
+  h.setAttribute('position', new THREE.BufferAttribute(P2, 3)); h.setAttribute('normal', new THREE.BufferAttribute(N2, 3));
+  return h;
+}
 // poser une pièce : rotation puis translation, à même les tableaux (pas de mise à l'échelle : les normales tournent seulement)
 function transformer(g, M) {
   const e = M.elements, P = g.attributes.position.array, N = g.attributes.normal.array;
@@ -327,13 +336,13 @@ function transformer(g, M) {
 // Options d'une pièce : `p` position, `r` rotation [rx, ry, rz] (XYZ), `q` quaternion, `os` l'os qui la porte (vue),
 // `vue` = la pièce n'existe que dans la version de vue (détail), `trois` = que dans la 3e personne (remplaçante simplifiée),
 // `lisse` = l'angle (°) du lissage des normales, `seg` = segments (divisés par deux en 3e personne).
-const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _v = new THREE.Vector3();
+const _q = new THREE.Quaternion(), _e = new THREE.Euler(), _v = new THREE.Vector3();
 class Atelier {
   constructor(vue) { this.vue = vue; this.pieces = []; }
   s(n, min = 6) { return this.vue ? n : Math.max(min, Math.round(n / 2)); }
   _poser(geo, mat, o, solide = false) {
     if ((o.vue && !this.vue) || (o.trois && this.vue)) return null;
-    let g = geo.index ? geo.toNonIndexed() : geo;
+    const g = geo.index ? desindexer(geo) : geo;
     for (const a of Object.keys(g.attributes)) if (a !== 'position' && a !== 'normal') g.deleteAttribute(a);
     g.clearGroups();
     if (solide) nettoyer(g);
@@ -396,29 +405,48 @@ class Atelier {
     for (const P of this.pieces) {
       let mat = P.mat;
       if (!this.vue) { if (mat in MAT_3E) mat = MAT_3E[mat]; if (!mat) continue; }
-      const n = P.geo.attributes.position.count;
-      if (this.vue) {
-        const k = P.os ? osNoms.indexOf(P.os) + 1 : 0;
-        if (P.os && k === 0) throw new Error(`modeles_armes : l'os ${P.os} n'est pas dans OS_ARMES.${id}`);
-        const si = new Uint16Array(4 * n), sw = new Float32Array(4 * n);
-        for (let i = 0; i < n; i++) { si[4 * i] = k; sw[4 * i] = 1; }
-        P.geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(si, 4));
-        P.geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(sw, 4));
-        if (P.os) sommets[P.os] += n;
-      }
+      const k = P.os ? osNoms.indexOf(P.os) + 1 : 0;
+      if (P.os && k === 0) throw new Error(`modeles_armes : l'os ${P.os} n'est pas dans OS_ARMES.${id}`);
+      if (P.os) sommets[P.os] += P.geo.attributes.position.count;
       if (!lots.has(mat)) lots.set(mat, []);
-      lots.get(mat).push(P.geo);
+      lots.get(mat).push([P.geo, k]);
     }
     let triangles = 0;
-    const L = [...lots].map(([mat, geos]) => {
-      const geo = geos.length === 1 ? geos[0] : mergeGeometries(geos, false);
-      geo.computeBoundingBox(); geo.computeBoundingSphere();
+    const L = [...lots].map(([mat, pieces]) => {
+      const geo = coudre(pieces, this.vue);
       geo.name = `arme ${id} ${this.vue ? 'vue' : '3e'} ${mat}`; geo.userData.partage = true;
       triangles += geo.attributes.position.count / 3;
       return { mat, geo };
     });
     return { lots: L, osNoms, sommets, triangles };
   }
+}
+
+// LA COUTURE d'un lot : positions et normales bout à bout ; en vue, chaque plage de sommets portée par l'os de sa pièce
+// (skinIndex = k, skinWeight = 1 : rigide) ; boîte et sphère englobantes (au repos)
+function coudre(pieces, vue) {
+  let n = 0; for (const [g] of pieces) n += g.attributes.position.count;
+  const P = new Float32Array(3 * n), N = new Float32Array(3 * n), SI = vue ? new Uint16Array(4 * n) : null, SW = vue ? new Float32Array(4 * n) : null;
+  let o = 0;
+  for (const [g, k] of pieces) {
+    const c = g.attributes.position.count;
+    P.set(g.attributes.position.array, 3 * o); N.set(g.attributes.normal.array, 3 * o);
+    if (vue) for (let i = o; i < o + c; i++) { SI[4 * i] = k; SW[4 * i] = 1; }
+    o += c;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(P, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(N, 3));
+  if (vue) { geo.setAttribute('skinIndex', new THREE.BufferAttribute(SI, 4)); geo.setAttribute('skinWeight', new THREE.BufferAttribute(SW, 4)); }
+  let x0 = Infinity, y0 = Infinity, z0 = Infinity, x1 = -Infinity, y1 = -Infinity, z1 = -Infinity;
+  for (let i = 0; i < P.length; i += 3) {
+    const x = P[i], y = P[i + 1], z = P[i + 2];
+    if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; if (z < z0) z0 = z; if (z > z1) z1 = z;
+  }
+  geo.boundingBox = new THREE.Box3(new THREE.Vector3(x0, y0, z0), new THREE.Vector3(x1, y1, z1));
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, cz = (z0 + z1) / 2;
+  let r2 = 0; for (let i = 0; i < P.length; i += 3) { const a = P[i] - cx, b = P[i + 1] - cy, c = P[i + 2] - cz, d = a * a + b * b + c * c; if (d > r2) r2 = d; }
+  geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(cx, cy, cz), Math.sqrt(r2));
+  return geo;
 }
 
 // ---------------------------------------------------------------------
@@ -747,6 +775,7 @@ export function creerArme(id, { pourVue = false } = {}) {
       m = new THREE.SkinnedMesh(lot.geo, mat);
       m.bind(squelette, IDENTITE);
       m.frustumCulled = false;                       // (la boîte de l'arme de vue ne suit pas ses os ; elle est toujours devant l'œil)
+      m.boundingBox = lot.geo.boundingBox; m.boundingSphere = lot.geo.boundingSphere;   // (celles du repos : le tri seulement)
     } else {
       m = new THREE.Mesh(lot.geo, mat);
       m.castShadow = true; m.receiveShadow = true;
