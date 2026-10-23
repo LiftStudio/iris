@@ -16,15 +16,15 @@
 // vers chaque provocation (2 s ; l'aide, au téléphone par défaut).
 // Mêmes règles du DOM que js/jeu/hud_jeu.js : créé une fois sous #hud (`data-jeu`), textes et classes écrits quand ils
 // changent, ce qui bouge par les variables CSS d'UNE racine (une écriture par image), l'horloge du HUD, aucune lecture de
-// mise en page. Il lit `partie.hud.prop` et les événements (provocation, scanner, faux, deguise).
+// mise en page. Il lit `partie.hud.prop` et les événements (provocation, scanner, faux).
 import { PROVOCATIONS } from './sons_prop.js';
 import { REGLAGES_PROP } from './partie_prop.js';
 import * as DG from './deguisements.js';
-import { texte, classe, cacher, contenu, elt, Cadre, projeter, angleEcran, ECRAN, REGLAGES_HUD } from './hud_jeu.js';
+import { texte, classe, cacher, contenu, elt, Cadre, projeter, angleEcran, ECRAN } from './hud_jeu.js';
 import { actionKey } from '../settings.js';
 
 export const REGLAGES_HUD_PROP = {
-  etiquettes: 8, nom: 30, sons: { slots: 4, duree: 2, cercle: 0.42 }, scanner: { slots: 6, duree: 2, rayon: 64, couleurs: ['#ff3b30', '#ff8a1f', '#ffd166'], bandes: ['< 4 m', '4-8 m', '8-12 m'] },
+  etiquettes: 8, nom: 30, sons: { slots: 4, duree: 2 }, scanner: { slots: 6, duree: 2, bandes: ['< 4 m', '4-8 m', '8-12 m'] },   // (couleurs des bandes, rayons : css/jeu/hud.css)
   faux: 1.3, repere: 0.7, astuces: 8, viseHz: 10,
 };
 // une icône pour la forme (d'après la clé ou le nom du meuble)

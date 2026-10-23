@@ -28,14 +28,14 @@
 // montrés par `maj`, dans la même image. Il ne commande jamais une règle. Habillage Airsoft par défaut (« TOUCHÉ » au lieu
 // d'« ÉLIMINÉ » : arbitrage 35) ; tous les textes en français.
 import * as THREE from 'three';
-import { ARMES } from './armes.js';
+import { ARMES, degatsDe } from './armes.js';
 import { EQUIPES } from './constantes.js';
 import { rayonActeurs } from './touches.js';
 import { actionKey } from '../settings.js';
 
 // LES VALEURS (§ 3.6 ; CoD §§ 7.4, 9.1) — px CSS, secondes du HUD
 export const REGLAGES_HUD = {
-  reticule: { base: 4, trait: 9, epaisseur: 2, viseeCache: 0.5, allie: '#3d8bff', ennemi: '#ff3b30', portee: 60 },
+  reticule: { base: 4, trait: 9, viseeCache: 0.5, allie: '#3d8bff', ennemi: '#ff3b30', portee: 60 },
   marqueur: { duree: 0.12, dureeElim: 0.22, echelleElim: 1.15, echelleTete: 1.35, trait: 10, ecart: 6, rouge: '#ff3b30' },
   xp: { duree: 1.5, lignes: 5, pas: 21 },
   fil: { lignes: 5, duree: 5, fondu: 0.45, pas: 26 },
@@ -45,7 +45,7 @@ export const REGLAGES_HUD = {
   chevron: { grand: 14, petit: 8, dPres: 2, dLoin: 40, nom: 15, max: 4 },
   grenade: { rayon: 7, cercle: 92, slots: 2 },
   munitionsBas: 0.30, chronoRouge: 30, chronoRougeCachette: 10,
-  flash: { fondu: 0.6 }, mort: { desat: 3, entree: 0.5 }, lunette: 0.85,
+  flash: { fondu: 0.6 }, mort: { desat: 3 }, lunette: 0.85,
   annonce: { duree: 1.9, min: 0.55, file: 3 },
   objectif: { hauteur: 2.2, marge: 34 },
 };
@@ -145,10 +145,20 @@ export function tailleCarte(w = ECRAN.w, h = ECRAN.h, tactile = false) {
 export function echelleArcs(w = ECRAN.w, h = ECRAN.h) { return Math.min(1, Math.min(w, h) / 320); }
 export function habillage(game) { const s = game && game.settings, j = s && s.data && s.data.jeu; return j && j.habillage === 'militaire' ? 'militaire' : 'airsoft'; }
 
+// LES MESSAGES DE LA QUALITÉ AUTOMATIQUE (js/game.js : « Trop lent : qualité → BASSE », « Ça respire… », « … im/s ici »), dits
+// par game._dire en cls 'info' — en partie, une ANNONCE : en plein combat, un bandeau géant au milieu de l'écran (relecture
+// 23/10, vu au stand). Pendant leur envoi — un écouteur en capture sur window passe AVANT celui de game.js, sur document ; le
+// nôtre sur document, inscrit après le sien, passe APRÈS —, ce qui arrive à _pousserAnnonce va à la petite ligne d'alerte.
+const QUALITE = ['hoops-qualite-baissee', 'hoops-qualite-remontee', 'hoops-qualite-lourde', 'hoops-qualite-bridee'];
+
 export class HudJeu {
   constructor(game) {
-    this.game = game; this.partie = null; this.el = null; this.t = 0; this._des = [];
+    this.game = game; this.partie = null; this.el = null; this.t = 0; this._des = []; this._technique = false;
     this._raz();
+    if (typeof window !== 'undefined') for (const n of QUALITE) {
+      window.addEventListener(n, () => { this._technique = true; }, true);
+      document.addEventListener(n, () => { this._technique = false; });
+    }
   }
   _raz() {
     this.t = 0;
@@ -269,7 +279,12 @@ export class HudJeu {
       const M = this._marque;
       if (M && M.t0 === this.t) { M.tete = M.tete || !!e.tete; M.rouge = M.rouge || prop; }
       else this._marque = { t0: this.t, tete: !!e.tete, elim: false, rouge: prop };
-      if (P.id === 'stand' && c && c.role === 'cible') this._stand = { t0: this.t, zone: e.zone, degats: e.degats, d: Math.hypot(c.pos.x - L.pos.x, c.pos.z - L.pos.z) };
+      // (le stand : la dernière balle — ses dégâts VRAIS : une silhouette n'a qu'1 PV, l'événement les rabote à 1 ; ceux de
+      // l'arme à cette distance et à cette zone, comme les compte Partie.resoudreTir)
+      if (P.id === 'stand' && c && c.role === 'cible') {
+        const d = Math.hypot(c.pos.x - L.pos.x, c.pos.z - L.pos.z), f = L.arsenal && L.arsenal.arme;
+        this._stand = { t0: this.t, zone: e.zone, degats: c.vie <= 1e-9 && f ? Math.max(e.degats || 0, degatsDe(f, d, e.zone)) : e.degats, d };
+      }
     }
     if (e.cible === L.id) {
       this._zoneTouche = e.zone;
@@ -285,6 +300,16 @@ export class HudJeu {
   _elim(e) {
     const P = this.partie, L = this._local();
     const k = P.acteurParId(e.par), v = P.acteurParId(e.cible);
+    // (une silhouette du stand qui tombe : le marqueur rouge, mais ni ligne au fil ni « +100 » — sauf les points que les
+    // règles du stand donnent, § 2.6)
+    if (v && v.role === 'cible') {
+      if (L && e.par === L.id) {
+        const M = this._marque;
+        this._marque = { t0: this.t, tete: !!e.tete || !!(M && M.t0 === this.t && M.tete), elim: true, rouge: true };
+        if (this._ptsElim && this._ptsElim.t === this.t) this._pousserXp('+' + this._ptsElim.points, e.tete ? 'TIR À LA TÊTE' : 'CIBLE', 'elim');
+      }
+      return;
+    }
     // le fil
     const ligne = { t0: this.t, tueur: k ? k.nom : null, tueurEq: k ? this._relation(k) : 'aucun', victime: v ? v.nom : '?', victimeEq: v ? this._relation(v) : 'ennemi',
       arme: e.arme, tete: !!e.tete, soi: !k || e.par === e.cible, forme: v && v.prop && v.prop.T ? v.prop.T.nom : null, moi: !!(L && (e.par === L.id || e.cible === L.id)) };
@@ -323,8 +348,9 @@ export class HudJeu {
   }
   _pousserAnnonce(t, cls) {
     if (!t) return;
-    // (les messages de la qualité automatique — `game._dire`, cls warn / bad — vont à la petite ligne d'alerte)
-    if (cls === 'warn' || cls === 'bad') { this._alerte = { t0: this.t, texte: t, cls }; return; }
+    // (les messages de la qualité automatique — `game._dire`, cls warn / bad, et les 'info' de QUALITE — vont à la petite
+    // ligne d'alerte)
+    if (cls === 'warn' || cls === 'bad' || this._technique) { this._alerte = { t0: this.t, texte: t, cls }; return; }
     const F = this._annonces;
     if (F.length >= REGLAGES_HUD.annonce.file) F.shift();
     F.push({ texte: t, cls: cls || 'info' });
@@ -357,7 +383,7 @@ export class HudJeu {
     this._majMunitions(H, fps && !cachette && phase !== 'presentation');
     this._majVie(H, L, C, vivant);
     this._majViseur(H, P, L, cam, C, fps && !cachette && phase !== 'presentation');
-    this._majMarques(C, fps);
+    this._majMarques(C);
     this._majFil(C);
     this._majArcs(C, g ? g.camYaw : 0, vivant);
     this._majChevrons(H, P, cam, C);
@@ -402,7 +428,8 @@ export class HudJeu {
     texte(this.eScoreTxt, txt); cacher(this.eScoreTxt, !txt);
     // le chrono : en manche, en cachette, en traque (rouge sous 30 s)
     const ph = H.phase || '', ch = H.chrono;
-    const montre = typeof ch === 'number' && (ch > 0 || ph === 'manche' || ph === 'traque') && id !== 'essai' && ph !== 'presentation' && ph !== 'fin';
+    // (le stand n'a de chrono que celui d'un défi : jamais « 0:00 » rouge sans défi)
+    const montre = typeof ch === 'number' && (ch > 0 || ((ph === 'manche' || ph === 'traque') && id !== 'stand')) && id !== 'essai' && ph !== 'presentation' && ph !== 'fin';
     cacher(this.eClock, !montre);
     // (rouge sous 30 s ; la cachette du prop hunt ne dure que 30 à 50 s : rouge sous 10 s, avec l'annonce « 10 SECONDES ! »)
     if (montre) { texte(this.eClock, mmss(ch)); classe(this.eClock, 'low', (ph === 'manche' || ph === 'traque') ? ch < REGLAGES_HUD.chronoRouge : ph === 'cachette' && ch < REGLAGES_HUD.chronoRougeCachette); }
@@ -516,7 +543,7 @@ export class HudJeu {
   }
 
   // ---- le marqueur de touche, les « +100 » ----
-  _majMarques(C, fps) {
+  _majMarques(C) {
     const M = this._marque, R = REGLAGES_HUD.marqueur;
     let o = 0, k = 1, rouge = false;
     if (M) {

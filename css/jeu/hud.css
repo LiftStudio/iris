@@ -15,7 +15,11 @@ body.combat .stamina,
 body.combat #hud-keys,
 body.combat #phone-badge,
 body.combat #hud-hint,
-body.combat #hud-streak { display: none !important; }
+body.combat #hud-streak,
+body.combat #hud-feedback { display: none !important; }
+/* (relecture 23/10 : #hud-feedback aussi — le bandeau de la balade, « IRIS — REZ-DE-CHAUSSÉE » au retour en balade, encore en
+   train de s'effacer au lancement d'une partie, restait figé au milieu de la présentation : en partie personne ne l'écrit,
+   § 4.1 r. 13, et son effacement n'avance plus) */
 
 #calque-clic {
   position: fixed; inset: 0; z-index: 25; display: flex; align-items: center; justify-content: center;

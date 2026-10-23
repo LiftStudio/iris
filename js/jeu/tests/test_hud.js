@@ -7,10 +7,10 @@
 // DOM dans la même tâche (getComputedStyle, permis ici : c'est le test qui lit, pas le HUD). Le critère 1 fait au contraire
 // tourner de VRAIES images (game.frame à la main, 7 bots qui se battent) sous un MutationObserver et des espions de
 // lecture de mise en page.
-import { REGLAGES_HUD, TEXTES, tailleCarte, echelleArcs, angleEcran } from '../hud_jeu.js';
+import { REGLAGES_HUD, TEXTES, tailleCarte, echelleArcs } from '../hud_jeu.js';
 import { CARTE } from '../minicarte.js';
 import { PROVOCATIONS } from '../sons_prop.js';
-import { NIVEAUX } from '../constantes.js';
+import { ARMES, degatsDe } from '../armes.js';
 
 const r2 = (x) => Math.round(x * 100) / 100;
 const egalA = (a, b, e) => Math.abs(a - b) <= e;
@@ -602,6 +602,39 @@ export default function (jeu) {
     res.push([`${fb} hud.feedback, ${hoops} hoops-feedback, ${lectures} lecture(s) de mise en page`, fb === 0 && hoops === 0 && lectures === 0]);
     res.push(['#hud-annonce à elles (sous #hud, marqué data-jeu)', A.hud.eAnnonce.id === 'hud-annonce' && !!A.hud.eAnnonce.closest('[data-jeu]')]);
     return bilan(res, '20 annonces : chacune relancée dans #hud-annonce ; 0 hud.feedback, 0 hoops-feedback, 0 lecture de mise en page');
+  });
+
+  // 17. (relecture 23/10) LE STAND : la silhouette qui tombe n'est ni une élimination au fil ni un « +100 », la dernière balle
+  //     dit les dégâts de l'arme (pas le 1 PV de la silhouette), pas de chrono « 0:00 » sans défi ; et LES MESSAGES DE LA
+  //     QUALITÉ AUTOMATIQUE (« Trop lent : qualité → … », cls 'info') vont à la petite ligne d'alerte, pas en annonce géante
+  T('17 stand ; messages de la qualité automatique', async () => {
+    const { p, A, rendre } = await lancer('stand', { graine: 5 });
+    const res = [], R = A.hud.el;
+    try {
+      const L = p.local, c = p.acteurs.find((a) => a.role === 'cible');
+      A.hud.maj(0.5, etat(p));
+      const fil0 = A.hud._fil.length, xp0 = A.hud._xp.length;
+      // (la balle telle que Partie.infliger la rapporte : 1 dégât, la silhouette à 0 PV)
+      const d = Math.hypot(c.pos.x - L.pos.x, c.pos.z - L.pos.z);
+      c.vie = 0;
+      p.evt('touche', { par: L.id, cible: c.id, zone: 'torse', degats: 1, x: c.pos.x, y: 1.3, z: c.pos.z, tete: false, dx: 1, dz: 0 });
+      p.evt('elim', { par: L.id, cible: c.id, arme: 'fa24', tete: false, x: c.pos.x, y: 0, z: c.pos.z, ix: 1, iy: 0, iz: 0, assists: [] });
+      A.hud.maj(0, etat(p));
+      c.vie = 1;
+      const st = A.hud.eStand.textContent, brut = Math.round(degatsDe(ARMES.fa24, d, 'torse'));
+      res.push([`dernière balle « ${st} » (l'arme : ${brut})`, visible(A.hud.eStand) && st.includes(`${brut} DÉGÂTS`) && brut >= 20]);
+      res.push([`silhouette tombée : fil ${fil0} → ${A.hud._fil.length}, « + » ${xp0} → ${A.hud._xp.length}, marqueur rouge ${R.style.getPropertyValue('--mc').trim()}`,
+        A.hud._fil.length === fil0 && A.hud._xp.length === xp0 && R.style.getPropertyValue('--mc').trim() === REGLAGES_HUD.marqueur.rouge]);
+      res.push([`chrono sans défi : ${visible(A.hud.eClock) ? '« ' + A.hud.eClock.textContent + ' »' : 'caché'}`, !visible(A.hud.eClock)]);
+      // la qualité automatique : l'événement de js/game.js, puis l'image
+      const an0 = A.hud.annonces || 0;
+      document.dispatchEvent(new CustomEvent('hoops-qualite-baissee', { detail: { quality: 'low' } }));
+      A.hud.maj(0.1, etat(p));
+      res.push([`« ${A.hud.eAlerte.textContent} » à la ligne d'alerte, annonces ${an0} → ${A.hud.annonces || 0}`, /qualité/i.test(A.hud.eAlerte.textContent) && (A.hud.annonces || 0) === an0 && !A.hud._technique]);
+      p.annonce('GO !', 'go'); A.hud.maj(0.1, etat(p));
+      res.push([`une vraie annonce ensuite : « ${A.hud.eAnnonce.textContent} »`, A.hud.eAnnonce.textContent === 'GO !']);
+    } finally { rendre(); }
+    return bilan(res, 'stand : ni fil ni « +100 » pour une silhouette, dégâts de l’arme, pas de chrono sans défi ; qualité automatique à la ligne d’alerte');
   });
 
   // À F2 : avec les vrais événements de L-A / L-E / L-F, une manche de 2 min de chaque mode : seuils 1 et 12 tenus
