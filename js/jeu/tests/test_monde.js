@@ -8,7 +8,7 @@
 // squelette de js/jeu/nav.js (le vol d'oiseau) : les trajets de test vont en ligne droite, d'un point libre à l'autre.
 import * as THREE from 'three';
 import { Rng } from '../rng.js';
-import { PAS, ZONES_JEU, BORNES_JEU } from '../constantes.js';
+import { PAS, ZONES_JEU, BORNES_JEU, niveauDe } from '../constantes.js';
 import { TABLE_PORTES_FPS, TABLE_PORTES_PROP, TABLE_DEPOLIS, PASSAGES_PIECES, regleParDefaut } from '../monde_partie.js';
 import { Pilote } from '../pilotage.js';
 import { MODES } from '../index.js';
@@ -45,6 +45,32 @@ export default function (jeu) {
     };
   };
   const essai = (opts) => jeu.lancer('essai', { graine: 1, mannequins: [], bots: 0, ...opts });
+  // LES NIVEAUX de chaque pièce (ses points d'échantillon, à leur sol) : un rectangle de pièce sans hauteur maximale répond
+  // aussi au-dessus d'elle — le palier du 2e en dehors de ses rectangles se lit « e1pause »
+  let _niveaux = null;
+  const niveauxPieces = () => {
+    if (_niveaux) return _niveaux;
+    _niveaux = new Map();
+    for (const Z of Lu().zones) {
+      const S = new Set();
+      for (const r of Z.rects) for (let x = r[0] + 0.1; x < r[2]; x += 0.4) for (let z = r[1] + 0.1; z < r[3]; z += 0.4) for (const y0 of [-3.06, 0, 1.75, 3.5, 5.05, 6.6]) {
+        const y = C().solEn(x, z, y0 + 0.3); if (Math.abs(y - y0) > 0.9) continue;
+        if (Lu().zoneEn(x, z, y + 0.1) === Z) S.add(niveauDe(y));
+      }
+      _niveaux.set(Z.id, S);
+    }
+    return _niveaux;
+  };
+  // DEHORS, franchement : dans une pièce hors de la zone, de ce niveau-là, et à plus de 35 cm de toute pièce de la zone (au
+  // ras d'un mur, la lecture des rectangles hésite d'une pièce à l'autre)
+  const dehors = (Pz, x, y, z) => {
+    const N = niveauxPieces(), n = niveauDe(y);
+    for (const [dx, dz] of [[0, 0], [0.35, 0], [-0.35, 0], [0, 0.35], [0, -0.35]]) {
+      const id = zoneEn(x + dx, y, z + dz);
+      if (!id || dans(Pz, id) || !(N.get(id) || new Set()).has(n)) return null;
+    }
+    return zoneEn(x, y, z);
+  };
 
   // 1. UNE RÈGLE PAR PORTE ; l'entrée en combat les applique ; une porte FICTIVE suit la règle par défaut
   T('1 portes : une règle chacune, entrée en combat, porte fictive', async () => {
@@ -147,10 +173,19 @@ export default function (jeu) {
       for (const Q of F) {
         if (Q.porte && M.regles.get(Q.porte.nom) === 'fermee') continue;
         nb++;
-        const y = Q.sol + 1.2, ax = Q.cx - Q.nx * 0.4, az = Q.cz - Q.nz * 0.4, bx = Q.cx + Q.nx * 0.4, bz = Q.cz + Q.nz * 0.4;
-        if (C().rayonLibre(ax, y, az, bx, y, bz, 0) > 0.99) cam++;
-        const o = p.balistique.balle(ax, y, az, Q.nx, 0, Q.nz, 0.8, {});
-        if (o.t > 0.5) balles++;
+        // (le même rayon, la barrière là puis retirée le temps d'une mesure : elle ne doit rien y changer)
+        let okC = true, okB = true;
+        for (const u of [-0.3, 0, 0.3]) {
+          const s = (Q.s0 + Q.s1) / 2 + u * (Q.s1 - Q.s0), y = Q.sol + 1.2, ax = Q.bx + Q.tx * s - Q.nx * 0.4, az = Q.bz + Q.tz * s - Q.nz * 0.4;
+          const c1 = C().rayonLibre(ax, y, az, ax + Q.nx * 0.8, y, az + Q.nz * 0.8, 0), b1 = p.balistique.balle(ax, y, az, Q.nx, 0, Q.nz, 0.8, {}).t;
+          Q.forme.off = true;
+          const c0 = C().rayonLibre(ax, y, az, ax + Q.nx * 0.8, y, az + Q.nz * 0.8, 0), b0 = p.balistique.balle(ax, y, az, Q.nx, 0, Q.nz, 0.8, {}).t;
+          Q.forme.off = false;
+          if (Math.abs(c1 - c0) > 1e-9) okC = false;
+          if (Math.abs(b1 - b0) > 1e-9) okB = false;
+        }
+        if (okC) cam++;
+        if (okB) balles++;
       }
       // les marcheurs : huit à la fois, chacun d'un point libre DEDANS (1,2 à 2,5 m de la limite) vers un point DEHORS
       const marcheurs = [];
@@ -167,7 +202,7 @@ export default function (jeu) {
         } };
         marcheurs.push(m);
       }
-      let trajets = 0, dehors = 0, departs = 0;
+      let trajets = 0, nDehors = 0, departs = 0, franchies = 0;
       const sorties = new Set();
       while (trajets < 200 && F.length) {
         for (const m of marcheurs) {
@@ -179,24 +214,30 @@ export default function (jeu) {
             const y = C().solEn(x, zz, Q.sol + 0.6);
             if (!C().libre(x, zz, 0.32, y) || !dans(Pz, zoneEn(x, y, zz))) continue;
             const e = 1.5 + rng.next() * 1.5, s2 = Q.s0 + rng.next() * (Q.s1 - Q.s0);
-            pose = { x, y, z: zz, cible: { x: Q.bx - Q.nx * sgn * e + Q.tx * s2, y: Q.sol, z: Q.bz - Q.nz * sgn * e + Q.tz * s2 }, Q };
+            pose = { x, y, z: zz, cible: { x: Q.bx - Q.nx * sgn * e + Q.tx * s2, y: Q.sol, z: Q.bz - Q.nz * sgn * e + Q.tz * s2 }, Q, sgn };
           }
           if (!pose) continue;
-          jeu.teleporter(m.a.id, pose.x, pose.y, pose.z); m.cible = pose.cible; m.Q = pose.Q; m.sorti = false; departs++;
+          jeu.teleporter(m.a.id, pose.x, pose.y, pose.z); m.cible = pose.cible; m.Q = pose.Q; m.sgn = pose.sgn; m.sorti = false; m.franchi = false; departs++;
         }
         for (let i = 0; i < 4 * 120; i++) {
           p.pas(PAS);
-          if (i % 12 === 0) for (const m of marcheurs) { const q = m.a.pos, id = zoneEn(q.x, q.y, q.z); if (id && !dans(Pz, id)) { m.sorti = true; sorties.add(m.Q.cle + '→' + id); } }
+          if (i % 12 === 0) for (const m of marcheurs) { const q = m.a.pos, id = dehors(Pz, q.x, q.y, q.z); if (id) { m.sorti = true; sorties.add(m.Q.cle + '→' + id + '@' + q.x.toFixed(2) + ',' + q.y.toFixed(2) + ',' + q.z.toFixed(2)); } }
+          // (et la barrière elle-même : le corps passé de plus de 30 cm de l'autre côté de sa limite, en face d'elle, à son niveau)
+          for (const m of marcheurs) {
+            if (!m.cible) continue;
+            const Q = m.Q, q = m.a.pos, dx = q.x - Q.bx, dz = q.z - Q.bz, perp = (dx * Q.nx + dz * Q.nz) * m.sgn, along = dx * Q.tx + dz * Q.tz;
+            if (perp < -0.3 && along > Q.s0 - 0.1 && along < Q.s1 + 0.1 && Math.abs(q.y - Q.sol) < 1.2) m.franchi = true;
+          }
         }
-        for (const m of marcheurs) { if (m.cible) { trajets++; if (m.sorti) dehors++; } m.cible = null; }
+        for (const m of marcheurs) { if (m.cible) { trajets++; if (m.sorti) nDehors++; if (m.franchi) franchies++; } m.cible = null; }
         if (!departs) break;
       }
       jeu.quitter('balade');
-      res.push({ z, F: F.length, trajets, dehors, cam, balles, nb, sorties: [...sorties] });
+      res.push({ z, F: F.length, trajets, dehors: nDehors, franchies, cam, balles, nb, sorties: [...sorties] });
     }
-    const ok = res.every((r) => r.trajets >= 200 && r.dehors === 0 && r.cam === r.nb && r.balles === r.nb);
-    return { ok, attendu: '6 zones · 200 trajets chacune · 0 dehors · caméra et balles passent toutes les barrières ouvertes',
-      obtenu: res.map((r) => `${r.z} : ${r.F} frontières, ${r.trajets} trajets, ${r.dehors} dehors${r.sorties.length ? ' [' + r.sorties.join(', ') + ']' : ''}, caméra ${r.cam}/${r.nb}, balles ${r.balles}/${r.nb}`).join(' · ') };
+    const ok = res.every((r) => r.trajets >= 200 && r.dehors === 0 && r.franchies === 0 && r.cam === r.nb && r.balles === r.nb);
+    return { ok, attendu: '6 zones · 200 trajets chacune · 0 dehors, 0 barrière franchie · caméra et balles passent toutes les barrières ouvertes',
+      obtenu: res.map((r) => `${r.z} : ${r.F} frontières, ${r.trajets} trajets, ${r.dehors} dehors, ${r.franchies} barrières franchies${r.sorties.length ? ' [' + r.sorties.join(', ') + ']' : ''}, caméra ${r.cam}/${r.nb}, balles ${r.balles}/${r.nb}`).join(' · ') };
   }, { delai: 300 });
 
   // 5. LA RUBALISE : un appel de dessin ; aucun programme compilé à l'entrée
@@ -214,15 +255,16 @@ export default function (jeu) {
       jeu.teleporter(0, x, C().solEn(x, z, Q.sol + 0.5), z, Math.atan2(-(Q.cx - x), -(Q.cz - z)));
       game.camPitch = 0.12;
       await jeu.images(4);
-      const avec = await jeu.images(6);
-      R.visible = false; await jeu.images(2);
-      const sans = await jeu.images(6);
-      R.visible = true;
-      const instances = R.count;
+      // (deux rendus de la même image, la rubalise montrée puis cachée : la différence des appels)
+      const inf = game.renderer.info, rendre = () => { inf.autoReset = false; inf.reset(); game.fx.render(0); const n = inf.render.calls; inf.autoReset = true; return n; };
+      rendre(); const avec = rendre();
+      R.visible = false; rendre(); const sans = rendre(); R.visible = true;
+      const instances = R.count, enrub = M.rubans.map((q) => q.cle);
+      window.__photosLM = { ...(window.__photosLM || {}), rubalise: jeu.photo('rubalise') };
       jeu.quitter('balade');
-      const ok = n0 !== null && n1 === n0 && avec.appels - sans.appels === 1 && instances > 0;
+      const ok = n0 !== null && n1 === n0 && avec - sans === 1 && instances > 0;
       return { ok, attendu: 'programmes à la fin de la préparation = après 10 images ; rubalise = 1 appel',
-        obtenu: `programmes ${n0} → ${n1} · appels ${avec.appels} avec, ${sans.appels} sans (${instances} segments, ${M.rubans.length} passages enrubannés : ${M.rubans.map((q) => q.cle)})` };
+        obtenu: `programmes ${n0} → ${n1} · appels ${avec} avec, ${sans} sans (${instances} segments, ${enrub.length} passages enrubannés : ${enrub})` };
     } finally { jeu.figerQualite(false); }
   });
 
@@ -322,7 +364,9 @@ export default function (jeu) {
       poses = [0, 0.2, 0.4, 0.6, 0.8, 1].map((f) => cands[Math.min(cands.length - 1, Math.round(f * (cands.length - 1)))]).filter(Boolean);
       const enPartie = mesurer(true), ouverte = P.k === 1;
       jeu.quitter('balade'); stabiliser();
-      const balade = mesurer(false);
+      // (la glace de l'accueil, peinte en partie, l'est aussi le temps de la mesure en balade : ses rendus ne sont pas la pièce)
+      const Mi = carte().miroirAccueil, c0 = Mi.coupe; Mi.coupe = true;
+      let balade; try { carte().maj(0, game); balade = mesurer(false); } finally { Mi.coupe = c0; }
       const ecarts = enPartie.map((m, i) => m.appels - balade[i].appels), pires = enPartie.map((m) => m.diff);
       const ok = ouverte && poses.length === 6 && ecarts.every((d) => d <= 60) && pires.every((d) => d < 0.004);
       return { ok, attendu: 'porte ouverte ; six poses ; pixels différents avec / sans le tri < 0,4 % ; appels en partie − balade ≤ 60',
@@ -403,14 +447,18 @@ export default function (jeu) {
   T('12 vantaux solides : balles arrêtées, aucun pilote au travers, rien hors partie', async () => {
     await essai({ zone: 'ecole' });
     const p = game.partie, V = C().formes.filter((f) => f.vantail);
-    let arretees = 0; const det = [];
-    for (let k = 0; k < 20; k++) {
-      const f = V[k % V.length], nx = -f.s, nz = f.c, cx = f.cx + f.c * f.hx * (((k * 7) % 5) / 5 - 0.4), cz = f.cz + f.s * f.hx * (((k * 7) % 5) / 5 - 0.4);
-      const y = f.y0 + 0.5 + (k % 4) * 0.35;
-      // du côté libre du vantail, à 1 m, droit sur lui
-      const sg = C().libre(cx + nx * 1.0, cz + nz * 1.0, 0.1, f.y0) ? 1 : -1;
-      const o = p.balistique.balle(cx + nx * sg, y, cz + nz * sg, -nx * sg, 0, -nz * sg, 3, {});
-      if (o.mat !== 'rien' && Math.abs(o.t - (1 - 0.035)) < 0.06) arretees++; else det.push(`${f.porte} ${r3(o.t)}`);
+    // (les tirs : à 1 m du vantail, droit sur lui, de ses deux faces, à plusieurs hauteurs et le long de lui ; ne comptent que
+    // ceux que rien d'autre n'arrête — le même tir, la boîte du vantail retirée, va plus loin que lui)
+    let arretees = 0, tires = 0; const det = [];
+    for (let k = 0; k < 400 && tires < 20; k++) {
+      const f = V[k % V.length], nx = -f.s, nz = f.c, u = ((k * 7) % 9) / 9 - 0.45, cx = f.cx + f.c * f.hx * u * 2, cz = f.cz + f.s * f.hx * u * 2;
+      const y = f.y0 + 0.4 + ((k >> 2) % 5) * 0.3, sg = (k >> 1) % 2 ? 1 : -1;
+      const ox = cx + nx * sg, oz = cz + nz * sg;
+      f.off = true; const sans = p.balistique.balle(ox, y, oz, -nx * sg, 0, -nz * sg, 3, {}).t; f.off = false;
+      if (sans < 1.2 || !C().libre(ox, oz, 0.05, f.y0)) continue;
+      tires++;
+      const o = p.balistique.balle(ox, y, oz, -nx * sg, 0, -nz * sg, 3, {});
+      if (o.mat !== 'rien' && Math.abs(o.t - (1 - 0.035)) < 0.03) arretees++; else det.push(`${f.porte} ${r3(o.t)}`);
     }
     // les pilotes : de 1,2 m d'un côté à 1,2 m de l'autre, au travers du milieu du vantail
     const a = p.ajouterActeur({ id: 90, nom: 'Frôleur', equipe: 'B', x: 14.88, y: 0, z: -3.12, lacet: 0, cerveau: null });
@@ -443,9 +491,9 @@ export default function (jeu) {
     const ref = jeu.reference && jeu.reference[window.__chargement && window.__chargement.telephone ? 'tel' : 'pc'].instantane;
     stabiliser();
     const inst = !ref || egal(sansEnfants(jeu.instantane()), sansEnfants(ref));
-    const ok = nV > 0 && arretees === 20 && traversees === 0 && hors === 0 && inst;
+    const ok = nV > 0 && tires === 20 && arretees === 20 && traversees === 0 && hors === 0 && inst;
     return { ok, attendu: '20 balles arrêtées sur le vantail ; 0 traversée sur 20 trajets ; hors partie 0 boîte de partie, instantané = la référence',
-      obtenu: `${nV} vantaux solides · ${arretees}/20 arrêtées${det.length ? ' [' + det.join(', ') + ']' : ''} · ${traversees}/${trajets} traversées · hors partie ${hors} · instantané ${inst}` };
+      obtenu: `${nV} vantaux solides · ${arretees}/${tires} arrêtées${det.length ? ' [' + det.join(', ') + ']' : ''} · ${traversees}/${trajets} traversées · hors partie ${hors} · instantané ${inst}` };
   });
 
   // 13. LES DÉPOLIS : la table trouvée au monde solide, le drapeau sur elles seules en partie, nulle part hors partie

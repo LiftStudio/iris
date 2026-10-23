@@ -256,7 +256,7 @@ export class MondePartie {
     R.name = 'rubalise (zone de jeu)'; R.count = 0; R.castShadow = false; R.receiveShadow = true;
     R.userData.dynamique = true; R.frustumCulled = false;
     this.rubalise = R;
-    g._compilerAsync?.(R);
+    this._compilerRubalise();
   }
   // LA LIMITE d'un passage. Les pièces sont des rectangles alignés sur les axes (carte_ecole.js l. 2345-2385) : leur limite
   // aussi. Le long de chaque axe, de part et d'autre du centre du passage (1,5 m), la suite des pièces — lues au SOL de chaque
@@ -491,6 +491,7 @@ export class MondePartie {
   // les nœuds des pièces atteignables de la zone (portes réglées : moins les pièces fermées par la table, rien hors des
   // pièces de la zone) ; un nœud hors de toute pièce (un seuil, une embrasure) suit ses voisins. Zone inconnue : tout.
   noeudsAutorises(nav, zoneJeu, mode) {
+    this._compilerRubalise();
     const n = (nav && nav.nb) | 0, out = new Uint8Array(n);
     if (!n) return out;
     const permis = this.piecesPermises(zoneJeu, mode), Lu = this.carte.lumieres;
@@ -504,6 +505,15 @@ export class MondePartie {
     }
     if (nav.debut && nav.liens) for (const i of sans) for (let j = nav.debut[i]; j < nav.debut[i + 1]; j++) if (out[nav.liens[j]]) { out[i] = 1; break; }
     return out;
+  }
+
+  // (LA RUBALISE COMPILÉE pour le préréglage du moment : elle n'est pas dans la scène que Partie.preparer compile, et un
+  // préréglage changé — la qualité automatique, un réglage — change ses programmes. noeudsAutorises est la seule méthode du
+  // monde que Partie.preparer appelle à CHAQUE préparation, avant la compilation de la scène : c'est là ; trois fois rien
+  // quand le programme existe déjà. Affichage, hors du pas.)
+  _compilerRubalise() {
+    const g = this.game, R = this.rubalise;
+    if (R && g && g._compilerAsync) g._compilerAsync(R);
   }
 
   // ================================================================ L'AFFICHAGE (une fois par image)
