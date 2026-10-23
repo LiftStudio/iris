@@ -250,13 +250,17 @@ caché la manche suivante (montré, clips coupés) ; Haythem prop humain n'étai
   S0 point 25 ne compte que les CHOIX. Correction proposée : dans la branche `vise`, garder la visée d'un pas à l'autre (par
   ex. `if (this.vise) { this.aim.l = this._aimVise.l; … }` avant `viserVers`, ou ne pas appeler l'errant tant que `vise`).
   Sans elle, au prop hunt du socle, aucun chasseur bot ne touche jamais un prop (les props bots ne bougent pas non plus : c'est
-  le minimal).
+  le minimal). Revu en jouant à la relecture : Gabriel à 0,6 m du carton de Haythem, 3 choix au journal, 0 tir ; les props
+  gagnent les six manches.
+- **F2 / S0** (relecture) : S0 point 8 à 1 280 × 720 émulé donne « programmes 144 → 145 » en mode `essai` (28/29), et passe à la
+  taille du panneau (145 → 145) : un programme du décor compilé quand la caméra en voit plus — à refaire machine calme.
 - **L-H** : (1) `jouer3d(…, { dalle: 'faite' })` = la dalle déjà faite par `SonsProp` (× 0,35, 900 Hz) : ne pas y remettre la
   règle « autre niveau » (−14 dB, 400 Hz) ; (2) poser `sonsJeu.spatial = true` quand les voix sont spatialisées (alors
   `SonsProp` n'atténue plus ni ne place le son lui-même) ; (3) `SonsProp` joue le sifflet du lâcher (phase `traque`) et la
   ritournelle de fin de manche : que `SonsJeu` ne siffle pas aussi sur `traque` ; (4) `jouer3d` gagnerait à libérer la plus
   faible voix plutôt que de refuser quand 24 sont pleines (un « bip » de scanner refusé, observé quand l'horloge des sons
-  n'avançait pas).
+  n'avançait pas) ; (5, relecture) les provocations passent `prioritaire: true` (elles volent une voix : le squelette prend
+  la plus ancienne, le vrai `jouer3d` la plus faible).
 - **L-C** : `CadenceActeurs` ne pose jamais l'acteur local ; en prop hunt, Haythem prop encore HUMAIN est à la 3e personne :
   `PartieProp.image` le pose s'il ne l'a pas été (`!a.aPoser`) — si la vraie cadence le pose, rien n'est fait deux fois.
 - **L-G** : `hud.prop.cachette` est rempli aussi pendant la présentation (panneau dès la 1re image du chasseur) ; dessiner
@@ -273,7 +277,8 @@ caché la manche suivante (montré, clips coupés) ; Haythem prop humain n'étai
   doit le respecter) ; exposer `oeil(acteur) → 0..1` pour la jauge ŒIL ; `CerveauCacheur.cle` (le type voulu) est lu par
   `_changerForme` (validé : déguisable dans la zone, ou le carton).
 - **L-D** : `PASSAGES` (exporté par le squelette de `pilotage.js`) est lu par `PartieProp` s'il existe encore (import en espace
-  de noms : pas d'erreur s'il disparaît) pour éviter de poser un prop dans un passage.
+  de noms : pas d'erreur s'il disparaît) pour éviter de poser un prop dans un passage, et (relecture) pour tourner le chasseur
+  vers la porte de sa pièce au départ (`_cibleDepart`) : sans lui, vers le cœur de la zone.
 
 ## Doutes
 
@@ -282,6 +287,10 @@ caché la manche suivante (montré, clips coupés) ; Haythem prop humain n'étai
   ligne de texte) ; `credibilite` rend 0,5 avant L-K.
 - Les sons n'ont été qu'ÉCOUTÉS PAR LES NOMBRES (journal, rendu hors ligne : crête, efficace) : le test à l'oreille (F2 / INT,
   sans `?test=1`) dira s'il faut retoucher un timbre (le téléphone est le plus doux : crête 0,07).
+- (relecture) Le regard du chasseur au départ est une heuristique (porte de sa pièce, puis le cap qui voit le plus loin à
+  ± 90°) : vue au 1er et au RDC ; le −1 (lot R) et le 2e (grisé) ne sont pas regardés. Pendant la présentation, Haythem
+  chasseur peut encore tourner la tête : la caméra n'est figée qu'en cachette (`Partie.camera`, socle) — le panneau de L-G
+  masque la scène dès la présentation.
 
 ## Jeton du navigateur
 
