@@ -422,6 +422,20 @@ export class Nav {
   }
   // (les données de la session oubliées : la prochaine `obtenir` relit IndexedDB ou régénère — les tests du cache)
   static oublier() { MEMOIRE.clear(); }
+  // la génération d'un bloc, sans cache ni attente (les tests : rien d'autre ne tourne pendant — l'instantané d'avant et
+  // celui d'après se comparent dans la même tâche) ; `o` comme `obtenir`
+  static genererSync(game, o) {
+    const { pas = 0.25, rayon = 0.3, franchir = true, bornes = BORNES_NAV } = o || {};
+    const C = game.collisions, Lu = game.carte && game.carte.lumieres, opts = { pas, rayon, franchir: !!franchir && rayon >= 0.25, bornes };
+    const dep = game.carte && game.carte.depart, graines = dep ? [[dep.x, C.solEn(dep.x, dep.z, dep.y || 0), dep.z], ...GRAINES] : GRAINES;
+    const D = generer(C, Lu, { ...opts, graines }); D.empreinte = empreinteDe(C, Lu, opts);
+    const n = new Nav(); n._charger(D, C); return n;
+  }
+  // l'empreinte qu'aurait le graphe de ces options, sans le générer (les tests ; `o` comme `obtenir`)
+  static empreinteDe(game, o) {
+    const { pas = 0.25, rayon = 0.3, franchir = true, bornes = BORNES_NAV } = o || {};
+    return empreinteDe(game.collisions, game.carte && game.carte.lumieres, { pas, rayon, franchir: !!franchir && rayon >= 0.25, bornes });
+  }
   // (`pas`, `rayon`, `franchir`, `bornes` : les options du graphe ; `depuisCache` : relu d'un cache plutôt que généré — lus
   // par js/jeu/harnais.js verifierNav)
   constructor() {

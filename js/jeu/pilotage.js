@@ -34,7 +34,7 @@ const COINCE_T = 3, COINCE_D = 0.6;        // § 4.5.11
 const PENAL_T = 10;
 const SECOURS_RECUL = 1.5;                 // le nœud sûr : à 1,5 m au moins en arrière
 const EVITE = 0.6;
-const FACE_D = 1.0, FACE_DEG = 0.6, REFUGE_DEG = 0.75, PASSE_D = 1.2, ATTENTE_MAX = 4;
+const FACE_D = 1.0, FACE_DEG = 0.6, REFUGE_DEG = 0.75, PASSE_D = 1.2, ATTENTE_MAX = 3;
 const SAUT_FACE = 0.6, FRANCHIR_MAX = 1.6;
 const angle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const _Q = { x: 0, z: 0 };
@@ -48,6 +48,7 @@ export class Pilote {
     this.chemin = []; this.k = 0; this.vise = 0;            // les nœuds ; le prochain à passer ; celui que vise la ficelle
     this._plan = null; this._attente = false; this._tPlan = -1; this._replan = false; this._direct = false;
     this._tFicelle = -1; this._ref = null; this._tRef = 0; this.coincements = 0; this.secours = 0;
+    this._cheminVu = null; this._kMax = 0; this._tK = 0;
     this._surs = [];                                         // les derniers nœuds sûrs passés (le secours)
     this.mode = 'route'; this._refuge = null; this._autre = null; this._tAttente = 0;
     this._franchi = null;                                    // { de, a, t } : le franchissement en cours
@@ -103,6 +104,9 @@ export class Pilote {
     else {
       // les nœuds passés
       while (this.k < L.length && this._passe(L[this.k], p)) { this._noterSur(L[this.k], p); this.k++; }
+      // (poussé plus loin sur le chemin sans être passé à 0,35 m d'un nœud — par un autre corps, un mur qui fait glisser :
+      // il reprend au nœud qu'il touche, jusqu'à 12 devant ; sinon la ficelle le ramènerait en arrière)
+      for (let j = Math.min(L.length - 1, this.k + FICELLE_N); j > this.k; j--) if (this._passe(L[j], p)) { this.k = j + 1; break; }
       if (this.k >= L.length) {
         if (this.mode === 'recul') { this.mode = 'attente'; this._tAttente = 0; return; }
         tx = c.x; tz = c.z;                                   // (après le dernier nœud : la cible elle-même)
@@ -160,9 +164,11 @@ export class Pilote {
     const N = this.nav, L = this.chemin, k = this.k;
     let hi = Math.min(L.length - 1, k + FICELLE_N);
     for (let j = k + 1; j <= hi; j++) { const q = N.lien(L[j - 1], L[j]); if (q >= 0 && N.typeLien[q] === 1) { hi = j - 1; break; } }
-    if (hi <= k) return k;
-    if (this._balayer(p.x, p.y, p.z, L[hi])) return hi;
+    // (l'ancienne visée tient tant qu'un balayage l'atteint : la ficelle ne recule jamais pour rien)
     let lo = k;
+    if (this.vise > k && this.vise < hi && this._balayer(p.x, p.y, p.z, L[this.vise])) lo = this.vise;
+    if (hi <= lo) return lo;
+    if (this._balayer(p.x, p.y, p.z, L[hi])) return hi;
     while (hi - lo > 1) { const m = (lo + hi) >> 1; if (this._balayer(p.x, p.y, p.z, L[m])) lo = m; else hi = m; }
     return lo;
   }
@@ -192,7 +198,7 @@ export class Pilote {
     if (!this._franchi || this._franchi.v !== v) this._franchi = { u, v, t, saute: false };
     const F = this._franchi;
     // (raté : 1,6 s sur le lien sans être passé → pénalisé, un autre chemin)
-    if (t - F.t > FRANCHIR_MAX) { N.penaliser(u, v, t + PENAL_T); this._franchi = null; this._replan = true; this._tPlan = -1; this.chemin = []; return; }
+    if (t - F.t > FRANCHIR_MAX) { this._penaliserFranchir(u, t + PENAL_T); this._franchi = null; this._replan = true; this._tPlan = -1; this.chemin = []; return; }
     if (F.saute || this.acteur.corps.airborne) return;
     // aligné (< 15°) et la face à ≤ 0,6 m : le saut (la face : un disque poussé de 0,8 m bute)
     if (dx * ux + dz * uz < Math.cos(15 * Math.PI / 180)) return;
@@ -201,6 +207,13 @@ export class Pilote {
     const avance = (_Q.x - p.x) * ux + (_Q.z - p.z) * uz;
     // (la face, du centre du corps : avance + rayon ≤ 0,6 m)
     if (avance + this._r <= SAUT_FACE) { cmd.saut = true; F.saute = true; }
+  }
+
+  // un franchissement raté : tous les liens « franchir » qui partent à moins de 1,5 m de là (le même obstacle — ils sont
+  // tous les 0,75 m le long d'une table), pour que le nouveau chemin fasse le tour
+  _penaliserFranchir(u, jusqua) {
+    const N = this.nav, L = N.dans(N.px[u], N.ph[u], N.pz[u], 1.5, this._tmpF || (this._tmpF = []), 0.5);
+    for (const w of L) for (let j = N.debut[w]; j < N.debut[w + 1]; j++) if (N.typeLien[j] === 1) N.penaliser(w, N.liens[j], jusqua);
   }
 
   // ---------------------------------------------------------------- l'évitement
@@ -244,28 +257,42 @@ export class Pilote {
       if (d1.x * d2.x + d1.z * d2.z > -0.5) continue;
       // (l'un vers l'autre : chacun a l'autre devant lui)
       if ((q.x - p.x) * d1.x + (q.z - p.z) * d1.z <= 0) continue;
+      // (ÉTROIT : aucun nœud à 0,45 m de l'un ni de l'autre n'a 0,6 m de dégagement — le long d'un mur d'un hall, les nœuds
+      // ont peu de dégagement mais on se croise très bien)
       const na = N.noeudPres(p.x, p.y, p.z, 1), nbb = N.noeudPres(q.x, q.y, q.z, 1);
-      if (na < 0 || nbb < 0 || N.degage[na] >= FACE_DEG || N.degage[nbb] >= FACE_DEG) continue;
+      if (na < 0 || nbb < 0 || !this._etroit(p) || !this._etroit(q)) continue;
+      // (sans refuge de son côté — un cul-de-sac dans son dos —, c'est l'autre qui recule)
       const R = this._refugeDe(na, q);
-      if (!R) continue;
-      this.mode = 'recul'; this._autre = b; this._refuge = R; this._sauve = { chemin: this.chemin, k: this.k };
-      this.chemin = R; this.k = 0; this.vise = 0; this._tFicelle = -1; this._ref = null;
-      return;
+      if (R) { this._reculer(R, b); return; }
+      const R2 = Q._refugeDe(nbb, p);
+      if (R2) { Q._reculer(R2, a); return; }
     }
   }
-  // le chemin (par la marche) jusqu'au nœud le plus proche de dégagement ≥ 0,75 m qui ne rapproche pas de l'autre
+  _reculer(R, b) {
+    this.mode = 'recul'; this._autre = b; this._refuge = R;
+    this.chemin = R; this.k = 0; this.vise = 0; this._tFicelle = -1; this._ref = null; this._arrive = false;
+  }
+  _etroit(q) {
+    const N = this.nav, L = N.dans(q.x, q.y, q.z, 0.45, this._tmpE || (this._tmpE = []), 0.6);
+    for (const v of L) if (N.degage[v] >= FACE_DEG) return false;
+    return L.length > 0;
+  }
+  // le chemin (par la marche) jusqu'au nœud le plus proche de dégagement ≥ 0,75 m, en ne faisant que S'ÉLOIGNER de l'autre
+  // (chaque pas du chemin à au moins la distance du précédent, à 5 cm près, en comptant la hauteur : dans la volée de tôle,
+  // le refuge est en haut ou en bas, du côté d'où l'on vient — jamais derrière l'autre)
   _refugeDe(de, q) {
     const N = this.nav, pere = new Map([[de, -1]]), file = [de];
-    const d0 = Math.hypot(N.px[de] - q.x, N.pz[de] - q.z);
-    for (let i = 0; i < file.length && i < 600; i++) {
+    const dist = (v) => Math.hypot(N.px[v] - q.x, N.pz[v] - q.z, (N.ph[v] - q.y) * 0.8);
+    for (let i = 0; i < file.length && i < 800; i++) {
       const u = file[i];
-      if (u !== de && N.degage[u] >= REFUGE_DEG && Math.hypot(N.px[u] - q.x, N.pz[u] - q.z) >= d0 - 0.05) {
+      if (u !== de && N.degage[u] >= REFUGE_DEG) {
         const L = []; for (let w = u; w >= 0; w = pere.get(w)) L.push(w);
         return L.reverse();
       }
+      const du = dist(u);
       for (let j = N.debut[u]; j < N.debut[u + 1]; j++) {
         const v = N.liens[j];
-        if (N.typeLien[j] || pere.has(v) || !N.permis(v)) continue;
+        if (N.typeLien[j] || pere.has(v) || !N.permis(v) || dist(v) < du - 0.05) continue;
         pere.set(v, u); file.push(v);
       }
     }
@@ -275,7 +302,8 @@ export class Pilote {
     const b = this._autre, p = this.pos;
     this._tAttente += dt;
     const Q = b && b.cerveau && b.cerveau.pilote;
-    let passe = !b || !b.vivant || !b.corps || !Q;
+    // (passé : à 1,2 m et qui s'éloigne — ou arrivé, ou qui a changé de route : le passage est libre)
+    let passe = !b || !b.vivant || !b.corps || !Q || Q._arrive || Q.mode !== 'route' || !Q.cible;
     if (!passe) {
       const q = b.corps.pos, d = Math.hypot(q.x - p.x, q.z - p.z), D = Q._dirPrec;
       passe = d >= PASSE_D && (!D || (q.x - p.x) * D.x + (q.z - p.z) * D.z > 0);
@@ -284,17 +312,23 @@ export class Pilote {
   }
   _finFace(reprendre = false) {
     if (this.mode === 'route') return;
-    this.mode = 'route'; this._autre = null; this._refuge = null; this._sauve = null;
+    this.mode = 'route'; this._autre = null; this._refuge = null;
     if (reprendre) { this.chemin = []; this._replan = true; this._tPlan = -1; this._ref = null; }
   }
 
   // ---------------------------------------------------------------- coincé, le secours
   _surveiller(dt, t, p) {
     this._dirPrec = this.dir;
+    // (le progrès sur le chemin : un bot qui va et vient sans passer de nœud pendant 4 s est coincé aussi)
+    // (le temps compté est celui des pas où il veut avancer : un cerveau qui s'arrête pour tirer ne le fait pas courir)
+    if (this.chemin !== this._cheminVu || this.k > this._kMax) { this._cheminVu = this.chemin; this._kMax = this.k; this._tK = 0; }
+    else this._tK += dt;
+    const sansProgres = this.chemin.length > 0 && this._tK > COINCE_T + 1;
     if (!this._ref) { this._ref = { x: p.x, z: p.z }; this._tRef = 0; return; }
     this._tRef += dt;
-    if (Math.hypot(p.x - this._ref.x, p.z - this._ref.z) > COINCE_D) { this._ref.x = p.x; this._ref.z = p.z; this._tRef = 0; this.coincements = 0; return; }
-    if (this._tRef < COINCE_T) return;
+    if (!sansProgres && Math.hypot(p.x - this._ref.x, p.z - this._ref.z) > COINCE_D) { this._ref.x = p.x; this._ref.z = p.z; this._tRef = 0; this.coincements = 0; return; }
+    if (this._tRef < COINCE_T && !sansProgres) return;
+    this._tK = 0;
     this._ref.x = p.x; this._ref.z = p.z; this._tRef = 0;
     this.coincements++;
     const N = this.nav, L = this.chemin;
@@ -311,8 +345,9 @@ export class Pilote {
   _secours() {
     const N = this.nav, P = this.partie, a = this.acteur, p = this.pos, B = this.balistique;
     if (!N || !N.nb || !P) return false;
+    // (jamais plus bas que lui de plus de 0,5 m : une téléportation n'est pas une chute)
     let v = -1;
-    for (let i = this._surs.length - 1; i >= 0; i--) { const s = this._surs[i]; if (Math.hypot(N.px[s] - p.x, N.pz[s] - p.z) >= SECOURS_RECUL && N.permis(s)) { v = s; break; } }
+    for (let i = this._surs.length - 1; i >= 0; i--) { const s = this._surs[i]; if (Math.hypot(N.px[s] - p.x, N.pz[s] - p.z) >= SECOURS_RECUL && N.ph[s] > p.y - 0.5 && N.permis(s)) { v = s; break; } }
     if (v < 0) return false;
     const L = P.local;
     if (L && L !== a && L.vivant && L.corps && B) {

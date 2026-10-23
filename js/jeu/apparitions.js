@@ -123,64 +123,103 @@ function lacetVers(N, champ, u, pasMax = 18) {
 const _o = { x: 0, y: 0, z: 0, set(x, y, z) { this.x = x; this.y = y; this.z = z; return this; } };
 
 // ---------------------------------------------------------------- LES DÉPARTS
-// `n` points d'un camp, à 1,5 m l'un de l'autre, dégagés, ramenés aux nœuds, tournés vers le chemin du camp d'en face.
-// (`nav` facultatif : à défaut, le graphe des humains de la partie qui se prépare)
+// `n` points d'un camp, à 1,5 m l'un de l'autre, dégagés (≥ 0,75 m), sur des nœuds hors des volées, tournés vers le chemin
+// du camp d'en face. Les deux camps sont tirés ENSEMBLE (à tour de rôle, le meilleur candidat de chacun : le plus proche
+// à pied de la base de son camp, pénalisé de 1,5 × ce dont il s'avance vers la base adverse), chaque point à 15 m à pied
+// au moins de tous ceux de l'autre camp — un appel pour A et un pour B rendent donc les mêmes deux camps (le tirage ne
+// dépend que de la zone et du graphe ; DEPARTS_N points par camp, les `n` premiers rendus). Une salle de classe pleine
+// de tables (la S 1.3 des étages, la salle 1 du 2e) n'a qu'un nœud dégagé : le camp déborde alors dans le couloir voisin.
+// Les passes : PASSES (dégagés près de la base d'abord). (`nav` facultatif : à défaut, le graphe des
+// humains de la partie qui se prépare ; `rng` : la graine de la partie — le tirage est déterministe, il n'en tire rien.)
+const DEPARTS_N = 6, SEPARATION = 15;
+const _departs = new WeakMap();
 export function departs(zoneJeu, equipe, n, rng, nav = null) {
   const Z = ZONES_JEU[zoneJeu] || ZONES_JEU.ecole, N = navDe(nav);
   if (!N) return departsSansGraphe(Z, equipe, n);
-  const R = REGLES_APPARITION;
-  const base = (Z.departs && Z.departs[equipe]) || (Z.departs && (Z.departs.A || Z.departs.chasseurs)) || [[14.88, 0, -3.12]];
-  const autre = Z.departs && (equipe === 'A' ? Z.departs.B : equipe === 'B' ? Z.departs.A : null);
-  // les nœuds de base (le plus proche qui soit dégagé, à 4 m au plus, sinon le plus proche tout court)
-  const bases = [];
-  for (const b of base) {
-    let v = noeudDegage(N, b[0], b[1], b[2], 4, R.degageMin);
-    if (v < 0) v = N.noeudPres(b[0], b[1], b[2], 4);
-    if (v >= 0 && !bases.includes(v)) bases.push(v);
-  }
-  if (!bases.length) return departsSansGraphe(Z, equipe, n);
-  // le champ du camp d'en face (vers où l'on regarde ; on ne s'avance pas vers lui)
+  const D = Z.departs || {}, deux = (equipe === 'A' || equipe === 'B') && D.A && D.B;
+  const K = Math.max(DEPARTS_N, n);
+  let pris;
+  if (deux) {
+    let M = _departs.get(N); if (!M) _departs.set(N, M = new Map());
+    const cle = zoneJeu + ':' + K;
+    let J = M.get(cle);
+    if (!J || J.masque !== N.masque) { J = departsDeux(N, D, K); if (J) { J.masque = N.masque; M.set(cle, J); } }
+    pris = J ? J[equipe] : null;
+  } else pris = departsUn(N, (D[equipe] || D.A || D.chasseurs || [[14.88, 0, -3.12]]), K);
+  if (!pris || !pris.length) return departsSansGraphe(Z, equipe, n);
+  pris = pris.slice(0, n);
+  while (pris.length < n) pris.push(pris[pris.length % Math.max(1, pris.length)]);
+  const autre = equipe === 'A' ? D.B : equipe === 'B' ? D.A : null;
   let champE = null;
-  if (autre && autre.length) {
-    const E = [];
-    for (const b of autre) { const v = N.noeudPres(b[0], b[1], b[2], 4); if (v >= 0) E.push(v); }
-    if (E.length) champE = N.champMulti(E, Infinity);
-  }
-  // en largeur depuis chaque base, à tour de rôle : les nœuds dégagés, sur le sol de la base, à 1,5 m des autres
-  const files = bases.map((v) => ({ file: [v], vu: new Set([v]), i: 0, h: N.ph[v], e0: champE ? champE[v] : 0 }));
-  const pris = [];
-  const prend = (v) => pris.every((w) => Math.hypot(N.px[w] - N.px[v], N.pz[w] - N.pz[v]) >= R.espacement || Math.abs(N.ph[w] - N.ph[v]) > 1.5);
-  for (let tour = 0; pris.length < n && tour < 4000; tour++) {
-    let avance = false;
-    for (const F of files) {
-      if (pris.length >= n) break;
-      while (F.i < F.file.length && F.i < 3000) {
-        const v = F.file[F.i++];
-        for (let j = N.debut[v]; j < N.debut[v + 1]; j++) {
-          const w = N.liens[j];
-          if (N.typeLien[j] || F.vu.has(w) || !N.permis(w) || Math.abs(N.ph[w] - F.h) > 0.3) continue;
-          F.vu.add(w); F.file.push(w);
-        }
-        avance = true;
-        if (N.degage[v] < R.degageMin || !prend(v) || (champE && champE[v] < F.e0 - 1)) continue;
-        pris.push(v);
-        break;
-      }
-    }
-    if (!avance) break;
-  }
-  // (pas assez de place dégagée : on complète au dégagement du graphe, puis en reprenant les premiers)
-  if (pris.length < n) for (const F of files) for (const v of F.file) { if (pris.length >= n) break; if (!pris.includes(v) && prend(v)) pris.push(v); }
-  while (pris.length < n) pris.push(pris[pris.length % Math.max(1, pris.length)] ?? bases[0]);
-  const out = [];
-  for (let k = 0; k < n; k++) {
-    const v = pris[k];
+  if (autre && autre.length) { const E = autre.map((b) => N.noeudPres(b[0], b[1], b[2], 4)).filter((v) => v >= 0); if (E.length) champE = N.champMulti(E, Infinity); }
+  return pris.map((v) => {
     let lacet = champE ? lacetVers(N, champE, v) : null;
     if (lacet === null && autre && autre[0]) lacet = Math.atan2(-(autre[0][0] - N.px[v]), -(autre[0][2] - N.pz[v]));
     if (lacet === null) lacet = lacetOuvert(N, v, rng);
-    out.push({ x: N.px[v], y: N.ph[v], z: N.pz[v], lacet });
+    return { x: N.px[v], y: N.ph[v], z: N.pz[v], lacet };
+  });
+}
+// les nœuds de base d'un camp (le plus proche dégagé à ≤ 4 m, sinon le plus proche)
+function basesDe(N, base) {
+  const R = REGLES_APPARITION, L = [];
+  for (const b of base) {
+    let v = noeudDegage(N, b[0], b[1], b[2], 4, R.degageMin);
+    if (v < 0) v = N.noeudPres(b[0], b[1], b[2], 4);
+    if (v >= 0 && !L.includes(v)) L.push(v);
   }
-  return out;
+  return L;
+}
+// les candidats d'un camp, triés : à ≤ 30 m à pied de sa base, la distance plus 1,5 × l'avance vers la base adverse
+function candidatsCamp(N, bases, adverses) {
+  const P = N.champMulti(bases, 30).slice();
+  let E = null, e0 = 0;
+  if (adverses && adverses.length) { E = N.champMulti(adverses, Infinity).slice(); e0 = Math.min(...bases.map((v) => E[v])); }
+  const L = [];
+  for (let v = 0; v < N.nb; v++) if (P[v] <= 30 && !surVolee(N.C, N.px[v], N.ph[v], N.pz[v])) L.push([P[v] + (E && Number.isFinite(E[v]) ? 1.5 * Math.max(0, e0 - E[v]) : 0), v]);
+  L.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const R = L.map((c) => c[1]); R.P = P;
+  return R;
+}
+// les passes : dégagés de 0,75 m à ≤ 12 m à pied de la base, puis de 0,5 m à ≤ 12 m (près de sa base plutôt que dégagé au
+// loin : dans la sas du −1, deux nœuds seulement ont 0,75 m), puis jusqu'à 30 m, puis n'importe quel nœud
+const PASSES = [[0.75, 12], [0.5, 12], [0.75, 30], [0.5, 30], [0, 30]];
+const espaceOk = (N, pris, v) => pris.every((w) => Math.hypot(N.px[w] - N.px[v], N.pz[w] - N.pz[v]) >= REGLES_APPARITION.espacement || Math.abs(N.ph[w] - N.ph[v]) > 1.5);
+// UN camp seul (les chasseurs du prop hunt)
+function departsUn(N, base, K) {
+  const B = basesDe(N, base); if (!B.length) return null;
+  const L = candidatsCamp(N, B, null), pris = [];
+  for (const [dMin, rMax] of PASSES) {
+    for (const v of L) { if (pris.length >= K) break; if (N.degage[v] >= dMin && L.P[v] <= rMax && !pris.includes(v) && espaceOk(N, pris, v)) pris.push(v); }
+    if (pris.length >= K) break;
+  }
+  return pris;
+}
+// LES DEUX camps, à tour de rôle, à ≥ 15 m à pied l'un de l'autre
+function departsDeux(N, D, K) {
+  const bA = basesDe(N, D.A), bB = basesDe(N, D.B);
+  if (!bA.length || !bB.length) return null;
+  const S = { A: { L: candidatsCamp(N, bA, bB), pris: [] }, B: { L: candidatsCamp(N, bB, bA), pris: [] } };
+  // (la distance à pied aux points déjà pris de chaque camp, bornée à 15 m, tenue à jour à chaque prise)
+  const pres = { A: new Float64Array(N.nb).fill(Infinity), B: new Float64Array(N.nb).fill(Infinity) }, tmp = new Float64Array(N.nb);
+  const prendre = (cote, v) => {
+    S[cote].pris.push(v);
+    const F = N.champMulti([v], SEPARATION, tmp), M = pres[cote];
+    for (let i = 0; i < N.nb; i++) if (F[i] < M[i]) M[i] = F[i];
+  };
+  for (const [dMin, rMax] of PASSES) {
+    for (let tour = 0; tour < K; tour++) {
+      for (const cote of ['A', 'B']) {
+        const c = S[cote], autre = pres[cote === 'A' ? 'B' : 'A'];
+        if (c.pris.length >= K) continue;
+        for (const v of c.L) {
+          if (N.degage[v] < dMin || c.L.P[v] > rMax || c.pris.includes(v) || !(autre[v] >= SEPARATION) || !espaceOk(N, c.pris, v)) continue;
+          prendre(cote, v); break;
+        }
+      }
+    }
+    if (S.A.pris.length >= K && S.B.pris.length >= K) break;
+  }
+  return { A: S.A.pris, B: S.B.pris };
 }
 // (sans camp d'en face : vers le plus long dégagement du graphe autour de lui — on regarde la pièce, pas le mur)
 function lacetOuvert(N, v, rng) {
@@ -226,6 +265,9 @@ function candidats(N) {
   _cands.set(N, { masque: N.masque, L });
   return L;
 }
+
+// (les candidats de la réapparition du graphe et de son masque : nœuds — les tests)
+export function candidatsApparition(nav) { const N = navDe(nav); return N ? candidats(N).slice() : []; }
 
 // ---------------------------------------------------------------- LA RÉAPPARITION (§ 3.8)
 const _buf = new WeakMap();
@@ -300,10 +342,22 @@ function choisirSansGraphe(partie, acteur) {
 // ---------------------------------------------------------------- LES ANNEAUX de domination (§ 2.5)
 // le nœud le plus proche de (x, y, z), à ≤ rayonMax, de dégagement ≥ degageMin, sur ce sol ; null s'il n'y en a pas
 // (sans graphe : le point tel quel)
+// Les pauses du −1 et du 1er (les anneaux B et C) sont meublées : aucun nœud n'y a 1,5 m de dégagement à 8 m à la ronde
+// (mesuré : 1,0 au mieux). Plutôt que null (une domination sans anneau), le dégagement demandé est alors RELÂCHÉ — le nœud
+// le plus dégagé à ≤ rayonMax, le plus proche à dégagement égal — et le rendu le dit : { x, y, z, degage, releve: vrai }.
+// null seulement s'il n'y a aucun nœud à ≤ rayonMax.
 export function ramenerPoint(nav, x, y, z, o) {
   const { rayonMax = 3, degageMin = 1.5 } = o || {};
   const N = navDe(nav);
   if (!N) return { x, y, z };
-  const v = noeudDegage(N, x, y, z, rayonMax, degageMin);
-  return v >= 0 ? { x: N.px[v], y: N.ph[v], z: N.pz[v] } : null;
+  let v = noeudDegage(N, x, y, z, rayonMax, degageMin), releve = false;
+  if (v < 0) {
+    let bd = -1, bdist = Infinity;
+    for (const w of N.dans(x, y, z, rayonMax, [], 0.6)) {
+      const d = Math.hypot(N.px[w] - x, N.pz[w] - z);
+      if (N.degage[w] > bd || (N.degage[w] === bd && d < bdist)) { bd = N.degage[w]; bdist = d; v = w; }
+    }
+    releve = true;
+  }
+  return v >= 0 ? { x: N.px[v], y: N.ph[v], z: N.pz[v], degage: N.degage[v], releve } : null;
 }
