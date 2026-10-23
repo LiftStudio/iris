@@ -72,15 +72,22 @@ export default function (jeu) {
     const mo = new MutationObserver(() => {});
     mo.observe(document.getElementById('hud'), { subtree: true, attributes: true, childList: true, characterData: true });
     const tirs0 = jeu.compteurs().tirs;
-    let records = 0;
+    let records = 0, msHud = 0;
+    // (le temps des quatre maj, noté : le HUD dans le budget du gameplay, § 3.10)
+    const chrono = [];
+    for (const m of [A.hud, A.hudProp, A.tableau, A.minicarte]) {
+      const f = m.maj; m.maj = function (...a) { const t1 = performance.now(); try { return f.apply(this, a); } finally { msHud += performance.now() - t1; } };
+      chrono.push(() => { m.maj = f; });
+    }
     try {
       // 300 images : Haythem tourne la tête (la mini-carte tourne, les chevrons glissent) et tire une seconde
       jeu.commande(0, { tir: true }, 1.0);
       for (let i = 0; i < 300; i++) { game.camYaw += 0.012; game.frame(1 / 60); records += mo.takeRecords().length; }
-    } finally { mo.disconnect(); for (const r of rendre) r(); }
+    } finally { mo.disconnect(); for (const r of chrono) r(); for (const r of rendre) r(); }
+    t.note('L-G maj du HUD par image (ms)', r2(msHud / 300));
     const parImage = records / 300, tirs = jeu.compteurs().tirs - tirs0;
     t.note('L-G écritures par image', r2(parImage));
-    const res = [[`${r2(parImage)} écriture(s) DOM par image (≤ 2)`, parImage <= 2], [`${lectures} lecture(s) de mise en page dans maj (0)`, lectures === 0],
+    const res = [[`${r2(parImage)} écriture(s) DOM par image (≤ 2)`, parImage <= 2], [`HUD ${r2(msHud / 300)} ms par image`, true], [`${lectures} lecture(s) de mise en page dans maj (0)`, lectures === 0],
       [`${tirs} tirs pendant la mesure (une manche qui se bat)`, tirs >= 10], [`phase ${p.phase}`, p.phase === 'manche']];
     return bilan(res, '≤ 2 écritures DOM par image en moyenne sur 300 images de manche à 7 bots ; 0 lecture de mise en page dans maj');
   }, { delai: 120 });

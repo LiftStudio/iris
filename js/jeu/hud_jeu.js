@@ -193,6 +193,7 @@ export class HudJeu {
     this.ePlaque = N('hj-plaque', R, '');
     this.eAnnonce = N('hj-annonce', R, ''); this.eAnnonce.id = 'hud-annonce';
     this.eAlerte = N('hj-alerte', R, '');
+    this.eAstuce = N('hj-astuce', R, '');
     // la présentation et le décompte
     this.ePhase = N('hj-phase'); this.ePhaseT = elt('div', 'hj-phase-t', this.ePhase, ''); this.ePhaseS = elt('div', 'hj-phase-s', this.ePhase, ''); this.ePhase.hidden = true;
     this.eChiffre = N('hj-chiffre', R, '');
@@ -291,8 +292,11 @@ export class HudJeu {
     if (e.par === L.id && e.cible !== L.id) {
       this._marque = { t0: this.t, tete: !!e.tete, elim: true, rouge: true };
       const prop = !!(v && (v.prop || v.role === 'prop'));
-      this._pousserXp(prop ? '+100' : '+100', prop ? 'PROP TROUVÉ' : TX.elim, 'elim');
-      if (e.tete && !prop) this._pousserXp('+25', 'TIR À LA TÊTE', 'bonus');
+      // (les règles s'abonnent à 'elim' AVANT le HUD : leurs `score` de cette élimination sont déjà arrivés — leurs points,
+      // sinon les 100 du barème ; le « +25 » de la tête s'il n'est pas venu d'elles)
+      const pts = this._ptsElim && this._ptsElim.t === this.t ? this._ptsElim.points : 100;
+      this._pousserXp('+' + pts, prop ? 'PROP TROUVÉ' : TX.elim, 'elim');
+      if (e.tete && !prop && this._teteT !== this.t) this._pousserXp('+25', 'TIR À LA TÊTE', 'bonus');
     } else if (Array.isArray(e.assists) && e.assists.includes(L.id)) this._pousserXp('+50', 'ASSISTANCE', 'bonus');
     if (e.cible === L.id) {
       const dist = k && k !== L ? Math.hypot(k.pos.x - L.pos.x, k.pos.y - L.pos.y, k.pos.z - L.pos.z) : null;
@@ -302,7 +306,9 @@ export class HudJeu {
     }
   }
   _score(e) {
-    const L = this._local(); if (!L || e.id !== L.id || !e.points || e.raison === 'elim') return;
+    const L = this._local(); if (!L || e.id !== L.id || !e.points) return;
+    if (e.raison === 'elim') { this._ptsElim = { t: this.t, points: e.points }; return; }
+    if (e.raison === 'tete') this._teteT = this.t;
     const lib = RAISONS[e.raison] || String(e.raison || '').toUpperCase();
     this._pousserXp((e.points > 0 ? '+' : '−') + Math.abs(e.points), lib, e.points > 0 ? 'bonus' : 'malus');
   }
@@ -649,6 +655,9 @@ export class HudJeu {
       C.v('ank', r2(age < 0.12 ? 0.7 + 0.38 * age / 0.12 : age < 0.2 ? 1.08 - 0.08 * (age - 0.12) / 0.08 : 1));
       C.v('any', r1(age > R.duree - 0.4 ? -20 * (age - (R.duree - 0.4)) / 0.4 : 0));
     } else { C.v('ano', 0); C.v('ank', 1); C.v('any', 0); }
+    // l'astuce des règles (`hud.astuce`), tant qu'elles la donnent
+    const ast = typeof H.astuce === 'string' ? H.astuce : H.astuce && H.astuce.texte ? H.astuce.texte : '';
+    texte(this.eAstuce, ast); cacher(this.eAstuce, !ast);
     // la petite ligne d'alerte (qualité automatique)
     const Al = this._alerte, alv = !!Al && this.t - Al.t0 < 3;
     texte(this.eAlerte, alv ? Al.texte : ''); classe(this.eAlerte, 'bad', alv && Al.cls === 'bad');

@@ -123,6 +123,8 @@ body:not(.combat) #voile-flash, body:not(.combat) #voile-cachette { display: non
 .hj-annonce.go { color: #7dffa8; font-size: 64px; } .hj-annonce.prop { color: #a9ff7a; }
 .hj-alerte { left: 0; right: 0; top: calc(14px + var(--sa-t, 0px)); text-align: center; opacity: var(--alo, 0); font: 500 13px/1.3 Oswald, sans-serif; letter-spacing: .05em; color: var(--or); text-shadow: var(--ombre); }
 .hj-alerte.bad { color: #ff8a80; }
+.hj-astuce { left: 50%; bottom: calc(108px + var(--sa-b, 0px)); transform: translateX(-50%); max-width: min(560px, calc(100vw - 40px)); text-align: center; padding: 5px 12px;
+  background: rgba(5,7,11,.55); border-left: 2px solid var(--or); font: 400 13px/1.35 system-ui, -apple-system, 'Segoe UI', sans-serif; color: #e8ecf3; text-shadow: var(--ombre); }
 .hj-phase { left: 0; right: 0; top: 30%; text-align: center; opacity: var(--pho, 0); transform: scale(var(--phk, 1)); padding: 0 16px; }
 .hj-phase-t { display: inline-block; padding: 10px 34px 8px; font: 400 clamp(26px, 6vw, 54px)/1 'Bebas Neue', Impact, sans-serif; letter-spacing: .08em;
   background: linear-gradient(90deg, rgba(5,7,11,0), rgba(5,7,11,.72) 18%, rgba(5,7,11,.72) 82%, rgba(5,7,11,0)); text-shadow: 0 2px 14px rgba(0,0,0,.8);
