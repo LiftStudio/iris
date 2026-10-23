@@ -7,8 +7,9 @@ Branche `lot/L-M` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-M`, depuis `socle
 EN COURS. Code relu contre §§ 3, 4.5.19, 5.3, 5.5.14 et le diff `socle...lot/L-M` ; `verifier_proprietaires` OK 7 fichiers.
 Corrigé (commit `L-M relecture : …`) : `appliquer` levait jamais un verrou (état d'avant un verrou → porte restée fermée) ;
 ordre des portes pilotées après un verrou ; `_dedans` dès la balade gardée ; rubalise envoyée segment par segment.
-Reste : rejouer `&lot=L-M` et `&lot=S0` (PC, `?tel=1`), jouer (combat, prop hunt), photos — en attente d'un jeton du
-navigateur (les trois pris à 06:55).
+Reste : rejouer `&lot=L-M` et `&lot=S0` (PC, `?tel=1`), jouer (combat, prop hunt), photos.
+Repreneur de la relecture (session coupée après `7adb331`) : rubalise de la rue en travées, test 1 compte `monde.ecarts`
+(`950a2ae`) ; jeton_3 pris à 08:51 (attendu depuis 08:06), serveur 8144.
 
 ## Où j'en suis (constructeur)
 
