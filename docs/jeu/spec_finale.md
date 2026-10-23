@@ -1206,7 +1206,7 @@ sur `avaturn_body` ET `avaturn_look`, géométrie COPIÉE), **ancres d'épaule p
 sous le bord bas de la caméra de l'arme, à ≤ 0,45 m des prises dans toutes les poses ; départ D (0,20 ; −0,26 ; −0,05),
 G (−0,02 ; −0,25 ; −0,30) en repère caméra), `ikBras` + `plierDoigts` sur les prises (poignée, garde-main, pompe, deux
 mains, couteau, grenade, chargeur). Poses (repère caméra) : hanche (0,135 ; −0,125 ; −0,32) rot (0 ; 0,035 ; 0) ; visée :
-le repère `visee` sur l'axe à 0,24 m ; sprint (0,06 ; −0,19 ; −0,25) rot (−0,55 ; 0,65 ; 0,35) ; sprint tactique (0,10 ;
+le repère `visee` sur l'axe à 0,24 m (F2 : le FP-12 par son `oeilleton`) ; sprint (F2 : (0,10 ; −0,14 ; −0,30) rot (−0,30 ; 0,65 ; 0,35), proposée par L-V — l'ancienne (0,06 ; −0,19 ; −0,25) rot (−0,55 ; 0,65 ; 0,35) sortait l'arme du champ) ; sprint tactique (0,10 ;
 −0,10 ; −0,30) rot (0,9 ; 0,2 ; −0,4) ; glissade hanche + (−0,02 ; −0,03 ; 0), roulis −0,25 ; franchissement (0,12 ; −0,22 ;
 −0,22) rot (−0,3 ; 0,4 ; 0,45). Ressorts : inertie du regard (−0,0016 × vitesse angulaire, ±3°, ω 18, ζ 0,8), balancement en
 huit (12 mm à f/2, 8 mm à f ; sprint ×2,5 ; visée ×0,1), pas chassé 3°, réception −2,5 cm, recul (§ 3.4), respiration

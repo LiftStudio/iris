@@ -431,8 +431,9 @@ export class Arsenal {
     if (this.rT0 >= 0) { this.cumV -= this.rFait; this.rT0 = -1; this.rFait = 0; this.rTot = 0; }
     this.aV += v * DEG; this.aH += h * DEG; this.cumV += v * DEG;
     // le ressort visuel : le cabré et le piston de la fiche, un roulis d'un côté ou de l'autre, le coup de côté du motif
-    // (F2, demande de L-V : l'aléa du cabré tenu à ± 5 %, celui du critère des pics)
-    this.rvV += M.cabre * IMPULSION * (0.95 + 0.1 * R.next());
+    // (F2, demande de L-V : l'aléa du cabré tenu à ± 4 % — le critère des pics veut ± 5 %, la crête vue à l'image près en garde
+    // la marge)
+    this.rvV += M.cabre * IMPULSION * (0.96 + 0.08 * R.next());
     this.psV += M.piston * IMPULSION;
     this.roV += (R.next() < 0.5 ? -1 : 1) * M.roulis * IMPULSION * (0.5 + 0.5 * R.next());
     this.rhV += h * 2 * IMPULSION;

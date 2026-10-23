@@ -23,7 +23,10 @@ import { ARMES } from './armes.js';
 export const POSES_VUE = {
   hanche: { p: [0.135, -0.125, -0.32], r: [0, 0.035, 0], bal: 1 },
   visee: { p: [0, 0, -0.24], r: [0, 0, 0], repere: 'visee', bal: 0.1 },
-  sprint: { p: [0.06, -0.19, -0.25], r: [-0.55, 0.65, 0.35], bal: 2.5 },
+  // (F2, demande de L-V : la pose du § 4.5.9, (0,06 ; −0,19 ; −0,25) rot (−0,55 ; 0,65 ; 0,35), sortait l'arme du champ — 0 à
+  // 7 % de ses sommets dans le cône de vue avec les vraies armes de L-W ; celle-ci en garde 67 à 79 %, l'arme baissée et
+  // tournée vers la gauche, comme dans Call of Duty)
+  sprint: { p: [0.10, -0.14, -0.30], r: [-0.30, 0.65, 0.35], bal: 2.5 },
   sprintTact: { p: [0.10, -0.10, -0.30], r: [0.9, 0.2, -0.4], bal: 2.5 },
   glisse: { p: [0.115, -0.155, -0.32], r: [0, 0.035, -0.25], bal: 0.3 },
   franchit: { p: [0.12, -0.22, -0.22], r: [-0.3, 0.4, 0.45], bal: 0.5 },
@@ -196,7 +199,8 @@ function fp12() {
   // cartouches de la recharge en cours)
   const P = ARMES.fp12.chargeur;
   const rechargeTact = enchainer([debut, cartouche, fin]);
-  const rechargeVide = enchainer([debut, ...Array(P).fill(cartouche), fin, pompe]);
+  // (F2 : début, cartouches, pompe, fin — l'ordre de l'arsenal, demande de L-V)
+  const rechargeVide = enchainer([debut, ...Array(P).fill(cartouche), pompe, fin]);
   return { debut, cartouche, fin, pompe, apresTir, rechargeTact, rechargeVide };
 }
 // des pistes jouées BOUT À BOUT (les clés décalées ; à une jointure, la 1re clé de la suivante remplace la dernière de la

@@ -10,7 +10,7 @@
 // L-W ne sont pas là (le socle n'a qu'une boîte par arme). Elle ne sert qu'aux tests et aux photos.
 import * as THREE from 'three';
 import { REPERES } from '../modeles_armes.js';
-import { Viewmodel, CHAMP_VUE } from '../viewmodel.js';
+import { Viewmodel, CHAMP_VUE, repereVisee } from '../viewmodel.js';
 import { CHRONOS, VOIES, evaluer } from '../anim_vue.js';
 import { ARMES } from '../armes.js';
 
@@ -269,7 +269,7 @@ export default function (jeu) {
     for (const id of ARMES_VUE) {
       calmer(vm, etat({ arme: id, visee: 1 }), 120);
       cam.updateMatrixWorld();
-      const v = new THREE.Vector3(...REPERES[id].visee).applyMatrix4(vm.racine.matrixWorld).applyMatrix4(cam.matrixWorldInverse);
+      const v = new THREE.Vector3(...repereVisee(id)).applyMatrix4(vm.racine.matrixWorld).applyMatrix4(cam.matrixWorldInverse);
       const a = cam.aspect; cam.aspect = 1280 / 720; cam.updateProjectionMatrix();
       const q = v.clone().project(cam); cam.aspect = a; cam.updateProjectionMatrix();
       const px = q.x * 640, py = q.y * 360;

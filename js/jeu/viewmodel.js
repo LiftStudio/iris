@@ -69,25 +69,33 @@ const prise = (o, p, f, n, doigts, index = doigts, pouce = null) => ({ o, p, f: 
 const POUCE_TENU = [0.8, 0.8, 0.6];
 const POIGNEE = (o = [0, 0, 0]) => prise(o, [0.024, -0.075, 0.062], [-0.10, -0.30, -0.95], [-1, 0.05, 0], [1.05, 1.25, 0.9], [0.30, 0.45, 0.35], POUCE_TENU);
 const GARDE = (o) => prise(o, [-0.022, -0.014, 0.046], [0.42, 0.30, -0.86], [0.25, 1, 0.12], [0.85, 1.05, 0.75], [0.55, 0.6, 0.45], [0.3, 0.2, 0.1]);
+// (F2, demande de L-W : le point tenu du CHARGEUR est le repère `saisieChargeur` des modèles de L-W — le flanc gauche du
+// chargeur, au tiers bas — : les points d'avant tombaient 2 à 4,5 cm sous les vrais chargeurs ; le poignet garde son décalage)
+const SAISIE = (id, repli) => (REPERES[id] && REPERES[id].saisieChargeur) || repli;
+// (le levier du TP-50 tenu par sa boule, le jumeau mobile de L-W : une prise de passage, remplie à chaque image)
+const PRISE_LEVIER = { o: [0, 0, 0], p: null, f: null, n: null };
+// LE REPÈRE DE VISÉE d'une arme (F2, demande de L-W : le FP-12 vise par son `oeilleton`, l'anneau arrière sur la ligne de mire
+// de la perle — par la perle, à 0,24 m, l'arme flottait 66 cm trop loin et la crosse était loin derrière l'œil)
+export const repereVisee = (id) => (REPERES[id] && (REPERES[id].oeilleton || REPERES[id].visee)) || [0, 0.06, 0];
 export const PRISES = {
   fa24: { d: POIGNEE(), g: GARDE(REPERES.fa24.mainG),
-    chargeur: prise([0, -0.17, -0.14], [-0.045, -0.19, -0.075], [0.25, 0.35, -0.90], [1, 0.1, 0.1], [0.9, 1.0, 0.8]),
+    chargeur: prise(SAISIE('fa24', [0, -0.17, -0.14]), [-0.045, -0.19, -0.075], [0.25, 0.35, -0.90], [1, 0.1, 0.1], [0.9, 1.0, 0.8]),
     arretoir: prise([-0.028, 0.005, -0.09], [-0.075, -0.035, -0.03], [0.55, 0.40, -0.73], [0.9, 0, 0.3], [0.3, 0.3, 0.2]) },
   pm9: { d: POIGNEE(), g: GARDE(REPERES.pm9.mainG),
-    chargeur: prise([0, -0.15, -0.08], [-0.045, -0.17, -0.02], [0.25, 0.35, -0.90], [1, 0.1, 0.1], [0.9, 1.0, 0.8]),
+    chargeur: prise(SAISIE('pm9', [0, -0.15, -0.08]), [-0.045, -0.17, -0.02], [0.25, 0.35, -0.90], [1, 0.1, 0.1], [0.9, 1.0, 0.8]),
     arretoir: prise([-0.026, 0.01, -0.06], [-0.07, -0.03, 0.0], [0.55, 0.40, -0.73], [0.9, 0, 0.3], [0.3, 0.3, 0.2]) },
   // (la pompe : la main gauche suit sa course, 9 cm vers la crosse ; « chargeur » = la fenêtre où l'on pousse les cartouches)
   fp12: { d: POIGNEE(), g: GARDE(REPERES.fp12.mainG), course: REPERES.fp12.courseMainG || 0.09,
     chargeur: prise([0, -0.05, -0.10], [-0.035, -0.10, -0.04], [0.3, 0.55, -0.78], [0.3, 1, 0], [0.7, 0.8, 0.6]),
     arretoir: prise([0, -0.05, -0.10], [-0.035, -0.10, -0.04], [0.3, 0.55, -0.78], [0.3, 1, 0], [0.7, 0.8, 0.6]) },
   tp50: { d: POIGNEE(), g: GARDE(REPERES.tp50.mainG),
-    chargeur: prise([0, -0.10, -0.12], [-0.045, -0.13, -0.06], [0.25, 0.35, -0.90], [1, 0.1, 0.1], [0.9, 1.0, 0.8]),
+    chargeur: prise(SAISIE('tp50', [0, -0.10, -0.12]), [-0.045, -0.13, -0.06], [0.25, 0.35, -0.90], [1, 0.1, 0.1], [0.9, 1.0, 0.8]),
     arretoir: prise([0.05, 0.03, 0.02], [-0.02, -0.03, 0.06], [0.6, 0.45, -0.66], [0.8, 0.2, 0.4], [0.5, 0.5, 0.4]),
     levier: prise([0.05, 0.03, 0.025], [0.075, -0.035, 0.085], [-0.35, 0.40, -0.85], [-0.55, 0.75, 0.1], [0.8, 1.0, 0.8], [0.6, 0.8, 0.6]) },
   // (le pistolet : poignée inclinée de 15°, la main gauche referme la droite)
   p17: { d: prise([0, 0, 0], [0.022, -0.072, 0.050], [-0.10, -0.24, -0.96], [-1, 0.05, 0], [1.05, 1.25, 0.9], [0.30, 0.45, 0.35], POUCE_TENU),
     g: prise(REPERES.p17.mainG, [-0.050, -0.055, 0.035], [0.55, -0.05, -0.83], [0.95, 0.2, 0.1], [1.0, 1.1, 0.8], [0.9, 1.0, 0.7], [0.2, 0.1, 0.1]),
-    chargeur: prise([0, -0.12, 0.03], [-0.04, -0.16, 0.05], [0.3, 0.6, -0.74], [0.9, 0.2, 0.1], [0.9, 1.0, 0.8]),
+    chargeur: prise(SAISIE('p17', [0, -0.12, 0.03]), [-0.04, -0.16, 0.05], [0.3, 0.6, -0.74], [0.9, 0.2, 0.1], [0.9, 1.0, 0.8]),
     arretoir: prise([-0.016, 0.03, -0.02], [-0.06, -0.01, 0.03], [0.55, 0.40, -0.73], [0.9, 0, 0.3], [0.3, 0.3, 0.2]) },
 };
 // la main tenant un objet (couteau, grenade) : le repère de base des voies dr* (doigts vers l'avant, paume vers la gauche)
@@ -124,6 +132,7 @@ const amortir = (x, c, tau, dt) => (dt > 0 ? c + (x - c) * Math.exp(-dt / tau) :
 const borne = (x, a, b) => (x < a ? a : x > b ? b : x);
 
 const _v = new THREE.Vector3(), _w = new THREE.Vector3(), _u = new THREE.Vector3(), _f = new THREE.Vector3(), _n = new THREE.Vector3();
+const _vL = new THREE.Vector3();
 const _q = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _e = new THREE.Euler(0, 0, 0, 'YXZ'), _m = new THREE.Matrix4(), _m2 = new THREE.Matrix4();
 const _pole = new THREE.Vector3(), _P = new THREE.Vector3(), _R = new THREE.Vector3(), _x = new THREE.Vector3();
 
@@ -360,7 +369,7 @@ export class Viewmodel {
     let wS = P.sprint * ks, wT = P.sprintTact * ks, wG = P.glisse, wF = P.franchit;
     const somme = wS + wT + wG + wF; if (somme > 1) { wS /= somme; wT /= somme; wG /= somme; wF /= somme; }
     const H = (POSES_ARMES[id] && POSES_ARMES[id].hanche) || POSES_VUE.hanche, kv = e.visee * (1 - wF);     // (la courbe 1 − (1 − t)³ est celle de l'Arsenal, § 3.2 : pas une 2e ici)
-    const vis = REPERES[id] && REPERES[id].visee ? REPERES[id].visee : [0, 0.06, 0];
+    const vis = repereVisee(id);
     for (let i = 0; i < 3; i++) {
       let p = H.p[i] + wS * (POSES_VUE.sprint.p[i] - H.p[i]) + wT * (POSES_VUE.sprintTact.p[i] - H.p[i]) + wG * (POSES_VUE.glisse.p[i] - H.p[i]) + wF * (POSES_VUE.franchit.p[i] - H.p[i]);
       let r = H.r[i] + wS * (POSES_VUE.sprint.r[i] - H.r[i]) + wT * (POSES_VUE.sprintTact.r[i] - H.r[i]) + wG * (POSES_VUE.glisse.r[i] - H.r[i]) + wF * (POSES_VUE.franchit.r[i] - H.r[i]);
@@ -432,11 +441,13 @@ export class Viewmodel {
       if (id === 'fp12') {
         const r = f.recharge, D = e.duree ?? (r.debut + r.parCartouche * 7 + r.fin), vide = !e.tactique;
         const nC = Math.max(0, Math.round((D - r.debut - r.fin - (vide ? r.pompe : 0)) / r.parCartouche));
-        const tc = e.t - r.debut, tf = tc - nC * r.parCartouche, tp = tf - r.fin;
+        // (F2, demande de L-V : l'ordre de l'arsenal de L-A — début, cartouches, POMPE à vide, fin —, celui de ses événements et
+        // des sons de L-H : la pompe commence avec la dernière cartouche entrée)
+        const tc = e.t - r.debut, tp = tc - nC * r.parCartouche, tf = tp - (vide ? r.pompe : 0);
         if (tc < 0) { cle = 'fp12.debut'; P = C.debut; t = e.t; }
-        else if (tf < 0) { cle = 'fp12.cartouche'; P = C.cartouche; t = tc % r.parCartouche; }
-        else if (tp < 0 || !vide) { cle = 'fp12.fin'; P = C.fin; t = tf; }
-        else { cle = 'fp12.pompe'; P = C.pompe; t = tp; }
+        else if (tp < 0) { cle = 'fp12.cartouche'; P = C.cartouche; t = tc % r.parCartouche; }
+        else if (vide && tf < 0) { cle = 'fp12.pompe'; P = C.pompe; t = tp; }
+        else { cle = 'fp12.fin'; P = C.fin; t = tf; }
       } else { P = e.tactique ? C.rechargeTact : C.rechargeVide; cle = id + (e.tactique ? '.tact' : '.vide'); t = e.t; }
     } else if (e.et === 'change' && C) {
       const de = this._chg.de || e.arme, fO = ARMES[de] || f;
@@ -558,7 +569,17 @@ export class Viewmodel {
     const cD = this._cibleD, cG = this._cibleG;
     this._priseMonde(PR.d, A, cD);
     const dl = Gv[ix.dl] * w;
-    if (dl > 0 && PR.levier) { this._priseMonde(PR.levier, A, _T1); melanger(cD, _T1, dl); }
+    if (dl > 0 && PR.levier) {
+      // (F2, demande de L-W : la main droite tient la BOULE du levier — le jumeau mobile `saisieLevier` de L-W, qui suit l'os de
+      // la culasse levée puis reculée —, et non un point fixe à 3,3 cm d'elle, resté au repos pendant le réarmement)
+      const RM = this.courante && this.courante.userData.reperesMobiles, J = RM && RM.saisieLevier;
+      let pr = PR.levier;
+      if (J) {
+        J.updateWorldMatrix(true, false); _vL.setFromMatrixPosition(J.matrixWorld); A.worldToLocal(_vL);
+        pr = PRISE_LEVIER; pr.o[0] = _vL.x; pr.o[1] = _vL.y; pr.o[2] = _vL.z; pr.p = PR.levier.p; pr.f = PR.levier.f; pr.n = PR.levier.n;
+      }
+      this._priseMonde(pr, A, _T1); melanger(cD, _T1, dl);
+    }
     const dk = M[iM.dk] * wm;
     if (dk > 0) {
       _e.set(M[iM.drx], M[iM.dry], M[iM.drz], 'YXZ'); _q.setFromEuler(_e);
