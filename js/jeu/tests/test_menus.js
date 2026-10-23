@@ -54,9 +54,12 @@ export default function (jeu) {
     return game.partie;
   };
   // la fin d'une partie de combat, par ses règles (le score cible atteint)
+  // (F2 : les VRAIES règles de L-E passent par « fin_manche » — le verdict, quelques secondes — avant « fin » : on avance
+  // jusqu'à la fin, 10 s au plus)
   const finir = (p) => {
     if (p.scores) p.scores.A = p.scoreCible; else if (p.local) p.local.stats.elims = p.scoreCible;
     jeu.avancer(PAS * 3);
+    for (let i = 0; i < 1200 && game.partie === p && p.phase !== 'fin'; i++) p.pas(PAS);
   };
 
   // 1. L'ACCUEIL : les six portes dans l'ordre, le focus manette sur BALADE, la croix et A jusqu'à chacune, B qui revient
@@ -355,7 +358,9 @@ export default function (jeu) {
     }
     if (place) { jeu.teleporter(H.id, place[0], place[1], place[2]); jeu.teleporter(E.id, place[0] + 2.5, place[3], place[2]); jeu.tirer(H.id, { n: 2, cible: E.id }); }
     const precF = +((menu().bilan(pf).chiffres.find(([n]) => n === 'précision') || [])[1] || '').replace(/\D/g, '');
-    res.push([`précision au FP-12 : ${precF} % (${H.stats.touches} touches pour ${H.stats.tirs} tirs)`, !!place && H.stats.touches > H.stats.tirs && precF > 0 && precF <= 100]);
+    // (F2 : les stats de l'acteur comptent maintenant une touche par COUP — js/jeu/partie.js, demande de L-U —, plus jamais
+    // plus de touches que de tirs)
+    res.push([`précision au FP-12 : ${precF} % (${H.stats.touches} touches pour ${H.stats.tirs} tirs)`, !!place && H.stats.touches <= H.stats.tirs && H.stats.touches > 0 && precF > 0 && precF <= 100]);
     let p = await combatCourt();
     finir(p);
     res.push([`écran de fin (${$('.fj-titre', F)?.textContent} · ${$('.fj-sous', F)?.textContent})`, vu(F) && !vu($('#overlay')) && game.partie === p && p.phase === 'fin' && /VICTOIRE/.test($('.fj-titre', F).textContent)]);
