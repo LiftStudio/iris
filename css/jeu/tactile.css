@@ -1,5 +1,58 @@
 /* =====================================================================
-   LES COMMANDES TACTILES DU JEU — socle S0 (22/10), rempli par le lot L-I
+   LES COMMANDES TACTILES DU JEU — lot L-I (23/10/2026 ; spec §§ 3.2, 4.5.18, 5.5.13)
    =====================================================================
-   Les boutons de partie au doigt (combat : TIR en rôle mixte, VISER, SAUT, ACCROUPI, RECHARGER, ARME, GRENADE, TACTIQUE,
-   COUTEAU, SCORES, II ; prop : DÉGUISER, VERROU, FIGER, PROVOQUER…). Vide au squelette. */
+   Les boutons de partie au doigt, façon CoD Mobile (js/touch.js, emplacements `jeu`) : combat — TIR en rôle mixte (on vise en
+   glissant dessus), VISER (bascule), SAUT, ACCROUPI (en sprint : la glissade), RECHARGER, ARME, GRENADE, FLASH, COUTEAU,
+   SCORES, II ; chasseur — SCAN en plus, ni flash ni couteau ; prop — DÉGUISER, FIGER, VERROU, PROVOQUER (long : la roue).
+   Tout est placé en JS (left / top / width / height) ; ici, seulement l'allure, en plus de celle de css/style.css (.tc-btn,
+   .tc-xl, .tc-l, .tc-u). Les couleurs : le tir en rouge, le prop en vert (EQUIPES.props), la bascule allumée en orange
+   (l'accent du jeu). Aucune animation sous `prefers-reduced-motion`. */
+
+/* les petits boutons de la partie (RECHARGER, ARME, GRENADE, FLASH, COUTEAU, SCAN) : sombres, bord plus net que les « u » */
+.tc-btn.tc-s { background: rgba(10, 13, 20, .58); border-color: rgba(255, 255, 255, .5); }
+
+/* TIR : le gros bouton du pouce droit, en rouge ; tenu, ou pendant le TIR AUTO (js/jeu/assistance_visee.js), plein */
+.tc-btn[data-slot="tir"][data-action="tir"] { background: rgba(214, 58, 48, .5); border-color: rgba(255, 255, 255, .7); }
+.tc-btn[data-slot="tir"][data-action="tir"].on,
+.tc-btn[data-slot="tir"][data-action="tir"].auto { opacity: 1; background: rgba(255, 59, 48, .9); border-color: #fff; color: #fff; }
+.tc-btn[data-slot="tir"].auto { animation: tc-tir-auto .24s ease-in-out infinite alternate; }
+@keyframes tc-tir-auto { from { box-shadow: 0 0 0 0 rgba(255, 59, 48, .55); } to { box-shadow: 0 0 0 7px rgba(255, 59, 48, 0); } }
+
+/* le PROP : DÉGUISER en vert (la couleur des props), FIGER / VERROU en bleu nuit comme les « l » */
+.tc-btn[data-action="deguiser"] { background: rgba(126, 217, 87, .48); border-color: rgba(255, 255, 255, .7); }
+.tc-btn[data-action="deguiser"].on { background: rgba(126, 217, 87, .92); color: #0b0e14; }
+/* PROVOQUER : l'appui long ouvre la roue — le bouton s'allume tant qu'elle est ouverte */
+.tc-btn[data-action="provoquer"] { border-color: rgba(126, 217, 87, .8); }
+.tc-btn.roue { opacity: 1; transform: scale(1.08); background: rgba(126, 217, 87, .92); border-color: #fff; color: #0b0e14;
+  box-shadow: 0 0 0 5px rgba(126, 217, 87, .32), 0 3px 10px rgba(0, 0, 0, .35); }
+
+/* LA BASCULE ALLUMÉE (VISER tenu au doigt ; ACCROUPI quand l'accroupi est « maintenu ») */
+.tc-btn.verrouille { opacity: 1; background: rgba(240, 164, 23, .9); border-color: #fff; color: #0b0e14; }
+.tc-btn.verrouille .tc-lbl { text-shadow: none; }
+
+/* LE COMPTE d'une grenade (data-n), en pastille au bas du rond ; à 0, le bouton s'éteint (il reste à sa place) */
+.tc-btn[data-n]::after { content: attr(data-n); position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%);
+  min-width: 14px; height: 14px; padding: 0 3px; box-sizing: border-box; border-radius: 7px; background: rgba(11, 14, 20, .85);
+  font: 600 10px/14px Oswald, system-ui, sans-serif; letter-spacing: 0; color: #fff; text-align: center; pointer-events: none; }
+.tc-btn.vide { filter: grayscale(1) brightness(.7); }
+.tc-btn.vide::after { color: #ff8a80; }
+
+/* LE SPRINT VERROUILLÉ : le socle s'allume et un double chevron monte au-dessus de lui ; pouce levé, il reste allumé tant
+   que Haythem court tout seul */
+.tc-stick.verrou { opacity: var(--tc-op); border-color: var(--accent, #f0a417);
+  box-shadow: 0 0 0 3px rgba(240, 164, 23, .55), 0 0 26px rgba(240, 164, 23, .6); }
+.tc-stick.verrou::after { content: '︽'; position: absolute; left: 50%; top: -22px; transform: translateX(-50%);
+  font: 700 18px/1 system-ui, sans-serif; color: var(--accent, #f0a417); text-shadow: 0 1px 4px rgba(0, 0, 0, .7);
+  animation: tc-verrou .5s ease-in-out infinite alternate; }
+@keyframes tc-verrou { from { transform: translate(-50%, 2px); } to { transform: translate(-50%, -3px); } }
+
+/* RECHARGER qui bat : le chargeur est vide, il reste des balles */
+.tc-btn.urgent { opacity: 1; border-color: var(--accent, #f0a417); color: var(--accent, #f0a417); animation: tc-urgent .45s ease-in-out infinite alternate; }
+@keyframes tc-urgent { from { box-shadow: 0 0 0 0 rgba(240, 164, 23, .6); } to { box-shadow: 0 0 0 6px rgba(240, 164, 23, 0); } }
+
+/* SCORES dans la rangée du haut, comme la pause */
+.tc-btn[data-slot="scores"] { letter-spacing: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-btn[data-slot="tir"].auto, .tc-stick.verrou::after, .tc-btn.urgent { animation: none; }
+}

@@ -16,12 +16,27 @@
 //   « bloque » : le jeu est bloqué sans écran à piloter — on ne transmet rien.
 // Un bouton tenu au moment où l'on change de contexte est ignoré jusqu'à ce qu'on le lâche : le A qui valide
 // « Reprendre » ne doit pas faire sauter Haythem en retombant dans la balade.
+//
+// EN PARTIE (23/10/2026, lot L-I ; spec §§ 3.2, 4.5.18) : le stick droit vise à 3,6 rad/s (sensibilité 1, courbe ^1,8, même
+// vitesse sur les deux axes), avec l'ACCÉLÉRATION DE VIRAGE d'un jeu de tir (poussé au-delà de 0,9 pendant 0,25 s : × 1,35 en
+// lacet, atteint en 0,3 s), × 0,55 en visée, × le RALENTISSEMENT de l'aide à la visée (js/jeu/assistance_visee.js
+// facteurStick), entre les bornes de la partie (game.bornesTangage : ± 1,48, un prop −0,7 / 1,25). La ROUE DES PROVOCATIONS
+// ouverte (LB tenu, Haythem prop) : le stick droit la pointe (partie.mouvementStick), la caméra ne tourne pas. Le calque
+// « CLIQUE POUR JOUER » : A ou START le ferment et la partie repart SANS capture du pointeur. (L3 : le sprint, que
+// lireCommande verrouille et dont le double appui fait le sprint tactique — js/jeu/entrees_jeu.js.) Les VIBRATIONS viennent des ÉVÉNEMENTS de la partie seulement (son tir :
+// faible, 40 ms ; une touche reçue : forte, 120 ms ; une élimination, une annonce : une seule fois) — plus aucune par
+// `hoops-feedback`, que la partie n'envoie plus (pas de double vibration). La balade, elle, ne change pas d'une ligne.
 import { settings, entree, PAD_BOUTONS, actionKey } from './settings.js';
 import { NavMenus } from './manette_menus.js';
+import { facteurStick } from './jeu/assistance_visee.js';
 
 // ---- aides à l'écran quand la dernière entrée est la manette (Game.lobbyHint les demande) ----
+// (23/10 : en partie, celle du profil de la partie — combat ou prop hunt —, avec ses boutons à elle)
 export const manetteActive = () => entree.manette;
 export function aideBalade() {
+  const P = typeof window !== 'undefined' && window.__game && window.__game.partie ? window.__game.partie.profil : 'balade';
+  if (P === 'combat') return `stick droit = viser · ${actionKey('tir')} = tirer · ${actionKey('visee')} = viser · ${actionKey('sprint')} = sprint (deux fois : tactique) · ${actionKey('accroupi')} = accroupi (en sprint : glissade) · ${actionKey('jump')} = sauter · ${actionKey('recharger')} = recharger · ${actionKey('armeSuiv')} = arme · ${actionKey('letale')} = grenade · ${actionKey('tactique')} = flash · ${actionKey('couteau')} = couteau · ${actionKey('scores')} = scores`;
+  if (P === 'prop') return `stick droit = caméra · ${actionKey('deguiser')} = devenir le meuble visé · ${actionKey('figer')} = se figer · ${actionKey('verrou')} = verrouiller le cap · ${actionKey('provoquer')} tenu = provocations (stick droit) · ${actionKey('provocVite')} = la dernière · ${actionKey('jump')} = sauter · ${actionKey('scores')} = scores`;
   return `stick droit = caméra · ${actionKey('camera')} = vue (3e / épaule / 1re personne / photo) · stick à moitié ou ${actionKey('walk')} = marcher · ${actionKey('sprint')} = sprint · ${actionKey('jump')} = sauter · ${actionKey('emote')} = emotes · ${actionKey('phone')} = téléphone`;
 }
 
@@ -31,9 +46,20 @@ const EXPO_MARCHE = 1.25;                         // courbe du stick gauche : un
 const EXPO_CAMERA = 1.8;                          // courbe du stick droit : précis près du centre, rapide à fond
 const CAM_LACET = 2.9, CAM_TANGAGE = 1.6;         // vitesse de la caméra stick à fond (rad/s, sensibilité 1)
 const ACTIVITE = 0.3;                             // poussée de stick qui compte comme « on joue à la manette »
-const I_LT = 6, I_RT = 7, I_HOME = 16;
+const I_A = 0, I_LT = 6, I_RT = 7, I_START = 9, I_HOME = 16;
 // ce que la roue des emotes garde pour elle quand elle est ouverte (le reste va au jeu : LB la referme, START…)
 const ROUE_GARDE = new Set(['Pad:A', 'Pad:B', 'Pad:Up', 'Pad:Down', 'Pad:Left', 'Pad:Right']);
+// (23/10, lot L-I) LA MANETTE EN PARTIE — les valeurs du § 3.2 de la spécification
+export const STICK_JEU = {
+  vitesse: 3.6,                                   // rad/s stick à fond, sensibilité 1 (lacet ET tangage)
+  accel: { seuil: 0.9, attente: 0.25, montee: 0.3, gain: 1.35 },   // accélération de virage (lacet)
+  visee: 0.55,                                    // en visée (entre les deux selon la visée de l'arme)
+};
+// [fort, faible, ms] par événement de la partie (Haythem) — jamais plus de 0,6 en fort ni 200 ms, comme en balade
+export const VIBRATIONS_JEU = {
+  tir: [0, 0.35, 40], touche: [0.5, 0.8, 120], elim: [0.3, 0.5, 80], annonce: [0.15, 0.3, 60],
+  explosion: [0.6, 0.45, 200], flash: [0.25, 0.35, 150],
+};
 
 // Famille de la manette, d'après gamepad.id. Chrome écrit par exemple
 // « DualSense Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6) », Firefox « 054c-0ce6-… »,
@@ -116,6 +142,10 @@ export class Manette {
     this.annoncees = new Set();                 // manettes déjà annoncées (une seule notification par branchement)
     this.ctx = null;
     this.nav = new NavMenus(this);
+    // (23/10, lot L-I) en partie : `regardBouge` (le stick droit poussé à cette image : le SUIVI de l'aide à la visée le
+    // lit), le temps passé au-delà de 0,9 (accélération de virage), la partie écoutée (vibrations)
+    this.regardBouge = false; this.accelT = 0;
+    this._partie = null; this._desabonner = null;
 
     // branchement / débranchement. Chrome n'annonce une manette qu'au premier appui : l'événement vaut activité.
     this._on = (e) => {
@@ -132,7 +162,8 @@ export class Manette {
     this._clavier = (e) => { if (e.isTrusted !== false) this.passerAuClavier(); };
     this._souris = (e) => { if (Math.abs(e.movementX || 0) + Math.abs(e.movementY || 0) > 6) this.passerAuClavier(); };
     this._doigt = () => this.passerAuClavier();
-    this._retour = (e) => this.vibrerPour(e.detail || {});
+    // (en partie, aucune vibration par les retours du HUD : celles de la partie viennent de ses événements)
+    this._retour = (e) => { if (this.game && this.game.partie) return; this.vibrerPour(e.detail || {}); };
     window.addEventListener('gamepadconnected', this._on);
     window.addEventListener('gamepaddisconnected', this._off);
     window.addEventListener('keydown', this._clavier, true);
@@ -140,6 +171,10 @@ export class Manette {
     window.addEventListener('mousemove', this._souris, { passive: true });
     window.addEventListener('touchstart', this._doigt, { passive: true, capture: true });
     document.addEventListener('hoops-feedback', this._retour);
+    // (23/10) une partie qui commence ou finit : les vibrations s'abonnent à ses événements dès son entrée (sans attendre la
+    // première scrutation)
+    this._partieChange = () => { const g = this.game || (typeof window !== 'undefined' ? window.__game : null); if (g) this._ecouter(g.partie); };
+    document.addEventListener('iris-partie', this._partieChange);
   }
 
   dispose() {
@@ -150,6 +185,8 @@ export class Manette {
     window.removeEventListener('mousemove', this._souris);
     window.removeEventListener('touchstart', this._doigt, true);
     document.removeEventListener('hoops-feedback', this._retour);
+    document.removeEventListener('iris-partie', this._partieChange);
+    this._ecouter(null);
     this.toutRelacher();
     if (instance === this) instance = null;
   }
@@ -160,7 +197,10 @@ export class Manette {
     this.game = game;
     for (const c of this.aRelacher) this.input.relacher(c);
     this.aRelacher.length = 0;
+    this.regardBouge = false;
     const etaitManette = entree.manette;
+    const partie = game && game.partie;
+    if (partie !== this._partie) this._ecouter(partie);
     const gp = this.lire();
     if (!gp) {
       this.axe = null;
@@ -194,6 +234,12 @@ export class Manette {
     const roue = !!(game && game.wheel && game.wheel.isOpen);
     const ctx = racine ? 'menu' : roue ? 'roue' : this.input.blocked ? 'bloque' : 'jeu';
     const etats = this.etatCodes(bas);
+    // (23/10) LE CALQUE « CLIQUE POUR JOUER » : A ou START le ferment et la partie repart, SANS capture du pointeur ; le
+    // bouton reste muet jusqu'à son relâchement (ni un saut, ni la pause dans la foulée)
+    if (partie && partie.calqueOuvert && fronts.some((i) => i === I_A || i === I_START)) {
+      partie.fermerCalque(true);
+      for (const n of ['Pad:A', 'Pad:Start']) if (etats.get(n)) this.muets.add(n);
+    }
     if (ctx !== this.ctx) this.changerContexte(ctx, etats, g, racine);
     const permis = this.permis(ctx, racine);
 
@@ -203,7 +249,12 @@ export class Manette {
         const amp = courbe(g.m, EXPO_MARCHE), k = amp / g.m;
         this.axe = { x: g.x * k, y: -g.y * k, amp };          // l'axe Y de la manette pointe vers le BAS
       } else this.axe = null;
-      if (ctx === 'jeu' && game && game.mode === 'lobby' && !game.paused && d.m > 0) this.camera(game, d, dt);
+      // (23/10) la roue des PROVOCATIONS (prop hunt) ouverte — ou LB tenu : elle s'ouvre au pas suivant — : le stick droit
+      // la pointe, la caméra ne tourne pas
+      const roueJeu = ctx === 'jeu' && partie && ((partie.roueOuverte && partie.roueOuverte()) || (partie.profil === 'prop' && this.input.down('provoquer')));
+      if (d.m <= STICK_JEU.accel.seuil || roueJeu) this.accelT = 0;
+      if (roueJeu) { if (partie.mouvementStick) partie.mouvementStick(d.x, d.y); }
+      else if (ctx === 'jeu' && game && game.mode === 'lobby' && !game.paused && d.m > 0) this.camera(game, d, dt);
       if (ctx === 'roue') this.roue(game, d, fronts);
     } else this.axe = null;
 
@@ -329,14 +380,52 @@ export class Manette {
     this.input.presser(c); this.aRelacher.push(c);
   }
 
+  // ---- (23/10) les vibrations de la partie ----
+  // Abonnées à SES événements (spec § 4.5.18) : Haythem tire, est touché, élimine ; une annonce ; une explosion ou une flash
+  // près de lui. Une partie neuve : de nouveaux abonnements (Partie.sortir les efface tous).
+  _ecouter(p) {
+    if (this._desabonner) { try { this._desabonner(); } catch (e) { /* partie déjà finie */ } }
+    this._desabonner = null; this._partie = p || null; this.accelT = 0;
+    if (!p || !p.sur) return;
+    const V = VIBRATIONS_JEU, moi = (id) => !!p.local && id === p.local.id, v = (x, k = 1) => this.vibrer(x[0] * k, x[1] * k, x[2]);
+    const L = [
+      p.sur('tir', (e) => { if (moi(e.a)) v(V.tir); }),
+      p.sur('touche', (e) => { if (moi(e.cible)) v(V.touche); }),
+      p.sur('elim', (e) => { if (moi(e.par) && !moi(e.cible)) v(V.elim); }),
+      p.sur('annonce', () => v(V.annonce)),
+      p.sur('explosion', (e) => {
+        const a = p.local; if (!a || !a.vivant || !a.corps) return;
+        const k = 1 - Math.hypot(e.x - a.pos.x, e.y - a.pos.y, e.z - a.pos.z) / 8;
+        if (k > 0) v(V.explosion, k);
+      }),
+      p.sur('flash', (e) => { if (moi(e.cible)) v(V.flash); }),
+    ];
+    this._desabonner = () => { for (const f of L) f(); };
+  }
+
   // ---- stick droit ----
   // En balade : la caméra, exactement comme la souris (lacet, tangage borné, sensibilité et inversion propres au stick).
+  // (23/10) En partie : la visée d'un jeu de tir (cameraJeu).
   camera(game, d, dt) {
+    if (game.partie) { this.cameraJeu(game, d, dt); return; }
     const c = settings.controls.pad, k = c.sens || 1, amp = courbe(d.m, EXPO_CAMERA) / d.m;
     const vx = d.x * amp, vy = d.y * amp;
     game.camYaw -= vx * CAM_LACET * k * dt;
     game.camPitch = borne(game.camPitch + vy * CAM_TANGAGE * k * dt * (c.invertY ? -1 : 1), -0.1, 0.9);
     if (Math.abs(vx) > 0.05) game.camManuT = performance.now();     // même effet qu'un geste de souris (vélo)
+  }
+  // EN PARTIE : 3,6 rad/s à fond (sensibilité du stick, courbe ^1,8, les deux axes), accélération de virage en lacet,
+  // × 0,55 en visée (au prorata de la visée de l'arme), × le ralentissement de l'aide à la visée, bornes de la partie
+  cameraJeu(game, d, dt) {
+    const c = settings.controls.pad, k = c.sens || 1, amp = courbe(d.m, EXPO_CAMERA) / d.m, J = STICK_JEU, A = J.accel;
+    this.accelT = d.m > A.seuil ? this.accelT + dt : 0;
+    const acc = 1 + (A.gain - 1) * borne((this.accelT - A.attente) / A.montee, 0, 1);
+    const a = game.partie.local, vis = a && a.arsenal ? borne(a.arsenal.visee || 0, 0, 1) : 0;
+    const f = (1 - (1 - J.visee) * vis) * facteurStick(game);
+    const [lo, hi] = game.bornesTangage ? game.bornesTangage() : [-1.48, 1.48];
+    game.camYaw -= d.x * amp * J.vitesse * k * acc * f * dt;
+    game.camPitch = borne(game.camPitch + d.y * amp * J.vitesse * k * f * dt * (c.invertY ? -1 : 1), lo, hi);
+    this.regardBouge = true;
   }
   // Roue des emotes ouverte : le stick droit pointe le secteur (même calcul d'angle que la souris), la croix passe
   // au voisin, A lance l'emote, B referme. Relâcher LB sur un secteur le lance aussi (logique de Game).
@@ -394,9 +483,10 @@ export class Manette {
   // ---- notification ----
   // Sur le terrain, dans le HUD existant (le grand texte du centre) ; dès qu'un écran est par-dessus (menus, où le
   // HUD est caché, mais aussi la PAUSE, qui le recouvre et le floute), un bandeau discret en haut de l'écran.
+  // (23/10 : en partie, toujours le bandeau — jamais hud.feedback, qui n'a plus cours en partie, § 4.1 règle 13)
   notifier(txt) {
     const g = this.game;
-    if (g && g.hud && g.hud.el && !g.hud.el.hidden && !this.nav.racine()) { g.hud.feedback(txt.toUpperCase(), 'info'); return; }
+    if (g && !g.partie && g.hud && g.hud.el && !g.hud.el.hidden && !this.nav.racine()) { g.hud.feedback(txt.toUpperCase(), 'info'); return; }
     let el = document.getElementById('pad-toast');
     if (!el) { el = document.createElement('div'); el.id = 'pad-toast'; el.className = 'pad-toast'; document.body.appendChild(el); }
     el.textContent = txt;
