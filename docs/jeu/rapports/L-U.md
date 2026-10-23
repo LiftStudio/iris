@@ -5,7 +5,12 @@ Section de la spécification : § 5.5.11 (contrats § 4.5.16, valeurs § 3, prop
 
 ## Où j'en suis
 
-**FINI** (23/10, 05:56). La définition de « fini » du § 5.1, règle 5 :
+**RELECTURE EN COURS** (23/10, 06:30 ; relecteur sévère, commits « L-U relecture : … », section « Relecture » plus bas) :
+spécification relue (§§ 2.1, 2.2, 2.9, 3, 4.5.16, 4.8, 5.1, 5.5.11), diff complet `socle...lot/L-U` lu, propriétaires
+OK 17 fichiers ; en attente d'un jeton du navigateur (les trois pris à 06:26) pour rejouer les 14 critères et jouer.
+Un repreneur : lire la section « Relecture » (défauts trouvés, corrigés ou non), puis reprendre là où elle s'arrête.
+
+**Construction FINIE** (23/10, 05:56, le constructeur). La définition de « fini » du § 5.1, règle 5 :
 - (a) `&rapport=1&lot=L-U` : **14/14 sur PC** (1280 × 720, qualité haute, 17,0 s ; dernier passage sur 4a3f7cc) et **14/14 sous
   `?tel=1`** (375 × 812 émulé, qualité moyenne, 15,3 s) ; seul « signalé » : le premier Tab mesuré onglet caché (non
   valable) — rejoué onglet DEVANT : **37,5 ms** au plus (≤ 50), vert ;
@@ -181,3 +186,13 @@ avertissement au-delà de 3 ; 7 : LANCER → présentation **227 ms** (≤ 10 00
 7. **F2** : le point 8 du socle (« programmes constants ») tombe parfois quand la qualité AUTOMATIQUE change de préréglage
    pendant la mesure (onglet en arrière-plan, plusieurs agents) — vu ici comme chez L-E ; rejoué avec `&qualite=haute`,
    vert. Le figer dans le test (`figerQualite`) éviterait le faux échec.
+
+## Relecture (relecteur sévère, 23/10)
+
+Relu : la spécification (§§ 2.1, 2.2, 2.9, 3.7-3.10, 4.1, 4.5.16, 4.8, 4.9, 4.10, 5.1, 5.2, 5.5.11), le diff complet
+`git diff socle...lot/L-U` (17 fichiers), le code qu'il touche (`js/jeu/index.js`, `js/game.js` lancerPartie / quitterPartie /
+togglePause / frame, `js/manette.js` et `js/manette_menus.js`, `js/settings.js`, `partie.js`, `partie_fps.js`,
+`partie_prop.js`). `python -I tools/verifier_proprietaires.py lot/L-U` : OK 17 fichiers. Fins de ligne : celles des voisins
+(CRLF partout, LF pour `js/ui.js` comme avant).
+
+### Défauts trouvés à la lecture (avant le navigateur)
