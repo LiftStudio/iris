@@ -3,7 +3,13 @@
 Branche `lot/L-D` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-D`, depuis `socle` = `socle-ok`, e06258f), port 8136 ;
 23/10/2026. Spécification : `docs/jeu/spec_finale.md` § 5.5.6 (contrats § 4.5.11, valeurs §§ 3.7-3.8, propriétaires § 5.2).
 
-## Où j'en suis
+## Où j'en suis — RELECTURE (relecteur sévère, 23/10, commits « L-D relecture : … »)
+
+Relecture en cours sur `9ca7414`. Fait : spec (§§ 3.7-3.8, 4.5.11, 5.1, 5.5.6) et diff `socle...lot/L-D` relus ;
+propriétaires OK. À faire, dans l'ordre : corriger (liste dans « Relecture » en bas), rejouer `&lot=L-D` puis `&lot=S0`,
+jouer (jeton), mettre ce rapport à jour. Un repreneur : la section « Relecture » en bas dit ce qui est corrigé et ce qui reste.
+
+## Où j'en suis — construction
 
 - [x] `nav.js` : génération (méthode B), deux graphes, CSR, empreinte, cache, A* d'un bloc et en file, champs, couverts
 - [x] `nav_cache.js` : IndexedDB `iris.nav` (index des 4 dernières empreintes, délais, `try/catch`)
@@ -242,3 +248,26 @@ de 4 cm d'un mur).
 graphe des props 639 ms, cache IndexedDB 43,9 ms ; `verifierBots` 0 / 0 / 0 / 0, 0 coincé, 0 secours, 44 pièces ; A* 30/30
 sur les franchissements ; couverts 0 faute). `&lot=S0` 29/29 (sur `202b9bd`, le pilotage inchangé depuis). Propriétaires :
 OK. Onglet `tab-8` fermé, serveur 8136 arrêté, `jeton_1` rendu.
+
+## Relecture (relecteur sévère, 23/10)
+
+### Constats sur `9ca7414` (à corriger : ✔ = corrigé, commité)
+
+1. `nav.restreindre` vidait la file des chemins SANS rappeler les demandeurs : un pilote en attente de son chemin
+   (`_attente`) restait figé pour toujours (ni chemin, ni surveillance « coincé ») dès qu'une partie restreint son graphe
+   en cours de route (L-F le fait au changement de zone du prop hunt, L-M peut le faire en verrouillant une porte).
+2. `champDepuis` / `champMulti` comptaient les liens pénalisés (× 10 pendant 10 s) : des distances « à pied » fausses
+   juste après un coincement — un ennemi derrière un lien pénalisé semblait loin, la réapparition pouvait tomber à
+   moins de 20 m de lui (le rapport disait « distances vraies »).
+3. L'errant (la patrouille du cerveau minimal) gardait son regard d'avant le combat : sortie d'un combat, la tête et le
+   corps du bot sautaient d'un coup vers l'ancien regard (jusqu'à 180° en un pas).
+4. L'errant lisait `arrive` / `coince` du pilote pour la destination D'AVANT quand la sienne venait de changer : au point
+   chaud entendu pendant une pause, il passait en « guet » sans y être allé (pas de sprint, pas de guet à l'arrivée).
+5. `departs` : un appel par camp, deux tirages si les `n` diffèrent au-delà de 6 (`K = max(6, n)` dans la clé) — les deux
+   camps pouvaient sortir de deux tirages différents, donc à moins de 15 m l'un de l'autre.
+6. Morts récentes de la réapparition lues dans l'anneau de 256 événements de la partie : en plein combat (tirs, pas,
+   impacts) il couvre 3 s, pas les 10 s voulues.
+7. `choisirApparition` pouvait rendre un point VU par un ennemi à plus de 20 m à pied (permis par le § 3.8) : L-E le
+   refuse alors (`_sur` : vu de personne à 60 m, aucun ennemi à 6 m) et prend son repli — le choix de L-D ne servait pas.
+8. Test 1 : le graphe mesuré AVANT toute partie, donc sans les vantaux solides de `MondePartie.preparerSession` (L-M) :
+   à F2, `verifierNav` mesurerait un autre graphe que celui des parties (autre empreinte).
