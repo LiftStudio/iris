@@ -20,7 +20,9 @@ const HUMAIN = [
   { zone: 'jambes', a: 0.10, b: 0.90, r: 0.13 },
 ];
 const HANCHES = 0.90;
-export const AVANCE_TETE = { base: 0.04, parMs: 0.02 };   // m, et m par m/s (× h / 1,73)
+// (F2, demande de L-C : plus d'AVANCE de la tête — 0,04 + 0,02·v au § 4.5.6 —, les corps armés de L-C ont le dos droit et la
+// tête au-dessus des pieds ; avec elle, la tête simulée était à 11-12,6 cm de l'os Head en course, 3,3-4,7 cm sans)
+export const AVANCE_TETE = { base: 0, parMs: 0 };   // m, et m par m/s (× h / 1,73)
 
 const vol = (out, n) => out[n] || (out[n] = { zone: null, t: 'c', ax: 0, ay: 0, az: 0, bx: 0, by: 0, bz: 0, r: 0, cx: 0, cy: 0, cz: 0, hx: 0, hy: 0, hz: 0, c: 1, s: 0 });
 const boite = (v, zone, cx, cy, cz, hx, hy, hz, c, s) => { v.zone = zone; v.t = 'o'; v.cx = cx; v.cy = cy; v.cz = cz; v.hx = hx; v.hy = hy; v.hz = hz; v.c = c; v.s = s; };

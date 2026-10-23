@@ -1116,7 +1116,7 @@ plan `y = 0` là où aucun sol ne couvre (règle de `solEn`) ; (4) normale de la
 forme touchée : `_segment` ne la rend pas) ; (5) incrémente `C._tour` lui-même, jamais dans un rappel. Visé : ≤ 30 µs
 médian à 30 m, ≤ 120 µs au 99e centile ; origine = l'ŒIL (jamais le bout du canon, qui peut être dans un mur).
 **Capsules simulées** (pour h = 1,73, × h/1,73 ; accroupi k abaisse tout ce qui est au-dessus des hanches de 0,54·k ; glissade
-idem à 0,77 ; + jumpY ; tête avancée de 0,04 + 0,02·v selon le cap) : tête sphère r 0,115 centrée à 1,635 · cou 1,42→1,55
+idem à 0,77 ; + jumpY ; tête avancée de 0,04 + 0,02·v selon le cap — F2 : avance retirée, les corps armés de L-C ont la tête au-dessus des pieds) : tête sphère r 0,115 centrée à 1,635 · cou 1,42→1,55
 r 0,06 · torse 1,12→1,42 r 0,165 · ventre 0,90→1,12 r 0,155 · jambes 0,10→0,90 r 0,13. Contrôle (L-A) : écart tête simulée /
 os `Head` (+0,085 sur son Y) en course ≤ 6 cm en moyenne, ≤ 10 cm au 95e centile ; au-delà, L-C coupe le penché des
 couches pour un acteur armé.
