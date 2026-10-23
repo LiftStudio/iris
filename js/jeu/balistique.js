@@ -137,7 +137,7 @@ export class Balistique {
     // les vitres traversées par le dernier parcours en mode `balle` : [{ t, forme, nx, ny, nz }] (les `nv` premières)
     this._vt = []; this.nv = 0;
     this._h = { t: 0, forme: null, sol: null, nx: 0, ny: 0, nz: 0 };
-    this._m = {}; this._cibles = []; this._hA = { acteur: null, zone: null, t: 0 };
+    this._m = {}; this._cibles = []; this._hA = { acteur: null, zone: null, t: 0 }; this._fel = [];
   }
 
   // ------------------------------------------------------------------ le parcours
@@ -326,14 +326,6 @@ export class Balistique {
     for (const b of partie.acteurs) if (b !== tireur && b.vivant && b.corps && partie.ennemis(tireur, b)) cibles.push(b);
     const h = cibles.length ? rayonActeurs(cibles, ox, oy, oz, dx, dy, dz, m.t, tireur, this._hA) : null;
     const tFin = h ? h.t : m.t;
-    let traverse = false;
-    for (let j = 0; j < this.nv; j++) {
-      const v = this._vt[j];
-      if (v.t >= tFin) break;
-      traverse = true;
-      partie.evt('impact', { x: ox + dx * v.t, y: oy + dy * v.t, z: oz + dz * v.t, nx: v.nx, ny: v.ny, nz: v.nz, mat: 'vitre', forme: v.forme.id ?? null,
-        plomb, traverse: true });
-    }
     if (h) {
       out.acteur = h.acteur; out.zone = h.zone; out.t = h.t;
       out.x = ox + dx * h.t; out.y = oy + dy * h.t; out.z = oz + dz * h.t;
@@ -342,7 +334,17 @@ export class Balistique {
       out.acteur = null; out.zone = null; out.t = m.t; out.x = m.x; out.y = m.y; out.z = m.z;
       out.nx = m.nx; out.ny = m.ny; out.nz = m.nz; out.mat = m.mat; out.forme = m.forme;
     }
-    out.traverse = traverse;
+    // les fêlures, recopiées AVANT d'être émises (un abonné qui pose sa propre question au monde récrirait `_vt`)
+    let nf = 0;
+    for (let j = 0; j < this.nv && this._vt[j].t < tFin; j++) {
+      const v = this._vt[j], F = this._fel[nf] || (this._fel[nf] = { t: 0, nx: 0, ny: 0, nz: 0, forme: null });
+      F.t = v.t; F.nx = v.nx; F.ny = v.ny; F.nz = v.nz; F.forme = v.forme.id ?? null; nf++;
+    }
+    out.traverse = nf > 0;
+    for (let j = 0; j < nf; j++) {
+      const F = this._fel[j];
+      partie.evt('impact', { x: ox + dx * F.t, y: oy + dy * F.t, z: oz + dz * F.t, nx: F.nx, ny: F.ny, nz: F.nz, mat: 'vitre', forme: F.forme, plomb, traverse: true });
+    }
     return out;
   }
 }
