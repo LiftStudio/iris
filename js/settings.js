@@ -117,9 +117,13 @@ const DEFAULTS = {
   game: { vue: 3, emotes: [], demarrage: 'menu' },
   // LES DERNIERS CHOIX DE PARTIE (22/10, socle du jeu ; spec § 2.2) ; `prop.zone: null` = calculée au lancement (§ 3.9) ;
   // `habillage` : 'airsoft' (par défaut) ou 'militaire' ; `fluidite` : l'option « Priorité fluidité » (éteinte)
-  jeu: { combat: { mode: 'equipes', zone: 'ecole', allies: 3, ennemis: 4, difficulte: 'regulier', classe: 'assaut', avatars: [] },
+  // (F2, demande de L-U : les adversaires du chacun pour soi, la limite et le temps par mode, le défi et la classe du stand —
+  // sans eux, deepMerge les oubliait à la relecture ; js/jeu/menus_jeu.js _rattraper les reprenait de la sauvegarde brute)
+  jeu: { combat: { mode: 'equipes', zone: 'ecole', allies: 3, ennemis: 4, adversaires: TELEPHONE ? 3 : 5, difficulte: 'regulier', classe: 'assaut', avatars: [],
+      limites: { equipes: { score: TELEPHONE ? 20 : 40, duree: 600 }, melee: { score: 20, duree: 600 }, domination: { score: 150, duree: 600 } } },
     prop: { zone: null, manches: 6, acteurs: 5, difficulte: 'facile', premierRole: 'prop', chasseurSeul: false,
       aides: { discretion: true, oeil: true, voirSons: TELEPHONE } },
+    stand: { defi: null, classe: 'assaut' },
     habillage: 'airsoft', fluidite: false },
 };
 const KEY = 'iris.settings.v1';
@@ -226,7 +230,8 @@ class Settings {
     for (const a of LISTES_ACTIONS[profil] || ACTIONS) for (let s = 0; s < 2; s++) if (B[a.id][s] === code && !(a.id === id && s === slot)) B[a.id][s] = null;
     B[id][slot] = code; this.save();
   }
-  unbind(id, slot) { this.bindings[id][slot] = null; this.save(); }
+  // (F2, demande de L-U : le profil, comme bind ; 'balade' par défaut, le comportement d'avant)
+  unbind(id, slot, profil = 'balade') { const B = this.bindingsDe(profil); if (B[id]) B[id][slot] = null; this.save(); }
   // Même chose côté manette : un bouton ne sert qu'à une action, il est retiré de celle qui l'avait.
   get padBindings() { return this.data.controls.pad.bindings; }
   bindPad(id, slot, code, profil = 'balade') {
@@ -237,7 +242,7 @@ class Settings {
   // les touches et les boutons d'un profil ('balade' : ceux d'avant, à leur place)
   bindingsDe(profil = 'balade') { return profil === 'combat' || profil === 'prop' ? this.data.controls[profil].bindings : this.bindings; }
   padBindingsDe(profil = 'balade') { return profil === 'combat' || profil === 'prop' ? this.data.controls[profil].pad : this.padBindings; }
-  unbindPad(id, slot) { this.padBindings[id][slot] = null; this.save(); }
+  unbindPad(id, slot, profil = 'balade') { const B = this.padBindingsDe(profil); if (B[id]) B[id][slot] = null; this.save(); }
   onChange(fn) { this._subs.add(fn); return () => this._subs.delete(fn); }
   _emit() { for (const fn of this._subs) { try { fn(this); } catch (e) { console.error(e); } } }
 }
