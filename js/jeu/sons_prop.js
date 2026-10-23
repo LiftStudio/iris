@@ -255,7 +255,7 @@ function bruitDe(ctx) {
 export class SonsProp {
   constructor(sonsJeu) {
     this.sons = sonsJeu; this.partie = null; this._des = [];
-    this.journal = [];               // les derniers sons joués { nom, t, x, y, z, dalle, gain } (lus par les tests et la mise au point)
+    this.journal = []; this.n = 0;   // les derniers sons joués { n, nom, t, x, y, z, dalle, gain } (n : leur numéro ; lus par les tests et la mise au point)
     this.muets = 0;                  // ceux qu'une règle a tus (Haythem chasseur avant la traque)
   }
   brancher(partie) {
@@ -325,7 +325,7 @@ export class SonsProp {
       const g = ctx.createGain(); g.gain.setValueAtTime(gain, quand); g.connect(out);
       return recette(ctx, g, quand, bruitDe(ctx));
     }, { gain: 1, rayon: o.rayon || 30, prioritaire: !!o.local, dalle: dalle ? 'faite' : false });
-    if (v) { this.journal.push({ nom, t: P.t, x, y, z, dalle, gain }); if (this.journal.length > 64) this.journal.shift(); }
+    if (v) { this.journal.push({ n: ++this.n, nom, t: P.t, x, y, z, dalle, gain }); if (this.journal.length > 64) this.journal.shift(); }
     return v;
   }
   // (une provocation jouée telle quelle, à l'oreille : l'écoute des huit dans les tests et le menu)

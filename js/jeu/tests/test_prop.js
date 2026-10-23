@@ -75,7 +75,7 @@ export default function (jeu) {
     const R = REGLAGES_PROP, [tC, tT] = R.durees.e1, res = [];
     await lancer({ graine: 11, humain: false, manches: 6 });
     let p = P();
-    const L = [], fins = [];
+    const L = p.phase === 'presentation' && p.t === 0 ? [{ phase: 'presentation', t: 0, manche: 1 }] : [], fins = [];
     const d1 = p.sur('phase', (e) => {
       L.push({ phase: e.phase, t: p.t, manche: p.manche });
       // (la 1re manche va au bout du chrono : ses props tiennent)
@@ -147,7 +147,7 @@ export default function (jeu) {
     const res = [], proto = CerveauChasseur.prototype, avant = Object.getOwnPropertyDescriptor(proto, 'entendre'), base = proto.entendre;
     let recus = 0, recusTraque = 0;
     await lancer({ graine: 5, premierRole: 'chasseur' });
-    const p = P(), loc = p.local, SP = p.aff.sonsProp;
+    const p = P(), loc = p.local, SP = p.aff.sonsProp, jL = SP.n;
     const dePropOuSon = (e) => ['provocation', 'frottement', 'deguise', 'defige'].includes(e.type) || (e.a !== undefined && (p.acteurParId(e.a) || {}).role === 'prop');
     proto.entendre = function (e) { if (dePropOuSon(e)) { if (p.phase === 'traque') recusTraque++; else recus++; } return base.call(this, e); };
     try {
@@ -171,15 +171,15 @@ export default function (jeu) {
       jusquA(p.t + 8.1); p.majHud(); const C2 = p.hud.prop && p.hud.prop.cachette, a2 = C2 ? C2.astuces.join('|') : '';
       const bouges = ch.map((a, i) => r2(Math.hypot(a.pos.x - pos0[i].x, a.pos.z - pos0[i].z)));
       const tirs = E.L.filter((e) => ch.some((h) => h.id === e.a)).length;
-      const frottes = SP.muets - muets0, joues = SP.journal.filter((j) => ['frottement', 'pouf', 'craquement', 'toc'].includes(j.nom) || PROVOCATIONS.some((q) => q.id === j.nom)).length;
+      const frottes = SP.muets - muets0, joues = SP.journal.filter((j) => j.n > jL).filter((j) => ['frottement', 'pouf', 'craquement', 'toc'].includes(j.nom) || PROVOCATIONS.some((q) => q.id === j.nom)).length;
       // (le témoin : à la traque, un prop qui court près de Haythem s'entend, et les cerveaux l'entendent)
       jusqua('traque');
       const pr = { x: loc.pos.x, y: loc.pos.y, z: loc.pos.z }, q = autour(pr.x, pr.y, pr.z, 2.5) || pr;
       jeu.teleporter(prop.id, q.x, q.y, q.z);
-      const j0 = SP.journal.length;
+      const j0 = SP.n;
       jeu.commande(prop.id, { ax: 0, ay: 1, amp: 1, sprint: true, lacet: prop.cmd.lacet }, 1.5);
       jeu.avancer(1.6);
-      const temoin = SP.journal.slice(j0).filter((j) => j.nom === 'frottement').length;
+      const temoin = SP.journal.filter((j) => j.n > j0).filter((j) => j.nom === 'frottement').length;
       E.fin();
       res.push([`chasseurs déplacés ${bouges.join(', ')} m`, bouges.every((d) => d === 0)], [`${tirs} tir de chasseur`, tirs === 0],
         [`caméra ${dq.toExponential(1)} rad`, dq < 1e-6], [`panneau ${C1 ? 'chrono ' + r2(C1.chrono) + ', ' + C1.roles.length + ' rôles' : 'absent'}`, !!C1 && C1.chrono > 0 && C1.roles.length === 5],
@@ -299,8 +299,8 @@ export default function (jeu) {
     await lancer({ graine: 21, premierRole: 'prop' });
     const p = P(), loc = p.local; p._deguisables.add(A.cle); p._deguisables.add(B.cle);
     jusqua('cachette');
-    // un vrai meuble fictif à 1,5 m devant lui (visé), qui change de type entre deux essais
-    const l = loc.cmd.lacet, P0 = ajouter(pose(A.cle, loc.pos.x - Math.sin(l) * 1.5, loc.pos.y, loc.pos.z - Math.cos(l) * 1.5));
+    // un vrai meuble fictif à 0,9 m devant lui (visé), qui change de type entre deux essais
+    const l = loc.cmd.lacet, P0 = ajouter(pose(A.cle, loc.pos.x - Math.sin(l) * 0.9, loc.pos.y, loc.pos.z - Math.cos(l) * 0.9));
     const E = ev(['deguise', 'refus']);
     const essai = () => { P0.cle = P0.cle === A.cle ? B.cle : A.cle; game.camYaw = l; front(0, { deguiser: true }); };
     for (let k = 0; k < 6; k++) { essai(); jeu.avancer(0.3); }
@@ -380,6 +380,7 @@ export default function (jeu) {
       // Haythem au milieu de la pause orange ; cinq props à 3, 6, 10, 13 m (même niveau) et un au RDC juste en dessous
       const c = { x: 12.63, y: 3.5, z: -7.87 }; jeu.teleporter(0, c.x, c.y, c.z, 0); p.pas(PAS);
       const pr = p.acteurs.filter((a) => a.role === 'prop'), D = [3, 6, 10, 13], vrais = [];
+      pr.forEach((a, i) => jeu.teleporter(a.id, 5.38 + i * 0.8, 0, -15.12));
       D.forEach((d, i) => { const q = autour(c.x, c.y, c.z, d, { k0: i * 11 }); if (q) { jeu.teleporter(pr[i].id, q.x, q.y, q.z); vrais.push({ id: pr[i].id, d, az: Math.atan2(-(q.x - c.x), -(q.z - c.z)) }); } });
       const qb = autour(c.x, 0, c.z, 1.5) || { x: c.x, y: 0, z: c.z }; jeu.teleporter(pr[4].id, qb.x, qb.y, qb.z);
       const E = ev(['scanner', 'refus']);
@@ -403,7 +404,7 @@ export default function (jeu) {
     // le bip : Haythem prop, un chasseur bot qui scanne à 8 m (entendu), puis à 14 m (pas entendu)
     await lancer({ graine: 41, premierRole: 'prop' }); const p = P(), loc = p.local; jusqua('traque');
     const SP = p.aff.sonsProp, h = p.acteurs.find((a) => a.role === 'chasseur');
-    const bip = (d) => { const q = autour(loc.pos.x, loc.pos.y, loc.pos.z, d) || { x: loc.pos.x + d, y: loc.pos.y, z: loc.pos.z }; jeu.teleporter(h.id, q.x, q.y, q.z); const j0 = SP.journal.length; front(h.id, { scanner: true }); return SP.journal.slice(j0).filter((j) => j.nom === 'bip').length; };
+    const bip = (d) => { const q = autour(loc.pos.x, loc.pos.y, loc.pos.z, d) || { x: loc.pos.x + d, y: loc.pos.y, z: loc.pos.z }; jeu.teleporter(h.id, q.x, q.y, q.z); const j0 = SP.n; front(h.id, { scanner: true }); return SP.journal.filter((j) => j.n > j0).filter((j) => j.nom === 'bip').length; };
     const b8 = bip(8); jusquA(p.t + 8.1); const b14 = bip(14);
     jeu.quitter('balade');
     res.push([`bip à 8 m : ${b8}, à 14 m : ${b14}`, b8 === 1 && b14 === 0]);
@@ -430,11 +431,11 @@ export default function (jeu) {
     const pv = E.L.filter((e) => e.raison === 'provocation' && e.id === 0).map((e) => e.points);
     // deux props bots éliminés : le premier par ch[0] avec 30 % de ch[1] (aide), le second par ch[0] avec 20 % de ch[1] (pas d'aide)
     const [P1, P2] = props, [H1, H2] = ch;
-    for (const [Pk, part] of [[P1, 0.3], [P2, 0.2]]) { Pk.vie = Pk.vieMax = 100; p.infliger(Pk, 100 * part, { par: H2.id }); p.infliger(Pk, 1e9, { par: H1.id }); }
+    for (const [Pk, part] of [[P1, 0.3], [P2, 0.2]]) { Pk.vie = Pk.vieMax = 100; Pk.pp.deg = {}; p.infliger(Pk, 100 * part, { par: H2.id }); p.infliger(Pk, 1e9, { par: H1.id }); }
     const elims = E.L.filter((e) => e.raison === 'elim' && e.id === H1.id).length, aides = E.L.filter((e) => e.raison === 'aide' && e.id === H2.id).length;
     // une balle de chasseur dans un vrai meuble (fictif) : −2
     const P0 = pose(A.cle, 0, 0, 0); p._deguisables.add(A.cle); poseSousLeTir(p, P0);
-    jeu.commande(H1.id, { tir: true, lacet: H1.cmd.lacet, tangage: 0 }, 1.5 * PAS); p.pas(PAS); jeu.avancer(0.1);
+    H1.arsenal.prochain = 0; jeu.commande(H1.id, { tir: true, lacet: H1.cmd.lacet, tangage: 0 }, 1.5 * PAS); p.pas(PAS); jeu.avancer(0.1);
     const meuble = E.L.filter((e) => e.raison === 'meuble' && e.id === H1.id).map((e) => e.points);
     delete p.poseTouchee;
     // la fin au chrono, Haythem dernier prop vivant
