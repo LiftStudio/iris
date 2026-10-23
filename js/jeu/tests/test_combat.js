@@ -372,7 +372,17 @@ export default function (jeu) {
       let err = null;
       try { await jeu.lancer('equipes', { graine: 109, zone }); } catch (e) { err = String(e); }
       const p = game.partie, D = ZONES_JEU[zone].departs;
-      const pres = (a) => (D[a.equipe] || []).some((d) => Math.hypot(a.pos.x - d[0], a.pos.z - d[2]) < 6 && Math.abs(a.pos.y - d[1]) < 0.5);
+      // (F2 : les VRAIS départs de L-D — js/jeu/apparitions.js departs — prennent leurs points à ≤ 30 m À PIED de la base du camp,
+      // camps à ≥ 15 m l'un de l'autre : au −1 et aux étages, 4 c. 4 s'étalent au-delà des 6 m que lisait le squelette. Un acteur
+      // est donc « à un départ de son camp » s'il est à ≤ 30 m à pied d'un point de la table de son camp)
+      const N = p.nav, champs = {};
+      const champ = (eq) => champs[eq] || (champs[eq] = N && N.nb ? N.champMulti((D[eq] || []).map((d) => N.noeudPres(d[0], d[1], d[2], 4)).filter((v) => v >= 0), 31) : null);
+      const pres = (a) => {
+        const F = champ(a.equipe);
+        if (!F) return (D[a.equipe] || []).some((d) => Math.hypot(a.pos.x - d[0], a.pos.z - d[2]) < 6 && Math.abs(a.pos.y - d[1]) < 0.5);
+        const v = N.noeudPres(a.pos.x, a.pos.y, a.pos.z, 1.5);
+        return v >= 0 && F[v] <= 30.5;
+      };
       const ok = !err && !!p && p.zone === zone && p.acteurs.length >= 4 && p.acteurs.every(pres);
       res.push([zone, ok, err || (p ? p.acteurs.filter((a) => !pres(a)).map((a) => `${a.id}@${r2(a.pos.x)},${r2(a.pos.y)},${r2(a.pos.z)}`).join(' ') : 'pas de partie')]);
       jeu.quitter('balade');
@@ -395,7 +405,7 @@ export default function (jeu) {
     let msg2 = null; try { await jeu.lancer('equipes', { zone: 'e1' }); } catch (e) { msg2 = String(e && e.message || e); }
     jeu.quitter('balade');
     const ok = res.every((r) => r[1]) && refuse && !!msg2 && PartieFPS.refus({ mode: 'domination', zone: 'ecole' }) === null;
-    return { ok, attendu: 'chaque zone : partie lancée, chaque acteur à ≤ 6 m d’un départ de son camp ; chacun pour soi sur toute l’école : aucun départ vu d’un autre ; domination au −1 : refusée, avec un message',
+    return { ok, attendu: 'chaque zone : partie lancée, chaque acteur à ≤ 30 m à pied de la base de son camp (départs de L-D) ; chacun pour soi sur toute l’école : aucun départ vu d’un autre ; domination au −1 : refusée, avec un message',
       obtenu: res.map((r) => `${r[0]} ${r[1] ? 'ok' : '✗'} ${typeof r[2] === 'string' && r[2] ? '(' + r[2] + ')' : ''}`).join(' · ') + ` · refus « ${msg} » · zone du prop hunt « ${msg2} »` };
   }, { delai: 120 });
 

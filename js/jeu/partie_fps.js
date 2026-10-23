@@ -157,12 +157,17 @@ export class PartieFPS extends Partie {
     if (!C) return { x: q.x, y: q.y, z: q.z, degage: 0 };
     const sol = (x, z) => C.solEn(x, z, (q.y ?? d.y) + 0.3);
     const y0 = sol(q.x, q.z);
+    // (F2 : à ≤ 3 m du point INDICATIF `d`, pas du point ramené — le vrai ramenerPoint de L-D rend un nœud « relevé » à ≤ 3 m
+    // quand aucun n'a 1,5 m de dégagement, et la spirale autour de lui allait jusqu'à 6 m : B à 3,07 m, test 16)
+    const pres = (x, z) => Math.hypot(x - d.x, z - d.z) <= Rm + 1e-9;
     for (const R of DOMINATION.libres) {
-      if (Math.abs(y0 - d.y) < 0.3 && C.libre(q.x, q.z, R, y0)) return { x: q.x, y: y0, z: q.z, degage: R };
-      for (let r = 0.25; r <= Rm + 1e-9; r += 0.25) {
+      if (Math.abs(y0 - d.y) < 0.3 && pres(q.x, q.z) && C.libre(q.x, q.z, R, y0)) return { x: q.x, y: y0, z: q.z, degage: R };
+      for (let r = 0.25; r <= 2 * Rm + 1e-9; r += 0.25) {
         const n = Math.max(8, Math.round(2 * Math.PI * r / 0.25));
         for (let i = 0; i < n; i++) {
-          const a = (i / n) * 2 * Math.PI, x = q.x + r * Math.cos(a), z = q.z + r * Math.sin(a), y = sol(x, z);
+          const a = (i / n) * 2 * Math.PI, x = q.x + r * Math.cos(a), z = q.z + r * Math.sin(a);
+          if (!pres(x, z)) continue;
+          const y = sol(x, z);
           if (Math.abs(y - d.y) < 0.3 && C.libre(x, z, R, y)) return { x, y, z, degage: R };
         }
       }
