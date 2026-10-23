@@ -313,6 +313,7 @@ class Recherche {
     this.nav = nav; this.g = new Float64Array(n); this.pere = new Int32Array(n); this.vu = new Uint32Array(n); this.ferme = new Uint32Array(n);
     this.tas = new Int32Array(256); this.tf = new Float64Array(256); this.n = 0; this.tour = 0;
     this.de = -1; this.a = -1; this.fini = true; this.ok = false; this.ouverts = 0; this.pur = false; this.marche = false;
+    this.inv = false;                // (vrai : le graphe À REBOURS — les distances de chaque nœud VERS le départ ; avec `pur`)
   }
   _pousser(v, f) {
     if (this.n >= this.tas.length) { const t = new Int32Array(this.tas.length * 2); t.set(this.tas); this.tas = t; const u = new Float64Array(this.tf.length * 2); u.set(this.tf); this.tf = u; }
@@ -349,7 +350,8 @@ class Recherche {
   // `budget` nœuds ouverts au plus ; vrai quand c'est fini (trouvé ou impossible)
   avancer(budget = Infinity) {
     if (this.fini) return true;
-    const N = this.nav, D = N.debut, L = N.liens, K = N.cout, M = N.masque, P = N._penal, tour = this.tour, g = this.g, a = this.a, T = N.typeLien;
+    const N = this.nav, M = N.masque, P = N._penal, tour = this.tour, g = this.g, a = this.a, inv = this.inv;
+    const D = inv ? N.debutInv : N.debut, L = inv ? N.liensInv : N.liens, K = inv ? N.coutInv : N.cout, T = inv ? N.typeInv : N.typeLien;
     // (`pur` : la distance à pied vraie — ni bords, ni pénalités : distancePied)
     const pur = this.pur, pen = P.size > 0 && !pur, frMal = N.franchirMauvais && !pur, G = N.degage, bord = pur ? -1 : N.rayon + 0.01, marche = this.marche;
     let n = 0;
@@ -453,7 +455,7 @@ export class Nav {
     this.empreinte = 'vide'; this.masque = null;
     this.C = null; this.t = 0;                  // (t : l'horloge de la partie, posée par le pilote — les liens pénalisés expirent)
     this._penal = new Map(); this._file = []; this._champs = new Map(); this._parZone = null; this._frOk = 0; this._frRate = 0;
-    this._r1 = null; this._r2 = null; this._rC = null;
+    this._r1 = null; this._r2 = null; this._rC = null; this._fond = null;
   }
   _charger(D, C) {
     this.C = C;
@@ -474,7 +476,7 @@ export class Nav {
   restreindre(masque) {
     this.masque = masque && masque.length === this.nb ? masque : null;
     if (this.masque && this.masque.every((v) => v)) this.masque = null;
-    this._champs.clear(); this._parZone = null;
+    this._champs.clear(); this._parZone = null; this._fond = null;
     for (const q of this._file) q.parti = false;
     if (this._r2) this._r2.fini = true;
     if (this.rayon >= 0.25) Nav.derniere = this;            // (le graphe des humains de la partie qui se prépare : js/jeu/apparitions.js departs)
@@ -584,7 +586,7 @@ export class Nav {
   // une tranche de la demande en tête (Partie.pas, étape 9) : 1 500 nœuds ouverts au plus, une demande à la fois
   pasFile() {
     const F = this._file;
-    if (!F.length) return;
+    if (!F.length) { if (this._fond && this._fond.next().done) this._fond = null; return; }
     const q = F[0], R = this._r2;
     if (!q.parti) { R.marche = q.marche; R.debut(q.de, q.a); q.parti = true; }
     if (!R.avancer(TRANCHE)) return;
@@ -696,6 +698,41 @@ export class Nav {
     R.debut(u, v); R.avancer(Infinity);
     return R.ok ? R.g[v] : Infinity;
   }
+  // LE GRAPHE À REBOURS (les liens retournés, CSR : fait une fois par graphe, à la première demande — 60 000 liens, ≈ 2 ms)
+  _inverser() {
+    if (this.debutInv) return;
+    const n = this.nb, D = this.debut, Li = this.liens, nl = Li.length, debut = new Int32Array(n + 1);
+    for (let j = 0; j < nl; j++) debut[Li[j] + 1]++;
+    for (let v = 0; v < n; v++) debut[v + 1] += debut[v];
+    const pos = debut.slice(0, n), liens = new Int32Array(nl), cout = new Float32Array(nl), type = new Uint8Array(nl);
+    for (let u = 0; u < n; u++) for (let j = D[u]; j < D[u + 1]; j++) { const q = pos[Li[j]]++; liens[q] = u; cout[q] = this.cout[j]; type[q] = this.typeLien[j]; }
+    this.debutInv = debut; this.liensInv = liens; this.coutInv = cout; this.typeInv = type;
+  }
+  // LE CHAMP VERS un nœud : la distance à pied VRAIE (ni bords, ni pénalités) de chaque nœud permis JUSQU'À `id` — celle
+  // qu'un acteur posé là ferait pour y venir (Float64Array, Infinity hors d'atteinte). Itérateur : `tranche` nœuds ouverts par
+  // pas (la tâche de fond), la valeur rendue à la fin ; `champVers` le fait d'un bloc (ses tableaux à lui)
+  *champVersPar(id, tranche = TRANCHE) {
+    this._inverser();
+    const R = this._rV || (this._rV = new Recherche(this)); R.pur = true; R.inv = true;
+    R.debut(id, -1);
+    while (!R.avancer(tranche)) yield null;
+    const out = new Float64Array(this.nb).fill(Infinity);
+    for (let v = 0; v < this.nb; v++) if (R.ferme[v] === R.tour) out[v] = R.g[v];
+    return out;
+  }
+  champVers(id) {
+    this._inverser();
+    const R = this._rW || (this._rW = new Recherche(this)); R.pur = true; R.inv = true;
+    R.debut(id, -1); R.avancer(Infinity);
+    const out = new Float64Array(this.nb).fill(Infinity);
+    for (let v = 0; v < this.nb; v++) if (R.ferme[v] === R.tour) out[v] = R.g[v];
+    return out;
+  }
+  // LA TÂCHE DE FOND : un itérateur avancé d'un cran par pasFile où la file des chemins est vide (les champs des points de
+  // réapparition, js/jeu/apparitions.js, calculés pendant la présentation et le décompte) ; déterministe (au pas, jamais au
+  // temps) ; oubliée par `restreindre`
+  fond(it) { this._fond = it || null; }
+  get enFond() { return !!this._fond; }
   // la longueur d'une liste de nœuds (m)
   longueur(L) { let s = 0; for (let i = 1; i < L.length; i++) s += Math.hypot(this.px[L[i]] - this.px[L[i - 1]], this.pz[L[i]] - this.pz[L[i - 1]], this.ph[L[i]] - this.ph[L[i - 1]]); return s; }
 }

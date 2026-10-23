@@ -8,7 +8,7 @@
 import { Nav, BORNES_NAV } from '../nav.js';
 import { lireNav, oublierBase } from '../nav_cache.js';
 import { Pilote } from '../pilotage.js';
-import { POINTS_APPARITION, departs, choisirApparition, ramenerPoint, piecesDe, candidatsApparition } from '../apparitions.js';
+import { POINTS_APPARITION, departs, choisirApparition, ramenerPoint, piecesDe, candidatsApparition, completerChampsApparition } from '../apparitions.js';
 import { ZONES_JEU, PIECES } from '../constantes.js';
 import { Rng, hacher } from '../rng.js';
 import { franchissable } from '../mouvement.js';
@@ -320,20 +320,45 @@ export default function (jeu) {
     for (let k = 0; k < 4; k++) ennemis.push(p.ajouterActeur({ id: 20 + k, nom: 'E' + k, equipe: 'B', x: 14.88, y: 0, z: -3.12, cerveau: null }));
     for (let k = 0; k < 2; k++) allies.push(p.ajouterActeur({ id: 30 + k, nom: 'A' + k, equipe: 'A', x: 14.88, y: 0, z: -3.12, cerveau: null }));
     const poserAuHasard = (a) => { const v = auHasard(N, rng, (w) => N.degage[w] >= 0.5 && N.niveau[w] <= 3); a.corps.pos.set(N.px[v], N.ph[v], N.pz[v]); a.corps.posPrec.copy(a.corps.pos); };
-    let fautes = 0, essais = 0, vusEvitables = 0, colles = 0, vus = 0; const ms = []; const exemples = [];
     const LC = candidatsApparition(N);
     const vuPar = (yeux, x, y, z) => yeux.some((o) => Math.hypot(o.x - x, o.z - z) <= 50 && (B.vue(o.x, o.y, o.z, x, y + 1.6, z) || B.vue(o.x, o.y, o.z, x, y + 0.9, z)));
+    // (relecture : les champs VERS un candidat, sur le graphe à rebours, égaux aux distances DEPUIS chaque nœud par le graphe à
+    // l'endroit — 20 paires)
+    let ecartChamp = 0;
+    for (let k = 0; k < 20; k++) {
+      const c = LC[rng.int(LC.length)], u = auHasard(N, rng), V = N.champVers(c), d0 = N.distancePied(u, c);
+      if (Number.isFinite(d0) || Number.isFinite(V[u])) ecartChamp = Math.max(ecartChamp, Math.abs(V[u] - d0));
+    }
+    // CHACUN POUR SOI : 5 ennemis ; le point attendu calculé ici, par un champ depuis tous les autres
+    let exacts = 0, nCps = 0;
+    const cps = (n) => {
+      moi.equipe = null; for (const a of [...ennemis, ...allies]) a.equipe = null;
+      for (let k = 0; k < n; k++) {
+        for (const a of [...ennemis, ...allies]) poserAuHasard(a);
+        const autres = [...ennemis, ...allies], yeux = autres.map(oeil);
+        const F = N.champMulti(autres.map((a) => a.pos), Infinity);
+        let best = -1, bd = -1;
+        for (const v of LC) if (!vuPar(yeux, N.px[v], N.ph[v], N.pz[v]) && F[v] > bd) { bd = F[v]; best = v; }
+        const q = choisirApparition(p, moi); nCps++;
+        if (best >= 0 && Math.hypot(q.x - N.px[best], q.z - N.pz[best]) < 1e-4 && Math.abs(q.y - N.ph[best]) < 1e-4) exacts++;
+      }
+      moi.equipe = 'A'; for (const a of ennemis) a.equipe = 'B'; for (const a of allies) a.equipe = 'A';
+    };
+    // LES ÉQUIPES : 500 tirages SANS les champs des candidats (Dijkstra bornés depuis les acteurs), puis 500 AVEC (calculés
+    // d'un bloc ici ; en partie, en tâche de fond) ; sur les 100 premiers de chaque : jamais à 6 m d'un ennemi, VU d'un
+    // ennemi — même à plus de 20 m à pied — seulement si tous les candidats permis l'étaient aussi
+    let fautes = 0, essais = 0, vusEvitables = 0, colles = 0, vus = 0; const ms = [], msChamps = []; const exemples = [];
+    cps(50);
     for (let k = 0; k < 1000; k++) {
+      if (k === 500) completerChampsApparition(N, p.zone);
       for (const a of [...ennemis, ...allies]) poserAuHasard(a);
-      const t0 = performance.now(); const q = choisirApparition(p, moi); ms.push(performance.now() - t0);
+      const t0 = performance.now(); const q = choisirApparition(p, moi); (k < 500 ? ms : msChamps).push(performance.now() - t0);
       essais++;
       for (const e of ennemis) {
         const d = N.distancePied({ x: q.x, y: q.y, z: q.z }, e.pos), o = oeil(e);
         if (d < 20 && B.vue(o.x, o.y, o.z, q.x, q.y + 1.6, q.z)) { fautes++; if (exemples.length < 3) exemples.push(`${r2(d)} m`); break; }
       }
-      // (relecture, les 200 premiers : à 6 m d'un ennemi jamais ; VU d'un ennemi — même à plus de 20 m à pied — seulement si
-      // tous les candidats permis l'étaient aussi)
-      if (k < 200) {
+      if (k < 100 || (k >= 500 && k < 600)) {
         const yeux = ennemis.map(oeil);
         if (ennemis.some((e) => Math.hypot(e.pos.x - q.x, (e.pos.y - q.y) * 2, e.pos.z - q.z) < 6)) colles++;
         if (vuPar(yeux, q.x, q.y, q.z)) {
@@ -345,22 +370,11 @@ export default function (jeu) {
         }
       }
     }
-    // CHACUN POUR SOI : 100 tirages, 5 ennemis
-    moi.equipe = null; for (const a of [...ennemis, ...allies]) a.equipe = null;
-    const L = candidatsApparition(N); let exacts = 0;
-    for (let k = 0; k < 100; k++) {
-      for (const a of [...ennemis, ...allies]) poserAuHasard(a);
-      const autres = [...ennemis, ...allies], yeux = autres.map(oeil);
-      const F = N.champMulti(autres.map((a) => a.pos), Infinity);
-      const vu = (v) => yeux.some((o) => Math.hypot(o.x - N.px[v], o.z - N.pz[v]) <= 50 && (B.vue(o.x, o.y, o.z, N.px[v], N.ph[v] + 1.6, N.pz[v]) || B.vue(o.x, o.y, o.z, N.px[v], N.ph[v] + 0.9, N.pz[v])));
-      let best = -1, bd = -1;
-      for (const v of L) if (!vu(v) && F[v] > bd) { bd = F[v]; best = v; }
-      const q = choisirApparition(p, moi);
-      if (best >= 0 && Math.hypot(q.x - N.px[best], q.z - N.pz[best]) < 1e-4 && Math.abs(q.y - N.ph[best]) < 1e-4) exacts++;
-    }
+    cps(50);
     jeu.quitter('balade');
-    return { ok: fautes === 0 && exacts === 100 && colles === 0 && vusEvitables === 0, attendu: '0 faute sur 1 000 ; sur 200 : 0 à 6 m, 0 vu évitable ; chacun pour soi 100/100 exacts',
-      obtenu: `${fautes} fautes / ${essais}${exemples.length ? ' (' + exemples.join(', ') + ')' : ''}, ${r2(mediane(ms))} ms par tirage (p95 ${r2(centile(ms, 0.95))}) ; sur 200 : ${colles} à 6 m, ${vus} vus (${vusEvitables} évitables) ; chacun pour soi ${exacts}/100 ; ${L.length} candidats` };
+    return { ok: fautes === 0 && exacts === nCps && colles === 0 && vusEvitables === 0 && ecartChamp < 1e-6,
+      attendu: '0 faute sur 1 000 (500 sans les champs, 500 avec) ; sur 200 : 0 à 6 m, 0 vu évitable ; chacun pour soi 100/100 exacts ; champs à rebours = distances',
+      obtenu: `${fautes} fautes / ${essais}${exemples.length ? ' (' + exemples.join(', ') + ')' : ''}, ${r2(mediane(ms))} ms par tirage sans les champs (p95 ${r2(centile(ms, 0.95))}), ${r2(mediane(msChamps))} ms avec (p95 ${r2(centile(msChamps, 0.95))}) ; sur 200 : ${colles} à 6 m, ${vus} vus (${vusEvitables} évitables) ; chacun pour soi ${exacts}/${nCps} ; champs à rebours ${ecartChamp.toExponential(1)} m ; ${LC.length} candidats` };
   }, { delai: 300 });
 
   // ---------------------------------------------------------------- 11. déterminisme, IndexedDB qui lève
@@ -583,14 +597,20 @@ export default function (jeu) {
   });
 
   // ---------------------------------------------------------------- 19. le décompte (relecture)
-  T('19 décompte d\'un match d\'équipes de bots (gelés 6 s) : aucun pilote ne s\'y croit coincé, aucune commande de marche gelé', async () => {
+  T('19 décompte d\'un match d\'équipes de bots (gelés 6 s) : aucun pilote ne s\'y croit coincé, aucune commande de marche gelé ; champs des réapparitions prêts', async (t) => {
     await jeu.lancer('equipes', { graine: 19, humain: false, allies: 4, ennemis: 4, zone: 'ecole', difficulte: 'regulier' });
     const p = game.partie; let gelesQuiMarchent = 0, co = 0, sec = 0, partis = 0;
     for (let i = 0; i < 120 * 7; i++) { jeu.avancer(PAS); for (const a of p.acteurs) if (a.gele && (a.cmd.ax || a.cmd.ay)) gelesQuiMarchent++; }
     for (const a of p.acteurs) { const P = a.cerveau && a.cerveau.pilote; if (P) { co += P.coincements; sec += P.secours; if (P.chemin.length) partis++; } }
+    // (et les champs des points de réapparition, finis en tâche de fond pendant la présentation et le décompte : une
+    // réapparition ne coûte plus qu'une lecture)
+    const fond = p.nav.enFond, a0 = p.acteurs.find((a) => a.equipe === 'B'), t0 = performance.now();
+    for (let k = 0; k < 10; k++) choisirApparition(p, a0);
+    const msApp = (performance.now() - t0) / 10;
     jeu.quitter('balade');
-    return { ok: gelesQuiMarchent === 0 && co === 0 && sec === 0 && partis === 8, attendu: '0 pas de marche gelé, 0 coincement, 0 secours, 8 bots partis sur un chemin au « GO ! »',
-      obtenu: `${gelesQuiMarchent} pas gelés en marche, ${co} coincements, ${sec} secours, ${partis} partis` };
+    const tA = t.temps('L-D réapparition ms (champs)', msApp, 3);
+    return { ok: gelesQuiMarchent === 0 && co === 0 && sec === 0 && partis === 8 && !fond && tA, attendu: '0 pas de marche gelé, 0 coincement, 0 secours, 8 bots partis sur un chemin au « GO ! » ; champs finis, une réapparition ≤ 3 ms',
+      obtenu: `${gelesQuiMarchent} pas gelés en marche, ${co} coincements, ${sec} secours, ${partis} partis ; tâche de fond ${fond ? 'EN COURS' : 'finie'}, réapparition ${r2(msApp)} ms` };
   });
 
   // ================================================================ À F2 (les vrais modules de la vague 2)

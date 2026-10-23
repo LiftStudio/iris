@@ -158,6 +158,9 @@ export function departs(zoneJeu, equipe, n, rng, nav = null) {
     let J = M.get(zoneJeu);
     if (!J || J.masque !== N.masque || J.K < K) { J = departsDeux(N, D, K, dansZone(N, zoneJeu)); if (J) { J.masque = N.masque; J.K = K; M.set(zoneJeu, J); } }
     pris = J ? J[equipe] : null;
+    // (un combat à deux camps : les champs des points de réapparition calculés en tâche de fond dès maintenant — pendant la
+    // présentation et le décompte, avant la première mort)
+    preparerChamps(N, candidats(N, zoneJeu));
   } else pris = departsUn(N, (D[equipe] || D.A || D.chasseurs || [[14.88, 0, -3.12]]), K, dansZone(N, zoneJeu));
   if (!pris || !pris.length) return departsSansGraphe(Z, equipe, n);
   pris = pris.slice(0, n);
@@ -249,11 +252,12 @@ function lacetOuvert(N, v, rng) {
 }
 
 // ---------------------------------------------------------------- LES CANDIDATS d'une zone (par graphe et par masque)
+// L'entrée du cache : { masque, L (les nœuds), champs (le champ VERS chacun, quand il est calculé), complet }
 const _cands = new WeakMap();
 function candidats(N, zoneJeu) {
   let M = _cands.get(N); if (!M) _cands.set(N, M = new Map());
   const K = M.get(zoneJeu || 'ecole');
-  if (K && K.masque === N.masque) return K.L;
+  if (K && K.masque === N.masque) return K;
   const R = REGLES_APPARITION, C = N.C, L = [], Z = dansZone(N, zoneJeu);
   // les 20 lieux (ramenés au nœud dégagé à ≤ 3 m)
   for (const q of POINTS_APPARITION) {
@@ -278,23 +282,52 @@ function candidats(N, zoneJeu) {
       L.push(A[bi]); maj(A[bi]);
     }
   }
-  M.set(zoneJeu || 'ecole', { masque: N.masque, L });
-  return L;
+  const E = { masque: N.masque, L, champs: new Array(L.length).fill(null), complet: false };
+  M.set(zoneJeu || 'ecole', E);
+  return E;
+}
+
+// LES CHAMPS DES CANDIDATS (§ 3.8 : « champs de Dijkstra par point, en cache ») : pour chaque candidat, la distance à pied
+// de chaque nœud JUSQU'À lui (Nav.champVers, le graphe à rebours : le chemin qu'un ennemi posé là ferait pour y venir) —
+// une réapparition ne fait plus que LIRE (relecture : six Dijkstra et ≈ 150 rayons par réapparition, 10 à 25 ms d'un seul
+// pas : un à-coup à chaque mort). Calculés EN TÂCHE DE FOND (Nav.fond : 1 500 nœuds par pas, à l'étape 9) dès que la partie
+// tire ses départs, donc pendant la présentation et le décompte (52 champs, ≈ 300 pas) ; avant qu'ils soient tous là, la
+// réapparition calcule comme avant (Dijkstra bornés depuis les acteurs). ≈ 3,7 Mo par graphe (52 × 8 904 × 8 octets).
+function* calculerChamps(N, K) {
+  for (let i = 0; i < K.L.length; i++) {
+    if (K.champs[i]) continue;
+    const it = N.champVersPar(K.L[i]);
+    let r = it.next();
+    while (!r.done) { yield; r = it.next(); }
+    if (K.masque !== N.masque) return;
+    K.champs[i] = r.value;
+    yield;
+  }
+  K.complet = true;
+}
+function preparerChamps(N, K) { if (!K.complet && !N.enFond) N.fond(calculerChamps(N, K)); }
+// (les tests, et qui veut les champs tout de suite : calculés d'un bloc)
+export function completerChampsApparition(nav, zoneJeu = 'ecole') {
+  const N = navDe(nav); if (!N) return 0;
+  const K = candidats(N, zoneJeu);
+  for (let i = 0; i < K.L.length; i++) if (!K.champs[i]) K.champs[i] = N.champVers(K.L[i]);
+  K.complet = true;
+  return K.L.length;
 }
 
 // (les candidats de la réapparition du graphe, de son masque et de la zone de jeu : nœuds — les tests)
-export function candidatsApparition(nav, zoneJeu = 'ecole') { const N = navDe(nav); return N ? candidats(N, zoneJeu).slice() : []; }
+export function candidatsApparition(nav, zoneJeu = 'ecole') { const N = navDe(nav); return N ? candidats(N, zoneJeu).L.slice() : []; }
 
 // ---------------------------------------------------------------- LA RÉAPPARITION (§ 3.8)
 const _buf = new WeakMap();
 export function choisirApparition(partie, acteur) {
   const N = navDe(partie.nav), R = REGLES_APPARITION;
   if (!N) return choisirSansGraphe(partie, acteur);
-  const L = candidats(N, partie.zone);
+  const K = candidats(N, partie.zone), L = K.L;
   if (!L.length) return choisirSansGraphe(partie, acteur);
+  preparerChamps(N, K);
   const ennemis = partie.acteurs.filter((b) => b !== acteur && b.vivant && b.corps && b.role !== 'cible' && partie.ennemis(acteur, b));
   const allies = acteur.equipe ? partie.acteurs.filter((b) => b !== acteur && b.vivant && b.corps && b.equipe === acteur.equipe) : [];
-  let B = _buf.get(N); if (!B) _buf.set(N, B = { a: new Float64Array(N.nb), b: new Float64Array(N.nb) });
   const B_ = partie.balistique || N.balistique;
   const yeux = ennemis.map((e) => { e.oeil(_o); return { x: _o.x, y: _o.y, z: _o.z, e }; });
   // (« voit » : l'œil d'un ennemi, à ≤ 50 m, voit la tête (1,6 m) ou le buste (0,9 m) d'un acteur posé là — ce que la partie
@@ -304,46 +337,85 @@ export function choisirApparition(partie, acteur) {
   const vuDeQuelquun = (v) => yeux.some((o) => voit(v, o));
   // (un ennemi à moins de 6 m à vol d'oiseau, la hauteur comptée double — un autre étage est loin)
   const colle = (v) => ennemis.some((e) => Math.hypot(e.pos.x - N.px[v], (e.pos.y - N.ph[v]) * 2, e.pos.z - N.pz[v]) < R.procheMin);
-  const melee = !acteur.equipe;
-  // les distances à pied : depuis tous les ennemis (complet en chacun pour soi : on maximise le plus proche)
-  const champE = ennemis.length ? N.champMulti(ennemis.map((e) => e.pos), melee ? Infinity : R.danger.portee + 10, B.a).slice() : null;
+  const melee = !acteur.equipe, nC = L.length;
+  // LES DISTANCES À PIED : dE[i] celle du plus proche ennemi, dA[i] celle du plus proche allié, dK(i, k) celle de l'ennemi k
+  // (au-delà de 20 m, Infinity suffit) — lues dans les champs des candidats quand ils sont là, sinon calculées comme avant
+  const dE = new Float64Array(nC).fill(Infinity), dA = new Float64Array(nC).fill(Infinity);
+  let dK, lacetDe;
+  if (K.complet) {
+    const nE = ennemis.map((e) => N._noeud(e.pos)), nA = allies.map((b) => N._noeud(b.pos));
+    for (let i = 0; i < nC; i++) {
+      const F = K.champs[i];
+      for (const u of nE) if (u >= 0 && F[u] < dE[i]) dE[i] = F[u];
+      for (const u of nA) if (u >= 0 && F[u] < dA[i]) dA[i] = F[u];
+    }
+    dK = (i, k) => (nE[k] >= 0 ? K.champs[i][nE[k]] : Infinity);
+    lacetDe = (i) => lacetVersEnnemi(N, K.champs[i], L[i], nE);
+  } else {
+    let B = _buf.get(N); if (!B) _buf.set(N, B = { a: new Float64Array(N.nb), b: new Float64Array(N.nb) });
+    // (depuis tous les ennemis — complet en chacun pour soi, on y maximise le plus proche ; un champ par ennemi, borné à 20 m)
+    const champE = ennemis.length ? N.champMulti(ennemis.map((e) => e.pos), melee ? Infinity : R.danger.portee + 10, B.a).slice() : null;
+    if (champE) for (let i = 0; i < nC; i++) dE[i] = champE[L[i]];
+    if (allies.length) { const cA = N.champMulti(allies.map((b) => b.pos), R.allies.portee, B.b); for (let i = 0; i < nC; i++) dA[i] = cA[L[i]]; }
+    const parE = melee ? [] : ennemis.map((e) => { const c = N.champMulti([e.pos], R.danger.portee, B.b); return L.map((v) => c[v]); });
+    dK = (i, k) => parE[k][i];
+    lacetDe = (i) => (champE ? lacetVers(N, champE, L[i]) : null);
+  }
+  const sortie = (i) => {
+    const v = L[i];
+    let lacet = lacetDe(i);
+    if (lacet === null) lacet = lacetOuvert(N, v, null);
+    return { x: N.px[v], y: N.ph[v], z: N.pz[v], lacet };
+  };
   if (melee) {
     // CHACUN POUR SOI : le plus loin à pied du plus proche ennemi, que personne ne voit — exactement (départage : l'ordre)
-    const tri = L.map((v, i) => ({ v, i, d: champE ? champE[v] : Infinity })).sort((p, q) => (q.d === p.d ? p.i - q.i : (q.d > p.d ? 1 : -1)));
-    for (const c of tri) if (!vuDeQuelquun(c.v)) return sortie(N, c.v, champE);
-    return sortie(N, tri[0].v, champE);
+    const tri = L.map((v, i) => i).sort((p, q) => (dE[q] === dE[p] ? p - q : (dE[q] > dE[p] ? 1 : -1)));
+    for (const i of tri) if (!vuDeQuelquun(L[i])) return sortie(i);
+    return sortie(tri[0]);
   }
   // LES ÉQUIPES : la note
-  const note = new Float64Array(L.length), interdit = new Uint8Array(L.length);
-  if (allies.length) {
-    const cA = N.champMulti(allies.map((b) => b.pos), R.allies.portee, B.b);
-    for (let i = 0; i < L.length; i++) { const d = cA[L[i]]; if (d <= R.allies.portee) note[i] += R.allies.poids * (1 - d / R.allies.portee); }
-  }
+  const note = new Float64Array(nC), interdit = new Uint8Array(nC);
+  for (let i = 0; i < nC; i++) if (dA[i] <= R.allies.portee) note[i] += R.allies.poids * (1 - dA[i] / R.allies.portee);
   for (let k = 0; k < ennemis.length; k++) {
-    const cE = N.champMulti([ennemis[k].pos], R.danger.portee, B.b), o = yeux[k];
-    for (let i = 0; i < L.length; i++) {
-      const v = L[i], d = cE[v];
+    const o = yeux[k];
+    for (let i = 0; i < nC; i++) {
+      const d = dK(i, k);
       if (!(d <= R.danger.portee)) continue;
-      const vu = voit(v, o);
+      const vu = voit(L[i], o);
       if (vu && d < R.interditVu) interdit[i] = 1;
       note[i] -= R.danger.poids * (1 - d / R.danger.portee) * (vu ? R.danger.vue : 1);
     }
   }
   // les morts récentes (la place est chaude)
   for (const e of mortsDe(partie)) {
-    for (let i = 0; i < L.length; i++) { const v = L[i], d = Math.hypot(N.px[v] - e.x, N.pz[v] - e.z, N.ph[v] - e.y); if (d <= R.danger.morts) note[i] -= R.danger.poids * (1 - d / R.danger.morts); }
+    for (let i = 0; i < nC; i++) { const v = L[i], d = Math.hypot(N.px[v] - e.x, N.pz[v] - e.z, N.ph[v] - e.y); if (d <= R.danger.morts) note[i] -= R.danger.poids * (1 - d / R.danger.morts); }
   }
-  const ordre = L.map((v, i) => i).filter((i) => !interdit[i] && !(champE && champE[L[i]] < R.procheMin) && !colle(L[i]));
+  const ordre = L.map((v, i) => i).filter((i) => !interdit[i] && !(dE[i] < R.procheMin) && !colle(L[i]));
   ordre.sort((p, q) => note[q] - note[p] || p - q);
   // (et de ceux-là, les 3 mieux notés qu'AUCUN ennemi ne voit, même à plus de 20 m à pied — vu de loin, on meurt en
   // apparaissant ; la règle du § 3.8 reste le plancher quand tout est vu. La vue n'est essayée que dans l'ordre des notes,
   // jusqu'à 3 : une cinquantaine de rayons au lieu de 400)
   const caches = [];
   for (const i of ordre) { if (!vuDeQuelquun(L[i])) { caches.push(i); if (caches.length >= R.meilleurs) break; } }
-  const loin = (p, q) => { const a = champE ? champE[L[p]] : 0, b = champE ? champE[L[q]] : 0; return a === b ? p - q : b > a ? 1 : -1; };
+  const loin = (p, q) => (dE[p] === dE[q] ? p - q : dE[q] > dE[p] ? 1 : -1);
   const pool = caches.length ? caches : ordre.length ? ordre : L.map((v, i) => i).sort(loin).slice(0, 1);
   const top = pool.slice(0, R.meilleurs), i = top[partie.rng ? partie.rng.int(top.length) : 0];
-  return sortie(N, L[i], champE);
+  return sortie(i);
+}
+// le lacet du candidat v vers le plus proche ennemi, par le chemin : de l'ennemi, en descendant le champ VERS v, jusqu'à
+// 4,5 m de v — on regarde d'où il viendra ; null si aucun ennemi n'est atteignable
+function lacetVersEnnemi(N, F, v, nE) {
+  let u = -1, du = Infinity;
+  for (const w of nE) if (w >= 0 && F[w] < du) { du = F[w]; u = w; }
+  if (u < 0 || u === v) return null;
+  for (let s = 0; s < 4000 && F[u] > 4.5; s++) {
+    let best = u;
+    for (let j = N.debut[u]; j < N.debut[u + 1]; j++) { const w = N.liens[j]; if (F[w] < F[best]) best = w; }
+    if (best === u) break;
+    u = best;
+  }
+  if (Math.hypot(N.px[u] - N.px[v], N.pz[u] - N.pz[v]) < 1e-6) return null;
+  return Math.atan2(-(N.px[u] - N.px[v]), -(N.pz[u] - N.pz[v]));
 }
 // les morts récentes d'une partie (relecture : l'anneau de 256 événements de la partie ne couvre que 3 s d'un combat nourri
 // — tirs, pas, impacts —, pas les 10 s du § 3.8) : abonnées à 'elim' au premier appel, amorcées par ce que l'anneau garde
@@ -357,11 +429,6 @@ function mortsDe(partie) {
   }
   while (M.length && partie.t - M[0].t > REGLES_APPARITION.danger.mortsT) M.shift();
   return M;
-}
-function sortie(N, v, champE) {
-  let lacet = champE ? lacetVers(N, champE, v) : null;
-  if (lacet === null) lacet = lacetOuvert(N, v, null);
-  return { x: N.px[v], y: N.ph[v], z: N.pz[v], lacet };
 }
 // (sans graphe : le lieu de la zone le plus loin, à vol d'oiseau, du plus proche ennemi vivant)
 function choisirSansGraphe(partie, acteur) {
