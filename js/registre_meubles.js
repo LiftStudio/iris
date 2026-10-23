@@ -31,6 +31,7 @@
 //     local x = dx·c + dz·s, local z = −dx·s + dz·c) ; pas : le pas de sa rangée (médiane, pasRangee)
 // Rien ici n'est appelé par Partie.pas : le registre se construit au chargement et se range à la préparation.
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { NIVEAUX } from './jeu/constantes.js';
 
 export const MEUBLES = {
@@ -73,16 +74,22 @@ export const TAILLES_REFERENCE = {
 };
 const LONG_MAX = 1.0, LONG_SUR_PLACE = 1.6;
 
-const _vus = new WeakSet();          // chaque étiqueté n'est vu qu'une fois
-const _maillesVues = new WeakSet();  // chaque maillage non étiqueté aussi
-const _references = [];              // les meubles cousus SEULS (racine de leur couture) : copiés plus tard, déjà cousus
-const _libres = [];                  // les signatures des maillages non étiquetés : { cle, x, y, z, nomMat }
-const _instances = [];               // { objet, P } : les poses dont la racine reste dans la scène (recalées au rattrapage)
-const _sigs = new Map();             // type (+ variante) → [{ sig, cle }] : les variantes déjà vues
+// L'ÉTAT DU REGISTRE (un objet : le test L-K 1 rejoue la construction dans un bac à sable, sans toucher au vrai)
+const nouvelEtat = () => ({
+  vus: new WeakSet(),                // chaque étiqueté n'est vu qu'une fois
+  maillesVues: new WeakSet(),        // chaque maillage non étiqueté aussi
+  references: [],                    // les meubles cousus SEULS (racine de leur couture) : copiés plus tard, déjà cousus
+  libres: [],                        // les signatures des maillages non étiquetés : { cle, x, y, z, nomMat }
+  instances: [],                     // { objet, P } : les poses dont la racine reste dans la scène (recalées au rattrapage)
+  sigs: new Map(),                   // type (+ variante) → [{ sig, cle }] : les variantes déjà vues
+});
+let _E = nouvelEtat();
 const _sigMat = new WeakMap();       // matériau → signature (à son CONTENU : les jumeaux dédupliqués plus tard ont la même)
 const _m = new THREE.Matrix4(), _inv = new THREE.Matrix4(), _pose = new THREE.Matrix4(), _p = new THREE.Vector3(), _q = new THREE.Quaternion(),
   _s = new THREE.Vector3(), _e = new THREE.Euler(), _v = new THREE.Vector3(), _y = new THREE.Vector3(0, 1, 0);
 const r3 = (v) => Math.round(v * 1000);                  // (au mm, au millième de radian)
+// l'empreinte d'une signature (FNV-1a, 8 chiffres hexadécimaux) : chaque pose garde celle de son exemplaire (test L-K 5)
+function empreinte(s) { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(16).padStart(8, '0'); }
 const ang = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
 const etiquette = (o) => {
@@ -169,6 +176,39 @@ function signaturePieces(maillages, Mpose) {
   return maillages.map((o) => { _m.multiplyMatrices(_inv, o.matrixWorld); return nSommets(o.geometry) + '/' + sigMat(o.material) + '/' + _m.elements.map(r3).join(','); }).join(';');
 }
 
+// L'APLATISSEMENT d'un prototype : ses maillages regroupés par matériau, réglages d'ombre, ordre de rendu et attributs, cousus
+// dans le repère du prototype (géométries CLONÉES : celles du décor ne bougent pas) ; ce qui ne se coud pas reste à part
+function aplatir(proto) {
+  proto.updateMatrixWorld(true);
+  const familles = new Map(), aPart = [];
+  proto.traverse((o) => {
+    if (!o.isMesh) return;
+    const g = o.geometry, m = o.material;
+    if (!g || !g.attributes.position || Array.isArray(m) || o.isSkinnedMesh || o.isInstancedMesh || (g.morphAttributes && Object.keys(g.morphAttributes).length)) { aPart.push(o); return; }
+    const cle = [m.uuid, o.castShadow, o.receiveShadow, o.renderOrder, !!o.userData.horsAOSol, !!o.userData.sansNormales, Object.keys(g.attributes).sort().join(','), !!g.index].join('#');
+    if (!familles.has(cle)) familles.set(cle, []);
+    familles.get(cle).push(o);
+  });
+  const plat = new THREE.Group();
+  for (const [, L] of familles) {
+    const geos = L.map((o) => { const q = o.geometry.clone(); q.applyMatrix4(o.matrixWorld); return q; });
+    let g = null;
+    try { g = geos.length > 1 ? mergeGeometries(geos, false) : geos[0]; } catch (e) { g = null; }
+    if (geos.length > 1) for (const q of geos) if (q !== g) q.dispose();
+    if (!g) { for (const o of L) aPart.push(o); continue; }
+    const M = L[0], mesh = new THREE.Mesh(g, M.material);
+    mesh.castShadow = M.castShadow; mesh.receiveShadow = M.receiveShadow; mesh.renderOrder = M.renderOrder;
+    mesh.userData = { ...M.userData }; mesh.name = M.name || '';
+    plat.add(mesh);
+  }
+  for (const o of aPart) {
+    const c = o.clone(false); o.matrixWorld.decompose(c.position, c.quaternion, c.scale);
+    c.userData = { ...o.userData }; plat.add(c);
+  }
+  plat.updateMatrixWorld(true);
+  return plat;
+}
+
 // UN TYPE NEUF : le prototype (la racine clonée SANS son étiquette — userData passe par JSON.stringify, et les `formes` du
 // lot R sont des formes du monde solide), posé dans son repère, sa boîte exacte, et ce qui s'en déduit (§ 3.9)
 function creerType(cle, E, variante, racines, Mbase, sig) {
@@ -190,7 +230,15 @@ function creerType(cle, E, variante, racines, Mbase, sig) {
     MEUBLES.stats.clones++;
   }
   proto.updateMatrixWorld(true);
-  const boite = boiteExacte(maillagesDe(proto), new THREE.Matrix4(), new THREE.Box3());
+  // (la plus grosse pièce de l'ORIGINAL : sa signature reconnaît un exemplaire oublié du décor)
+  let grosse = null;
+  for (const o of maillages) if (!o.material || !o.material.transparent) if (!grosse || nSommets(o.geometry) > nSommets(grosse.geometry)) grosse = o;
+  const cleM = grosse && nSommets(grosse.geometry) >= 8 ? cleMaillage(grosse) : null;
+  // LE PROTOTYPE COUSU par matériau (comme fusionnerLocal) : une copie coûte un appel de dessin par matériau et par passe
+  // (une chaise de 22 maillages en coûterait 88 en haute), et ses pièces restent exactement à leur place
+  const plat = aplatir(proto);
+  plat.name = proto.name;
+  const boite = boiteExacte(maillagesDe(plat), new THREE.Matrix4(), new THREE.Box3());
   if (boite.isEmpty()) boite.set(new THREE.Vector3(-0.2, 0, -0.2), new THREE.Vector3(0.2, 0.4, 0.2));
   const taille = boite.getSize(new THREE.Vector3());
   const l = taille.x, h = taille.y, p = taille.z, volume = Math.max(1e-4, l * h * p), k3 = Math.cbrt(volume);
@@ -198,19 +246,16 @@ function creerType(cle, E, variante, racines, Mbase, sig) {
   const longMax = surPlace ? LONG_SUR_PLACE : LONG_MAX;
   let deguisable = E.deguisable ?? (DEGUISABLE_PAR_TYPE[type] !== false), raison = deguisable ? null : 'type';
   if (deguisable && Math.max(l, p) > longMax) { deguisable = false; raison = 'trop long (' + Math.max(l, p).toFixed(2) + ' m)'; }
-  // (la plus grosse pièce du meuble : sa signature reconnaît un exemplaire oublié du décor)
-  let grosse = null;
-  for (const o of maillagesDe(proto)) if (!o.material || !o.material.transparent) if (!grosse || nSommets(o.geometry) > nSommets(grosse.geometry)) grosse = o;
   const T = {
-    cle, type, variante, nom: E.nom || type, famille: familleDe(type), proto, boite, taille, volume,
+    cle, type, variante, nom: E.nom || type, famille: familleDe(type), proto: plat, boite, taille, volume,
     rayon: Math.min(0.5, Math.max(0.15, Math.max(l, p) / 2 * 0.9)), haut: h,
     bande: { bas: Math.min(0.25, 0.4 * h), haut: Math.max(h, 0.5) },
     pv: Math.round(Math.min(145, Math.max(60, 40 + 90 * k3))),
     vitesse: 4.6 * Math.min(1.05, Math.max(0.72, 1.15 - 0.35 * k3)),
     mural: !!(E.mural ?? propriete(type, 'mural')), surPlace: !!surPlace, voile: E.voile !== false,
     deguisable, raison, deguisableBase: deguisable, raisonBase: raison, symetrie: propriete(type, 'symetrie') ?? null,
-    accroche: 0, dos: Math.max(0.02, -boite.min.z), dy, signature: sig,
-    cleMaillage: grosse && nSommets(grosse.geometry) >= 8 ? cleMaillage(grosse) : null,
+    accroche: 0, dos: Math.max(0.02, -boite.min.z), dy, signature: sig, empreinte: empreinte(sig), maillages: plat.children.length,
+    cleMaillage: cleM,
     source: null,
   };
   MEUBLES.types.set(cle, T);
@@ -220,8 +265,8 @@ function creerType(cle, E, variante, racines, Mbase, sig) {
 // LA CLÉ D'UN EXEMPLAIRE : son type, sa variante (donnée, ou dérivée de la signature)
 function cleDe(E, sig) {
   const base = E.type + (E.variante ? ':' + E.variante : '');
-  let L = _sigs.get(base);
-  if (!L) _sigs.set(base, L = []);
+  let L = _E.sigs.get(base);
+  if (!L) _E.sigs.set(base, L = []);
   for (const e of L) if (e.sig === sig) return { cle: e.cle, variante: e.variante, neuf: false };
   const n = L.length + 1;
   const variante = n === 1 ? (E.variante || null) : (E.variante ? E.variante + '-' + n : String(n));
@@ -238,7 +283,7 @@ function poserExemplaire(T, Mbase, objet) {
     y0, y1: y0 + T.taille.y, c: Math.cos(-cap), s: Math.sin(-cap), pas: 0 };
   centrer(P, T);
   MEUBLES.poses.push(P);
-  if (objet && !objet.isMesh) _instances.push({ objet, P });
+  if (objet && !objet.isMesh) _E.instances.push({ objet, P });
   return P;
 }
 // le centre au sol de la boîte orientée : le centre de la boîte du prototype, tourné de cap
@@ -272,6 +317,7 @@ function noter(racines, E, aJour = false) {
   let T = MEUBLES.types.get(k.cle);
   if (!T) T = creerType(k.cle, E, k.variante, racines, Mbase, sig);
   const P = poserExemplaire(T, Mbase, racines.length === 1 ? R0 : null);
+  P.empreinte = empreinte(sig);
   if (!T.source) {
     // (l'original, pour le test L-K 4 : sa boîte monde exacte, au sommet près)
     const bm = boiteExacte(maillages, new THREE.Matrix4(), new THREE.Box3());
@@ -285,23 +331,23 @@ function noter(racines, E, aJour = false) {
 // LE PARCOURS d'un sous-arbre avant sa couture : les étiquetés, et la signature de chaque maillage non étiqueté
 function parcourir(o, racine, parties) {
   const E = etiquette(o);
-  if (E && !_vus.has(o)) {
-    _vus.add(o);
+  if (E && !_E.vus.has(o)) {
+    _E.vus.add(o);
     if (E.partie) { let L = parties.get(E.partie); if (!L) parties.set(E.partie, L = { E, racines: [] }); L.racines.push(o); return; }
-    if (o === racine) { _references.push(o); MEUBLES.stats.references++; return; }
+    if (o === racine) { _E.references.push(o); MEUBLES.stats.references++; return; }
     noter([o], E, true);
     return;
   }
   if (E) return;
-  if (o.isMesh && !_maillesVues.has(o) && o.geometry && !(o.userData && (o.userData.dynamique || o.userData.suite))) {
-    _maillesVues.add(o);
+  if (o.isMesh && !_E.maillesVues.has(o) && o.geometry && !(o.userData && (o.userData.dynamique || o.userData.suite))) {
+    _E.maillesVues.add(o);
     const n = nSommets(o.geometry);
     if (n >= 8 && n <= 40000) {
       const mat = Array.isArray(o.material) ? o.material[0] : o.material;
       if (!o.geometry.boundingBox) MEUBLES.stats.sommets += n;
       const cle = cleMaillage(o);
       _p.setFromMatrixPosition(o.matrixWorld);
-      _libres.push({ cle, x: _p.x, y: _p.y, z: _p.z, nomMat: (mat && mat.name) || '' });
+      _E.libres.push({ cle, x: _p.x, y: _p.y, z: _p.z, nomMat: (mat && mat.name) || '' });
       MEUBLES.stats.libres++;
     }
   }
@@ -322,14 +368,14 @@ export function fermerRegistre(racine) {
 // (groupes `nofuse`) ; les poses recalées si leur racine a bougé depuis (un groupe de niveau décalé après sa couture) ; les
 // maillages oubliés comparés aux prototypes
 export function rattraperRegistre(scene) {
-  for (const o of _references.splice(0)) { const E = etiquette(o); if (E) { noter([o], E); MEUBLES.stats.rattrapes++; } }
+  for (const o of _E.references.splice(0)) { const E = etiquette(o); if (E) { noter([o], E); MEUBLES.stats.rattrapes++; } }
   if (scene && scene.traverse) {
     const L = [];
-    scene.traverse((o) => { if (o.userData && o.userData.meuble && !_vus.has(o) && !o.userData.dynamique) L.push(o); });
-    for (const o of L) { _vus.add(o); const E = etiquette(o); if (E && !E.partie) { noter([o], E); MEUBLES.stats.rattrapes++; } }
+    scene.traverse((o) => { if (o.userData && o.userData.meuble && !_E.vus.has(o) && !o.userData.dynamique) L.push(o); });
+    for (const o of L) { _E.vus.add(o); const E = etiquette(o); if (E && !E.partie) { noter([o], E); MEUBLES.stats.rattrapes++; } }
   }
   // (les racines restées dans la scène : leur pose relue sur la matrice d'aujourd'hui)
-  for (const { objet, P } of _instances) {
+  for (const { objet, P } of _E.instances) {
     if (!objet.parent) continue;
     objet.updateWorldMatrix(true, false);
     const T = MEUBLES.types.get(P.cle), M = objet.matrixWorld, cap = capDe(M);
@@ -343,7 +389,7 @@ export function rattraperRegistre(scene) {
   // extincteurs, un matériau qui le dit (ils n'ont pas tous la même géométrie : celui de l'ascenseur, de L-M)
   const parCle = new Map();
   for (const [, T] of MEUBLES.types) if (T.cleMaillage) parCle.set(T.cleMaillage, T);
-  for (const L of _libres) {
+  for (const L of _E.libres) {
     const T = parCle.get(L.cle);
     let type = T ? T.type : null;
     if (!type && /extincteur/i.test(L.nomMat)) type = 'extincteur';
@@ -433,4 +479,15 @@ export function copieMeuble(cle) {
   g.name = 'copie ' + cle;
   g.userData = { ...g.userData, meuble: cle, dynamique: true };
   return g;
+}
+
+// LE BAC À SABLE (pour les TESTS : le test L-K 1 mesure le coût du registre en rejouant la construction sur une réplique,
+// le vrai registre mis de côté puis rendu tel quel)
+export function _bacASable(fn) {
+  const E0 = _E, M0 = { types: MEUBLES.types, poses: MEUBLES.poses, parZone: MEUBLES.parZone, grille: MEUBLES.grille, parForme: MEUBLES.parForme,
+    nonEtiquetes: MEUBLES.nonEtiquetes, horsTolerance: MEUBLES.horsTolerance, stats: MEUBLES.stats };
+  _E = nouvelEtat();
+  Object.assign(MEUBLES, { types: new Map(), poses: [], parZone: new Map(), grille: new Map(), parForme: new Map(), nonEtiquetes: [], horsTolerance: [],
+    stats: { coutures: 0, etiquetes: 0, clones: 0, references: 0, parties: 0, libres: 0, sommets: 0, rattrapes: 0, recales: 0 } });
+  try { return fn(MEUBLES); } finally { _E = E0; Object.assign(MEUBLES, M0); }
 }
