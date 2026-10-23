@@ -267,7 +267,9 @@ export class Game {
       }
     };
     // (la capture du pointeur perdue en pleine partie — Échap, la fenêtre quittée — : la pause, dans la même image)
-    document.addEventListener('iris-pointeur', (e) => { if (this.partie && !e.detail.capture && !this.paused) this.togglePause(); });
+    // (F2, demandes de L-E et L-U : jamais sur l'écran de FIN — la partie finie rend le pointeur, l'écran de pause couvrait
+    // celui de fin)
+    document.addEventListener('iris-pointeur', (e) => { if (this.partie && this.partie.phase !== 'fin' && !e.detail.capture && !this.paused) this.togglePause(); });
     window.addEventListener('resize', this._onResize);
     canvas.addEventListener('click', this._onClick);
     canvas.addEventListener('mousedown', this._onDown);
@@ -544,7 +546,7 @@ export class Game {
     if (enJeu !== this._enJeu) { this._enJeu = enJeu; document.body.classList.toggle('en-jeu', enJeu); }
     this.input.scruter(this, dt);                    // manette : boutons -> codes « Pad:… », sticks, menus (js/manette.js)
     const wheelAte = this.updateEmoteInput(dt);
-    if (enJeu && !wheelAte && this.input.pressed('pause')) this.togglePause();
+    if (enJeu && !wheelAte && this.input.pressed('pause') && !(this.partie && this.partie.phase === 'fin')) this.togglePause();
     // (22/10 : en partie, ni téléphone ni changement de vue — ces actions ne sont pas dans ses profils de touches)
     if (enJeu && !this.partie && this.input.pressed('phone')) this.cb.onPhone?.();
     if (enJeu && !this.partie && this.input.pressed('camera')) {
