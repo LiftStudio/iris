@@ -213,7 +213,6 @@ function generer(C, Lu, { pas, rayon, franchir, bornes: B, graines, chrono = nul
     for (let a = 0; a < nb; a++) caseNoeuds[rempli[ci[a] * NK + ck[a]]++] = a;
     // LES LIENS « FRANCHIR » (le graphe des humains) : là où la marche échoue, la fonction du mouvement
     const fr = [];
-    let appels = 0, nBas = 0, nArr = 0;
     const essais = new Set();
     if (franchir) {
       const proche = (x, y, z) => {
@@ -242,11 +241,9 @@ function generer(C, Lu, { pas, rayon, franchir, bornes: B, graines, chrono = nul
           // suffit au chemin, et les voisins d'un essai raté butent sur le même obstacle)
           const bloc = ((((ci[a] >> 2) * NK + (ck[a] >> 2)) * 64 + ((Math.round(ph[a] * 2) + 32) & 63)) * 8) + d;
           if (essais.has(bloc)) continue;
-          nBas++;
           if (!basDevant(C, px[a], ph[a], pz[a], ux, uz)) continue;
-          essais.add(bloc); nArr++;
+          essais.add(bloc);
           if (!arriveeLibre(C, px[a], ph[a], pz[a], ux, uz)) continue;
-          appels++;
           const F = franchissable(C, px[a], ph[a], pz[a], ux, uz);
           if (!F) continue;
           const b = proche(F.x, F.y, F.z);
@@ -302,7 +299,7 @@ function generer(C, Lu, { pas, rayon, franchir, bornes: B, graines, chrono = nul
     ch('degage');
     return { v: VERSION_NAV, pas, rayon, franchir, bornes: { ...B }, NI, NK, nb,
       px: Float32Array.from(px), pz: Float32Array.from(pz), ph: Float32Array.from(ph), ci: Int16Array.from(ci), ck: Int16Array.from(ck),
-      zone, region, niveau, degage, debut, liens, cout, typeLien, caseDebut, caseNoeuds, nFranchir: fr.length / 2, appelsFranchir: appels, stats: { nBas, nArr, appels } };
+      zone, region, niveau, degage, debut, liens, cout, typeLien, caseDebut, caseNoeuds, nFranchir: fr.length / 2 };
   } finally {
     for (let j = 0; j < garde.length; j += 2) garde[j].off = garde[j + 1];
   }
@@ -459,7 +456,7 @@ export class Nav {
     this._r1 = null; this._r2 = null; this._rC = null;
   }
   _charger(D, C) {
-    this.C = C; this.D = D;
+    this.C = C;
     this.pas = D.pas; this.rayon = D.rayon; this.franchir = D.franchir; this.bornes = D.bornes; this.empreinte = D.empreinte;
     this.nb = D.nb; this.px = D.px; this.pz = D.pz; this.ph = D.ph; this.zone = D.zone; this.region = D.region || D.zone; this.niveau = D.niveau;
     this.degage = D.degage; this.debut = D.debut; this.liens = D.liens; this.cout = D.cout; this.typeLien = D.typeLien;

@@ -390,12 +390,11 @@ export class Pilote {
     c.pos.set(N.px[v], N.ph[v], N.pz[v]); c.vel.set(0, 0, 0);
     if (c.posPrec) c.posPrec.copy(c.pos);
     c.solAff = N.ph[v]; c.jumpY = 0; c.jumpVel = 0; c.airborne = false;
-    this.secours++; Pilote.secoursTotal++;
+    this.secours++;
     this._surs.length = 0; this._ref = null;
     return true;
   }
 }
-Pilote.secoursTotal = 0;
 
 // ======================================================================================================== L'ERRANT
 // les visites des pièces par partie (les errants d'une même partie se répartissent l'école)

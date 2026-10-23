@@ -469,7 +469,7 @@ export default function (jeu) {
       let fr = false; for (let i = 1; i < L.length; i++) { const q = N.lien(L[i - 1], L[i]); if (q >= 0 && N.typeLien[q] === 1) fr = true; }
       if (fr) pris++;
     }
-    const ok = liens.length > 0 && verifies === liens.length && attente >= 1 && rangs === 0 && candidats > 0 && pris === candidats;
+    const ok = liens.length > 0 && liens.length === N.nFranchir && verifies === liens.length && attente >= 1 && rangs === 0 && candidats > 0 && pris === candidats;
     return { ok, attendu: 'tous redonnés à ≤ 0,3 m, ≥ 1 sur les banquettes de l\'attente, 0 dans un rang, A* les prend (le comptoir : 0, il fait 1,18 m)',
       obtenu: `${liens.length} liens, ${verifies} redonnés${faux.length ? ' (faux ' + faux.join(' ; ') + ')' : ''}, attente ${attente}, comptoir ${comptoir}, rangs ${rangs}, A* ${pris}/${candidats}` };
   });
