@@ -22,7 +22,13 @@ const DEFAUTS = ['#opt-panels button, #opt-panels [data-toggle], #opt-panels inp
 // (sélecteur du bouton de retour), `defaut` (sélecteur de l'élément focalisé en arrivant, essayé avant ceux d'aujourd'hui),
 // `avant` (l'id d'une racine déjà inscrite sous laquelle passer : sans lui, la nouvelle va en dessous de toutes). Une
 // racine qui porte `data-retour-action` « tape » cette action du jeu sur B (voir retour).
+// (23/10, lot L-I) Ce que les écrans du jeu demandent en plus : une racine peut aussi porter son bouton de retour elle-même
+// (`data-retour`, un sélecteur cherché en elle — un écran construit plus tard, ou à plusieurs sous-écrans, n'a pas à
+// s'inscrire de nouveau) ; une racine inscrite une 2e fois avec `avant` reprend sa place sous celle-ci (le squelette du menu
+// et le vrai s'inscrivent chacun à leur tour) ; `racinesInscrites()` les rend, du dessus vers le dessous (les tests).
 export function ajouterRacine(id, { retour = null, defaut = null, avant = null } = {}) {
+  const j = RACINES.indexOf(id);
+  if (j >= 0 && avant && RACINES.includes(avant) && avant !== id) RACINES.splice(j, 1);
   if (!RACINES.includes(id)) {
     const i = avant ? RACINES.indexOf(avant) : -1;
     if (i >= 0) RACINES.splice(i, 0, id); else RACINES.push(id);
@@ -30,6 +36,7 @@ export function ajouterRacine(id, { retour = null, defaut = null, avant = null }
   if (retour) RETOUR[id] = retour;
   if (defaut && !DEFAUTS.includes(defaut)) DEFAUTS.unshift(defaut);
 }
+export function racinesInscrites() { return RACINES.slice(); }
 // répétition quand on tient une direction : premier pas tout de suite, puis après 0,4 s, puis toutes les 0,1 s
 const REPET_1 = 0.4, REPET_N = 0.1;
 
@@ -355,7 +362,7 @@ export class NavMenus {
     if (act && racine.contains(act) && (act.tagName === 'INPUT' || act.tagName === 'TEXTAREA')) { act.blur(); return; }
     if (racine.id === 'overlay') { this.m.taperAction('pause'); return; }
     if (racine.dataset && racine.dataset.retourAction) { this.m.taperAction(racine.dataset.retourAction); return; }
-    const sel = RETOUR[racine.id];
+    const sel = (racine.dataset && racine.dataset.retour) || RETOUR[racine.id];
     const el = sel && [...racine.querySelectorAll(sel)].find(estVisible);
     if (el) el.click();
   }
