@@ -438,7 +438,9 @@ export class SonsJeu {
   _chaine() {
     const L = this._chaines || (this._chaines = []);
     for (const c of L) if (!c.occupee) return c;
-    if (L.length >= REGLAGES_SONS.voix + 6 || !this._bus()) return null;
+    // (toutes prises : la plus vieille voix volée finit son fondu tout de suite — l'horloge peut ne pas avancer)
+    if (L.length >= REGLAGES_SONS.voix + 6) { const m = this._mourantes.shift(); if (!m) return null; const c = m.v.chaine; this._liberer(m.v); return c && !c.occupee ? c : null; }
+    if (!this._bus()) return null;
     const A = this.audio, ctx = A.ctx;
     const c = { gain: ctx.createGain(), filtre: ctx.createBiquadFilter(), panner: A.spatial ? A.spatial() : ctx.createPanner(), occupee: false };
     c.gain.gain.value = 0; c.filtre.type = 'lowpass'; c.filtre.frequency.value = 20000; c.filtre.Q.value = 0.7;

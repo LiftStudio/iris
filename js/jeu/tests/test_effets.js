@@ -351,7 +351,7 @@ export default function (jeu) {
       for (let k = 0; k < 10; k++) S.jouer3d(L.x + 3 + k * 0.3, L.y, L.z - 2, SINUS(), { gain: 1, rayon: 30 });
       vues = 0; S.maj(0, cam); const n1 = vues;
       // une voix sous −30 dB (gain 0,01 à 25 m) : jamais testée
-      while (S.voix.some((v) => v.aVerifier)) S.maj(0, cam);
+      for (let k = 0; k < 50 && S.voix.some((v) => v.aVerifier); k++) S.maj(0, cam);
       const faible = S.jouer3d(L.x + 25, L.y, L.z, SINUS(), { gain: 0.01, rayon: 60 });
       let vuesFaible = 0; B.vue = function (ax, ay, az, bx, by, bz) { if (faible && Math.abs(bx - faible.x) < 1e-6 && Math.abs(bz - faible.z) < 1e-6) vuesFaible++; vues++; return vue.call(this, ax, ay, az, bx, by, bz); };
       for (let k = 0; k < 30; k++) S.maj(0, cam);
@@ -359,7 +359,7 @@ export default function (jeu) {
       res.push([`voix à ${faible ? r2(faible.niveauDb) : '—'} dB : testée ${vuesFaible} fois`, !!faible && faible.niveauDb < -30 && vuesFaible === 0]);
     } finally { B.vue = vue; }
     // LE COÛT de l'occlusion par image (24 voix actives), hors le temps de vue() elle-même ; 0 appel à C.rayonLibre hors de vue()
-    while (S.voix.length < REGLAGES_SONS.voix) S.jouer3d(L.x + 2 + Math.random() * 6, L.y, L.z - 3 + Math.random() * 6, SINUS(5), { gain: 1, rayon: 30 });
+    for (let k = 0; k < 200 && S.voix.length < REGLAGES_SONS.voix; k++) S.jouer3d(L.x + 2 + Math.random() * 6, L.y, L.z - 3 + Math.random() * 6, SINUS(5), { gain: 1, rayon: 30 });
     let dansVue = false, msVue = 0, rl = 0;
     const rayon = c.rayonLibre;
     c.rayonLibre = function (...x) { if (!dansVue) rl++; return rayon.apply(this, x); };
@@ -555,7 +555,7 @@ export default function (jeu) {
   T('F1 occlusion avec la vraie vue de L-A : ≤ 0,05 ms par image', async (t) => {
     const { p, S } = await essai({ mannequins: 1 });
     const cam = game.camera, L = cam.position;
-    while (S.voix.length < REGLAGES_SONS.voix) S.jouer3d(L.x + 2 + Math.random() * 10, L.y, L.z - 6 + Math.random() * 12, SINUS(5), { gain: 1, rayon: 30 });
+    for (let k = 0; k < 200 && S.voix.length < REGLAGES_SONS.voix; k++) S.jouer3d(L.x + 2 + Math.random() * 10, L.y, L.z - 6 + Math.random() * 12, SINUS(5), { gain: 1, rayon: 30 });
     const m = jeu.mesurer(() => S._occlusions(), 300);
     jeu.quitter('balade');
     return { ok: t.temps('L-H occlusion par image, vraie vue (ms)', m.med, 0.05), attendu: '≤ 0,05 ms', obtenu: r3(m.med) + ' ms' };
