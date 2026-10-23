@@ -214,7 +214,10 @@ export default function (jeu) {
         for (let j = 0; j < 3; j++) {
           if (j === 2 && ARMES_FEU.includes(id)) {
             // la vue du tireur : la caméra là où la met la pose de hanche (repère caméra 0,135 ; −0,125 ; −0,32 ; lacet 0,035), 52°
-            cam.fov = 52; cam.position.set(-0.135, 0.125, 0.32).applyAxisAngle(new THREE.Vector3(0, 1, 0), -0.035); cam.rotation.set(0, -0.035, 0);
+            // (écran en hauteur, ?tel=1 : le champ horizontal d'un 16:9 gardé, sinon l'arme, à droite, sort du cadre)
+            const a0 = game.camera.aspect;
+            cam.fov = a0 >= 16 / 9 ? 52 : 2 * Math.atan(Math.tan(26 * Math.PI / 180) * (16 / 9) / a0) * 180 / Math.PI;
+            cam.position.set(-0.135, 0.125, 0.32).applyAxisAngle(new THREE.Vector3(0, 1, 0), -0.035); cam.rotation.set(0, -0.035, 0);
           } else {
             const [az, el] = j === 0 ? [-90, 8] : j === 1 ? [-35, 24] : [-140, 30];
             // (la distance qui fait tenir l'arme dans le cadre : sa sphère dans la largeur, sa hauteur dans la hauteur)
