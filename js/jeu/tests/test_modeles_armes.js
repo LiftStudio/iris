@@ -329,9 +329,11 @@ export default function (jeu) {
       });
       try { appels = rendreCible(game, vm.scene).appels; } finally { for (const o of caches) o.visible = true; }
     }
+    // (3 s de tir puis 3 s de recharge en temps SIMULÉ, `partie.t` : l'onglet derrière un autre, les images sont faites à la main
+    // et 3 s d'horloge n'en simulaient que 0,3 — 3 tirs, échec — relecture)
     const prog0 = game.renderer.info.programs.length, tir0 = jeu.compteurs().tirs;
-    jeu.commande(0, { tir: true }, 3); let t0 = performance.now(); while (performance.now() - t0 < 3000) await t.images(10);
-    jeu.commande(0, { tir: false, recharger: true }, 0.1); t0 = performance.now(); while (performance.now() - t0 < 3000) await t.images(10);
+    jeu.commande(0, { tir: true }, 3); let t0 = p.t; for (let k = 0; k < 60 && p.t - t0 < 3; k++) await t.images(10);
+    jeu.commande(0, { tir: false, recharger: true }, 0.1); t0 = p.t; for (let k = 0; k < 60 && p.t - t0 < 3; k++) await t.images(10);
     const prog1 = game.renderer.info.programs.length, tirs = jeu.compteurs().tirs - tir0;
     jeu.quitter('balade'); jeu.figerQualite(false);
     const ok = modeles === 8 && !!a && appels === a.userData.appels && appels <= 6 && prog1 === prog0 && tirs > 5;
