@@ -334,7 +334,7 @@ export class Effets {
   constructor(game) {
     this.game = game; this.partie = null; this._des = [];
     this._file = []; this.pools = null; this.racines = [];
-    this._kImp = 0; this._tirs = []; this._trajets = []; this._points = []; this._douillesAttente = []; this._cibAff = new Map(); this._grenVues = new Map(); this._image = 0;
+    this._kImp = 0; this._tirs = []; this._trajets = []; this._points = []; this._couteaux = []; this._douillesAttente = []; this._cibAff = new Map(); this._grenVues = new Map(); this._image = 0;
     this.t = 0; this.stats = { impacts: 0, decalques: 0, gerbes: 0, traceurs: 0, douilles: 0, eclairs: 0, explosions: 0 };
   }
 
@@ -420,7 +420,9 @@ export class Effets {
     // tout droit ; sans lui, il va à l'impact du même pas sur le rayon du tir)
     // (ni `elim` ni `flash` : la touche qui tue a déjà sa gerbe, la poupée est à L-C, le voile blanc au HUD — relecture du
     // 23/10, deux abonnements qui ne dessinaient rien)
-    for (const quoi of ['tir', 'trajet', 'impact', 'touche', 'explosion', 'faux']) this._des.push(partie.sur(quoi, (e) => { this._file.push({ quoi, e }); }));
+    // (`couteau`, un ajout de L-A : le coup de couteau qui touche le décor passe par Partie.resoudreTir et émet un `impact`
+    // au même point — pas de trou de balle pour une lame)
+    for (const quoi of ['tir', 'trajet', 'impact', 'touche', 'explosion', 'faux', 'couteau']) this._des.push(partie.sur(quoi, (e) => { this._file.push({ quoi, e }); }));
     this._fluidite();
   }
   debrancher() {
@@ -440,7 +442,7 @@ export class Effets {
       m.instanceMatrix.needsUpdate = true; m.visible = false;
     }
     this.imp.t.fill(-1); this._kImp = 0; this.tra.age.fill(1e9); this.dou.age.fill(1e9); this.ecl.images.fill(0);
-    this._douillesAttente.length = 0; this._cibAff.clear(); this._tirs.length = 0; this._grenVues.clear(); this._nGren = 0; this._nAnn = 0; this._nCib = 0;
+    this._douillesAttente.length = 0; this._cibAff.clear(); this._tirs.length = 0; this._couteaux.length = 0; this._grenVues.clear(); this._nGren = 0; this._nAnn = 0; this._nCib = 0;
   }
   // « Priorité fluidité » (réglage jeu.fluidite) : le budget de js/fx.js, relu à chaque image (Options pendant la pause)
   _fluidite() { const fx = this.game.fx; if (fx) fx.fluidite = !!this._jeu().fluidite; }
@@ -459,8 +461,8 @@ export class Effets {
     // 1. les événements du pas (les tirs d'abord : un impact y retrouve son tireur)
     if (this._file.length) {
       const L = this._file; this._file = [];
-      this._tirs.length = 0; this._points.length = 0; this._trajets.length = 0;
-      for (const w of L) if (w.quoi === 'tir') this._tirs.push(w.e); else if (w.quoi === 'trajet') this._trajets.push(w.e);
+      this._tirs.length = 0; this._points.length = 0; this._trajets.length = 0; this._couteaux.length = 0;
+      for (const w of L) if (w.quoi === 'tir') this._tirs.push(w.e); else if (w.quoi === 'trajet') this._trajets.push(w.e); else if (w.quoi === 'couteau') this._couteaux.push(w.e);
       for (const w of L) if (w.quoi === 'impact' || w.quoi === 'touche') this._points.push(w.e);
       for (const w of L) { try { this._evenement(w.quoi, w.e, P); } catch (err) { console.warn('[effets]', w.quoi, err); } }
       for (const ev of this._tirs) { try { this._traceur(ev, P); } catch (err) { console.warn('[effets] traceur', err); } }
@@ -723,7 +725,8 @@ export class Effets {
       if (!plomb) this.etincelles.emettre(ev.x, ev.y, ev.z, 0, 0, 0, 0.08, 0.05, 0.12, COUL.verre, { cas: 2, a0: 0.8 });
       return;
     }
-    const decal = mat === 'plafond' || (f && decalquable(f) && mat !== 'sol' && mat !== 'meuble');
+    const lame = this._couteaux.some((k) => Math.abs(k.t - ev.t) < 1e-6 && Math.hypot(k.x - ev.x, k.y - ev.y, k.z - ev.z) < 0.02);
+    const decal = !lame && (mat === 'plafond' || (f && decalquable(f) && mat !== 'sol' && mat !== 'meuble'));
     if (decal && !(plomb && Math.random() < 0.4)) {
       const I = REGLAGES_EFFETS.impact;
       if (air) this._decalque(ev.x, ev.y, ev.z, nx, ny, nz, 1, I.peinture[0] + Math.random() * (I.peinture[1] - I.peinture[0]), coul);

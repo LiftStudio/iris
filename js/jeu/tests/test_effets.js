@@ -237,6 +237,12 @@ export default function (jeu) {
         if (!avantReg) MEUBLES.parForme.set(F.mur, -1);
         try { tirVers(p, a, surFace(F.mur), { mat: 'mur', forme: F.mur.id }); E.maj(1 / 60); } finally { if (!avantReg) MEUBLES.parForme.delete(F.mur); }
         res.push([`meuble du registre haut de ${r2(F.mur.y1 - F.mur.y0)} m, dit « mur » : ${E.stats.decalques - n1} décalque`, E.stats.decalques === n1]);
+        // (relecture) un COUP DE COUTEAU sur le mur (l'impact et l'événement `couteau` de L-A au même point) : pas de trou
+        const q = surFace(F.mur), n2 = E.stats.decalques;
+        p.evt('impact', { x: q.x, y: q.y, z: q.z, nx: q.nx, ny: q.ny, nz: q.nz, mat: 'mur', forme: F.mur.id, plomb: 0 });
+        p.evt('couteau', { a: a.id, cible: -1, x: q.x, y: q.y, z: q.z });
+        E.maj(1 / 60);
+        res.push([`coup de couteau sur le mur : ${E.stats.decalques - n2} décalque`, E.stats.decalques === n2]);
       }
     } finally { habillage(avant); jeu.quitter('balade'); }
     return bilan(res, 'un décalque sur un mur haut et un plafond, aucun sur un meuble, un vantail ou le sol ; quad sur la normale à ± 2°');
