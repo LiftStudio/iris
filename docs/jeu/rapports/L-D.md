@@ -237,3 +237,8 @@ de 4 cm d'un mur).
 - (f) onglet fermé, serveur du port 8136 arrêté, jeton `jeton_1` rendu (pris à 03:15, rafraîchi pendant les tests).
 
 ### Dernier passage
+
+23/10, sur `71717c1` : `&rapport=1&lot=L-D` → **`ok: true`, 18/18**, 29,96 s, 0 échec, 0 signalé (génération 924 ms,
+graphe des props 639 ms, cache IndexedDB 43,9 ms ; `verifierBots` 0 / 0 / 0 / 0, 0 coincé, 0 secours, 44 pièces ; A* 30/30
+sur les franchissements ; couverts 0 faute). `&lot=S0` 29/29 (sur `202b9bd`, le pilotage inchangé depuis). Propriétaires :
+OK. Onglet `tab-8` fermé, serveur 8136 arrêté, `jeton_1` rendu.
