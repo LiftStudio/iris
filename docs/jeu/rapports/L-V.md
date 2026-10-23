@@ -3,6 +3,13 @@
 Branche `lot/L-V` (depuis `socle` = `socle-ok`, e06258f), arbre `C:/Users/hgami/Downloads/IRIS_lots/L-V`, port 8134 ; 23/10/2026.
 Fichiers : `js/jeu/viewmodel.js`, `js/jeu/anim_vue.js` (remplis), `js/jeu/tests/test_viewmodel.js` (créé), ce rapport.
 
+## Relecture (relecteur sévère, 23/10/2026) — où j'en suis
+
+**EN COURS** (repreneur : reprendre ici). Lecture faite (spec §§ 3.2-3.4, 4.1, 4.5.6-4.5.9, 4.10.1, 5.1, 5.5.4 ; diff
+`socle...lot/L-V`) ; `python -I tools/verifier_proprietaires.py lot/L-V` → OK 4 fichiers ; fins de ligne CRLF comme
+les voisins. En attente d'un jeton du navigateur (les trois pris à 04:57 : L-C, L-K, L-G relecture) pour rejouer
+`&rapport=1&lot=L-V` (PC et `?tel=1`), `&lot=S0`, et jouer.
+
 ## Où j'en suis
 
 **FINI** (757f08e et ce rapport). Les six points de la définition de « fini » (§ 5.1 règle 5) sont tenus : (a)
