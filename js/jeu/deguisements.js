@@ -45,7 +45,7 @@ export const REGLAGES_DEGUISEMENT = {
   touche: { tressaille: 0.15, roulis: 3 * Math.PI / 180, flash: 0.08 }, mort: 0.4,
   cred: { memeZone: 0.35, memeNiveau: 0.15, voisins: 0.2, rayonVoisins: 2, capBon: 0.15, capMoyen: 0.05, capFaux: -0.35, pas: 0.1,
     murBon: 0.2, murSans: -0.5, passageLoin: 0.1, passagePres: -0.2, couloir: -0.2, sol: 0.1 },
-  cachettes: { budget: 160, poidsVue: 8, rang: 0.9, mur: [0.6, -0.6, 1.2, -1.2], table: [0.7, -0.7, 1.4, -1.4], doublon: 0.35, passage: 0.9, atteinte: 0.6 },
+  cachettes: { budget: 110, poidsVue: 8, rang: 0.9, mur: [0.6, -0.6, 1.2, -1.2], table: [0.7, -0.7, 1.4, -1.4], doublon: 0.35, passage: 0.9, atteinte: 0.6 },
 };
 
 // ---------------------------------------------------------------- LE CATALOGUE
@@ -502,10 +502,10 @@ export function contreMurEn(T, x, y, z, cap) {
   const dx = -Math.sin(cap), dz = -Math.cos(cap);
   return C.rayonLibre(x, ym, z, x + dx * L, ym, z + dz * L, 0) < 1 - 1e-6;
 }
-// planté au milieu d'une pièce de circulation, à plus de 0,8 m de tout ?
+// planté au milieu d'une pièce de circulation, à plus de 55 cm de tout (un couloir de 1,5 m : le milieu ; pas contre un mur) ?
 export function enPleinCouloir(x, y, z, zone) {
   const C = MEUBLES.collisions;
-  return !!C && COULOIRS.has(zone) && C.libre(x, z, 0.8, y, 1.6, 0.05);
+  return !!C && COULOIRS.has(zone) && C.libre(x, z, 0.55, y, 1.6, 0.05);
 }
 // l'écart de cap qui SE VOIT (à la symétrie du type près : un tabouret rond tourné n'a pas bougé)
 function ecartCap(T, a, b) {

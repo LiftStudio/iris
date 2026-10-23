@@ -10,7 +10,7 @@ import { PAS, ZONES_JEU } from '../constantes.js';
 import { MEUBLES, copieMeuble, fermerRegistre, rattraperRegistre, zonerRegistre, _bacASable, empriseEgale } from '../../registre_meubles.js';
 import {
   CATALOGUE, preparerCatalogue, typesDeguisables, typesDistincts, deguisableDans, viserMeuble, deguiser, retirerProp, majProps, credibilite, cachettes,
-  candidatsMeubles, toucherPoses, typeDe, pivotDe, _refEstActeur, distPassage,
+  candidatsMeubles, toucherPoses, typeDe, pivotDe, _refEstActeur, distPassage, PASSAGES_PIECES,
 } from '../deguisements.js';
 import { CorpsProp, deplacerProp, coinsLibres } from '../corps_prop.js';
 import { piecesDe, POINTS_APPARITION } from '../apparitions.js';
@@ -268,15 +268,23 @@ export default function (jeu) {
       notes.push(`${nom} ${v.toFixed(2)}`);
       if (sens > 0 ? v < borne : v > borne) fautes.push(`${nom} ${v.toFixed(2)} (${sens > 0 ? '≥' : '≤'} ${borne})`);
     };
-    // (a, f) la chaise coque au BOUT de sa rangée (la rangée nord de la salle d'attente, au pas de 0,7), puis tournée de 90°
-    const rang = MEUBLES.poses.filter((p) => MEUBLES.types.get(p.cle).type === 'chaise-coque' && p.zone === 'attente').sort((a, b) => a.x - b.x);
-    const nord = rang.filter((p) => Math.abs(p.z - rang[rang.length - 1].z) < 0.2).sort((a, b) => a.x - b.x);
+    // (a, f) la chaise coque au BOUT de sa rangée : au-delà d'une chaise, à l'opposé de sa voisine, au pas de la rangée — une
+    // place libre (au rayon, dans la bande, coins compris) et hors de toute vraie chaise
+    const coques = MEUBLES.poses.filter((p) => MEUBLES.types.get(p.cle).type === 'chaise-coque');
     let bout = null;
-    for (const P of [nord[nord.length - 1], nord[0]]) { if (!P) continue; const s = P === nord[0] ? -1 : 1, x = P.x + s * (P.pas || 0.7); if (libreT(MEUBLES.types.get(P.cle), x, P.y, P.z)) { bout = { P, x }; break; } }
+    for (const P of coques) {
+      if (bout || !(P.pas > 0)) continue;
+      const Q = coques.filter((q) => q !== P && q.zone === P.zone).sort((a, b) => Math.hypot(a.x - P.x, a.z - P.z) - Math.hypot(b.x - P.x, b.z - P.z))[0];
+      if (!Q) continue;
+      const d = Math.hypot(P.x - Q.x, P.z - Q.z), x = P.x + (P.x - Q.x) / d * P.pas, z = P.z + (P.z - Q.z) / d * P.pas, T0 = MEUBLES.types.get(P.cle);
+      if (!libreT(T0, x, P.y, z) || !coinsLibres(C(), T0, x, P.y, z, P.cap)) continue;
+      if (MEUBLES.poses.some((q) => q !== P && Math.hypot(q.cx - x, q.cz - z) < 0.5)) continue;
+      bout = { P, x, z };
+    }
     if (bout) {
-      cas('chaise coque au bout de sa rangée', bout.P.cle, bout.x, bout.P.y, bout.P.z, bout.P.cap, bout.P.zone, 0.8, 1);
-      cas('la même tournée de 90°', bout.P.cle, bout.x, bout.P.y, bout.P.z, bout.P.cap + Math.PI / 2, bout.P.zone, 0.5, -1);
-      // (b) la même au milieu d'un couloir (le couloir est, loin de tout)
+      cas('chaise coque au bout de sa rangée', bout.P.cle, bout.x, bout.P.y, bout.z, bout.P.cap, bout.P.zone, 0.8, 1);
+      cas('la même tournée de 90°', bout.P.cle, bout.x, bout.P.y, bout.z, bout.P.cap + Math.PI / 2, bout.P.zone, 0.5, -1);
+      // (b) la même au milieu d'un couloir (le couloir est, à son point d'apparition, loin de tout)
       const p = POINTS_APPARITION.find((q) => q.zone === 'couloirEst');
       cas('chaise coque au milieu du couloir', bout.P.cle, p.x, p.y, p.z, 0, 'couloirEst', 0.25, -1);
     } else fautes.push('pas de bout de rangée libre');
@@ -312,41 +320,55 @@ export default function (jeu) {
   });
 
   // 8. LE CORPS DES PROPS : 100 trajets par type déguisable → 0 traversée, 0 dans un mur ; sous une table ; « Pas la place »
+  // (une TRAVERSÉE : le segment d'un pas coupe une forme du JOUEUR — celles que heurte le corps ; les marches d'escalier,
+  // formes de la caméra seule, ne comptent pas — à une hauteur de la bande du corps où elle s'élève ; DANS UN MUR : plus de
+  // 0,2 s d'affilée à moins de 80 % de son rayon d'une forme, comme la surveillance du harnais)
+  const traverse = (Cc, ax, az, bx, bz, pieds, bas, haut) => {
+    let coupe = false;
+    Cc._parcourir(Math.min(ax, bx) - 0.01, Math.min(az, bz) - 0.01, Math.max(ax, bx) + 0.01, Math.max(az, bz) + 0.01, (f) => {
+      if (coupe || f.off || !f.joueur) return;
+      for (const h of [bas + 0.01, (bas + haut) / 2, haut - 0.01]) if (Cc._segment(f, ax, pieds + h, az, bx - ax, 0, bz - az, 0) < 1) { coupe = true; return; }
+    });
+    return coupe;
+  };
   T('8 CorpsProp : 100 trajets par type, sous une table, pas la place', async () => {
     await preparer();
-    const Cc = C(), R = new Rng(19), types = [...CATALOGUE.values()].filter((T0) => T0.deguisable && !T0.secours), bilan = [];
-    let traverse = 0, mur = 0, pas = 0;
+    const Cc = C(), R = new Rng(19), types = [...CATALOGUE.values()].filter((T0) => T0.deguisable && !T0.secours), bilan = [], Lu = game.carte.lumieres;
+    let tr = 0, mur = 0, pas = 0;
     const departs = POINTS_APPARITION.filter((p) => p.zone !== 'rue');
     const partie = { evt() {}, game, acteurs: [] };
     for (const T0 of types) {
-      let tr = 0, mu = 0;
+      let t1 = 0, m1 = 0;
       for (let k = 0; k < 100; k++) {
-        // un départ libre près d'un lieu d'apparition
+        // un départ libre DANS la pièce d'un lieu d'apparition
         let x, y, z, ok = false;
         for (let e = 0; e < 40 && !ok; e++) {
           const p = departs[R.int(departs.length)]; x = p.x + R.range(-2.5, 2.5); z = p.z + R.range(-2.5, 2.5); y = Cc.solEn(x, z, p.y + 0.3);
-          ok = Math.abs(y - p.y) < 0.3 && Cc.libre(x, z, T0.rayon, y, T0.bande.haut, T0.bande.bas);
+          const Z = Lu.zoneEn(x, z, y + 0.1);
+          ok = Math.abs(y - p.y) < 0.3 && Z && Z.id === p.zone && Cc.libre(x, z, T0.rayon, y, T0.bande.haut, T0.bande.bas);
         }
         if (!ok) continue;
         const c = new CorpsProp(Cc, { rayon: T0.rayon, haut: T0.bande.haut, bas: T0.bande.bas, bounds: null }); c.porter(T0);
         c.pos.set(x, y, z); c.posPrec.copy(c.pos);
         const a = { id: k, corps: c, prop: { T: T0, cap: 0, fige: false, verrou: false }, endurance: 100 }, cmd = creerCommande();
+        let dedans = 0;
         for (let s = 0; s < 180; s++) {
           if (s % 60 === 0) { cmd.lacet = R.range(-Math.PI, Math.PI); cmd.ay = 1; cmd.ax = R.range(-1, 1); cmd.sprint = R.next() < 0.5; cmd.saut = R.next() < 0.1; } else cmd.saut = false;
-          const px = c.pos.x, pz = c.pos.z, py = c.pos.y, ym = py + (c.bas + c.haut) / 2;
+          const px = c.pos.x, pz = c.pos.z, py = c.pos.y + c.jumpY;
           deplacerProp(a, cmd, PAS, partie); pas++;
-          if (Math.hypot(c.pos.x - px, c.pos.z - pz) > 1e-4 && Cc.rayonLibre(px, ym, pz, c.pos.x, ym, c.pos.z, 0) < 1 - 1e-6) tr++;
-          if (!Cc.libre(c.pos.x, c.pos.z, c.rayon * 0.8, c.pos.y, c.haut, c.bas)) mu++;
+          if (Math.hypot(c.pos.x - px, c.pos.z - pz) > 1e-4 && traverse(Cc, px, pz, c.pos.x, c.pos.z, Math.min(py, c.pos.y + c.jumpY), c.bas, c.haut)) t1++;
+          dedans = Cc.libre(c.pos.x, c.pos.z, c.rayon * 0.8, c.pos.y + c.jumpY, c.haut, c.bas) ? 0 : dedans + 1;
+          if (dedans === 25) m1++;
         }
       }
-      traverse += tr; mur += mu;
-      if (tr || mu) bilan.push(`${T0.cle} ${tr} traversées, ${mu} pas dans un mur`);
+      tr += t1; mur += m1;
+      if (t1 || m1) bilan.push(`${T0.cle} ${t1} traversées, ${m1} fois dans un mur`);
     }
     // SOUS UNE TABLE : la corbeille (bande 0,14-0,5) file sous un plateau — un tabouret, non
     const sous = sousUneTable(Cc);
     // PAS LA PLACE : un meuble long (le baby-foot du −1, 1,05 × 0,93 × 1,48, sur place) refusé dans une porte de 0,8 m
     const porte = pasLaPlace(Cc);
-    const ok = traverse === 0 && mur === 0 && sous.ok && porte.ok;
+    const ok = tr === 0 && mur === 0 && sous.ok && porte.ok;
     return { ok, attendu: '0 traversée, 0 dans un mur ; la corbeille sous une table, le tabouret non ; le baby-foot refusé dans une porte de 0,8 m',
       obtenu: `${types.length} types, ${pas} pas · ${bilan.join(' ; ') || '0 traversée, 0 dans un mur'} · ${sous.texte} · ${porte.texte}` };
   }, { delai: 300 });
@@ -380,20 +402,20 @@ export default function (jeu) {
     const bf = typeDe('carton'), T0 = { ...bf, cle: 'baby-foot-essai', type: 'baby-foot', nom: 'le baby-foot', secours: false, deguisable: true, surPlace: true,
       boite: new THREE.Box3(new THREE.Vector3(-0.525, 0, -0.74), new THREE.Vector3(0.525, 0.93, 0.74)), taille: new THREE.Vector3(1.05, 0.93, 1.48), rayon: 0.5, haut: 0.93,
       bande: { bas: 0.25, haut: 0.93 } };
-    // une porte de 0,8 m : deux montants de part et d'autre d'un passage (cherchés parmi les passages du RDC) — à défaut, deux
-    // formes posées le temps du test hors de la carte vivante n'existent pas : on mesure la largeur libre au passage
-    for (const p of [{ x: 11.49, z: -11.21 }, { x: 11.5, z: -9 }, { x: 6, z: -11 }, { x: 6, z: -8.5 }, { x: 5.14, z: -12.74 }]) {
-      const y = Cc.solEn(p.x, p.z, 0.3);
-      if (!Cc.libre(p.x, p.z, 0.2, y)) continue;
+    // une porte de 0,8 m : parmi les passages d'une pièce à l'autre, un dont l'ouverture libre fait de 0,6 à 0,9 m (le plus
+    // grand disque qui y tient, au pas du centimètre)
+    for (const p of PASSAGES_PIECES) {
+      const y = Cc.solEn(p.x, p.z, p.y + 0.3);
+      if (Math.abs(y - p.y) > 0.3 || !Cc.libre(p.x, p.z, 0.2, y)) continue;
       let w = 0.2; while (w < 0.6 && Cc.libre(p.x, p.z, w + 0.01, y)) w += 0.01;
-      if (w > 0.45) continue;                                     // (une porte : moins de 0,9 m de passage)
+      if (w < 0.3 || w > 0.45) continue;
       CATALOGUE.set(T0.cle, T0);
       try {
         const partie = { zone: 'ecole', game, evt(t, d) { this.dernier = { t, ...d }; }, acteurs: [] };
         const c = new CorpsProp(Cc, {}); c.pos.set(p.x, y, p.z);
         const a = { id: 0, corps: c, prop: null, vie: 100, vieMax: 100, changerCorps() {} };
         const r = deguiser(partie, a, T0.cle);
-        return { ok: r === false && partie.dernier && partie.dernier.raison === 'place', texte: `porte de ${(2 * w).toFixed(2)} m en (${p.x} ; ${p.z}) : ${r ? 'accepté' : 'refusé (' + (partie.dernier && partie.dernier.raison) + ')'}` };
+        return { ok: r === false && partie.dernier && partie.dernier.raison === 'place', texte: `porte de ${(2 * w).toFixed(2)} m (${p.a} | ${p.b}) : ${r ? 'accepté' : 'refusé (' + (partie.dernier && partie.dernier.raison) + ')'}` };
       } finally { CATALOGUE.delete(T0.cle); }
     }
     return { ok: false, texte: 'pas de porte de 0,8 m trouvée' };
@@ -497,9 +519,10 @@ export default function (jeu) {
       const quoi = res.trouve < 10 ? 'trouve' : res.mur < 5 ? 'mur' : 'loin', d = quoi === 'loin' ? 3.5 : quoi === 'mur' ? R.range(1.6, 2.7) : 2.5;
       const x = P.cx + Math.sin(ang) * d, z = P.cz + Math.cos(ang) * d, y = Cc.solEn(x, z, P.y + 0.3);
       if (Math.abs(y - P.y) > 0.05 || !Cc.libre(x, z, 0.3, y)) continue;
-      const tmp = viser(x, z, P), L = Math.max(0, tmp.d - 0.12), u = tmp.dir.map((q) => q / tmp.d);
+      // (la ligne libre jusqu'à l'ENTRÉE dans la boîte du meuble, moins 9 cm : sa propre forme l'enveloppe à quelques centimètres)
+      const tmp = viser(x, z, P), u = tmp.dir.map((q) => q / tmp.d);
+      const premiere = toucherPoses(tmp.o.x, tmp.o.y, tmp.o.z, u[0], u[1], u[2], tmp.d + 0.5), L = Math.max(0, (premiere ? premiere.t : tmp.d) - 0.09);
       const libre = Cc.rayonLibre(tmp.o.x, tmp.o.y, tmp.o.z, tmp.o.x + u[0] * L, tmp.o.y + u[1] * L, tmp.o.z + u[2] * L, 0) >= 1 - 1e-6;
-      const premiere = toucherPoses(tmp.o.x, tmp.o.y, tmp.o.z, u[0], u[1], u[2], tmp.d + 0.5);
       if (quoi === 'trouve') {
         if (!libre || !premiere || premiere.pose !== P) continue;
         res.trouve++; if (!tmp.v || tmp.v.pose !== P) fautes.push(`à 2,5 m de ${P.cle} : ${tmp.v ? tmp.v.cle : 'null'}`);
