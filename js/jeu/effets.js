@@ -246,6 +246,8 @@ function poolMesh(geo, mat, n, nom, { couleur = true, fx = true } = {}) {
   for (let i = 0; i < n; i++) m.setMatrixAt(i, ZERO);
   m.count = n; m.frustumCulled = false; m.castShadow = false; m.receiveShadow = false;
   m.userData.dynamique = true; m.userData.effets = true; m.name = 'effets : ' + nom;
+  // (transparent : hors de la passe de normales de l'occlusion — js/fx.js _decoupes —, sinon un quad plein y laisse un carré)
+  if (mat.transparent) m.userData.sansNormales = true;
   m.renderOrder = 4;
   return m;
 }
@@ -380,8 +382,9 @@ export class Effets {
     return P;
   }
   // les pools dans la scène (enfants DIRECTS : js/kit_decor.js, js/ombre_cache.js, js/ombres_contact.js les reconnaissent)
-  _poser() { const S = this.game.scene; for (const m of this.racines) if (m.parent !== S) S.add(m); }
-  _retirer() { for (const m of this.racines) if (m.parent) m.parent.remove(m); }
+  // (le compteur `effetsJeu` de la scène dit à js/fx.js de relever ses découpes tout de suite)
+  _poser() { const S = this.game.scene; let n = 0; for (const m of this.racines) if (m.parent !== S) { S.add(m); n++; } if (n) S.userData.effetsJeu = (S.userData.effetsJeu | 0) + 1; }
+  _retirer() { let n = 0; for (const m of this.racines) if (m.parent) { m.parent.remove(m); n++; } if (n) { const S = this.game.scene; S.userData.effetsJeu = (S.userData.effetsJeu | 0) + 1; } }
 
   // LA PRÉPARATION (Partie.preparer, sous l'écran « PRÉPARATION DE LA PARTIE ») : pools créés, posés, compilés — leurs
   // programmes pour la cible du rendu, ceux du préréglage de repli de la qualité automatique (Player.preparerRendu)

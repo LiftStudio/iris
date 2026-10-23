@@ -1584,8 +1584,11 @@ export class PostFX {
       return this._dec;
     }
     const t = performance.now();
-    if (!this._dec || t - this._decT > 2000) {
-      this._decT = t;
+    // (23/10, lot L-H : les pools transparents des effets du jeu — js/jeu/effets.js, `sansNormales` — posés dans la scène
+    // ou retirés : relevé TOUT DE SUITE, pas 2 s plus tard — un impact dessiné plein dans les normales y laissait un carré)
+    const fxJeu = this.scene.userData.effetsJeu | 0;
+    if (!this._dec || t - this._decT > 2000 || fxJeu !== this._decJeu) {
+      this._decT = t; this._decJeu = fxJeu;
       const s = new Set(this.scene.userData.feuillages || []);
       this.scene.traverse((o) => {
         if (o.isSprite) { s.add(o); return; }
