@@ -369,7 +369,10 @@ export class Viewmodel {
       else { const o = evaluer(S, ts, this._tmp || (this._tmp = new Float64Array(VOIES.length))); _P.x += o[ix.x]; _P.y += o[ix.y]; _R.x += o[ix.rx]; _R.z += o[ix.rz]; }
     }
     // 5. les ressorts : inertie du regard, balancement, pas chassé, réception, recul, respiration
-    this._ressorts(e, f, dt, kv, wS + wT, wG);
+    // (le facteur du balancement en huit, `bal` des poses mêlées : sprint × 2,5, glissade × 0,3, visée × 0,1)
+    const V = POSES_VUE, bal = (H.bal + wS * (V.sprint.bal - H.bal) + wT * (V.sprintTact.bal - H.bal) + wG * (V.glisse.bal - H.bal) + wF * (V.franchit.bal - H.bal))
+      * (1 + (V.visee.bal - 1) * kv);
+    this._ressorts(e, f, dt, kv, bal);
     // 6. l'arme posée
     const A = this.racine;
     A.position.copy(_P); _e.set(_R.x, _R.y, _R.z, 'YXZ'); A.quaternion.setFromEuler(_e);
@@ -459,7 +462,7 @@ export class Viewmodel {
 
   // LES RESSORTS posés sur _P / _R (l'arme), dans l'ordre : inertie du regard, balancement en huit, pas chassé,
   // réception, recul visuel, respiration
-  _ressorts(e, f, dt, kv, wSprint, wGlisse) {
+  _ressorts(e, f, dt, kv, bal) {
     const g = this.game, l = g.camYaw || 0, tg = g.camPitch || 0;
     // la vitesse angulaire du regard (°/s) → l'arme traîne : −0,0016 × ω, ±3°
     let wl = 0, wt = 0;
@@ -477,7 +480,7 @@ export class Viewmodel {
     // relecture du 23/10)
     const v = e.enAir ? 0 : e.vitesse, fq = 1.15 + 0.35 * v;
     this._phase = (this._phase + Math.PI * fq * dt) % (2 * Math.PI);          // (θ avance à f/2 : un pas = π)
-    const kb = (1 + 1.5 * wSprint) * (1 - 0.9 * kv) * (1 - 0.7 * wGlisse) * (e.accroupi > 0.5 ? 0.7 : 1);
+    const kb = bal * (e.accroupi > 0.5 ? 0.7 : 1);
     this._amp = amortir(this._amp, borne(v / 5, 0, 1) * kb, 0.12, dt);
     const th = this._phase, A = this._amp;
     _P.x += 0.012 * A * Math.sin(th); _P.y += 0.008 * A * Math.sin(2 * th) - 0.003 * A;
