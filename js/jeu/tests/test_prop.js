@@ -126,19 +126,23 @@ export default function (jeu) {
   T('2 composition : arrondi(N/3) chasseurs, chasseur seul', async () => {
     const res = [];
     for (let N = 4; N <= 8; N++) {
-      await lancer({ acteurs: N, premierRole: 'prop' }); const a = P(), nP = compte(a, 'chasseur'), nA = a.acteurs.length;
-      await lancer({ acteurs: N, premierRole: 'chasseur' }); const b = P(), nC = compte(b, 'chasseur');
+      await lancer({ acteurs: N, premierRole: 'prop', appareil: 'pc' }); const a = P(), nP = compte(a, 'chasseur'), nA = a.acteurs.length;
+      await lancer({ acteurs: N, premierRole: 'chasseur', appareil: 'pc' }); const b = P(), nC = compte(b, 'chasseur');
       // (les bots toujours props n'ont pas de corps d'élève)
       const sansAvatar = b.acteurs.filter((x) => !x.pool && !x.local).every((x) => !x.joueur);
       res.push([`N ${N} : ${nP} / ${nC} chasseurs (${Math.round(N / 3)})`, nP === Math.round(N / 3) && nC === Math.round(N / 3) && nA === N && b.acteurs.length === N && sansAvatar]);
     }
+    // (relecture) au téléphone, 5 bots au plus (arbitrage 25) : 8 demandés → Haythem + 5 ; sans Haythem, 5
+    await lancer({ acteurs: 8, premierRole: 'prop', appareil: 'tel' }); const t1 = P().acteurs.length;
+    await lancer({ acteurs: 8, humain: false, appareil: 'tel' }); const t2 = P().acteurs.length;
+    res.push([`téléphone : 8 demandés → ${t1} (Haythem + ${t1 - 1}), ${t2} sans lui`, t1 === 6 && t2 === 5]);
     await lancer({ acteurs: 5, premierRole: 'chasseur', chasseurSeul: true }); const s = P();
     res.push([`chasseur seul : ${compte(s, 'chasseur')} chasseur, ${compte(s, 'prop')} props`, compte(s, 'chasseur') === 1 && compte(s, 'prop') === 4 && s.local.role === 'chasseur']);
     jusqua('traque'); s._finir('props'); jusqua('presentation', 10);
     res.push([`chasseur seul, manche 2 (Haythem prop) : ${compte(s, 'chasseur')} chasseurs`, compte(s, 'chasseur') === 2 && s.local.role === 'prop']);
     jeu.quitter('balade');
     const ko = res.filter((r) => !r[1]);
-    return { ok: !ko.length, attendu: 'N 4…8 → 1, 2, 2, 2, 3 chasseurs (dans les deux rôles de Haythem) ; chasseur seul → 1 chasseur, le coéquipier en prop',
+    return { ok: !ko.length, attendu: 'N 4…8 → 1, 2, 2, 2, 3 chasseurs (dans les deux rôles de Haythem) ; téléphone : 5 bots au plus ; chasseur seul → 1 chasseur, le coéquipier en prop',
       obtenu: res.map((r) => (r[1] ? '' : '✗ ') + r[0]).join(' · ') };
   }, { delai: 180 });
 

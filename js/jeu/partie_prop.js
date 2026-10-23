@@ -19,11 +19,13 @@
 // rôle au hasard), le temps `this.t` ; la roue des provocations est lue HORS simulation (lireExtra). Les règles émettent
 // (`provocation`, `faux`, `scanner`, `score`, `refus`, `defige`…) ; les sons (js/jeu/sons_prop.js) et le HUD (L-G) écoutent.
 //   opts : { zone, manches, acteurs, difficulte, premierRole, chasseurSeul, aides, graine, humain = vrai, avatars,
-//            forcerZone (tests : une zone grisée gardée) } — un champ absent vient des derniers choix (settings.jeu.prop)
+//            forcerZone (tests : une zone grisée gardée), appareil ('pc' | 'tel' : le plafond des bots, tests) } — un champ
+//            absent vient des derniers choix (settings.jeu.prop)
 import * as THREE from 'three';
 import { Partie } from './partie.js';
 import { Rng, melanger } from './rng.js';
-import { PAS, ZONES_JEU, niveauDe } from './constantes.js';
+import { PAS, ZONES_JEU, LIMITES, niveauDe } from './constantes.js';
+import { TELEPHONE } from '../appareil.js';
 import { Acteur } from './acteur.js';
 import { Arsenal, DOTATION_CHASSEUR, degatsDe } from './armes.js';
 import { departs, pointsDe, piecesDe } from './apparitions.js';
@@ -156,7 +158,9 @@ export class PartieProp extends Partie {
   _nouveauCorpsProp() { return new CorpsProp(this.game.collisions, { rayon: 0.3, haut: 1, bas: 0.1, bounds: this.monde && this.monde.bornes }); }
   peupler() {
     const o = this.opts, R = REGLAGES_PROP, humain = o.humain !== false;
-    const N = clamp(Math.round(o.acteurs || R.acteurs), R.acteursMin, R.acteursMax);
+    // (4 à 8 acteurs ; au téléphone, 5 bots au plus — arbitrage 25, LIMITES : `appareil` force l'un ou l'autre pour les tests)
+    const tel = o.appareil ? o.appareil === 'tel' : TELEPHONE;
+    const N = clamp(Math.round(o.acteurs || R.acteurs), R.acteursMin, Math.min(R.acteursMax, LIMITES[tel ? 'tel' : 'pc'].bots + (humain ? 1 : 0)));
     this.N = N; this.nC = R.chasseurs(N); this.chasseurSeul = !!o.chasseurSeul;
     let r = o.premierRole || 'prop';
     // (au hasard SEMÉ : un tirage à lui — les premiers tirages d'un xorshift semé d'un petit entier sont tous proches de 0)
