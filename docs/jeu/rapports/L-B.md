@@ -5,9 +5,11 @@ Branche `lot/L-B` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-B`), partie de `s
 
 ## Où j'en suis
 
-**EN COURS — étape 6 : le code des quatre modules et les tests des 19 critères sont écrits et commités ; il reste à les
-jouer au navigateur (jeton) : `&rapport=1&lot=L-B`, `&lot=S0`, la passe de mesure du franchissement (critère 7 :
-`await __jeu.mesuresFranchir()` puis les coordonnées recopiées dans `OBSTACLES` / `RANGS_SERRES` du test).**
+**EN COURS — étape 6 (navigateur), 23/10 04:25 : les tests ont été joués un à un (`__jeu.tests('L-B', 'N ')`) ; 1, 2, 4 à
+8, 11 à 17 passent ; 3 (portes : les portes automatiques de la carte), 9, 10 (props sans bornes), 18 (sources en CRLF),
+19 (course mesurée après l'inertie) sont corrigés (64b5887), À REJOUER ; puis `&rapport=1&lot=L-B`, `&lot=S0`, photos.
+Le franchissement est mesuré (`OBSTACLES`, `RANGS_SERRES` recopiés de `__jeu.mesuresFranchir()`). Jeton perdu à 04:12
+(jeton_3 repris par un autre lot, voir `_navigateur/NOTE_L-V_jeton3.txt`) : onglet fermé, en attente d'un jeton.**
 
 Pour un repreneur : serveur `python serve.py 8132` dans l'arbre, prendre un jeton (`mkdir …/_navigateur/jeton_N`), ouvrir
 `http://127.0.0.1:8132/?test=1`, puis dans la console `await __jeu.chargerTests('L-B'); await __jeu.tests('L-B', '7')` (le
