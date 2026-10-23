@@ -157,11 +157,13 @@ export function vignette(fiche, cls = '') {
   return img;
 }
 
-const _v = new THREE.Vector3(), _w = new THREE.Vector3();
+const _w = new THREE.Vector3();
+// le menu de la session (un seul : js/jeu/index.js le crée) — pour les tests et la vague 3 (L-P)
+export const MENUS = { courant: null };
 
 export class MenuJeu {
   constructor(game, deps) {
-    this.game = game; this.deps = deps || {};
+    this.game = game; this.deps = deps || {}; MENUS.courant = this;
     this.corps = new CorpsFixe();                  // (le corps fictif que suit la carte vivante au menu : game.carteMenu)
     this.tCam = 0; this.plan = 0; this.fondu = 0; this.figer = null;
     this.modeReglage = null; this._lance = null; this._dernier = null;     // (la partie demandée par le menu ; la dernière lancée)

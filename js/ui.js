@@ -343,7 +343,7 @@ export function buildOptions(settings, cb = {}) {
       L.hm = (e) => {
         e.preventDefault(); e.stopImmediatePropagation();
         // (le mouseup, le clic et le menu contextuel qui suivent ne cliquent rien ; les boutons 4 et 5 ne font pas « page précédente »)
-        const avale = (ev) => { ev.preventDefault(); ev.stopImmediatePropagation(); if (ev.type === 'mouseup') setTimeout(lacher, 60); };
+        const avale = (ev) => { ev.preventDefault(); ev.stopImmediatePropagation(); if (ev.type === 'mouseup') setTimeout(lacher, 300); else if (ev.type !== 'contextmenu') lacher(); };
         const lacher = () => { for (const t of ['mouseup', 'click', 'auxclick', 'contextmenu']) window.removeEventListener(t, avale, true); };
         for (const t of ['mouseup', 'click', 'auxclick', 'contextmenu']) window.addEventListener(t, avale, true);
         setTimeout(lacher, 3000);
