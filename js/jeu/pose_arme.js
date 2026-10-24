@@ -63,6 +63,10 @@ function prendre(id) {
   if (!g) {
     g = creerArme(id, { pourVue: false });
     g.userData.dynamique = true; g.userData.arme3e = id;
+    // (F2 : hors des ombres de CONTACT — une arme tenue à 1 m du sol n'y laisse rien de visible, et ses trois maillages y
+    // coûtaient trois appels par bot : 156 appels ajoutés avec les 7 bots en vue, au-delà des 150 du § 3.10 ; l'ombre portée
+    // du soleil reste, réglée par la cadence)
+    g.userData.horsContact = true;
     g.matrixAutoUpdate = false;
     g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; } });
     L.push(g);

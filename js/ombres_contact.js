@@ -204,7 +204,8 @@ export class OmbresContact {
       if (!m || m.transparent) return;
       o.layers.enable(COUCHE);
     });
-    for (const o of this.scene.children) if (o.userData.dynamique && !o.userData.ombreToujours && o !== this.plan) marquer(o);
+    // (F2 : `horsContact` — les armes à la 3e personne des bots, js/jeu/pose_arme.js — n'y vont pas)
+    for (const o of this.scene.children) if (o.userData.dynamique && !o.userData.ombreToujours && !o.userData.horsContact && o !== this.plan) marquer(o);
   }
 
   // SES PROGRAMMES PRÉCOMPILÉS (06/10/2026 ; voir avecProfondeur de js/ombre_cache.js). Un avatar qui arrive (squelette,
