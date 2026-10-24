@@ -782,7 +782,7 @@ export class MenuJeu {
         ['temps', s1(r.temps)], ['précision', `${Math.round(100 * (r.precision || 0))} %`],
         [r.defi === 'reflexes' ? 'réaction' : r.defi === 'recul' ? 'groupement' : 'têtes', r.defi === 'reflexes' ? (r.reaction ? `${Math.round(r.reaction * 1000)} ms` : '—')
           : r.defi === 'recul' ? (r.groupement !== null && r.groupement !== undefined ? `${String(r.groupement).replace('.', ',')} cm` : '—') : String(r.tetes ?? 0)],
-        ['points', String(r.points ?? 0)], ['essais ici', String(rec ? rec.essais : 1)]];
+        ['points', milliers(r.points)], ['essais ici', String(rec ? rec.essais : 1)]];
       return B;
     }
     if (loc) {
