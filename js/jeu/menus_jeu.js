@@ -26,6 +26,7 @@ import { FICHES_BOTS, FICHE_HAYTHEM } from './avatars.js';
 import { ARMES, CLASSES } from './armes.js';
 import { typesDeguisables } from './deguisements.js';
 import { REGLAGES_PROP } from './partie_prop.js';
+import { lireRecords, meilleur } from './partie_stand.js';
 import { portrait } from './portraits.js';
 
 // ---------------------------------------------------------------- les données des écrans (§§ 2.1, 2.2, 3.8, 3.9)
@@ -78,7 +79,7 @@ export const MANCHES = REGLAGES_PROP.choixManches || [4, 6, 8];
 // L'HABILLAGE (arbitrage 35, R33 : en tête des réglages du combat ; la même ligne que dans Options › Combat)
 export const HABILLAGES = [['airsoft', 'AIRSOFT', 'Billes de peinture, « TOUCHÉ », tir au gaz — conseillé, et pour toute vidéo publiée.'],
   ['militaire', 'MILITAIRE', 'Impacts de balles, « ÉLIMINÉ ».']];
-const STAND_CLE = 'iris.stand.v1', REGLAGES_CLE = 'iris.settings.v1';
+const REGLAGES_CLE = 'iris.settings.v1';
 
 // LA CAMÉRA DU MENU : trois plans de 12 s, un fondu au noir de 1,2 s à chaque coupe (0,6 s de chaque côté). Chaque plan
 // glisse de `de` à `a` (position de la caméra et point visé), lissé aux deux bouts. Positions relevées dans l'école le
@@ -123,6 +124,8 @@ const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const jv = (v) => esc(JSON.stringify(v));
 // (arrondi à la seconde AVANT le partage : 59,6 s font « 1:00 », pas « 0:60 »)
 const mmss = (s) => { const t = Math.max(0, Math.round(+s || 0)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`; };
+// (les milliers séparés d'une espace, comme au stand : « 1 125 »)
+const milliers = (v) => String(Math.round(+v || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 const limites = () => (TELEPHONE ? LIMITES.tel : LIMITES.pc);
 const lisse = (u) => u * u * (3 - 2 * u);
 const borne = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -557,15 +560,22 @@ export class MenuJeu {
     }
   }
   // les records du stand (localStorage 'iris.stand.v1', écrit par js/jeu/partie_stand.js : lu au mieux, jamais exigé)
+  // (F2 relecture : lus par lireRecords, au format qu'écrit le stand — `records['<défi>:<arme>'].meilleur` — ; le menu lisait
+  // `R[défi]` et montrait « — » partout, records faits ou non ; le meilleur de chaque défi toutes armes confondues, comparé
+  // par `meilleur`, la règle du stand)
   _records() {
-    let R = null;
-    try { R = JSON.parse(localStorage.getItem(STAND_CLE) || 'null'); } catch (e) { R = null; }
+    const R = (lireRecords() || {}).records || {}, n = (v) => milliers(v ?? 0);
+    const s1 = (v) => (Number.isFinite(+v) ? (+v).toFixed(1).replace('.', ',') + ' s' : '');
+    const texteDe = (r) => {
+      const arme = ARMES[r.arme] ? ` (${ARMES[r.arme].nom.split(' ')[0]})` : '';
+      if (r.defi === 'vingt' || r.defi === 'tetes') return (r.reussi ? `${s1(r.temps)} · ${n(r.points)} pts` : `${r.compte} / ${r.objectif} · ${n(r.points)} pts`) + arme;
+      if (r.defi === 'recul') return `${r.touches} / ${r.tirs}` + (r.groupement !== null && r.groupement !== undefined ? ` · ${String(r.groupement).replace('.', ',')} cm` : '') + arme;
+      return `${r.compte} / ${r.objectif}` + (r.reaction ? ` · ${Math.round(r.reaction * 1000)} ms` : '') + arme;
+    };
     const lignes = DEFIS.filter(([v]) => v).map(([v, l]) => {
-      const r = R && typeof R === 'object' ? R[v] : null;
-      const t = r === null || r === undefined ? '—' : typeof r === 'number' ? String(r)
-        : typeof r === 'object' ? [r.score !== undefined ? `${r.score} pts` : '', r.temps !== undefined ? `${(+r.temps).toFixed(2).replace('.', ',')} s` : '',
-          r.precision !== undefined ? `${Math.round(r.precision * (r.precision <= 1 ? 100 : 1))} %` : ''].filter(Boolean).join(' · ') || '—' : String(r);
-      return `<div><span>${l}</span><b>${esc(t)}</b></div>`;
+      let best = null;
+      for (const [k, x] of Object.entries(R)) if (k.split(':')[0] === v && x && x.meilleur && meilleur(x.meilleur, best)) best = x.meilleur;
+      return `<div><span>${l}</span><b>${esc(best ? texteDe(best) : '—')}</b></div>`;
     });
     return lignes.join('');
   }
