@@ -311,6 +311,9 @@ export class Profil {
   // ---------------------------------------------------------------- BRANCHÉ À UNE PARTIE : ce qu'elle rapporte
   brancher(partie) {
     this.debrancher();
+    // (relecture : les annonces d'AVANT — un niveau gagné par la victoire de la partie d'avant, sous son écran de fin, où le
+    // bilan l'a déjà dit — ne tombent pas au milieu de la suivante)
+    ETAT.annonces.length = 0;
     this.partie = partie;
     const L = partie && partie.local;
     if (!partie || !L || SANS_XP.has(partie.id)) { this.courante = null; return; }
