@@ -1,0 +1,1567 @@
+{
+ "genere_le": "2026-10-23",
+ "demande": "« pour les armes, mets des vraies armes 3D que tu installes par toi-même sur internet » (Haythem, 23/10)",
+ "contrat": "spec_finale.md § 4.5.8 : origine = prise de la main droite sur l'axe, −Z vers la bouche, +Y en haut, mètres",
+ "pack": "3DModelsCC0 (nisu), packs Free CC0 Guns & Explosives et Melee Weapons, version GLB de BoQsc ; CC0 1.0 pour les 8",
+ "outils": "outils/ : extraire_morceau_zip.py, inspecter_glb.py, normale_convention.py, alpha_textures.py, atelier.html + atelier*.js (three r170), finaliser_glb.py, manifeste.py, recepteur.mjs ; vérificateur : verif_glb.py, verif_normales.py, verif3d.html/.js, verif_zoom.html/.js, corriger_glb.py, verif_manifeste.py",
+ "integration": [
+  "GLTFLoader de three r170 suffit (aucune extension, ni Draco ni KTX2).",
+  "Les REPERES du § 4.5.8 (faits main) sont à remplacer par extras.iris.reperes de chaque GLB : par ex. l'axe du FA-24 est 8,6 cm au-dessus de l'origine (3,5 cm dans le contrat).",
+  "Les normales sont déjà en convention glTF : ne PAS mettre normalScale.y = −1 à la main. GLTFLoader r170 le fait lui-même (pas d’attribut TANGENT : material.normalScale vaut (1, −1) après chargement) ; si le jeu recrée ou fusionne les matériaux, recopier normalScale ET side tels quels.",
+  "Un seul matériau par arme ; on peut fusionner les nœuds fixes par matériau, les pièces mobiles restent des nœuds à part.",
+  "Version téléphone : choix/tel/<id>.glb (mêmes nœuds, textures 512 px).",
+  "Racine : gltf.scene.getObjectByName(<id>) renvoie bien le nœud racine porteur de userData.iris (la scène s’appelle désormais « <id>_scene »).",
+  "Recto-verso : FA-24, P-17 et TP-50 ont material.side = DoubleSide (extras.iris.recto_verso = true) ; le garder si le jeu recrée ses matériaux, sinon la hausse du FA-24 devient transparente en visée.",
+  "FP-12 : visée = aligner rep_visee_arriere (arrière du boîtier) et rep_visee (guidon perle) sur l’axe de la caméra."
+ ],
+ "armes": {
+  "fa24": {
+   "nom_jeu": "FA-24 « Faucon »",
+   "fichier": "choix/fa24.glb",
+   "fichier_telephone": "choix/tel/fa24.glb",
+   "apercu": "apercus_final/fa24.jpg",
+   "controle_reperes": "apercus_final/fa24_reperes.jpg",
+   "modele_reel": "M4A1 Assault Rifle",
+   "source": {
+    "page": "https://web.archive.org/web/20220520003932/https://www.3dmodelscc0.com/model/m4a1-assault-rifle",
+    "page_live": "https://opengameart.org/content/m4a1-assault-rifle",
+    "telechargement": "https://github.com/BoQsc/cc0-guns-explosives-pack-glb/releases/download/0/Guns.Explosives_glb.zip -> Guns&Explosives_glb/M4A1/M4A1.glb (lu par requête Range à l'offset 88762527, CRC32 vérifié)",
+    "original_auteur_fbx_png": "https://4ad59772-834a-4e5e-a169-710e51b2c023.filesusr.com/archives/7f8c30_6d2e783c91274e4e89a71a90d0721e42.rar?dn=M4A1.rar",
+    "fichier_telecharge": "telechargements/fa24/M4A1.glb",
+    "sha256_source": "446f101acda44b2f9cabe920e4bc33c1b5ca979f13888804a795fc9a6f3eb7cb"
+   },
+   "auteur": "3DModelsCC0 (« nisu ») ; conversion GLB par BoQsc (dépôt GitHub sous CC0-1.0)",
+   "licence": "CC0 1.0 (domaine public, aucun crédit obligatoire)",
+   "preuve": "Page officielle archivée : « This work is licensed under CC0 1.0 », bouton Download = le RAR filesusr indiqué ; dépôt GitHub BoQsc sous licence CC0-1.0 (API GitHub) ; vérifié par le juge le 23/10/2026.",
+   "triangles": 9236,
+   "taille_ko": 1182.1,
+   "taille_ko_telephone": 613.4,
+   "sha256": "720ba8ed26c2ad06349225cee390ec0d21a255b3e5f2c0ea61e9c4186833877a",
+   "dimensions_m": {
+    "longueur_z": 0.8588,
+    "hauteur_y": 0.2663,
+    "largeur_x": 0.0636,
+    "boite_min": [
+     -0.0308,
+     -0.1133,
+     -0.6181
+    ],
+    "boite_max": [
+     0.0328,
+     0.153,
+     0.2408
+    ]
+   },
+   "echelle": {
+    "facteur": 1.0,
+    "reference_reelle": "M4A1 réel : 0,838 m crosse déployée",
+    "constat": "0,859 m mesuré (+2,5 %) : échelle conservée ; sous la fourchette indicative 0,90-1,0 car c'est la vraie taille d'un M4A1"
+   },
+   "repere": "origine = prise de la main droite (centre de la poignée, ~3 cm sous son raccord, plan médian), −Z vers la bouche, +Y en haut, mètres",
+   "transformation": [
+    "GLB source déjà en mètres, Y en haut, bouche vers −Z : échelle ×1 (l'échelle 0,01 et la rotation +90° X du nœud racine Blender sont intégrées aux sommets)",
+    "translation −origine = [0.0008, 0.065, -0.0822] (origine relevée dans le modèle corrigé)",
+    "rotations/échelles de tous les nœuds intégrées aux sommets : chaque nœud n'a plus qu'une translation (axes = repère du contrat), son origine reste le pivot d'origine",
+    "textures 2048 -> 1024 px (Lanczos) ; carte de normales source DirectX (nommée « _Normal », mesurée DirectX) -> vert inversé = convention glTF/OpenGL, renormalisée ; couleur et métal/rugosité en JPEG q90, normales en PNG",
+    "matériau RECTO-VERSO (doubleSided) : le modèle a des ouvertures dont l’envers se voit en jeu (vérificateur, outils/verif3d.js + verif_zoom.js)",
+    "vérificateur : doubleSided rétabli (la hausse arrière laissait voir l’envers de ses faces en visée : 951 px à 0,24 m)",
+    "vérificateur : scène renommée « <id>_scene » (même nom que le nœud racine : three.js renommait la racine « <id>_1 ») ; extras.iris.recto_verso ajouté"
+   ],
+   "reperes": {
+    "origine": [
+     0,
+     0,
+     0
+    ],
+    "bouche": [
+     0,
+     0.0856,
+     -0.6181
+    ],
+    "mainG": [
+     0,
+     0.0544,
+     -0.3122
+    ],
+    "visee": [
+     0,
+     0.143,
+     -0.0143
+    ],
+    "guidon": [
+     0,
+     0.1526,
+     -0.4307
+    ],
+    "ejection": [
+     0.0123,
+     0.089,
+     -0.1236
+    ],
+    "crosse": [
+     0,
+     0.045,
+     0.2318
+    ]
+   },
+   "pieces_mobiles": {
+    "Magazine": {
+     "parent": "fa24",
+     "pivot": [
+      0,
+      0.0313,
+      -0.1333
+     ],
+     "min": [
+      -0.0103,
+      -0.1133,
+      -0.1853
+     ],
+     "max": [
+      0.0103,
+      0.0711,
+      -0.0981
+     ],
+     "triangles": 736,
+     "role": "chargeur",
+     "mouvement": "translation −Y (puits vertical), ~0,20 m pour sortir"
+    },
+    "Charging_Handle": {
+     "parent": "Parts",
+     "pivot": [
+      0,
+      0.1071,
+      -0.067
+     ],
+     "min": [
+      -0.0195,
+      0.1032,
+      -0.1604
+     ],
+     "max": [
+      0.0196,
+      0.1109,
+      0.0265
+     ],
+     "triangles": 124,
+     "role": "culasse",
+     "mouvement": "levier d'armement : translation +Z ~0,075 m puis retour"
+    },
+    "Ejector_Lid": {
+     "parent": "Ejector",
+     "pivot": [
+      0.0103,
+      0.0754,
+      -0.1252
+     ],
+     "min": [
+      0.0087,
+      0.0592,
+      -0.168
+     ],
+     "max": [
+      0.0246,
+      0.0768,
+      -0.0824
+     ],
+     "triangles": 128,
+     "role": "couvre_ejection",
+     "mouvement": "volet de la fenêtre d'éjection (ouvert dans le modèle), rotation autour de Z"
+    },
+    "Firemode_Selector": {
+     "parent": "Parts",
+     "pivot": [
+      -0.0091,
+      0.0488,
+      -0.022
+     ],
+     "min": [
+      -0.0125,
+      0.0265,
+      -0.0287
+     ],
+     "max": [
+      -0.0056,
+      0.0574,
+      -0.0154
+     ],
+     "triangles": 108,
+     "role": "selecteur",
+     "mouvement": "rotation autour de X, 90° (sûreté / semi) "
+    },
+    "Sight_2": {
+     "parent": "Sight",
+     "pivot": [
+      0,
+      0.1337,
+      -0.0129
+     ],
+     "min": [
+      -0.0053,
+      0.1198,
+      -0.0161
+     ],
+     "max": [
+      0.0052,
+      0.1476,
+      -0.0098
+     ],
+     "triangles": 232,
+     "role": "hausse",
+     "mouvement": "œilleton repliable, rotation autour de X"
+    },
+    "Trigger": {
+     "parent": "Parts",
+     "pivot": [
+      0,
+      0.0324,
+      -0.0588
+     ],
+     "min": [
+      -0.0017,
+      0.005,
+      -0.0718
+     ],
+     "max": [
+      0.0017,
+      0.0382,
+      -0.0475
+     ],
+     "triangles": 68,
+     "role": "detente",
+     "mouvement": "rotation autour de X au pivot, ≈ −12° (le bas recule)"
+    }
+   },
+   "noeuds_maillages": [
+    "Base",
+    "Magazine",
+    "Barrel",
+    "Charging_Handle",
+    "Ejector_2",
+    "Ejector_Lid",
+    "Firemode_Selector",
+    "Sight_2",
+    "Switch1",
+    "Switch2",
+    "Sight",
+    "Stock",
+    "Trigger"
+   ],
+   "materiaux": [
+    "M4A1_MasterMat"
+   ],
+   "textures": [
+    "fa24_metal_rugosite (image/jpeg, 1024², 303773 octets)",
+    "fa24_couleur (image/jpeg, 1024², 46373 octets)",
+    "fa24_normales (image/png, 1024², 451929 octets)"
+   ],
+   "recto_verso": true,
+   "extras_glb": "le nœud racine « fa24 » porte extras.iris (repères + pièces) ; les repères sont aussi des nœuds vides « reperes/rep_<nom> »",
+   "verification": {
+    "ok": true,
+    "licence": "CC0 1.0 revérifiée le 23/10/2026 par le vérificateur : page 3dmodelscc0.com archivée relue (curl) = « This work is licensed under CC0 1.0 », son bouton Download pointe sur le RAR filesusr indiqué ; dépôt GitHub BoQsc sous CC0-1.0 (API GitHub), release 0 = « I simply converted to glb files and fixed material ». Aucun compte, aucune acceptation de conditions. Page OpenGameArt vivante : « License(s): CC0 », auteur « nisu ».",
+    "chargement_three_r170": "GLTFLoader du jeu (vendor/three identique, octet pour octet) : 0 avertissement, 0 erreur, PC et téléphone ; MeshStandardMaterial, couleur 1024 px sRGB (512 au téléphone), normales et métal/rugosité linéaires ; normalScale (1, −1) posé par le chargeur",
+    "structure": "accesseurs dans les bornes, min/max exacts, aucun NaN, aucun indice hors bornes, normales unitaires, 0 face retournée après correction",
+    "echelle_repere": "mètres, +Y en haut, bouche vers −Z, origine sur la poignée (contrôlé sur apercus_final/fa24_reperes.jpg et par la boîte englobante)",
+    "normales": "glTF/OpenGL vérifié sur la hauteur d’origine (R −0,091, G +0,096 ; la source BoQsc « _Normal » donnait G −0,122 = DirectX, donc l’inversion était juste)",
+    "metal_rugosite": "B = métal (corr 1,000 avec M4A1_Metallic.png), G = rugosité (corr 0,994 avec M4A1_Roughness.png)",
+    "trous_envers_visible_pct_max": 0.0,
+    "trous_detail": "avant correction : 0,35 % en visée (hausse arrière transparente, 951 px en gros plan) -> recto-verso : 0",
+    "marquages": "aucune marque commerciale lue sur les textures couleur / normales / hauteur",
+    "reserves": [
+     "texture couleur très unie (gris + noir, normal map presque plate) : le détail vient surtout de la géométrie ; le plus « propre » du lot",
+     "pointe du guidon 9,6 mm plus haute que l’œilleton (défaut du modèle, repère guidon fourni à part)"
+    ],
+    "images": [
+     "analyse/jeu_fa24_apres.jpg",
+     "analyse/zoom_fa24_visee.jpg"
+    ]
+   }
+  },
+  "pm9": {
+   "nom_jeu": "PM-9 « Guêpe »",
+   "fichier": "choix/pm9.glb",
+   "fichier_telephone": "choix/tel/pm9.glb",
+   "apercu": "apercus_final/pm9.jpg",
+   "controle_reperes": "apercus_final/pm9_reperes.jpg",
+   "modele_reel": "Grease Gun M3",
+   "source": {
+    "page": "https://web.archive.org/web/20211130063158/https://www.3dmodelscc0.com/model/grease-gun-m3",
+    "telechargement": "https://github.com/BoQsc/cc0-guns-explosives-pack-glb/releases/download/0/Guns.Explosives_glb.zip -> Guns&Explosives_glb/GreaseGun/Grease_Gun.glb (lu par requête Range à l'offset 54670913, CRC32 vérifié)",
+    "original_auteur_fbx_png": "https://4ad59772-834a-4e5e-a169-710e51b2c023.filesusr.com/archives/7f8c30_0fe7e83c01ec4f4bbbf46e11d95172e0.rar?dn=GreaseGun.rar",
+    "fichier_telecharge": "telechargements/pm9/Grease_Gun.glb",
+    "sha256_source": "ec6b590d6d96479de3aa811bdda040404ebda306bc4c940e6358cfc2226985f1"
+   },
+   "auteur": "3DModelsCC0 (« nisu ») ; conversion GLB par BoQsc (dépôt GitHub sous CC0-1.0)",
+   "licence": "CC0 1.0 (domaine public, aucun crédit obligatoire)",
+   "preuve": "Page officielle archivée : « This work is licensed under CC0 1.0 », bouton Download = le RAR filesusr indiqué ; dépôt GitHub BoQsc sous licence CC0-1.0 (API GitHub) ; vérifié par le juge le 23/10/2026.",
+   "triangles": 7721,
+   "taille_ko": 1295.3,
+   "taille_ko_telephone": 593.9,
+   "sha256": "f4f8473d782749f6bc6769c00e54eb9010761523a4a1a565a7d9bcacbc2aa385",
+   "dimensions_m": {
+    "longueur_z": 0.6271,
+    "hauteur_y": 0.334,
+    "largeur_x": 0.0635,
+    "boite_min": [
+     -0.0328,
+     -0.1888,
+     -0.4998
+    ],
+    "boite_max": [
+     0.0307,
+     0.1452,
+     0.1272
+    ]
+   },
+   "echelle": {
+    "facteur": 1.0,
+    "reference_reelle": "M3 réel : 0,579 m crosse rentrée / 0,757 m sortie, canon 0,203 m",
+    "constat": "0,627 m (canon 0,20 m = réel) : échelle conservée, dans la fourchette 0,55-0,70"
+   },
+   "repere": "origine = prise de la main droite (centre de la poignée, ~3 cm sous son raccord, plan médian), −Z vers la bouche, +Y en haut, mètres",
+   "transformation": [
+    "GLB source déjà en mètres, Y en haut, bouche vers −Z : échelle ×1 (l'échelle 0,01 et la rotation +90° X du nœud racine Blender sont intégrées aux sommets)",
+    "translation −origine = [-0.0001, 0.085, -0.1615] (origine relevée dans le modèle corrigé)",
+    "rotations/échelles de tous les nœuds intégrées aux sommets : chaque nœud n'a plus qu'une translation (axes = repère du contrat), son origine reste le pivot d'origine",
+    "textures 2048 -> 1024 px (Lanczos) ; carte de normales source DirectX -> vert inversé = convention glTF/OpenGL, renormalisée ; couleur et métal/rugosité en JPEG q90, normales en PNG",
+    "matériau en faces simples (doubleSided retiré : aucun envers visible, vérifié sur 26 directions + 4 poses FPS)",
+    "vérificateur : scène renommée « <id>_scene » (même nom que le nœud racine : three.js renommait la racine « <id>_1 ») ; extras.iris.recto_verso ajouté"
+   ],
+   "reperes": {
+    "origine": [
+     0,
+     0,
+     0
+    ],
+    "bouche": [
+     0,
+     0.0909,
+     -0.4998
+    ],
+    "mainG": [
+     0,
+     0.02,
+     -0.2521
+    ],
+    "visee": [
+     0,
+     0.1255,
+     0.0099
+    ],
+    "guidon": [
+     0,
+     0.1257,
+     -0.282
+    ],
+    "ejection": [
+     0.0239,
+     0.1,
+     -0.2065
+    ],
+    "crosse": [
+     0,
+     0.0086,
+     0.1272
+    ]
+   },
+   "pieces_mobiles": {
+    "Bolt": {
+     "parent": "Body",
+     "pivot": [
+      -0.0018,
+      0.0914,
+      -0.2122
+     ],
+     "min": [
+      -0.022,
+      0.0712,
+      -0.2648
+     ],
+     "max": [
+      0.0184,
+      0.1116,
+      -0.0796
+     ],
+     "triangles": 151,
+     "role": "culasse",
+     "mouvement": "translation +Z (~0,09 m) puis retour"
+    },
+    "EjectorLid": {
+     "parent": "Body",
+     "pivot": [
+      0.0001,
+      0.116,
+      -0.1581
+     ],
+     "min": [
+      -0.0295,
+      0.1143,
+      -0.2636
+     ],
+     "max": [
+      0.0019,
+      0.1452,
+      -0.1581
+     ],
+     "triangles": 284,
+     "role": "couvre_ejection",
+     "mouvement": "capot d'éjection relevé (position de tir), rotation autour de Z"
+    },
+    "Magazine": {
+     "parent": "Body",
+     "pivot": [
+      0,
+      0.0233,
+      -0.2511
+     ],
+     "min": [
+      -0.0114,
+      -0.1888,
+      -0.2726
+     ],
+     "max": [
+      0.0114,
+      0.0921,
+      -0.2297
+     ],
+     "triangles": 212,
+     "role": "chargeur",
+     "mouvement": "translation −Y (puits vertical), ~0,30 m pour sortir"
+    },
+    "Stock": {
+     "parent": "Body",
+     "pivot": [
+      0,
+      0.0129,
+      -0.0383
+     ],
+     "min": [
+      -0.0236,
+      -0.0474,
+      -0.2038
+     ],
+     "max": [
+      0.0236,
+      0.0684,
+      0.1272
+     ],
+     "triangles": 2596,
+     "role": "crosse",
+     "mouvement": "crosse en fil coulissante : translation −Z pour la rentrer"
+    },
+    "Trigger": {
+     "parent": "Body",
+     "pivot": [
+      0,
+      0.022,
+      -0.0383
+     ],
+     "min": [
+      -0.0045,
+      0.0023,
+      -0.0523
+     ],
+     "max": [
+      0.0045,
+      0.0315,
+      -0.0278
+     ],
+     "triangles": 144,
+     "role": "detente",
+     "mouvement": "rotation autour de X au pivot"
+    }
+   },
+   "noeuds_maillages": [
+    "Bolt",
+    "EjectorLid",
+    "Magazine",
+    "Stock",
+    "Trigger",
+    "Body"
+   ],
+   "materiaux": [
+    "Grease_MasterMat"
+   ],
+   "textures": [
+    "pm9_metal_rugosite (image/jpeg, 1024², 303888 octets)",
+    "pm9_couleur (image/jpeg, 1024², 141712 octets)",
+    "pm9_normales (image/png, 1024², 590541 octets)"
+   ],
+   "recto_verso": false,
+   "extras_glb": "le nœud racine « pm9 » porte extras.iris (repères + pièces) ; les repères sont aussi des nœuds vides « reperes/rep_<nom> »",
+   "verification": {
+    "ok": true,
+    "licence": "CC0 1.0 revérifiée le 23/10/2026 par le vérificateur : page 3dmodelscc0.com archivée relue (curl) = « This work is licensed under CC0 1.0 », son bouton Download pointe sur le RAR filesusr indiqué ; dépôt GitHub BoQsc sous CC0-1.0 (API GitHub), release 0 = « I simply converted to glb files and fixed material ». Aucun compte, aucune acceptation de conditions.",
+    "chargement_three_r170": "GLTFLoader du jeu (vendor/three identique, octet pour octet) : 0 avertissement, 0 erreur, PC et téléphone ; MeshStandardMaterial, couleur 1024 px sRGB (512 au téléphone), normales et métal/rugosité linéaires ; normalScale (1, −1) posé par le chargeur",
+    "structure": "accesseurs dans les bornes, min/max exacts, aucun NaN, aucun indice hors bornes, normales unitaires, 0 face retournée après correction",
+    "echelle_repere": "mètres, +Y en haut, bouche vers −Z, origine sur la poignée (contrôlé sur apercus_final/pm9_reperes.jpg et par la boîte englobante)",
+    "normales": "glTF/OpenGL vérifié sur la hauteur d’origine (R −0,241, G +0,171 ; source DirectX G −0,200)",
+    "metal_rugosite": "B = métal (corr 0,996), G = rugosité (corr 0,986) ; arme tout acier (métal 99 %)",
+    "trous_envers_visible_pct_max": 0.021,
+    "trous_detail": "au plus 4 px en silhouette (crénelage), aucune ouverture",
+    "marquages": "aucune marque commerciale lue sur les textures couleur / normales / hauteur",
+    "reserves": [
+     "arme réelle de l’époque de la Seconde Guerre mondiale (M3) : réaliste mais d’un autre âge que le M4A1"
+    ],
+    "images": [
+     "analyse/jeu_pm9_apres.jpg"
+    ]
+   }
+  },
+  "fp12": {
+   "nom_jeu": "FP-12 « Bélier »",
+   "fichier": "choix/fp12.glb",
+   "fichier_telephone": "choix/tel/fp12.glb",
+   "apercu": "apercus_final/fp12.jpg",
+   "controle_reperes": "apercus_final/fp12_reperes.jpg",
+   "modele_reel": "Shotgun (pompe façon Remington 870)",
+   "source": {
+    "page": "https://web.archive.org/web/20210302225522/https://www.3dmodelscc0.com/model/shotgun",
+    "telechargement": "https://github.com/BoQsc/cc0-guns-explosives-pack-glb/releases/download/0/Guns.Explosives_glb.zip -> Guns&Explosives_glb/Shotgun/Shotgun.glb (lu par requête Range à l'offset 131362756, CRC32 vérifié)",
+    "original_auteur_fbx_png": "https://4ad59772-834a-4e5e-a169-710e51b2c023.filesusr.com/archives/7f8c30_462b35a17ead4bb3aed9100669b7fd7f.rar?dn=Shotgun.rar",
+    "fichier_telecharge": "telechargements/fp12/Shotgun.glb",
+    "sha256_source": "25e13c9ef514023fcab5a441253524e52718a23593d56e6a49e4deb63ed83b5e"
+   },
+   "auteur": "3DModelsCC0 (« nisu ») ; conversion GLB par BoQsc (dépôt GitHub sous CC0-1.0)",
+   "licence": "CC0 1.0 (domaine public, aucun crédit obligatoire)",
+   "preuve": "Page officielle archivée : « This work is licensed under CC0 1.0 », bouton Download = le RAR filesusr indiqué ; dépôt GitHub BoQsc sous licence CC0-1.0 (API GitHub) ; vérifié par le juge le 23/10/2026.",
+   "triangles": 1740,
+   "taille_ko": 861.1,
+   "taille_ko_telephone": 278.2,
+   "sha256": "51020c0b3aacb949819969c04b31ce44fb5b235e9d309bcb18045ed1108d9436",
+   "dimensions_m": {
+    "longueur_z": 1.0992,
+    "hauteur_y": 0.2408,
+    "largeur_x": 0.0562,
+    "boite_min": [
+     -0.0281,
+     -0.1594,
+     -0.7602
+    ],
+    "boite_max": [
+     0.0281,
+     0.0813,
+     0.339
+    ]
+   },
+   "echelle": {
+    "facteur": 1.0,
+    "reference_reelle": "870 réel : 0,98-1,06 m avec canon 18,5-20 po",
+    "constat": "1,219 m d'origine (canon long) -> 1,099 m après raccourcissement du canon (carcasse à l'échelle réelle)"
+   },
+   "repere": "origine = prise de la main droite (centre de la poignée, ~3 cm sous son raccord, plan médian), −Z vers la bouche, +Y en haut, mètres",
+   "transformation": [
+    "GLB source déjà en mètres, Y en haut, bouche vers −Z : échelle ×1 (l'échelle 0,01 et la rotation +90° X du nœud racine Blender sont intégrées aux sommets)",
+    "canon raccourci sans toucher à la carcasse : tout ce qui est devant z = +0,10 (canon, tube magasin, bouchon, pompe) reculé de 4,5 cm, puis le bout du canon et le guidon (devant z = −0,365 d'origine) reculés de 7,5 cm ; ces zones ne contenaient que de longs quads (aucun sommet entre z = −0,252 et +0,182) : seul l'UV du canon/tube est comprimé de 10 à 21 %, invisible sur un métal uni",
+    "translation −origine = [0.0011, 0.03, -0.475] (origine relevée dans le modèle corrigé)",
+    "rotations/échelles de tous les nœuds intégrées aux sommets : chaque nœud n'a plus qu'une translation (axes = repère du contrat), son origine reste le pivot d'origine",
+    "textures 2048 -> 1024 px (Lanczos) ; carte de normales source DirectX -> vert inversé = convention glTF/OpenGL, renormalisée ; couleur et métal/rugosité en JPEG q90, normales en PNG",
+    "matériau en faces simples (doubleSided retiré : aucun envers visible, vérifié sur 26 directions + 4 poses FPS)",
+    "vérificateur : scène renommée « <id>_scene » (même nom que le nœud racine : three.js renommait la racine « <id>_1 ») ; extras.iris.recto_verso ajouté"
+   ],
+   "reperes": {
+    "origine": [
+     0,
+     0,
+     0
+    ],
+    "bouche": [
+     0,
+     0.0592,
+     -0.7602
+    ],
+    "mainG": [
+     0,
+     -0.0097,
+     -0.4861
+    ],
+    "visee": [
+     0,
+     0.0813,
+     -0.7317
+    ],
+    "visee_arriere": [
+     0,
+     0.0758,
+     -0.175
+    ],
+    "ejection": [
+     0.0154,
+     0.0563,
+     -0.2162
+    ],
+    "crosse": [
+     0,
+     -0.0756,
+     0.337
+    ]
+   },
+   "pieces_mobiles": {
+    "Ejection_Port": {
+     "parent": "Shotgun",
+     "pivot": [
+      0.0144,
+      0.0563,
+      -0.2162
+     ],
+     "min": [
+      0.014,
+      0.0454,
+      -0.2549
+     ],
+     "max": [
+      0.0154,
+      0.0673,
+      -0.1775
+     ],
+     "triangles": 36,
+     "role": "culasse",
+     "mouvement": "culasse vue par la fenêtre : suit la pompe (+Z 0,09 m)"
+    },
+    "Fore_Stock": {
+     "parent": "Shotgun",
+     "pivot": [
+      0,
+      0.0184,
+      -0.4861
+     ],
+     "min": [
+      -0.0281,
+      -0.0097,
+      -0.5778
+     ],
+     "max": [
+      0.0281,
+      0.0465,
+      -0.3943
+     ],
+     "triangles": 128,
+     "role": "pompe",
+     "mouvement": "translation +Z 0,09 m (course) puis retour"
+    },
+    "Trigger": {
+     "parent": "Shotgun",
+     "pivot": [
+      0,
+      -0.0057,
+      -0.0832
+     ],
+     "min": [
+      -0.0017,
+      -0.0302,
+      -0.099
+     ],
+     "max": [
+      0.0017,
+      0.0033,
+      -0.0751
+     ],
+     "triangles": 44,
+     "role": "detente",
+     "mouvement": "rotation autour de X au pivot"
+    }
+   },
+   "noeuds_maillages": [
+    "Ejection_Port",
+    "Fore_Stock",
+    "Trigger",
+    "Shotgun"
+   ],
+   "materiaux": [
+    "Shotgun_MasterMat"
+   ],
+   "textures": [
+    "fp12_metal_rugosite (image/jpeg, 1024², 242405 octets)",
+    "fp12_couleur (image/jpeg, 1024², 133021 octets)",
+    "fp12_normales (image/png, 1024², 436892 octets)"
+   ],
+   "recto_verso": false,
+   "extras_glb": "le nœud racine « fp12 » porte extras.iris (repères + pièces) ; les repères sont aussi des nœuds vides « reperes/rep_<nom> »",
+   "verification": {
+    "ok": true,
+    "licence": "CC0 1.0 revérifiée le 23/10/2026 par le vérificateur : page 3dmodelscc0.com archivée relue (curl) = « This work is licensed under CC0 1.0 », son bouton Download pointe sur le RAR filesusr indiqué ; dépôt GitHub BoQsc sous CC0-1.0 (API GitHub), release 0 = « I simply converted to glb files and fixed material ». Aucun compte, aucune acceptation de conditions.",
+    "chargement_three_r170": "GLTFLoader du jeu (vendor/three identique, octet pour octet) : 0 avertissement, 0 erreur, PC et téléphone ; MeshStandardMaterial, couleur 1024 px sRGB (512 au téléphone), normales et métal/rugosité linéaires ; normalScale (1, −1) posé par le chargeur",
+    "structure": "accesseurs dans les bornes, min/max exacts, aucun NaN, aucun indice hors bornes, normales unitaires, 0 face retournée après correction",
+    "echelle_repere": "mètres, +Y en haut, bouche vers −Z, origine sur la poignée (contrôlé sur apercus_final/fp12_reperes.jpg et par la boîte englobante)",
+    "normales": "glTF/OpenGL vérifié sur la hauteur d’origine (R −0,059, G +0,068 ; source DirectX G −0,059)",
+    "metal_rugosite": "B = métal (corr 1,000), G = rugosité (corr 0,998) ; bois de la crosse et de la pompe non métallique",
+    "trous_envers_visible_pct_max": 0.004,
+    "trous_detail": "1 px en silhouette",
+    "marquages": "aucune marque commerciale lue sur les textures couleur / normales / hauteur",
+    "reserves": [
+     "le plus simple du lot (1 740 triangles) mais crédible grâce aux textures ; canon raccourci par le téléchargeur (UV du canon comprimés, invisible)",
+     "rep_visee = guidon perle (comme le contrat) : pour la visée, aligner rep_visee_arriere ET rep_visee, sinon la caméra à 0,24 m du guidon tombe au milieu de l’arme"
+    ],
+    "images": [
+     "analyse/jeu_fp12_apres.jpg"
+    ]
+   }
+  },
+  "tp50": {
+   "nom_jeu": "TP-50 « Héron »",
+   "fichier": "choix/tp50.glb",
+   "fichier_telephone": "choix/tel/tp50.glb",
+   "apercu": "apercus_final/tp50.jpg",
+   "controle_reperes": "apercus_final/tp50_reperes.jpg",
+   "modele_reel": "Sniper Rifle (verrou + lunette, type Steyr SSG 69)",
+   "source": {
+    "page": "https://web.archive.org/web/20211130063347/https://www.3dmodelscc0.com/model/sniper-rifle",
+    "telechargement": "https://github.com/BoQsc/cc0-guns-explosives-pack-glb/releases/download/0/Guns.Explosives_glb.zip -> Guns&Explosives_glb/Sniper/Sniper.glb (lu par requête Range à l'offset 154503145, CRC32 vérifié)",
+    "original_auteur_fbx_png": "https://4ad59772-834a-4e5e-a169-710e51b2c023.filesusr.com/archives/7f8c30_68f9318f713146e78389adaf4f0d156a.rar?dn=Sniper.rar",
+    "fichier_telecharge": "telechargements/tp50/Sniper.glb",
+    "sha256_source": "1be08572ebcc461f9e5e41384fcae5fcdbe93e01b0f1a20fb11a0c1b8abddd42"
+   },
+   "auteur": "3DModelsCC0 (« nisu ») ; conversion GLB par BoQsc (dépôt GitHub sous CC0-1.0)",
+   "licence": "CC0 1.0 (domaine public, aucun crédit obligatoire)",
+   "preuve": "Page officielle archivée : « This work is licensed under CC0 1.0 », bouton Download = le RAR filesusr indiqué ; dépôt GitHub BoQsc sous licence CC0-1.0 (API GitHub) ; vérifié par le juge le 23/10/2026.",
+   "triangles": 4808,
+   "taille_ko": 751.7,
+   "taille_ko_telephone": 345.2,
+   "sha256": "a80760dd7a48bc2577023a41e07678ffe48230117b0bdc7c91671ee362c764cd",
+   "dimensions_m": {
+    "longueur_z": 1.1436,
+    "hauteur_y": 0.2256,
+    "largeur_x": 0.0568,
+    "boite_min": [
+     -0.0223,
+     -0.0892,
+     -0.8493
+    ],
+    "boite_max": [
+     0.0345,
+     0.1364,
+     0.2943
+    ]
+   },
+   "echelle": {
+    "facteur": 1.0,
+    "reference_reelle": "SSG 69 réel : 1,14 m",
+    "constat": "1,144 m : échelle conservée, dans la fourchette 1,1-1,25"
+   },
+   "repere": "origine = prise de la main droite (centre de la poignée, ~3 cm sous son raccord, plan médian), −Z vers la bouche, +Y en haut, mètres",
+   "transformation": [
+    "GLB source déjà en mètres, Y en haut, bouche vers −Z : échelle ×1 (l'échelle 0,01 et la rotation +90° X du nœud racine Blender sont intégrées aux sommets)",
+    "modèle source posé incliné (+10,67° autour de X, pose de présentation) : remis à plat (rotation −10,67° X, canon horizontal à 0,01 mm près)",
+    "chargeur posé SOUS l'arme dans la source : remonté de 5,9 cm dans son puits (dépasse de 4,5 cm sous le boîtier)",
+    "origine du nœud Bolt posée sur l'axe du canon (pivot de la rotation de 60°)",
+    "translation −origine = [0.0037, 0.045, -0.326] (origine relevée dans le modèle corrigé)",
+    "rotations/échelles de tous les nœuds intégrées aux sommets : chaque nœud n'a plus qu'une translation (axes = repère du contrat), son origine reste le pivot d'origine",
+    "textures 2048 -> 1024 px (Lanczos) ; carte de normales source DirectX (nommée « _Normal », mesurée DirectX) -> vert inversé = convention glTF/OpenGL, renormalisée ; couleur et métal/rugosité en JPEG q90, normales en PNG",
+    "matériau RECTO-VERSO (doubleSided) : le modèle a des ouvertures dont l’envers se voit en jeu (vérificateur, outils/verif3d.js + verif_zoom.js)",
+    "vérificateur : doubleSided rétabli + 10 faces (fond du chargeur 8, crosse 2) dont l’enroulement contredisait les normales : enroulement inversé (rendu correct en recto-verso)",
+    "vérificateur : scène renommée « <id>_scene » (même nom que le nœud racine : three.js renommait la racine « <id>_1 ») ; extras.iris.recto_verso ajouté"
+   ],
+   "reperes": {
+    "origine": [
+     0,
+     0,
+     0
+    ],
+    "bouche": [
+     0,
+     0.0738,
+     -0.8493
+    ],
+    "mainG": [
+     0,
+     0.0315,
+     -0.386
+    ],
+    "visee": [
+     0,
+     0.115,
+     0.0028
+    ],
+    "lunette_objectif": [
+     0,
+     0.1139,
+     -0.3279
+    ],
+    "ejection": [
+     0.0135,
+     0.075,
+     -0.116
+    ],
+    "crosse": [
+     0,
+     -0.0193,
+     0.294
+    ]
+   },
+   "pieces_mobiles": {
+    "Bolt": {
+     "parent": "tp50",
+     "pivot": [
+      0,
+      0.0738,
+      -0.1246
+     ],
+     "min": [
+      -0.0094,
+      0.0271,
+      -0.2078
+     ],
+     "max": [
+      0.0345,
+      0.0844,
+      -0.0446
+     ],
+     "triangles": 392,
+     "role": "culasse",
+     "mouvement": "rotation autour de Z (axe du canon, pivot = origine du nœud) +60° (levier vers le haut), puis translation +Z 0,08 m"
+    },
+    "FlipFlap": {
+     "parent": "tp50",
+     "pivot": [
+      0,
+      0.0486,
+      -0.4959
+     ],
+     "min": [
+      -0.016,
+      0.0334,
+      -0.499
+     ],
+     "max": [
+      0.0159,
+      0.0552,
+      -0.4917
+     ],
+     "triangles": 222,
+     "role": "hausse",
+     "mouvement": "hausse repliable des organes de visée de secours"
+    },
+    "IronSight": {
+     "parent": "tp50",
+     "pivot": [
+      0,
+      0.0872,
+      -0.8321
+     ],
+     "min": [
+      -0.0069,
+      0.0781,
+      -0.8435
+     ],
+     "max": [
+      0.0069,
+      0.1016,
+      -0.7807
+     ],
+     "triangles": 146,
+     "role": "guidon",
+     "mouvement": "fixe"
+    },
+    "Magazine": {
+     "parent": "tp50",
+     "pivot": [
+      0,
+      0.0091,
+      -0.167
+     ],
+     "min": [
+      -0.0073,
+      -0.0203,
+      -0.2116
+     ],
+     "max": [
+      0.0073,
+      0.0639,
+      -0.1385
+     ],
+     "triangles": 288,
+     "role": "chargeur",
+     "mouvement": "translation −Y, ~0,15 m pour sortir"
+    },
+    "Scope": {
+     "parent": "tp50",
+     "pivot": [
+      0.0074,
+      0.1097,
+      -0.1648
+     ],
+     "min": [
+      -0.0223,
+      0.0798,
+      -0.3282
+     ],
+     "max": [
+      0.0223,
+      0.1364,
+      0.0026
+     ],
+     "triangles": 1116,
+     "role": "lunette",
+     "mouvement": "fixe"
+    },
+    "Trigger": {
+     "parent": "tp50",
+     "pivot": [
+      0.0019,
+      0.0212,
+      -0.0816
+     ],
+     "min": [
+      -0.0006,
+      -0.0033,
+      -0.0934
+     ],
+     "max": [
+      0.0044,
+      0.0329,
+      -0.07
+     ],
+     "triangles": 68,
+     "role": "detente",
+     "mouvement": "rotation autour de X au pivot"
+    }
+   },
+   "noeuds_maillages": [
+    "Barrel",
+    "Bolt",
+    "FlipFlap",
+    "IronSight",
+    "Magazine",
+    "Scope",
+    "Stock",
+    "Trigger"
+   ],
+   "materiaux": [
+    "Sniper_MasterMat"
+   ],
+   "textures": [
+    "tp50_metal_rugosite (image/jpeg, 1024², 140074 octets)",
+    "tp50_couleur (image/jpeg, 1024², 36448 octets)",
+    "tp50_normales (image/png, 1024², 412569 octets)"
+   ],
+   "recto_verso": true,
+   "extras_glb": "le nœud racine « tp50 » porte extras.iris (repères + pièces) ; les repères sont aussi des nœuds vides « reperes/rep_<nom> »",
+   "verification": {
+    "ok": true,
+    "licence": "CC0 1.0 revérifiée le 23/10/2026 par le vérificateur : page 3dmodelscc0.com archivée relue (curl) = « This work is licensed under CC0 1.0 », son bouton Download pointe sur le RAR filesusr indiqué ; dépôt GitHub BoQsc sous CC0-1.0 (API GitHub), release 0 = « I simply converted to glb files and fixed material ». Aucun compte, aucune acceptation de conditions.",
+    "chargement_three_r170": "GLTFLoader du jeu (vendor/three identique, octet pour octet) : 0 avertissement, 0 erreur, PC et téléphone ; MeshStandardMaterial, couleur 1024 px sRGB (512 au téléphone), normales et métal/rugosité linéaires ; normalScale (1, −1) posé par le chargeur",
+    "structure": "accesseurs dans les bornes, min/max exacts, aucun NaN, aucun indice hors bornes, normales unitaires, 0 face retournée après correction",
+    "echelle_repere": "mètres, +Y en haut, bouche vers −Z, origine sur la poignée (contrôlé sur apercus_final/tp50_reperes.jpg et par la boîte englobante)",
+    "normales": "glTF/OpenGL vérifié sur la hauteur d’origine (R −0,110, G +0,075 ; la source « _Normal » donnait G −0,130 = DirectX)",
+    "metal_rugosite": "B = métal (corr 1,000), G = rugosité (corr 0,996) ; crosse synthétique non métallique",
+    "trous_envers_visible_pct_max": 0.0,
+    "trous_detail": "avant correction : 0,09 % (avant du boîtier) + 10 faces retournées -> recto-verso et enroulement corrigé : 0",
+    "marquages": "aucune marque commerciale lue sur les textures couleur / normales / hauteur",
+    "reserves": [],
+    "images": [
+     "analyse/jeu_tp50_apres.jpg",
+     "analyse/zoom_tp50_chargeur_dessous.jpg"
+    ]
+   }
+  },
+  "p17": {
+   "nom_jeu": "P-17 « Moineau »",
+   "fichier": "choix/p17.glb",
+   "fichier_telephone": "choix/tel/p17.glb",
+   "apercu": "apercus_final/p17.jpg",
+   "controle_reperes": "apercus_final/p17_reperes.jpg",
+   "modele_reel": "Makarov (pistolet PM)",
+   "source": {
+    "page": "https://web.archive.org/web/20211130062513/https://www.3dmodelscc0.com/model/makarov-pistol",
+    "telechargement": "https://github.com/BoQsc/cc0-guns-explosives-pack-glb/releases/download/0/Guns.Explosives_glb.zip -> Guns&Explosives_glb/Pistol_MK/Makarov.glb (lu par requête Range à l'offset 127262211, CRC32 vérifié)",
+    "original_auteur_fbx_png": "https://4ad59772-834a-4e5e-a169-710e51b2c023.filesusr.com/archives/7f8c30_edc22dfa71b04dc2bb6eb82e65f0f970.rar?dn=Pistol_MK.rar",
+    "fichier_telecharge": "telechargements/p17/Makarov.glb",
+    "sha256_source": "1028f19fb4f3268dcec20d1685d85fa5f3e3eae140c30d0d55c919544a20444c"
+   },
+   "auteur": "3DModelsCC0 (« nisu ») ; conversion GLB par BoQsc (dépôt GitHub sous CC0-1.0)",
+   "licence": "CC0 1.0 (domaine public, aucun crédit obligatoire)",
+   "preuve": "Page officielle archivée : « This work is licensed under CC0 1.0 », bouton Download = le RAR filesusr indiqué ; dépôt GitHub BoQsc sous licence CC0-1.0 (API GitHub) ; vérifié par le juge le 23/10/2026.",
+   "triangles": 3991,
+   "taille_ko": 1324.4,
+   "taille_ko_telephone": 506.1,
+   "sha256": "058c16f14bda270e263120395d983537f2a4b99d6fc73a8791fc45e33f06ee31",
+   "dimensions_m": {
+    "longueur_z": 0.1685,
+    "hauteur_y": 0.1276,
+    "largeur_x": 0.0257,
+    "boite_min": [
+     -0.0134,
+     -0.0515,
+     -0.1343
+    ],
+    "boite_max": [
+     0.0123,
+     0.0761,
+     0.0342
+    ]
+   },
+   "echelle": {
+    "facteur": 1.0,
+    "reference_reelle": "Makarov PM réel : 0,161 m × 0,127 m",
+    "constat": "0,169 m (chien compris) × 0,128 m : échelle conservée ; sous la fourchette indicative 0,19-0,21 car le PM est un pistolet compact"
+   },
+   "repere": "origine = prise de la main droite (centre de la poignée, ~3 cm sous son raccord, plan médian), −Z vers la bouche, +Y en haut, mètres",
+   "transformation": [
+    "GLB source déjà en mètres, Y en haut, bouche vers −Z : échelle ×1 (l'échelle 0,01 et la rotation +90° X du nœud racine Blender sont intégrées aux sommets)",
+    "chargeur posé À CÔTÉ de l'arme dans la source : avancé de 9,35 cm dans la poignée (semelle 2 mm sous le bas de la poignée)",
+    "Hammer (chien) rattaché à la carcasse Body au lieu de la glissière ; Safety reste sur la glissière, comme sur le vrai PM",
+    "translation −origine = [-0.0047, 0.015, -0.0042] (origine relevée dans le modèle corrigé)",
+    "rotations/échelles de tous les nœuds intégrées aux sommets : chaque nœud n'a plus qu'une translation (axes = repère du contrat), son origine reste le pivot d'origine",
+    "textures 2048 -> 1024 px (Lanczos) ; carte de normales source OpenGL (déjà conforme glTF) -> gardée telle quelle (déjà glTF/OpenGL), renormalisée ; couleur et métal/rugosité en JPEG q90, normales en PNG",
+    "matériau RECTO-VERSO (doubleSided) : le modèle a des ouvertures dont l’envers se voit en jeu (vérificateur, outils/verif3d.js + verif_zoom.js)",
+    "vérificateur : doubleSided rétabli (fentes ouvertes à l’arrière de la glissière, vues de dos en FPS : 250 px en gros plan)",
+    "vérificateur : scène renommée « <id>_scene » (même nom que le nœud racine : three.js renommait la racine « <id>_1 ») ; extras.iris.recto_verso ajouté"
+   ],
+   "reperes": {
+    "origine": [
+     0,
+     0,
+     0
+    ],
+    "bouche": [
+     0,
+     0.0624,
+     -0.1343
+    ],
+    "mainG": [
+     -0.02,
+     -0.02,
+     0.005
+    ],
+    "visee": [
+     0,
+     0.075,
+     0.0078
+    ],
+    "guidon": [
+     0,
+     0.0761,
+     -0.1282
+    ],
+    "ejection": [
+     0.0103,
+     0.071,
+     -0.0492
+    ]
+   },
+   "pieces_mobiles": {
+    "Magazine": {
+     "parent": "p17",
+     "pivot": [
+      0.0001,
+      -0.0267,
+      0.01
+     ],
+     "min": [
+      -0.0085,
+      -0.0515,
+      -0.0256
+     ],
+     "max": [
+      0.0092,
+      0.0493,
+      0.0279
+     ],
+     "triangles": 170,
+     "role": "chargeur",
+     "mouvement": "translation le long de la poignée, direction (0, −0,981, +0,193), ~0,12 m pour sortir"
+    },
+    "Slide": {
+     "parent": "p17",
+     "pivot": [
+      0.0019,
+      0.055,
+      -0.09
+     ],
+     "min": [
+      -0.0134,
+      0.0448,
+      -0.1339
+     ],
+     "max": [
+      0.0123,
+      0.0761,
+      0.032
+     ],
+     "triangles": 1819,
+     "role": "glissiere",
+     "mouvement": "translation +Z 0,03 m (recul) ; la sûreté (Safety) est sa fille, comme sur le vrai PM"
+    },
+    "Safety": {
+     "parent": "Slide",
+     "pivot": [
+      -0.0113,
+      0.0577,
+      0.0131
+     ],
+     "min": [
+      -0.0134,
+      0.0535,
+      -0.003
+     ],
+     "max": [
+      -0.0109,
+      0.062,
+      0.015
+     ],
+     "triangles": 180,
+     "role": "surete",
+     "mouvement": "levier de sûreté, rotation autour de X"
+    },
+    "Trigger": {
+     "parent": "p17",
+     "pivot": [
+      0.0002,
+      0.0361,
+      -0.0507
+     ],
+     "min": [
+      -0.0028,
+      0.0176,
+      -0.0569
+     ],
+     "max": [
+      0.0033,
+      0.0428,
+      -0.0461
+     ],
+     "triangles": 60,
+     "role": "detente",
+     "mouvement": "rotation autour de X au pivot"
+    },
+    "Hammer": {
+     "parent": "Body",
+     "pivot": [
+      0.0006,
+      0.0526,
+      0.0089
+     ],
+     "min": [
+      -0.0036,
+      0.0442,
+      0.0069
+     ],
+     "max": [
+      0.0036,
+      0.0693,
+      0.0265
+     ],
+     "triangles": 224,
+     "role": "chien",
+     "mouvement": "rotation autour de X au pivot (rattaché à la carcasse Body)"
+    }
+   },
+   "noeuds_maillages": [
+    "Magazine",
+    "Safety",
+    "Slide",
+    "Trigger",
+    "Barrel",
+    "Hammer",
+    "Body"
+   ],
+   "materiaux": [
+    "Makarov_MasterMat"
+   ],
+   "textures": [
+    "p17_metal_rugosite (image/jpeg, 1024², 297197 octets)",
+    "p17_couleur (image/jpeg, 1024², 149173 octets)",
+    "p17_normales (image/png, 1024², 744762 octets)"
+   ],
+   "recto_verso": true,
+   "extras_glb": "le nœud racine « p17 » porte extras.iris (repères + pièces) ; les repères sont aussi des nœuds vides « reperes/rep_<nom> »",
+   "verification": {
+    "ok": true,
+    "licence": "CC0 1.0 revérifiée le 23/10/2026 par le vérificateur : page 3dmodelscc0.com archivée relue (curl) = « This work is licensed under CC0 1.0 », son bouton Download pointe sur le RAR filesusr indiqué ; dépôt GitHub BoQsc sous CC0-1.0 (API GitHub), release 0 = « I simply converted to glb files and fixed material ». Aucun compte, aucune acceptation de conditions.",
+    "chargement_three_r170": "GLTFLoader du jeu (vendor/three identique, octet pour octet) : 0 avertissement, 0 erreur, PC et téléphone ; MeshStandardMaterial, couleur 1024 px sRGB (512 au téléphone), normales et métal/rugosité linéaires ; normalScale (1, −1) posé par le chargeur",
+    "structure": "accesseurs dans les bornes, min/max exacts, aucun NaN, aucun indice hors bornes, normales unitaires, 0 face retournée après correction",
+    "echelle_repere": "mètres, +Y en haut, bouche vers −Z, origine sur la poignée (contrôlé sur apercus_final/p17_reperes.jpg et par la boîte englobante)",
+    "normales": "glTF/OpenGL vérifié sur la hauteur d’origine (R −0,443, G +0,481 ; source déjà OpenGL, gardée)",
+    "metal_rugosite": "B = métal (corr 1,000), G = rugosité (corr 0,990) ; plaquettes non métalliques",
+    "trous_envers_visible_pct_max": 0.0,
+    "trous_detail": "avant correction : 1,14 % vu de dos-dessus (fentes arrière de la glissière, 250 px en gros plan) -> recto-verso : 0",
+    "marquages": "aucune marque commerciale lue sur les textures couleur / normales / hauteur",
+    "reserves": [
+     "étoile sur les plaquettes (emblème du Makarov, pas une marque commerciale)"
+    ],
+    "images": [
+     "analyse/jeu_p17_apres.jpg",
+     "analyse/zoom_p17_visee.jpg",
+     "analyse/zoom_p17_arriere.jpg"
+    ]
+   }
+  },
+  "couteau": {
+   "nom_jeu": "Couteau",
+   "fichier": "choix/couteau.glb",
+   "fichier_telephone": "choix/tel/couteau.glb",
+   "apercu": "apercus_final/couteau.jpg",
+   "controle_reperes": "apercus_final/couteau_reperes.jpg",
+   "modele_reel": "Combat Knife (type Ka-Bar)",
+   "source": {
+    "page": "https://web.archive.org/web/20211130052733/https://www.3dmodelscc0.com/model/combat-knife",
+    "telechargement": "https://github.com/BoQsc/cc0-melee-weapons-pack-glb/releases/download/0/MeleeWeaponsPack_glb.zip -> MeleeWeaponsPack_glb/Combat_Knife/Combat_Knife.glb (lu par requête Range à l'offset 115, CRC32 vérifié)",
+    "original_auteur_fbx_png": "https://4ad59772-834a-4e5e-a169-710e51b2c023.filesusr.com/archives/7f8c30_3ad7e42998fa4303b022af331d019641.rar?dn=Combat_Knife.rar",
+    "fichier_telecharge": "telechargements/couteau/Combat_Knife.glb",
+    "sha256_source": "3ed5f43714bfe426b1b1143b3cebf3b451fdf06e6c40b299a6e05f5e0ba41443"
+   },
+   "auteur": "3DModelsCC0 (« nisu ») ; conversion GLB par BoQsc (dépôt GitHub sous CC0-1.0)",
+   "licence": "CC0 1.0 (domaine public, aucun crédit obligatoire)",
+   "preuve": "Page officielle archivée : « This work is licensed under CC0 1.0 », bouton Download = le RAR filesusr indiqué ; dépôt GitHub BoQsc sous licence CC0-1.0 (API GitHub) ; vérifié par le juge le 23/10/2026.",
+   "triangles": 1550,
+   "taille_ko": 1156.1,
+   "taille_ko_telephone": 360.4,
+   "sha256": "285e79973bf74c305c5486cd499edef7120ca00dff39bea0dbaf7e6b779934bb",
+   "dimensions_m": {
+    "longueur_z": 0.2972,
+    "hauteur_y": 0.0552,
+    "largeur_x": 0.024,
+    "boite_min": [
+     -0.012,
+     -0.028,
+     -0.2321
+    ],
+    "boite_max": [
+     0.012,
+     0.0272,
+     0.0651
+    ]
+   },
+   "echelle": {
+    "facteur": 1.0,
+    "reference_reelle": "Ka-Bar réel : 0,302 m",
+    "constat": "0,297 m : échelle conservée"
+   },
+   "repere": "origine = prise de la main droite (centre de la poignée, ~3 cm sous son raccord, plan médian), −Z vers la bouche, +Y en haut, mètres",
+   "transformation": [
+    "GLB source déjà en mètres, Y en haut, bouche vers −Z : échelle ×1 (l'échelle 0,01 et la rotation +90° X du nœud racine Blender sont intégrées aux sommets)",
+    "rotation : pointe (+Y d'origine) vers −Z, dos de lame (+X) vers +Y, tranchant vers −Y (matrice X→Y, Y→−Z, Z→−X)",
+    "translation −origine = [0.0, 0.0003, -0.069] (origine relevée dans le modèle corrigé)",
+    "rotations/échelles de tous les nœuds intégrées aux sommets : chaque nœud n'a plus qu'une translation (axes = repère du contrat), son origine reste le pivot d'origine",
+    "textures 2048 -> 1024 px (Lanczos) ; carte de normales source DirectX (nommée « _Normal », mesurée DirectX) -> vert inversé = convention glTF/OpenGL, renormalisée ; couleur et métal/rugosité en JPEG q90, normales en PNG",
+    "matériau en faces simples (doubleSided retiré : aucun envers visible, vérifié sur 26 directions + 4 poses FPS)",
+    "vérificateur : scène renommée « <id>_scene » (même nom que le nœud racine : three.js renommait la racine « <id>_1 ») ; extras.iris.recto_verso ajouté"
+   ],
+   "reperes": {
+    "origine": [
+     0,
+     0,
+     0
+    ],
+    "pointe": [
+     0,
+     0.0092,
+     -0.2321
+    ],
+    "garde": [
+     0,
+     0,
+     -0.0652
+    ],
+    "pommeau": [
+     0,
+     0,
+     0.0651
+    ]
+   },
+   "pieces_mobiles": {},
+   "noeuds_maillages": [
+    "Combat_Knife"
+   ],
+   "materiaux": [
+    "Combat_Knife_Material"
+   ],
+   "textures": [
+    "couteau_metal_rugosite (image/jpeg, 1024², 302948 octets)",
+    "couteau_couleur (image/jpeg, 1024², 79249 octets)",
+    "couteau_normales (image/png, 1024², 745371 octets)"
+   ],
+   "recto_verso": false,
+   "extras_glb": "le nœud racine « couteau » porte extras.iris (repères + pièces) ; les repères sont aussi des nœuds vides « reperes/rep_<nom> »",
+   "verification": {
+    "ok": true,
+    "licence": "CC0 1.0 revérifiée le 23/10/2026 par le vérificateur : page 3dmodelscc0.com archivée relue (curl) = « This work is licensed under CC0 1.0 », son bouton Download pointe sur le RAR filesusr indiqué ; dépôt GitHub BoQsc sous CC0-1.0 (API GitHub), release 0 = « I simply converted to glb files and fixed material ». Aucun compte, aucune acceptation de conditions.",
+    "chargement_three_r170": "GLTFLoader du jeu (vendor/three identique, octet pour octet) : 0 avertissement, 0 erreur, PC et téléphone ; MeshStandardMaterial, couleur 1024 px sRGB (512 au téléphone), normales et métal/rugosité linéaires ; normalScale (1, −1) posé par le chargeur",
+    "structure": "accesseurs dans les bornes, min/max exacts, aucun NaN, aucun indice hors bornes, normales unitaires, 0 face retournée après correction",
+    "echelle_repere": "mètres, +Y en haut, bouche vers −Z, origine sur la poignée (contrôlé sur apercus_final/couteau_reperes.jpg et par la boîte englobante)",
+    "normales": "glTF/OpenGL vérifié sur la hauteur d’origine (R −0,094, G +0,037, signal faible : lame presque lisse ; la source « _Normal » donnait G −0,056 = DirectX)",
+    "metal_rugosite": "B = métal (corr 1,000), G = rugosité (corr 0,990)",
+    "trous_envers_visible_pct_max": 0.0,
+    "trous_detail": "aucun",
+    "marquages": "aucune marque commerciale lue sur les textures couleur / normales / hauteur",
+    "reserves": [
+     "un seul maillage (normal pour un couteau)"
+    ],
+    "images": [
+     "analyse/jeu_couteau_apres.jpg"
+    ]
+   }
+  },
+  "frag": {
+   "nom_jeu": "Grenade à fragmentation",
+   "fichier": "choix/frag.glb",
+   "fichier_telephone": "choix/tel/frag.glb",
+   "apercu": "apercus_final/frag.jpg",
+   "controle_reperes": "apercus_final/frag_reperes.jpg",
+   "modele_reel": "Frag Grenade",
+   "source": {
+    "page": "https://web.archive.org/web/20210623092723/https://www.3dmodelscc0.com/model/frag-grenade",
+    "telechargement": "https://github.com/BoQsc/cc0-guns-explosives-pack-glb/releases/download/0/Guns.Explosives_glb.zip -> Guns&Explosives_glb/FragGrenade/FragGrenadeModel.glb (lu par requête Range à l'offset 42964732, CRC32 vérifié)",
+    "original_auteur_fbx_png": "https://4ad59772-834a-4e5e-a169-710e51b2c023.filesusr.com/archives/7f8c30_5814714079244df5858342d7028b2d97.rar?dn=Grenade.rar",
+    "fichier_telecharge": "telechargements/frag/FragGrenadeModel.glb",
+    "sha256_source": "d558ae2bd3056b9dc0f0f548f672b8dad57e9d864034cf996f3077c78b548496"
+   },
+   "auteur": "3DModelsCC0 (« nisu ») ; conversion GLB par BoQsc (dépôt GitHub sous CC0-1.0)",
+   "licence": "CC0 1.0 (domaine public, aucun crédit obligatoire)",
+   "preuve": "Page officielle archivée : « This work is licensed under CC0 1.0 », bouton Download = le RAR filesusr indiqué ; dépôt GitHub BoQsc sous licence CC0-1.0 (API GitHub) ; vérifié par le juge le 23/10/2026.",
+   "triangles": 3642,
+   "taille_ko": 1209.7,
+   "taille_ko_telephone": 393.6,
+   "sha256": "6b0a57948f0788909df59cef5c4df2d8ef43c88a1f2c3fecdcc82f866b754305",
+   "dimensions_m": {
+    "longueur_z": 0.0635,
+    "hauteur_y": 0.1018,
+    "largeur_x": 0.0544,
+    "boite_min": [
+     -0.0272,
+     -0.0402,
+     -0.0272
+    ],
+    "boite_max": [
+     0.0272,
+     0.0615,
+     0.0363
+    ]
+   },
+   "echelle": {
+    "facteur": 1.0,
+    "reference_reelle": "forme « citron » M26/M61 réelle : 0,099 m × Ø 0,057 m",
+    "constat": "0,102 m × Ø 0,054 m : échelle conservée ; sous la fourchette indicative 0,11-0,13 car c'est la vraie taille"
+   },
+   "repere": "origine = prise de la main droite (centre de la poignée, ~3 cm sous son raccord, plan médian), −Z vers la bouche, +Y en haut, mètres",
+   "transformation": [
+    "GLB source déjà en mètres, Y en haut, bouche vers −Z : échelle ×1 (l'échelle 0,01 et la rotation +90° X du nœud racine Blender sont intégrées aux sommets)",
+    "rotation 180° autour de Y : anneau de goupille à gauche (−X, main gauche), cuillère vers l'arrière (+Z, paume droite)",
+    "translation −origine = [0.0, -0.04, 0.0] (origine relevée dans le modèle corrigé)",
+    "rotations/échelles de tous les nœuds intégrées aux sommets : chaque nœud n'a plus qu'une translation (axes = repère du contrat), son origine reste le pivot d'origine",
+    "textures 2048 -> 1024 px (Lanczos) ; carte de normales source DirectX -> vert inversé = convention glTF/OpenGL, renormalisée ; couleur et métal/rugosité en JPEG q90, normales en PNG",
+    "matériau en faces simples (doubleSided retiré : aucun envers visible, vérifié sur 26 directions + 4 poses FPS)",
+    "vérificateur : scène renommée « <id>_scene » (même nom que le nœud racine : three.js renommait la racine « <id>_1 ») ; extras.iris.recto_verso ajouté"
+   ],
+   "reperes": {
+    "origine": [
+     0,
+     0,
+     0
+    ],
+    "anneau": [
+     -0.012,
+     0.0409,
+     0.0163
+    ],
+    "sommet": [
+     0,
+     0.0615,
+     0.0038
+    ],
+    "fond": [
+     0,
+     -0.0402,
+     0
+    ]
+   },
+   "pieces_mobiles": {
+    "Pin": {
+     "parent": "frag",
+     "pivot": [
+      0,
+      -0.04,
+      0
+     ],
+     "min": [
+      -0.018,
+      0.0262,
+      0.0017
+     ],
+     "max": [
+      0.0094,
+      0.0556,
+      0.0309
+     ],
+     "triangles": 824,
+     "role": "goupille",
+     "mouvement": "goupille + anneau : translation −X ~0,03 m pour l'arracher"
+    }
+   },
+   "noeuds_maillages": [
+    "Grenade",
+    "Pin"
+   ],
+   "materiaux": [
+    "FragGrenade_MasterMat"
+   ],
+   "textures": [
+    "frag_metal_rugosite (image/jpeg, 1024², 284779 octets)",
+    "frag_couleur (image/jpeg, 1024², 116243 octets)",
+    "frag_normales (image/png, 1024², 713172 octets)"
+   ],
+   "recto_verso": false,
+   "extras_glb": "le nœud racine « frag » porte extras.iris (repères + pièces) ; les repères sont aussi des nœuds vides « reperes/rep_<nom> »",
+   "verification": {
+    "ok": true,
+    "licence": "CC0 1.0 revérifiée le 23/10/2026 par le vérificateur : page 3dmodelscc0.com archivée relue (curl) = « This work is licensed under CC0 1.0 », son bouton Download pointe sur le RAR filesusr indiqué ; dépôt GitHub BoQsc sous CC0-1.0 (API GitHub), release 0 = « I simply converted to glb files and fixed material ». Aucun compte, aucune acceptation de conditions.",
+    "chargement_three_r170": "GLTFLoader du jeu (vendor/three identique, octet pour octet) : 0 avertissement, 0 erreur, PC et téléphone ; MeshStandardMaterial, couleur 1024 px sRGB (512 au téléphone), normales et métal/rugosité linéaires ; normalScale (1, −1) posé par le chargeur",
+    "structure": "accesseurs dans les bornes, min/max exacts, aucun NaN, aucun indice hors bornes, normales unitaires, 0 face retournée après correction",
+    "echelle_repere": "mètres, +Y en haut, bouche vers −Z, origine sur la poignée (contrôlé sur apercus_final/frag_reperes.jpg et par la boîte englobante)",
+    "normales": "glTF/OpenGL par test des dérivées croisées (−0,449 ; source « _Normal_DirectX » à +0,509) — pas de hauteur d’origine (RAR 4K non téléchargé)",
+    "metal_rugosite": "pas d’original 2K à comparer (RAR 4K non téléchargé) ; métal moyen 0,05 = corps peint, cohérent",
+    "trous_envers_visible_pct_max": 0.001,
+    "trous_detail": "1 px en silhouette",
+    "marquages": "aucune marque commerciale lue sur les textures couleur / normales / hauteur",
+    "reserves": [
+     "forme M26/M61 (pas M67) ; cuillère non séparée (seule la goupille l’est) ; inscription militaire générique, pas de marque"
+    ],
+    "images": [
+     "analyse/jeu_frag_apres.jpg"
+    ]
+   }
+  },
+  "flash": {
+   "nom_jeu": "Grenade aveuglante",
+   "fichier": "choix/flash.glb",
+   "fichier_telephone": "choix/tel/flash.glb",
+   "apercu": "apercus_final/flash.jpg",
+   "controle_reperes": "apercus_final/flash_reperes.jpg",
+   "modele_reel": "Flashbang (type M84)",
+   "source": {
+    "page": "https://web.archive.org/web/20210516014208/https://www.3dmodelscc0.com/model/flash-grenade",
+    "telechargement": "https://github.com/BoQsc/cc0-guns-explosives-pack-glb/releases/download/0/Guns.Explosives_glb.zip -> Guns&Explosives_glb/Flashbang/Flashbang.glb (lu par requête Range à l'offset 35808867, CRC32 vérifié)",
+    "original_auteur_fbx_png": "https://4ad59772-834a-4e5e-a169-710e51b2c023.filesusr.com/archives/7f8c30_890cfc8241f148579559c693b32836a0.rar?dn=Flashbang.rar",
+    "fichier_telecharge": "telechargements/flash/Flashbang.glb",
+    "sha256_source": "89a677146a551466b5e8bc4cc2c677ec1c9e2ef7318278babfc09dc6b31cebc0"
+   },
+   "auteur": "3DModelsCC0 (« nisu ») ; conversion GLB par BoQsc (dépôt GitHub sous CC0-1.0)",
+   "licence": "CC0 1.0 (domaine public, aucun crédit obligatoire)",
+   "preuve": "Page officielle archivée : « This work is licensed under CC0 1.0 », bouton Download = le RAR filesusr indiqué ; dépôt GitHub BoQsc sous licence CC0-1.0 (API GitHub) ; vérifié par le juge le 23/10/2026.",
+   "triangles": 5562,
+   "taille_ko": 1612.9,
+   "taille_ko_telephone": 568.8,
+   "sha256": "017b325e7227ec9d4c11043ba86c37e44301ad21793e42e3eceb1744e1b35fae",
+   "dimensions_m": {
+    "longueur_z": 0.047,
+    "hauteur_y": 0.1216,
+    "largeur_x": 0.0418,
+    "boite_min": [
+     -0.0228,
+     -0.0509,
+     -0.0165
+    ],
+    "boite_max": [
+     0.019,
+     0.0708,
+     0.0305
+    ]
+   },
+   "echelle": {
+    "facteur": 1.0,
+    "reference_reelle": "M84 réelle : 0,133 m × Ø 0,044 m",
+    "constat": "0,122 m × Ø 0,038 m : échelle conservée, dans la fourchette 0,11-0,13"
+   },
+   "repere": "origine = prise de la main droite (centre de la poignée, ~3 cm sous son raccord, plan médian), −Z vers la bouche, +Y en haut, mètres",
+   "transformation": [
+    "GLB source déjà en mètres, Y en haut, bouche vers −Z : échelle ×1 (l'échelle 0,01 et la rotation +90° X du nœud racine Blender sont intégrées aux sommets)",
+    "rotation 180° autour de Y : anneau de goupille à gauche (−X, main gauche), cuillère vers l'arrière (+Z, paume droite)",
+    "translation −origine = [-0.003, 0.029, 0.0084] (origine relevée dans le modèle corrigé)",
+    "rotations/échelles de tous les nœuds intégrées aux sommets : chaque nœud n'a plus qu'une translation (axes = repère du contrat), son origine reste le pivot d'origine",
+    "textures 2048 -> 1024 px (Lanczos) ; carte de normales source DirectX -> vert inversé = convention glTF/OpenGL, renormalisée ; couleur et métal/rugosité en JPEG q90, normales en PNG",
+    "matériau en faces simples (doubleSided retiré : aucun envers visible, vérifié sur 26 directions + 4 poses FPS)",
+    "vérificateur : scène renommée « <id>_scene » (même nom que le nœud racine : three.js renommait la racine « <id>_1 ») ; extras.iris.recto_verso ajouté"
+   ],
+   "reperes": {
+    "origine": [
+     0,
+     0,
+     0
+    ],
+    "anneau": [
+     -0.016,
+     0.0534,
+     0.0154
+    ],
+    "sommet": [
+     0,
+     0.0708,
+     0.0034
+    ],
+    "fond": [
+     0,
+     -0.0509,
+     0
+    ]
+   },
+   "pieces_mobiles": {
+    "Pin": {
+     "parent": "flash",
+     "pivot": [
+      -0.0053,
+      0.0582,
+      0.0155
+     ],
+     "min": [
+      -0.0228,
+      0.0414,
+      0.0029
+     ],
+     "max": [
+      0.0084,
+      0.0655,
+      0.0279
+     ],
+     "triangles": 824,
+     "role": "goupille",
+     "mouvement": "goupille + anneau : translation −X ~0,03 m pour l'arracher"
+    }
+   },
+   "noeuds_maillages": [
+    "Flashbang",
+    "Pin"
+   ],
+   "materiaux": [
+    "Flashbang_MasterMat"
+   ],
+   "textures": [
+    "flash_metal_rugosite (image/jpeg, 1024², 384656 octets)",
+    "flash_couleur (image/jpeg, 1024², 236556 octets)",
+    "flash_normales (image/png, 1024², 829590 octets)"
+   ],
+   "recto_verso": false,
+   "extras_glb": "le nœud racine « flash » porte extras.iris (repères + pièces) ; les repères sont aussi des nœuds vides « reperes/rep_<nom> »",
+   "verification": {
+    "ok": true,
+    "licence": "CC0 1.0 revérifiée le 23/10/2026 par le vérificateur : page 3dmodelscc0.com archivée relue (curl) = « This work is licensed under CC0 1.0 », son bouton Download pointe sur le RAR filesusr indiqué ; dépôt GitHub BoQsc sous CC0-1.0 (API GitHub), release 0 = « I simply converted to glb files and fixed material ». Aucun compte, aucune acceptation de conditions.",
+    "chargement_three_r170": "GLTFLoader du jeu (vendor/three identique, octet pour octet) : 0 avertissement, 0 erreur, PC et téléphone ; MeshStandardMaterial, couleur 1024 px sRGB (512 au téléphone), normales et métal/rugosité linéaires ; normalScale (1, −1) posé par le chargeur",
+    "structure": "accesseurs dans les bornes, min/max exacts, aucun NaN, aucun indice hors bornes, normales unitaires, 0 face retournée après correction",
+    "echelle_repere": "mètres, +Y en haut, bouche vers −Z, origine sur la poignée (contrôlé sur apercus_final/flash_reperes.jpg et par la boîte englobante)",
+    "normales": "glTF/OpenGL par test des dérivées croisées (−0,086, faible ; source « _Normal_DirectX » à +0,288, signe inversé comme attendu)",
+    "metal_rugosite": "B = métal (corr 0,999), G = rugosité (corr 0,992)",
+    "trous_envers_visible_pct_max": 0.002,
+    "trous_detail": "1 px en silhouette",
+    "marquages": "aucune marque commerciale lue sur les textures couleur / normales / hauteur",
+    "reserves": [],
+    "images": [
+     "analyse/jeu_flash_apres.jpg"
+    ]
+   }
+  }
+ },
+ "verification": {
+  "date": "2026-10-23",
+  "verdict": "8 armes sur 8 prêtes à brancher après corrections (recto-verso FA-24, P-17, TP-50 ; 10 faces du TP-50 ; scènes renommées)",
+  "sauvegarde_avant_corrections": "analyse/avant_verif/ (GLB PC) et analyse/avant_verif/tel/ (téléphone)",
+  "executables": "aucun : _armes ne contient que des GLB, images, JSON/MD et nos propres scripts ; les RAR de l’auteur (scratchpad) ne listent que des FBX/PNG",
+  "methode": [
+   "licences : curl des 8 pages archivées + API GitHub des 2 dépôts BoQsc + page OpenGameArt du M4A1",
+   "outils/verif_glb.py : structure, accesseurs, faces retournées, arêtes ouvertes, boîte, textures",
+   "outils/verif_normales.py : convention des normales contre la carte de hauteur d’origine (vérité terrain)",
+   "outils/verif3d.html : chargement three r170 + test des trous (envers magenta, 26 directions + 4 poses FPS) + rendus de jeu",
+   "outils/verif_zoom.html : gros plans livré / recto seul / recto-verso",
+   "outils/corriger_glb.py : corrections appliquées (PC et téléphone)"
+  ]
+ }
+}

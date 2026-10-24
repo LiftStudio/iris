@@ -1,60 +1,147 @@
 // =====================================================================
-//  LES MODÈLES D'ARMES — lot L-W (23/10/2026), sur le squelette du socle S0 (22/10)
+//  LES MODÈLES D'ARMES — les VRAIES armes 3D (lot L-X, 24/10/2026), sur les modèles faits main de L-W (23/10)
 // =====================================================================
-// Huit armes faites main en primitives three.js, AUCUN fichier, aucune texture, aucune marque, aucun texte (spec § 4.5.8,
-// CoD § 6.2) : FA-24 « Faucon », PM-9 « Guêpe », FP-12 « Bélier », TP-50 « Héron », P-17 « Moineau », couteau, frag, flash.
-// Pourquoi à la main : une arme sur le disque, c'est un .glb de plus au démarrage et une marque à effacer ; ici chaque pièce
-// est une boîte chanfreinée, un cylindre, un tour (LatheGeometry) ou un profil extrudé biseauté — l'arête biseautée accroche
-// la lumière du studio de l'arme de vue (une boîte nue y paraît en carton).
+// Demande de Haythem (23/10) : « pour les armes, mets des vraies armes 3D que tu installes par toi-même sur internet ».
+// Huit modèles réels, d'un même auteur, dans le domaine public (CC0 1.0 : 3DModelsCC0 « nisu », conversion GLB de BoQsc ;
+// preuves dans assets/armes/LICENCES.md) : FA-24 « Faucon » = M4A1 (9 236 triangles, 0,859 m), PM-9 « Guêpe » = M3 Grease
+// Gun (7 721, 0,627 m), FP-12 « Bélier » = pompe façon 870 (1 740, 1,099 m), TP-50 « Héron » = verrou à lunette façon SSG 69
+// (4 808, 1,144 m), P-17 « Moineau » = Makarov (3 991, 0,169 m), couteau de combat façon Ka-Bar, frag, flash. Mis à l'échelle
+// RÉELLE, PBR complet (couleur, normales, métal/rugosité en 1024 px ; 512 au téléphone), pièces mobiles déjà séparées par
+// l'auteur : chargeurs, levier d'armement, culasses, pompe, glissière, goupilles.
 //
-// DEUX VERSIONS, une seule recette (les plans, plus bas) :
-// - `pourVue` (l'arme de vue, L-V) : chaque pièce rattachée à UN os (poids 1, rigide), toutes les pièces d'un même matériau
-//   COUSUES en un SkinnedMesh — un appel de dessin par matériau, 3 à 5 par arme (≤ 6 visé) ; os `chargeur`, `culasse`,
-//   `glissiere`, `pompe`, `detente`, `goupille` selon l'arme (OS_ARMES : pivots ; COURSES_OS : leurs gestes) ; détails
-//   (dents des rails, ouïes, goupilles, molettes, points de visée) en plus.
-// - 3e personne (les bots, L-C `armeTroisieme`) : une géométrie par matériau, sans os, ≤ 3 appels (le poli, la lentille
-//   passent à l'acier ; le point rouge et les points blancs disparaissent), segments divisés par deux, ≤ 1 500 triangles.
-// Les géométries cousues sont faites UNE fois par arme et par version (cache) puis PARTAGÉES par tous les exemplaires, comme
-// les matériaux (MATERIAUX_ARMES) : 20 exemplaires de plus = 0 matériau et 0 programme de plus. On ne les libère JAMAIS
-// (`libererArme` ne rend que la texture d'os du squelette ; un matériau libéré se recompile : image figée).
+// LE CONTRAT DE L-W EST GARDÉ (spec § 4.5.8) : creerArme(id, { pourVue }) → Group ; `userData.reperes` = les repères
+// RELEVÉS SUR LE VRAI MODÈLE (la table REPERES : la main gauche sur le vrai garde-main, la bouche au vrai canon, la visée
+// au vrai viseur), tous enfants directs du groupe, `position` = la table ; `userData.reperesMobiles` (en vue) = leurs jumeaux
+// enfants d'un os ; `userData.os` = { chargeur, culasse, glissiere, pompe, detente, goupille } = les VRAIES pièces mobiles.
+// - `pourVue` (l'arme de vue, L-V) : UN SkinnedMesh par arme — toutes les pièces cousues en une géométrie, chaque sommet porté
+//   par UN os rigide (poids 1) : la racine pour le fixe, l'os d'une pièce mobile pour ses sommets, posé à son pivot (le levier
+//   du TP-50 tourne autour de l'axe du canon) — UN appel de dessin (≤ 8 demandés : bras 2 + arme).
+// - 3e personne (les bots, L-C `armeTroisieme` ; les vitrines) : la même géométrie sans os, un Mesh, UN appel.
+// Les deux versions PARTAGENT les tampons (position, normale, uv, index : envoyés une fois à la carte graphique) et le
+// MATÉRIAU de l'arme (un MeshStandardMaterial par arme, celui du GLB) : 20 exemplaires de plus = 0 matériau, 0 programme.
 //
-// REPÈRE de chaque arme : origine = la PRISE DE LA MAIN DROITE (le creux entre pouce et index, en haut de la poignée), sur
-// le plan médian ; −Z vers la bouche, +Y en haut, +X à droite du tireur. En vue FPS la caméra voit le DESSUS et le flanc
-// GAUCHE (l'arme est à droite de l'œil) : les détails sont mis là d'abord. Les REPÈRES (table du § 4.5.8, au mm près) sont
-// des Object3D sous `userData.reperes`, TOUS enfants directs du groupe, `position` = la table (le contrat tel que le socle
-// l'a posé, et que L-V compare) ; en vue, ceux qui suivent une pièce mobile ont en plus un JUMEAU enfant de son os, sous
-// `userData.reperesMobiles` (la main gauche du FP-12 sur la pompe, les saisies du chargeur, du levier, de la glissière,
-// l'anneau des grenades).
+// LE CHARGEMENT EST ASYNCHRONE : `prechargerArmes()` lit les huit GLB (assets/armes/, assets/tel/armes/ sous ?tel=1 ; 5,6 Mo
+// sur PC, 2,6 au téléphone) À LA PRÉPARATION D'UNE PARTIE, jamais au démarrage de la balade (rien n'est demandé tant que
+// personne n'a voulu d'arme), par un GLTFLoader à SON LoadingManager (ils ne déclenchent pas DefaultLoadingManager.onLoad,
+// qui recuirait ombre du sol, carte d'environnement et cache d'ombre : kit_decor.js), puis envoie leurs textures à la carte
+// graphique une par une. Tant qu'un GLB n'est pas prêt — ou s'il échoue —, creerArme rend le MODÈLE FAIT MAIN de L-W
+// (REPLI, recalé sur les repères des vrais modèles) et lance le chargement ; à l'arrivée du GLB, chaque groupe de repli est
+// REMPLI EN PLACE par la vraie arme (mêmes groupe et userData : l'arme de vue et les bots gardent leurs références), ses
+// programmes compilés AVANT l'échange (aucune image figée). La préparation l'attendra quand INT aura posé la prise de
+// Partie.preparer (rapport L-X, demande 1) : alors aucune arme de repli ne se montre jamais.
 //
-// Ce que la spec ne pouvait pas tenir à la fois (rapport L-W, écarts) : le FP-12 mesure 0,95 m mais ses repères crosse
-// (+0,22) et bouche (−0,78) sont à 1,00 m l'un de l'autre — la couche finit à +0,215 et la couronne du canon à −0,745
-// (0,96 m) : la bouche est 3,5 cm devant le canon ; le PM-9 mesure 0,62 m pour 0,58 m entre ses repères — le compensateur
-// dépasse la bouche de 2,5 cm et la couche la crosse de 1,5 cm ; sa crosse « en fil repliée » est montrée DÉPLIÉE (la
-// crosse en +0,18 l'exige), sa charnière à gauche dit qu'elle se replie.
+// REPÈRE de chaque arme (celui de L-W, où L-V a réglé les mains) : origine = la PRISE DE LA MAIN DROITE, en haut de la
+// poignée, au creux entre pouce et index, sur le plan médian ; −Z vers la bouche, +Y en haut, +X à droite du tireur ; mètres.
+// (L'atelier du 23/10 l'avait mise au CENTRE de la poignée, 3 cm plus bas : assets/armes/preparer_armes.py la remonte.)
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { TELEPHONE } from '../appareil.js';
 
 const DEG = Math.PI / 180;
 const _m4 = new THREE.Matrix4(), _m4b = new THREE.Matrix4();
 const UN = new THREE.Vector3(1, 1, 1);
 export const IDS_ARMES = ['fa24', 'pm9', 'fp12', 'tp50', 'p17', 'couteau', 'frag', 'flash'];
-// l'encombrement (longueur selon −Z, § 3.3) : les modèles le tiennent à ± 3 % (test 3 de L-W)
-export const ENCOMBREMENTS = { fa24: 0.84, pm9: 0.62, fp12: 0.95, tp50: 1.10, p17: 0.19 };
+// l'encombrement (longueur selon −Z) des VRAIS modèles, mesuré : 0,84 · 0,62 · 0,95 · 1,10 · 0,19 m au § 3.3 (écart du FP-12,
+// canon de 870 raccourci par l'atelier mais carcasse réelle, et du P-17, un Makarov réel ; rapport L-X)
+export const ENCOMBREMENTS = { fa24: 0.8589, pm9: 0.627, fp12: 1.0992, tp50: 1.1436, p17: 0.1685 };
 
 // ---------------------------------------------------------------------
-//  LES MATÉRIAUX (partagés, créés au premier appel)
+//  LES REPÈRES (m, repère de l'arme) — RELEVÉS SUR LES VRAIS MODÈLES (assets/armes/preparer_armes.py, extras.iris)
 // ---------------------------------------------------------------------
-// acier 0x24272b (métal 0,85, rugosité 0,38) · polymère 0x2b2d30 (0 / 0,72) · une TEINTE par arme (c'est elle que les
-// camouflages de la vague 3 remplaceront) · verre émissif du point rouge (0xff2a1a, toneMapped: false : le bloom le fait
-// briller) — et, ajoutés par L-W : la LENTILLE (verre traité, miroir sombre qui reflète le studio : opaque, la lunette est
-// cachée en visée), le BLANC des points de visée (un rien émissif : lisible dans un couloir sombre), le POLI (tranchant du
-// couteau, culasse du TP-50, culots des cartouches, anneaux des grenades).
+// Ceux du § 4.5.8 (mainG sous le vrai garde-main ou la vraie pompe, bouche, visee, ejection, crosse) et les ajouts de L-W
+// que lisent l'arme de vue et les bots : mainD (l'origine), saisieChargeur (le flanc gauche du vrai chargeur, au tiers bas
+// de ce qui dépasse ; FP-12 : la fenêtre de chargement), saisieLevier (le loquet du levier d'armement de la FA-24, la boule de
+// culasse du TP-50), saisieGlissiere (les stries arrière du P-17), oeilleton (FP-12 : la ligne de mire de la perle au-dessus
+// de l'arrière du boîtier — viser par la perle à 0,24 m mettrait la crosse loin derrière l'œil), courseMainG (la pompe),
+// goupille (l'anneau des grenades) ; et ceux des vrais modèles : guidon (la pointe du guidon), centrePoignee (où l'atelier
+// avait mis l'origine), arretoir (l'arrêtoir de culasse, flanc gauche : rapport L-X, demande 2), lunette_objectif, pointe /
+// garde / pommeau du couteau, sommet / fond des grenades. Le test 2 vérifie chaque valeur contre extras.iris du GLB (1 mm).
+const V = (x, y, z) => [x, y, z];
+export const REPERES = {
+  fa24: { mainD: V(0, 0, 0), mainG: V(0, 0.0324, -0.3022), bouche: V(0, 0.0636, -0.6081), visee: V(0, 0.121, -0.0043), ejection: V(0.0123, 0.067, -0.1136),
+    crosse: V(0, 0.023, 0.2418), guidon: V(0, 0.1306, -0.4207), saisieChargeur: V(-0.0103, -0.0963, -0.1344), saisieLevier: V(-0.0185, 0.085, 0.0329),
+    arretoir: V(-0.0118, 0.0017, -0.0821), centrePoignee: V(0, -0.022, 0.01) },
+  pm9: { mainD: V(0, 0, 0), mainG: V(0, -0.008, -0.2441), bouche: V(0, 0.0629, -0.4918), visee: V(0, 0.0975, 0.0179), ejection: V(0.0239, 0.072, -0.1985),
+    crosse: V(0, -0.0194, 0.1352), guidon: V(0, 0.0977, -0.274), saisieChargeur: V(-0.0105, -0.1554, -0.2432), saisieLevier: V(-0.0185, 0.0634, -0.2103),
+    arretoir: V(-0.0146, -0.0126, -0.2157), centrePoignee: V(0, -0.028, 0.008) },
+  fp12: { mainD: V(0, 0, 0), mainG: V(0, -0.0397, -0.4761), bouche: V(0, 0.0292, -0.7502), visee: V(0, 0.0513, -0.7217), ejection: V(0.0154, 0.0263, -0.2062),
+    crosse: V(0, -0.1056, 0.347), courseMainG: 0.09, oeilleton: V(0, 0.0513, -0.165), visee_arriere: V(0, 0.0458, -0.165),
+    saisieChargeur: V(0, -0.0177, -0.2062), arretoir: V(0, -0.0177, -0.2062), centrePoignee: V(0, -0.03, 0.01) },
+  tp50: { mainD: V(0, 0, 0), mainG: V(0, 0.0015, -0.376), bouche: V(0, 0.0438, -0.8393), visee: V(0, 0.085, 0.0128), ejection: V(0.0135, 0.045, -0.106),
+    crosse: V(0, -0.0493, 0.304), lunette_objectif: V(0, 0.0839, -0.3179), saisieChargeur: V(-0.0066, -0.035, -0.1651), saisieLevier: V(0.029, 0.0046, -0.0763),
+    arretoir: V(-0.0143, 0.0158, -0.1225), centrePoignee: V(0, -0.03, 0.01) },
+  p17: { mainD: V(0, 0, 0), mainG: V(-0.02, -0.054, 0.011), bouche: V(0, 0.0284, -0.1283), visee: V(0, 0.041, 0.0138), ejection: V(0.0103, 0.037, -0.0432),
+    guidon: V(0, 0.0421, -0.1222), saisieChargeur: V(-0.0084, -0.0735, 0.0143), saisieGlissiere: V(-0.0123, 0.0264, 0.022), arretoir: V(-0.0117, -0.0514, 0.0399),
+    centrePoignee: V(0, -0.034, 0.006) },
+  couteau: { mainD: V(0, 0, 0), pointe: V(0, 0.0092, -0.2321), garde: V(0, 0, -0.0652), pommeau: V(0, 0, 0.0651) },
+  frag: { mainD: V(0, 0, 0), goupille: V(0.012, 0.0409, -0.0163), anneau: V(0.012, 0.0409, -0.0163), sommet: V(0, 0.0615, -0.0038), fond: V(0, -0.0402, 0) },
+  flash: { mainD: V(0, 0, 0), goupille: V(0.016, 0.0534, -0.0154), anneau: V(0.016, 0.0534, -0.0154), sommet: V(0, 0.0708, -0.0034), fond: V(0, -0.0509, 0) },
+};
+// en vue, les repères portés par une pièce mobile : leurs jumeaux de `userData.reperesMobiles`, enfants de son os (ils la suivent)
+const PORTES = { fa24: { saisieChargeur: 'chargeur', saisieLevier: 'culasse' }, pm9: { saisieChargeur: 'chargeur', saisieLevier: 'culasse' },
+  fp12: { mainG: 'pompe' }, tp50: { saisieChargeur: 'chargeur', saisieLevier: 'culasse' }, p17: { saisieChargeur: 'chargeur', saisieGlissiere: 'glissiere' },
+  frag: { goupille: 'goupille' }, flash: { goupille: 'goupille' } };
+
+// ---------------------------------------------------------------------
+//  LES PIÈCES MOBILES DES VRAIS MODÈLES : quel nœud du GLB porte quel os, ses pivots, ses gestes
+// ---------------------------------------------------------------------
+// PIECES : le nœud du GLB (et tout ce qui est sous lui) → l'os ; le reste est porté par la racine (fixe). Le chien et la
+// sûreté du Makarov suivent ce qui les porte (la sûreté est sur la glissière, comme sur le vrai PM) ; la culasse vue par la
+// fenêtre du FP-12 (Ejection_Port) suit la pompe ; le couvre-éjection, le sélecteur, la hausse repliable de la FA-24, la
+// crosse en fil du PM-9 restent fixes (aucun geste de L-V ne les demande). OS_ARMES : le pivot de chaque os (le nœud de
+// PIVOTS, relevé dans le GLB) ; COURSES_OS : le geste de chaque pièce (`x`, `y`, `z` en m, +z = vers l'arrière ; `rz` en
+// rad), lu par les tests et la planche — l'arme de vue de L-V pose ses os elle-même (viewmodel.js _os, _poserChargeur).
+const PIECES = {
+  fa24: { Magazine: 'chargeur', Charging_Handle: 'culasse', Trigger: 'detente' },
+  pm9: { Magazine: 'chargeur', Bolt: 'culasse', Trigger: 'detente' },
+  fp12: { Fore_Stock: 'pompe', Ejection_Port: 'pompe', Trigger: 'detente' },
+  tp50: { Bolt: 'culasse', Magazine: 'chargeur', Trigger: 'detente' },
+  p17: { Slide: 'glissiere', Magazine: 'chargeur', Trigger: 'detente' },
+  couteau: {}, frag: { Pin: 'goupille' }, flash: { Pin: 'goupille' },
+};
+const PIVOTS = { fp12: { pompe: 'Fore_Stock' } };
+export const OS_ARMES = {
+  fa24: { chargeur: V(0, 0.0093, -0.1233), culasse: V(0, 0.0851, -0.057), detente: V(0, 0.0104, -0.0488) },
+  pm9: { chargeur: V(0, -0.0047, -0.2431), culasse: V(-0.0018, 0.0634, -0.2042), detente: V(0, -0.006, -0.0303) },
+  fp12: { pompe: V(0, -0.0116, -0.4761), detente: V(0, -0.0357, -0.0732) },
+  tp50: { culasse: V(0, 0.0438, -0.1146), chargeur: V(0, -0.0209, -0.157), detente: V(0.0019, -0.0088, -0.0716) },
+  p17: { glissiere: V(0.0019, 0.021, -0.084), chargeur: V(0.0001, -0.0607, 0.016), detente: V(0.0002, 0.0021, -0.0447) },
+  couteau: {}, frag: { goupille: V(0, -0.04, 0) }, flash: { goupille: V(0.0053, 0.0582, -0.0155) },
+};
+export const COURSES_OS = {
+  fa24: { chargeur: { y: -0.20 }, culasse: { z: 0.075 }, detente: { z: 0.006 } },
+  pm9: { chargeur: { y: -0.30 }, culasse: { z: 0.09 }, detente: { z: 0.006 } },
+  fp12: { pompe: { z: 0.09 }, detente: { z: 0.006 } },
+  // (la culasse du TP-50 se lève de 60° autour de l'axe du canon — son pivot — PUIS recule de 8 cm)
+  tp50: { culasse: { rz: 60 * DEG, z: 0.08 }, chargeur: { y: -0.15 }, detente: { z: 0.006 } },
+  // (le chargeur du Makarov sort dans l'axe de sa poignée : (0 ; −0,981 ; +0,193))
+  p17: { glissiere: { z: 0.03 }, chargeur: { y: -0.12 * 0.981, z: 0.12 * 0.193 }, detente: { z: 0.006 } },
+  couteau: {}, frag: { goupille: { x: 0.03 } }, flash: { goupille: { x: 0.03 } },
+};
+const NOMS_OS = ['chargeur', 'culasse', 'glissiere', 'pompe', 'detente', 'goupille'];
+
+// ---------------------------------------------------------------------
+//  LES MATÉRIAUX
+// ---------------------------------------------------------------------
+// Les VRAIES armes : un MeshStandardMaterial par arme, celui du GLB (couleur sRGB, normales — GLTFLoader pose normalScale
+// (1, −1), convention glTF sans tangentes : gardée telle quelle —, métal/rugosité linéaires) ; recto-verso pour la FA-24, le
+// P-17 et le TP-50 (leurs ouvertures se voient de dos : la hausse de la FA-24 en visée), recto seul ailleurs. Ajustés pour
+// IRIS : filtrage anisotrope ×4 (l'arme de vue se regarde en rasant), `envMapIntensity` (AJUSTE_MAT) — l'arme de vue a sa
+// carte d'environnement de studio (L-V), la scène de jeu la sienne (ou aucune en qualité basse : le métal y serait noir —
+// d'où le plancher de rugosité `rugoMin`, qui garde un reflet diffus des lumières). `MATERIAUX_ARMES.glb(id)` les rend
+// (null tant que le GLB n'est pas là).
+// Les matériaux du REPLI (L-W, inchangés) : acier 0x24272b (métal 0,85, rugosité 0,38) · polymère 0x2b2d30 (0 / 0,72) · une
+// TEINTE par arme · verre émissif du point rouge (0xff2a1a, toneMapped: false) · lentille, blanc des points de visée, poli.
+const AJUSTE_MAT = { anisotropie: TELEPHONE ? 1 : 4, envMapIntensity: 1.0, rugoMin: 0 };
 let _mats = null;
+const MODELES = {};                  // id → la vraie arme bâtie (batir) ; absente tant que son GLB n'est pas là
 export const MATERIAUX_ARMES = {
   get acier() { return mats().acier; }, get polymere() { return mats().polymere; }, get verre() { return mats().verre; },
   get lentille() { return mats().lentille; }, get blanc() { return mats().blanc; }, get poli() { return mats().poli; },
   teinte(id) { return mats().teintes[id] || mats().polymere; },
-  // tous les matériaux des armes (tests, compilation)
-  get tous() { const m = mats(); return [m.acier, m.polymere, m.verre, m.lentille, m.blanc, m.poli, ...Object.values(m.teintes)]; },
+  glb(id) { return MODELES[id] ? MODELES[id].mat : null; },
+  // tous les matériaux des armes (tests, compilation) : ceux du repli, puis ceux des vraies armes arrivées
+  get tous() { const m = mats(); return [m.acier, m.polymere, m.verre, m.lentille, m.blanc, m.poli, ...Object.values(m.teintes), ...IDS_ARMES.filter((i) => MODELES[i]).map((i) => MODELES[i].mat)]; },
 };
 function mats() {
   if (_mats) return _mats;
@@ -80,42 +167,24 @@ const matDe = (nom, id) => (nom === 'teinte' ? MATERIAUX_ARMES.teinte(id) : mats
 const MAT_3E = { poli: 'acier', lentille: 'acier', verre: null, blanc: null };
 
 // ---------------------------------------------------------------------
-//  LES REPÈRES (m, repère de l'arme) — § 4.5.8 tels quels, plus les ajouts de L-W
+//  LE REPLI : les modèles faits main de L-W (23/10), RECALÉS sur les repères des vrais modèles
 // ---------------------------------------------------------------------
-// Ajouts (règle 3 : on ajoute, on ne change rien) : `mainD` (0, 0, 0) des armes à feu ; `saisieChargeur` (là où la main
-// gauche prend le chargeur : son flanc gauche, au tiers bas) ; `saisieLevier` (le levier d'armement, le levier de culasse) ;
-// `saisieGlissiere` (les stries arrière du P-17). `courseMainG` (FP-12) : la course de la pompe, que la main gauche suit.
-// `oeilleton` (FP-12, relecture) : le centre de l'anneau arrière, sur la ligne de mire de la perle (même hauteur 0,06) — viser
-// la PERLE à 0,24 m de l'œil (§ 4.5.9) mettrait la crosse 0,68 m derrière la caméra ; viser par l'œilleton la met à 1,5 cm
-// derrière l'œil, comme la FA-24 (4 cm) : à trancher par L-V et F2 (écart 4 du rapport).
-const V = (x, y, z) => [x, y, z];
-export const REPERES = {
-  fa24: { mainD: V(0, 0, 0), mainG: V(0, -0.025, -0.34), bouche: V(0, 0.035, -0.64), visee: V(0, 0.088, -0.08), ejection: V(0.03, 0.05, -0.06), crosse: V(0, 0.03, 0.20),
-    saisieChargeur: V(-0.015, -0.152, -0.133), saisieLevier: V(-0.028, 0.053, 0.064) },
-  pm9: { mainD: V(0, 0, 0), mainG: V(0, -0.03, -0.24), bouche: V(0, 0.03, -0.40), visee: V(0, 0.075, -0.05), ejection: V(0.03, 0.045, -0.05), crosse: V(0, 0.03, 0.18),
-    saisieChargeur: V(-0.013, -0.150, -0.093), saisieLevier: V(-0.040, 0.034, -0.130) },
-  fp12: { mainD: V(0, 0, 0), mainG: V(0, -0.03, -0.42), bouche: V(0, 0.03, -0.78), visee: V(0, 0.06, -0.70), ejection: V(0.03, 0.04, -0.08), crosse: V(0, 0.02, 0.22), courseMainG: 0.09,
-    oeilleton: V(0, 0.060, -0.035) },
-  tp50: { mainD: V(0, 0, 0), mainG: V(0, -0.03, -0.36), bouche: V(0, 0.03, -0.85), visee: V(0, 0.075, -0.02), ejection: V(0.03, 0.05, -0.05), crosse: V(0, 0.03, 0.24),
-    saisieChargeur: V(-0.014, -0.062, -0.100), saisieLevier: V(0.042, 0.010, 0.057) },
-  p17: { mainD: V(0, 0, 0), mainG: V(-0.02, -0.04, 0.01), bouche: V(0, 0.035, -0.13), visee: V(0, 0.058, 0.04), ejection: V(0.015, 0.04, -0.03),
-    saisieChargeur: V(-0.012, -0.100, 0.029), saisieGlissiere: V(-0.0145, 0.040, 0.030) },
-  couteau: { mainD: V(0, 0, 0) }, frag: { mainD: V(0, 0, 0), goupille: V(0.02, 0.05, 0) }, flash: { mainD: V(0, 0, 0), goupille: V(0.02, 0.06, 0) },
+// Leur table d'origine (le § 4.5.8 tel que L-W l'a tenu) et leurs os : le repli est translaté de RECALAGE (la moyenne des
+// écarts de sa bouche et de sa main gauche à ceux de la vraie arme) pour que l'arme de vue et les bots, qui posent les mains
+// sur REPERES, le tiennent encore si un GLB manque (hors ligne la 1re fois, fichier absent) ; ses `userData.reperes` sont
+// ceux de la table (le contrat), à quelques centimètres de ses pièces.
+const REPERES_MAIN = {
+  fa24: { mainG: V(0, -0.025, -0.34), bouche: V(0, 0.035, -0.64) }, pm9: { mainG: V(0, -0.03, -0.24), bouche: V(0, 0.03, -0.40) },
+  fp12: { mainG: V(0, -0.03, -0.42), bouche: V(0, 0.03, -0.78) }, tp50: { mainG: V(0, -0.03, -0.36), bouche: V(0, 0.03, -0.85) },
+  p17: { mainG: V(-0.02, -0.04, 0.01), bouche: V(0, 0.035, -0.13) },
 };
-// en vue, les repères portés par une pièce mobile : leurs jumeaux de `userData.reperesMobiles`, enfants de son os (ils la suivent)
-const PORTES = { fa24: { saisieChargeur: 'chargeur', saisieLevier: 'culasse' }, pm9: { saisieChargeur: 'chargeur', saisieLevier: 'culasse' },
-  fp12: { mainG: 'pompe' }, tp50: { saisieChargeur: 'chargeur', saisieLevier: 'culasse' }, p17: { saisieChargeur: 'chargeur', saisieGlissiere: 'glissiere' },
-  frag: { goupille: 'goupille' }, flash: { goupille: 'goupille' } };
-
-// ---------------------------------------------------------------------
-//  LES OS (version `pourVue`) : pivots, et ce que chacun fait
-// ---------------------------------------------------------------------
-// Chaque os est un enfant de l'os `racine` (à l'origine), posé à son PIVOT, sans rotation : le bouger de (dx, dy, dz) bouge
-// ses pièces d'autant ; le tourner les tourne autour du pivot. COURSES_OS dit le geste (pour L-V) : `x`, `y`, `z` en mètres
-// dans le repère de l'arme (+z = vers l'arrière), `rx`, `rz` en radians. La détente se tire par rx < 0 (le bas vers
-// l'arrière) ; la culasse du TP-50 se lève de 60° (rz > 0 : le levier, à droite, monte) PUIS recule de 8 cm ; la pompe du
-// FP-12 recule de 9 cm (la main gauche, enfant de l'os, suit) ; la glissière du P-17 recule de 3 cm au tir.
-export const OS_ARMES = {
+const RECALAGE = {};
+for (const id of IDS_ARMES) {
+  const A = REPERES_MAIN[id], B = REPERES[id];
+  RECALAGE[id] = A ? [0, 1, 2].map((k) => ((B.bouche[k] - A.bouche[k]) + (B.mainG[k] - A.mainG[k])) / 2) : [0, 0, 0];
+}
+// Chaque os est un enfant de l'os `racine` (à l'origine), posé à son PIVOT, sans rotation (les os du repli, avant recalage)
+const OS_MAIN = {
   fa24: { chargeur: V(0, -0.02, -0.105), culasse: V(0, 0.053, 0.064), detente: V(0, -0.012, -0.040) },
   pm9: { chargeur: V(0, -0.015, -0.085), culasse: V(-0.022, 0.034, -0.130), detente: V(0, -0.016, -0.036) },
   fp12: { pompe: V(0, 0.0015, -0.42), detente: V(0, -0.016, -0.050) },
@@ -123,20 +192,9 @@ export const OS_ARMES = {
   p17: { glissiere: V(0, 0.0375, -0.04), chargeur: V(0, 0.004, 0.0), detente: V(0, 0.004, -0.028) },
   couteau: {}, frag: { goupille: V(0.02, 0.05, 0) }, flash: { goupille: V(0.02, 0.06, 0) },
 };
-export const COURSES_OS = {
-  fa24: { chargeur: { y: -0.30 }, culasse: { z: 0.075 }, detente: { rx: -0.32 } },
-  pm9: { chargeur: { y: -0.26 }, culasse: { z: 0.060 }, detente: { rx: -0.32 } },
-  fp12: { pompe: { z: 0.09 }, detente: { rx: -0.30 } },
-  tp50: { culasse: { rz: 60 * DEG, z: 0.08 }, chargeur: { y: -0.12 }, detente: { rx: -0.28 } },
-  // (le chargeur du P-17 sort dans l'axe de la poignée, 15° vers l'arrière : tiré tout droit, il traverserait le devant de la
-  // poignée dès 2,6 cm — relecture)
-  p17: { glissiere: { z: 0.03 }, chargeur: { y: -0.16 * Math.cos(15 * DEG), z: 0.16 * Math.sin(15 * DEG) }, detente: { rx: -0.30 } },
-  couteau: {}, frag: { goupille: { x: 0.06 } }, flash: { goupille: { x: 0.06 } },
-};
-const NOMS_OS = ['chargeur', 'culasse', 'glissiere', 'pompe', 'detente', 'goupille'];
 
 // ---------------------------------------------------------------------
-//  LES PRIMITIVES (géométries non indexées : position + normale ; les uv n'ont rien à porter)
+//  LE REPLI — LES PRIMITIVES de L-W (géométries non indexées : position + normale ; les uv n'ont rien à porter)
 // ---------------------------------------------------------------------
 // LA BOÎTE CHANFREINÉE (l × h × p, chanfrein c) : 6 faces, 12 arêtes biseautées, 8 coins — 44 triangles à normales de face.
 const _chanfreins = new Map();
@@ -409,13 +467,13 @@ class Atelier {
   }
   // L'ASSEMBLAGE : les pièces cousues par matériau ; en vue, chaque sommet porté par UN os (poids 1)
   assembler(id) {
-    const osNoms = Object.keys(OS_ARMES[id] || {}), lots = new Map(), sommets = {};
+    const osNoms = Object.keys(OS_MAIN[id] || {}), lots = new Map(), sommets = {};
     for (const nom of osNoms) sommets[nom] = 0;
     for (const P of this.pieces) {
       let mat = P.mat;
       if (!this.vue) { if (mat in MAT_3E) mat = MAT_3E[mat]; if (!mat) continue; }
       const k = P.os ? osNoms.indexOf(P.os) + 1 : 0;
-      if (P.os && k === 0) throw new Error(`modeles_armes : l'os ${P.os} n'est pas dans OS_ARMES.${id}`);
+      if (P.os && k === 0) throw new Error(`modeles_armes : l'os ${P.os} n'est pas dans OS_MAIN.${id}`);
       if (P.os) sommets[P.os] += P.geo.attributes.position.count;
       if (!lots.has(mat)) lots.set(mat, []);
       lots.get(mat).push([P.geo, k]);
@@ -757,81 +815,263 @@ const PLANS = {
   },
 };
 
+
 // ---------------------------------------------------------------------
-//  LE CACHE ET LA CRÉATION
+//  LE REPLI : cache des modèles faits main (une fois par arme et par version), recalés
 // ---------------------------------------------------------------------
 const _cache = new Map();
-function modele(id, vue) {
+function modeleMain(id, vue) {
   const k = id + (vue ? '|vue' : '|3e');
   let M = _cache.get(k);
-  if (!M) { const A = new Atelier(vue); PLANS[id](A); M = A.assembler(id); _cache.set(k, M); }
+  if (!M) {
+    const A = new Atelier(vue); PLANS[id](A);
+    const brut = A.assembler(id), d = RECALAGE[id];
+    if (d[0] || d[1] || d[2]) for (const L of brut.lots) L.geo.translate(d[0], d[1], d[2]);     // (boîte et sphère refaites)
+    const pivots = {};
+    for (const n of brut.osNoms) pivots[n] = OS_MAIN[id][n].map((x, i) => x + d[i]);
+    M = { modele: 'main', lots: brut.lots.map((L) => ({ geo: L.geo, mat: matDe(L.mat, id), nom: L.mat })), osNoms: brut.osNoms, pivots, sommets: brut.sommets,
+      triangles: brut.triangles };
+    _cache.set(k, M);
+  }
   return M;
 }
-// (tests : le coût d'une création À FROID — les géométries déjà données à des armes restent valides, simplement plus partagées)
+// (tests : le coût d'une création À FROID du repli — les géométries déjà données à des armes restent valides)
 export function viderCacheArmes() { _cache.clear(); }
 const IDENTITE = new THREE.Matrix4();
 
-export function creerArme(id, { pourVue = false } = {}) {
-  const cle = PLANS[id] ? id : 'fa24';
-  const M = modele(cle, pourVue);
-  const g = new THREE.Group(); g.name = 'arme ' + id;
+// ---------------------------------------------------------------------
+//  LES VRAIES ARMES : chargement (à la préparation), couture, envoi des textures
+// ---------------------------------------------------------------------
+const ECHECS = {};                   // id → la raison (le repli reste)
+const _attente = new Set();          // les groupes de repli à remplir quand leur GLB arrive
+// (`?armes=main` : le repli partout, pour comparer la cadence à celle des vraies armes — diagnostic, rapport L-X)
+let _charge = null, _t0 = 0, _t1 = 0, _faitMain = (() => { try { return new URLSearchParams(location.search).get('armes') === 'main'; } catch (e) { return false; } })();
+export const BASE_ARMES = TELEPHONE ? 'assets/tel/armes/' : 'assets/armes/';
+const _chargeur = () => new GLTFLoader(new THREE.LoadingManager());      // (son gestionnaire à lui : pas de recuisson du décor)
+
+// LA COUTURE d'une vraie arme : toutes les pièces du GLB (un seul matériau par arme) cousues en une géométrie dans le repère
+// de l'arme (les nœuds n'ont que des translations : les sommets gardent leur forme exacte), chaque sommet porté par l'os de sa
+// pièce (PIECES) ou par la racine ; la 3e personne et la vue partagent position, normale, uv et index
+function batir(id, gltf) {
+  const t0 = performance.now();
+  const racine = gltf.scene.getObjectByName(id) || gltf.scene;
+  gltf.scene.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(racine.matrixWorld).invert(), P = PIECES[id] || {}, morceaux = [];
+  let mat = null, n = 0, ni = 0;
+  racine.traverse((o) => {
+    if (!o.isMesh) return;
+    let os = null;
+    for (let p = o; p && p !== racine; p = p.parent) if (P[p.name]) { os = P[p.name]; break; }
+    const G = o.geometry;
+    morceaux.push({ G, M: new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld), os });
+    if (!mat) mat = o.material;
+    n += G.attributes.position.count; ni += G.index ? G.index.count : G.attributes.position.count;
+  });
+  if (!mat || !n) throw new Error(`modeles_armes : ${id}, GLB sans maillage`);
+  const osNoms = NOMS_OS.filter((nom) => Object.values(P).includes(nom)), pivots = {}, sommets = {};
+  for (const nom of osNoms) {
+    const noeud = (PIVOTS[id] && PIVOTS[id][nom]) || Object.keys(P).find((k) => P[k] === nom), o = racine.getObjectByName(noeud);
+    pivots[nom] = o ? new THREE.Vector3().setFromMatrixPosition(_m4b.multiplyMatrices(inv, o.matrixWorld)).toArray() : OS_ARMES[id][nom].slice();
+    sommets[nom] = 0;
+  }
+  const pos = new Float32Array(3 * n), nor = new Float32Array(3 * n), uv = new Float32Array(2 * n), si = new Uint16Array(4 * n), sw = new Float32Array(4 * n);
+  const idx = n > 65535 ? new Uint32Array(ni) : new Uint16Array(ni), v = new THREE.Vector3(), nm = new THREE.Matrix3();
+  let o = 0, oi = 0;
+  for (const m of morceaux) {
+    const A = m.G.attributes, c = A.position.count, k = m.os ? osNoms.indexOf(m.os) + 1 : 0, I = m.G.index;
+    nm.getNormalMatrix(m.M);
+    for (let i = 0; i < c; i++) {
+      const j = o + i;
+      v.fromBufferAttribute(A.position, i).applyMatrix4(m.M); pos[3 * j] = v.x; pos[3 * j + 1] = v.y; pos[3 * j + 2] = v.z;
+      v.fromBufferAttribute(A.normal, i).applyMatrix3(nm).normalize(); nor[3 * j] = v.x; nor[3 * j + 1] = v.y; nor[3 * j + 2] = v.z;
+      if (A.uv) { uv[2 * j] = A.uv.getX(i); uv[2 * j + 1] = A.uv.getY(i); }
+      si[4 * j] = k; sw[4 * j] = 1;
+    }
+    if (m.os) sommets[m.os] += c;
+    const L = I ? I.count : c;
+    for (let t = 0; t < L; t++) idx[oi + t] = (I ? I.getX(t) : t) + o;
+    o += c; oi += L;
+    m.G.dispose();                                   // (jamais envoyée : la copie cousue la remplace)
+  }
+  const aP = new THREE.BufferAttribute(pos, 3), aN = new THREE.BufferAttribute(nor, 3), aU = new THREE.BufferAttribute(uv, 2), aI = new THREE.BufferAttribute(idx, 1);
+  const trois = new THREE.BufferGeometry();
+  trois.setAttribute('position', aP); trois.setAttribute('normal', aN); trois.setAttribute('uv', aU); trois.setIndex(aI);
+  trois.computeBoundingBox(); trois.computeBoundingSphere();
+  const vue = new THREE.BufferGeometry();
+  vue.setAttribute('position', aP); vue.setAttribute('normal', aN); vue.setAttribute('uv', aU); vue.setIndex(aI);
+  vue.setAttribute('skinIndex', new THREE.BufferAttribute(si, 4)); vue.setAttribute('skinWeight', new THREE.BufferAttribute(sw, 4));
+  vue.boundingBox = trois.boundingBox.clone(); vue.boundingSphere = trois.boundingSphere.clone();
+  trois.name = `arme ${id} 3e (glb)`; vue.name = `arme ${id} vue (glb)`; trois.userData.partage = vue.userData.partage = true;
+  // le matériau du GLB, partagé, ajusté (filtrage anisotrope ; normalScale et side tels que GLTFLoader les a posés)
+  mat.name = `arme ${id} (glb)`; mat.userData.partage = true;
+  for (const t of texturesDe(mat)) { t.anisotropy = AJUSTE_MAT.anisotropie; t.name = t.name || `arme ${id}`; }
+  return { modele: 'glb', mat, geoTrois: trois, geoVue: vue, osNoms, pivots, sommets, triangles: ni / 3, iris: racine.userData.iris || null,
+    ms: performance.now() - t0 };
+}
+const texturesDe = (mat) => [...new Set(['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap'].map((k) => mat[k]).filter(Boolean))];
+// la vraie arme sous la forme de garnir (comme un modèle du repli)
+const versionGlb = (M, vue) => ({ modele: 'glb', lots: [{ geo: vue ? M.geoVue : M.geoTrois, mat: M.mat, nom: 'glb' }], osNoms: M.osNoms, pivots: M.pivots,
+  sommets: M.sommets, triangles: M.triangles });
+
+// UN GLB lu et cousu (null s'il manque) ; `garder` : la vraie arme du jeu (sinon un essai, rien n'est retenu)
+export async function chargerModele(id, url = BASE_ARMES + id + '.glb', { garder = true } = {}) {
+  try {
+    const M = batir(id, await _chargeur().loadAsync(url));
+    if (garder) { MODELES[id] = M; delete ECHECS[id]; }
+    return M;
+  } catch (e) {
+    if (garder) { ECHECS[id] = String((e && e.message) || e); console.warn(`[armes] ${id} : GLB indisponible (${url}), le modèle fait main reste —`, e); }
+    return null;
+  }
+}
+
+// LE PRÉCHARGEMENT (à la PRÉPARATION d'une partie ; jamais au démarrage) : les huit GLB en parallèle, leurs textures envoyées
+// à la carte graphique une par une (une image entre deux : pas d'à-coup), puis les groupes de repli déjà donnés remplis en
+// place. Une seule fois par session ; ne rejette jamais (un GLB qui manque laisse son repli). Rend etatArmes().
+export function prechargerArmes({ game = null } = {}) {
+  if (_charge) return _charge;
+  const G = game || (typeof window !== 'undefined' ? window.__game : null);
+  _t0 = performance.now();
+  _charge = Promise.all(IDS_ARMES.map((id) => (MODELES[id] ? null : chargerModele(id))))
+    .then(() => envoyerTextures(G))
+    .then(() => remplirAttente(G))
+    .catch((e) => console.warn('[armes] préchargement :', e))
+    .then(() => { _t1 = performance.now(); return etatArmes(); });
+  return _charge;
+}
+export function armesPretes() { return IDS_ARMES.every((id) => MODELES[id] || ECHECS[id]); }
+export function etatArmes() {
+  return { demande: !!_charge, prets: IDS_ARMES.filter((id) => MODELES[id]), echecs: { ...ECHECS }, attente: _attente.size, ms: _t1 ? _t1 - _t0 : null,
+    base: BASE_ARMES, faitMain: _faitMain };
+}
+// (tests, diagnostic : creerArme rend le repli fait main même quand les vraies armes sont là — la cadence comparée)
+export function forcerFaitMain(oui) { _faitMain = !!oui; }
+// (L-H, rapport L-X demande 4 : les grenades en vol avec la vraie géométrie — un InstancedMesh par type)
+export function modeleArme(id) { const M = MODELES[id]; return M ? { geometrie: M.geoTrois, materiau: M.mat } : null; }
+
+const uneImage = () => new Promise((res) => {
+  let fait = false; const f = () => { if (!fait) { fait = true; res(); } };
+  try { requestAnimationFrame(f); } catch (e) { /* (hors navigateur) */ }
+  setTimeout(f, 40);                                 // (onglet caché : pas de rAF)
+});
+async function envoyerTextures(G) {
+  const r = G && G.renderer;
+  if (!r || !r.initTexture) return;
+  for (const id of IDS_ARMES) {
+    const M = MODELES[id];
+    if (!M || M.envoye) continue;
+    M.envoye = true;
+    for (const t of texturesDe(M.mat)) { r.initTexture(t); await uneImage(); }
+  }
+}
+
+// ---------------------------------------------------------------------
+//  LA CRÉATION, et l'ÉCHANGE EN PLACE du repli contre la vraie arme
+// ---------------------------------------------------------------------
+// garnir un groupe vide : maillage(s), squelette (vue : la racine à l'origine, un os par pièce mobile à son pivot, sans
+// rotation ; leurs inverses donnés EXPLICITEMENT — le groupe peut être n'importe où dans sa scène quand on le remplit),
+// repères (enfants directs, `position` = la table) et jumeaux mobiles (enfants des os)
+function garnir(g, id, pourVue, M) {
   let os = null, squelette = null;
   if (pourVue) {
-    // le squelette : la racine à l'origine, un os par pièce mobile à son pivot ; inverses prises à la création (groupe à
-    // l'identité) ; tous les maillages de l'arme le partagent (three ne le met à jour qu'une fois par image)
     const racine = new THREE.Bone(); racine.name = 'racine'; g.add(racine);
-    const L = [racine];
+    const L = [racine], inv = [new THREE.Matrix4()];
     os = {}; for (const n of NOMS_OS) os[n] = null;
-    for (const n of M.osNoms) { const b = new THREE.Bone(); b.name = n; b.position.fromArray(OS_ARMES[cle][n]); racine.add(b); L.push(b); os[n] = b; }
-    g.updateMatrixWorld(true);
-    squelette = new THREE.Skeleton(L);
+    for (const n of M.osNoms) {
+      const b = new THREE.Bone(), p = M.pivots[n]; b.name = n; b.position.fromArray(p); racine.add(b);
+      L.push(b); inv.push(new THREE.Matrix4().makeTranslation(-p[0], -p[1], -p[2])); os[n] = b;
+    }
+    squelette = new THREE.Skeleton(L, inv);
   }
   for (const lot of M.lots) {
-    const mat = matDe(lot.mat, cle);
     let m;
     if (pourVue) {
-      m = new THREE.SkinnedMesh(lot.geo, mat);
+      m = new THREE.SkinnedMesh(lot.geo, lot.mat);
       m.bind(squelette, IDENTITE);
       m.frustumCulled = false;                       // (la boîte de l'arme de vue ne suit pas ses os ; elle est toujours devant l'œil)
-      // (celles du repos, le tri seulement ; COPIÉES : SkinnedMesh.computeBoundingBox() les réécrit sur place, os compris — sur
-      // l'objet de la géométrie partagée, il fausserait la boîte de toutes les autres armes — relecture)
+      // (celles du repos, COPIÉES : SkinnedMesh.computeBoundingBox() les réécrirait sur la géométrie partagée — L-W, relecture)
       m.boundingBox = lot.geo.boundingBox.clone(); m.boundingSphere = lot.geo.boundingSphere.clone();
     } else {
-      m = new THREE.Mesh(lot.geo, mat);
+      m = new THREE.Mesh(lot.geo, lot.mat);
       m.castShadow = true; m.receiveShadow = true;
     }
-    m.name = g.name + ' ' + lot.mat;
+    m.name = g.name + ' ' + lot.nom;
     g.add(m);
   }
-  // les repères : tous enfants directs du groupe, `position` = la table ; en vue, ceux d'une pièce mobile ont un jumeau enfant
-  // de son os (`reperesMobiles`). (Le constructeur les avait mis SOUS l'os à la place : leur `position` devenait relative au
-  // pivot — la main gauche du FP-12 à 42 cm de la table pour qui lit `position`, comme le test F2 de L-V — relecture.)
   const reperes = {}, mobiles = pourVue ? {} : null;
-  for (const [nom, p] of Object.entries(REPERES[cle] || {})) {
+  for (const [nom, p] of Object.entries(REPERES[id] || {})) {
     if (!Array.isArray(p)) continue;
     const r = new THREE.Object3D(); r.name = nom; r.position.set(p[0], p[1], p[2]); g.add(r); reperes[nom] = r;
-    const porteur = pourVue && PORTES[cle] ? PORTES[cle][nom] : null;
+    const porteur = pourVue && PORTES[id] ? PORTES[id][nom] : null;
     if (porteur && os[porteur]) {
-      const q = OS_ARMES[cle][porteur], j = new THREE.Object3D(); j.name = nom + ' (suit ' + porteur + ')';
+      const q = M.pivots[porteur], j = new THREE.Object3D(); j.name = nom + ' (suit ' + porteur + ')';
       j.position.set(p[0] - q[0], p[1] - q[1], p[2] - q[2]); os[porteur].add(j); mobiles[nom] = j;
     }
   }
-  g.userData.reperes = reperes;
-  g.userData.reperesMobiles = mobiles;
-  g.userData.os = os;
-  g.userData.arme = id;
-  g.userData.squelette = squelette;
-  g.userData.appels = M.lots.length;
-  g.userData.triangles = M.triangles;
-  if (pourVue) g.userData.sommetsParOs = { ...M.sommets };
-  else g.userData.dynamique = true;                  // (racine de scène à la 3e personne : § 4.1 règle 6)
+  const U = g.userData;
+  U.reperes = reperes; U.reperesMobiles = mobiles; U.os = os; U.squelette = squelette;
+  U.appels = M.lots.length; U.triangles = M.triangles; U.modele = M.modele;
+  if (pourVue) U.sommetsParOs = { ...M.sommets }; else { delete U.sommetsParOs; U.dynamique = true; }    // (3e personne : racine de scène, § 4.1 règle 6)
+  for (const c of g.children) c.updateMatrixWorld(true);
+}
+
+export function creerArme(id, { pourVue = false } = {}) {
+  const cle = PLANS[id] ? id : 'fa24';
+  const g = new THREE.Group(); g.name = 'arme ' + id;
+  g.userData.arme = id; g.userData.pourVue = !!pourVue;
+  const M = _faitMain ? null : MODELES[cle];
+  garnir(g, cle, pourVue, M ? versionGlb(M, pourVue) : modeleMain(cle, pourVue));
+  if (!M && !_faitMain && !ECHECS[cle]) { _attente.add(g); prechargerArmes(); }
   g.updateMatrixWorld(true);
   return g;
 }
+
+// L'ÉCHANGE : le groupe de repli vidé (son squelette rendu ; géométries et matériaux partagés gardés) puis garni de la vraie
+// arme ; les drapeaux posés par ceux qui le tiennent (ombre, élagage, ordre, calques : l'arme de vue, la réserve des bots)
+// recopiés ; `userData` gardé (arme3e, horsContact, ombre… : seuls nos champs sont refaits)
+function echanger(g) {
+  const id = PLANS[g.userData.arme] ? g.userData.arme : 'fa24', M = MODELES[id];
+  if (!M || g.userData.modele === 'glb') return false;
+  const vieux = g.children.find((c) => c.isMesh);
+  const drap = vieux ? { cs: vieux.castShadow, rs: vieux.receiveShadow, fc: vieux.frustumCulled, ro: vieux.renderOrder, la: vieux.layers.mask, vi: vieux.visible } : null;
+  if (g.userData.squelette) g.userData.squelette.dispose();
+  for (const c of [...g.children]) g.remove(c);
+  garnir(g, id, !!g.userData.pourVue, versionGlb(M, !!g.userData.pourVue));
+  if (drap) for (const c of g.children) if (c.isMesh) { c.castShadow = drap.cs; c.receiveShadow = drap.rs; c.frustumCulled = drap.fc; c.renderOrder = drap.ro; c.layers.mask = drap.la; c.visible = drap.vi; }
+  return true;
+}
+// (tests : un groupe de repli rempli en place tout de suite, si sa vraie arme est là — ce que fait l'arrivée d'un GLB)
+export function remplacerRepli(g) { const ok = echanger(g); if (ok) _attente.delete(g); return ok; }
+// remplir les groupes en attente : leurs programmes compilés d'abord (la scène de l'arme de vue pour ceux qui y sont, aux deux
+// cibles où elle est dessinée ; la scène de jeu, ombres comprises, pour la 3e personne), puis l'échange, dans la même tâche
+async function remplirAttente(G) {
+  const L = [..._attente].filter((g) => MODELES[PLANS[g.userData.arme] ? g.userData.arme : 'fa24']);
+  if (!L.length) return;
+  if (G && G._compilerAsync) {
+    const parScene = new Map(), tmp = [], P = [];
+    let trois = new Set();
+    for (const g of L) {
+      const id = PLANS[g.userData.arme] ? g.userData.arme : 'fa24';
+      if (!g.userData.pourVue) { trois.add(id); continue; }
+      let s = g; while (s.parent) s = s.parent;
+      if (!s.isScene) continue;
+      if (!parScene.has(s)) parScene.set(s, new Set());
+      parScene.get(s).add(id);
+    }
+    const lot = (ids, vue) => { const grp = new THREE.Group(); for (const id of ids) { const a = creerArme(id, { pourVue: vue }); a.position.y = -50; grp.add(a); tmp.push(a); } grp.updateMatrixWorld(true); return grp; };
+    for (const [s, ids] of parScene) { const grp = lot(ids, true); P.push(G._compilerAsync(grp, s, false, G.camera), G._compilerAsync(grp, s, true, G.camera)); }
+    if (trois.size) { const grp = lot(trois, false); P.push(G._compilerTout ? G._compilerTout(grp, true) : G._compilerAsync(grp)); }
+    try { await Promise.race([Promise.all(P.filter(Boolean)), new Promise((r) => setTimeout(r, 4000))]); } catch (e) { /* (une compilation ratée se refera au rendu) */ }
+    for (const a of tmp) libererArme(a);
+  }
+  for (const g of L) { echanger(g); _attente.delete(g); }
+}
+
 // rendre une arme : la retirer de son parent et libérer la TEXTURE D'OS de son squelette (vue) — jamais ses géométries ni
 // ses matériaux, partagés par toutes les autres
 export function libererArme(g) {
   if (!g) return;
+  _attente.delete(g);
   if (g.parent) g.parent.remove(g);
   if (g.userData.squelette) { g.userData.squelette.dispose(); g.userData.squelette = null; }
 }
