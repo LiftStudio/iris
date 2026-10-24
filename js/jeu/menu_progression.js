@@ -54,7 +54,9 @@ export class MenuProgression {
     this._construire();
     ajouterRacine('armurerie-jeu', { retour: '#armurerie-jeu [data-act="retour"]', defaut: '#armurerie-jeu .ar-classe.on', avant: 'menu-jeu' });
     ajouterRacine('profil-jeu', { retour: '#profil-jeu [data-act="retour"]', defaut: '#profil-jeu [data-act="retour"]', avant: 'menu-jeu' });
-    this.profil.ecouter(() => this.majBarre());
+    // (relecture : la barre récrite seulement quand l'accueil se voit — en partie, chaque XP gagnée récrivait l'accueil caché ;
+    // `accueil()` la remet à jour en s'ouvrant)
+    this.profil.ecouter(() => { if (this.menu && this.menu.el && !this.menu.el.hidden) this.majBarre(); });
     // (la fenêtre qui change de taille : la vue de la vitrine recalée)
     window.addEventListener('resize', () => { if (this._vitrine && this._vm) this._decaler(this._vm); });
   }

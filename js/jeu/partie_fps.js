@@ -747,8 +747,8 @@ export class PartieFPS extends Partie {
         sentinelle: sent.length ? { reste: Math.max(0, sent[0].fin - this.t), vie: sent[0].vie, vieMax: SERIES.sentinelle.vie } : null, armure: a.armure || 0 };
       const sig = H.signalesMiniCarte = [];
       for (const x of D) for (const [id, vx, , vz] of x.vus) sig.push({ id, x: vx, z: vz, t: x.prochain });
-      const sol = a.vivant && a.humain && !a.prop ? this.armesSol.proche(a) : null, A = a.arsenal;
-      H.ramassage = sol && A && !A.armes.some((f) => (f.base || f.id) === sol.arme) ? { id: sol.id, arme: sol.arme, acc: sol.acc, ch: sol.ch, res: sol.res } : null;
+      const sol = a.vivant && a.humain && !a.prop && a.arsenal ? this.armesSol.proche(a) : null;
+      H.ramassage = sol ? { id: sol.id, arme: sol.arme, acc: sol.acc, ch: sol.ch, res: sol.res } : null;
     }
   }
   peutTirer(a) { return this.phase === 'manche' && super.peutTirer(a); }

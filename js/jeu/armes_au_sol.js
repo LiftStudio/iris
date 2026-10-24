@@ -53,12 +53,16 @@ export class ArmesAuSol {
     P.evt('arme_sol', { id: s.id, arme: s.arme, etat: 'posee', x, y, z });
     return s;
   }
-  // l'arme au sol la plus proche de `a` à ≤ 1,4 m, au même niveau (null : rien)
+  // l'arme au sol la plus proche de `a` à ≤ 1,4 m, au même niveau, qu'il peut PRENDRE (null : rien) — (relecture) un modèle
+  // qu'il tient déjà n'en est pas une : sa réserve pleine, elle restait là et cachait l'arme d'à côté, qu'on ne pouvait ni voir à
+  // l'invite ni ramasser
   proche(a) {
     if (!a || !a.corps) return null;
+    const A = a.arsenal;
     let best = null, bd = REGLES_SOL.portee;
     for (const s of this.liste) {
       if (Math.abs(s.y - a.pos.y) > REGLES_SOL.hauteur) continue;
+      if (A && A.armes.some((f) => (f.base || f.id) === s.arme)) continue;
       const d = Math.hypot(s.x - a.pos.x, s.z - a.pos.z);
       if (d <= bd) { bd = d; best = s; }
     }
