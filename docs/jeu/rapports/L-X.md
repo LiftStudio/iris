@@ -5,6 +5,15 @@ Branche `lot/L-X` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-X`, depuis `vague
 (8, CC0, 3DModelsCC0) ont été trouvés, convertis et vérifiés avant ce lot : `C:/Users/hgami/Downloads/IRIS_lots/_armes/`
 (`choix.md`, `manifeste.json`, `LICENCES.md`, `planche.jpg`).
 
+## Relecture — où j'en suis (relecteur sévère, 24/10/2026, commits « L-X relecture : … »)
+
+**EN COURS (08:50).** Lu : la tâche du lot, le § 4.5.8-4.5.9, § 4.1, § 5.1, § 5.5.3, `_armes/choix.md`, `manifeste.json`,
+`LICENCES.md`, le diff `vague2...lot/L-X` (22 fichiers). Hors navigateur : les 16 GLB relus (1 matériau, 1 primitive, aucun
+nœud tourné ni mis à l'échelle, aucune extension, textures JPEG, `extras.iris` présents) ; `verifier_proprietaires` sur une
+copie avec l'entrée L-X (rendue) : OK 22 fichiers. En attente d'un jeton du navigateur (les trois tenus : L-O, R-KAHN, L-J).
+
+## Constructeur (avant la relecture ; ce qui suit est son rapport, gardé tel quel)
+
 ## Où j'en suis
 
 **FINI (24/10, 08:45).** Les 5 armes, le couteau et les grenades sont les VRAIES (8 modèles CC0 de 3DModelsCC0, en GLB à
