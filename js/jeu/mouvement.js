@@ -83,7 +83,7 @@ export function etatMvt(a) {
     M = a.mvt = { tact: false, tactArme: -Infinity, epuise: false, sprintT: 0, sprintFinT: -Infinity, sprinte: false, glisse: null, glisseFin: -Infinity,
       accAvant: false, viseeBloquee: false, viseeLibreT: -Infinity, receptionFin: -Infinity, hautVol: 0, sprintAir: false,
       franchit: null, contreT: 0, essaiT: -Infinity, pasD: 0, yOeil: NaN, yOeilPrec: NaN, tickOeil: -1, decalOeil: 0,
-      mortT: a.mortT, px: a.corps ? a.corps.pos.x : 0, pz: a.corps ? a.corps.pos.z : 0 };
+      mortT: a.mortT, px: a.corps ? a.corps.pos.x : 0, py: a.corps ? a.corps.pos.y : 0, pz: a.corps ? a.corps.pos.z : 0 };
   }
   return M;
 }
@@ -123,7 +123,9 @@ export function appliquerCommande(acteur, cmd, dt, partie) {
   const x0 = p.pos.x, y0 = p.pos.y, z0 = p.pos.z;
   // (une mort, une réapparition, une téléportation : la glissade, le franchissement, le sprint tactique et l'œil repartent ; on
   // réapparaît la jauge du sprint tactique et l'endurance pleines, comme dans Call of Duty)
-  if (M.mortT !== acteur.mortT || Math.hypot(x0 - M.px, z0 - M.pz) > 1) {
+  // (F2 : la hauteur compte aussi — une téléportation au même endroit d'un autre niveau, à moins de 1 m en plan, laissait
+  // le franchissement en cours finir son arc à l'étage d'avant : test F2 de L-D, 3 bots sur 44 ramenés au 2e ou au −1)
+  if (M.mortT !== acteur.mortT || Math.hypot(x0 - M.px, z0 - M.pz) > 1 || Math.abs(y0 - (M.py ?? y0)) > 1) {
     if (M.mortT !== acteur.mortT) { acteur.jaugeTact = 1; acteur.endurance = ENDURANCE.max; M.epuise = false; }
     M.mortT = acteur.mortT; M.glisse = null; M.franchit = null; M.tact = false; M.sprintT = 0; M.sprinte = false; M.contreT = 0;
     M.receptionFin = -Infinity; M.viseeLibreT = -Infinity; M.hautVol = 0; M.tickOeil = -1;
@@ -337,7 +339,7 @@ function chevauche(C, x, z, r, pieds, haut, bas = BAS_CORPS) {
 // la fin de chaque pas : la visée bloquée (glissade, décollage, franchissement), l'allure, les pas, l'œil lissé
 function finPas(acteur, p, M, C, t, x0, z0, dt, partie, sprint) {
   const cmd = acteur.cmd;
-  M.px = p.pos.x; M.pz = p.pos.z;
+  M.px = p.pos.x; M.py = p.pos.y; M.pz = p.pos.z;
   M.viseeBloquee = t < M.viseeLibreT || !!M.franchit;
   // (la commande est l'intention : la visée et le tir qu'elle ne peut pas avoir à ce pas sont retirés pour l'arsenal, qui
   // vient après — étape 6 ; un cerveau ou lireCommande la réécrivent au pas suivant)
