@@ -36,6 +36,15 @@ ORIGINES = {
     'p17': [0.0, 0.034, -0.006], 'couteau': [0.0, 0.0, 0.0], 'frag': [0.0, 0.0, 0.0], 'flash': [0.0, 0.0, 0.0],
 }
 DEMI_TOUR = {'frag', 'flash'}
+# LA HAUSSE DE LA FA-24 (relecture L-X, 24/10) : telle que l'atelier l'a livrée, la visée était injuste. Le centre du trou de
+# la hausse est 5,4 mm SOUS la pointe du guidon (une arme parallèle à la caméra ne peut pas les aligner tous deux sur l'axe :
+# la pointe tombait au bord haut du trou, et le coup partait 0,5° sous elle) et le trou ne fait que 2,4 mm (le petit
+# œilleton) : vu à 12 cm, un disque noir de 5,5° masquait le centre de l'écran, la cible ne se voyait que par un trou de 1°.
+# On lève donc le disque de la hausse jusqu'à la ligne du guidon (sa tige s'allonge d'autant) et on ouvre le trou au
+# GRAND œilleton du vrai M4 (5 mm) ; l'œil se pose à OEIL_FA24 derrière lui (l'anneau cadre la cible, le guidon au centre).
+OEIL_FA24 = 0.05
+R_OEILLETON = 0.0025
+
 CT = {5121: np.uint8, 5123: np.uint16, 5125: np.uint32, 5126: np.float32}
 NC = {'SCALAR': 1, 'VEC2': 2, 'VEC3': 3, 'VEC4': 4}
 
@@ -179,6 +188,23 @@ def r4(v):
     return [round(float(x), 4) for x in v]
 
 
+def hausse_fa24(g, rep):
+    """la hausse levée sur la ligne du guidon, son trou ouvert à 5 mm ; rend (centre du trou, pointe du guidon)"""
+    M = maillages(g); P, ni = M['Sight_2']; B = M['Barrel'][0]
+    # la pointe du guidon : le plus haut des sommets de la lame (|x| < 2,5 mm, à l'avant du garde-main ; les oreilles sont à ±6 mm)
+    L = B[(np.abs(B[:, 0]) < 0.0025) & (B[:, 2] < -0.30) & (B[:, 1] > 0.10)]; pointe = L[np.argmax(L[:, 1])]
+    # le centre du trou : le bord intérieur (les sommets à moins de 2 mm de l'axe du disque, relevé près de `visee`)
+    r0 = np.hypot(P[:, 0], P[:, 1] - rep['visee'][1]); bord = r0 < 0.002
+    c = P[bord][:, :2].mean(0); dy = float(pointe[1] - c[1])
+    Q = P.copy(); d = Q[:, :2] - c; r = np.hypot(d[:, 0], d[:, 1]); bord = r < 0.002
+    Q[bord, :2] = c + d[bord] * (R_OEILLETON / r[bord])[:, None]           # (le trou ouvert : le bord intérieur poussé à 2,5 mm)
+    Q[Q[:, 1] > c[1] - 0.008, 1] += dy                                      # (le disque levé ; la tige, plus bas, s'allonge)
+    pr = g.js['meshes'][g.js['nodes'][ni]['mesh']]['primitives'][0]
+    g.ecrire_acc(pr['attributes']['POSITION'], Q - g.pos_monde(ni))
+    zt = float(P[bord][:, 2].max())                                        # (la face arrière du trou)
+    return [0.0, float(pointe[1]), zt], [0.0, float(pointe[1]), float(pointe[2])]
+
+
 def ajouter_reperes(g, ident, iris):
     """les repères que lisent l'arme de vue et les bots, relevés sur la géométrie"""
     M = maillages(g); MT = maillages(g, True); rep = iris['reperes']
@@ -212,9 +238,11 @@ def ajouter_reperes(g, ident, iris):
         rep['oeilleton'] = r4([0.0, rep['visee'][1], -0.035])
         rep['courseMainG'] = 0.09
     if ident == 'fa24':
-        # (l'œil à 12 cm derrière la hausse en visée, et non 24 : la crosse et le tube passaient sous l'œil et remplissaient
-        # le bas de l'image ; la ligne de mire — horizontale, par le centre de la hausse — est la même)
-        rep['oeilleton'] = r4([0.0, rep['visee'][1], rep['visee'][2] - 0.12])
+        # (relecture : la hausse levée sur la ligne du guidon et ouverte, hausse_fa24 ; `visee` = le centre de son trou, `guidon`
+        # = la pointe de la lame — l'atelier relevait le haut des oreilles —, `oeilleton` = le point de la ligne de mire 0,24 m
+        # devant l'œil, l'œil à OEIL_FA24 derrière la hausse : la crosse et le tube restent derrière lui)
+        rep['visee'], rep['guidon'] = (r4(v) for v in hausse_fa24(g, rep))
+        rep['oeilleton'] = r4([0.0, rep['visee'][1], rep['visee'][2] - (0.24 - OEIL_FA24)])
         H = M['Charging_Handle'][0]; G = H[H[:, 0] < H[:, 0].min() + 0.008]
         rep['saisieLevier'] = r4(G.mean(0))
     if ident == 'pm9':

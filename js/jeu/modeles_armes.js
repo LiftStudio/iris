@@ -54,15 +54,16 @@ export const ENCOMBREMENTS = { fa24: 0.8589, pm9: 0.627, fp12: 1.0992, tp50: 1.1
 // de ce qui dépasse ; FP-12 : la fenêtre de chargement), saisieLevier (le loquet du levier d'armement de la FA-24, la boule de
 // culasse du TP-50), saisieGlissiere (les stries arrière du P-17), oeilleton (le point de la LIGNE DE MIRE par lequel vise
 // l'arme de vue, l'œil 0,24 m derrière lui — viewmodel.js repereVisee : il passe devant `visee`, le vrai viseur ; FA-24 : l'œil
-// à 12 cm de la vraie hausse, la crosse sous la joue au lieu de remplir le bas de l'image ; FP-12 : la ligne de la perle,
+// à 5 cm de la vraie hausse — relecture : levée sur la ligne du guidon et ouverte au grand œilleton par preparer_armes.py,
+// l'anneau cadre la cible et la pointe du guidon est AU CENTRE, là où part le coup ; FP-12 : la ligne de la perle,
 // l'œil à +0,205 sur la crosse, comme chez L-W), courseMainG (la pompe),
 // goupille (l'anneau des grenades) ; et ceux des vrais modèles : guidon (la pointe du guidon), centrePoignee (où l'atelier
 // avait mis l'origine), arretoir (l'arrêtoir de culasse, flanc gauche : rapport L-X, demande 2), lunette_objectif, pointe /
 // garde / pommeau du couteau, sommet / fond des grenades. Le test 2 vérifie chaque valeur contre extras.iris du GLB (1 mm).
 const V = (x, y, z) => [x, y, z];
 export const REPERES = {
-  fa24: { mainD: V(0, 0, 0), mainG: V(0, 0.0324, -0.3022), bouche: V(0, 0.0636, -0.6081), visee: V(0, 0.121, -0.0043), ejection: V(0.0123, 0.067, -0.1136),
-    crosse: V(0, 0.023, 0.2418), guidon: V(0, 0.1306, -0.4207), oeilleton: V(0, 0.121, -0.1243), saisieChargeur: V(-0.0103, -0.0963, -0.1344), saisieLevier: V(-0.0185, 0.085, 0.0329),
+  fa24: { mainD: V(0, 0, 0), mainG: V(0, 0.0324, -0.3022), bouche: V(0, 0.0636, -0.6081), visee: V(0, 0.1258, -0.0035), ejection: V(0.0123, 0.067, -0.1136),
+    crosse: V(0, 0.023, 0.2418), guidon: V(0, 0.1258, -0.4172), oeilleton: V(0, 0.1258, -0.1935), saisieChargeur: V(-0.0103, -0.0963, -0.1344), saisieLevier: V(-0.0185, 0.085, 0.0329),
     arretoir: V(-0.0118, 0.0017, -0.0821), centrePoignee: V(0, -0.022, 0.01) },
   pm9: { mainD: V(0, 0, 0), mainG: V(0, -0.008, -0.2441), bouche: V(0, 0.0629, -0.4918), visee: V(0, 0.0975, 0.0179), ejection: V(0.0239, 0.072, -0.1985),
     crosse: V(0, -0.0194, 0.1352), guidon: V(0, 0.0977, -0.274), saisieChargeur: V(-0.0105, -0.1554, -0.2432), saisieLevier: V(-0.0185, 0.0634, -0.2103),

@@ -590,4 +590,34 @@ export default function (jeu) {
     const ok = !!f && !!l && x === null && f.geometrie.index && f.materiau.isMeshStandardMaterial && !f.geometrie.attributes.skinIndex;
     return { ok, attendu: '{ geometrie, materiau } pour frag et flash (sans os), null sinon', obtenu: `frag ${f ? f.geometrie.index.count / 3 : '—'} tri. · flash ${l ? l.geometrie.index.count / 3 : '—'} tri. · inconnue ${x}` };
   });
+
+  // 17. LES LIGNES DE MIRE, JOUÉES (relecture, 24/10) : en visée, la pointe du guidon et le centre de la hausse — la perle et
+  // l'œilleton du FP-12 — tombent AU CENTRE de l'écran, là où part le coup (≤ 0,15° : 2 px en 1280 × 720) ; et la FA-24
+  // laisse voir la cible (le trou de sa hausse ≥ 4° de diamètre). Telle que l'atelier l'avait livrée, sa pointe était 0,5°
+  // au-dessus du centre, au bord haut d'un trou de 1° percé dans un disque noir de 5,5°.
+  T('17 · lignes de mire au centre en visée', async (t) => {
+    await prechargerArmes();
+    jeu.figerQualite(true);
+    const res = [], fautes = [], v = new THREE.Vector3(), DEG = Math.PI / 180;
+    try {
+      for (const id of ['fa24', 'pm9', 'fp12', 'p17']) {
+        await jeu.lancer('essai', { graine: 42, classe: CLASSE_DE[id], mannequins: 0 });
+        const p = game.partie, vm = p.aff.viewmodel;
+        if (id === 'p17') { jeu.commande(0, { armeN: 2 }, 1 / 60); await simuler(t, p, 0.8); }
+        jeu.commande(0, { visee: true }, 3); await simuler(t, p, 1.5);
+        const a = vm.courante, R = a.userData.reperes, cam = vm.camera;
+        cam.updateMatrixWorld(true); a.updateMatrixWorld(true);
+        // l'écart à l'axe de la caméra de l'arme (°) et la distance à l'œil (m)
+        const mesure = (n) => { R[n].getWorldPosition(v); cam.worldToLocal(v); return [Math.atan2(Math.hypot(v.x, v.y), -v.z) / DEG, -v.z]; };
+        const [g] = mesure(id === 'fp12' ? 'visee' : 'guidon'), [h, dh] = mesure(id === 'fp12' ? 'oeilleton' : 'visee');
+        let trou = '';
+        if (id === 'fa24') { const d = 2 * Math.atan(0.0025 / dh) / DEG; trou = ` · trou ${d.toFixed(1)}° à ${Math.round(dh * 1000)} mm`; if (d < 4) fautes.push(`fa24 trou ${d.toFixed(1)}°`); }
+        res.push(`${NOMS[id]} guidon ${g.toFixed(2)}° · hausse ${h.toFixed(2)}°${trou}`);
+        if (!(g <= 0.15 && h <= 0.15)) fautes.push(`${id} guidon ${g.toFixed(2)}°, hausse ${h.toFixed(2)}°`);
+        jeu.quitter('balade');
+      }
+    } finally { jeu.figerQualite(false); }
+    return { ok: fautes.length === 0, attendu: 'en visée : guidon et hausse à ≤ 0,15° du centre de l’écran ; FA-24 : trou de la hausse ≥ 4°',
+      obtenu: (fautes.length ? 'FAUTES ' + fautes.join(' · ') + ' — ' : '') + res.join(' · ') };
+  }, { delai: 120 });
 }
