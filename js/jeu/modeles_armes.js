@@ -933,15 +933,17 @@ export async function chargerModele(id, url = BASE_ARMES + id + '.glb', { garder
 // LE PRÉCHARGEMENT (à la PRÉPARATION d'une partie ; jamais au démarrage) : les huit GLB en parallèle, leurs textures envoyées
 // à la carte graphique une par une (une image entre deux : pas d'à-coup), puis les groupes de repli déjà donnés remplis en
 // place. Une seule fois par session ; ne rejette jamais (un GLB qui manque laisse son repli). Rend etatArmes().
+// (relecture : chaque étape à part — une exception dans l'envoi des textures ou une compilation sautait le REMPLISSAGE, et les
+// groupes de repli déjà donnés, l'arme de vue et les armes des bots, restaient faits main toute la session)
 export function prechargerArmes({ game = null } = {}) {
   if (_charge) return _charge;
   const G = game || (typeof window !== 'undefined' ? window.__game : null);
+  const etape = (f) => () => Promise.resolve().then(f).catch((e) => console.warn('[armes] préchargement :', e));
   _t0 = performance.now();
   _charge = Promise.all(IDS_ARMES.map((id) => (MODELES[id] ? null : chargerModele(id))))
-    .then(() => envoyerTextures(G))
-    .then(() => compilerTroisieme(G))
-    .then(() => remplirAttente(G))
-    .catch((e) => console.warn('[armes] préchargement :', e))
+    .then(etape(() => envoyerTextures(G)))
+    .then(etape(() => compilerTroisieme(G)))
+    .then(etape(() => remplirAttente(G)))
     .then(() => { _t1 = performance.now(); return etatArmes(); });
   return _charge;
 }
@@ -1088,7 +1090,7 @@ async function remplirAttente(G) {
     try { await Promise.race([Promise.all(P.filter(Boolean)), new Promise((r) => setTimeout(r, 4000))]); } catch (e) { /* (une compilation ratée se refera au rendu) */ }
     for (const a of tmp) libererArme(a);
   }
-  for (const g of L) { echanger(g); _attente.delete(g); }
+  for (const g of L) { try { echanger(g); } catch (e) { console.warn('[armes] échange :', e); } _attente.delete(g); }
 }
 
 // rendre une arme : la retirer de son parent et libérer la TEXTURE D'OS de son squelette (vue) — jamais ses géométries ni

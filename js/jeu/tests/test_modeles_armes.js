@@ -550,7 +550,7 @@ export default function (jeu) {
         await simuler(t, p, 1.0);
         const g = a.aff && a.aff.arme3e, A = a.joueur.avatar;
         let dg = 99;
-        if (g && A) { const e = a.h / 1.73, w = new THREE.Vector3(...REPERES[id].mainG).applyMatrix4(g.matrixWorld); dg = priseMain(A, id === 'p17' ? 'Left' : 'Left', e, new THREE.Vector3()).distanceTo(w); }
+        if (g && A) { const e = a.h / 1.73, w = new THREE.Vector3(...REPERES[id].mainG).applyMatrix4(g.matrixWorld); dg = priseMain(A, 'Left', e, new THREE.Vector3()).distanceTo(w); }
         const url = jeu.photo(`bot ${id}`); envoyer(`bot_${id}.jpg`, url);
         await P.case(i, 0, `${NOMS[id]} · bot`, url);
         const ok = !!g && g.userData.arme3e === id && g.userData.modele === 'glb' && mailles(g).length === 1 && dg <= 0.03;
