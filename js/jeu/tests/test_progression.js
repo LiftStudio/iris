@@ -365,7 +365,7 @@ export default function (jeu) {
       }
       if (!place) { jeu.quitter('balade'); return { tirs: -1, touches: 0, place: null }; }
       // (hors de la rue bornée — à 26 m, la rue s'arrête : la cible n'y est pas ramenée)
-      if (pose.vue === false && cible.joueur) cible.joueur.bounds = null;
+      if (pose.vue === false && cible.joueur) cible.joueur.bounds = { xMin: -100, xMax: 100, zMin: -100, zMax: 100 };
       jeu.teleporter(1, place.x, place.y, place.z);
       jeu.teleporter(0, st.x + Math.sin(st.cap) * 2, st.y, st.z + Math.cos(st.cap) * 2);
       const T0 = ecouter(q, 'tir'), T1 = ecouter(q, 'touche');
