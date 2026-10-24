@@ -463,14 +463,17 @@ export class Partie {
     (cible._aides || (cible._aides = [])).push({ par, d, t: this.t });
     // (F2, demande de L-U : un COUP touche une fois — les plombs d'un même coup de FP-12, `seq`, ne comptent qu'une touche ; la
     // précision, touches / tirs, ne passe plus 100 %)
+    // (F2 relecture : la précision est touches / TIRS — la frag, la flash, le couteau ne sont pas des tirs, leurs touches ne
+    // comptent pas : joué, 39 touches pour 38 tirs après une frag dans un groupe)
     if (tireur) {
-      const s = o && o.seq, multi = o && o.plomb !== undefined && arme && (ARMES[arme] || {}).plombs > 1;
-      if (!multi || tireur._seqTouche !== s) tireur.stats.touches++;
+      const f = arme ? ARMES[arme] : null, s = o && o.seq, multi = o && o.plomb !== undefined && f && f.plombs > 1;
+      if (f && f.rpm && (!multi || tireur._seqTouche !== s)) tireur.stats.touches++;
       if (multi) tireur._seqTouche = s;
       tireur.stats.degats += d;
     }
     const tete = zone === 'tete';
-    this.evt('touche', { par, cible: cible.id, zone, degats: d, x, y, z, tete, dx, dz });
+    // (`arme` en plus du § 4.6, F2 relecture : la précision des écrans se compte sur les touches des armes à feu seulement)
+    this.evt('touche', { par, cible: cible.id, zone, degats: d, x, y, z, tete, dx, dz, arme });
     if (cible.vie <= 1e-9) {
       cible.vie = 0;
       const assists = [];

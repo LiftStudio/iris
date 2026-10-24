@@ -798,7 +798,8 @@ export class MenuJeu {
       // (la PRÉCISION du bilan : touches sur balles TIRÉES, plombs compris — les statistiques de l'acteur comptent un tir
       // de FP-12 pour un et chacun de ses huit plombs pour une touche, d'où 800 % : DEMANDE à F2 au rapport)
       p.sur('tir', (e) => S.plombs.set(e.a, (S.plombs.get(e.a) || 0) + (e.n || 1)));
-      p.sur('touche', (e) => { if (e.par >= 0 && e.par !== e.cible) S.touches.set(e.par, (S.touches.get(e.par) || 0) + 1); });
+      // (F2 relecture : les touches des armes à feu seulement — une frag dans un groupe n'est pas une balle tirée)
+      p.sur('touche', (e) => { if (e.par >= 0 && e.par !== e.cible && (!e.arme || (ARMES[e.arme] && ARMES[e.arme].rpm))) S.touches.set(e.par, (S.touches.get(e.par) || 0) + 1); });
       p.sur('elim', (e) => {
         if (e.cible !== undefined) S.serie.set(e.cible, 0);
         if (e.par === undefined || e.par === e.cible) return;

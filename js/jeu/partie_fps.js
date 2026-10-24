@@ -234,7 +234,8 @@ export class PartieFPS extends Partie {
       const a = this.acteurParId(e.a);
       if (a && a.protegeT > this.t) a.protegeT = this.t;
     });
-    this.sur('touche', (e) => { this._toucheurs.add(e.par); this._zoneTouche.set(e.cible, e.zone); });
+    // (F2 relecture : un tir qui touche — la touche d'une frag ou d'un couteau au même pas ne fait pas un tir touchant)
+    this.sur('touche', (e) => { if (!e.arme || (ARMES[e.arme] && ARMES[e.arme].rpm)) this._toucheurs.add(e.par); this._zoneTouche.set(e.cible, e.zone); });
     // (L'APPARITION VUE — affichage, comme Partie._elimVue : la poupée de chiffon rendue, le corps remontré ; le même Player
     // revient, sa poupée encore au sol en habillage Militaire — 4 s contre 3,0 s de réapparition — s'efface d'un coup)
     this.sur('apparition', (e) => {
