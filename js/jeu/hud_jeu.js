@@ -651,7 +651,10 @@ export class HudJeu {
     if (phase !== this._phaseVue) {
       this._phaseVue = phase;
       if (phase === 'presentation') { this._presT = this.t; this._annonces.length = 0; this._annonce = null; }
-      if (phase === 'mi_temps') this._pousserAnnonce('MI-TEMPS — LES CAMPS S’ÉCHANGENT', 'info');
+      // (F2 relecture : seulement si les règles ne l'ont pas dite — PartieFPS annonce « MI-TEMPS · SISR 75 – 19 SLAM · … » :
+      // joué, les deux bandeaux passaient l'un après l'autre)
+      const dite = (n) => !!n && /MI-TEMPS/.test(n.texte);
+      if (phase === 'mi_temps' && !this._annonces.some(dite) && !dite(this._annonce)) this._pousserAnnonce('MI-TEMPS — LES CAMPS S’ÉCHANGENT', 'info');
     }
     const pres = phase === 'presentation' && P;
     cacher(this.ePhase, !pres);
