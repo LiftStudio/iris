@@ -154,7 +154,7 @@ export default function (jeu) {
       const tex = [mat.map, mat.normalMap, mat.roughnessMap].map((x) => (x && x.image ? x.image.width : 0));
       const ok = g.userData.modele === 'glb' && n === 1 && R.appels === 1 && tr === TRIANGLES[id] && tr <= 30000 && tex.every((w) => w === taille)
         && mat.map.colorSpace === THREE.SRGBColorSpace && mat.normalMap.colorSpace !== THREE.SRGBColorSpace && mat.normalScale.y === -1 && (vue ? m.isSkinnedMesh : !m.isSkinnedMesh)
-        && mat === MATERIAUX_ARMES.glb(id);
+        && mat === MATERIAUX_ARMES.glb(id, !vue);
       if (!ok) fautes.push(`${id} ${vue ? 'vue' : '3e'} : ${g.userData.modele}, ${n} maillages, ${R.appels} appels, ${tr} triangles, textures ${tex.join('/')}, normalScale ${mat.normalScale && mat.normalScale.y}`);
       if (vue) L.push(`${NOMS[id]} ${tr} tri. ${tex[0]} px`);
       libererArme(g);
@@ -298,9 +298,9 @@ export default function (jeu) {
     const D = rendreCible(game, sc);
     await new Promise((r) => setTimeout(r, 300));
     requetes.push(...obs.takeRecords()); obs.disconnect();
-    const ok = requetes.length === 0 && mats.size === 8 && mats2.size === 8 && partages === 8 && B.programmes === A.programmes
+    const ok = requetes.length === 0 && mats.size === 16 && mats2.size === 16 && partages === 8 && B.programmes === A.programmes
       && B.textures - A.textures === sq && C.textures === A.textures && D.textures === A.textures - sq0;
-    return { ok, attendu: '0 requête ; 8 matériaux (un par arme) ; tampons partagés vue / 3e ; +20 × 16 : 0 matériau, 0 programme, textures = 1 par squelette de vue (rendues)',
+    return { ok, attendu: '0 requête ; 16 matériaux (un par arme et par version : la 3e personne a son clone) ; tampons partagés vue / 3e ; +20 × 16 : 0 matériau, 0 programme, textures = 1 par squelette de vue (rendues)',
       obtenu: `requêtes ${requetes.length} · ${mats.size} matériaux → ${mats2.size} · tampons partagés ${partages}/8 · programmes ${A.programmes} → ${B.programmes} · textures ${A.textures} → ${B.textures} (+${B.textures - A.textures} pour ${sq} squelettes) → ${C.textures} → ${D.textures}` };
   });
 

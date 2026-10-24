@@ -126,22 +126,23 @@ const NOMS_OS = ['chargeur', 'culasse', 'glissiere', 'pompe', 'detente', 'goupil
 // Les VRAIES armes : un MeshStandardMaterial par arme, celui du GLB (couleur sRGB, normales — GLTFLoader pose normalScale
 // (1, −1), convention glTF sans tangentes : gardée telle quelle —, métal/rugosité linéaires) ; recto-verso pour la FA-24, le
 // P-17 et le TP-50 (leurs ouvertures se voient de dos : la hausse de la FA-24 en visée), recto seul ailleurs. Ajustés pour
-// IRIS : filtrage anisotrope ×4 (l'arme de vue se regarde en rasant), `envMapIntensity` (AJUSTE_MAT) — l'arme de vue a sa
-// carte d'environnement de studio (L-V), la scène de jeu la sienne (ou aucune en qualité basse : le métal y serait noir —
-// d'où le plancher de rugosité `rugoMin`, qui garde un reflet diffus des lumières). `MATERIAUX_ARMES.glb(id)` les rend
-// (null tant que le GLB n'est pas là).
+// IRIS : filtrage anisotrope ×4 (l'arme de vue se regarde en rasant) ; et la 3e PERSONNE a son clone, `metal3e` : l'arme de
+// vue a TOUJOURS sa carte d'environnement de studio (L-V), la scène de jeu n'en a pas en qualité Basse ni Moyenne (fx.js,
+// `env: false` — Moyenne est le socle du combat sur la Radeon 660M) — un métal à 1 n'y renvoie que les reflets ponctuels des
+// lampes : une arme de bot NOIRE. Le clone garde la moitié de diffus (métal ×0,5 : un acier bronzé que les lampes éclairent),
+// mêmes textures. `MATERIAUX_ARMES.glb(id, troisieme)` les rend (null tant que le GLB n'est pas là).
 // Les matériaux du REPLI (L-W, inchangés) : acier 0x24272b (métal 0,85, rugosité 0,38) · polymère 0x2b2d30 (0 / 0,72) · une
 // TEINTE par arme · verre émissif du point rouge (0xff2a1a, toneMapped: false) · lentille, blanc des points de visée, poli.
-const AJUSTE_MAT = { anisotropie: TELEPHONE ? 1 : 4, envMapIntensity: 1.0, rugoMin: 0 };
+const AJUSTE_MAT = { anisotropie: TELEPHONE ? 1 : 4, metal3e: 0.5 };
 let _mats = null;
 const MODELES = {};                  // id → la vraie arme bâtie (batir) ; absente tant que son GLB n'est pas là
 export const MATERIAUX_ARMES = {
   get acier() { return mats().acier; }, get polymere() { return mats().polymere; }, get verre() { return mats().verre; },
   get lentille() { return mats().lentille; }, get blanc() { return mats().blanc; }, get poli() { return mats().poli; },
   teinte(id) { return mats().teintes[id] || mats().polymere; },
-  glb(id) { return MODELES[id] ? MODELES[id].mat : null; },
+  glb(id, troisieme = false) { return MODELES[id] ? (troisieme ? MODELES[id].mat3e : MODELES[id].mat) : null; },
   // tous les matériaux des armes (tests, compilation) : ceux du repli, puis ceux des vraies armes arrivées
-  get tous() { const m = mats(); return [m.acier, m.polymere, m.verre, m.lentille, m.blanc, m.poli, ...Object.values(m.teintes), ...IDS_ARMES.filter((i) => MODELES[i]).map((i) => MODELES[i].mat)]; },
+  get tous() { const m = mats(); return [m.acier, m.polymere, m.verre, m.lentille, m.blanc, m.poli, ...Object.values(m.teintes), ...IDS_ARMES.filter((i) => MODELES[i]).flatMap((i) => [MODELES[i].mat, MODELES[i].mat3e])]; },
 };
 function mats() {
   if (_mats) return _mats;
@@ -905,12 +906,13 @@ function batir(id, gltf) {
   // le matériau du GLB, partagé, ajusté (filtrage anisotrope ; normalScale et side tels que GLTFLoader les a posés)
   mat.name = `arme ${id} (glb)`; mat.userData.partage = true;
   for (const t of texturesDe(mat)) { t.anisotropy = AJUSTE_MAT.anisotropie; t.name = t.name || `arme ${id}`; }
-  return { modele: 'glb', mat, geoTrois: trois, geoVue: vue, osNoms, pivots, sommets, triangles: ni / 3, iris: racine.userData.iris || null,
+  const mat3e = mat.clone(); mat3e.name = `arme ${id} (glb, 3e personne)`; mat3e.metalness = AJUSTE_MAT.metal3e; mat3e.userData.partage = true;
+  return { modele: 'glb', mat, mat3e, geoTrois: trois, geoVue: vue, osNoms, pivots, sommets, triangles: ni / 3, iris: racine.userData.iris || null,
     ms: performance.now() - t0 };
 }
 const texturesDe = (mat) => [...new Set(['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap'].map((k) => mat[k]).filter(Boolean))];
 // la vraie arme sous la forme de garnir (comme un modèle du repli)
-const versionGlb = (M, vue) => ({ modele: 'glb', lots: [{ geo: vue ? M.geoVue : M.geoTrois, mat: M.mat, nom: 'glb' }], osNoms: M.osNoms, pivots: M.pivots,
+const versionGlb = (M, vue) => ({ modele: 'glb', lots: [{ geo: vue ? M.geoVue : M.geoTrois, mat: vue ? M.mat : M.mat3e, nom: 'glb' }], osNoms: M.osNoms, pivots: M.pivots,
   sommets: M.sommets, triangles: M.triangles });
 
 // UN GLB lu et cousu (null s'il manque) ; `garder` : la vraie arme du jeu (sinon un essai, rien n'est retenu)
@@ -947,7 +949,7 @@ export function etatArmes() {
 // (tests, diagnostic : creerArme rend le repli fait main même quand les vraies armes sont là — la cadence comparée)
 export function forcerFaitMain(oui) { _faitMain = !!oui; }
 // (L-H, rapport L-X demande 4 : les grenades en vol avec la vraie géométrie — un InstancedMesh par type)
-export function modeleArme(id) { const M = MODELES[id]; return M ? { geometrie: M.geoTrois, materiau: M.mat } : null; }
+export function modeleArme(id) { const M = MODELES[id]; return M ? { geometrie: M.geoTrois, materiau: M.mat3e } : null; }
 
 const uneImage = () => new Promise((res) => {
   let fait = false; const f = () => { if (!fait) { fait = true; res(); } };
