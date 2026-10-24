@@ -594,33 +594,50 @@ export default function (jeu) {
   // ---------------------------------------------------------------- À F2 (les vrais modules des autres lots)
   // le vrai graphe (L-D) restreint : aucun nœud dans une pièce fermée ; et généré avec les vantaux du combat (avecVantaux)
   T('F2 · graphe restreint : aucun nœud dans une pièce fermée, vantaux contournés', async () => {
-    const nav = await Nav.obtenir(game, {});
+    // (F2 : le monde des parties d'abord — sans lui le graphe est généré sans les vantaux, sous une autre empreinte : celui
+    // d'une vraie partie, préparée, les a toujours)
     if (!game.mondePartie) { await essai({ zone: 'ecole' }); jeu.quitter('balade'); }
+    const nav = await Nav.obtenir(game, {});
     const M = game.mondePartie, out = M.noeudsAutorises(nav, 'ecole', 'equipes'), F = new Set(['wcF', 'wcH', 'pmr', 'local', 'service']);
     let fautes = 0;
     // (F2 : nav.zone[i] est un indice dans PIECES — nav.pieceDe —, demande de L-D)
     for (let i = 0; i < nav.nb; i++) if (out[i] && nav.zone[i] !== 255 && F.has(nav.pieceDe(i))) fautes++;
     // aucun nœud du graphe DANS une boîte de vantail ouvert
+    // (F2 : le monde de la génération — les portes `mobile` et les barrières éteintes, nav.js generer — : hors partie, une porte
+    // fermée en balade bouche sa baie, et les 91 nœuds des baies passaient pour « dans un vantail »)
     let dansVantail = 0;
-    M.avecVantaux(() => { for (let i = 0; i < nav.nb; i++) if (!C().libre(nav.px[i], nav.pz[i], 0.25, nav.ph[i])) dansVantail++; });
+    M.avecVantaux(() => {
+      const garde = C().formes.filter((f) => (f.mobile || f.limite) && !f.off);
+      for (const f of garde) f.off = true;
+      try { for (let i = 0; i < nav.nb; i++) if (!C().libre(nav.px[i], nav.pz[i], 0.25, nav.ph[i])) dansVantail++; } finally { for (const f of garde) f.off = false; }
+    });
     return { ok: nav.nb > 5000 && fautes === 0 && dansVantail === 0, attendu: '0 nœud permis dans une pièce fermée ; 0 nœud dans un vantail ouvert', obtenu: `${nav.nb} nœuds · ${fautes} fautes · ${dansVantail} dans un vantail` };
   }, { apresFusion: true });
   // la vraie balistique (L-A) : la forme touchée est le vantail ; la vue s'arrête sur un dépoli, la balle le traverse
   T('F2 · balistique : vantail touché, dépoli opaque à la vue', async () => {
     await essai({ zone: 'ecole' });
     const p = game.partie, M = p.monde, V = C().formes.filter((f) => f.vantail);
+    // (F2 : des DEUX côtés du vantail, le premier coup qui l'atteint compte — un vantail ouvert contre un mur : à 1 m de son
+    // côté « libre », on était parfois dans la pièce voisine, derrière le mur ; la balle touchait le mur, pas lui)
     let vantail = 0;
-    for (const f of V.slice(0, 10)) { const nx = -f.s, nz = f.c, sg = C().libre(f.cx + nx, f.cz + nz, 0.1, f.y0) ? 1 : -1; const o = p.balistique.balle(f.cx + nx * sg, f.y0 + 1.2, f.cz + nz * sg, -nx * sg, 0, -nz * sg, 3, {}); if (o.forme && o.forme.vantail) vantail++; }
-    let opaques = 0, traverses = 0;
-    for (const f of M.depolis) {
+    for (const f of V.slice(0, 10)) {
+      const nx = -f.s, nz = f.c;
+      if ([1, -1].some((sg) => { const o = p.balistique.balle(f.cx + nx * sg, f.y0 + 1.2, f.cz + nz * sg, -nx * sg, 0, -nz * sg, 3, {}); return o.forme === f; })) vantail++;
+    }
+    // (F2 : les dépolis ALLUMÉS — la vitre d'une porte ouverte à demeure en combat est éteinte avec son vantail, la baie est
+    // libre : 4 sur 14 ; la balle tirée des deux côtés — un meuble collé à la cloison arrêtait celle d'un côté à 1 cm)
+    let opaques = 0, traverses = 0; const allumes = M.depolis.filter((f) => !f.off);
+    for (const f of allumes) {
       const cx = (f.bx0 + f.bx1) / 2, cz = (f.bz0 + f.bz1) / 2, y = Math.min(f.y1 - 0.1, Math.max(f.y0 + 0.1, (f.y0 + f.y1) / 2)), lx = f.bx1 - f.bx0, lz = f.bz1 - f.bz0;
       const nx = lx < lz ? 1 : 0, nz = lx < lz ? 0 : 1;
-      if (!p.balistique.vue(cx - nx * 0.6, y, cz - nz * 0.6, cx + nx * 0.6, y, cz + nz * 0.6)) opaques++;
-      const o = p.balistique.balle(cx - nx * 0.6, y, cz - nz * 0.6, nx, 0, nz, 1.2, {});
-      if (o.vitre || o.t > 0.65) traverses++;
+      if (!p.balistique.vue(cx - nx * 0.6, y, cz - nz * 0.6, cx + nx * 0.6, y, cz + nz * 0.6) && !p.balistique.vue(cx + nx * 0.6, y, cz + nz * 0.6, cx - nx * 0.6, y, cz - nz * 0.6)) opaques++;
+      // (la balle part à 8 cm de la vitre — un meuble collé à la cloison, une vitrine d'affichage du hall à 13 cm d'elle —, et
+      // la vitre est TRAVERSÉE quand elle est la première vitre du parcours, pas la forme qui l'arrête)
+      const e = (nx ? lx : lz) / 2 + 0.08;
+      if ([1, -1].some((sg) => { const o = p.balistique.balle(cx - sg * nx * e, y, cz - sg * nz * e, sg * nx, 0, sg * nz, 1.2, {}); return o.vitre === f && o.forme !== f; })) traverses++;
     }
     jeu.quitter('balade');
-    return { ok: vantail === Math.min(10, V.length) && opaques === M.depolis.length && traverses === M.depolis.length, attendu: 'balle → forme.vantail ; vue arrêtée par chaque dépoli, balle qui le traverse',
-      obtenu: `${vantail}/${Math.min(10, V.length)} vantaux · ${opaques}/${M.depolis.length} dépolis opaques · ${traverses} traversés` };
+    return { ok: vantail === Math.min(10, V.length) && allumes.length >= 8 && opaques === allumes.length && traverses === allumes.length, attendu: 'balle → ce vantail ; vue arrêtée par chaque dépoli allumé, balle qui le traverse',
+      obtenu: `${vantail}/${Math.min(10, V.length)} vantaux · ${opaques}/${allumes.length} dépolis allumés opaques (${M.depolis.length - allumes.length} éteints : portes ouvertes) · ${traverses} traversés` };
   }, { apresFusion: true });
 }
