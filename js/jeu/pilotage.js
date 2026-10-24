@@ -111,6 +111,9 @@ export class Pilote {
     if (this.mode === 'route') {
       if (this._arrive) { if (!(memeSol && d < this.arret + this.marge)) this._arrive = false; }
       else if (memeSol && d < this.arret) this._arrive = true;
+      // (F2 : arrivé pendant un franchissement — la cible juste derrière la table — : il est RÉUSSI ; sinon seuls les ratés
+      // étaient comptés, et à trois ratés tous les liens « franchir » de la partie coûtaient × 10 : test F2 de L-D)
+      if (this._arrive && this._franchi && !this.acteur.franchit && !this.acteur.corps.airborne) { N.noterFranchir?.(true); this._franchi = null; }
       if (this._arrive) { this._ref = null; return; }
     }
     // LE CHEMIN

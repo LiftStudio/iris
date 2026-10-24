@@ -644,7 +644,8 @@ export default function (jeu) {
     const p = await partieVide(50), N = p.nav, a = conducteur(p, 70, 0, 0, 0), rng = new Rng(50);
     const liens = []; for (let u = 0; u < N.nb; u++) for (let j = N.debut[u]; j < N.debut[u + 1]; j++) if (N.typeLien[j] === 1) liens.push([u, N.liens[j]]);
     let ok = 0, essais = 0, coinces = 0;
-    for (let k = 0; k < 400 && essais < 50; k++) {
+    // (F2 : 2 000 tirages — le graphe v2 a 426 liens « franchir », l'A* n'en prend tout droit qu'un sur neuf : 44 en 400)
+    for (let k = 0; k < 2000 && essais < 50; k++) {
       const [u, v] = liens[rng.int(liens.length)], L = [];
       if (!N.chemin(u, v, L) || L.length !== 2) continue;           // (seulement ceux que l'A* prend)
       essais++;
