@@ -488,9 +488,14 @@ export default function (jeu) {
       jeu.quitter('menu'); for (let i = 0; i < 3; i++) game.frame(1 / 60);
       const r = n.racine();
       res.push(['menu-jeu : racine, focus sur BALADE LIBRE', !!r && r.id === 'menu-jeu' && !!n.cur && n.cur.dataset.act === 'balade', r ? r.id + ' / ' + (n.cur && n.cur.dataset.act) : 'aucune']);
-      const vus = [];
-      for (let i = 0; i < 5; i++) { F.bouton('Down', true); game.frame(1 / 60); F.bouton('Down', false); game.frame(1 / 60); vus.push(n.cur && n.cur.dataset.act); }
-      res.push(['la croix descend la liste', egal(vus, ['combat', 'prophunt', 'stand', 'options', 'credits']), vus.join(',')]);
+      // (F2 : sur un écran BAS — 812 × 375 —, l'accueil de L-U passe sur deux colonnes : la croix descend chaque colonne, la droite
+      // passe de l'une à l'autre ; toutes les portes sont atteintes depuis BALADE, en bas puis à droite et en bas)
+      const vus = [], appui = (b) => { F.bouton(b, true); game.frame(1 / 60); F.bouton(b, false); game.frame(1 / 60); vus.push(n.cur && n.cur.dataset.act); };
+      for (let i = 0; i < 5; i++) appui('Down');
+      n.poser(document.querySelector('#menu-jeu [data-act="balade"]')); game.frame(1 / 60);
+      appui('Right'); for (let i = 0; i < 5; i++) appui('Down');
+      const portes = ['combat', 'prophunt', 'stand', 'options', 'credits'];
+      res.push(['la croix parcourt l’accueil', portes.every((x) => vus.includes(x)) && vus.every((x) => x === 'balade' || portes.includes(x)), vus.join(',')]);
       // les écrans de réglages et de crédits : des écrans d'essai inscrits comme ceux de L-U (les vrais : le test de F2)
       for (const id of ['reglage-jeu', 'credits-jeu']) {
         let el = document.getElementById(id);
