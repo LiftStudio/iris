@@ -206,9 +206,15 @@ def ajouter_reperes(g, ident, iris):
         yb = sous[:, 1].min() if len(sous) else ej[1] - 0.04
         rep['saisieChargeur'] = r4([0.0, yb - 0.004, ej[2]])        # la fenêtre de chargement, sous le boîtier
         rep['arretoir'] = rep['saisieChargeur']
-        rep['oeilleton'] = r4([0.0, rep['visee'][1], rep['visee_arriere'][2]])
+        # (l'arme de vue vise par `oeilleton` quand il existe, l'œil 0,24 m derrière lui : sur la ligne de mire de la perle,
+        # l'œil à +0,205 — la joue sur la crosse, comme chez L-W ; par l'arrière du boîtier, l'œil tombait à 12 cm de lui et le
+        # boîtier bouchait la moitié de l'image, photos du 24/10)
+        rep['oeilleton'] = r4([0.0, rep['visee'][1], -0.035])
         rep['courseMainG'] = 0.09
     if ident == 'fa24':
+        # (l'œil à 12 cm derrière la hausse en visée, et non 24 : la crosse et le tube passaient sous l'œil et remplissaient
+        # le bas de l'image ; la ligne de mire — horizontale, par le centre de la hausse — est la même)
+        rep['oeilleton'] = r4([0.0, rep['visee'][1], rep['visee'][2] - 0.12])
         H = M['Charging_Handle'][0]; G = H[H[:, 0] < H[:, 0].min() + 0.008]
         rep['saisieLevier'] = r4(G.mean(0))
     if ident == 'pm9':
@@ -219,6 +225,10 @@ def ajouter_reperes(g, ident, iris):
         rep['saisieLevier'] = r4(G.mean(0))
     if ident == 'p17':
         S = M['Slide'][0]
+        # (l'arrêtoir du Makarov : sur le flanc gauche de la carcasse, juste sous la glissière, au-dessus de la détente — la
+        # règle du puits, faite pour les fusils, le mettait sur la poignée)
+        B = M['Body'][0]; ys = S[:, 1].min() - 0.004; c = coupe(MT['Body'][0], ys); c = c[np.abs(c[:, 2] + 0.035) < 0.012]
+        rep['arretoir'] = r4([c[:, 0].min() if len(c) else B[:, 0].min(), ys, -0.035])
         rep['saisieGlissiere'] = r4([S[:, 0].min(), (S[:, 1].min() + S[:, 1].max()) / 2, S[:, 2].max() - 0.016])
     if ident in DEMI_TOUR:
         rep['goupille'] = rep['anneau']

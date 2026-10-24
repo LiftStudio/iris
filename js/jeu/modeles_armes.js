@@ -51,27 +51,29 @@ export const ENCOMBREMENTS = { fa24: 0.8589, pm9: 0.627, fp12: 1.0992, tp50: 1.1
 // Ceux du § 4.5.8 (mainG sous le vrai garde-main ou la vraie pompe, bouche, visee, ejection, crosse) et les ajouts de L-W
 // que lisent l'arme de vue et les bots : mainD (l'origine), saisieChargeur (le flanc gauche du vrai chargeur, au tiers bas
 // de ce qui dépasse ; FP-12 : la fenêtre de chargement), saisieLevier (le loquet du levier d'armement de la FA-24, la boule de
-// culasse du TP-50), saisieGlissiere (les stries arrière du P-17), oeilleton (FP-12 : la ligne de mire de la perle au-dessus
-// de l'arrière du boîtier — viser par la perle à 0,24 m mettrait la crosse loin derrière l'œil), courseMainG (la pompe),
+// culasse du TP-50), saisieGlissiere (les stries arrière du P-17), oeilleton (le point de la LIGNE DE MIRE par lequel vise
+// l'arme de vue, l'œil 0,24 m derrière lui — viewmodel.js repereVisee : il passe devant `visee`, le vrai viseur ; FA-24 : l'œil
+// à 12 cm de la vraie hausse, la crosse sous la joue au lieu de remplir le bas de l'image ; FP-12 : la ligne de la perle,
+// l'œil à +0,205 sur la crosse, comme chez L-W), courseMainG (la pompe),
 // goupille (l'anneau des grenades) ; et ceux des vrais modèles : guidon (la pointe du guidon), centrePoignee (où l'atelier
 // avait mis l'origine), arretoir (l'arrêtoir de culasse, flanc gauche : rapport L-X, demande 2), lunette_objectif, pointe /
 // garde / pommeau du couteau, sommet / fond des grenades. Le test 2 vérifie chaque valeur contre extras.iris du GLB (1 mm).
 const V = (x, y, z) => [x, y, z];
 export const REPERES = {
   fa24: { mainD: V(0, 0, 0), mainG: V(0, 0.0324, -0.3022), bouche: V(0, 0.0636, -0.6081), visee: V(0, 0.121, -0.0043), ejection: V(0.0123, 0.067, -0.1136),
-    crosse: V(0, 0.023, 0.2418), guidon: V(0, 0.1306, -0.4207), saisieChargeur: V(-0.0103, -0.0963, -0.1344), saisieLevier: V(-0.0185, 0.085, 0.0329),
+    crosse: V(0, 0.023, 0.2418), guidon: V(0, 0.1306, -0.4207), oeilleton: V(0, 0.121, -0.1243), saisieChargeur: V(-0.0103, -0.0963, -0.1344), saisieLevier: V(-0.0185, 0.085, 0.0329),
     arretoir: V(-0.0118, 0.0017, -0.0821), centrePoignee: V(0, -0.022, 0.01) },
   pm9: { mainD: V(0, 0, 0), mainG: V(0, -0.008, -0.2441), bouche: V(0, 0.0629, -0.4918), visee: V(0, 0.0975, 0.0179), ejection: V(0.0239, 0.072, -0.1985),
     crosse: V(0, -0.0194, 0.1352), guidon: V(0, 0.0977, -0.274), saisieChargeur: V(-0.0105, -0.1554, -0.2432), saisieLevier: V(-0.0185, 0.0634, -0.2103),
     arretoir: V(-0.0146, -0.0126, -0.2157), centrePoignee: V(0, -0.028, 0.008) },
   fp12: { mainD: V(0, 0, 0), mainG: V(0, -0.0397, -0.4761), bouche: V(0, 0.0292, -0.7502), visee: V(0, 0.0513, -0.7217), ejection: V(0.0154, 0.0263, -0.2062),
-    crosse: V(0, -0.1056, 0.347), courseMainG: 0.09, oeilleton: V(0, 0.0513, -0.165), visee_arriere: V(0, 0.0458, -0.165),
+    crosse: V(0, -0.1056, 0.347), courseMainG: 0.09, oeilleton: V(0, 0.0513, -0.035), visee_arriere: V(0, 0.0458, -0.165),
     saisieChargeur: V(0, -0.0177, -0.2062), arretoir: V(0, -0.0177, -0.2062), centrePoignee: V(0, -0.03, 0.01) },
   tp50: { mainD: V(0, 0, 0), mainG: V(0, 0.0015, -0.376), bouche: V(0, 0.0438, -0.8393), visee: V(0, 0.085, 0.0128), ejection: V(0.0135, 0.045, -0.106),
     crosse: V(0, -0.0493, 0.304), lunette_objectif: V(0, 0.0839, -0.3179), saisieChargeur: V(-0.0066, -0.035, -0.1651), saisieLevier: V(0.029, 0.0046, -0.0763),
     arretoir: V(-0.0143, 0.0158, -0.1225), centrePoignee: V(0, -0.03, 0.01) },
   p17: { mainD: V(0, 0, 0), mainG: V(-0.02, -0.054, 0.011), bouche: V(0, 0.0284, -0.1283), visee: V(0, 0.041, 0.0138), ejection: V(0.0103, 0.037, -0.0432),
-    guidon: V(0, 0.0421, -0.1222), saisieChargeur: V(-0.0084, -0.0735, 0.0143), saisieGlissiere: V(-0.0123, 0.0264, 0.022), arretoir: V(-0.0117, -0.0514, 0.0399),
+    guidon: V(0, 0.0421, -0.1222), saisieChargeur: V(-0.0084, -0.0735, 0.0143), saisieGlissiere: V(-0.0123, 0.0264, 0.022), arretoir: V(-0.0105, 0.0068, -0.035),
     centrePoignee: V(0, -0.034, 0.006) },
   couteau: { mainD: V(0, 0, 0), pointe: V(0, 0.0092, -0.2321), garde: V(0, 0, -0.0652), pommeau: V(0, 0, 0.0651) },
   frag: { mainD: V(0, 0, 0), goupille: V(0.012, 0.0409, -0.0163), anneau: V(0.012, 0.0409, -0.0163), sommet: V(0, 0.0615, -0.0038), fond: V(0, -0.0402, 0) },

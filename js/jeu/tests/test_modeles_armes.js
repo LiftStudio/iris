@@ -510,7 +510,7 @@ export default function (jeu) {
         }
         // couteau, grenade, flash tenues (avec l'arme de l'essai assaut)
         if (id === 'fa24') {
-          const gestes = [['couteau', { couteau: true }, 0.16], ['frag tenue', { letale: true }, 0.7], ['flash tenue', { tactique: true }, 0.35]];
+          const gestes = [['couteau', { couteau: true }, 0.16], ['frag tenue', { letale: true }, 0.7], ['flash dégoupillée', { tactique: true }, 0.12]];
           for (let j = 0; j < gestes.length; j++) {
             const [nom, cmd, s] = gestes[j];
             jeu.commande(0, cmd, nom === 'couteau' ? 1 / 60 : s + 0.3); await simuler(t, p, s);

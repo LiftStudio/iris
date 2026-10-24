@@ -7,13 +7,12 @@ Branche `lot/L-X` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-X`, depuis `vague
 
 ## Où j'en suis
 
-**EN COURS (24/10, 06:52)** — construit et commité (`37efcf6`, `2fea517`) : les GLB du jeu, `modeles_armes.js` réécrit sur
-eux (repli fait main rempli en place), les tests. Vérifié HORS navigateur (three r170 sous Node, textures retirées) : les 8
-GLB se cousent, repères = extras ± 0 mm, pivots ± 0,07 mm, os rigides justes, 1 maillage par arme, repli → vraie arme en
-place. **Reste** : le jeu au navigateur (jeton : les trois pris par L-O, G-LUM, G-MAT depuis 06:23 ; j'attends), les
-photos, le réglage des origines et des matériaux sur photos, S0 / L-V / L-C rejoués, le rapport final.
+**EN COURS (24/10, 07:55)** — construit, joué, photographié : les 5 armes + couteau + grenades sont les vraies, en vue FPS
+(bras de Haythem) et dans les mains des bots ; `&rapport=1&lot=L-W` 17/17 au 1er passage (07:30) ; rejeux finaux en cours
+(L-W après le réglage des visées, S0, L-V et L-C avec `&fusion=1`, L-W sous `?tel=1`). Jeton : `jeton_3`, repris PÉRIMÉ à
+07:25 (qui.txt de G-MAT de 06:24, son onglet fermé depuis — voir « Navigateur »).
 
 Un repreneur : `git -C C:/Users/hgami/Downloads/IRIS_lots/L-X log --oneline vague2..` dit ce qui est fait ; le serveur se
-relance par `python serve.py 8155` dans l'arbre, le récepteur de photos par
-`node <scratchpad>/lx/recepteur.mjs C:/Users/hgami/Downloads/IRIS_lots/_photos/L-X 8255` (outil hors dépôt, 20 lignes :
-POST d'un data:URL → fichier ; sans lui, les planches restent dans `window.__planche*`).
+relance par `python serve.py 8155` dans l'arbre ; les photos arrivent dans `C:/Users/hgami/Downloads/IRIS_lots/_photos/L-X/`
+par un petit récepteur hors dépôt (`node <scratchpad>/lx/recepteur.mjs <dossier> 8255` : POST d'un data:URL → fichier) et
+l'adresse `&recepteur=8255` ; sans lui, les planches restent dans `window.__planche*`.
