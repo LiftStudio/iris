@@ -329,7 +329,9 @@ export default function (jeu) {
     for (let k = 0; k < 2; k++) { tuer(p, E[k], { d: 9 }); jeu.avancer(4.5); }
     jeu.commande(0, { serie: 2 }, PAS); jeu.avancer(PAS * 2);
     const ar0 = a.armure; p.infliger(a, 30, { par: E[2].id, arme: 'fa24', zone: 'torse' });
-    res.push([`gilet : armure ${ar0} ; 30 dégâts → vie ${r2(a.vie)}, armure ${r2(a.armure)}`, ar0 === 60 && a.vie === 100 && a.armure === 30]);
+    // (relecture : les 30 dégâts pris par le gilet comptent à l'assistance du tireur — § 3.5 —, et le coup est une touche)
+    const aide = (a._aides || []).filter((h) => h.par === E[2].id).reduce((s, h) => s + h.d, 0);
+    res.push([`gilet : armure ${ar0} ; 30 dégâts → vie ${r2(a.vie)}, armure ${r2(a.armure)}, à l'assistance du tireur ${aide}`, ar0 === 60 && a.vie === 100 && a.armure === 30 && aide === 30]);
     p.infliger(a, 50, { par: E[2].id, arme: 'fa24', zone: 'torse' });
     res.push([`50 de plus : vie ${r2(a.vie)}, armure ${r2(a.armure)}`, a.vie === 80 && a.armure === 0]);
     // deux de plus : la sentinelle
@@ -405,6 +407,17 @@ export default function (jeu) {
       Ed.fin();
       const det = Ed.L.find((e) => e.etat === 'detruite');
       res.push([`300 PV : détruite ${!!det} (${Ed.L.filter((e) => e.etat === 'touchee').length} touches)`, !!det && Sq.sentinelles.length === 0]);
+      jeu.quitter('balade');
+    }
+    // (relecture) LA MI-TEMPS de la domination : les camps s'échangent, drone et sentinelle de la première moitié s'en vont
+    {
+      const q = await combat({ mode: 'domination', allies: 1, ennemis: 2 }), Sq = q.series, Ef = ecouter(q, 'serie');
+      Sq.de(0).dispo.push('drone', 'sentinelle');
+      jeu.commande(0, { serie: 1 }, PAS); jeu.avancer(PAS * 2); jeu.commande(0, { serie: 3 }, PAS); jeu.avancer(PAS * 2);
+      const avant = [Sq.drones.length, Sq.sentinelles.length];
+      q._miTemps(); jeu.avancer(PAS * 2); Ef.fin();
+      res.push([`mi-temps : drones ${avant[0]} → ${Sq.drones.length}, sentinelles ${avant[1]} → ${Sq.sentinelles.length}`,
+        avant[0] === 1 && Sq.drones.length === 0 && Sq.sentinelles.length === 0 && Ef.L.filter((e) => e.etat === 'finie').length >= 1 + (avant[1] ? 1 : 0)]);
       jeu.quitter('balade');
     }
     rendre();
@@ -565,6 +578,32 @@ export default function (jeu) {
       res.push([`appels : ${sans} → ${avec} avec une FA-24 au sol devant (≤ 3 de plus)`, avec - sans <= 3 && avec - sans >= 1]);
     } finally { jeu.figerQualite(false); }
     jeu.quitter('balade');
+    // (relecture) une partie neuve : l'arme proposée est une arme qu'on peut PRENDRE (une FA-24 au sol, réserve pleine, ne cache
+    // pas la PM-9 d'à côté) ; F ne prend rien pendant qu'une frag cuit en main ; au doigt, l'invite touchée ramasse
+    {
+      const q = await combat({ allies: 0, ennemis: 1 }), b = q.local, Gq = q.armesSol, Aq = b.arsenal;
+      Gq.poser(ARMES.fa24, 30, 90, b.pos.x + 0.3, b.pos.y, b.pos.z, 0, 97); Gq.poser(ARMES.pm9, 32, 96, b.pos.x + 1.0, b.pos.y, b.pos.z, 0, 96);
+      jeu.avancer(PAS * 2); q.majHud();
+      const pr = Gq.proche(b), inv = q.hud.ramassage;
+      res.push([`une FA-24 au sol à 0,3 m (déjà tenue), une PM-9 à 1 m : proposée ${pr && pr.arme}, invite ${inv && inv.arme}`, !!pr && pr.arme === 'pm9' && !!inv && inv.arme === 'pm9']);
+      const tactile = document.body.classList.contains('touch'), el = q.aff.hud.eRamasse;
+      document.body.classList.add('touch');
+      try {
+        q.majHud(); await jeu.images(2);
+        el.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch', bubbles: true, cancelable: true }));
+        jeu.avancer(PAS * 3);
+        await new Promise((r) => setTimeout(r, 200)); jeu.avancer(PAS * 2);
+      } finally { if (!tactile) document.body.classList.remove('touch'); }
+      res.push([`au doigt, l'invite touchée : en main ${Aq.arme.id}`, Aq.arme.id === 'pm9']);
+      // (la FA-24 est retombée là : une frag cuite en main, F ne la prend pas — la partie quittée grenade en main)
+      jeu.avancer(0.6);
+      jeu.commande(0, { letale: true }, 1); jeu.avancer(0.3);
+      const et = Aq.etatArme, let0 = Aq.letales, vise = Gq.proche(b);
+      jeu.commande(0, { interagir: true }, PAS * 3); jeu.avancer(PAS * 3);
+      res.push([`frag cuite en main (${et}, ${let0} grenade) près d'une ${vise && vise.arme} : F → en main ${Aq.arme.id}, ${Aq.etatArme}`,
+        et === 'lancer' && !!vise && vise.arme === 'fa24' && Aq.arme.id === 'pm9' && Aq.etatArme === 'lancer']);
+      jeu.quitter('balade');
+    }
     return bilan(res, 'lâchée à la mort, ramassée par F (et 2 × RECHARGER), munitions prises, dotation rendue, 30 s, 10 au plus ; ≤ 3 appels');
   }, { delai: 120 });
 
