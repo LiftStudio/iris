@@ -233,6 +233,21 @@ body.pad-nav .mj-b.pad-focus { outline: none !important; box-shadow: none !impor
 @media (max-height: 520px) and (min-width: 600px) {
   .fj-chiffres { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 }
+/* (F2 relecture : une fenêtre de 521 à 680 px de haut — un portable, le navigateur hors du plein écran — : le bilan se serre
+   pour tenir sans défiler ; à 960 × 540, les quatre boutons collés au bas couvraient la ligne des chiffres) */
+@media (max-height: 680px) and (min-height: 521px) {
+  .fin-jeu.bilan { padding-top: 3vh; gap: 10px; }
+  .fin-jeu.bilan .fj-titre { font-size: clamp(36px, 7vh, 60px); }
+  .fj-bilan { gap: 12px; }
+  .fj-podium { padding-top: 4px; }
+  .fj-marche { padding: 10px 8px 9px; gap: 4px; }
+  .fj-r1 { padding-bottom: 12px; transform: translateY(-8px); }
+  .fj-vignette { width: 62px; height: 62px; }
+  .fj-r1 .fj-vignette { width: 80px; height: 80px; }
+  .fj-rang { font-size: 24px; }
+  .fj-chiffres div { padding: 8px 6px; }
+  .fj-chiffres b { font-size: 28px; }
+}
 @media (max-width: 520px) {
   .rj-fil { display: none; }
   .rj-seg button { padding: 9px 11px; }
