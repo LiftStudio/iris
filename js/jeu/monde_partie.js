@@ -83,7 +83,9 @@ export const TABLE_DEPOLIS = [
   { x: 5.775, y: 5.21, z: -4.95, nom: 'jour de la S 1.3 (travée 4)' },
   // 2e : les portes des salles 1 et 2 (verre dépoli)
   { x: 12.45, y: 7.62, z: -6.56, nom: 'porte de la salle 1 du 2e' }, { x: 10.52, y: 7.62, z: -4.59, nom: 'porte de la salle 2 du 2e' },
-  // −1 (js/ecole_amphi.js, lot R : à relever de nouveau après sa fusion) : le fixe, l'imposte et la porte de la S −1.14
+  // −1 (js/ecole_amphi.js, lot R) : le fixe, l'imposte et la porte de la S −1.14 — (F2 relecture, 24/10 : relevés sur la base
+  // fusionnée, lot R compris : les trois formes `vitre` aux mêmes centres, 14 dépolis sur 14 trouvés ; le verre y est bien
+  // dépoli, js/ecole_amphi.js « verre dépoli (S -1.14, translucide) »)
   { x: 9.1, y: -2.03, z: -14.485, nom: 'fixe de la S −1.14', lotR: true }, { x: 9.55, y: -0.88, z: -14.485, nom: 'imposte de la S −1.14', lotR: true },
   { x: 9.8, y: -2.035, z: -14.485, nom: 'porte de la S −1.14', lotR: true },
 ];
