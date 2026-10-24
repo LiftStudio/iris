@@ -45,13 +45,32 @@ export class CerveauBase {
   get etat() { return this._etat; }
   liberer() { if (this._des) this._des(); this._des = null; }
 
-  // le point chaud : le dernier tir ou la dernière mort entendus, sinon le départ adverse
+  // le point chaud : le dernier tir ou la dernière mort entendus, sinon le départ adverse — (F2 relecture) en DOMINATION,
+  // d'abord l'OBJECTIF
   pointChaud() {
+    const O = this.objectif(); if (O) return O;
     const I = this.indices[this.indices.length - 1];
     if (I && this.partie.t - I.t < 30) return I;
     const Z = ZONES_JEU[this.partie.zone] || ZONES_JEU.ecole, eq = this.acteur.equipe;
     const L = Z.departs && (eq === 'A' ? Z.departs.B : eq === 'B' ? Z.departs.A : null);
     return L && L[0] ? { x: L[0][0], y: L[0][1], z: L[0][2] } : null;
+  }
+  // L'OBJECTIF DE LA DOMINATION (F2 relecture, le minimal ; le vrai état OBJECTIF du § 3.7 est à L-J) : l'anneau le plus
+  // proche que son équipe ne tient pas — un anneau qu'elle tient mais qu'on lui prend compte comme s'il était à 8 m de
+  // moins —, `tenir` = le rayon où il reste une fois arrivé (js/jeu/pilotage.js Errant). Sans lui, les bots ne faisaient que
+  // s'entre-tuer : 25 – 49 en 10 min de 4 c. 4 (test 6 de test_fusion.js), et Haythem gagnait seul en restant sur A. La
+  // possession et la prise en cours sont publiques (le HUD les montre) : rien de caché n'est lu.
+  objectif() {
+    const P = this.partie, a = this.acteur, L = P.mode === 'domination' && P.phase === 'manche' ? P.points : null;
+    if (!L || !L.length || (a.equipe !== 'A' && a.equipe !== 'B')) return null;
+    let best = null, bd = Infinity;
+    for (const p of L) {
+      const K = p.capture, prise = p.possesseur === a.equipe && !!K && !!K.equipe && K.equipe !== a.equipe && K.k > 0;
+      if (p.possesseur === a.equipe && !prise) continue;
+      const d = Math.hypot(p.x - a.pos.x, (p.y - a.pos.y) * 2, p.z - a.pos.z) - (prise ? 8 : 0);
+      if (d < bd) { bd = d; best = p; }
+    }
+    return best ? { x: best.x, y: best.y, z: best.z, tenir: Math.max(0.8, best.r - 0.7), point: best.id } : null;
   }
   // l'ouïe (les événements de la partie) : tirs au rayon du bruit de l'arme (× 0,55 d'un niveau à l'autre), morts
   entendre(e) {

@@ -465,9 +465,16 @@ export class Errant {
     const N = this._nav(), c = this.versPt;
     if (!N || !c) { this._choisirPiece(); return; }
     // (à 2-6,5 m À PIED du point : à vol d'oiseau, la ronde passait le mur et menait au bout de l'école par le couloir)
-    const F = N.champMulti([c], 6.5, this._champ && this._champ.length === N.nb ? this._champ : (this._champ = new Float64Array(N.nb)));
-    const L = N.dans(c.x, c.y, c.z, 6, this._tmp || (this._tmp = []), 1.2).filter((v) => Math.hypot(N.px[v] - c.x, N.pz[v] - c.z) >= 2 && F[v] <= 6.5 && N.degage[v] >= 0.5);
-    if (!L.length) { this._choisirPiece(); return; }
+    // (F2 relecture : un point à TENIR — l'anneau de la domination, js/jeu/cerveau.js objectif — : la ronde reste dedans,
+    // à `tenir` m au plus de son centre)
+    const T = c.tenir > 0 ? c.tenir : 0, rMax = T || 6.5, rMin = T ? 0 : 2;
+    const F = N.champMulti([c], rMax, this._champ && this._champ.length === N.nb ? this._champ : (this._champ = new Float64Array(N.nb)));
+    const L = N.dans(c.x, c.y, c.z, T || 6, this._tmp || (this._tmp = []), 1.2).filter((v) => Math.hypot(N.px[v] - c.x, N.pz[v] - c.z) >= rMin && F[v] <= rMax && N.degage[v] >= 0.5);
+    if (!L.length) {
+      // (un point à tenir sans nœud dégagé autour : il reste au centre, aux aguets)
+      if (T) { this.mode = 'guet'; this.rondeT = this.partie.t + 2 + this.rng.next() * 2; this.dest = { x: c.x, y: c.y, z: c.z }; return; }
+      this._choisirPiece(); return;
+    }
     const v = L[this.rng.int(L.length)];
     this.mode = 'ronde'; this.rondeT = this.partie.t + 4 + this.rng.next() * 5;
     this.dest = { x: N.px[v], y: N.ph[v], z: N.pz[v] };
@@ -482,7 +489,7 @@ export class Errant {
     const v = this.vers ? this.vers(a) : null, avant = this.dest;
     if (v) {
       if (!this.versPt || Math.hypot(v.x - this.versPt.x, v.z - this.versPt.z) > 3 || Math.abs(v.y - this.versPt.y) > 1.5) {
-        this.versPt = { x: v.x, y: v.y, z: v.z }; this.mode = 'vers'; this.dest = { ...this.versPt };
+        this.versPt = { x: v.x, y: v.y, z: v.z, tenir: v.tenir || 0 }; this.mode = 'vers'; this.dest = { ...this.versPt };
       }
     } else if (this.mode === 'vers' || this.mode === 'guet' || this.mode === 'ronde') { this.versPt = null; this.dest = null; }
     if (!this.dest) this._choisirPiece();
