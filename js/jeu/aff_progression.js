@@ -306,8 +306,15 @@ export class AffProgression {
     if (D.length && a && a.corps) {
       const C = this.game.collisions, c = a.corps.posAff || a.pos, Dr = R.drone;
       this._angle += Dr.vitesse * dt;
-      const x = c.x + Math.cos(this._angle) * Dr.rayon, z = c.z + Math.sin(this._angle) * Dr.rayon;
-      const sol = c.y, plaf = C && C.plafondEn ? C.plafondEn(x, z, sol + 0.5) : sol + 3;
+      // (relecture : son cercle se resserre devant un mur — à 1,7 m dans un couloir de 2 m, il passait dans les murs une fois
+      // sur deux : la part libre du rayon, `rayonLibre`, lissée)
+      const sol = c.y, ux = Math.cos(this._angle), uz = Math.sin(this._angle), p0 = C && C.plafondEn ? C.plafondEn(c.x, c.z, sol + 0.5) : sol + 3;
+      const y0 = Math.max(sol + 1.3, Math.min(sol + Dr.hauteur, (Number.isFinite(p0) ? p0 : sol + 3) - Dr.sous));
+      const k = C && C.rayonLibre ? C.rayonLibre(c.x, y0, c.z, c.x + ux * Dr.rayon, y0, c.z + uz * Dr.rayon, 0.22) : 1;
+      const rv = Math.max(0.2, Dr.rayon * k - 0.12);
+      this._rDrone = this._rDrone === undefined || !g.visible ? rv : rv < this._rDrone ? rv : this._rDrone + (rv - this._rDrone) * Math.min(1, dt * 2);
+      const x = c.x + ux * this._rDrone, z = c.z + uz * this._rDrone;
+      const plaf = C && C.plafondEn ? C.plafondEn(x, z, sol + 0.5) : sol + 3;
       const y = Math.min(sol + Dr.hauteur, (Number.isFinite(plaf) ? plaf : sol + 3) - Dr.sous);
       g.position.set(x, Math.max(sol + 1.3, y), z);
       g.rotation.set(0.12 * Math.sin(this.t * 1.7), -this._angle, 0.18);
