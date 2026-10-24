@@ -63,9 +63,14 @@ body.touch .hj-series-txt { text-align: left; }
 .mjx-barre { position: relative; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .1); overflow: hidden; }
 .mjx-barre i { position: absolute; inset: 0; transform-origin: 0 50%; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
 .mjx-txt { display: flex; justify-content: space-between; gap: 8px; font: 500 11px/1 var(--ui); letter-spacing: .12em; color: var(--muted); white-space: nowrap; }
-.mj-b[data-act="armurerie"] { margin-top: 10px; }
-.mj-b[data-act="armurerie"], .mj-b[data-act="profil"] { font-size: clamp(22px, 4.2vh, 36px); color: rgba(242, 244, 248, 0.66); }
-@media (max-height: 520px) { .mj-b[data-act="armurerie"] { margin-top: 0; } .mjx-niv { width: 44px; height: 44px; } .mjx-niv b { font-size: 22px; } }
+/* les deux portes de la progression, sous la barre */
+.mj-prog { display: flex; gap: 8px; margin-top: 10px; animation: mjEntree 0.5s 0.25s both; }
+.mj-p { background: rgba(14, 18, 27, .72); border: 1px solid var(--line); border-radius: 5px; padding: 7px 14px 6px; cursor: pointer; color: rgba(242, 244, 248, .8);
+  font: 400 18px/1 var(--head); letter-spacing: .12em; transition: color .15s, border-color .15s, background .15s; }
+.mj-p:hover, .mj-p:focus-visible, .mj-p.pad-focus { color: #fff; border-color: var(--accent); background: rgba(240, 164, 23, .14); outline: none; }
+body.pad-nav .mj-p.pad-focus { outline: none !important; box-shadow: 0 0 0 2px rgba(240, 164, 23, .45) !important; }
+.rj-mesclasses { padding: 8px 14px; font-size: 12px; }
+@media (max-height: 520px) { .mjx-niv { width: 44px; height: 44px; } .mjx-niv b { font-size: 22px; } .mj-prog { margin-top: 6px; } .mj-p { font-size: 15px; padding: 5px 10px 4px; } }
 
 /* ---------------------------------------------------------------- L'ARMURERIE */
 .prog-ecran[hidden] { display: none !important; }

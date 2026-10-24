@@ -43,10 +43,12 @@ export const ACCUEIL = [
   { act: 'combat', titre: 'COMBAT', texte: 'À la première personne contre des bots : SISR contre SLAM, chacun pour soi ou domination, dans toute l’école.' },
   { act: 'prophunt', titre: 'PROP HUNT', texte: 'Deviens un vrai meuble de l’école et tiens jusqu’au bout… ou traque ceux qui se cachent parmi les chaises.' },
   { act: 'stand', titre: 'STAND DE TIR', texte: 'Dans la rue, devant la façade : des cibles à 8, 15 et 25 m, quatre défis et tes records.' },
-  { act: 'armurerie', titre: 'ARMURERIE', texte: 'Tes classes : l’arme, son accessoire, l’atout, le camouflage. Cinq classes à toi dès le niveau 6.' },
-  { act: 'profil', titre: 'PROFIL', texte: 'Ton niveau, les défis du jour, tes chiffres par arme et par mode, tes médailles, ce qui reste à débloquer.' },
   { act: 'options', titre: 'OPTIONS', texte: 'Graphismes, son, commandes de la balade, du combat et du prop hunt, réglages de la vue à la 1re personne.' },
   { act: 'credits', titre: 'CRÉDITS', texte: 'Qui a fait quoi : l’école, les avatars, les animations, les licences.' },
+  // (L-P, vague 3 : les deux portes de la progression, SOUS LE TITRE avec la barre d'XP — `tete` : rendues là, pas dans la
+  // colonne des portes du jeu, que la croix atteint en montant depuis BALADE LIBRE)
+  { act: 'armurerie', titre: 'ARMURERIE', tete: true, texte: 'Tes classes : l’arme, son accessoire, l’atout, le camouflage. Cinq classes à toi dès le niveau 6.' },
+  { act: 'profil', titre: 'PROFIL', tete: true, texte: 'Ton niveau, les défis du jour, tes chiffres par arme et par mode, tes médailles, ce qui reste à débloquer.' },
 ];
 // les modes du combat ; les limites et les temps PRÉRÉGLÉS par mode (§ 3.8 : 40 éliminations — 20 au téléphone —, 20 en
 // chacun pour soi, 150 points en domination ; 10:00 partout)
@@ -225,13 +227,14 @@ export class MenuJeu {
     const d = document.createElement('div');
     d.id = 'menu-jeu'; d.className = 'menu-jeu'; d.hidden = true;
     d.innerHTML = '<div class="mj-col"><div class="mj-tete"><div class="menu-jeu-titre mj-titre">IRIS</div>'
-      + '<div class="mj-sous">L’ÉCOLE · BALADE · COMBAT · PROP HUNT</div><div class="mj-xp" hidden></div></div>'
-      + '<nav class="menu-jeu-liste mj-liste">' + ACCUEIL.map((A, i) => `<button class="menu-jeu-bouton mj-b" data-act="${A.act}" style="--i:${i}">`
+      + '<div class="mj-sous">L’ÉCOLE · BALADE · COMBAT · PROP HUNT</div><div class="mj-xp" hidden></div>'
+      + `<div class="mj-prog">${ACCUEIL.filter((A) => A.tete).map((A) => `<button class="mj-p" data-act="${A.act}">${A.titre}</button>`).join('')}</div></div>`
+      + '<nav class="menu-jeu-liste mj-liste">' + ACCUEIL.filter((A) => !A.tete).map((A, i) => `<button class="menu-jeu-bouton mj-b" data-act="${A.act}" style="--i:${i}">`
         + `<span class="mj-b-t">${A.titre}</span></button>`).join('') + '</nav><div class="mj-aide"></div></div>'
       + '<aside class="mj-info"><div class="mj-info-t"></div><div class="mj-info-x"></div></aside>';
     d.addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (b) this._agir(b.dataset.act); });
-    d.addEventListener('mouseover', (e) => { const b = e.target.closest('.mj-b'); if (b) this._info(b.dataset.act); });
-    d.addEventListener('focusin', (e) => { const b = e.target.closest('.mj-b'); if (b) this._info(b.dataset.act); });
+    d.addEventListener('mouseover', (e) => { const b = e.target.closest('.mj-b, .mj-p'); if (b) this._info(b.dataset.act); });
+    d.addEventListener('focusin', (e) => { const b = e.target.closest('.mj-b, .mj-p'); if (b) this._info(b.dataset.act); });
     B.appendChild(d); this.el = d;
     // LES RÉGLAGES (un écran, trois contenus : data-screen = combat | prop | stand)
     const r = document.createElement('div');
@@ -277,6 +280,7 @@ export class MenuJeu {
     else if (act === 'prophunt') this.reglage('prop');
     else if (act === 'stand') this.reglage('stand');
     else if (act === 'armurerie') this.prog.armurerie();
+    else if (act === 'mesClasses') this.prog.armurerie(null, { retour: 'combat' });
     else if (act === 'profil') this.prog.profilEcran();
     else if (act === 'options') D.options?.open?.();
     else if (act === 'credits') this.credits();
@@ -302,7 +306,8 @@ export class MenuJeu {
     }
     if (this.game.mode !== 'menu') return;
     const prog = this.prog && (ouvert(this.prog.armEl) ? this.prog.armEl : ouvert(this.prog.profEl) ? this.prog.profEl : null);
-    if (pause && (ouvert(this.regEl) || ouvert(this.credEl) || prog)) { e.preventDefault(); e.stopImmediatePropagation(); this.accueil(); return; }
+    if (pause && prog) { e.preventDefault(); e.stopImmediatePropagation(); this.prog.revenir(); return; }
+    if (pause && (ouvert(this.regEl) || ouvert(this.credEl))) { e.preventDefault(); e.stopImmediatePropagation(); this.accueil(); return; }
     if (prog) this._naviguer(e, prog, prog === this.prog.armEl ? '.ar-classe.on' : '[data-act="retour"]');
     else if (ouvert(this.regEl)) this._naviguer(e, this.regEl, '[data-act="lancer"]');
     else if (ouvert(this.credEl)) this._naviguer(e, this.credEl, '[data-act="retour"]');
@@ -537,12 +542,14 @@ export class MenuJeu {
       h += this._ligne('limite', 'Limite', `La partie s’arrête à ${q.score} ${A ? Lm.uniteA : Lm.unite} ou au bout du temps.`,
         this._choix(`jeu.combat.limites.${c.mode}.score`, Lm.choix.map((v) => [v, String(v)]), q.score));
       h += this._ligne('temps', 'Temps', '', this._choix(`jeu.combat.limites.${c.mode}.duree`, DUREES.map((v) => [v, mmss(v)]), q.duree));
-      // (L-P : les classes du profil — de départ et personnalisées —, une classe verrouillée grisée avec son niveau ; le détail
-      // à l'ARMURERIE)
+      // (L-P : les quatre classes de départ — une classe verrouillée grisée avec son niveau — et, si c'est elle qu'on a prise, la
+      // classe PERSONNALISÉE choisie à l'armurerie ; « MES CLASSES » ouvre l'armurerie, et y revient)
       const Lc = this.profil ? this.profil.classes() : CLASSES_MENU.map(([id, nom]) => ({ id, nom, verrou: 0 }));
       const cJ = Lc.some((x) => x.id === c.classe && !x.verrou) ? c.classe : 'assaut';
+      const proposees = Lc.filter((x) => !x.perso || x.id === cJ);
       h += this._ligne('classe', 'Classe', dotationTexte(cJ) + (cJ !== c.classe ? ' (ta classe n’est pas encore débloquée)' : ''),
-        this._choix('jeu.combat.classe', Lc.map((x) => [x.id, x.nom, dotationTexte(x.id), x.verrou ? `Niveau ${x.verrou}` : null]), cJ), 'rj-classes');
+        this._choix('jeu.combat.classe', proposees.map((x) => [x.id, x.nom, dotationTexte(x.id), x.verrou ? `Niveau ${x.verrou}` : null]), cJ)
+        + (this.profil ? '<button class="btn-secondary rj-mesclasses" data-act="mesClasses">MES CLASSES</button>' : ''), 'rj-classes');
       h += this._ligne('avatars', 'Avatars des bots', amisSous(c.avatars), this._amis(), 'rj-large');
       fil = `${MODES_COMBAT[c.mode].nom.toUpperCase()} · ${nomZone(zone).toUpperCase()}`;
       resume = [MODES_COMBAT[c.mode].court, nomZone(zone), c.mode === 'melee' ? `toi + ${c.adversaires}` : `${c.allies + 1} c. ${c.ennemis}`, D[1], `${q.score} ${Lm.unite === 'points' ? 'pts' : A ? 'touchés' : 'élim.'}`, mmss(q.duree),
@@ -919,7 +926,7 @@ export class MenuJeu {
     const sol = C ? C.solEn(x, z, y) : 0;
     this.corps.placer(x, sol, z, 0);
     // (la porte que vise la manette : sa fiche à droite)
-    if (this.el && !this.el.hidden && entree.manette) { const b = this.el.querySelector('.mj-b.pad-focus'); if (b) this._info(b.dataset.act); }
+    if (this.el && !this.el.hidden && entree.manette) { const b = this.el.querySelector('.mj-b.pad-focus, .mj-p.pad-focus'); if (b) this._info(b.dataset.act); }
     return true;
   }
   // l'opacité du fondu (le DOM n'est écrit que si la valeur affichée change, au centième)

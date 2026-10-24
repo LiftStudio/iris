@@ -69,7 +69,7 @@ export class MenuProgression {
     p.id = 'profil-jeu'; p.className = 'prog-ecran profil-jeu reglage-jeu'; p.hidden = true;
     p.innerHTML = '<div class="rj-boite pf-boite"><header class="rj-tete"><button class="back rj-retour" data-act="retour">← RETOUR</button><h2 class="rj-titre">PROFIL</h2>'
       + '<span class="rj-fil pf-fil"></span></header><div class="rj-corps pf-corps"></div></div>';
-    p.addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (b && b.dataset.act === 'retour') this.menu.accueil(); });
+    p.addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (b && b.dataset.act === 'retour') this.revenir(); });
     B.appendChild(p);
   }
   get ouvert() { return (this.armEl && !this.armEl.hidden) || (this.profEl && !this.profEl.hidden); }
@@ -101,8 +101,11 @@ export class MenuProgression {
   }
 
   // ================================================================ L'ARMURERIE
-  armurerie(id = null) {
+  // RETOUR (le bouton, B, ÉCHAP) : là d'où l'on venait — l'accueil, ou les réglages du combat (« MES CLASSES »)
+  revenir() { const r = this._retour; this._retour = null; if (r === 'combat') this.menu.reglage('combat'); else this.menu.accueil(); }
+  armurerie(id = null, { retour = null } = {}) {
     this.menu.cacher();
+    this._retour = retour;
     const cur = this.menu._valeur ? this.menu._valeur('jeu.combat.classe') : null;
     this.sel = id || (cur && this.profil.classeJouable(cur) ? cur : this.sel) || 'assaut';
     this.armEl.hidden = false;
@@ -195,7 +198,7 @@ export class MenuProgression {
   _clicArmurerie(e) {
     const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
     const act = b.dataset.act;
-    if (act === 'retour') { this.menu.accueil(); return; }
+    if (act === 'retour') { this.revenir(); return; }
     if (act === 'classe') { this.sel = b.dataset.classe; this._rendreArmurerie(); this._refocus('#ar-c-' + this.sel); return; }
     if (act === 'prendre') {
       if (!this.profil.classeJouable(this.sel)) return;
@@ -219,6 +222,7 @@ export class MenuProgression {
   // ================================================================ LE PROFIL
   profilEcran() {
     this.menu.cacher();
+    this._retour = null;
     this.profEl.hidden = false;
     this._rendreProfil();
     const c = this.profEl.querySelector('.pf-corps'); if (c) c.scrollTop = 0;

@@ -188,6 +188,9 @@ export class Profil {
   charger() {
     let d = null;
     try { const s = ETAT.stockage.getItem(PROFIL_CLE); d = s ? JSON.parse(s) : null; } catch (e) { d = null; ETAT.memoire = true; }
+    // (sous ?test=1, un profil vide est un profil de TEST au niveau 40 : tout débloqué — les tests des autres lots, écrits avant
+    // la progression, choisissent n'importe quelle classe ; ceux de L-P posent eux-mêmes leur niveau)
+    if (!d && TEST) d = { xp: xpPourNiveau(NIVEAU_MAX) };
     ETAT.donnees = reparer(d);
     return ETAT.donnees;
   }
