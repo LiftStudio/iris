@@ -97,6 +97,9 @@ export function installerJeu(game, deps) {
       const o = { ...opts };
       if (Classe === PartieFPS) o.mode = mode;
       dernier = { mode, opts: { ...opts } };
+      // (F2 relecture : une partie lancée hors du menu — « Recommencer » de la pause, ?partie= — dit aussi son mode à l'écran
+      // PRÉPARATION ; sinon sa ligne restait vide, et l'étape « Meubles » du prop hunt n'apparaissait qu'en route)
+      if (!menu._lance) menu._lance = { mode, opts: { ...opts } };
       menu.preparation(0, 'Plan de l’école');
       let p;
       try { p = await game.lancerPartie(Classe, o, (etape, f) => menu.preparation(f, etape)); }
