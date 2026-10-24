@@ -148,6 +148,9 @@ export class PartieFPS extends Partie {
 
   // ---------------------------------------------------------------- la préparation : les anneaux de la domination
   async preparer(progres) {
+    // (L-P : les modèles des armes au sol, de la sentinelle et du drone posés dans la scène AVANT sa compilation — leurs
+    // programmes prêts avant la première image ; une fois par session)
+    this.aff.progression?.preparer?.(this);
     await super.preparer(progres);
     if (this.mode === 'domination') this._poserAnneaux();
   }

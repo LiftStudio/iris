@@ -15,6 +15,10 @@
 // Rien n'est chargé ici : les portraits des amis sont des IMAGES précalculées (js/jeu/portraits.js, balises <img>) —
 // jamais un 2e contexte WebGL, jamais un avatar au menu (arbitrage 40). Affichage seulement : le menu lit l'état des
 // parties et s'abonne à leurs événements (séries, manches), il ne commande aucune règle.
+// VAGUE 3, L-P : les portes ARMURERIE et PROFIL (js/jeu/menu_progression.js), la barre d'XP sous le titre, les classes du
+// PROFIL au réglage du combat (une classe verrouillée grisée avec son niveau, les cinq personnalisées dès le 6), l'ÉQUIPEMENT
+// de la classe passé à la partie (`opts.equipement`, ce que le profil a débloqué), le BILAN D'XP à la fin (ce que la partie
+// a rapporté, la barre qui avance, les niveaux et ce qu'ils débloquent, les défis du jour réussis).
 import * as THREE from 'three';
 import { ajouterRacine } from '../manette_menus.js';
 import { entree, actionKey, padGlyph } from '../settings.js';
@@ -28,6 +32,9 @@ import { typesDeguisables } from './deguisements.js';
 import { REGLAGES_PROP } from './partie_prop.js';
 import { lireRecords, meilleur } from './partie_stand.js';
 import { portrait } from './portraits.js';
+import { MenuProgression } from './menu_progression.js';
+import { CLASSES_DEPART } from './profil.js';
+import { ACCESSOIRES, ATOUTS, MEDAILLES } from './series.js';
 
 // ---------------------------------------------------------------- les données des écrans (§§ 2.1, 2.2, 3.8, 3.9)
 // L'ACCUEIL, dans l'ordre du § 2.1 (vague 3 : L-P ajoute ses portes à cette table)
@@ -36,6 +43,8 @@ export const ACCUEIL = [
   { act: 'combat', titre: 'COMBAT', texte: 'À la première personne contre des bots : SISR contre SLAM, chacun pour soi ou domination, dans toute l’école.' },
   { act: 'prophunt', titre: 'PROP HUNT', texte: 'Deviens un vrai meuble de l’école et tiens jusqu’au bout… ou traque ceux qui se cachent parmi les chaises.' },
   { act: 'stand', titre: 'STAND DE TIR', texte: 'Dans la rue, devant la façade : des cibles à 8, 15 et 25 m, quatre défis et tes records.' },
+  { act: 'armurerie', titre: 'ARMURERIE', texte: 'Tes classes : l’arme, son accessoire, l’atout, le camouflage. Cinq classes à toi dès le niveau 6.' },
+  { act: 'profil', titre: 'PROFIL', texte: 'Ton niveau, les défis du jour, tes chiffres par arme et par mode, tes médailles, ce qui reste à débloquer.' },
   { act: 'options', titre: 'OPTIONS', texte: 'Graphismes, son, commandes de la balade, du combat et du prop hunt, réglages de la vue à la 1re personne.' },
   { act: 'credits', titre: 'CRÉDITS', texte: 'Qui a fait quoi : l’école, les avatars, les animations, les licences.' },
 ];
@@ -137,6 +146,16 @@ const ETAPES = [['plan', 'Plan de l’école'], ['eleves', 'Les élèves arriven
 const cleEtape = (t) => { const s = String(t || '').replace(/['’]/g, '’').toLowerCase(); const E = ETAPES.find(([, n]) => n.toLowerCase() === s); return E ? E[0] : null; };
 // le chargement d'une classe, en clair (FA-24 « Faucon » + P-17 « Moineau » · grenade · flash · couteau)
 export function dotationTexte(id) {
+  // (L-P : une classe personnalisée, ou une classe de départ avec ce que le profil lui a débloqué)
+  const P = MENUS.courant && MENUS.courant.profil;
+  if (P && (/^perso[1-5]$/.test(id) || CLASSES_DEPART[id])) {
+    const E = P.equipement(id), n = (a) => (ARMES[a] ? ARMES[a].nom : a), t = [`${n(E.principale)}${E.accessoire ? ' + ' + ACCESSOIRES[E.accessoire].nom.toLowerCase() : ''} + ${n(E.secondaire)}`];
+    if (E.letale) t.push('une grenade');
+    if (E.tactique) t.push(E.tactique[1] > 1 ? '2 flashs' : 'une flash');
+    if (E.atout) t.push('atout ' + ATOUTS[E.atout].nom);
+    t.push('couteau');
+    return t.join(' · ');
+  }
   const C = CLASSES[id]; if (!C) return '';
   const n = (a) => (ARMES[a] ? ARMES[a].nom : a);
   const t = [`${n(C.principale)} + ${n(C.secondaire)}`];
@@ -181,6 +200,8 @@ export class MenuJeu {
     this.compterTypes = (z) => { this._registre(); return typesDeguisables(z).length; };
     this._rattraper();
     this._construire();
+    // (L-P) l'armurerie, le profil et sa barre d'XP
+    this.prog = new MenuProgression(game, this); this.profil = this.prog.profil;
     // (à la manette : B revient de chaque sous-écran ; le focus, en arrivant, sur l'action principale de l'écran)
     ajouterRacine('menu-jeu', { defaut: '#menu-jeu [data-act="balade"]' });
     ajouterRacine('reglage-jeu', { retour: '#reglage-jeu [data-act="retour"]', defaut: '#reglage-jeu [data-act="lancer"]', avant: 'menu-jeu' });
@@ -255,6 +276,8 @@ export class MenuJeu {
     else if (act === 'combat') this.reglage('combat');
     else if (act === 'prophunt') this.reglage('prop');
     else if (act === 'stand') this.reglage('stand');
+    else if (act === 'armurerie') this.prog.armurerie();
+    else if (act === 'profil') this.prog.profilEcran();
     else if (act === 'options') D.options?.open?.();
     else if (act === 'credits') this.credits();
     else if (act === 'retour') this.accueil();
@@ -278,8 +301,10 @@ export class MenuJeu {
       return;
     }
     if (this.game.mode !== 'menu') return;
-    if (pause && (ouvert(this.regEl) || ouvert(this.credEl))) { e.preventDefault(); e.stopImmediatePropagation(); this.accueil(); return; }
-    if (ouvert(this.regEl)) this._naviguer(e, this.regEl, '[data-act="lancer"]');
+    const prog = this.prog && (ouvert(this.prog.armEl) ? this.prog.armEl : ouvert(this.prog.profEl) ? this.prog.profEl : null);
+    if (pause && (ouvert(this.regEl) || ouvert(this.credEl) || prog)) { e.preventDefault(); e.stopImmediatePropagation(); this.accueil(); return; }
+    if (prog) this._naviguer(e, prog, prog === this.prog.armEl ? '.ar-classe.on' : '[data-act="retour"]');
+    else if (ouvert(this.regEl)) this._naviguer(e, this.regEl, '[data-act="lancer"]');
     else if (ouvert(this.credEl)) this._naviguer(e, this.credEl, '[data-act="retour"]');
     else if (ouvert(this.el)) this._naviguer(e, this.el, '[data-act="balade"]');
   }
@@ -308,7 +333,7 @@ export class MenuJeu {
       // Dans une fiche qui DÉFILE (le corps des réglages, des crédits), on cherche d'abord dans elle, lignes cachées comprises
       // (elles défilent jusqu'au focus) ; sinon, et depuis le dehors, parmi ce qui se voit — LANCER ne vole pas le focus à
       // la ligne suivante, cachée sous le pli.
-      const a = act.getBoundingClientRect(), v = d[1] !== 0, boite = (b) => b.closest('.rj-corps, .cr-corps');
+      const a = act.getBoundingClientRect(), v = d[1] !== 0, boite = (b) => b.closest('.rj-corps, .cr-corps, .ar-detail, .ar-classes');
       const vu = (b) => { const c = boite(b); if (!c) return true; const r = b.getBoundingClientRect(), k = c.getBoundingClientRect(); return r.bottom > k.top + 2 && r.top < k.bottom - 2; };
       const meilleur = (C) => {
         let best = Infinity, m = null;
@@ -333,10 +358,11 @@ export class MenuJeu {
   // ================================================================ L'ACCUEIL
   accueil() {
     this.cacher();
-    if (this.el) { this.el.hidden = false; this._majAide(); }
+    if (this.el) { this.el.hidden = false; this._majAide(); this.prog?.majBarre(); }
   }
   // tout caché (les minuteries arrêtées)
   cacher() {
+    this.prog?.cacher();
     for (const e of [this.el, this.regEl, this.prep, this.finEl, this.credEl]) if (e) e.hidden = true;
     if (this.finEl) this.finEl.classList.remove('bilan');
     clearTimeout(this._tFin); this._tFin = null;
@@ -365,7 +391,9 @@ export class MenuJeu {
     if (!MODES_COMBAT[c.mode]) c.mode = 'equipes';
     if (!ZONES_COMBAT.includes(c.zone)) c.zone = 'ecole';
     if (!DIFFS_COMBAT.some(([v]) => v === c.difficulte)) c.difficulte = 'regulier';
-    if (!CLASSES[c.classe]) c.classe = 'assaut';
+    // (L-P : une classe personnalisée est un choix permis ; une classe verrouillée — un profil neuf, un autre appareil —
+    // revient à l'Assaut au lancement, pas dans les réglages)
+    if (!CLASSES[c.classe] && !/^perso[1-5]$/.test(c.classe || '')) c.classe = 'assaut';
     if (!Array.isArray(c.avatars)) c.avatars = [];
     c.avatars = c.avatars.filter((id) => FICHES_BOTS.some((f) => f.id === id)).slice(0, limites().avatars);
     const L = limites();
@@ -509,11 +537,16 @@ export class MenuJeu {
       h += this._ligne('limite', 'Limite', `La partie s’arrête à ${q.score} ${A ? Lm.uniteA : Lm.unite} ou au bout du temps.`,
         this._choix(`jeu.combat.limites.${c.mode}.score`, Lm.choix.map((v) => [v, String(v)]), q.score));
       h += this._ligne('temps', 'Temps', '', this._choix(`jeu.combat.limites.${c.mode}.duree`, DUREES.map((v) => [v, mmss(v)]), q.duree));
-      h += this._ligne('classe', 'Classe', dotationTexte(c.classe), this._choix('jeu.combat.classe', CLASSES_MENU.map(([v, l]) => [v, l, dotationTexte(v)]), c.classe));
+      // (L-P : les classes du profil — de départ et personnalisées —, une classe verrouillée grisée avec son niveau ; le détail
+      // à l'ARMURERIE)
+      const Lc = this.profil ? this.profil.classes() : CLASSES_MENU.map(([id, nom]) => ({ id, nom, verrou: 0 }));
+      const cJ = Lc.some((x) => x.id === c.classe && !x.verrou) ? c.classe : 'assaut';
+      h += this._ligne('classe', 'Classe', dotationTexte(cJ) + (cJ !== c.classe ? ' (ta classe n’est pas encore débloquée)' : ''),
+        this._choix('jeu.combat.classe', Lc.map((x) => [x.id, x.nom, dotationTexte(x.id), x.verrou ? `Niveau ${x.verrou}` : null]), cJ), 'rj-classes');
       h += this._ligne('avatars', 'Avatars des bots', amisSous(c.avatars), this._amis(), 'rj-large');
       fil = `${MODES_COMBAT[c.mode].nom.toUpperCase()} · ${nomZone(zone).toUpperCase()}`;
       resume = [MODES_COMBAT[c.mode].court, nomZone(zone), c.mode === 'melee' ? `toi + ${c.adversaires}` : `${c.allies + 1} c. ${c.ennemis}`, D[1], `${q.score} ${Lm.unite === 'points' ? 'pts' : A ? 'touchés' : 'élim.'}`, mmss(q.duree),
-        CLASSES_MENU.find(([v]) => v === c.classe)[1], A ? 'AIRSOFT' : 'MILITAIRE'].join(' · ');
+        (Lc.find((x) => x.id === cJ) || { nom: 'ASSAUT' }).nom, A ? 'AIRSOFT' : 'MILITAIRE'].join(' · ');
     } else if (m === 'prop') {
       const p = J.prop, Z = this.zonesProp(), zv = p.zone && Z.R[p.zone] && Z.R[p.zone].ok ? p.zone : null, zEff = zv || Z.defaut;
       titre = 'PROP HUNT';
@@ -543,7 +576,9 @@ export class MenuJeu {
       const st = J.stand, D = DEFIS.find(([v]) => v === st.defi);
       titre = 'STAND DE TIR';
       h += this._ligne('defi', 'Défi', D[2], this._choix('jeu.stand.defi', DEFIS, st.defi));
-      h += this._ligne('classe', 'Classe', dotationTexte(st.classe), this._choix('jeu.stand.classe', CLASSES_MENU.map(([v, l]) => [v, l, dotationTexte(v)]), st.classe));
+      // (le stand : les classes de départ seulement — PartieStand ne lit pas l'équipement : demande à INT au rapport L-P)
+      h += this._ligne('classe', 'Classe', dotationTexte(st.classe), this._choix('jeu.stand.classe', CLASSES_MENU.map(([v, l]) => [v, l, dotationTexte(v),
+        this.profil && !this.profil.classeJouable(v) ? `Niveau ${CLASSES_DEPART[v].niveau}` : null]), st.classe));
       h += this._ligne('records', 'Records', 'Gardés sur cet appareil.', `<div class="rj-records">${this._records()}</div>`, 'rj-large');
       fil = 'LA RUE, DEVANT LA FAÇADE';
       resume = [D[1], CLASSES_MENU.find(([v]) => v === st.classe)[1]].join(' · ');
@@ -608,8 +643,10 @@ export class MenuJeu {
     const J = this._jeu();
     if (m === 'combat') {
       const c = J.combat, q = c.limites[c.mode];
+      // (L-P : la classe jouable — verrouillée : l'Assaut — et son ÉQUIPEMENT, tel que le profil l'a débloqué)
+      const cl = this.profil && this.profil.classeJouable(c.classe) ? c.classe : CLASSES[c.classe] && !this.profil ? c.classe : 'assaut';
       return { mode: c.mode, opts: { zone: c.mode === 'domination' ? 'ecole' : c.zone, allies: c.mode === 'melee' ? 0 : c.allies, ennemis: c.mode === 'melee' ? c.adversaires : c.ennemis,
-        difficulte: c.difficulte, classe: c.classe, avatars: [...c.avatars], scoreCible: q.score, duree: q.duree } };
+        difficulte: c.difficulte, classe: CLASSES[cl] ? cl : 'assaut', equipement: this.profil ? this.profil.equipement(cl) : undefined, avatars: [...c.avatars], scoreCible: q.score, duree: q.duree } };
     }
     if (m === 'prop') {
       const p = J.prop, Z = this.zonesProp();
@@ -617,7 +654,7 @@ export class MenuJeu {
       return { mode: 'prophunt', opts: { zone: p.zone && Z.R[p.zone] && Z.R[p.zone].ok ? p.zone : null, manches: p.manches, acteurs: p.acteurs, difficulte: p.difficulte,
         premierRole: p.premierRole, chasseurSeul: p.chasseurSeul, aides: { ...p.aides }, avatars: [...J.combat.avatars] } };
     }
-    return { mode: 'stand', opts: { defi: J.stand.defi, classe: J.stand.classe } };
+    return { mode: 'stand', opts: { defi: J.stand.defi, classe: this.profil && !this.profil.classeJouable(J.stand.classe) ? 'assaut' : J.stand.classe } };
   }
   _lancer(sur = null) {
     const { mode, opts } = sur || this.optionsDe();
@@ -721,6 +758,7 @@ export class MenuJeu {
       pod.appendChild(c);
     });
     f.querySelector('.fj-chiffres').innerHTML = B.chiffres.map(([n, v]) => `<div><b>${esc(v)}</b><span>${esc(n)}</span></div>`).join('');
+    this._bilanXp(f, p);
     f.hidden = false;
     // (la partie finie, GELÉE sous son écran : le pointeur que js/jeu/index.js rend à la fin déclencherait sinon la pause
     // par-dessus — game.js met en pause sur « iris-pointeur » sans capture —, et rien n'a plus à avancer)
@@ -729,7 +767,35 @@ export class MenuJeu {
     if (resultat && resultat.immediat) this._montrerBilan();
     else this._tFin = setTimeout(() => this._montrerBilan(), 2500);
   }
-  _montrerBilan() { clearTimeout(this._tFin); this._tFin = null; if (this.finEl && !this.finEl.hidden) this.finEl.classList.add('bilan'); }
+  _montrerBilan() {
+    clearTimeout(this._tFin); this._tFin = null;
+    if (!this.finEl || this.finEl.hidden) return;
+    this.finEl.classList.add('bilan');
+    // (L-P : la barre d'XP avance depuis l'avant de la partie — une transition CSS ; un niveau franchi la remplit, puis
+    // repart du début du nouveau)
+    const b = this.finEl.querySelector('.fj-xp-barre i'), X = this._xpFin;
+    if (b && X) requestAnimationFrame(() => requestAnimationFrame(() => { b.style.transform = `scaleX(${X.niveaux ? 1 : X.k.toFixed(3)})`; if (X.niveaux) setTimeout(() => { b.style.transition = 'none'; b.style.transform = 'scaleX(0)'; requestAnimationFrame(() => { b.style.transition = ''; b.style.transform = `scaleX(${X.k.toFixed(3)})`; }); }, 900); }));
+  }
+  // LE BILAN D'XP (L-P) : ce que la partie a rapporté, ligne par ligne, la barre, les niveaux gagnés et leurs déblocages,
+  // les défis du jour réussis, les médailles
+  _bilanXp(f, p) {
+    this._xpFin = null;
+    const Pf = this.profil, X = Pf && p && Pf.bilanPartie(); if (!X || !(X.xp > 0)) return;
+    const n0 = X.avant.niveau, n1 = X.apres.niveau, k0 = n1 > n0 ? 0 : X.avant.k;
+    const lignes = X.lignes.map((L) => `<div><span>${esc(L.lib)}${L.n > 1 && L.raison !== 'victoire' && L.raison !== 'fin' ? ` <small>× ${L.n}</small>` : ''}</span><b>+${milliers(L.xp)}</b></div>`).join('');
+    const med = X.medailles.length ? `<div class="fj-xp-med">${[...new Set(X.medailles)].map((id) => { const k = X.medailles.filter((x) => x === id).length, M = MEDAILLES[id];
+      return `<span class="${M.xp >= 75 ? 'or' : M.xp >= 50 ? 'argent' : 'bronze'}">${esc(this._jeu().habillage === 'airsoft' && M.nomA ? M.nomA : M.nom)}${k > 1 ? ` × ${k}` : ''}</span>`; }).join('')}</div>` : '';
+    const deb = X.deblocages.length ? `<div class="fj-xp-deb"><b>DÉBLOQUÉ</b>${X.deblocages.map((d) => `<span>${esc(d.nom)}</span>`).join('')}</div>` : '';
+    const def = X.defis.length ? `<div class="fj-xp-defis">${X.defis.map((t) => `<span>DÉFI RÉUSSI · ${esc(t)}</span>`).join('')}</div>` : '';
+    const fin = X.apres.fin === null ? 'NIVEAU MAX' : `${milliers(X.apres.dans)} / ${milliers(X.apres.cout)} XP`;
+    const h = `<div class="fj-xp"><div class="fj-xp-tete"><div class="fj-xp-total">+${milliers(X.xp)} <small>XP</small></div>`
+      + `<div class="fj-xp-niv${n1 > n0 ? ' monte' : ''}"><span>${n1 > n0 ? 'NIVEAU SUPÉRIEUR' : 'NIVEAU'}</span><b>${n1}</b></div></div>`
+      + `<div class="fj-xp-barre"><i style="transform:scaleX(${k0.toFixed(3)})"></i></div><div class="fj-xp-fin">${fin}</div>`
+      + `<div class="fj-xp-lignes">${lignes}</div>${med}${deb}${def}</div>`;
+    const bilan = f.querySelector('.fj-bilan'), act = f.querySelector('.fj-actions');
+    if (bilan && act) act.insertAdjacentHTML('beforebegin', h);
+    this._xpFin = { k: X.apres.k, niveaux: n1 > n0 };
+  }
   // LE BILAN d'une partie, lu sur son état (affichage seulement) : titre, sous-titre, podium, chiffres de Haythem
   bilan(p, resultat = {}) {
     const B = { titre: 'FIN DE LA PARTIE', sous: resultat.texte || '', cls: 'neutre', podium: [], chiffres: [] };
@@ -807,12 +873,12 @@ export class MenuJeu {
       const S = this._suivi = { p, serie: new Map(), meilleure: new Map(), manches: { props: 0, chasseurs: 0 }, plombs: new Map(), touches: new Map() };
       // (la PRÉCISION du bilan : touches sur balles TIRÉES, plombs compris — les statistiques de l'acteur comptent un tir
       // de FP-12 pour un et chacun de ses huit plombs pour une touche, d'où 800 % : DEMANDE à F2 au rapport)
-      p.sur('tir', (e) => S.plombs.set(e.a, (S.plombs.get(e.a) || 0) + (e.n || 1)));
+      p.sur('tir', (e) => { if (e.arme !== 'sentinelle') S.plombs.set(e.a, (S.plombs.get(e.a) || 0) + (e.n || 1)); });
       // (F2 relecture : les touches des armes à feu seulement — une frag dans un groupe n'est pas une balle tirée)
-      p.sur('touche', (e) => { if (e.par >= 0 && e.par !== e.cible && (!e.arme || (ARMES[e.arme] && ARMES[e.arme].rpm))) S.touches.set(e.par, (S.touches.get(e.par) || 0) + 1); });
+      p.sur('touche', (e) => { if (e.par >= 0 && e.par !== e.cible && e.arme !== 'sentinelle' && (!e.arme || (ARMES[e.arme] && ARMES[e.arme].rpm))) S.touches.set(e.par, (S.touches.get(e.par) || 0) + 1); });
       p.sur('elim', (e) => {
         if (e.cible !== undefined) S.serie.set(e.cible, 0);
-        if (e.par === undefined || e.par === e.cible) return;
+        if (e.par === undefined || e.par === e.cible || e.arme === 'sentinelle') return;
         const n = (S.serie.get(e.par) || 0) + 1;
         S.serie.set(e.par, n); S.meilleure.set(e.par, Math.max(S.meilleure.get(e.par) || 0, n));
       });
