@@ -283,6 +283,17 @@ function aplatir(src, invP) {
 }
 const APPELS_COPIE = 12;
 
+// (F2 relecture : un nom sans article — les étiquettes du lot R : « tabouret Tolix vert du mur vert », « étagère des
+// micro-ondes » — en reçoit un, deviné au premier mot, comme ceux de L-K en ont : « E : devenir le tabouret Tolix… », le fil
+// « (la poubelle…) » ; joué, l'aide disait « E : devenir tabouret Tolix vert du mur vert »)
+const FEMININS = /^(chaise|table|tablette|poubelle|plante|corbeille|borne|machine|banquette|colonne|caisse|lampe|fontaine|enceinte)\b/i;
+export function avecArticle(nom) {
+  const s = String(nom || '').trim();
+  if (!s || /^(le|la|les|un|une|des)\s/i.test(s) || /^l['’]/i.test(s)) return s;
+  if (/^[aeiouyéèêàâîôûœ]/i.test(s)) return 'l’' + s;
+  return (FEMININS.test(s) ? 'la ' : 'le ') + s;
+}
+
 // UN TYPE NEUF : le prototype — les maillages de l'original cousus dans son repère (aucune étiquette n'y passe : un
 // clone porterait userData par JSON.stringify, et les `formes` du lot R sont des formes du monde solide) —, sa boîte
 // exacte, et ce qui s'en déduit (§ 3.9)
@@ -292,7 +303,7 @@ function creerType(cle, E, variante, racines, Mbase, sig, geo = null) {
   // qui s'en déduit se font à la préparation (achever) : la construction de l'école n'en paie rien.
   const maillages = racines.flatMap((r) => (r.isMesh ? [r] : maillagesDe(r)));
   const T = {
-    cle, type: E.type, variante, nom: E.nom || E.type, famille: familleDe(E.type), E, geo, Mbase: Mbase.clone(), signature: sig, empreinte: sig,
+    cle, type: E.type, variante, nom: avecArticle(E.nom || E.type), famille: familleDe(E.type), E, geo, Mbase: Mbase.clone(), signature: sig, empreinte: sig,
     sources: maillages.map((o) => ({ g: o.geometry, mat: o.material, Mw: o.matrixWorld.clone(), ombre: o.castShadow, recoit: o.receiveShadow, ordre: o.renderOrder,
       ud: { horsAOSol: !!o.userData.horsAOSol, sansNormales: !!o.userData.sansNormales }, o: o.isSkinnedMesh || o.isInstancedMesh || Array.isArray(o.material) ? o : null, nom: o.name })),
     aAchever: true, proto: null, boite: null, taille: null, dy: 0, accroche: 0, source: null,
