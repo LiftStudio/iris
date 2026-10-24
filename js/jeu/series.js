@@ -109,9 +109,10 @@ export const SERIES = {
   // la tourelle : posée à 1,1 m devant soi (0,8 puis 0,5 si c'est encombré), œil à 1 m ; elle REPÈRE comme un Régulier
   // (jauge 0,45 s à ≤ 10 m, f(d) du § 3.7) PUIS réagit (0,45 s), tourne à 300°/s, tire par rafales de 4 à 7 avec 0,45 s de
   // pause ; l'erreur de chaque balle suit une loi de Rayleigh de MÉDIANE `erreur` (°), réglée pour 25 % de touches sur un
-  // homme debout à 10 m (§ 5.7.3 point 5 : mesuré par le test 5)
+  // homme debout à 10 m (§ 5.7.3 point 5 : mesuré par le test 5 — le 24/10, quatre graines × 240 balles : 3,4° → 15,7 %,
+  // 2,4° → 23,6 % puis 26 à 37 %, 2,75° → 20 à 28,5 % (24 en moyenne) ; 2,65° retenu)
   sentinelle: { id: 'sentinelle', n: 7, cle: 3, nom: 'SENTINELLE', court: 'SENTINELLE', duree: 40, vie: 300, portee: 25, demiCone: 90,
-    oeil: 1.0, avance: [1.1, 0.8, 0.5], rayon: 0.3, haut: 1.15, tReperage: 0.45, reaction: 0.45, rotation: 300, erreur: 3.4,
+    oeil: 1.0, avance: [1.1, 0.8, 0.5], rayon: 0.3, haut: 1.15, tReperage: 0.45, reaction: 0.45, rotation: 300, erreur: 2.65,
     rafale: [4, 7], pause: 0.45, rpm: 600, perception: 12, oubli: 0.6, texte: 'Une tourelle devant toi, 40 s ou 300 PV : elle tire comme un bot Régulier à 25 m.' },
 };
 export const ORDRE_SERIES = ['drone', 'gilet', 'sentinelle'];

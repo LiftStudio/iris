@@ -10,7 +10,7 @@
 
 /* ---------------------------------------------------------------- EN PARTIE */
 .hj-medaille, .hj-niveau, .hj-series, .hj-drone-e, .hj-ramasse { position: absolute; }
-.hj-medaille { left: 50%; top: calc(50% - 168px); display: flex; flex-direction: column; align-items: center; gap: 2px; opacity: var(--mdo, 0);
+.hj-medaille { left: 50%; top: calc(50% - 124px); display: flex; flex-direction: column; align-items: center; gap: 2px; opacity: var(--mdo, 0);
   transform: translateX(-50%) scale(var(--mdk, 1)); transform-origin: 50% 40%; text-shadow: var(--ombre); }
 .hj-medaille svg { width: 50px; height: 50px; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .7)); }
 .hj-medaille svg .r { fill: #3d4556; } .hj-medaille svg circle { fill: var(--md, #c98a4a); stroke: rgba(255, 255, 255, .55); stroke-width: 1; } .hj-medaille svg .e { fill: #fff; }
@@ -50,7 +50,9 @@
 body.touch .hj-series { bottom: auto; right: auto; left: calc(16px + var(--sa-l, 0px)); top: calc(var(--tc-haut, 64px) + 18px + var(--cartT, 160) * 1px); justify-content: flex-start; }
 body.touch .hj-serie.pret { pointer-events: auto; cursor: pointer; }
 body.touch .hj-series-txt { text-align: left; }
-@media (max-height: 520px) { .hj-medaille { top: calc(50% - 128px); } .hj-medaille svg { width: 38px; height: 38px; } .hj-medaille b { font-size: 24px; } .hj-series { bottom: calc(108px + var(--sa-b, 0px)); } }
+@media (max-height: 520px) { .hj-medaille { top: calc(50% - 84px); } .hj-medaille svg { width: 30px; height: 30px; } .hj-medaille b { font-size: 20px; } .hj-medaille span { font-size: 10px; }
+  .hj-series { bottom: calc(96px + var(--sa-b, 0px)); width: 128px; gap: 7px 4px; } .hj-serie { width: 36px; height: 36px; } .hj-serie-ic svg { width: 20px; height: 20px; }
+  .hj-niveau b { font-size: 34px; } .hj-niveau span { font-size: 12px; } }
 
 /* ---------------------------------------------------------------- LA BARRE D'XP SOUS LE TITRE */
 .mj-xp { display: flex; align-items: center; gap: 12px; width: min(390px, 100%); animation: mjEntree 0.5s 0.2s both; }

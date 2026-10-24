@@ -35,7 +35,7 @@ import { Partie } from './partie.js';
 import { departs, choisirApparition, ramenerPoint, POINTS_APPARITION } from './apparitions.js';
 import { EQUIPES, ZONES_JEU, LIMITES, PIECES, BORNES_JEU } from './constantes.js';
 import { FICHES_BOTS, FICHE_HAYTHEM } from './avatars.js';
-import { ARMES, CLASSES } from './armes.js';
+import { ARMES, CLASSES, degatsDe } from './armes.js';
 import { TABLE_PORTES_FPS } from './monde_partie.js';
 import { Rng, melanger } from './rng.js';
 import { TELEPHONE } from '../appareil.js';

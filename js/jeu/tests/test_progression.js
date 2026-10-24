@@ -13,7 +13,7 @@ import { entree, PAD_BOUTONS } from '../../settings.js';
 import { etatMvt } from '../mouvement.js';
 import { hacher } from '../rng.js';
 import { MENUS } from '../menus_jeu.js';
-import { Profil, stockageMemoire, xpPourNiveau, niveauDe, coutNiveau, xpDeScore, DEBLOCAGES, niveauRequis, XP, PROFIL_CLE, tirerDefis, CLASSES_DEPART } from '../profil.js';
+import { Profil, stockageMemoire, xpPourNiveau, niveauDe, coutNiveau, xpDeScore, DEBLOCAGES, niveauRequis, XP, PROFIL_CLE, tirerDefis, CLASSES_DEPART, dateDuJour } from '../profil.js';
 import { MEDAILLES, SERIES, ACCESSOIRES, ATOUTS, ficheEquipee, equiperArsenal, xpSerie } from '../series.js';
 import { REGLES_SOL } from '../armes_au_sol.js';
 import { AffProgression } from '../aff_progression.js';
@@ -31,7 +31,10 @@ export default function (jeu) {
   const T = (nom, fn, opts) => jeu.ajouterTest('L-P', nom, fn, opts);
   const profil = new Profil();
   // un profil neuf, en mémoire (ou au niveau `n`)
-  const neuf = (n = 1, d = {}) => { Profil.utiliserStockage(stockageMemoire()); return profil.reinitialiser({ xp: xpPourNiveau(n), ...d }); };
+  // (les défis du jour : trois défis du stand impossibles — 999 à faire, 0 XP — : un test ne voit pas un défi de la date
+  // tomber au milieu de son barème)
+  const DEFIS_NEUTRES = () => ({ date: dateDuJour(), liste: [0, 1, 2].map(() => ({ id: 'stand', n: 999, xp: 0, fait: 0, fini: false, texte: 'neutre' })) });
+  const neuf = (n = 1, d = {}) => { Profil.utiliserStockage(stockageMemoire()); return profil.reinitialiser({ xp: xpPourNiveau(n), defis: DEFIS_NEUTRES(), ...d }); };
   // (à la fin de chaque test : le profil de test d'un onglet neuf — vide, donc au niveau 40 —, pour les tests qui suivent)
   const rendre = () => { Profil.utiliserStockage(stockageMemoire()); };
   // l'équipement d'une classe personnalisée, posé tel quel (le test choisit l'accessoire et l'atout)
@@ -133,12 +136,19 @@ export default function (jeu) {
     const M = MENUS.courant;
     M._poser('jeu.combat.classe', 'tireur'); M.reglage('combat');
     const B = (id) => document.querySelector(`#reglage-jeu [data-champ="jeu.combat.classe"][data-v='"${id}"']`);
-    const g1 = ['infiltration', 'defense', 'tireur', 'perso1', 'perso5'].every((id) => B(id) && B(id).disabled), a1 = B('assaut') && !B('assaut').disabled;
+    const g1 = ['infiltration', 'defense', 'tireur'].every((id) => B(id) && B(id).disabled), a1 = B('assaut') && !B('assaut').disabled, p1 = !B('perso1') && !B('perso5');
     const o1 = M.optionsDe('combat').opts;
-    res.push([`niveau 1 : Infiltration, Défense, Tireur, Perso grisés ${g1}, Assaut libre ${a1} ; lancé : ${o1.classe} (équipement ${o1.equipement && o1.equipement.classe})`, g1 && a1 && o1.classe === 'assaut' && o1.equipement.classe === 'assaut']);
-    neuf(8); M.reglage('combat');
-    const g8 = !B('tireur').disabled && !B('perso1').disabled && B('tireur').classList.contains('on'), o8 = M.optionsDe('combat').opts;
-    res.push([`niveau 8 : Tireur et Perso proposés ${g8} ; lancé : ${o8.classe}`, g8 && o8.classe === 'tireur' && o8.equipement.principale === 'tp50']);
+    res.push([`niveau 1 : Infiltration, Défense, Tireur grisés ${g1}, Assaut libre ${a1}, aucune classe perso proposée ${p1} ; lancé : ${o1.classe} (équipement ${o1.equipement && o1.equipement.classe})`,
+      g1 && a1 && p1 && o1.classe === 'assaut' && o1.equipement.classe === 'assaut']);
+    // (une classe perso verrouillée prise quand même — un profil d'un autre appareil — : lancée en Assaut)
+    M._poser('jeu.combat.classe', 'perso2'); const o1b = M.optionsDe('combat').opts;
+    res.push([`niveau 1, Perso 2 dans les réglages : lancé ${o1b.classe} / ${o1b.equipement.classe}`, o1b.equipement.classe === 'assaut']);
+    neuf(8); M._poser('jeu.combat.classe', 'tireur'); M.reglage('combat');
+    const g8 = !B('tireur').disabled && B('tireur').classList.contains('on'), o8 = M.optionsDe('combat').opts;
+    res.push([`niveau 8 : Tireur proposé ${g8} ; lancé : ${o8.classe}`, g8 && o8.classe === 'tireur' && o8.equipement.principale === 'tp50']);
+    M._poser('jeu.combat.classe', 'perso3'); M.reglage('combat');
+    const g8b = !!B('perso3') && B('perso3').classList.contains('on') && !B('perso1'), o8b = M.optionsDe('combat').opts, mc = !!document.querySelector('#reglage-jeu [data-act="mesClasses"]');
+    res.push([`niveau 8, Perso 3 prise à l'armurerie : proposée ${g8b} (les autres non), lancée ${o8b.equipement.classe}, « MES CLASSES » ${mc}`, g8b && o8b.equipement.classe === 'perso3' && mc]);
     // L'ARMURERIE au niveau 11 : le point rouge proposé, la poignée (12) non ; l'atout aucun
     neuf(11); M.prog.armurerie('perso1');
     const acc = (id) => document.querySelector(`#armurerie-jeu [data-champ="accessoire"][data-v='"${id}"']`), atout = (id) => document.querySelector(`#armurerie-jeu [data-champ="atout"][data-v='"${id}"']`);
@@ -157,9 +167,14 @@ export default function (jeu) {
     // le temps de visée : du premier pas `visee` à visee = 1
     const tempsAds = (p) => { const A = p.local.arsenal; jeu.commande(0, { visee: false }, PAS * 30); jeu.avancer(PAS * 30); const t0 = p.t; let n = 0;
       jeu.commande(0, { visee: true }, 1); while (A.vk < 1 - 1e-9 && n++ < 240) jeu.avancer(PAS); const t = p.t - t0; jeu.commande(0, { visee: false }, PAS); jeu.avancer(PAS * 60); return t; };
-    // la montée de 12 balles tenues, à la hanche (le recul de visée, pris par lireCommande)
-    const montee = (p) => { jeu.avancer(1); game.camPitch = 0; const c0 = game.camPitch, s0 = p.local.arsenal.tirSeq; jeu.tirer(0, { n: 12, cible: { lacet: game.camYaw, tangage: 0 } });
-      return { d: (c0 - game.camPitch) / DEG, n: p.local.arsenal.tirSeq - s0 }; };
+    // la montée de 12 balles tenues, à la hanche (le recul de visée, pris par lireCommande au pas qui suit chaque tir) : la
+    // détente tenue pas à pas jusqu'au 12e tir, relâchée, un pas de plus
+    const montee = (p) => {
+      const A = p.local.arsenal; jeu.avancer(1); game.camPitch = 0; const c0 = game.camPitch, s0 = A.tirSeq;
+      let n = 0; while (A.tirSeq - s0 < 12 && n++ < 400) { jeu.commande(0, { tir: true }, PAS); jeu.avancer(PAS); }
+      jeu.commande(0, { tir: false }, PAS); jeu.avancer(PAS);
+      return { d: (c0 - game.camPitch) / DEG, n: A.tirSeq - s0 };
+    };
     // une recharge tactique : du 'debut' à la 'fin'
     const recharge = (p) => { const E = ecouter(p, 'recharge'); jeu.tirer(0, { n: 3, cible: { lacet: game.camYaw, tangage: 0 } }); jeu.avancer(0.5);
       jeu.commande(0, { recharger: true }, PAS); jeu.avancer(4); E.fin(); const a = E.L.find((e) => e.phase === 'debut' && e.a === 0), b = E.L.find((e) => e.phase === 'fin' && e.a === 0); return a && b ? b.t - a.t : NaN; };
@@ -229,14 +244,14 @@ export default function (jeu) {
       const tact = etatMvt(a).tact, j0 = a.jaugeTact;
       jeu.commande(0, { ay: 1, amp: 1, sprint: true }, 1.0); jeu.avancer(1.0);
       const j1 = a.jaugeTact;
-      jeu.commande(0, { ay: 0, amp: 0, sprint: false }, 0.5); jeu.avancer(0.5);
+      jeu.commande(0, { ay: 0, amp: 0, sprint: false, sprintTact: false }, 0.25); jeu.avancer(0.25);
       const j2 = a.jaugeTact;
       jeu.quitter('balade');
       return { tact, vide: j0 - j1, remplit: j2 - j1 };
     };
     const J0 = await jauge(null), J1 = await jauge('endurance');
-    res.push([`Endurance : sprint tactique ${r2(1 / J1.vide)} s (sans : ${r2(1 / J0.vide)} s), jauge pleine en ${r2(0.5 / J1.remplit)} s (sans : ${r2(0.5 / J0.remplit)} s)`,
-      J0.tact && J1.tact && Math.abs(1 / J1.vide - 6) < 0.1 && Math.abs(1 / J0.vide - 3) < 0.1 && Math.abs(0.5 / J1.remplit - 2) < 0.05 && Math.abs(0.5 / J0.remplit - 4) < 0.1]);
+    res.push([`Endurance : sprint tactique ${r2(1 / J1.vide)} s (sans : ${r2(1 / J0.vide)} s), jauge pleine en ${r2(0.25 / J1.remplit)} s (sans : ${r2(0.25 / J0.remplit)} s)`,
+      J0.tact && J1.tact && Math.abs(1 / J1.vide - 6) < 0.1 && Math.abs(1 / J0.vide - 3) < 0.1 && Math.abs(0.25 / J1.remplit - 2) < 0.05 && Math.abs(0.25 / J0.remplit - 4) < 0.1]);
     // MAIN SÛRE : la recharge tactique de la FA-24 et le passage au P-17
     const mains = async (atout) => {
       const p = await combat({ equipement: equipe({ atout }) }), A = p.local.arsenal;
@@ -335,7 +350,7 @@ export default function (jeu) {
     // `d` m, à `angles` degrés de son cap — la première place libre, au même sol, qu'elle VOIT (sauf `vue: false`) ; 25 % ± 5
     // de touches sur ≥ 300 balles à 10 m
     const tir = async (pose) => {
-      const q = await combat({ allies: 0, ennemis: 1 }), cible = q.acteurParId(1), Sq = q.series, C = game.collisions;
+      const q = await combat({ allies: 0, ennemis: 1, graine: pose.graine || 21 }), cible = q.acteurParId(1), Sq = q.series, C = game.collisions;
       jeu.teleporter(0, STAND.ligne.x + 1, STAND.ligne.y, STAND.ligne.z, STAND.ligne.lacet); game.camPitch = 0;
       Sq.de(0).dispo.push('sentinelle'); jeu.commande(0, { serie: 3, lacet: STAND.ligne.lacet, tangage: 0 }, PAS); jeu.avancer(PAS * 2);
       const st = Sq.sentinelles[0]; if (!st) { jeu.quitter('balade'); return null; }
@@ -349,6 +364,8 @@ export default function (jeu) {
         place = { x, y: pose.vue === false ? st.y : y, z, d, ang };
       }
       if (!place) { jeu.quitter('balade'); return { tirs: -1, touches: 0, place: null }; }
+      // (hors de la rue bornée — à 26 m, la rue s'arrête : la cible n'y est pas ramenée)
+      if (pose.vue === false && cible.joueur) cible.joueur.bounds = null;
       jeu.teleporter(1, place.x, place.y, place.z);
       jeu.teleporter(0, st.x + Math.sin(st.cap) * 2, st.y, st.z + Math.cos(st.cap) * 2);
       const T0 = ecouter(q, 'tir'), T1 = ecouter(q, 'touche');
@@ -357,12 +374,16 @@ export default function (jeu) {
       jeu.quitter('balade');
       return { tirs, touches, place };
     };
-    const a10 = await tir({ d: [10], angles: [0, 4, -4, 8, -8, 12, -12, 16, -16] });
+    // (trois graines — une balle sur quatre en moyenne, ± 3 points d'une graine à l'autre sur 240 balles —, les balles mises ensemble)
+    const L10 = [];
+    for (const graine of [21, 5, 77]) L10.push(await tir({ graine, d: [10], angles: [0, 4, -4, 8, -8, 12, -12, 16, -16] }));
+    const a10 = L10.every((x) => x && x.tirs > 0) ? { tirs: L10.reduce((s, x) => s + x.tirs, 0), touches: L10.reduce((s, x) => s + x.touches, 0) } : null;
     const a26 = await tir({ d: [26], angles: [0], vue: false, duree: 6 }), dos = await tir({ d: [6], angles: [120], vue: false, duree: 6 });
     const cote = await tir({ d: [4, 3, 2.5], angles: [80, -80, 75, -75], duree: 8 });
     const k10 = a10 ? a10.touches / Math.max(1, a10.tirs) : 0;
     t.note('L-P sentinelle touches à 10 m', r3(k10));
-    res.push([`sentinelle à 10 m : ${a10 && a10.touches} / ${a10 && a10.tirs} = ${Math.round(100 * k10)} % (25 ± 5)`, !!a10 && a10.tirs >= 300 && Math.abs(k10 - 0.25) <= 0.05]);
+    res.push([`sentinelle à 10 m : ${a10 && a10.touches} / ${a10 && a10.tirs} = ${Math.round(100 * k10)} % (25 ± 5 ; par graine ${L10.map((x) => x ? Math.round(100 * x.touches / Math.max(1, x.tirs)) : '-').join(' / ')} %)`,
+      !!a10 && a10.tirs >= 300 && Math.abs(k10 - 0.25) <= 0.05]);
     res.push([`à 26 m : ${a26 && a26.tirs} tirs ; derrière (120°) : ${dos && dos.tirs} ; sur le côté (${cote && cote.place ? cote.place.ang + '°, ' + cote.place.d + ' m' : '—'}) : ${cote && cote.tirs}`,
       !!a26 && a26.tirs === 0 && dos.tirs === 0 && cote.tirs > 0]);
     // 300 PV : détruite par les balles d'un ennemi
@@ -395,9 +416,9 @@ export default function (jeu) {
     // les médailles de Haythem, l'XP « médailles » du profil, les lignes du HUD
     const scene = async (id, jouer, o = {}) => {
       neuf(1);
-      const p = await combat({ allies: 3, ennemis: 4, ...o });
+      const p = await combat({ allies: 3, ennemis: 5, ...o });
       const M = ecouter(p, 'medaille');
-      if (id !== 'premierSang') { const A = allies(p)[0], e = ennemis(p)[3]; tuer(p, e, { par: A.id, d: 6 }); jeu.avancer(0.2); }
+      if (id !== 'premierSang') { const A = allies(p)[0], e = ennemis(p)[4]; tuer(p, e, { par: A.id, d: 6 }); jeu.avancer(0.2); }
       const x0 = p.aff.profil.courante ? (p.aff.profil.courante.lignes.get('medaille') || { xp: 0 }).xp : 0;
       await jouer(p);
       M.fin();
@@ -456,7 +477,10 @@ export default function (jeu) {
     res.push([`sauvegarde abîmée : xp ${ab.xp}, élim. ${ab.armes.fa24.elims}, classe ${ab.classes[0].principale}`, ab.xp === 0 && ab.armes.fa24.elims === 0 && ab.classes[0].principale === 'fa24']);
     // UN STOCKAGE QUI LÈVE : une partie entière, de l'XP, pas d'exception
     Profil.utiliserStockage({ getItem() { throw new Error('quota'); }, setItem() { throw new Error('quota'); }, removeItem() { throw new Error('quota'); } });
-    const Pm = new Profil(); const d0 = Pm.donnees;
+    const Pm = new Profil(), d0 = Pm.donnees;
+    // (sous ?test=1, un profil sans données est le profil de test du niveau 40 : neuf quand même — aucune partie, aucune stat ;
+    // regardé AVANT la partie, qui va l'enrichir)
+    const fraisLu = d0.totaux.parties === 0 && d0.totaux.elims === 0 && d0.xp === xpPourNiveau(40);
     let err = null, xp = 0;
     try {
       const p = await combat({ allies: 1, ennemis: 2 });
@@ -465,7 +489,7 @@ export default function (jeu) {
       p.evt('fin', { gagnant: p.local.equipe });
       jeu.quitter('balade');
     } catch (e) { err = String(e); }
-    res.push([`stockage qui lève : profil neuf ${d0.xp === 0}, en mémoire ${Pm.memoire}, ${xp} XP gagnés, ${err || 'aucune exception'}`, d0.xp === 0 && Pm.memoire && xp >= 100 && !err && Pm.enregistrer() === false]);
+    res.push([`stockage qui lève : profil neuf ${fraisLu}, en mémoire ${Pm.memoire}, +${xp - xpPourNiveau(40)} XP gagnés, ${err || 'aucune exception'}`, fraisLu && Pm.memoire && xp - xpPourNiveau(40) >= 100 && !err && Pm.enregistrer() === false]);
     // JAMAIS iris.settings.v1 (ni le profil réel de cette origine sous ?test=1)
     Profil.utiliserStockage(stockageMemoire());
     const ecrits = [], f = Storage.prototype.setItem, reel0 = (() => { try { return localStorage.getItem(PROFIL_CLE); } catch (e) { return null; } })();
@@ -564,8 +588,8 @@ export default function (jeu) {
     // (la croix : ARMURERIE en montant depuis BALADE LIBRE)
     {
       const a0 = entree.manette; entree.manette = true;
-      try { focus(); nav().poser(document.querySelector('#menu-jeu [data-act="balade"]')); const h1 = pad('Up'), h2 = h1 && pad('Right');
-        res.push([`↑ depuis BALADE : ${h1 && h1.dataset.act}, → : ${h2 && h2.dataset.act}`, !!h1 && h1.dataset.act === 'armurerie' && !!h2 && h2.dataset.act === 'profil']); }
+      try { focus(); nav().poser(document.querySelector('#menu-jeu [data-act="balade"]')); const h1 = pad('Up'), a1 = h1 && h1.dataset.act, h2 = h1 && pad(a1 === 'profil' ? 'Left' : 'Right');
+        res.push([`↑ depuis BALADE : ${a1}, puis ${h2 && h2.dataset.act}`, (a1 === 'armurerie' || a1 === 'profil') && !!h2 && h2.dataset.act === (a1 === 'profil' ? 'armurerie' : 'profil')]); }
       finally { entree.manette = a0; nav().poser(null); nav().cle = null; }
     }
     const barre = document.querySelector('#menu-jeu .mj-xp');

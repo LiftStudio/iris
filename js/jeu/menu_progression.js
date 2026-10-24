@@ -55,6 +55,8 @@ export class MenuProgression {
     ajouterRacine('armurerie-jeu', { retour: '#armurerie-jeu [data-act="retour"]', defaut: '#armurerie-jeu .ar-classe.on', avant: 'menu-jeu' });
     ajouterRacine('profil-jeu', { retour: '#profil-jeu [data-act="retour"]', defaut: '#profil-jeu [data-act="retour"]', avant: 'menu-jeu' });
     this.profil.ecouter(() => this.majBarre());
+    // (la fenêtre qui change de taille : la vue de la vitrine recalée)
+    window.addEventListener('resize', () => { if (this._vitrine && this._vm) this._decaler(this._vm); });
   }
   _construire() {
     const B = document.body;
@@ -182,7 +184,7 @@ export class MenuProgression {
   }
   _decaler(vm) {
     const c = vm.camera, W = window.innerWidth || 1280, H = window.innerHeight || 720; if (!c || !c.setViewOffset) return;
-    const etroit = W < 760, k = etroit ? 1.7 : 1.32, cx = etroit ? 0.5 : 0.73, cy = etroit ? 0.3 : 0.44;
+    const etroit = W < 760, bas = H < 520, k = etroit ? 1.7 : bas ? 1.62 : 1.32, cx = etroit ? 0.5 : 0.73, cy = etroit ? 0.3 : bas ? 0.47 : 0.44;
     c.aspect = W / H;
     c.setViewOffset(W * k, H * k, W * k / 2 - cx * W, H * k / 2 - cy * H, W, H);
   }
