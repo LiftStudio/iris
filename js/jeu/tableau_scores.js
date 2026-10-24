@@ -103,7 +103,9 @@ export class TableauScores {
         const b = P.acteurParId ? P.acteurParId(c.id) : null, st = (b && b.stats) || {};
         const e = c.elims ?? st.elims ?? 0, m = c.morts ?? st.morts ?? 0;
         const val = { score: c.score ?? st.score ?? 0, e, m, a: c.assists ?? st.assists ?? 0, ratio: (e / Math.max(1, m)).toFixed(2).replace('.', ','),
-          serie: this._series.get(c.id) || 0, role: ROLES[c.role] ?? '', trouves: c.role === 'chasseur' ? e : st.trouves ?? '—',
+          // (F2 relecture : les props TROUVÉS de toute la partie — `trouves`, posé par PartieProp.majHud —, même quand il est prop
+          // à cette manche : « — » effaçait ceux de ses manches de chasseur)
+          serie: this._series.get(c.id) || 0, role: ROLES[c.role] ?? '', trouves: c.trouves ?? (c.role === 'chasseur' ? e : st.trouves ?? '—'),
           survie: Math.round(st.survie || 0) + ' s', provocs: st.provocs || 0, faux: st.vraisMeubles ?? st.faux ?? st.rates ?? 0 };
         cols.forEach(([k], j) => texte(ln.vals[j], val[k]));
         classe(ln.el, 'moi', !!L && c.id === L.id); classe(ln.el, 'mort', c.vivant === false);
