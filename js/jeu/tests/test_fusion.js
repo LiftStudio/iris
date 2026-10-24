@@ -289,34 +289,56 @@ export default function (jeu) {
     return bilan(res, 'chaque mode : programmes constants, mémoire ± 2 %, enfants et instantané identiques après 3 cycles ; balade au bit près');
   }, { delai: 600, apresFusion: true });
 
-  // 8. LES COÛTS, qualité figée MOYENNE, 7 bots (4 c. 4 de Haythem et 7 bots, toute l'école) : appels AJOUTÉS par la partie (la
-  //    même image sans ce qu'elle a posé dans la scène) ≤ 50 typiques, ≤ 150 au pire ; Partie.pas ≤ 0,5 ms ; le processeur du
-  //    gameplay ≤ 2,5 ms par image (deux pas et Partie.image) — temps relatifs
+  // 8. LES COÛTS, qualité figée MOYENNE, 7 bots (4 c. 4 de Haythem et 7 bots, toute l'école) : appels AJOUTÉS par la partie ≤ 50
+  //    typiques, ≤ 150 au pire ; Partie.pas ≤ 0,5 ms ; le processeur du gameplay ≤ 2,5 ms par image (deux pas et Partie.image)
+  //    — temps relatifs. (F2, 24/10 : les appels de ce que la partie a posé dans la scène — corps, armes, effets, rubalise, tout
+  //    ce qui est `dynamique` — COMPTÉS un par un, passes d'ombre comprises, dans une image ; la différence de
+  //    deux images, l'une sans eux, changeait avec les passes d'ombre de tout le décor : −1 118 sur une paire)
   T('8 coûts : appels ajoutés, Partie.pas, processeur du gameplay', async (t) => {
     jeu.figerQualite(true);
-    let appels = [], pasMs = 0, imgMs = 0, valable = true;
+    let appels = [], enVue = [], dessines = 0, pasMs = 0, imgMs = 0, valable = true;
+    const dyn = () => game.scene.children.filter((o) => o.userData && o.userData.dynamique && o !== (game.user && game.user.mesh));
+    // (chaque appel de dessin passe par renderer.renderBufferDirect — passe principale, ombres du soleil, ombres de contact — :
+    // compté quand l'objet dessiné a pour racine de scène une de ces racines ; onBeforeRender, réécrit en route par la pose des
+    // corps, en perdait les corps)
+    const compter = async () => {
+      const D = new Set(dyn()), R = game.renderer, f = R.renderBufferDirect;
+      const racine = (o) => { while (o && o.parent && o.parent !== game.scene) o = o.parent; return o; };
+      let n = 0;
+      R.renderBufferDirect = function (cam, sc, geo, mat, obj, grp) { if (obj && D.has(racine(obj))) n++; return f.call(this, cam, sc, geo, mat, obj, grp); };
+      let r; try { r = await jeu.images(1); } finally { R.renderBufferDirect = f; }
+      valable = valable && r.valable;
+      return n;
+    };
     try {
       await jeu.qualite('moyenne');
       await jeu.lancer('equipes', { graine: 8, zone: 'ecole', allies: 3, ennemis: 4 });
-      const p = P(); await jeu.images(30);
-      const dyn = () => game.scene.children.filter((o) => o.userData && o.userData.dynamique && o.visible && o !== (game.user && game.user.mesh));
-      for (let k = 0; k < 12; k++) {
-        jeu.avancer(1);
-        const a = await jeu.images(1); valable = valable && a.valable;
-        const L = dyn(); for (const o of L) o.visible = false;
-        let b; try { b = await jeu.images(1); } finally { for (const o of L) o.visible = true; }
-        appels.push(a.appels - b.appels);
-      }
+      const p = P();
+      // LE PIRE : les 7 bots EN VUE, en éventail de 4 à 12 m devant Haythem dans la rue (la cadence de L-C les dessine tous),
+      // pendant le DÉCOMPTE — tous vivants et figés. D'abord leurs avatars PRÊTS (Player._pretAvatar : un corps neuf ne se montre
+      // qu'une fois ses programmes compilés et ses clips lus, en temps réel — la simulation, elle, court à la main : sans cette
+      // attente, 44 appels comptés, les armes seules)
+      const prets = p.acteurs.filter((x) => !x.local && x.joueur && x.joueur._pretAvatar).map((x) => x.joueur._pretAvatar);
+      await Promise.race([Promise.all(prets), new Promise((r) => setTimeout(r, 8000))]);
+      jusqua(p, () => p.phase === 'decompte' || p.phase === 'manche');
+      const h = p.local, bots = p.acteurs.filter((x) => x !== h && x.vivant && x.corps);
+      jeu.teleporter(h.id, -2, 0, 4.6, -Math.PI / 2); game.camPitch = 0;
+      bots.forEach((x, i) => jeu.teleporter(x.id, 2 + i * 1.3, 0, 3.6 + (i % 3) * 0.9, Math.PI / 2));
+      await jeu.images(p.phase === 'decompte' ? 20 : 2);
+      for (let k = 0; k < 3; k++) enVue.push(await compter());
+      dessines = bots.filter((x) => x.dessine && x.joueur.avatarModel && x.joueur.avatarModel.visible).length;
+      // TYPIQUE : 12 instants répartis sur 2 min de manche (les 12 premières secondes après le « GO ! » ne montraient guère que
+      // les trois alliés partis du même départ que Haythem)
+      for (let k = 0; k < 12; k++) { jeu.avancer(10); appels.push(await compter()); }
       // le temps : 4 s de jeu en images (deux pas par image)
-      const c0 = jeu.compteurs(), n0 = p.imageN || 0;
       const im = await jeu.images(240);
       const c1 = jeu.compteurs();
       pasMs = c1.pasMs; imgMs = c1.imageMs; valable = valable && im.valable;
       jeu.quitter('balade');
     } finally { jeu.figerQualite(false); await jeu.qualite('auto'); }
-    const typ = mediane(appels), pire = Math.max(...appels);
+    const typ = mediane(appels), pire = Math.max(...appels, ...enVue);
     const a = t.temps('F2 Partie.pas (ms)', pasMs, 0.5, valable), b = t.temps('F2 gameplay par image (ms)', 2 * pasMs + imgMs, 2.5, valable);
-    return { ok: typ <= 50 && pire <= 150 && a && b, attendu: 'appels ajoutés ≤ 50 (médiane), ≤ 150 (pire) ; Partie.pas ≤ 0,5 ms ; gameplay ≤ 2,5 ms par image',
-      obtenu: `appels ajoutés ${typ} (médiane), ${pire} (pire) · Partie.pas ${r3(pasMs)} ms · gameplay ${r3(2 * pasMs + imgMs)} ms par image${valable ? '' : ' (onglet caché : non valable)'}` };
+    return { ok: typ <= 50 && pire <= 150 && dessines === 7 && a && b, attendu: 'appels ajoutés ≤ 50 (médiane de 12 instants), ≤ 150 (pire, les 7 bots en vue compris) ; Partie.pas ≤ 0,5 ms ; gameplay ≤ 2,5 ms par image',
+      obtenu: `appels ajoutés ${typ} (médiane : ${appels.join(', ')}), ${pire} (pire ; les 7 bots en vue : ${enVue.join(', ')}, ${dessines} dessinés) · Partie.pas ${r3(pasMs)} ms · gameplay ${r3(2 * pasMs + imgMs)} ms par image${valable ? '' : ' (images faites à la main : non valable)'}` };
   }, { delai: 180, apresFusion: true });
 }
