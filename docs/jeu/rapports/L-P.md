@@ -5,10 +5,11 @@ Branche `lot/L-P` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-P`, depuis `vague
 
 ## Où j'en suis
 
-**EN COURS — le code est fait et commité, `test_progression.js` 11/11.** Reste : les rejeux des autres fichiers de tests sur
-la branche (S0 en cours, puis L-E, L-U, L-G, L-I), la partie jouée sans `?test=1`, le rapport final.
-Navigateur : `jeton_2` pris PÉRIMÉ à 07:09 (`qui.txt` de G-LUM daté 06:23:51), rafraîchi pendant les tests ; onglet `tab-53`,
-serveur 8153 (lancé dans l'arbre).
+**FINI.** `?test=1&rapport=1&lot=L-P` : 11 / 11 ; `&lot=S0` : 29 / 29 sur le code final ; `python -I
+tools/verifier_proprietaires.py lot/L-P` : OK ; joué sans `?test=1` (trois défauts trouvés en jouant, corrigés). Reste pour
+INT : le test `F · Pas feutrés` (`apresFusion`, avec le cerveau de L-J), les demandes ci-dessous, L-U 7 à rejouer au calme.
+Navigateur : `jeton_2` pris PÉRIMÉ à 07:09 (`qui.txt` de G-LUM daté 06:23:51, plus de 45 min), rafraîchi pendant les tests,
+RENDU à la fin ; onglet `tab-53` fermé, serveur 8153 (lancé dans l'arbre) arrêté.
 
 Un repreneur : `git -C C:/Users/hgami/Downloads/IRIS_lots/L-P log --oneline vague2..lot/L-P`.
 
@@ -84,7 +85,7 @@ Un repreneur : `git -C C:/Users/hgami/Downloads/IRIS_lots/L-P log --oneline vagu
 
 | lot | résultat | notes |
 |---|---|---|
-| S0 | 29 / 29 (117,6 s, sur `900f732`) ; rejoué sur le code final : voir plus bas | la balade au bit près, les cycles, les entrées |
+| S0 | 29 / 29 (117,6 s, sur `900f732`) ; rejoué sur le code final (`4318b86`) : **29 / 29, 115,9 s** | la balade au bit près, les cycles, les entrées |
 | L-E | 20 / 20 (109 s) | dont le déterminisme 4 c. 4 (60 s) et les 10 min de 4 c. 4 — avec les séries des bots |
 | L-G | 18 / 18 (821 s, onglet souvent passé derrière par les autres agents) | écritures du HUD 1,14 par image (test 01) ; les manches réelles de 2 min |
 | L-U | 14 / 15 | 7 « LANCER → présentation » : 1re préparation 9 741 ms (seuil 4 000) — la machine : mesurée à la suite dans le même onglet, 6,2 s ici contre 5,8 s sur l'arbre `apercu` (= `vague2-ok`) ; `AffProgression.preparer` coûte 61 ms. Les six portes (test 1), les quatre classes (4), le Tireur choisi (6) : verts |
