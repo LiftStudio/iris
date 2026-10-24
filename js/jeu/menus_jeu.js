@@ -800,8 +800,9 @@ export class MenuJeu {
       + `<div class="fj-xp-niv${n1 > n0 ? ' monte' : ''}"><span>${n1 > n0 ? 'NIVEAU SUPÉRIEUR' : 'NIVEAU'}</span><b>${n1}</b></div></div>`
       + `<div class="fj-xp-barre"><i style="transform:scaleX(${k0.toFixed(3)})"></i></div><div class="fj-xp-fin">${fin}</div>`
       + `<div class="fj-xp-lignes">${lignes}</div>${med}${deb}${def}</div>`;
-    const bilan = f.querySelector('.fj-bilan'), act = f.querySelector('.fj-actions');
-    if (bilan && act) act.insertAdjacentHTML('beforebegin', h);
+    // (juste sous le podium, avant les chiffres : ce qui donne envie de rejouer se voit sans faire défiler ; le podium se serre)
+    const ch = f.querySelector('.fj-chiffres');
+    if (ch) { ch.insertAdjacentHTML('beforebegin', h); f.classList.add('xp'); }
     this._xpFin = { k: X.apres.k, niveaux: n1 > n0 };
   }
   // LE BILAN d'une partie, lu sur son état (affichage seulement) : titre, sous-titre, podium, chiffres de Haythem
