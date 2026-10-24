@@ -125,7 +125,8 @@ body.pad-nav .mj-p.pad-focus { outline: none !important; box-shadow: 0 0 0 2px r
   .ar-scene { grid-row: 1; padding: 10px 14px 8px; }
   .ar-panneau { grid-row: 2; padding: 10px 12px; background: rgba(10, 13, 20, .96); border-right: 0; border-top: 1px solid var(--line); }
   .ar-corps { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
-  .ar-classes { flex-direction: row; overflow-x: auto; }
+  .ar-classes { flex-direction: row; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .ar-classe b { font-size: 16px; } .ar-arme { text-align: center; } .ar-arme-acc { display: none; }
   .ar-chiffres { display: none; }
   .ar-arme-nom { font-size: 26px; }
 }

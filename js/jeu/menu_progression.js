@@ -184,7 +184,8 @@ export class MenuProgression {
   }
   _decaler(vm) {
     const c = vm.camera, W = window.innerWidth || 1280, H = window.innerHeight || 720; if (!c || !c.setViewOffset) return;
-    const etroit = W < 760, bas = H < 520, k = etroit ? 1.7 : bas ? 1.62 : 1.32, cx = etroit ? 0.5 : 0.73, cy = etroit ? 0.3 : bas ? 0.47 : 0.44;
+    // (étroit : l'arme dans la bande du haut, 32 % de la hauteur — CSS ; bas : la moitié droite, plus petite)
+    const etroit = W < 760, bas = H < 520, k = etroit ? 2.9 : bas ? 1.62 : 1.32, cx = etroit ? 0.5 : 0.73, cy = etroit ? 0.17 : bas ? 0.47 : 0.44;
     c.aspect = W / H;
     c.setViewOffset(W * k, H * k, W * k / 2 - cx * W, H * k / 2 - cy * H, W, H);
   }

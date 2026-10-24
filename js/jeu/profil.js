@@ -176,10 +176,14 @@ export function reparerClasse(c, k) {
 const TEST = (() => { try { return new URLSearchParams(location.search).get('test') === '1'; } catch (e) { return false; } })();
 export function stockageMemoire() { const M = new Map(); return { getItem: (k) => (M.has(k) ? M.get(k) : null), setItem: (k, v) => { M.set(k, String(v)); }, removeItem: (k) => { M.delete(k); }, _m: M }; }
 const LOCAL = { getItem: (k) => localStorage.getItem(k), setItem: (k, v) => localStorage.setItem(k, v), removeItem: (k) => localStorage.removeItem(k) };
-const ETAT = { donnees: null, stockage: TEST ? stockageMemoire() : LOCAL, memoire: false, annonces: [], ecoutes: new Set() };
+const ETAT = { donnees: null, stockage: TEST ? stockageMemoire() : LOCAL, memoire: false, annonces: [], ecoutes: new Set(), courante: null, derniere: null };
 
 export class Profil {
-  constructor() { this.partie = null; this._des = []; this.courante = null; this.derniere = null; }
+  constructor() { this.partie = null; this._des = []; }
+  // (la partie en cours et la dernière jouée : PARTAGÉES elles aussi — c'est l'instance de l'affichage qui est branchée, celle
+  // du menu qui montre le bilan de fin)
+  get courante() { return ETAT.courante; } set courante(v) { ETAT.courante = v; }
+  get derniere() { return ETAT.derniere; } set derniere(v) { ETAT.derniere = v; }
   // (un test : un autre stockage — stockageMemoire(), un faux qui lève — ; les données relues de lui)
   static utiliserStockage(s) { ETAT.stockage = s || stockageMemoire(); ETAT.donnees = null; ETAT.memoire = false; }
   static get stockage() { return ETAT.stockage; }

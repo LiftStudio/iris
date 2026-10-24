@@ -100,6 +100,9 @@ export default function (jeu) {
     res.push([`médailles de 25 à 100 (${Object.values(MEDAILLES).map((M) => M.xp).join(' ')})`, Object.values(MEDAILLES).every((M) => M.xp >= 25 && M.xp <= 100) && Object.keys(MEDAILLES).length === 16]);
     // la fin : victoire 400, partie finie 200
     let x0 = P.xp; p.evt('fin', { gagnant: p.local.equipe }); const v = P.xp - x0;
+    // (l'écran de fin — celui du MENU, une autre instance du profil — montre le bilan d'XP de la partie : total, lignes, barre)
+    const bx = document.querySelector('#fin-jeu .fj-xp'), tb = bx ? bx.textContent.replace(/\s+/g, ' ') : '';
+    res.push([`écran de fin : bilan d'XP « ${tb.slice(0, 90)}… »`, !!bx && /\+[\d\s ]+XP/.test(tb) && /VICTOIRE/.test(tb) && /MÉDAILLES/.test(tb) && !!bx.querySelector('.fj-xp-barre i')]);
     jeu.quitter('balade');
     await jeu.lancer('equipes', { graine: 5, zone: 'ecole', allies: 1, ennemis: 1 });
     const p2 = game.partie; x0 = P.xp; p2.evt('fin', { gagnant: p2.local.equipe === 'A' ? 'B' : 'A' }); const f = P.xp - x0;
