@@ -265,6 +265,9 @@ export class HudJeu {
     this.eSeriesTxt = N('hj-series-txt', Se, '');
     this.eDroneE = N('hj-drone-e', R, 'DRONE ENNEMI');
     this.eRamasse = N('hj-ramasse', R, '');
+    // (relecture : au doigt, l'invite SE TOUCHE — le bouton contextuel du § 4.8 : la touche d'`interagir` pressée un instant,
+    // comme les écussons des séries ; avant, seuls deux appuis sur RECHARGER ramassaient au doigt)
+    this.eRamasse.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'touch') return; e.preventDefault(); e.stopPropagation(); this._presser('interagir'); });
     hud.appendChild(R);
     // LE CALQUE BLANC DE LA FLASH : hors de #hud (au-dessus de lui, sous la pause : z-index 14 entre 10 et 30)
     this.eFlash = document.getElementById('voile-flash') || elt('div', null, document.body);
@@ -333,8 +336,10 @@ export class HudJeu {
     return actionKey(id);
   }
   // au doigt : la touche de la série pressée un instant (js/jeu/entrees_jeu.js la lit comme le clavier)
-  _toucherSerie(i) {
-    const inp = this.game.input, B = inp && inp.bind && inp.bind['serie' + (i + 1)], code = B && B.find(Boolean);
+  _toucherSerie(i) { this._presser('serie' + (i + 1)); }
+  // la touche d'une action pressée un instant (120 ms : un front pour une action à front, un appui tenu pour `interagir`)
+  _presser(action) {
+    const inp = this.game.input, B = inp && inp.bind && inp.bind[action], code = B && B.find(Boolean);
     if (!code) return;
     inp.presser(code); setTimeout(() => inp.relacher(code), 120);
   }
@@ -523,7 +528,7 @@ export class HudJeu {
     const Ra = montre && H.ramassage, f = Ra && ARMES[Ra.arme];
     cacher(this.eRamasse, !f);
     if (f) {
-      const k = entree.manette ? `${padGlyph('Pad:X').replace(/<[^>]+>/g, '') || 'X'} × 2` : document.body.classList.contains('touch') ? 'RECHARGER × 2' : `${actionKey('interagir')}`;
+      const k = entree.manette ? `${padGlyph('Pad:X').replace(/<[^>]+>/g, '') || 'X'} × 2` : document.body.classList.contains('touch') ? 'TOUCHE' : `${actionKey('interagir')}`;
       const acc = Ra.acc && ACCESSOIRES[Ra.acc] ? ` + ${ACCESSOIRES[Ra.acc].nom.toLowerCase()}` : '';
       texte(this.eRamasse, `${k} · RAMASSER ${nomCourt(Ra.arme)}${acc} (${Ra.ch} / ${Ra.res})`);
     }

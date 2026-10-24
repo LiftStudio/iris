@@ -50,6 +50,8 @@
 body.touch .hj-series { bottom: auto; right: auto; left: calc(16px + var(--sa-l, 0px)); top: calc(var(--tc-haut, 64px) + 18px + var(--cartT, 160) * 1px); justify-content: flex-start; }
 body.touch .hj-serie.pret { pointer-events: auto; cursor: pointer; }
 body.touch .hj-series-txt { text-align: left; }
+/* (relecture : au doigt, l'invite de l'arme au sol est un BOUTON — touchée, elle ramasse) */
+body.touch .hj-ramasse { pointer-events: auto; cursor: pointer; padding: 11px 16px; border: 1px solid var(--or); border-left-width: 3px; background: rgba(0, 0, 0, .68); }
 @media (max-height: 520px) { .hj-medaille { top: calc(50% - 84px); } .hj-medaille svg { width: 30px; height: 30px; } .hj-medaille b { font-size: 20px; } .hj-medaille span { font-size: 10px; }
   .hj-series { bottom: calc(96px + var(--sa-b, 0px)); width: 128px; gap: 7px 4px; } .hj-serie { width: 36px; height: 36px; } .hj-serie-ic svg { width: 20px; height: 20px; }
   .hj-niveau b { font-size: 34px; } .hj-niveau span { font-size: 12px; } }

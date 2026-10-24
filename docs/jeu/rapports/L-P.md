@@ -3,7 +3,13 @@
 Branche `lot/L-P` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-P`, depuis `vague2` = `vague2-ok` `2e688ba`), port 8153 ;
 24/10/2026. Spécification : `docs/jeu/spec_finale.md` § 5.7.3 (et §§ 2.1, 3.3, 3.5, 4.1, 4.5, 4.6, 5.1, 5.2 ; CoD §§ 7.7, 11, 12).
 
-## Où j'en suis
+## Où j'en suis — RELECTURE (24/10, relecteur sévère, commits « L-P relecture : … »)
+
+**EN COURS.** Code et diff `vague2...lot/L-P` relus contre les §§ 5.7.3, 4.1, 4.5, 4.6, 4.8, 5.1, 5.2 et CoD §§ 7.7, 11, 13 ;
+propriétaires OK (11 fichiers), 13 / 13 commits attribués. Jeton du navigateur : en attente depuis 08:55 (les trois pris par
+L-O, R-KAHN, L-J). Détail : section « Relecture » en fin de rapport.
+
+## Où en était le constructeur
 
 **FINI.** `?test=1&rapport=1&lot=L-P` : 11 / 11 ; `&lot=S0` : 29 / 29 sur le code final ; `python -I
 tools/verifier_proprietaires.py lot/L-P` : OK ; joué sans `?test=1` (trois défauts trouvés en jouant, corrigés). Reste pour
