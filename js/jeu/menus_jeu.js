@@ -147,9 +147,10 @@ export const familleDe = (id) => (id === 'prophunt' ? 'prop' : id === 'stand' ? 
 const ETAPES = [['plan', 'Plan de l’école'], ['eleves', 'Les élèves arrivent'], ['meubles', 'Meubles'], ['armes', 'Armes et effets']];
 const cleEtape = (t) => { const s = String(t || '').replace(/['’]/g, '’').toLowerCase(); const E = ETAPES.find(([, n]) => n.toLowerCase() === s); return E ? E[0] : null; };
 // le chargement d'une classe, en clair (FA-24 « Faucon » + P-17 « Moineau » · grenade · flash · couteau)
-export function dotationTexte(id) {
-  // (L-P : une classe personnalisée, ou une classe de départ avec ce que le profil lui a débloqué)
-  const P = MENUS.courant && MENUS.courant.profil;
+export function dotationTexte(id, brute = false) {
+  // (L-P : une classe personnalisée, ou une classe de départ avec ce que le profil lui a débloqué ; `brute` : la classe telle
+  // quelle — le stand ne lit pas l'équipement)
+  const P = !brute && MENUS.courant && MENUS.courant.profil;
   if (P && (/^perso[1-5]$/.test(id) || CLASSES_DEPART[id])) {
     const E = P.equipement(id), n = (a) => (ARMES[a] ? ARMES[a].nom : a), t = [`${n(E.principale)}${E.accessoire ? ' + ' + ACCESSOIRES[E.accessoire].nom.toLowerCase() : ''} + ${n(E.secondaire)}`];
     if (E.letale) t.push('une grenade');
@@ -584,7 +585,7 @@ export class MenuJeu {
       titre = 'STAND DE TIR';
       h += this._ligne('defi', 'Défi', D[2], this._choix('jeu.stand.defi', DEFIS, st.defi));
       // (le stand : les classes de départ seulement — PartieStand ne lit pas l'équipement : demande à INT au rapport L-P)
-      h += this._ligne('classe', 'Classe', dotationTexte(st.classe), this._choix('jeu.stand.classe', CLASSES_MENU.map(([v, l]) => [v, l, dotationTexte(v),
+      h += this._ligne('classe', 'Classe', dotationTexte(st.classe, true), this._choix('jeu.stand.classe', CLASSES_MENU.map(([v, l]) => [v, l, dotationTexte(v, true),
         this.profil && !this.profil.classeJouable(v) ? `Niveau ${CLASSES_DEPART[v].niveau}` : null]), st.classe));
       h += this._ligne('records', 'Records', 'Gardés sur cet appareil.', `<div class="rj-records">${this._records()}</div>`, 'rj-large');
       fil = 'LA RUE, DEVANT LA FAÇADE';
