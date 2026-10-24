@@ -617,13 +617,21 @@ export default function (jeu) {
   // de l'arsenal (couteau, lancer) montrés par leur geste
   T('F2 recul de l’arsenal, caméra à 15 % ; couteau et grenade réels', async () => {
     const p = await essai(jeu), vm = p.aff.viewmodel, A = p.local.arsenal, iM = CHRONOS.couteau.coup.i, fiche = ARMES.fa24.recul.cabre;
-    let pic = 0, picVm = 0, cam = 0;
-    jeu.tirer(0, { n: 1 });
-    for (let i = 0; i < 12; i++) {
-      await jeu.images(1);
-      pic = Math.max(pic, A.reculV); picVm = Math.max(picVm, vm.diag.cabre);
-      cam = Math.max(cam, (game.camera.rotation.x + game.camPitch) / DEG);      // (rotation.x = −(tangage − 0,15·reculV·DEG))
-    }
+    let pic = 0, picImg = 0, picVm = 0, cam = 0;
+    // (F2 : la crête de reculV lue à CHAQUE pas de 1/120 s, et les images faites à la main à 1/60 s — onglet devant, les
+    // vraies images de rAF tombent n'importe où sur la courbe du ressort, crête à 34 ms : 1,618° lus pour 2,2° ; l'arme et la
+    // caméra comparées au reculV de LEURS images, picImg)
+    const pas0 = p.pas;
+    p.pas = function (dt) { pas0.call(this, dt); pic = Math.max(pic, A.reculV); };
+    jeu.forcerImagesManuelles(true);
+    try {
+      jeu.tirer(0, { n: 1 });
+      for (let i = 0; i < 12; i++) {
+        await jeu.images(1);
+        picVm = Math.max(picVm, vm.diag.cabre); picImg = Math.max(picImg, A.reculV);
+        cam = Math.max(cam, (game.camera.rotation.x + game.camPitch) / DEG);      // (rotation.x = −(tangage − 0,15·reculV·DEG))
+      }
+    } finally { jeu.forcerImagesManuelles(false); delete p.pas; }
     jeu.commande(0, { couteau: true }, 1 / 60); await jeu.images(4); const gC = vm.diag.geste;
     await jeu.images(60);
     // la frag tenue 0,5 s puis lâchée : la main la lance (la goupille n'est pas rejouée quand le temps de l'arsenal repart)
@@ -638,9 +646,9 @@ export default function (jeu) {
       vuPin = Math.max(vuPin, pin);
     }
     jeu.quitter('balade');
-    const ok = pic > 0 && Math.abs(pic / fiche - 1) <= 0.05 && Math.abs(picVm / pic - 1) <= 0.05 && Math.abs(cam / (0.15 * pic) - 1) <= 0.1
+    const ok = pic > 0 && Math.abs(pic / fiche - 1) <= 0.05 && Math.abs(picVm / picImg - 1) <= 0.05 && Math.abs(cam / (0.15 * picImg) - 1) <= 0.1
       && gC === 'couteau' && gG === 'grenade' && lancee && !rejouee;
     return { ok, attendu: 'crête de reculV = cabré de la fiche ± 5 % (§ 3.4, critère 8) ; l’arme la montre ± 5 % ; caméra 15 % ± 10 % ; couteau ; frag lancée, goupille pas rejouée',
-      obtenu: `reculV ${r3(pic)}° (fiche ${fiche}°) · arme ${r3(picVm)}° · caméra ${r3(cam)}° · gestes ${gC} / ${gG} · lancée ${lancee} · goupille rejouée ${rejouee}` };
+      obtenu: `reculV ${r3(pic)}° (fiche ${fiche}°), ${r3(picImg)}° aux images · arme ${r3(picVm)}° · caméra ${r3(cam)}° · gestes ${gC} / ${gG} · lancée ${lancee} · goupille rejouée ${rejouee}` };
   }, { apresFusion: true });
 }
