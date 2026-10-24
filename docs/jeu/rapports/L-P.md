@@ -206,3 +206,53 @@ profil RÉEL de l'origine (`iris.profil.v1` du port 8153, neuf au départ : nive
 7. **INT (L-U test 7)** : sous charge, la 1re préparation mesurée 6,2 s ici contre 5,8 s sur l'arbre `apercu` (= `vague2-ok`),
    dans le même onglet à la suite : L-P n'y ajoute que ≈ 60 ms (`AffProgression.preparer`) ; le 9 741 ms du rejeu de L-U 7 est la
    machine (trois agents), à rejouer au calme.
+
+## Relecture (24/10, relecteur sévère — commits « L-P relecture : … »)
+
+Relu : le § 5.7.3 (construit, propriétaires, acceptation), les §§ 3.5, 4.1, 4.5.6 (`Arsenal`), 4.6, 4.8, 5.1, 5.2, CoD §§ 7.7,
+11, 13 ; le diff `vague2...lot/L-P` (11 fichiers) ligne à ligne ; les fichiers des autres lots qu'il touche (`armes.js`,
+`partie.js`, `mouvement.js`, `minicarte.js`, `effets.js`, `sons_jeu.js`, `cerveau.js`, `touch.js`, `collisions.js`).
+
+### Contrats et valeurs vérifiés (rien à redire)
+
+- Niveaux : `xpPourNiveau(n) = 800 k + 100 k (k − 1)`, k = n − 1 → 14 400 au 10, 179 400 au 40 ; barème de CoD § 11 (élim. 100 /
+  + 25 tête / + 25 couteau / + 50 au-delà de 30 m, assistance 25, capture 150, neutralisation 75, défense 50, série 50 × n à 3, 5,
+  7…, victoire 400, fin 200, médailles 25-100) ; les raisons des `score` de L-E (`elim`, `assistance`, `capture`,
+  `neutralisation`, `point`, `suicide`) toutes lues.
+- Déblocages de CoD § 11 aux bons niveaux ; accessoires (point rouge : zoom PORTÉ à 1,30 — même notation que les zooms du
+  § 3.2, « FA-24 × 1,25 » —, poignée × 0,8 / + 0,02 s, chargeur × 1,5 / + 0,04 s / + 0,2 s, silencieux 8 m / paliers × 0,85) et
+  atouts (Endurance × 2 / × 0,5, Main sûre × 0,75 / × 0,8 sur `sortie` ET `rangement`, Pas feutrés ÷ 3, Récupération 2,5 s,
+  Fantôme) : des fiches recopiées, la fiche de L-A jamais touchée.
+- Pureté : `series.js` (armes, rng) et `armes_au_sol.js` (armes, series) — ni hasard du navigateur, ni horloge, ni entrées, ni
+  affichage ; les lectures du monde solide (`solEn`, `libre`, `balistique.vue/libre`) hors de tout rappel d'une autre ;
+  `verifier_proprietaires.py` OK.
+- Les tirs de la sentinelle (id ≥ 1000) : `effets._tir`, `sons_jeu` (`tir`), `minicarte` et le cerveau minimal rendent la main
+  sur un acteur introuvable — aucune exception ; ses touches ne comptent ni à la précision de Haythem (`ARMES.sentinelle`
+  n'existe pas) ni au bilan.
+- Fins de ligne : CRLF partout, comme dans `vague2`.
+
+### Trouvé et corrigé (au fil de la relecture)
+
+1. **Ramasser au milieu d'un geste** (`armes_au_sol.js`) : F (ou 2 × RECHARGER) pendant qu'une frag CUIT en main passait
+   l'Arsenal en 'change' — la grenade restait goupillée sans jamais partir ni être décomptée (lancer annulé sans coût, `grenade`
+   resté vrai pour l'arme de vue) ; le couteau et le franchissement étaient coupés net. L'échange est refusé en 'lancer',
+   'couteau', 'franchit'.
+2. **L'arme proposée cachée par sa voisine** (`armes_au_sol.js` `proche`, `partie_fps.js` `majHud`) : la plus proche était
+   prise même d'un modèle déjà tenu (réserve pleine : elle reste au sol) — l'invite disparaissait et F ne prenait rien, alors
+   qu'une autre arme était à 1,2 m. `proche` ne rend plus qu'une arme qu'on peut prendre.
+3. **« Longue distance » de la sentinelle** (`series.js`, `partie_fps.js`) : la distance d'une élimination de la tourelle était
+   celle de HAYTHEM (loin d'elle, + 50 et la médaille LONGUE DISTANCE pour une tourelle qui ne tire qu'à 25 m). Plus pour elle.
+4. **La sentinelle passait la mi-temps** de la domination (`series.js` `finirTout`, `partie_fps.js` `_miTemps`) : les camps
+   s'échangent, la tourelle restée dans l'ancien camp de Haythem tirait sur les réapparitions d'en face. Drones et sentinelles
+   finissent à la mi-temps (événements `serie` 'finie') ; les séries à prendre restent.
+5. **Le gilet ne comptait pas** (`partie_fps.js` `infliger`) : les dégâts pris par l'armure n'entraient pas aux assistances (§ 3.5 :
+   ≥ 30 dégâts) et un coup tout pris par le gilet n'était pas une touche du tireur. Comptés.
+6. **Au doigt, ramasser** (`hud_jeu.js`, `progression.css`) : seuls deux appuis sur RECHARGER ramassaient. L'invite est un
+   BOUTON au doigt (« TOUCHE · RAMASSER … », § 4.8 « contextuel ») qui presse la touche d'`interagir` 120 ms (comme les écussons des
+   séries).
+7. **Les annonces d'avant** (`profil.js`) : un niveau gagné par la victoire (au `fin`, sous l'écran de fin, que le bilan dit déjà)
+   restait dans la file et tombait au milieu de la partie SUIVANTE. Vidée au branchement.
+8. **La barre d'XP de l'accueil récrite en partie** (`menu_progression.js`) : chaque XP gagnée récrivait l'accueil caché ; elle
+   n'est récrite que s'il se voit (`accueil()` la remet à jour).
+9. **Le drone dans les murs** (`aff_progression.js`) : son cercle de 1,7 m autour de Haythem traversait les murs d'un couloir ;
+   il se resserre à la part libre du rayon (`rayonLibre`), lissé.
