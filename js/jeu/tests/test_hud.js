@@ -662,6 +662,8 @@ export default function (jeu) {
     }
     } finally { jeu.figerQualite(false); await jeu.qualite('auto'); }
     return bilan(res, 'une manche de 2 min par mode avec les vrais lots : ≤ 2 écritures par image, 0 exception');
-  }, { delai: 600, apresFusion: true });
+  // (F2 : 1 200 s de délai — onglet DEVANT, chaque image faite à la main est aussi présentée à l'écran : ≈ 0,6 × le temps réel,
+  // les trois manches de 2 min ont pris ≈ 370 s le 24/10, aux deux tiers des 600 s d'avant ; une machine plus chargée les passait)
+  }, { delai: 1200, apresFusion: true });
   const t0 = () => new Promise((r) => setTimeout(r, 0));
 }
