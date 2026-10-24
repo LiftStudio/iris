@@ -705,9 +705,11 @@ export class HudJeu {
       return pr ? ['TU ES PROP — CACHE-TOI !', [m, 'deviens un meuble de l’école'].filter(Boolean).join(' · ')]
         : ['TU ES CHASSEUR', [m, 'trouve les faux meubles'].filter(Boolean).join(' · ')];
     }
-    if (id === 'equipes') return [TITRES.equipes, `${EQUIPES.A.nom} CONTRE ${EQUIPES.B.nom} · ${lim} ÉLIMINATIONS${dur ? ' · ' + dur : ''}`];
+    // (F2 relecture : en Airsoft, les mots de l'habillage — « 40 TOUCHÉS », comme les réglages du combat le disaient avant LANCER)
+    const unite = habillage(this.game) === 'airsoft' ? 'TOUCHÉS' : 'ÉLIMINATIONS';
+    if (id === 'equipes') return [TITRES.equipes, `${EQUIPES.A.nom} CONTRE ${EQUIPES.B.nom} · ${lim} ${unite}${dur ? ' · ' + dur : ''}`];
     if (id === 'domination') return [TITRES.domination, `${EQUIPES.A.nom} CONTRE ${EQUIPES.B.nom} · ${lim} POINTS${dur ? ' · ' + dur : ''}`];
-    if (id === 'melee') return [TITRES.melee, `${lim} ÉLIMINATIONS${dur ? ' · ' + dur : ''}`];
+    if (id === 'melee') return [TITRES.melee, `${lim} ${unite}${dur ? ' · ' + dur : ''}`];
     return [TITRES[id] || 'PARTIE', ''];
   }
 
