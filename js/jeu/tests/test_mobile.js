@@ -153,6 +153,9 @@ export default function (jeu) {
     try {
       const el = tc.el.tir, P = centre(tc, 'tir'), s = settings.controls.sensitivity;
       res.push(['TIR montré', !el.hidden && el.dataset.action === 'tir']);
+      // (F2 : l'arme VIDE — avec le vrai arsenal de L-A, le tir tenu tire, et le recul monte la vue : le tangage n'est plus celui
+      // du seul glissé)
+      a.arsenal.ch[a.arsenal.i] = 0; a.arsenal.res[a.arsenal.i] = 0;
       const t0 = game.camPitch; let dLacet = 0, tenu = true;
       const d = doigt(el, P.x, P.y);
       jeu.avancer(PAS); tenu = tenu && a.cmd.tir;
@@ -731,7 +734,8 @@ export default function (jeu) {
     try {
       const x0 = tc.repos.x, y0 = tc.repos.y, d = doigt(canvas(), x0, y0);
       d.bouge(x0, y0 - tc.course * 1.3); let v = 0;
-      for (let i = 0; i < 60; i++) { imageSim(PAS); v = Math.max(v, Math.hypot(a.corps.vel.x, a.corps.vel.z)); }
+      // (F2 : 1 s — le vrai mouvement de L-B accélère : 7,42 m/s au bout de 0,5 s, parti de l'arrêt)
+      for (let i = 0; i < 120; i++) { imageSim(PAS); v = Math.max(v, Math.hypot(a.corps.vel.x, a.corps.vel.z)); }
       res.push(['sprint tactique : ≥ 7,6 m/s', v >= 7.6, r3(v) + ' m/s']);
       const P = centre(tc, 'accr'), g = doigt(tc.el.accr, P.x, P.y); g.bouge(P.x, P.y + 30);
       let gl = 0; for (let i = 0; i < 30; i++) { imageSim(PAS); gl = Math.max(gl, a.glisse || 0); }
