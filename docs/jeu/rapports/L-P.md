@@ -59,9 +59,64 @@ Un repreneur : `git -C C:/Users/hgami/Downloads/IRIS_lots/L-P log --oneline vagu
   défis, médailles), la précision du bilan sans les balles de la sentinelle.
 - **`css/jeu/progression.css`**, **`js/jeu/tests/test_progression.js`** (11 critères + 1 `apresFusion`).
 
-## `__rapport` (`?test=1&rapport=1&lot=L-P`, PC 1280 × 720)
+## `__rapport` (`?test=1&rapport=1&lot=L-P`, PC 1280 × 720, qualité moyenne ; 24/10 vers 08:58, sur `69ec57d`)
 
-(à compléter)
+**`ok: true`, 11 / 11, 42,1 s, 0 signalé.** Ce que disent les tests :
+
+| # | critère du § 5.7.3 | obtenu |
+|---|---|---|
+| 1 | barème d'XP exact ; niveau 10 à 14 400, 40 à 179 400 | 14 400 / 179 400, coût 800 + 200 (n − 1) à chaque niveau ; 33 événements au barème (élimination, tête, couteau, loin, défense, assistance 25, capture 150, neutralisation 75, point et suicide 0, séries 3/5/7/9 → 150/250/350/450, les 16 médailles, sentinelle 50) ; victoire 400, défaite 200 ; l'écran de fin montre le bilan d'XP |
+| 2 | déblocages aux niveaux de la table ; un objet verrouillé n'est pas proposé | 27 déblocages à leur niveau ; l'équipement retire ce qui n'est pas débloqué (Tireur au niveau 1 → Assaut, Endurance à 18, silencieux à 16) ; aux réglages : Infiltration, Défense, Tireur grisés au niveau 1, aucune perso proposée, une perso verrouillée lancée en Assaut ; à l'armurerie (niveau 11) : point rouge ouvert, poignée, silencieux et atouts grisés |
+| 3 | accessoires mesurés par l'Arsenal | point rouge : zoom 1,30 en visée ; poignée : 12 balles 5,41° (nue 6,76°), visée 0,283 s (nue 0,267) ; chargeur étendu : 45 / 90, visée 0,30 s, recharge tactique 2,10 s (nue 1,90) ; silencieux : bruit 8 m, paliers 12,75 / 25,5 ; un bot à 15 m derrière entend la FA-24 nue, pas la silencieuse ; un ennemi silencieux n'est pas sur la mini-carte |
+| 4 | atouts mesurés | Endurance : tactique 6 s (nue 3), jauge pleine en 2 s (nue 4) ; Main sûre : recharge 1,425 s (× 0,75), changement 0,333 s (nue 0,408) ; Pas feutrés : rayon 3 m en course (9), 4,67 en sprint (14) ; Récupération : la vie remonte à 2,5 s (4) ; Fantôme : ni balayé par un drone ennemi, ni dans la mémoire des bots |
+| 5 | séries | drone 25 s, 4 ennemis sur la mini-carte, balayage toutes les 2 s, plus rien à 25,5 s ; gilet : 30 dégâts → vie 100, armure 30 ; sentinelle posée à 1,1 m, 300 PV, 40 s, partie à 40 s ; **26 % de touches à 10 m** (237 / 908 sur trois graines : 24 / 28 / 27 %), 0 tir à 26 m, 0 derrière (120°), 46 sur le côté (80°) ; détruite par 9 touches ennemies ; mort : série à 0, gilet à prendre gardé, armure 0 à la réapparition |
+| 6 | les 16 médailles une à une → XP et ligne exactes | 16 / 16 : chacune son événement, l'XP « médailles » du profil égale à la somme des médailles reçues, la ligne « +XP NOM » au HUD (« PREMIÈRE TOUCHE » en Airsoft) |
+| 7 | profil relu identique ; stockage qui lève ; jamais `iris.settings.v1` | relu identique (2 095 octets) ; sauvegarde abîmée remise d'aplomb ; stockage qui lève : une partie jouée, +150 XP en mémoire, aucune exception, `enregistrer()` faux ; aucune écriture du navigateur pendant le profil (ni `iris.settings.v1` ni le vrai `iris.profil.v1`) ; défis du jour tirés à la date |
+| 8 | armes au sol | PM-9 17 / 64 lâchée à la mort, « ramasser » au HUD, `ramasser` vrai (échange : la FA-24 30 / 90 à sa place), F la reprend, 2 × RECHARGER aussi ; munitions prises en passant (10 → 60) ; dotation rendue à la réapparition ; disparues à 30 s ; 10 gardées sur 13 ; **3 appels** chacune (178 → 181 avec une FA-24 au sol devant la caméra), sans ombre portée |
+| 9 | armurerie et profil à la manette ; vitrine ; 0 lumière | portes : les six de L-U + ARMURERIE · PROFIL sous le titre (↑ depuis BALADE) ; A ouvre, la croix parcourt, A choisit, B revient ; vitrine de la PM-9 superposée, vue décalée, rendue en sortant ; lumières de la scène de jeu 8 → 8 ; profil : niveau, défis, armes, médailles, déblocages |
+| 10 | ≤ 2 écritures DOM par image ; déterminisme et état, séries actives | 1,24 écriture par image (300 images, 7 bots, drone + sentinelle + médailles) ; même graine → même empreinte (7324f95d) avec 3 drones, 10 armes au sol ; état en pleine série identique (champ `serie` des acteurs, sentinelle, armes au sol) ; `verifierEtat` vrai |
+| 11 | pureté ; maillages par `aff_progression.js` seul ; programmes constants | `series.js` n'importe que `armes.js` et `rng.js`, `armes_au_sol.js` que `armes.js` et `series.js` ; programmes 165 → 165 (sentinelle qui tire, drone, 6 armes au sol, camouflage or sur l'arme de vue) ; trois racines de scène `dynamique` + `horsContact`, aucun maillage hors d'elles |
+| F | (`apresFusion`) Pas feutrés et la vraie oreille de L-J | à rejouer par INT avec le cerveau de L-J |
+
+`python -I tools/verifier_proprietaires.py lot/L-P` : **OK 11 fichiers** (fichiers et pureté).
+
+## Les autres fichiers de tests, rejoués sur `lot/L-P` (1280 × 720, `&fusion=1`)
+
+| lot | résultat | notes |
+|---|---|---|
+| S0 | 29 / 29 (117,6 s, sur `900f732`) ; rejoué sur le code final : voir plus bas | la balade au bit près, les cycles, les entrées |
+| L-E | 20 / 20 (109 s) | dont le déterminisme 4 c. 4 (60 s) et les 10 min de 4 c. 4 — avec les séries des bots |
+| L-G | 18 / 18 (821 s, onglet souvent passé derrière par les autres agents) | écritures du HUD 1,14 par image (test 01) ; les manches réelles de 2 min |
+| L-U | 14 / 15 | 7 « LANCER → présentation » : 1re préparation 9 741 ms (seuil 4 000) — la machine : mesurée à la suite dans le même onglet, 6,2 s ici contre 5,8 s sur l'arbre `apercu` (= `vague2-ok`) ; `AffProgression.preparer` coûte 61 ms. Les six portes (test 1), les quatre classes (4), le Tireur choisi (6) : verts |
+| L-I | 17 / 18, puis 18 / 18 | 1 a dépassé son délai l'onglet derrière (minuteries bridées) ; rejoué seul, onglet devant : vert |
+
+## Joué pour de vrai (24/10, 08:24-08:55, SANS `?test=1`, `http://127.0.0.1:8153/`, vrai son, panneau du navigateur intégré)
+
+Le navigateur intégré refuse la capture du pointeur (F2 l'a noté) : elle est SIMULÉE (un getter de `document.pointerLockElement`,
+`requestPointerLock` / `exitPointerLock` remplacés, `pointerlockchange` émis) ; tout le reste passe par les vrais chemins : clics de
+l'outil sur « APPUIE », ARMURERIE, RETOUR, LANCER, le calque « CLIQUE POUR JOUER » ; les touches 3 et 4 du vrai clavier pour les
+séries ; un « joueur automatique » qui tourne la vue (`camYaw`, comme la souris) vers l'ennemi vu et tient le clic gauche
+(`input.presser('Souris:0')`, lu par `lireCommande`), et qui marche par le pilote de L-D (`Pilote`, commande forcée `ax/ay`). Le
+profil RÉEL de l'origine (`iris.profil.v1` du port 8153, neuf au départ : niveau 1). Ce qui a été vu :
+
+- **Accueil** : « NIV. 1 · 0 / 800 XP · DÉFIS DU JOUR 0 / 3 », ARMURERIE et PROFIL sous la barre. **Armurerie** (clic) : les neuf
+  classes, Infiltration « NIVEAU 2 », Défense « NIVEAU 4 », Tireur « NIVEAU 8 », les cinq perso « NIVEAU 6 » ; la FA-24 qui tourne
+  en haut ; RETOUR (clic) : l'accueil, la vitrine retirée, la vue de sa caméra rendue. **Réglages** : Assaut seul jouable.
+- **1re partie** (équipes, toute l'école, 20 · 5:00) : présentation, calque, GO ; Haythem resté dans la rue n'a croisé personne ;
+  DÉFAITE 3 – 20 — profil : +200 XP (partie finie), enregistré (2 044 octets). **Trouvé** : l'écran de fin n'avait PAS de bilan
+  d'XP — `courante` et `derniere` étaient propres à chaque instance du profil, et le menu (une autre instance que celle de
+  l'affichage, branchée à la partie) n'en avait pas. Corrigé (partagées : 5c68a8e) et vérifié par le test 1.
+- **2e partie** (équipes, le −1, 30 · 5:00, Recrue) : 6 éliminations ; médailles PREMIÈRE TOUCHE, DOUBLÉ, TRIPLÉ, FURIE, SÉRIE DE 5 ;
+  série 6 : DRONE et GILET à prendre ; touches **3** puis **4** au vrai clavier : « DRONE · 25 s », l'écusson du drone en bleu, la
+  mini-carte couverte de points rouges (le balayage), le gilet enfilé ; « F · RAMASSER PM-9 (24 / 96) » sur une arme tombée ;
+  VICTOIRE 30 – 22. **Bilan** : « +1 750 XP · NIVEAU SUPÉRIEUR 3 · 150 / 1 200 XP · ÉLIMINATIONS × 6 +600 · MÉDAILLES × 5 +350 ·
+  SÉRIES × 2 +400 · VICTOIRE +400 · (les cinq médailles) · DÉBLOQUÉ PM-9 « Guêpe », Classe Infiltration ». **Trouvé** : à
+  1280 × 720, les boutons de fin (collés au bas, L-U) couvraient le bilan d'XP placé sous les chiffres — il passe sous le podium,
+  le podium se serre (5060d36, 69ec57d) ; à la vitrine, `setViewOffset` AGRANDISSAIT l'arme (une image entière plus grande que la
+  fenêtre) — l'image entière est maintenant plus petite : l'arme rétrécit et tombe dans la moitié droite (5060d36).
+- Console : aucune erreur du jeu (seule celle, connue, du service worker que le navigateur intégré refuse).
+- À voir par INT : à 374 × 218 (le panneau ici, plus petit qu'un téléphone couché) l'armurerie ne montre qu'une rangée de classes
+  et l'écran de fin se fait défiler ; le nom d'un allié (chevron) peut passer sur les écussons des séries.
 
 ## Décisions (le § 5.7.3 laisse le choix)
 
