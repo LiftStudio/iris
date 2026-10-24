@@ -36,6 +36,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TELEPHONE } from '../appareil.js';
+import { avecProfondeur } from '../ombre_cache.js';
 
 const DEG = Math.PI / 180;
 const _m4 = new THREE.Matrix4(), _m4b = new THREE.Matrix4();
@@ -938,6 +939,7 @@ export function prechargerArmes({ game = null } = {}) {
   _t0 = performance.now();
   _charge = Promise.all(IDS_ARMES.map((id) => (MODELES[id] ? null : chargerModele(id))))
     .then(() => envoyerTextures(G))
+    .then(() => compilerTroisieme(G))
     .then(() => remplirAttente(G))
     .catch((e) => console.warn('[armes] préchargement :', e))
     .then(() => { _t1 = performance.now(); return etatArmes(); });
@@ -967,6 +969,26 @@ async function envoyerTextures(G) {
     M.envoye = true;
     for (const t of texturesDe(M.mat)) { r.initTexture(t); await uneImage(); }
   }
+}
+
+// LES PROGRAMMES DE LA 3e PERSONNE (la scène de jeu), compilés une fois, à l'arrivée des GLB : l'arme éclairée et ses
+// variantes d'ombre (Game._compilerTout : carte d'ombre aux lumières de la scène, ombres de contact) — et la carte d'ombre
+// dessinée SANS lumière (avecProfondeur contre une scène vide) : au téléphone, mesuré le 24/10, deux programmes de profondeur
+// (la carte de la vraie arme a une `map` : variante « uv » à 0 lumière) se compilaient en pleine partie, que ni la préparation
+// des avatars (preparerArmes3e) ni _compilerTout ne faisaient
+async function compilerTroisieme(G) {
+  if (!G || !G._compilerAsync) return;
+  const ids = IDS_ARMES.filter((id) => MODELES[id] && !MODELES[id].compile3e);
+  if (!ids.length) return;
+  const grp = new THREE.Group(), tmp = [];
+  for (const id of ids) { const a = creerArme(id, { pourVue: false }); a.position.y = -50; grp.add(a); tmp.push(a); MODELES[id].compile3e = true; }
+  grp.updateMatrixWorld(true);
+  const vide = new THREE.Scene();
+  try {
+    const P = [G._compilerTout ? G._compilerTout(grp, true) : G._compilerAsync(grp), avecProfondeur(grp, (x) => G._compilerAsync(x, vide, false))];
+    await Promise.race([Promise.all(P.filter(Boolean)), new Promise((r) => setTimeout(r, 4000))]);
+  } catch (e) { /* (une compilation ratée se refera au rendu) */ }
+  for (const a of tmp) libererArme(a);
 }
 
 // ---------------------------------------------------------------------
@@ -1053,10 +1075,9 @@ async function remplirAttente(G) {
   if (!L.length) return;
   if (G && G._compilerAsync) {
     const parScene = new Map(), tmp = [], P = [];
-    let trois = new Set();
     for (const g of L) {
       const id = PLANS[g.userData.arme] ? g.userData.arme : 'fa24';
-      if (!g.userData.pourVue) { trois.add(id); continue; }
+      if (!g.userData.pourVue) continue;                         // (la 3e personne : compilerTroisieme, déjà fait)
       let s = g; while (s.parent) s = s.parent;
       if (!s.isScene) continue;
       if (!parScene.has(s)) parScene.set(s, new Set());
@@ -1064,7 +1085,6 @@ async function remplirAttente(G) {
     }
     const lot = (ids, vue) => { const grp = new THREE.Group(); for (const id of ids) { const a = creerArme(id, { pourVue: vue }); a.position.y = -50; grp.add(a); tmp.push(a); } grp.updateMatrixWorld(true); return grp; };
     for (const [s, ids] of parScene) { const grp = lot(ids, true); P.push(G._compilerAsync(grp, s, false, G.camera), G._compilerAsync(grp, s, true, G.camera)); }
-    if (trois.size) { const grp = lot(trois, false); P.push(G._compilerTout ? G._compilerTout(grp, true) : G._compilerAsync(grp)); }
     try { await Promise.race([Promise.all(P.filter(Boolean)), new Promise((r) => setTimeout(r, 4000))]); } catch (e) { /* (une compilation ratée se refera au rendu) */ }
     for (const a of tmp) libererArme(a);
   }
