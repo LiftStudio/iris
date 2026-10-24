@@ -337,9 +337,11 @@ export class HudJeu {
   }
   // au doigt : la touche de la série pressée un instant (js/jeu/entrees_jeu.js la lit comme le clavier)
   _toucherSerie(i) { this._presser('serie' + (i + 1)); }
-  // la touche d'une action pressée un instant (120 ms : un front pour une action à front, un appui tenu pour `interagir`)
+  // la touche d'une action pressée un instant (120 ms : un front pour une action à front, un appui tenu pour `interagir`) —
+  // (relecture) son code TACTILE d'abord (`Tactile:<action>`, que js/input.js lie à chaque action : il marche même si Haythem a
+  // délié la touche du clavier), sinon la première touche liée
   _presser(action) {
-    const inp = this.game.input, B = inp && inp.bind && inp.bind[action], code = B && B.find(Boolean);
+    const inp = this.game.input, B = inp && inp.bind && inp.bind[action], code = B && (B.find((c) => c === 'Tactile:' + action) || B.find(Boolean));
     if (!code) return;
     inp.presser(code); setTimeout(() => inp.relacher(code), 120);
   }
