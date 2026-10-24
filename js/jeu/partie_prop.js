@@ -856,6 +856,8 @@ export class PartieProp extends Partie {
     this.game.appliquerProfil?.({ purger: true });
   }
   bornesTangage() { return this.local && this.local.role === 'prop' ? [-0.7, 1.25] : super.bornesTangage(); }
+  // (F2 relecture : la ligne sous « PAUSE »)
+  titrePause() { const Z = ZONES_JEU[this.zone]; return `PROP HUNT · ${(Z ? Z.nom : this.zone || '').toUpperCase()} · MANCHE ${this.manche} / ${this.nManches}`; }
   get profil() { return this.local && this.local.role === 'prop' ? 'prop' : 'combat'; }
 }
 

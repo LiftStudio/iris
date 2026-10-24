@@ -613,6 +613,8 @@ export class PartieFPS extends Partie {
       camp: this.local ? this.local.equipe : null };
   }
   peutTirer(a) { return this.phase === 'manche' && super.peutTirer(a); }
+  // (F2 relecture : la ligne sous « PAUSE »)
+  titrePause() { const Z = ZONES_JEU[this.zone]; return `${this.nomMode} · ${(Z ? Z.nom : this.zone).toUpperCase()}`; }
   // (pendant la présentation, la caméra est derrière Haythem : l'arme de vue, une superposition, n'y est pas — cachée après
   // sa mise à jour de l'image, avant le rendu ; elle revient d'elle-même au décompte)
   image(dt) {

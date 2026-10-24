@@ -535,7 +535,9 @@ export class Game {
       return;
     }
     if (document.pointerLockElement) document.exitPointerLock?.();
-    showOverlay('PAUSE', this.carte.nom ? `IRIS · ${this.carte.nom}` : 'IRIS', this.partie ? this.partie.boutonsPause() : [
+    // (F2 relecture : en partie, la ligne sous PAUSE dit la partie — « MATCH À MORT PAR ÉQUIPES · TOUTE L'ÉCOLE » — et non la
+    // carte, « IRIS · IRIS — rez-de-chaussée » ; la balade garde la sienne)
+    showOverlay('PAUSE', this.partie ? (this.partie.titrePause?.() || 'IRIS') : this.carte.nom ? `IRIS · ${this.carte.nom}` : 'IRIS', this.partie ? this.partie.boutonsPause() : [
       { label: 'Reprendre', cls: 'btn-primary', onClick: () => this.togglePause(true) },
       { label: 'Options', cls: 'btn-secondary', onClick: () => this.cb.onOptions?.() },
       { label: 'Commandes', cls: 'btn-secondary', onClick: () => this.cb.onAide?.() },

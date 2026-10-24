@@ -341,6 +341,8 @@ export class PartieStand extends Partie {
     return `RÉFLEXES · ${r.compte} / 20` + (r.reaction !== null ? ` · ${Math.round(r.reaction * 1000)} MS` : '') + ` · ${pts}`;
   }
   peutTirer(a) { return (this.phase === 'manche') && super.peutTirer(a); }
+  // (F2 relecture : la ligne sous « PAUSE »)
+  titrePause() { return `STAND DE TIR · ${this.D.nom}`; }
 
   // ---------------------------------------------------------------- le HUD : les cibles (L-H les dessine), le défi
   _majCibles() {

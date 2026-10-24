@@ -387,6 +387,8 @@ export class Partie {
   mouvementSouris(dx, dy) { }
   mouvementStick(x, y) { }
   lireExtra(input, game, cmd) { }
+  // (F2 relecture : la ligne sous « PAUSE » — les sous-classes disent leur mode)
+  titrePause() { return 'IRIS · PARTIE D’ESSAI'; }
   boutonsPause() {
     const g = this.game;
     return [
