@@ -74,12 +74,15 @@ export class CerveauCacheur {
     this.etat = 'cachette'; this._fait = false;
   }
   // le type le plus courant de sa pièce (le carton quand le registre est vide)
+  // (F2 relecture : parmi les types DÉGUISABLES de la zone — PartieProp._deguisable — ; une pièce qui n'en a pas : null, et
+  // PartieProp prend le plus courant de la pièce puis de la zone. Le « carton de secours » n'existe nulle part au −1 — 0 carton
+  // au registre — : joué, les deux props bots partis de la S −1.14 et du sas étaient des cartons, des props à coup sûr)
   typeDeLaPiece() {
-    const a = this.acteur, z = this.partie.game.carte.lumieres?.zoneEn?.(a.pos.x, a.pos.z, a.pos.y + 0.1);
+    const a = this.acteur, P = this.partie, z = P.game.carte.lumieres?.zoneEn?.(a.pos.x, a.pos.z, a.pos.y + 0.1);
     const L = (z && MEUBLES.parZone.get(z.id)) || [];
-    const n = new Map(); for (const p of L) n.set(p.cle, (n.get(p.cle) || 0) + 1);
+    const n = new Map(); for (const p of L) if (!P._deguisable || P._deguisable(p.cle)) n.set(p.cle, (n.get(p.cle) || 0) + 1);
     let best = null, bn = 0; for (const [k, v] of n) if (v > bn) { bn = v; best = k; }
-    return best || 'carton';
+    return best || (MEUBLES.poses.length ? null : 'carton');
   }
   commande(dt, cmd) {
     cmd.ax = 0; cmd.ay = 0; cmd.amp = 0; cmd.sprint = false; cmd.tir = false; cmd.deguiser = false;
