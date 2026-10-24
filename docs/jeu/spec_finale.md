@@ -1625,7 +1625,7 @@ autres fichiers sont étiquetés par L-K (§ 5.3).
 |---|---|---|---|
 | `tir` | a, arme, ox, oy, oz, dx, dy, dz, n (plombs), seq | Arsenal | effets, sons, cerveaux (ouïe), HUD (mini-carte), manette |
 | `impact` | x, y, z, nx, ny, nz, mat, forme, plomb | Partie.resoudreTir | effets, sons |
-| `touche` | par, cible, zone, degats, x, y, z, tete, dx, dz | Partie.infliger (étape 6b, ou 7 pour une grenade) | HUD (marqueurs, indicateurs), sons, cerveaux, corps (sursaut), manette |
+| `touche` | par, cible, zone, degats, x, y, z, tete, dx, dz, arme (F2 relecture : la précision ne compte que les armes à feu) | Partie.infliger (étape 6b, ou 7 pour une grenade) | HUD (marqueurs, indicateurs), sons, cerveaux, corps (sursaut), manette |
 | `elim` | par, cible, arme, tete, x, y, z, ix, iy, iz, assists | Partie.infliger | règles, HUD (fil), corps (poupée), vue (mort), sons, profil (vague 3) |
 | `apparition` | a, x, y, z | règles | corps, HUD |
 | `recharge` | a, phase ('debut'\|'insere'\|'fin'), tactique | Arsenal | viewmodel (rien de règle), sons |
