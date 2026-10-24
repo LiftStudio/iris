@@ -81,10 +81,10 @@ export function lireCommande(input, game, cmd, profil, partie) {
       E.sprintAppui = t;
       if (manette || entree.manette) E.verrou = true;                   // (L3 : verrouillé, comme Call of Duty)
     }
-    // (au doigt : le joystick poussé au-delà de son bord verrouille le sprint — et lance le tactique s'il est prêt)
+    // (au doigt, js/touch.js : AU BORD du joystick, le sprint TENU — `touchSprint`, ni verrou ni tactique ; AU-DELÀ du bord, le
+    // verrou, dont le front `sprintTact` passe par la ligne d'au-dessus. F2, demande de L-I : le front de `touchSprint` lançait
+    // aussi le tactique, dès le bord — courir à fond au doigt brûlait la jauge à chaque fois)
     const doigt = !!inp.touchSprint;
-    if (doigt && !E.doigtSprint) tact = true;
-    E.doigtSprint = doigt;
     const tir = inp.down('tir');
     let visee = viseeMaintenue ? inp.down('visee') : E.visee;
     // (la visée basculée n'est ôtée que par un sprint qui part — vers l'avant — et jamais lunette à l'œil : Maj y retient le
