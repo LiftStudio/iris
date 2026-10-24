@@ -725,10 +725,14 @@ export class MenuJeu {
     const B = { titre: 'FIN DE LA PARTIE', sous: resultat.texte || '', cls: 'neutre', podium: [], chiffres: [] };
     if (!p) return B;
     const A = this._jeu().habillage === 'airsoft', loc = p.local, S = this._suivi && this._suivi.p === p ? this._suivi : null;
-    const joueurs = p.acteurs.filter((a) => a.role !== 'cible');
+    // (F2 relecture : au stand, le mannequin n'est pas un joueur — il montait sur le podium, « Mannequin / Haythem (toi) »)
+    const joueurs = p.acteurs.filter((a) => a.role !== 'cible' && !(p.id === 'stand' && a === p.mannequin));
     // le classement : au chacun pour soi par ÉLIMINATIONS d'abord (la règle qui désigne le gagnant), ailleurs par points ; le
     // RANG d'un joueur compte les ex æquo (1 + ceux strictement devant : quatre joueurs à 0 point sont tous premiers)
-    const cmp = p.id === 'melee' ? (x, y) => y.stats.elims - x.stats.elims || y.stats.score - x.stats.score
+    // (F2 relecture : au chacun pour soi, les éliminations NETTES — moins les suicides, PartieFPS._net —, comme la règle qui
+    // désigne le gagnant ; sinon un suicide pouvait donner « 1re PLACE » à un autre que le vainqueur annoncé)
+    const net = (a) => (p._net ? p._net(a) : a.stats.elims);
+    const cmp = p.id === 'melee' ? (x, y) => net(y) - net(x) || y.stats.score - x.stats.score
       : (x, y) => y.stats.score - x.stats.score || y.stats.elims - x.stats.elims;
     const cl = [...joueurs].sort((x, y) => cmp(x, y) || x.stats.morts - y.stats.morts);
     const rang = (a) => (a ? 1 + joueurs.filter((b) => b !== a && cmp(b, a) < 0).length : 0), exAequo = (a) => joueurs.some((b) => b !== a && cmp(b, a) === 0);
@@ -747,15 +751,30 @@ export class MenuJeu {
       const r = rang(loc), gagne = !!loc && g === loc.id;
       B.titre = gagne ? 'VICTOIRE' : r ? place(r) : 'FIN DE LA PARTIE';
       B.cls = gagne ? 'victoire' : 'neutre';
-      B.sous = `${loc ? loc.stats.elims : 0} ${A ? 'adversaires touchés' : 'éliminations'} · ${joueurs.length} joueurs`;
+      // (F2 relecture : le singulier — « 1 ADVERSAIRES TOUCHÉS » se lisait à la fin d'une partie)
+      const n = loc ? loc.stats.elims : 0;
+      B.sous = `${n} ${A ? (n > 1 ? 'adversaires touchés' : 'adversaire touché') : (n > 1 ? 'éliminations' : 'élimination')} · ${joueurs.length} joueurs`;
     } else if (p.id === 'prophunt') {
       const r = rang(loc), M = S ? S.manches : { props: 0, chasseurs: 0 }, seul = r === 1 && !exAequo(loc);
       B.titre = seul ? 'MEILLEUR SCORE' : r === 1 ? 'EX ÆQUO EN TÊTE' : r ? place(r) : (g === 'props' ? 'LES PROPS GAGNENT' : 'LES CHASSEURS GAGNENT');
       B.cls = seul ? 'victoire' : 'neutre';
       B.sous = `${p.nManches || p.manche || ''} manches · props ${M.props} – ${M.chasseurs} chasseurs`;
     } else if (p.id === 'stand') { B.titre = 'STAND TERMINÉ'; }
-    B.podium = cl.slice(0, 3).map((a) => ({ nom: a.nom, local: !!a.local, fiche: ficheDe(a), couleur: couleur(a),
+    // (F2 relecture : au stand, Haythem est seul — pas de podium, les chiffres du DÉFI : le résultat des règles,
+    // PartieStand.resultat, et le record de l'appareil)
+    B.podium = p.id === 'stand' ? [] : cl.slice(0, 3).map((a) => ({ nom: a.nom, local: !!a.local, fiche: ficheDe(a), couleur: couleur(a),
       ligne: p.id === 'prophunt' ? `${a.stats.score} pts` : `${a.stats.score} pts · ${a.stats.elims} / ${a.stats.morts}` }));
+    if (p.id === 'stand') {
+      const r = p.resultat || {}, rec = p.record, s1 = (v) => (Number.isFinite(v) ? v.toFixed(1).replace('.', ',') + ' s' : '—');
+      if (rec && rec.nouveau) B.titre = 'NOUVEAU RECORD';
+      B.cls = r.reussi || (rec && rec.nouveau) ? 'victoire' : 'neutre';
+      B.chiffres = [[r.defi === 'tetes' ? 'têtes' : r.defi === 'recul' ? 'touches' : 'cibles', r.objectif ? `${r.compte ?? 0} / ${r.defi === 'recul' ? r.tirs ?? 0 : r.objectif}` : String(r.compte ?? 0)],
+        ['temps', s1(r.temps)], ['précision', `${Math.round(100 * (r.precision || 0))} %`],
+        [r.defi === 'reflexes' ? 'réaction' : r.defi === 'recul' ? 'groupement' : 'têtes', r.defi === 'reflexes' ? (r.reaction ? `${Math.round(r.reaction * 1000)} ms` : '—')
+          : r.defi === 'recul' ? (r.groupement !== null && r.groupement !== undefined ? `${String(r.groupement).replace('.', ',')} cm` : '—') : String(r.tetes ?? 0)],
+        ['points', String(r.points ?? 0)], ['essais ici', String(rec ? rec.essais : 1)]];
+      return B;
+    }
     if (loc) {
       const s = loc.stats, tirs = S ? S.plombs.get(loc.id) || 0 : s.tirs, touches = S ? S.touches.get(loc.id) || 0 : s.touches;
       const prec = tirs ? Math.min(100, Math.round(100 * touches / tirs)) : 0;
