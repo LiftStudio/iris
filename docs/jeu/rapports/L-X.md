@@ -7,17 +7,13 @@ Branche `lot/L-X` (arbre `C:/Users/hgami/Downloads/IRIS_lots/L-X`, depuis `vague
 
 ## Où j'en suis
 
-**EN COURS (24/10)** — arbre créé, spec (§§ 0-4, 4.5.8-4.5.10, 5.1, 5.5.3-5.5.5), F2.md, L-W.md, `viewmodel.js`,
-`pose_arme.js` lus ; plan ci-dessous. Rien n'est encore construit.
+**EN COURS (24/10, 06:52)** — construit et commité (`37efcf6`, `2fea517`) : les GLB du jeu, `modeles_armes.js` réécrit sur
+eux (repli fait main rempli en place), les tests. Vérifié HORS navigateur (three r170 sous Node, textures retirées) : les 8
+GLB se cousent, repères = extras ± 0 mm, pivots ± 0,07 mm, os rigides justes, 1 maillage par arme, repli → vraie arme en
+place. **Reste** : le jeu au navigateur (jeton : les trois pris par L-O, G-LUM, G-MAT depuis 06:23 ; j'attends), les
+photos, le réglage des origines et des matériaux sur photos, S0 / L-V / L-C rejoués, le rapport final.
 
-Un repreneur : `git -C C:/Users/hgami/Downloads/IRIS_lots/L-X log --oneline vague2..` dit ce qui est fait.
-
-## Le plan
-
-1. `assets/armes/<id>.glb` (PC, textures 1024) et `assets/tel/armes/<id>.glb` (512) refaits depuis `_armes/choix/` par
-   `assets/armes/preparer_armes.py` : origine ramenée au contrat de L-W (la prise de la main droite EN HAUT de la poignée,
-   où l'arme de vue de L-V a réglé ses mains), textures JPEG, repères et pivots recalculés dans `extras.iris`.
-2. `js/jeu/modeles_armes.js` : `creerArme` sur les GLB (une géométrie cousue par arme, un appel de dessin ; en vue, un
-   `SkinnedMesh` rigide dont les os sont les vraies pièces mobiles), le modèle fait main en REPLI tant qu'un GLB n'est pas
-   prêt (remplacé EN PLACE à son arrivée), `prechargerArmes()` à la préparation d'une partie (jamais au démarrage).
-3. `js/jeu/tests/test_modeles_armes.js` réécrit ; photos (vue FPS, bots, vitrine) ; demandes à INT.
+Un repreneur : `git -C C:/Users/hgami/Downloads/IRIS_lots/L-X log --oneline vague2..` dit ce qui est fait ; le serveur se
+relance par `python serve.py 8155` dans l'arbre, le récepteur de photos par
+`node <scratchpad>/lx/recepteur.mjs C:/Users/hgami/Downloads/IRIS_lots/_photos/L-X 8255` (outil hors dépôt, 20 lignes :
+POST d'un data:URL → fichier ; sans lui, les planches restent dans `window.__planche*`).
