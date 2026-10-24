@@ -438,7 +438,8 @@ export class PartieFPS extends Partie {
     if (!sent) tireur.arsenal?.ajouterChargeur();
     const xt = this._ext(tireur);
     if (!sent) { xt.serie++; xt.serieMax = Math.max(xt.serieMax, xt.serie); }
-    const couteau = e.arme === 'couteau', loin = dist > B.loinM, defense = this._defense(tireur, cible);
+    // (relecture : une élimination de la sentinelle n'est pas « au-delà de 30 m » parce que Haythem est loin d'elle)
+    const couteau = e.arme === 'couteau', loin = !sent && dist > B.loinM, defense = this._defense(tireur, cible);
     const pts = B.elim + (e.tete ? B.tete : 0) + (couteau ? B.couteau : 0) + (loin ? B.loin : 0) + (defense ? B.defense : 0);
     if (defense) xt.defenses++;
     tireur.stats.score += pts;
@@ -576,6 +577,7 @@ export class PartieFPS extends Partie {
       P.possesseur = null; P.tenu = 0; P.capture = { equipe: null, k: 0 };
       if (avait) this.evt('capture', { point: P.id, equipe: null, etat: 'neutre' });
     }
+    this.series.finirTout();                      // (L-P relecture : drones et sentinelles ne passent pas la mi-temps)
     this.phaseVers('mi_temps', REGLES_FPS.miTemps);
     this.annonce(`MI-TEMPS · ${EQUIPES.A.nom} ${this.scores.A} – ${this.scores.B} ${EQUIPES.B.nom} · LES CAMPS S’ÉCHANGENT`, 'mi_temps');
   }
@@ -686,11 +688,20 @@ export class PartieFPS extends Partie {
     if (cible.protegeT > this.t) return 0;
     const pris = Math.min(ar, degats), reste = degats - pris;
     cible.armure = 0;
+    // (relecture : les dégâts pris par le gilet comptent à l'assistance du tireur, § 3.5 — ≥ 30 dégâts sur une cible tuée
+    // dans les 5 s —, comme ceux de la vie)
+    (cible._aides || (cible._aides = [])).push({ par, d: pris, t: this.t });
     let d = 0;
     if (reste > 1e-9) d = super.infliger(cible, reste, O);
     else {
       if (tireur && tireur.protegeT > this.t) tireur.protegeT = this.t;
       cible.derniereTouche = { t: this.t, par, arme: O.arme ?? null };
+      // (et le coup tout pris par le gilet est une touche du tireur, à sa précision — un coup de plombs une fois)
+      if (tireur) {
+        const f = O.arme ? ARMES[O.arme] : null, multi = O.plomb !== undefined && f && f.plombs > 1;
+        if (f && f.rpm && (!multi || tireur._seqTouche !== O.seq)) tireur.stats.touches++;
+        if (multi) tireur._seqTouche = O.seq;
+      }
       this.evt('touche', { par, cible: cible.id, zone: O.zone || 'torse', degats: 0, x: O.x || 0, y: O.y || 0, z: O.z || 0, tete: O.zone === 'tete', dx: O.dx || 0,
         dz: O.dz || 0, arme: O.arme ?? null, armure: pris });
     }

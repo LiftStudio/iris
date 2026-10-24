@@ -68,6 +68,9 @@ export class ArmesAuSol {
   ramasser(a, s) {
     const P = this.partie, A = a && a.arsenal, t = P.t;
     if (!A || !s || !a.vivant || this.liste.indexOf(s) < 0) return false;
+    // (relecture : pas au milieu d'un geste — une frag cuite en main restait goupillée sans jamais partir ni se décompter, le
+    // couteau et le franchissement coupés net ; l'arme ne s'échange que bras libres)
+    if (A.et === 'lancer' || A.et === 'couteau' || A.et === 'franchit') return false;
     const i = A.i, vieille = A.armes[i];
     const base = ARMES[s.arme]; if (!tireuse(base)) return false;
     // (un modèle qu'il tient déjà : ce n'est pas un échange — les munitions se prennent en passant dessus)

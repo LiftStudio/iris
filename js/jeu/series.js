@@ -186,7 +186,8 @@ export class Series {
     if (K.tueur === cible.id) { M.push('vengeance'); K.tueur = -1; }
     if (this.touches.some((h) => h.par === cible.id && h.cible !== tueur.id && t - h.t <= R.sauvetage + 1e-9 && this._allie(tueur, h.cible))) M.push('sauvetage');
     const d = Math.hypot(tueur.pos.x - cible.pos.x, tueur.pos.y - cible.pos.y, tueur.pos.z - cible.pos.z);
-    if (d > R.loin) M.push('loin');
+    // (relecture : la distance d'une élimination de la sentinelle est celle de Haythem, pas d'elle — sa portée est de 25 m)
+    if (d > R.loin && !sent) M.push('loin');
     if (d < R.boutPortant && e.arme !== 'couteau' && !sent) M.push('boutPortant');
     if (e.arme === 'couteau') M.push('couteau');
     if (serieCible >= R.troubleFete) M.push('troubleFete');
@@ -404,6 +405,15 @@ export class Series {
   }
   // une mort ou une réapparition : l'armure du gilet ne survit pas à la vie (posé par les règles)
   remettre(a) { if (a) a.armure = 0; }
+  // (relecture) LA MI-TEMPS de la domination — les camps s'échangent — : les drones et les sentinelles de la première moitié
+  // s'en vont (une tourelle restée dans l'ancien camp de Haythem tirait sur les réapparitions d'en face) ; les séries à
+  // prendre et les compteurs restent
+  finirTout() {
+    const P = this.partie;
+    for (const D of this.drones) P.evt('serie', { a: D.a, id: 'drone', etat: 'finie' });
+    for (const s of this.sentinelles) P.evt('serie', { a: s.a, id: 'sentinelle', etat: 'finie', sentinelle: s.id, x: s.x, y: s.y, z: s.z });
+    this.drones = []; this.sentinelles = [];
+  }
 
   // ---------------------------------------------------------------- L'ÉTAT (§ 4.7)
   etat() {
