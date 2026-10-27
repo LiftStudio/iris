@@ -1,0 +1,15 @@
+{
+  // Configuration Cloudflare du serveur en ligne d'IRIS (copie de celle de LA CAGE, même compte).
+  // Déploiement : double-clic sur serveur\Deployer_le_serveur.bat (ou : cd serveur puis npx wrangler deploy).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "iris-salon",
+  "main": "cloudflare.js",
+  "compatibility_date": "2025-04-07",
+  // l'école publique est un Durable Object : un seul objet, nommé, chez qui tout le monde est routé
+  "durable_objects": {
+    "bindings": [{ "name": "SALON", "class_name": "Salon" }]
+  },
+  // `new_sqlite_classes` : le plan gratuit n'a que les Durable Objects adossés à SQLite
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Salon"] }],
+  "observability": { "enabled": true }
+}

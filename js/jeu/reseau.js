@@ -10,6 +10,8 @@
 
 const CLE_ID = 'iris.enligne.id';
 export const CLE_PROFIL = 'iris.enligne.v1';
+// le serveur public (serveur/Deployer_le_serveur.bat : le Worker « iris-salon » du compte Cloudflare de LA CAGE)
+export const SERVEUR_PUBLIC = 'wss://iris-salon.lacage-salon.workers.dev/ws';
 
 function lire(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function ecrire(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* stockage refusé : tant pis, on garde en mémoire */ } }
@@ -41,6 +43,8 @@ export function adresseServeur() {
     const h = s.replace(/^https?:\/\//i, '').replace(/\/.*$/, ''), sur = /^https:/i.test(s);
     return (sur ? 'wss://' : 'ws://') + (h.includes(':') ? h : h + ':8124') + '/ws';
   }
+  // (la version web, sur GitHub Pages, n'a que les fichiers : elle va au serveur public, chez Cloudflare — serveur/cloudflare.js)
+  if (/github\.io$/i.test(location.hostname)) return SERVEUR_PUBLIC;
   return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
 }
 // l'état du serveur (combien d'élèves en ligne, ses adresses sur le wifi) — null s'il ne répond pas (serve.py, sans Node)
