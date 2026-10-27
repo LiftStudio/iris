@@ -45,6 +45,7 @@ import { AvatarRig } from '../avatar.js';
 import { prechargerModele } from '../player.js';
 import { HAYTHEM } from '../game.js';
 import { creerArme, REPERES } from './modeles_armes.js';
+import { creerViseurs, coucherHausse, TYPES_VISEURS } from './viseurs.js';
 import { ARMES } from './armes.js';
 import { POSES_VUE, POSES_ARMES, CHRONOS, VOIES, VOIES_MAIN, evaluer } from './anim_vue.js';
 
@@ -164,7 +165,7 @@ export class Viewmodel {
     // l'arme (son origine = la prise de la main droite), les objets tenus à la main (couteau, grenades), les bras
     this.racine = new THREE.Group(); this.racine.name = 'arme de vue'; this.scene.add(this.racine);
     this.tenus = new THREE.Group(); this.tenus.name = 'tenus'; this.scene.add(this.tenus);
-    this.armes = {}; this.objets = {}; this.courante = null; this._vitrine = null; this._supV = null; this._env = null;
+    this.armes = {}; this.objets = {}; this.viseurs = {}; this._hausses = {}; this._viseur = null; this.courante = null; this._vitrine = null; this._supV = null; this._env = null;
     this._sup = { scene: this.scene, camera: this.camera };
     this.racine.visible = false;
     this.bras = null;                 // { groupe, model, rig, triangles, mats, os: {D:…, G:…}, repos }
@@ -176,6 +177,9 @@ export class Viewmodel {
     this.recul = new Ressort(35, 0.55); this.reculR = new Ressort(35, 0.55); this.reculH = new Ressort(35, 0.55); this._reculSigne = 1;
     this.inertieL = new Ressort(18, 0.8); this.inertieT = new Ressort(18, 0.8);
     this.chasse = new Ressort(12, 0.999); this.reception = new Ressort(22, 0.7);
+    // (27/10) la TRAÎNE de l'arme derrière la vitesse du corps (elle prend du retard au départ, dépasse un peu à l'arrêt et
+    // revient : ω 9, ζ 0,55), l'accroupi et l'envol lissés
+    this.traineX = new Ressort(9, 0.55); this.traineZ = new Ressort(9, 0.55); this._accr = 0; this._vol = 0;
     this._phase = 0; this._amp = 0; this._lacet = null; this._tangage = 0; this._enAir = false; this._airT = 0;
     this._seq = null; this._tirT = -10; this._ressortArsenal = false; this._eclair = 0;
     this._geste = { cle: null, objet: null, poids: 0, vals: new Float64Array(VOIES.length), main: new Float64Array(VOIES_MAIN.length), poidsMain: 0 };
@@ -229,16 +233,44 @@ export class Viewmodel {
     const montres = [...Object.values(this.armes)].map((a) => [a, a.visible]);
     this.racine.visible = true; this.tenus.visible = true; if (this.bras) this.bras.groupe.visible = true;
     for (const [a] of montres) a.visible = true;
+    // (les viseurs aussi : leurs programmes compilés ici, pas au 1er changement de viseur en partie)
+    for (const id of ARMES_VUE) this._viseurs(id);
+    const vus = [];
+    for (const V of Object.values(this.viseurs)) if (V) for (const v of Object.values(V)) { vus.push([v.groupe, v.groupe.visible]); v.groupe.visible = true; }
     try {
       const c = g._compilerAsync;
       const L = c ? [c.call(g, this.scene, this.scene, false, this.camera), c.call(g, this.scene, this.scene, true, this.camera)].filter(Boolean) : [];
       await Promise.race([Promise.all(L), new Promise((res) => setTimeout(res, 8000))]);
     } finally {
       for (const [a, v] of montres) a.visible = v;
+      for (const [o, v] of vus) o.visible = v;
       this.racine.visible = vis[0]; this.tenus.visible = vis[1]; if (this.bras) this.bras.groupe.visible = !!vis[2];
     }
     this._pret = true;
     if (progres) progres('Armes et effets', 0.5);
+  }
+  // LES VISEURS d'une arme (créés une fois, rattachés à l'arme s'ils en ont été détachés — le GLB qui arrive remplit le groupe
+  // de l'arme en place)
+  _viseurs(id) {
+    const a = this.armes[id];
+    if (!a) return null;
+    if (this.viseurs[id] === undefined) this.viseurs[id] = creerViseurs(id, a);
+    const V = this.viseurs[id];
+    if (V) for (const v of Object.values(V)) if (v.groupe.parent !== a) a.add(v.groupe);
+    return V;
+  }
+  // le viseur de l'arme `id` tenue par Haythem (l'arsenal local : la fiche de cette arme, son champ `viseur`), montré seul
+  _poserViseur(id) {
+    const P = this.game.partie, A = P && P.local && P.local.arsenal;
+    const fi = A && A.armes ? A.armes.find((x) => x && (x.base || x.id) === id) : null;
+    const type = (fi && fi.viseur) || null, V = this._viseurs(id);
+    let v = null;
+    if (V) for (const t of TYPES_VISEURS) { const on = t === type; V[t].groupe.visible = on; if (on) v = V[t]; }
+    // (la hausse rabattable couchée sous une optique)
+    if (V && this._hausses[id] === undefined) this._hausses[id] = coucherHausse(id, this.armes[id]);
+    if (this._hausses[id]) this._hausses[id].couche(!!v);
+    this._viseur = v ? type : null; this.diag.viseur = this._viseur;
+    return v;
   }
   // une arme de la vue : jamais élaguée (ses os rigides ne recalculent pas sa sphère), sans ombre
   _pourVue(a) { a.traverse((o) => { if (o.isMesh) { o.frustumCulled = false; o.castShadow = false; o.receiveShadow = false; } }); }
@@ -334,6 +366,9 @@ export class Viewmodel {
     // la vitesse de côté (le pas chassé) : la vitesse du corps sur la droite du regard
     if (etat.lateral !== undefined) e.lateral = +etat.lateral || 0;
     else { const c = a && a.corps, l = this.game.camYaw || 0; e.lateral = c && c.vel ? c.vel.x * Math.cos(l) - c.vel.z * Math.sin(l) : 0; }
+    // (27/10) la vitesse vers l'avant du regard (la traîne de l'arme quand on avance ou recule)
+    if (etat.avant !== undefined) e.avant = +etat.avant || 0;
+    else { const c = a && a.corps, l = this.game.camYaw || 0; e.avant = c && c.vel ? -(c.vel.x * Math.sin(l) + c.vel.z * Math.cos(l)) : 0; }
     return e;
   }
 
@@ -352,7 +387,8 @@ export class Viewmodel {
     // du squelette passe à la nouvelle à la FIN de la sortie, celui de L-A à la fin du RANGEMENT : on ne dépend d'aucun
     const chg = this._chg;
     if (e.et !== 'change') { chg.de = null; chg.vers = null; }
-    else if (!chg.de) { chg.de = e.arme; chg.vers = e.vers || e.arme; }
+    // (chg.de : l'arme qu'on VOYAIT — un échange d'arme en partie remplace la fiche avant le geste : e.arme est déjà la neuve)
+    else if (!chg.de) { chg.de = (this.courante && this.courante.userData.arme) || e.arme; chg.vers = e.vers || e.arme; }
     else if (e.vers && e.vers !== chg.de) chg.vers = e.vers;
     if (!e.arme || e.mort || !this.armes[e.arme]) { this.cacher(); this._seq = e.seq; this.diag.maj = performance.now() - t0; return; }
     this.t += dt;
@@ -360,7 +396,7 @@ export class Viewmodel {
       // revenue (réapparition, sortie de la caméra de mort) : l'arme sort, comme d'un étui — après plus de 0,3 s cachée
       if (this.t - this._cacheeT > 0.3 && e.et !== 'change') this._sortieT = this.t;
       this.cachee = false; this.recul.raz(); this.reculR.raz(); this.reculH.raz(); this.reception.raz();
-      this.inertieL.raz(); this.inertieT.raz(); this._lacet = null;
+      this.inertieL.raz(); this.inertieT.raz(); this.traineX.raz(); this.traineZ.raz(); this._lacet = null;
     }
     // LA LUNETTE du TP-50 : à 85 % de la visée, l'arme se cache (le HUD pose le masque) — ses ressorts tournent quand même
     const lunette = e.arme === 'tp50' && e.visee >= 0.85;
@@ -370,6 +406,8 @@ export class Viewmodel {
     if (!this.armes[id] || !ARMES_VUE.includes(id)) id = ARMES_VUE.includes(e.arme) ? e.arme : 'fa24';
     if (!this.courante || this.courante.userData.arme !== id) this.montrer(id);
     const f = ARMES[id], PR = PRISES[id] || PRISES.fa24;
+    // LE VISEUR monté (la fiche de l'arsenal le dit : js/jeu/series.js VISEURS) — montré, et la visée se fait par lui
+    const viseur = this._poserViseur(id);
     // 2. les tirs (le compte de l'arsenal) : le ressort du recul, l'éclair, la pièce mobile
     this._tirs(e, f, dt);
     // 3. les poses (poids lissés 0,1 s)
@@ -383,11 +421,14 @@ export class Viewmodel {
     const ks = geste ? 0.35 : 1;
     let wS = P.sprint * ks, wT = P.sprintTact * ks, wG = P.glisse, wF = P.franchit;
     const somme = wS + wT + wG + wF; if (somme > 1) { wS /= somme; wT /= somme; wG /= somme; wF /= somme; }
-    const H = (POSES_ARMES[id] && POSES_ARMES[id].hanche) || POSES_VUE.hanche, kv = e.visee * (1 - wF);     // (la courbe 1 − (1 − t)³ est celle de l'Arsenal, § 3.2 : pas une 2e ici)
-    const vis = repereVisee(id);
+    const H = (POSES_ARMES[id] && POSES_ARMES[id].hanche) || POSES_VUE.hanche, kv = e.visee * (1 - wF);
+    const ST = (POSES_ARMES[id] && POSES_ARMES[id].sprintTact) || POSES_VUE.sprintTact;     // (la courbe 1 − (1 − t)³ est celle de l'Arsenal, § 3.2 : pas une 2e ici)
+    const vis = viseur ? viseur.oeil : repereVisee(id);
+    // (le réticule s'allume en visée : à peine visible à la hanche, comme une diode qu'on regarde de biais)
+    if (viseur) viseur.reticule.material.opacity = 0.12 + 0.88 * Math.min(1, kv * 1.4);
     for (let i = 0; i < 3; i++) {
-      let p = H.p[i] + wS * (POSES_VUE.sprint.p[i] - H.p[i]) + wT * (POSES_VUE.sprintTact.p[i] - H.p[i]) + wG * (POSES_VUE.glisse.p[i] - H.p[i]) + wF * (POSES_VUE.franchit.p[i] - H.p[i]);
-      let r = H.r[i] + wS * (POSES_VUE.sprint.r[i] - H.r[i]) + wT * (POSES_VUE.sprintTact.r[i] - H.r[i]) + wG * (POSES_VUE.glisse.r[i] - H.r[i]) + wF * (POSES_VUE.franchit.r[i] - H.r[i]);
+      let p = H.p[i] + wS * (POSES_VUE.sprint.p[i] - H.p[i]) + wT * (ST.p[i] - H.p[i]) + wG * (POSES_VUE.glisse.p[i] - H.p[i]) + wF * (POSES_VUE.franchit.p[i] - H.p[i]);
+      let r = H.r[i] + wS * (POSES_VUE.sprint.r[i] - H.r[i]) + wT * (ST.r[i] - H.r[i]) + wG * (POSES_VUE.glisse.r[i] - H.r[i]) + wF * (POSES_VUE.franchit.r[i] - H.r[i]);
       const pv = i === 0 ? -vis[0] : i === 1 ? -vis[1] : -0.24 - vis[2];
       _P.setComponent(i, p + (pv - p) * kv); _R.setComponent(i, r * (1 - kv));
     }
@@ -518,16 +559,36 @@ export class Viewmodel {
     const cl = borne(-0.0016 * wl, -3, 3) * DEG * ki, ct = borne(0.0016 * wt, -3, 3) * DEG * ki;
     const il = this.inertieL.pas(dt, cl), it = this.inertieT.pas(dt, ct);
     _R.y += il; _R.x += it; _P.x -= il * 0.06; _P.y += it * 0.05;
-    // le balancement en huit : latéral 12 mm à f/2, vertical 8 mm à f, f = 1,15 + 0,35 v ; × 2,5 au sprint, × 0,1 en visée
-    // (12 mm à la course, 5 m/s, et moins en marchant ; plafonné là : le sprint fait 30 mm, pas 2,5 × 1,32 × 12 = 40 —
-    // relecture du 23/10)
+    // (l'arme roule un peu dans le virage, comme un poignet qui suit le regard)
+    _R.z += il * 0.45;
+    // LE PAS (27/10, refait : le « huit » régulier faisait une arme qui flotte). Un pas = π de θ, f = 1,15 + 0,35 v pas/s.
+    // Chaque APPUI du pied (θ = kπ) l'arme est au plus bas et pique un peu du nez, puis remonte au milieu du pas ; le corps
+    // passe d'une jambe à l'autre : l'arme glisse vers la jambe qui porte (14 mm), roule (1,4°) et tourne (0,9°) avec elle.
+    // × 2,5 au sprint (35 mm, 3,5° : l'arme ballotte), × 0,1 en visée ; 0,7 accroupi.
     const v = e.enAir ? 0 : e.vitesse, fq = 1.15 + 0.35 * v;
-    this._phase = (this._phase + Math.PI * fq * dt) % (2 * Math.PI);          // (θ avance à f/2 : un pas = π)
+    this._phase = (this._phase + Math.PI * fq * dt) % (2 * Math.PI);
     const kb = bal * (e.accroupi > 0.5 ? 0.7 : 1);
     this._amp = amortir(this._amp, borne(v / 5, 0, 1) * kb, 0.12, dt);
-    const th = this._phase, A = this._amp;
-    _P.x += 0.012 * A * Math.sin(th); _P.y += 0.008 * A * Math.sin(2 * th) - 0.003 * A;
-    _R.z += -0.6 * DEG * A * Math.sin(th); _R.x += 0.4 * DEG * A * Math.sin(2 * th);
+    // (en sprint tactique l'arme est levée, tenue serrée contre soi : son pas est réduit de 70 %)
+    const th = this._phase, A = this._amp * (1 - 0.7 * this.poids.sprintTact), s = Math.sin(th), as = Math.abs(s), choc = Math.pow(1 - as, 3);
+    // (au sprint, la montée du milieu du pas plafonnée à 1,2 × et le reste à 1,8 × : à 2,5 ×, l'arme levée du sprint tactique
+    // montait 2 cm de plus et la pompe du FP-12 sortait de la main gauche ; les rotations plafonnées à 1,2 ×)
+    const Ar = Math.min(A, 1.2), Ap = Math.min(A, 1.8);
+    _P.x += 0.014 * Ap * s; _P.y += 0.011 * Ar * as - 0.0066 * Ap - 0.004 * Ap * choc;
+    _R.z += -1.4 * DEG * Ar * s; _R.y += 0.9 * DEG * Math.min(A, 1) * Math.sin(th + 0.6); _R.x += -0.7 * DEG * Ar * choc + 0.25 * DEG * Ar * as;
+    // LA TRAÎNE (27/10) : en avançant l'arme revient de 1,4 cm vers le corps et baisse le nez ; de côté elle reste en arrière
+    // du mouvement ; les ressorts la font dépasser puis revenir quand on s'arrête net
+    // (pas au sprint : la pose de sprint porte déjà l'arme — avec la traîne en plus, la pompe du FP-12 sortait de portée)
+    const kt = (1 - 0.8 * kv) * (e.enAir ? 0.5 : 1) * (1 - Math.min(1, this.poids.sprint + this.poids.sprintTact));
+    const tz = this.traineZ.pas(dt, 0.014 * borne(e.avant / 5, -1, 1) * kt), tx = this.traineX.pas(dt, -0.012 * borne(e.lateral / 5, -1, 1) * kt);
+    _P.z += tz; _P.x += tx; _R.x -= tz * 0.9; _R.y -= tx * 0.8;
+    // ACCROUPI : l'arme rentre et se couche un peu (1,2 cm plus bas, 1 cm plus près, 3° de roulis)
+    this._accr = amortir(this._accr, borne(e.accroupi, 0, 1), 0.12, dt);
+    const ka = this._accr * (1 - 0.85 * kv);
+    _P.y -= 0.012 * ka; _P.z += 0.010 * ka; _R.z += 3 * DEG * ka;
+    // EN L'AIR : l'arme flotte (1 cm plus haut, le nez relevé de 1,5°) le temps du saut
+    this._vol = amortir(this._vol, e.enAir ? 1 : 0, e.enAir ? 0.18 : 0.08, dt);
+    _P.y += 0.010 * this._vol * (1 - 0.7 * kv); _R.x += 1.5 * DEG * this._vol * (1 - 0.7 * kv);
     // le pas chassé : 3° de roulis du côté où l'on glisse
     _R.z += this.chasse.pas(dt, -3 * DEG * borne(e.lateral / 5, -1, 1) * (1 - 0.7 * kv));
     // la réception : −2,5 cm (ressort ω 22, ζ 0,7) après une chute de plus de 0,3 s en l'air ; un petit saut d'arme au départ
@@ -545,9 +606,15 @@ export class Viewmodel {
     _P.z += piston; _P.y += piston * 0.12;
     _R.x += cabre * DEG * pv; _R.z += (R.roulis || 0) * kr * DEG; _R.y += (this._ressortArsenal ? e.reculH : 0.25 * (R.roulis || 0) * kh) * DEG * pv;
     this.diag.piston = piston; this.diag.cabre = cabre; this.diag.roulis = (R.roulis || 0) * kr;
-    // la respiration à l'arrêt (±1,5 mm à 0,25 Hz)
-    const b = (1 - borne(this._amp, 0, 1)) * (1 - 0.9 * kv);
-    _P.y += 0.0015 * b * Math.sin(this.t * 2 * Math.PI * 0.25); _R.x += 0.08 * DEG * b * Math.sin(this.t * 2 * Math.PI * 0.25 + 0.7);
+    // L'ARME TENUE À L'ARRÊT (27/10) : la respiration (±2,5 mm à 0,23 Hz, le nez qui monte à l'inspiration) et le poids des
+    // bras — une dérive lente, jamais périodique (trois sinus de périodes premières entre elles : ±0,35° de lacet, ±0,25°
+    // de tangage, ±0,4° de roulis) ; en visée il en reste 15 % (le réticule vit, sans gêner)
+    const b = (1 - borne(this._amp, 0, 1)), kb2 = b * (1 - 0.9 * kv), kd = b * (1 - 0.85 * kv), t = this.t, w = 2 * Math.PI * 0.23;
+    _P.y += 0.0025 * kb2 * Math.sin(t * w); _R.x += 0.14 * DEG * kb2 * Math.sin(t * w + 0.7);
+    _R.y += 0.35 * DEG * kd * (0.6 * Math.sin(t * 0.37) + 0.4 * Math.sin(t * 0.91 + 1.3));
+    _R.x += 0.25 * DEG * kd * (0.6 * Math.sin(t * 0.29 + 2.1) + 0.4 * Math.sin(t * 0.77));
+    _R.z += 0.40 * DEG * kd * (0.7 * Math.sin(t * 0.23 + 0.4) + 0.3 * Math.sin(t * 0.61 + 2.7));
+    _P.x += 0.0012 * kd * Math.sin(t * 0.41 + 0.9);
   }
 
   // un os mobile de l'arme (L-W : `userData.os`) déplacé de `d` (m, repère de l'arme) et tourné de `q` depuis son repos

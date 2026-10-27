@@ -35,6 +35,7 @@ import { Cerveau } from './cerveau.js';
 import { Errant } from './pilotage.js';
 import { entree } from '../settings.js';
 import { prechargerArmes } from './modeles_armes.js';
+import { ficheEquipee, VISEURS } from './series.js';
 
 const ANNEAU = 256;
 // les drapeaux de partie du corps de Haythem, posés à l'entrée et RETIRÉS à la sortie (l'école telle qu'en balade)
@@ -311,6 +312,7 @@ export class Partie {
     A.effets?.maj?.(dt); A.sons?.maj?.(dt, cam);
     A.hud?.maj?.(dt, this.hud); A.hudProp?.maj?.(dt, this.hud);
     A.tableau?.maj?.(this, montre); A.minicarte?.maj?.(dt, this); A.progression?.maj?.(dt);
+    A.armurerie?.maj?.();                      // (B : changer d'arme et de viseur, js/jeu/armurerie_match.js)
     // 6. le monde
     this.monde.image(dt);
     this.imageN++;
@@ -397,6 +399,9 @@ export class Partie {
     return [
       { label: 'Reprendre', cls: 'btn-primary', onClick: () => g.togglePause(true) },
       { label: 'Tableau des scores', cls: 'btn-secondary', onClick: () => this.aff.tableau?.basculer?.(this) },
+      // (27/10 : l'armurerie de la partie — la pause se ferme, le panneau s'ouvre ; touche B en jeu)
+      ...(this.local && this.local.arsenal && !this.local.prop ? [{ label: 'Changer d’arme (B)', cls: 'btn-secondary', onClick: () => {
+        this.aff.armurerie?.ouvrir?.({ depuisPause: true }); } }] : []),
       { label: 'Options', cls: 'btn-secondary', onClick: () => g.cb.onOptions?.() },
       { label: 'Commandes', cls: 'btn-secondary', onClick: () => g.cb.onAide?.() },
       { label: 'Recommencer', cls: 'btn-secondary', onClick: () => this.deps.relancer?.() },
@@ -409,6 +414,29 @@ export class Partie {
     const corps = s && s.corps ? s.corps : this.game.user;
     if (!this._jeuCarte || this._corpsCarte !== corps) { this._corpsCarte = corps; this._jeuCarte = Object.create(this.game, { user: { value: corps } }); }
     return this._jeuCarte;
+  }
+  // CHANGER D'ARME EN PARTIE (27/10 : le menu de l'armurerie, touche B — js/jeu/armurerie_match.js) : la principale
+  // remplacée par `principale` avec son `viseur`, chargeur et réserve pleins ; elle SORT (l'arme sort de l'étui, le geste du
+  // changement) si on la tenait, sinon on range la secondaire pour la prendre. Gardée pour les réapparitions (`_fiches`, la
+  // dotation que js/jeu/partie_fps.js rend). Pas au milieu d'une grenade, d'un coup de couteau ou d'un franchissement → faux
+  changerEquipement(a, { principale, viseur = null } = {}) {
+    const A = a && a.arsenal, base = ARMES[principale], t = this.t;
+    if (!A || !a.vivant || a.prop || !base || base.emplacement !== 'principale') return false;
+    if (A.et === 'lancer' || A.et === 'couteau' || A.et === 'franchit') return false;
+    const i = A.armes.findIndex((f) => f && f.emplacement === 'principale');
+    if (i < 0) return false;
+    const M = A.modificateurs || {}, v = viseur && VISEURS[viseur] && VISEURS[viseur].armes.includes(principale) ? viseur : null;
+    const neuve = ficheEquipee(base, M.accessoire || null, M.atout || null, v);
+    if (A.et === 'recharge') this.evt('recharge', { a: a.id, phase: 'annulee', tactique: !!A.tact });
+    const tenue = A.armes[A.i], rg = (tenue && tenue.rangement) || 0.2;
+    A.armes[i] = neuve; A.ch[i] = neuve.chargeur; A.res[i] = neuve.reserve; A.pr[i] = t;
+    A.nC = 0; A.pp = false; A.reculI = 0; A.tampon = -Infinity; A.vk = 0;
+    // (l'ancienne se range — l'arme de vue la montre encore le temps de son rangement —, puis la neuve sort)
+    A.vers = i; A.basc = A.i === i; A.tB = A.basc ? t : t + rg;
+    A._etat('change', t, rg + (neuve.sortie || 0.3));
+    if (a._fiches && a._fiches.length === A.armes.length) a._fiches[i] = neuve;
+    this.evt('arme', { a: a.id, id: neuve.id, viseur: neuve.viseur || null, equipement: true });
+    return true;
   }
   peutTirer(a) {
     if (!a.vivant || a.gele || a.prop) return false;

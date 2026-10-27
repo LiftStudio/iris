@@ -37,6 +37,9 @@ export const POSES_VUE = {
 // l'axe et plus loin de l'œil qu'un fusil (à la pose du fusil, la main droite et la glissière ne se voyaient plus)
 export const POSES_ARMES = {
   p17: { hanche: { p: [0.095, -0.075, -0.40], r: [0.04, 0.07, 0], bal: 1 } },
+  // (27/10 : le FP-12 levé en sprint tactique moins haut et plus près — à la pose commune, sa pompe, 48 cm devant la main
+  // droite, passait hors de portée de la main gauche selon le moment du pas, jusqu'à 3,4 cm)
+  fp12: { sprintTact: { p: [0.10, -0.12, -0.27], r: [0.72, 0.2, -0.4], bal: 2.5 } },
 };
 
 // ---------------------------------------------------------------- les pistes

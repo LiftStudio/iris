@@ -40,6 +40,8 @@ fichier liste ce qui vient de tiers dans ce qui a été gardé.
   FP-12, fusil à lunette → TP-50, Makarov → P-17, couteau de combat, grenade, grenade aveuglante) de **3DModelsCC0**
   (« nisu », https://www.3dmodelscc0.com), domaine public (**CC0 1.0**), conversion GLB par **BoQsc** — adaptées pour IRIS
   (origine, textures réduites). Preuves de licence : `assets/armes/LICENCES.md`.
+- Les viseurs (point rouge, holographique, lunette × 3) et leurs réticules sont modelés et dessinés par le code
+  (`js/jeu/viseurs.js`) : aucun fichier.
 
 ## Textures
 

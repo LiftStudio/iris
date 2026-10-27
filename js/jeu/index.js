@@ -31,6 +31,7 @@ import { MiniCarte } from './minicarte.js';
 import { Profil } from './profil.js';
 import { Killcam } from './killcam.js';
 import { AffProgression } from './aff_progression.js';
+import { ArmurerieMatch } from './armurerie_match.js';
 import { installerHarnais } from './harnais.js';
 // (les autres modules du jeu, pour la liste de chargement et pour le harnais, qui les introspecte)
 import './anim_vue.js';
@@ -55,7 +56,7 @@ export function installerJeu(game, deps) {
     const sons = new SonsJeu(D.audio || game.audio);
     aff = { viewmodel: new Viewmodel(game), effets: new Effets(game), sons, sonsProp: new SonsProp(sons), hud: new HudJeu(game),
       hudProp: new HudProp(game), tableau: new TableauScores(game), minicarte: new MiniCarte(game), profil: new Profil(),
-      killcam: new Killcam(game), progression: new AffProgression(game) };
+      killcam: new Killcam(game), progression: new AffProgression(game), armurerie: new ArmurerieMatch(game) };
     return aff;
   };
   // LE CALQUE « CLIQUE POUR JOUER » (§ 4.3.5 ; style : css/jeu/hud.css)
@@ -124,6 +125,7 @@ export function installerJeu(game, deps) {
     // QUITTER une partie : vers le menu, la balade, ou rien (null)
     quitter(vers = 'menu') {
       menu.cacher();
+      aff?.armurerie?.fermer(false);
       if (game.partie) game.quitterPartie(vers);
       else if (vers === 'menu') game.entrerMenu();
       else if (vers === 'balade') {

@@ -40,6 +40,17 @@ export const ACCESSOIRES = {
   silencieux: { id: 'silencieux', nom: 'Silencieux', niveau: 16, armes: ['fa24', 'pm9', 'tp50', 'p17'], bruit: 8, paliers: 0.85,
     texte: 'Le tir s’entend à 8 m et ne te montre plus sur la mini-carte ; la portée des dégâts − 15 %.' },
 };
+// ---------------------------------------------------------------- LES VISEURS (27/10 : changés en partie, sur la principale)
+// Le viseur est à part des accessoires (on peut avoir une poignée ET un point rouge) : le zoom en visée et le temps de visée ;
+// ce qu'on en voit est dans js/jeu/viseurs.js. `null` : les organes de visée d'origine (la hausse et le guidon).
+export const VISEURS = {
+  pointRouge: { id: 'pointRouge', nom: 'Point rouge', court: 'POINT ROUGE', zoom: 1.30, ads: 0.0, armes: ['fa24', 'pm9', 'fp12'],
+    texte: 'Un point lumineux au centre, rien devant l’œil : zoom × 1,30.' },
+  holo: { id: 'holo', nom: 'Holographique', court: 'HOLO', zoom: 1.40, ads: 0.02, armes: ['fa24', 'pm9', 'fp12'],
+    texte: 'Une grande fenêtre et son cercle : zoom × 1,40, visée + 0,02 s.' },
+  lunette: { id: 'lunette', nom: 'Lunette × 3', court: 'LUNETTE ×3', zoom: 3.0, ads: 0.07, armes: ['fa24', 'pm9'],
+    texte: 'Grossit trois fois, le chevron pour viser loin : visée + 0,07 s.' },
+};
 // ---------------------------------------------------------------- LES ATOUTS (CoD § 11 ; un par classe)
 export const ATOUTS = {
   endurance: { id: 'endurance', nom: 'Endurance', niveau: 18, tactDuree: 2, tactRecharge: 0.5,
@@ -60,18 +71,22 @@ export const RAYONS_PAS = { sprint: 14, tact: 14, course: 9, marche: 4, accroupi
 // UNE FICHE D'ARME ÉQUIPÉE : la fiche de base recopiée (ses tableaux et ses blocs recopiés quand on les change : la fiche
 // de js/jeu/armes.js n'est jamais touchée — les bots la partagent), retouchée par l'accessoire (s'il va sur cette arme) et
 // par Main sûre. Même `id` que la base (les modèles, les sons, le HUD la reconnaissent) ; `base`, `accessoire`, `atout` en plus.
-export function ficheEquipee(base, accessoire = null, atout = null) {
+export function ficheEquipee(base, accessoire = null, atout = null, viseur = null) {
   if (!base) return base;
   const A = accessoire && ACCESSOIRES[accessoire] && ACCESSOIRES[accessoire].armes.includes(base.id) ? ACCESSOIRES[accessoire] : null;
   const M = atout === 'mainSure' && base.recharge ? ATOUTS.mainSure : null;
-  if (!A && !M) return base;
-  const f = { ...base, base: base.id, accessoire: A ? A.id : null, atout: M ? M.id : null };
+  // (le point rouge des accessoires de L-P se voit aussi : c'est le viseur « point rouge »)
+  const vId = viseur || (A && A.id === 'pointRouge' ? 'pointRouge' : null);
+  const S = vId && VISEURS[vId] && VISEURS[vId].armes.includes(base.id) ? VISEURS[vId] : null;
+  if (!A && !M && !S) return base;
+  const f = { ...base, base: base.id, accessoire: A ? A.id : null, atout: M ? M.id : null, viseur: S ? S.id : null };
   if (A && A.zoom) f.zoom = A.zoom;
+  if (S) { f.zoom = S.zoom; f.ads = base.ads + S.ads; }
   if (A && A.recul && base.recul) {
     const k = A.recul, R = base.recul;
     f.recul = { ...R, v: R.v.map((x) => x * k), h: R.h.map((x) => x * k), alea: R.alea * k, aleaH: (R.aleaH || 0) * k, cabre: R.cabre * k, piston: R.piston * k };
   }
-  if (A && A.ads) f.ads = base.ads + A.ads;
+  if (A && A.ads) f.ads += A.ads;
   if (A && A.chargeur) f.chargeur = Math.round(base.chargeur * A.chargeur);
   if (A && A.recharge && base.recharge) {
     const R = base.recharge;

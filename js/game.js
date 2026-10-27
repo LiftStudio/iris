@@ -272,7 +272,8 @@ export class Game {
     // (la capture du pointeur perdue en pleine partie — Échap, la fenêtre quittée — : la pause, dans la même image)
     // (F2, demandes de L-E et L-U : jamais sur l'écran de FIN — la partie finie rend le pointeur, l'écran de pause couvrait
     // celui de fin)
-    document.addEventListener('iris-pointeur', (e) => { if (this.partie && this.partie.phase !== 'fin' && !e.detail.capture && !this.paused) this.togglePause(); });
+    // (27/10 : ni quand le panneau CHANGER D'ARME rend le pointeur — game.menuArme, js/jeu/armurerie_match.js)
+    document.addEventListener('iris-pointeur', (e) => { if (this.partie && this.partie.phase !== 'fin' && !e.detail.capture && !this.paused && !this.menuArme) this.togglePause(); });
     window.addEventListener('resize', this._onResize);
     canvas.addEventListener('click', this._onClick);
     canvas.addEventListener('mousedown', this._onDown);

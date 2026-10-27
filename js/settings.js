@@ -52,6 +52,7 @@ export const ACTIONS_COMBAT = [
   { id: 'letale',     label: 'Grenade (tenir : cuire)',          group: 'Armes',       def: ['KeyG', null], pad: ['Pad:RB', null] },
   { id: 'tactique',   label: 'Grenade flash',                    group: 'Armes',       def: ['KeyQ', null], pad: ['Pad:LB', null] },
   { id: 'interagir',  label: 'Interagir (ramasser)',             group: 'Actions',     def: ['KeyF', null] },
+  { id: 'armurerie',  label: 'Changer d’arme et de viseur',      group: 'Armes',       def: ['KeyB', null] },
   { id: 'scanner',    label: 'Scanner (chasseur)',               group: 'Actions',     def: ['KeyX', null], pad: ['Pad:Down', null] },
   { id: 'serie1',     label: 'Série 1',                          group: 'Actions',     def: ['Digit3', null], pad: ['Pad:Left', null] },
   { id: 'serie2',     label: 'Série 2',                          group: 'Actions',     def: ['Digit4', null], pad: ['Pad:Up', null] },
