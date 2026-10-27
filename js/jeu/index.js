@@ -19,7 +19,7 @@ import { PartieEssai } from './partie_essai.js';
 import { PartieFPS } from './partie_fps.js';
 import { PartieStand } from './partie_stand.js';
 import { PartieProp } from './partie_prop.js';
-import { PartieEnLigne } from './partie_enligne.js';
+import { PartieEnLigne, PartiePropEnLigne } from './partie_enligne.js';
 import { MenuJeu } from './menus_jeu.js';
 import { Viewmodel } from './viewmodel.js';
 import { Effets } from './effets.js';
@@ -43,7 +43,7 @@ import './nav_cache.js';
 import './assistance_visee.js';
 import './cerveau_prop.js';
 
-export const MODES = { essai: PartieEssai, equipes: PartieFPS, melee: PartieFPS, domination: PartieFPS, stand: PartieStand, prophunt: PartieProp, enligne: PartieEnLigne };
+export const MODES = { essai: PartieEssai, equipes: PartieFPS, melee: PartieFPS, domination: PartieFPS, stand: PartieStand, prophunt: PartieProp, enligne: PartieEnLigne, propenligne: PartiePropEnLigne };
 
 export function installerJeu(game, deps) {
   const D = deps || {};

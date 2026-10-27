@@ -681,7 +681,7 @@ export class MenuJeu {
   // alors sur l'école vivante du menu, comme après LANCER (et non sur la balade, Haythem au départ et son HUD sous l'écran),
   // et une partie qui ne démarre pas ramène à l'accueil
   _rejouer() {
-    const p = this.game.partie, L = p ? { mode: p.id, opts: { ...p.opts } } : this._dernier;
+    const p = this.game.partie, L = p ? { mode: p.idLancement || p.id, opts: { ...p.opts } } : this._dernier;
     if (!L) return;
     const o = { ...L.opts }; delete o.mode; o.graine = 0;
     if (p) { this.cacher(); if (this.deps.quitter) this.deps.quitter('menu'); else this.game.entrerMenu(); }

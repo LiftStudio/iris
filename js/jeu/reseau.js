@@ -56,7 +56,8 @@ export async function etatServeur(delai = 2500) {
 }
 
 export class Reseau {
-  constructor({ nom, perso } = {}) {
+  constructor({ nom, perso, salon = 'PUBLIC' } = {}) {
+    this.salon = salon;   // (le salon du serveur : un par mode — PUBLIC pour les équipes, PROPHUNT)
     this.id = idReseau(); this.nom = String(nom || 'Élève').slice(0, 16); this.perso = perso || null;
     this.url = adresseServeur();
     this.ws = null; this.ouvert = false; this.ferme = false; this.essais = 0;
@@ -82,7 +83,7 @@ export class Reseau {
     ws.onopen = () => {
       this.ouvert = true; this.essais = 0; this.etat = 'en ligne';
       this._brut({ t: 'hello', id: this.id, name: this.nom });
-      this._brut({ t: 'join', id: this.id, name: this.nom, char: this.perso, code: 'PUBLIC' });
+      this._brut({ t: 'join', id: this.id, name: this.nom, char: this.perso, code: this.salon });
       surOuvert?.();
     };
     ws.onmessage = (e) => {
@@ -105,7 +106,7 @@ export class Reseau {
   _brut(m) { if (this.ws && this.ws.readyState === 1) { try { this.ws.send(JSON.stringify(m)); return true; } catch (e) { return false; } } return false; }
   envoyer(m) { m.from = this.id; return this._brut(m); }
   // annoncer un nouveau `char` (l'équipe choisie) : le relais rediffuse la carte de ce joueur à tout le salon
-  annoncer(perso) { this.perso = perso; return this._brut({ t: 'join', id: this.id, name: this.nom, char: perso, code: 'PUBLIC' }); }
+  annoncer(perso) { this.perso = perso; return this._brut({ t: 'join', id: this.id, name: this.nom, char: perso, code: this.salon }); }
   // le plus ancien du salon : c'est lui qui donne le score à ceux qui arrivent
   get ancien() { return this.presents[0] || null; }
   get suisAncien() { return this.ancien === this.id; }

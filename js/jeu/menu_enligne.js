@@ -10,6 +10,11 @@ import { portrait } from './portraits.js';
 import { profilEnLigne, garderProfil, etatServeur, adresseServeur } from './reseau.js';
 
 const PERSOS = [FICHE_HAYTHEM, ...FICHES_BOTS];
+// LES MODES EN LIGNE (27/10 soir) : chacun son salon sur le serveur (serveur/relais.js SALONS) et sa partie
+const MODES_EL = [
+  { id: 'enligne', salon: 'PUBLIC', nom: 'MATCH À MORT', sous: 'SISR CONTRE SLAM', regles: ['Tu rejoins l’équipe qui a le moins d’élèves.', '50 touchés ou 15 minutes.', 'Ton arme : celle de ta classe de combat (ARMURERIE). En partie, <b>B</b> pour en changer.'] },
+  { id: 'propenligne', salon: 'PROPHUNT', nom: 'PROP HUNT', sous: 'MEUBLES CONTRE CHASSEURS', regles: ['Il faut être deux au moins. Un tiers de chasseurs, à tour de rôle.', 'Les props se déguisent en vrais meubles de l’école (E), les chasseurs les traquent.', '6 manches : le meilleur total de points gagne.'] },
+];
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 const STYLE = `
@@ -42,6 +47,13 @@ const STYLE = `
 #menu-enligne .me-n{font:400 64px/1 'Bebas Neue',sans-serif;margin-top:8px} #menu-enligne .me-n small{font:500 13px/1 Oswald,sans-serif;letter-spacing:.14em;color:#8792a0;margin-left:8px}
 #menu-enligne .me-t{font-size:12.5px;line-height:1.5;color:#aab3bf;margin-top:6px}
 #menu-enligne .me-t code{font-family:Consolas,monospace;font-size:13px;color:#ffd27a;background:rgba(242,167,27,.08);padding:1px 6px;user-select:all}
+#menu-enligne .me-modes{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#menu-enligne .me-m{font:inherit;color:inherit;text-align:left;cursor:pointer;padding:10px 14px 9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.1);position:relative;transition:background .14s,border-color .14s}
+#menu-enligne .me-m:hover{background:rgba(255,255,255,.07)}
+#menu-enligne .me-m.on{border-color:#f2a71b;background:linear-gradient(180deg,rgba(242,167,27,.18),rgba(242,167,27,.05));box-shadow:inset 0 -2px 0 #f2a71b}
+#menu-enligne .me-m b{display:block;font:400 26px/1 'Bebas Neue',sans-serif;letter-spacing:.05em}
+#menu-enligne .me-m span{display:block;font-size:11px;letter-spacing:.14em;color:#9aa4b1;margin-top:3px}
+#menu-enligne .me-m i{position:absolute;right:10px;top:9px;font-style:normal;font-size:11px;letter-spacing:.1em;color:#59d98e}
 #menu-enligne .me-regles{font-size:12.5px;line-height:1.55;color:#aab3bf;margin:0;padding-left:16px}
 #menu-enligne .me-btns{margin-top:auto;display:flex;gap:10px;justify-content:flex-end}
 #menu-enligne button.me-ok,#menu-enligne button.me-non{font:400 26px/1 'Bebas Neue',sans-serif;letter-spacing:.12em;cursor:pointer;border:none;padding:12px 34px}
@@ -58,15 +70,16 @@ export class MenuEnLigne {
     const st = document.createElement('style'); st.textContent = STYLE; document.head.appendChild(st);
     const el = document.createElement('div'); el.id = 'menu-enligne'; el.hidden = true;
     el.innerHTML = `<div class="me-boite" role="dialog" aria-label="Jouer en ligne">
-      <div class="me-g"><h2>EN LIGNE<small>MATCH À MORT PAR ÉQUIPES · SISR CONTRE SLAM · ENTRE ÉLÈVES</small></h2>
+      <div class="me-g"><h2>EN LIGNE<small>ENTRE ÉLÈVES · JUSQU’À DIX PAR PARTIE</small></h2>
+        <h3>LE MODE</h3><div class="me-modes"></div>
         <h3>TON PSEUDO</h3><input class="me-pseudo" maxlength="16" spellcheck="false" autocomplete="off">
         <h3>TON PERSONNAGE</h3><div class="me-persos"></div>
-        <h3>LES RÈGLES</h3><ul class="me-regles"><li>Tu rejoins l’équipe qui a le moins d’élèves.</li><li>50 touchés ou 15 minutes ; la partie ne s’arrête pas quand tu fais pause.</li>
-          <li>Ton arme : celle de ta classe de combat (ARMURERIE). En partie, <b>B</b> pour en changer.</li></ul></div>
+        <h3>LES RÈGLES</h3><ul class="me-regles"></ul></div>
       <div class="me-d"><div class="me-etat"><div class="me-l"><i></i><span class="me-s">RECHERCHE DU SERVEUR…</span></div><div class="me-n"></div><div class="me-t"></div></div>
         <div class="me-btns"><button class="me-non" data-act="retour">RETOUR</button><button class="me-ok" data-act="jouer" disabled>JOUER</button></div></div></div>`;
     el.addEventListener('click', (e) => {
       const p = e.target.closest('.me-p'); if (p) { this.avatar = p.dataset.av; this._persos(); return; }
+      const mo = e.target.closest('.me-m'); if (mo) { this.mode = mo.dataset.mode; this._modes(); this._etat(); return; }
       const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
       if (b.dataset.act === 'retour') this.fermer(); else if (b.dataset.act === 'jouer') this.jouer();
     });
@@ -83,18 +96,32 @@ export class MenuEnLigne {
       return `<button class="me-p ${f.id === this.avatar ? 'on' : ''}" data-av="${f.id}" ${u ? `style="background-image:url('${u}')"` : ''}>${u ? '' : `<b>${esc(f.nom[0])}</b>`}<span>${esc(f.nom.toUpperCase())}</span></button>`;
     }).join('');
   }
+  _modes() {
+    const r = this._r, n = (M) => (r && r.parSalon ? r.parSalon[M.salon] | 0 : null);
+    this.el.querySelector('.me-modes').innerHTML = MODES_EL.map((M) => `<button class="me-m ${M.id === this.mode ? 'on' : ''}" data-mode="${M.id}">
+      ${n(M) ? `<i>● ${n(M)} EN JEU</i>` : ''}<b>${M.nom}</b><span>${M.sous}</span></button>`).join('');
+    const M = MODES_EL.find((x) => x.id === this.mode) || MODES_EL[0];
+    this.el.querySelector('.me-regles').innerHTML = [...M.regles, 'La partie ne s’arrête pas quand tu fais pause.'].map((t) => `<li>${t}</li>`).join('');
+  }
   async ouvrir() {
     this._construire();
     const P = profilEnLigne();
     this.avatar = P.avatar; this.el.querySelector('.me-pseudo').value = P.pseudo;
-    this._persos();
+    if (!MODES_EL.some((M) => M.id === this.mode)) { let m = null; try { m = localStorage.getItem('iris.enligne.mode'); } catch (e) { m = null; } this.mode = MODES_EL.some((M) => M.id === m) ? m : 'enligne'; }
+    this._r = null;
+    this._persos(); this._modes();
     this.el.hidden = false;
     setTimeout(() => { try { this.el.querySelector('.me-ok').focus(); } catch (e) { /* ignore */ } }, 30);
+    await this._etat(true);
+  }
+  // l'état du serveur : en ligne ou non, combien d'élèves dans le mode choisi (relu à chaque changement de mode)
+  async _etat(relire = false) {
     const E = this.el.querySelector('.me-etat'), S = E.querySelector('.me-s'), N = E.querySelector('.me-n'), T = E.querySelector('.me-t');
     E.className = 'me-etat'; S.textContent = 'RECHERCHE DU SERVEUR…'; N.textContent = ''; T.textContent = '';
     this.ok = false; this.el.querySelector('.me-ok').disabled = true;
-    const r = await etatServeur();
+    const r = relire || !this._r ? await etatServeur() : this._r;
     if (this.el.hidden) return;
+    this._r = r; this._modes();
     if (!r) {
       E.className = 'me-etat ko'; S.textContent = 'SERVEUR INTROUVABLE';
       // (la version web — GitHub Pages — n'a que les fichiers du jeu : pas de serveur derrière)
@@ -105,9 +132,10 @@ export class MenuEnLigne {
         installé, il ouvre le jeu ET le serveur sur le même port.<br>Adresse cherchée : <code>${esc(adresseServeur())}</code>`;
       return;
     }
-    const n = r.joueurs | 0, max = r.max || 10;
+    const Mo = MODES_EL.find((x) => x.id === this.mode) || MODES_EL[0];
+    const n = r.parSalon ? r.parSalon[Mo.salon] | 0 : r.joueurs | 0, max = r.max || 10;
     E.className = 'me-etat ok'; S.textContent = 'SERVEUR EN LIGNE';
-    N.innerHTML = `${n}<small>/ ${max} ÉLÈVE${n > 1 ? 'S' : ''} DANS L’ÉCOLE</small>`;
+    N.innerHTML = `${n}<small>/ ${max} ÉLÈVE${n > 1 ? 'S' : ''} EN ${Mo.nom}</small>`;
     const ad = (r.adresses || []).slice(0, 2);
     T.innerHTML = (n >= max ? '<b style="color:#ff8a80">L’école est pleine : réessaie dans un moment.</b><br>' : '')
       + (ad.length ? `Pour qu’un ami te rejoigne sur le même wifi, il ouvre : ${ad.map((a) => `<code>${esc(a)}</code>`).join(' ou ')}` : 'Tes amis ouvrent la même adresse que toi.')
@@ -120,6 +148,7 @@ export class MenuEnLigne {
     garderProfil({ pseudo, avatar: this.avatar });
     this.el.hidden = true;
     const c = this.menu.optionsDe ? this.menu.optionsDe('combat').opts : {};
-    this.menu._lancer({ mode: 'enligne', opts: { pseudo, avatar: this.avatar, classe: c.classe, equipement: c.equipement } });
+    try { localStorage.setItem('iris.enligne.mode', this.mode); } catch (e) { /* ignore */ }
+    this.menu._lancer({ mode: this.mode === 'propenligne' ? 'propenligne' : 'enligne', opts: { pseudo, avatar: this.avatar, classe: c.classe, equipement: c.equipement } });
   }
 }

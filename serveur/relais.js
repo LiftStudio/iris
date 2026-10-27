@@ -31,6 +31,9 @@
 // envie a personne. On garde neanmoins la machinerie des salons — le jour ou il faudra une partie privee,
 // il suffira de repasser `salonUnique` a faux.
 export const SALON_PUBLIC = 'PUBLIC';
+// IRIS (27/10 soir) : un salon PAR MODE en ligne — PUBLIC le match par équipes, PROPHUNT le prop hunt. Toujours rien à taper :
+// le mode choisi à l'écran EN LIGNE donne le code ; un code inconnu retombe sur PUBLIC.
+export const SALONS = ['PUBLIC', 'PROPHUNT'];
 
 export const LIMITES = {
   parSalon: 10,          // au-dela on refuse : l'ecole tient dix eleves armes, pas mille
@@ -46,14 +49,14 @@ export const LIMITES = {
 // ses impacts, pour que les autres les voient et les entendent), `touche` (le tireur dit a sa victime ce qu'elle a pris),
 // `elim` (la victime annonce sa mort a tous : c'est elle qui fait foi), `sync` (le plus ancien donne le score au nouveau).
 const ETAT_SALON = new Set(['join', 'chat']);                                    // renvoyes A TOUS, expediteur compris
-const TEMPS_REEL = new Set(['pos', 'fx', 'touche', 'elim', 'sync']);              // renvoyes aux AUTRES seulement
+const TEMPS_REEL = new Set(['pos', 'fx', 'touche', 'elim', 'sync', 'manche', 'phase']);   // renvoyes aux AUTRES seulement
 
 const code5 = (v) => String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8) || 'LOBBY';
 const texte = (v, n) => String(v === undefined || v === null ? '' : v).slice(0, n);
 
 export class Relais {
   // `journal` : une fonction a qui l'on raconte ce qui se passe (console.log en general).
-  constructor({ journal = () => {}, salonUnique = true } = {}) {
+  constructor({ journal = () => {}, salonUnique = false } = {}) {
     this.salons = new Map();          // code -> [client, ...] dans l'ORDRE D'ARRIVEE (l'hote est le premier)
     this.journal = journal;
     this.salonUnique = salonUnique;
@@ -112,7 +115,7 @@ export class Relais {
 
   // ---------------------------------------------------------------- rejoindre un salon
   rejoindre(cli, m) {
-    const code = this.salonUnique ? SALON_PUBLIC : code5(m.code);
+    const c = code5(m.code), code = this.salonUnique || !SALONS.includes(c) ? SALON_PUBLIC : c;
     cli.id = texte(m.id, 64) || cli.id;
     cli.nom = texte(m.name, 16) || cli.nom;
     if (m.char !== undefined) cli.perso = m.char;
@@ -209,6 +212,7 @@ export class Relais {
   }
 
   get etat() {
-    return { salons: this.salons.size, joueurs: [...this.salons.values()].reduce((n, l) => n + l.length, 0) };
+    const parSalon = {}; for (const s of SALONS) parSalon[s] = (this.salons.get(s) || []).length;
+    return { salons: this.salons.size, joueurs: [...this.salons.values()].reduce((n, l) => n + l.length, 0), parSalon };
   }
 }

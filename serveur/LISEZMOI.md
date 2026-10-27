@@ -49,9 +49,12 @@ enveloppe `cloudflare.js` (voir `Documents\Basket_1v1\serveur\LISEZMOI.md`), ave
 | `fx` | le tireur | ses tirs, ses trajets de balle et ses impacts, que les autres voient et entendent |
 | `touche` | le tireur, vers sa victime | les dégâts de sa balle. C'est la victime qui les applique, avec ses règles : gilet, protection d'apparition |
 | `elim` | la victime, à tous | sa mort : chacun met à jour le fil des éliminations et le score |
-| `sync` | le plus ancien du salon, au nouveau venu | le score et le temps de jeu en cours |
+| `sync` | le plus ancien du salon, au nouveau venu | le score et le temps de jeu en cours (match par équipes) |
+| `manche` | le plus ancien (prop hunt) | les rôles de la manche : qui chasse, qui est meuble |
+| `phase` | le plus ancien (prop hunt) | cachette, traque, révélation (et qui a gagné la manche), fin |
 
-Au plus 10 élèves par école. Il n'y a pas de bots en ligne.
+Deux salons, un par mode : `PUBLIC` (match à mort par équipes) et `PROPHUNT`. Au plus 10 élèves par salon. Il n'y a pas de bots en ligne.
+Le serveur public est un Worker Cloudflare (`serveur/cloudflare.js`, `wrangler.jsonc`) : pour le redéployer, double-clique `serveur/Deployer_le_serveur.bat`.
 
 Pas encore : les grenades des autres ne se voient pas voler (leurs dégâts arrivent bien), ni leurs séries
 (drone, sentinelle).
