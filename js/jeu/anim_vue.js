@@ -21,7 +21,9 @@ import { ARMES } from './armes.js';
 // repère `visee` de l'arme sur l'axe, à 0,24 m (`repere`, le viewmodel calcule la position arme par arme) ;
 // `bal` : le facteur du balancement en huit dans cette pose (sprint × 2,5, visée × 0,1 — § 4.5.9)
 export const POSES_VUE = {
-  hanche: { p: [0.135, -0.125, -0.32], r: [0, 0.035, 0], bal: 1 },
+  // (27/10 : l'arme 1,5 cm plus haut et 5 cm plus loin, tournée vers l'axe et un peu roulée — à (0,135 ; −0,125 ; −0,32), la
+  // main droite tombait sous le bord bas de l'image et la crosse remplissait la moitié droite de l'écran)
+  hanche: { p: [0.12, -0.11, -0.37], r: [0, 0.06, -0.05], bal: 1 },
   visee: { p: [0, 0, -0.24], r: [0, 0, 0], repere: 'visee', bal: 0.1 },
   // (F2, demande de L-V : la pose du § 4.5.9, (0,06 ; −0,19 ; −0,25) rot (−0,55 ; 0,65 ; 0,35), sortait l'arme du champ — 0 à
   // 7 % de ses sommets dans le cône de vue avec les vraies armes de L-W ; celle-ci en garde 67 à 79 %, l'arme baissée et
