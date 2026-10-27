@@ -11,7 +11,7 @@
 // ÉVÉNEMENTS (`sur`) et lisent l'état ; `etat()` / `appliquer()` sont l'hôte autoritaire de demain (§ 4.7).
 import * as THREE from 'three';
 import { Rng, hacher } from './rng.js';
-import { PAS, TANGAGE_MAX, VERSION_ETAT } from './constantes.js';
+import { PAS, TANGAGE_MAX, VERSION_ETAT, EQUIPES } from './constantes.js';
 import { viderFronts } from './commande.js';
 import { Acteur, CorpsFixe } from './acteur.js';
 import { appliquerCommande, separer } from './mouvement.js';
@@ -394,6 +394,27 @@ export class Partie {
   lireExtra(input, game, cmd) { }
   // (F2 relecture : la ligne sous « PAUSE » — les sous-classes disent leur mode)
   titrePause() { return 'IRIS · PARTIE D’ESSAI'; }
+  // ce que montre la pause à côté de ses boutons (js/ui.js decorerPause) : le score, le temps, les chiffres de Haythem, son arme
+  infosPause() {
+    const H = this.hud || {}, L = this.local, sc = H.scores, I = {};
+    if (sc && typeof sc.A === 'number') {
+      const ordre = L && L.equipe === 'B' ? ['B', 'A'] : ['A', 'B'];
+      I.equipes = ordre.map((k) => ({ nom: (EQUIPES[k] || {}).nom || k, couleur: (EQUIPES[k] || {}).couleur || '#888', score: sc[k] | 0, moi: !!L && L.equipe === k }));
+      I.limite = this.scoreCible ?? this.limite ?? (this.id === 'domination' ? 150 : 40);
+    }
+    if (typeof H.chrono === 'number' && H.chrono > 0 && this.id !== 'essai') { const s = Math.ceil(H.chrono); I.chrono = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
+    if (L && L.stats) {
+      const s = L.stats, prec = s.tirs ? Math.round((s.touches / s.tirs) * 100) + ' %' : '—';
+      I.stats = [['TOUCHÉS', s.elims], ['TOUCHÉ', s.morts], ['RATIO', s.morts ? (s.elims / s.morts).toFixed(2).replace('.', ',') : String(s.elims)], ['PRÉCISION', prec]];
+    }
+    const A = L && L.arsenal, f = A && A.arme;
+    if (f && f.nom) {
+      const NV = { pointRouge: 'point rouge', holo: 'holographique', lunette: 'lunette ×3' };
+      I.arme = f.nom.toUpperCase();
+      I.detail = `${f.chargeur ? `${A.chargeur} / ${A.reserve} · ` : ''}${f.viseur ? NV[f.viseur] || f.viseur : 'mire d’origine'}`;
+    }
+    return I;
+  }
   boutonsPause() {
     const g = this.game;
     return [

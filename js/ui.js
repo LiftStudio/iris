@@ -512,8 +512,26 @@ export function showOverlay(title, text, buttons) {
   const o = $('overlay');
   $('overlay-title').textContent = title;
   $('overlay-text').textContent = text;
+  o.classList.remove('pause-jeu'); o.querySelector('.ov-infos')?.remove();
   const row = $('overlay-buttons'); row.innerHTML = '';
   for (const b of buttons) { const el = document.createElement('button'); el.className = b.cls || 'btn-secondary'; el.textContent = b.label; el.onclick = b.onClick; row.appendChild(el); }
   o.hidden = false;
 }
 export function hideOverlay() { $('overlay').hidden = true; }
+// (27/10 soir) LA PAUSE D'UNE PARTIE, façon Call of Duty : la colonne de boutons à gauche, et à côté la partie en cours — le
+// score des deux équipes, le temps qui reste, ce que Haythem a fait (touchés, touché, précision) et ce qu'il a en main.
+// `I` : Partie.infosPause() ; rien ne se passe sans lui (la balade garde la pause d'avant)
+const echap = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+export function decorerPause(I) {
+  const o = $('overlay'); if (!I) return;
+  o.classList.add('pause-jeu');
+  const box = o.querySelector('.overlay-box'), d = document.createElement('div'); d.className = 'ov-infos';
+  const eq = (I.equipes || []).map((e) => `<div class="ov-eq${e.moi ? ' moi' : ''}" style="--c:${e.couleur}"><span>${echap(e.nom)}${e.moi ? ' <i>TON ÉQUIPE</i>' : ''}</span><b>${e.score}</b>
+    <u><i style="width:${Math.round(Math.min(1, e.score / (I.limite || 1)) * 100)}%"></i></u></div>`).join('');
+  const st = (I.stats || []).map(([n, v]) => `<div class="ov-st"><b>${echap(v)}</b><span>${echap(n)}</span></div>`).join('');
+  d.innerHTML = `${I.chrono ? `<div class="ov-chrono"><span>TEMPS RESTANT</span><b>${echap(I.chrono)}</b></div>` : ''}
+    ${eq ? `<div class="ov-bloc"><h4>SCORE${I.limite ? ` · PREMIER À ${I.limite}` : ''}</h4>${eq}</div>` : ''}
+    ${st ? `<div class="ov-bloc"><h4>TA PARTIE</h4><div class="ov-sts">${st}</div></div>` : ''}
+    ${I.arme ? `<div class="ov-bloc"><h4>EN MAIN</h4><div class="ov-arme"><b>${echap(I.arme)}</b><span>${echap(I.detail || '')}</span></div></div>` : ''}`;
+  box.appendChild(d);
+}

@@ -245,7 +245,10 @@ export class HudJeu {
     this.eVie = N('hj-vie'); this.eVie.innerHTML = '<i class="hj-vie-f"></i><i class="hj-vie-a"></i><b></b>';
     const M = this.eMun = N('hj-mun');
     this.eMunCh = elt('b', 'hj-mun-ch', M, ''); this.eMunRes = elt('span', 'hj-mun-res', M, '');
-    this.eMunNom = elt('div', 'hj-mun-nom', M, ''); this.eMunGr = elt('div', 'hj-mun-gr', M, ''); this.eMunAide = elt('div', 'hj-mun-aide', M, '');
+    this.eMunNom = elt('div', 'hj-mun-nom', M, '');
+    // (27/10 soir) le chargeur en traits, une balle par trait (au-delà de 40 : la jauge pleine), sous le nom de l'arme et son viseur
+    this.eMunBar = elt('div', 'hj-mun-bar', M, ''); this.eMunBar.innerHTML = '<i></i>';
+    this.eMunGr = elt('div', 'hj-mun-gr', M, ''); this.eMunAide = elt('div', 'hj-mun-aide', M, '');
     // la carte de mort
     const K = this.eMort = N('hj-mort'); K.hidden = true;
     this.eMortT = elt('div', 'hj-mort-t', K, ''); this.eMortD = elt('div', 'hj-mort-d', K, ''); this.eMortR = elt('div', 'hj-mort-r', K, '');
@@ -628,14 +631,24 @@ export class HudJeu {
     // (L-P : le chargeur de l'arme TENUE — un chargeur étendu en a 45 —, sinon celui de la fiche)
     const L = this._local(), g = L && L.arsenal && L.arsenal.arme && L.arsenal.arme.id === A.id ? L.arsenal.arme : null;
     const f = g || ARMES[A.id] || null, cap = f && f.chargeur ? f.chargeur : 0, ch = A.chargeur ?? 0, res = A.reserve ?? 0;
-    texte(this.eMunCh, ch); texte(this.eMunRes, res); texte(this.eMunNom, nomCourt(A.id));
+    const NV = { pointRouge: 'POINT ROUGE', holo: 'HOLO', lunette: 'LUNETTE ×3' };
+    texte(this.eMunCh, ch); texte(this.eMunRes, res); texte(this.eMunNom, nomCourt(A.id) + (g && g.viseur ? ` · ${NV[g.viseur] || ''}` : ''));
+    const pips = cap > 40 ? 1 : cap, kb = cap ? clamp(ch / cap, 0, 1) : 0;
+    if (this.eMunBar.__p !== pips || this.eMunBar.__k !== kb) {
+      this.eMunBar.__p = pips; this.eMunBar.__k = kb;
+      this.eMunBar.style.cssText = `--pips:${pips || 1}`; this.eMunBar.firstChild.style.width = `${r2(kb * 100)}%`;
+    }
     const bas = cap > 0 && ch < cap * REGLAGES_HUD.munitionsBas, vide = ch <= 0 && res <= 0;
     classe(this.eMun, 'bas', bas); classe(this.eMun, 'vide', vide);
     const recharge = A.etat === 'recharge';
     texte(this.eMunAide, recharge ? 'RECHARGEMENT' : vide ? 'PLUS DE MUNITIONS' : bas && res > 0 ? `${actionKey('recharger')} RECHARGER` : '');
     classe(this.eMunAide, 'recharge', recharge);
-    const gr = '◆'.repeat(clamp(H.letales | 0, 0, 3)) + (H.tactiques ? ' ' + '✸'.repeat(clamp(H.tactiques | 0, 0, 3)) : '');
-    texte(this.eMunGr, gr);
+    // (les grenades en pastilles : la frag ronde, la flash en losange ; un emplacement vide reste en creux)
+    const nL = clamp(H.letales | 0, 0, 3), nT = clamp(H.tactiques | 0, 0, 3), cle = nL * 10 + nT;
+    if (this.eMunGr.__c !== cle) {
+      this.eMunGr.__c = cle;
+      this.eMunGr.innerHTML = `<span class="frag">${'<i></i>'.repeat(nL)}${nL ? '' : '<i class="vide"></i>'}</span><span class="flash">${'<i></i>'.repeat(nT)}${nT ? '' : '<i class="vide"></i>'}</span>`;
+    }
   }
 
   // ---- la vie (au-dessus de la mini-carte) : seulement abîmée (ou doublée d'une armure : le liseré bleu dessus, CoD § 9.1) ----

@@ -280,3 +280,39 @@ body.touch .rj-seg button, body.touch .rj-pas button, body.touch .rj-bascule { m
 .opt-avert b { color: #fff; }
 /* la pastille de couleur du réticule */
 .reticule-pastille { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 7px; vertical-align: -1px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55); }
+
+/* ---------- LA PAUSE D'UNE PARTIE (27/10 soir : js/ui.js decorerPause) — la colonne de boutons à gauche, la partie à côté ---------- */
+#overlay.pause-jeu { place-items: center start; background: linear-gradient(90deg, rgba(4,6,9,.94) 0, rgba(4,6,9,.8) 38%, rgba(4,6,9,.35) 75%, rgba(4,6,9,.2)); backdrop-filter: blur(3px) saturate(.8); }
+#overlay.pause-jeu .overlay-box { display: grid; grid-template-columns: minmax(260px, 330px) minmax(280px, 380px); grid-template-rows: auto auto 1fr; column-gap: 56px;
+  margin: auto 0 auto max(24px, 7vw); padding: 0; background: none; border: none; border-radius: 0; text-align: left; max-width: calc(100vw - 48px); animation: pj-entree .2s ease-out; }
+@keyframes pj-entree { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; } }
+#overlay.pause-jeu .overlay-box h2 { grid-column: 1; font-size: 76px; letter-spacing: .06em; color: #fff; margin: 0; position: relative; padding-top: 14px; }
+#overlay.pause-jeu .overlay-box h2::before { content: ""; position: absolute; left: 0; top: 0; width: 56px; height: 4px; background: var(--accent); }
+#overlay.pause-jeu .overlay-box > p { grid-column: 1; font: 500 13px/1.4 Oswald, var(--ui); letter-spacing: .18em; color: var(--accent); margin: 6px 0 26px; text-transform: uppercase; }
+#overlay.pause-jeu .overlay-box .row { grid-column: 1; flex-direction: column; align-items: stretch; gap: 2px; justify-content: flex-start; }
+#overlay.pause-jeu .row button { position: relative; width: 100%; margin: 0; text-align: left; padding: 12px 18px; font: 400 25px/1 'Bebas Neue', var(--head); letter-spacing: .08em; text-transform: uppercase;
+  color: #cfd5de; background: none; border: none; border-left: 3px solid transparent; border-radius: 0; box-shadow: none; transform: none; transition: background .14s, color .14s, padding .14s, border-color .14s; }
+#overlay.pause-jeu .row button:hover, #overlay.pause-jeu .row button:focus-visible { color: #fff; padding-left: 26px; border-left-color: var(--accent);
+  background: linear-gradient(90deg, rgba(240,164,23,.22), rgba(240,164,23,0)); outline: none; filter: none; }
+#overlay.pause-jeu .row .btn-primary { color: #14161a; background: linear-gradient(90deg, var(--accent), rgba(240,164,23,.7) 70%, rgba(240,164,23,0)); border-left-color: #fff; margin-bottom: 8px; }
+#overlay.pause-jeu .row .btn-primary:hover { color: #000; background: linear-gradient(90deg, #ffbb3a, rgba(255,187,58,.75) 70%, rgba(255,187,58,0)); }
+#overlay.pause-jeu .row button:last-child { margin-top: 10px; color: #ff9b8f; }
+#overlay.pause-jeu .ov-infos { grid-column: 2; grid-row: 1 / 4; align-self: center; display: flex; flex-direction: column; gap: 16px; font-family: Oswald, var(--ui); color: #e8ecf3; }
+.ov-infos h4 { margin: 0 0 8px; font: 400 15px/1 'Bebas Neue', var(--head); letter-spacing: .22em; color: #8792a0; }
+.ov-bloc { padding: 14px 16px; background: linear-gradient(180deg, rgba(20,24,31,.86), rgba(12,14,19,.82)); border: 1px solid rgba(255,255,255,.07); }
+.ov-chrono { display: flex; align-items: baseline; justify-content: space-between; padding: 6px 2px 0; }
+.ov-chrono span { font-size: 12px; letter-spacing: .2em; color: #8792a0; } .ov-chrono b { font: 400 44px/1 'Bebas Neue', var(--head); letter-spacing: .04em; }
+.ov-eq { display: grid; grid-template-columns: 1fr auto; align-items: center; row-gap: 5px; padding: 6px 0 8px 12px; border-left: 3px solid var(--c); }
+.ov-eq + .ov-eq { margin-top: 6px; }
+.ov-eq span { font-size: 15px; letter-spacing: .14em; } .ov-eq span i { font-style: normal; font-size: 10px; letter-spacing: .16em; color: #14161a; background: var(--c); padding: 1px 5px; margin-left: 6px; vertical-align: 2px; }
+.ov-eq b { font: 400 34px/1 'Bebas Neue', var(--head); }
+.ov-eq u { grid-column: 1 / 3; height: 4px; background: rgba(255,255,255,.08); } .ov-eq u i { display: block; height: 100%; background: var(--c); }
+.ov-sts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.ov-st { text-align: center; padding: 8px 2px 6px; background: rgba(255,255,255,.035); }
+.ov-st b { display: block; font: 400 30px/1 'Bebas Neue', var(--head); } .ov-st span { font-size: 10px; letter-spacing: .14em; color: #8792a0; }
+.ov-arme b { display: block; font: 400 28px/1 'Bebas Neue', var(--head); letter-spacing: .04em; } .ov-arme span { font-size: 12px; letter-spacing: .12em; color: #aab3bf; text-transform: uppercase; }
+@media (max-width: 860px), (max-height: 560px) {
+  #overlay.pause-jeu .overlay-box { grid-template-columns: 1fr; margin: auto; column-gap: 0; }
+  #overlay.pause-jeu .ov-infos { grid-column: 1; grid-row: auto; margin-top: 16px; } #overlay.pause-jeu .ov-bloc:last-child { display: none; }
+  #overlay.pause-jeu .overlay-box h2 { font-size: 48px; } #overlay.pause-jeu .row button { font-size: 20px; padding: 8px 14px; } }
+@media (max-height: 560px) { #overlay.pause-jeu .ov-infos { display: none; } }

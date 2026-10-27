@@ -3,7 +3,7 @@ import { clamp, damp, ZERO } from './util.js';
 import { construireCarte } from './carte_ecole.js';
 import { Player } from './player.js';
 import { Input } from './input.js';
-import { HUD, showOverlay, hideOverlay, EmoteWheel } from './ui.js';
+import { HUD, showOverlay, hideOverlay, decorerPause, EmoteWheel } from './ui.js';
 import { PostFX } from './fx.js';
 import { actionKey } from './settings.js';
 import { manetteActive, aideBalade } from './manette.js';
@@ -545,6 +545,7 @@ export class Game {
       { label: 'Revenir au départ', cls: 'btn-secondary', onClick: () => { this.placerAuDepart(); this.togglePause(); } },
       { label: 'Modes de jeu', cls: 'btn-secondary', onClick: () => this.entrerMenu() },
     ]);
+    if (this.partie) decorerPause(this.partie.infosPause?.());
   }
 
   frame(dt) {
