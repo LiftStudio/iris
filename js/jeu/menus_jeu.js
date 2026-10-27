@@ -33,6 +33,7 @@ import { REGLAGES_PROP } from './partie_prop.js';
 import { lireRecords, meilleur } from './partie_stand.js';
 import { portrait } from './portraits.js';
 import { MenuProgression } from './menu_progression.js';
+import { MenuEnLigne } from './menu_enligne.js';
 import { CLASSES_DEPART } from './profil.js';
 import { ACCESSOIRES, ATOUTS, MEDAILLES } from './series.js';
 
@@ -41,6 +42,8 @@ import { ACCESSOIRES, ATOUTS, MEDAILLES } from './series.js';
 export const ACCUEIL = [
   { act: 'balade', titre: 'BALADE LIBRE', texte: 'L’école telle quelle : se promener, monter aux étages, s’asseoir, danser, lire le groupe IRIS sur le téléphone.' },
   { act: 'combat', titre: 'COMBAT', texte: 'À la première personne contre des bots : SISR contre SLAM, chacun pour soi ou domination, dans toute l’école.' },
+  // (27/10 : le multijoueur, sur le serveur que Lancer.bat ouvre avec le jeu — js/jeu/menu_enligne.js, js/jeu/partie_enligne.js)
+  { act: 'enligne', titre: 'EN LIGNE', texte: 'Contre de vrais élèves : SISR contre SLAM dans toute l’école, jusqu’à dix, sur le même wifi ou à distance.' },
   { act: 'prophunt', titre: 'PROP HUNT', texte: 'Deviens un vrai meuble de l’école et tiens jusqu’au bout… ou traque ceux qui se cachent parmi les chaises.' },
   { act: 'stand', titre: 'STAND DE TIR', texte: 'Dans la rue, devant la façade : des cibles à 8, 15 et 25 m, quatre défis et tes records.' },
   { act: 'options', titre: 'OPTIONS', texte: 'Graphismes, son, commandes de la balade, du combat et du prop hunt, réglages de la vue à la 1re personne.' },
@@ -142,7 +145,7 @@ const lisse = (u) => u * u * (3 - 2 * u);
 const borne = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const nomZone = (z) => (ZONES_JEU[z] ? ZONES_JEU[z].nom : z);
 // la famille d'écran de réglages d'une partie (son id)
-export const familleDe = (id) => (id === 'prophunt' ? 'prop' : id === 'stand' ? 'stand' : id === 'equipes' || id === 'melee' || id === 'domination' ? 'combat' : null);
+export const familleDe = (id) => (id === 'prophunt' ? 'prop' : id === 'stand' ? 'stand' : id === 'equipes' || id === 'melee' || id === 'domination' || id === 'enligne' ? 'combat' : null);
 // les étapes de Partie.preparer (js/jeu/partie.js), dans l'ordre où elles arrivent ; « Meubles » au prop hunt seulement
 const ETAPES = [['plan', 'Plan de l’école'], ['eleves', 'Les élèves arrivent'], ['meubles', 'Meubles'], ['armes', 'Armes et effets']];
 const cleEtape = (t) => { const s = String(t || '').replace(/['’]/g, '’').toLowerCase(); const E = ETAPES.find(([, n]) => n.toLowerCase() === s); return E ? E[0] : null; };
@@ -278,6 +281,7 @@ export class MenuJeu {
       g.input?.purger?.();                         // (la touche qui a validé ne part pas en saut ou en « s'asseoir »)
     } else if (act === 'menu') { this.cacher(); if (D.quitter) D.quitter('menu'); else g.entrerMenu(); }
     else if (act === 'combat') this.reglage('combat');
+    else if (act === 'enligne') { (this._enLigne || (this._enLigne = new MenuEnLigne(this))).ouvrir(); }
     else if (act === 'prophunt') this.reglage('prop');
     else if (act === 'stand') this.reglage('stand');
     else if (act === 'armurerie') this.prog.armurerie();
@@ -825,7 +829,7 @@ export class MenuJeu {
     const couleur = (a) => (a.equipe && EQUIPES[a.equipe] ? EQUIPES[a.equipe].couleur : null);
     const ficheDe = (a) => a.fiche || (a.local ? FICHE_HAYTHEM : FICHES_BOTS.find((f) => f.nom === a.nom) || null);
     const g = p.gagnant;
-    if (p.id === 'equipes' || p.id === 'domination' || (p.id !== 'melee' && p.scores && p.id !== 'prophunt')) {
+    if (p.id === 'equipes' || p.id === 'enligne' || p.id === 'domination' || (p.id !== 'melee' && p.scores && p.id !== 'prophunt')) {
       const sc = p.scores || { A: 0, B: 0 };
       B.sous = `${EQUIPES.A.nom} ${sc.A} – ${sc.B} ${EQUIPES.B.nom}`;
       if (g === null || g === undefined) { B.titre = 'ÉGALITÉ'; B.cls = 'neutre'; }

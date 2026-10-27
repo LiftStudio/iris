@@ -238,7 +238,8 @@ export class Partie {
     // 5. LES PORTES
     this.monde.majPortes(dt, this.acteurs, this);
     // 6. LES ARMES : 6a les tirs (effets DIFFÉRÉS), 6b appliqués dans l'ordre
-    for (const a of this.acteurs) if (a.vivant && a.arsenal) a.arsenal.pas(dt, a.cmd, this);
+    // (un acteur `distant` — le soldat d'un autre élève, js/jeu/partie_enligne.js — tire chez lui, pas ici)
+    for (const a of this.acteurs) if (a.vivant && a.arsenal && !a.distant) a.arsenal.pas(dt, a.cmd, this);
     this.appliquerEffets();
     // 7. LES PROJECTILES
     this.grenades.pas(dt);

@@ -76,7 +76,7 @@ const RAISONS = { assist: 'ASSISTANCE', assistance: 'ASSISTANCE', tete: 'TIR À 
   manche: 'MANCHE SURVÉCUE', dernierProp: 'DERNIER PROP', aide: 'AIDE', equipe: 'MANCHE GAGNÉE', propElimine: 'PROP TROUVÉ', vraiMeuble: 'VRAI MEUBLE',
   sentinelle: 'SENTINELLE DÉTRUITE' };
 // LES TITRES de la présentation (§§ 2.3-2.8)
-const TITRES = { equipes: 'MATCH À MORT PAR ÉQUIPES', melee: 'CHACUN POUR SOI', domination: 'DOMINATION', stand: 'STAND DE TIR', essai: 'ESSAI', prophunt: 'PROP HUNT' };
+const TITRES = { equipes: 'MATCH À MORT PAR ÉQUIPES', enligne: 'EN LIGNE · PAR ÉQUIPES', melee: 'CHACUN POUR SOI', domination: 'DOMINATION', stand: 'STAND DE TIR', essai: 'ESSAI', prophunt: 'PROP HUNT' };
 
 // LES SILHOUETTES DES ARMES (fil des éliminations), dessinées à la main : viewBox 0 0 48 14, la bouche à droite
 export const SILHOUETTES = {
@@ -864,7 +864,7 @@ export class HudJeu {
     }
     // (F2 relecture : en Airsoft, les mots de l'habillage — « 40 TOUCHÉS », comme les réglages du combat le disaient avant LANCER)
     const unite = habillage(this.game) === 'airsoft' ? 'TOUCHÉS' : 'ÉLIMINATIONS';
-    if (id === 'equipes') return [TITRES.equipes, `${EQUIPES.A.nom} CONTRE ${EQUIPES.B.nom} · ${lim} ${unite}${dur ? ' · ' + dur : ''}`];
+    if (id === 'equipes' || id === 'enligne') return [TITRES[id], `${EQUIPES.A.nom} CONTRE ${EQUIPES.B.nom} · ${lim} ${unite}${dur ? ' · ' + dur : ''}`];
     if (id === 'domination') return [TITRES.domination, `${EQUIPES.A.nom} CONTRE ${EQUIPES.B.nom} · ${lim} POINTS${dur ? ' · ' + dur : ''}`];
     if (id === 'melee') return [TITRES.melee, `${lim} ${unite}${dur ? ' · ' + dur : ''}`];
     return [TITRES[id] || 'PARTIE', ''];

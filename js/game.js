@@ -563,14 +563,17 @@ export class Game {
       if (this.settings) this.settings.set('game.vue', this.vue);
       this.hud.feedback(this.vue === 1 ? 'VUE 1re PERSONNE' : this.vue === 2 ? 'VUE ÉPAULE' : this.vue === 4 ? 'VUE PHOTO (œil à 1,45 m)' : 'VUE 3e PERSONNE', 'info');
     }
-    if (!this.paused) {
+    // (27/10 : une partie EN LIGNE ne se fige pas sous la pause — les autres élèves jouent ; js/jeu/partie_enligne.js lâche
+    // les commandes de Haythem tant qu'elle est ouverte)
+    const avance = !this.paused || !!(this.partie && this.partie.enLigne);
+    if (avance) {
       // PAS FIXE de 1/120 s : la même partie sur toutes les machines, quelle que soit la cadence de l'écran. Au
       // téléphone, cinq pas au plus par image (une image lente n'en demande pas plus qui la ralentiraient encore).
       this.acc = Math.min(0.25, (this.acc || 0) + dt);
       const maxPas = TELEPHONE ? 5 : 6;
       let nPas = 0, n = 0;
       for (let r = this.acc; r >= FIXED_DT && nPas < maxPas; r -= FIXED_DT) nPas++;
-      while (this.acc >= FIXED_DT && n < maxPas && !this.paused) {
+      while (this.acc >= FIXED_DT && n < maxPas && (!this.paused || avance)) {
         Player.poseVisible = n === nPas - 1;
         this.time += FIXED_DT; this.update(FIXED_DT); this.acc -= FIXED_DT; n++;
       }
