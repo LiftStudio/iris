@@ -7,8 +7,9 @@ Call of Duty (SISR contre SLAM, contre des bots), un prop hunt, un stand de tir,
 ## Jouer tout de suite, dans le navigateur
 
 **👉 https://liftstudio.github.io/iris/** — rien à installer : ouvre le lien sur un PC (Chrome ou Edge conseillés),
-attends le chargement (une minute la première fois), et joue. La balade, le combat contre les bots, le prop hunt et le
-stand de tir marchent tels quels. Le mode EN LIGNE (entre élèves) demande, lui, le serveur : voir juste en dessous.
+attends le chargement (une minute la première fois), et joue. Ça marche aussi **sur téléphone** (tenu à l'horizontale,
+commandes tactiles). Pour jouer **entre élèves** : chacun ouvre le lien, clique **EN LIGNE**, choisit son pseudo et son
+personnage, puis **JOUER** — le serveur public (Cloudflare, `serveur/cloudflare.js`) tourne en permanence.
 
 ## Installer et jouer (Windows)
 
