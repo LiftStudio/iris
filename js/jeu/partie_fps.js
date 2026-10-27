@@ -21,16 +21,26 @@
 // (`phase`, `annonce`, `score`, `capture`, `apparition`, `fin`). Seule la caméra de la présentation (camera, une fois par
 // image) est de l'affichage. L'état de ces règles entre dans `etat()` (bloc `fps`) : l'hôte autoritaire de demain.
 //   opts : { mode: 'equipes'|'melee'|'domination', zone, allies, ennemis, difficulte, duree, scoreCible, classe, avatars, graine,
-//            humain = true, campHumain = 'A', appareil ('pc'|'tel' : les effectifs d'un appareil, sinon celui-ci) }
+//            humain = true, campHumain = 'A', appareil ('pc'|'tel' : les effectifs d'un appareil, sinon celui-ci),
+//            equipement (L-P : la classe de Haythem telle que son profil la lui donne — { classe, principale, accessoire,
+//            secondaire, letale, tactique, atout } —, une DONNÉE de la partie : l'hôte de demain la reçoit telle quelle) }
+// VAGUE 3, L-P (la progression) : les SÉRIES et les MÉDAILLES (js/jeu/series.js), les ARMES AU SOL (js/jeu/armes_au_sol.js),
+// tenues ici à l'étape 8 ; l'équipement de Haythem (accessoire et atout : des fiches d'arme retouchées) ; ce que les atouts
+// changent aux règles — Endurance (`deplacer` : la jauge du sprint tactique deux fois plus lente à vider, deux fois plus
+// vite à remplir), Pas feutrés (le rayon d'audition posé sur chaque `pas`), Récupération (la régénération à 2,5 s) — ; le
+// GILET (son armure prise AVANT la vie : `infliger`) ; la SENTINELLE (ses balles reçues : `resoudreTir`, un effet différé à
+// elle) ; le bruit du SILENCIEUX lu par les cerveaux et la mini-carte (`ficheArme` rend la fiche du tireur pendant son `tir`).
 import * as THREE from 'three';
 import { Partie } from './partie.js';
 import { departs, choisirApparition, ramenerPoint, POINTS_APPARITION } from './apparitions.js';
 import { EQUIPES, ZONES_JEU, LIMITES, PIECES, BORNES_JEU } from './constantes.js';
 import { FICHES_BOTS, FICHE_HAYTHEM } from './avatars.js';
-import { ARMES, CLASSES } from './armes.js';
+import { ARMES, CLASSES, degatsDe } from './armes.js';
 import { TABLE_PORTES_FPS } from './monde_partie.js';
 import { Rng, melanger } from './rng.js';
 import { TELEPHONE } from '../appareil.js';
+import { Series, SERIES, ATOUTS, RAYONS_PAS, FICHE_SENTINELLE, equiperArsenal, ficheEquipee } from './series.js';
+import { ArmesAuSol } from './armes_au_sol.js';
 
 // LES RÈGLES (§§ 3.5, 3.8 : valeurs de départ, réglées par la vague 3 et l'intégration)
 export const REGLES_FPS = {
@@ -121,6 +131,8 @@ export class PartieFPS extends Partie {
     this.points = this.hud.points;                // (domination : le même tableau que hud.points — il entre dans l'état, § 4.7)
     this.mortLocal = null; this._lacet0 = null; this.replis = 0;   // (replis : les réapparitions où le point de choisirApparition n'était pas sûr)
     this._tireurs = new Set(); this._toucheurs = new Set(); this._zoneTouche = new Map(); this._candidats = null; this._mortsRecentes = [];
+    // (L-P) les séries et les médailles, les armes au sol ; la fiche du tireur pendant son `tir` (ficheArme)
+    this.series = new Series(this); this.armesSol = new ArmesAuSol(this); this._ficheTir = null;
   }
   // une partie qu'on ne lance pas, et pourquoi (null : elle se lance) — le menu peut griser avec la raison
   static refus(o = {}) {
@@ -136,6 +148,9 @@ export class PartieFPS extends Partie {
 
   // ---------------------------------------------------------------- la préparation : les anneaux de la domination
   async preparer(progres) {
+    // (L-P : les modèles des armes au sol, de la sentinelle et du drone posés dans la scène AVANT sa compilation — leurs
+    // programmes prêts avant la première image ; une fois par session)
+    this.aff.progression?.preparer?.(this);
     await super.preparer(progres);
     if (this.mode === 'domination') this._poserAnneaux();
   }
@@ -196,9 +211,22 @@ export class PartieFPS extends Partie {
     if (!x) { x = { serie: 0, serieMax: 0, suicides: 0, tirsTouchants: 0, captures: 0, neutralisations: 0, defenses: 0 }; this.ext.set(a.id, x); }
     return x;
   }
+  // L'ÉQUIPEMENT DE HAYTHEM (L-P) : `opts.equipement` (son profil le lui donne, js/jeu/profil.js equipement) remis
+  // d'aplomb contre les fiches — une arme inconnue revient à celle de la classe ; sans lui, la classe telle quelle
+  // (une partie lancée par le harnais ou ?partie=, sans profil)
+  equipementH() {
+    const o = this.opts, classe = CLASSES[o.classe] ? o.classe : 'assaut', C = CLASSES[classe], e = o.equipement;
+    if (!e || typeof e !== 'object') return { classe, dotation: C, accessoire: null, atout: null };
+    const P = ARMES[e.principale] && ARMES[e.principale].emplacement === 'principale' ? e.principale : C.principale;
+    const S = ARMES[e.secondaire] && ARMES[e.secondaire].emplacement === 'secondaire' ? e.secondaire : C.secondaire;
+    const L = e.letale === null ? null : Array.isArray(e.letale) && e.letale[0] === 'frag' ? ['frag', Math.max(1, Math.min(2, e.letale[1] | 0))] : C.letale;
+    const T = e.tactique === null ? null : Array.isArray(e.tactique) && e.tactique[0] === 'flash' ? ['flash', Math.max(1, Math.min(2, e.tactique[1] | 0))] : C.tactique;
+    return { classe: e.classe || classe, dotation: { principale: P, secondaire: S, letale: L, tactique: T, couteau: true },
+      accessoire: e.accessoire || null, atout: ATOUTS[e.atout] ? e.atout : null };
+  }
   peupler() {
     const o = this.opts, humain = o.humain !== false, E = this.effectifs;
-    const classeH = CLASSES[o.classe] ? o.classe : 'assaut';
+    const EH = this.equipementH();
     let id = 0, kBot = 0;
     const bot = (equipe, p, allie) => {
       const i = id++, f = this._ficheBot(kBot++);
@@ -209,7 +237,7 @@ export class PartieFPS extends Partie {
       const n = E.ennemis + (humain ? 1 : 0), L = this._placerMelee(n);
       for (let k = 0; k < n; k++) {
         if (humain && k === 0) this.ajouterActeur({ id: id++, nom: 'Haythem', fiche: FICHE_HAYTHEM, equipe: null, local: true, humain: true, x: L[k].x, y: L[k].y, z: L[k].z,
-          lacet: L[k].lacet, classe: classeH });
+          lacet: L[k].lacet, dotation: EH.dotation });
         else bot(null, L[k], false);
       }
     } else {
@@ -218,13 +246,17 @@ export class PartieFPS extends Partie {
       const dM = departs(this.zone, this.cotes[mon], nMon, this.rng), dA = departs(this.zone, this.cotes[autre], nAutre, this.rng);
       for (let k = 0; k < nMon; k++) {
         if (humain && k === 0) this.ajouterActeur({ id: id++, nom: 'Haythem', fiche: FICHE_HAYTHEM, equipe: mon, local: true, humain: true, x: dM[k].x, y: dM[k].y, z: dM[k].z,
-          lacet: dM[k].lacet, classe: classeH });
+          lacet: dM[k].lacet, dotation: EH.dotation });
         else bot(mon, dM[k], true);
       }
       for (let k = 0; k < nAutre; k++) bot(autre, dA[k], false);
     }
     for (const a of this.acteurs) this._ext(a);
     if (this.local) this._lacet0 = this.local.cmd.lacet;
+    // (L-P) l'accessoire et l'atout de Haythem ; la dotation de chacun gardée (une réapparition la rend : une arme ramassée
+    // ne survit pas à la mort) ; les séries et les armes au sol à l'écoute
+    if (this.local && this.local.arsenal) { this.local.atout = EH.atout; this.local.classe = EH.classe; equiperArsenal(this.local.arsenal, EH); }
+    for (const a of this.acteurs) if (a.arsenal) a._fiches = a.arsenal.armes.slice();
     this._geler(true);
     this.chrono = this.duree;
     // (les règles écoutent la simulation : l'élimination, le tir — la protection finie —, la touche — la zone, la précision)
@@ -243,6 +275,7 @@ export class PartieFPS extends Partie {
       if (a.poupee) { a.poupee.liberer?.(); a.poupee = null; }
       if (a.joueur && a.joueur.mesh) a.joueur.mesh.visible = !a.local;
     });
+    this.series.brancher(); this.armesSol.brancher();
     this.phaseVers('presentation', this.dPresentation);
     this.annonce(this._bandeau(), 'presentation');
   }
@@ -359,7 +392,9 @@ export class PartieFPS extends Partie {
     const p = this._apparition(a);
     if (!p) { a.reapparitionT = this.t + REGLES_FPS.attente; return false; }
     delete a._attenteDepuis;
+    this._rendreDotation(a);
     a.reapparaitre(p.x, p.y, p.z, p.lacet ?? 0, this.t);
+    this.series.remettre(a);                      // (L-P : le gilet ne survit pas à la vie)
     a.gele = false; if (a.arsenal) a.arsenal.bloque = false;
     if (a.local) { this.game.camYaw = p.lacet ?? 0; this.game.camPitch = 0; this.mortLocal = null; }
     a.cerveau?.reapparu?.();
@@ -396,10 +431,15 @@ export class PartieFPS extends Partie {
       return;
     }
     if (!tireur) return;                          // (une mort sans tireur : ni crédit ni pénalité)
-    tireur.arsenal?.ajouterChargeur();            // (§ 3.5 : un chargeur de réserve de l'arme principale, plafonné)
+    // (§ 3.5 : un chargeur de réserve de l'arme principale, plafonné — L-P le GARDE avec les armes au sol : elles ne durent
+    // que 30 s, là où l'on a tué, et une élimination à 25 m ne passe pas sur le corps ; une bonne vie ne tombe toujours pas
+    // à sec. La sentinelle, elle, ne rend pas de chargeur et ne compte pas dans la série, comme dans Call of Duty)
+    const sent = e.arme === 'sentinelle';
+    if (!sent) tireur.arsenal?.ajouterChargeur();
     const xt = this._ext(tireur);
-    xt.serie++; xt.serieMax = Math.max(xt.serieMax, xt.serie);
-    const couteau = e.arme === 'couteau', loin = dist > B.loinM, defense = this._defense(tireur, cible);
+    if (!sent) { xt.serie++; xt.serieMax = Math.max(xt.serieMax, xt.serie); }
+    // (relecture : une élimination de la sentinelle n'est pas « au-delà de 30 m » parce que Haythem est loin d'elle)
+    const couteau = e.arme === 'couteau', loin = !sent && dist > B.loinM, defense = this._defense(tireur, cible);
     const pts = B.elim + (e.tete ? B.tete : 0) + (couteau ? B.couteau : 0) + (loin ? B.loin : 0) + (defense ? B.defense : 0);
     if (defense) xt.defenses++;
     tireur.stats.score += pts;
@@ -448,8 +488,9 @@ export class PartieFPS extends Partie {
     for (const a of this.acteurs) {
       if (a.role === 'cible') continue;
       if (a.vivant) {
-        // LA RÉGÉNÉRATION : 4,0 s après le dernier dégât, 35 PV/s
-        if (a.vie < a.vieMax && this.t - (a.derniereTouche ? a.derniereTouche.t : -Infinity) >= R.regenDelai - 1e-9) a.vie = Math.min(a.vieMax, a.vie + R.regenPvS * dt);
+        // LA RÉGÉNÉRATION : 4,0 s après le dernier dégât (2,5 s avec Récupération, L-P), 35 PV/s
+        const delai = a.atout === 'recuperation' ? ATOUTS.recuperation.regenDelai : R.regenDelai;
+        if (a.vie < a.vieMax && this.t - (a.derniereTouche ? a.derniereTouche.t : -Infinity) >= delai - 1e-9) a.vie = Math.min(a.vieMax, a.vie + R.regenPvS * dt);
         continue;
       }
       // LA RÉAPPARITION (Espace / A : la caméra de mort passée, au plus tôt 1 s après la mort)
@@ -458,6 +499,8 @@ export class PartieFPS extends Partie {
       if (this.t >= a.reapparitionT - 1e-9) this._reapparaitre(a);
     }
     if (this.mode === 'domination') this._dominer(dt);
+    // (L-P) les séries lancées (drones, sentinelles) et les armes au sol
+    this.series.pas(dt); this.armesSol.pas(dt);
     if (!this.minuteDite && this.duree > 2 * R.derniereMinute && this.chrono <= R.derniereMinute) { this.minuteDite = true; this.annonce('DERNIÈRE MINUTE', 'info'); }
     // LA FIN : au score ou au temps ; la MI-TEMPS de la domination : à la moitié du score ou du temps
     let fin = this.chrono <= 1e-9;
@@ -534,6 +577,7 @@ export class PartieFPS extends Partie {
       P.possesseur = null; P.tenu = 0; P.capture = { equipe: null, k: 0 };
       if (avait) this.evt('capture', { point: P.id, equipe: null, etat: 'neutre' });
     }
+    this.series.finirTout();                      // (L-P relecture : drones et sentinelles ne passent pas la mi-temps)
     this.phaseVers('mi_temps', REGLES_FPS.miTemps);
     this.annonce(`MI-TEMPS · ${EQUIPES.A.nom} ${this.scores.A} – ${this.scores.B} ${EQUIPES.B.nom} · LES CAMPS S’ÉCHANGENT`, 'mi_temps');
   }
@@ -544,7 +588,9 @@ export class PartieFPS extends Partie {
       const D = departs(this.zone, this.cotes[eq], L.length, this.rng);
       L.forEach((a, k) => {
         const p = D[k];
+        this._rendreDotation(a);
         a.reapparaitre(p.x, p.y, p.z, p.lacet, this.t);
+        this.series.remettre(a);
         delete a._attenteDepuis;
         if (a.local) { this.game.camYaw = p.lacet; this.game.camPitch = 0; this.mortLocal = null; }
         a.cerveau?.reapparu?.();
@@ -600,6 +646,86 @@ export class PartieFPS extends Partie {
     return L;
   }
 
+  // ---------------------------------------------------------------- LA PROGRESSION DANS LA SIMULATION (L-P)
+  // la dotation de la classe rendue (une réapparition : l'arme ramassée ne survit pas à la vie)
+  _rendreDotation(a) {
+    const A = a.arsenal, F = a._fiches;
+    if (A && F && F.length === A.armes.length && A.armes.some((f, i) => f !== F[i])) A.armes = F.slice();
+  }
+  // ENDURANCE : le sprint tactique dure deux fois plus (la jauge se vide deux fois moins vite), et se recharge deux fois plus
+  // vite — la jauge de js/jeu/mouvement.js corrigée après son pas (rien d'autre ne la lit entre-temps)
+  deplacer(a, dt) {
+    if (a.atout !== 'endurance') return super.deplacer(a, dt);
+    const j0 = a.jaugeTact, E = ATOUTS.endurance;
+    super.deplacer(a, dt);
+    const d = a.jaugeTact - j0;
+    if (d < 0) a.jaugeTact = Math.max(0, j0 + d / E.tactDuree);
+    else if (d > 0 && d < 0.5) a.jaugeTact = Math.min(1, j0 + d / E.tactRecharge);    // (une réapparition la remet à 1 d'un coup)
+  }
+  // LES ÉVÉNEMENTS : le `tir` d'une arme équipée dit son bruit (le silencieux : 8 m, et `silencieux`) et la fiche du tireur
+  // reste lisible par `ficheArme` pendant qu'on l'écoute (les cerveaux l'entendent à SON bruit, la mini-carte ne montre pas un
+  // tir silencieux) ; chaque `pas` dit le rayon où les bots l'entendent (§ 3.1 ; ÷ 3 avec Pas feutrés)
+  evt(type, data) {
+    if (type === 'pas' && data) {
+      const a = this.acteurParId(data.a), r = RAYONS_PAS[data.tact ? 'tact' : data.allure] ?? RAYONS_PAS.course;
+      if (a && a.atout === 'pasFeutres') { data.rayon = r * ATOUTS.pasFeutres.audition; data.feutre = true; } else data.rayon = r;
+    } else if (type === 'tir' && data) {
+      let f = null;
+      if (data.arme === 'sentinelle') f = FICHE_SENTINELLE;
+      else { const a = this.acteurParId(data.a), g = a && a.arsenal && a.arsenal.arme; if (g && g.base && g.id === data.arme) { f = g; data.bruit = g.bruit; if (g.silencieux) data.silencieux = true; } }
+      if (f) { const avant = this._ficheTir; this._ficheTir = f; try { return super.evt(type, data); } finally { this._ficheTir = avant; } }
+    }
+    return super.evt(type, data);
+  }
+  ficheArme(id) { const f = this._ficheTir; return f && f.id === id ? f : super.ficheArme(id); }
+  // LE GILET : son armure prend les coups AVANT la vie (la base, sans gilet, en prendrait la moitié à chaque coup) ; un coup
+  // que le gilet a tout pris reste un coup (marqueur, son, régénération retardée)
+  infliger(cible, degats, o) {
+    const ar = cible.armure || 0;
+    if (ar <= 0 || !(degats > 0) || !cible.vivant) return super.infliger(cible, degats, o);
+    const O = o || {}, par = O.par ?? -1, tireur = this.acteurParId(par);
+    if (tireur && tireur !== cible && !this.ennemis(tireur, cible)) return 0;
+    if (cible.protegeT > this.t) return 0;
+    const pris = Math.min(ar, degats), reste = degats - pris;
+    cible.armure = 0;
+    // (relecture : les dégâts pris par le gilet comptent à l'assistance du tireur, § 3.5 — ≥ 30 dégâts sur une cible tuée
+    // dans les 5 s —, comme ceux de la vie)
+    (cible._aides || (cible._aides = [])).push({ par, d: pris, t: this.t });
+    let d = 0;
+    if (reste > 1e-9) d = super.infliger(cible, reste, O);
+    else {
+      if (tireur && tireur.protegeT > this.t) tireur.protegeT = this.t;
+      cible.derniereTouche = { t: this.t, par, arme: O.arme ?? null };
+      // (et le coup tout pris par le gilet est une touche du tireur, à sa précision — un coup de plombs une fois)
+      if (tireur) {
+        const f = O.arme ? ARMES[O.arme] : null, multi = O.plomb !== undefined && f && f.plombs > 1;
+        if (f && f.rpm && (!multi || tireur._seqTouche !== O.seq)) tireur.stats.touches++;
+        if (multi) tireur._seqTouche = O.seq;
+      }
+      this.evt('touche', { par, cible: cible.id, zone: O.zone || 'torse', degats: 0, x: O.x || 0, y: O.y || 0, z: O.z || 0, tete: O.zone === 'tete', dx: O.dx || 0,
+        dz: O.dz || 0, arme: O.arme ?? null, armure: pris });
+    }
+    if (cible.vivant) cible.armure = ar - pris;
+    return d;
+  }
+  // LES BALLES CONTRE UNE SENTINELLE ennemie : la tourelle coupée avant le monde et les acteurs arrête la balle (effet différé
+  // à elle, appliqué à l'étape 6b comme les autres) ; un impact sur son métal
+  resoudreTir(tireur, fiche, ox, oy, oz, dx, dy, dz, res, plomb) {
+    if (this.series.sentinelles.length && tireur && fiche && fiche.id !== 'couteau') {
+      const h = this.series.toucherSentinelle(tireur, ox, oy, oz, dx, dy, dz, res.t);
+      if (h) {
+        this.differer({ genre: 'sentinelle', id: h.s.id, degats: degatsDe(fiche, h.t, null), par: tireur.id });
+        this.evt('impact', { x: h.x, y: h.y, z: h.z, nx: -dx, ny: -dy, nz: -dz, mat: 'meuble', forme: null, plomb, arme: fiche.id, sentinelle: h.s.id });
+        return;
+      }
+    }
+    return super.resoudreTir(tireur, fiche, ox, oy, oz, dx, dy, dz, res, plomb);
+  }
+  appliquerEffet(e) {
+    if (e.genre === 'sentinelle') { this.series.blesser(e.id, e.degats, e.par); return; }
+    return super.appliquerEffet(e);
+  }
+
   // ---------------------------------------------------------------- l'affichage : le HUD, la caméra de la présentation
   majHud() {
     super.majHud();
@@ -612,6 +738,18 @@ export class PartieFPS extends Partie {
     // (en plus du § 4.5.15 : le mode, pour le bandeau et le tableau)
     H.mode = { id: this.mode, nom: this.nomMode, zone: this.zone, scoreCible: this.scoreCible, duree: this.duree, miTemps: this.miTempsFaite,
       camp: this.local ? this.local.equipe : null };
+    // (L-P) les séries de Haythem, le drone de son équipe (les ennemis balayés : `signalesMiniCarte`, que la mini-carte de
+    // L-G dessine), l'arme au sol qu'il peut ramasser
+    const a = this.local, S = this.series;
+    if (a) {
+      const K = S.acteurs.get(a.id), D = S.dronesPour(a), Dc = S.dronesContre(a), sent = S.sentinelles.filter((s) => s.a === a.id);
+      H.series = { vie: K ? K.vie : 0, dispo: K ? K.dispo.slice() : [], drone: D.reduce((m, x) => Math.max(m, x.fin - this.t), 0), droneEnnemi: Dc.length > 0,
+        sentinelle: sent.length ? { reste: Math.max(0, sent[0].fin - this.t), vie: sent[0].vie, vieMax: SERIES.sentinelle.vie } : null, armure: a.armure || 0 };
+      const sig = H.signalesMiniCarte = [];
+      for (const x of D) for (const [id, vx, , vz] of x.vus) sig.push({ id, x: vx, z: vz, t: x.prochain });
+      const sol = a.vivant && a.humain && !a.prop && a.arsenal ? this.armesSol.proche(a) : null;
+      H.ramassage = sol ? { id: sol.id, arme: sol.arme, acc: sol.acc, ch: sol.ch, res: sol.res } : null;
+    }
   }
   peutTirer(a) { return this.phase === 'manche' && super.peutTirer(a); }
   // (F2 relecture : la ligne sous « PAUSE »)
@@ -657,6 +795,13 @@ export class PartieFPS extends Partie {
       touches: this.acteurs.map((a) => [a.id, a.derniereTouche ? [a.derniereTouche.t, a.derniereTouche.par, a.derniereTouche.arme] : null,
         (a._aides || []).map((h) => [h.par, h.d, h.t]), a._attenteDepuis ?? null]),
       zones: [...this._zoneTouche], morts: this._mortsRecentes.map((m) => ({ ...m })) };
+    // (L-P) les séries — leur part par acteur dans le champ `serie` de chacun : [vie, enchaînement, son heure, son dernier
+    // tueur, les séries à prendre] —, les armes au sol, l'équipement tenu (les fiches : leur arme et leur accessoire, l'atout)
+    const S = this.series.etat(), act = new Map(S.act.map((x) => [x[0], x.slice(1)]));
+    delete S.act;
+    for (const s of e.acteurs) s.serie = act.get(s.id) || null;
+    e.prog = { series: S, sol: this.armesSol.etat(),
+      equip: this.acteurs.filter((a) => a.arsenal).map((a) => [a.id, a.arsenal.armes.map((f) => [f.base || f.id, f.accessoire || null]), a.atout || null]) };
     return e;
   }
   appliquer(e) {
@@ -676,5 +821,14 @@ export class PartieFPS extends Partie {
     this._zoneTouche = new Map(F.zones);
     this._mortsRecentes = (F.morts || []).map((m) => ({ ...m }));
     for (const a of this.acteurs) if (a.arsenal) a.arsenal.bloque = !!a.gele;
+    // (L-P) l'équipement tenu (fiches refaites), les séries, les armes au sol
+    const G = e.prog; if (!G) return;
+    for (const [id, armes, atout] of G.equip || []) {
+      const a = this.acteurParId(id); if (!a || !a.arsenal) continue;
+      a.atout = atout;
+      if (armes.length === a.arsenal.armes.length) a.arsenal.armes = armes.map(([k, acc]) => ficheEquipee(ARMES[k], acc, atout));
+    }
+    this.series.appliquer({ ...G.series, act: e.acteurs.filter((s) => s.serie).map((s) => [s.id, ...s.serie]) });
+    this.armesSol.appliquer(G.sol);
   }
 }

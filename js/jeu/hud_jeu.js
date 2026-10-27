@@ -27,11 +27,17 @@
 // ÉVÉNEMENTS (§ 4.6 : touche, elim, score, annonce, phase, fin, capture, apparition, soin), notés dans les rappels et
 // montrés par `maj`, dans la même image. Il ne commande jamais une règle. Habillage Airsoft par défaut (« TOUCHÉ » au lieu
 // d'« ÉLIMINÉ » : arbitrage 35) ; tous les textes en français.
+// VAGUE 3, L-P (la progression) : les MÉDAILLES (un écusson et son nom au-dessus du réticule, 1,8 s, en file, et leur ligne
+// « +50 DOUBLÉ » avec les autres), les SÉRIES en bas à droite (drone 3, gilet 5, sentinelle 7 : la vie qui les remplit, celle
+// qui est PRÊTE et sa touche, celle qui est EN COURS et son temps ; au doigt, on les touche), le drone ennemi signalé, l'arme
+// au sol qu'on peut ramasser, et les annonces du PROFIL (un niveau gagné et ce qu'il débloque, un défi du jour réussi). Les
+// mêmes règles : des textes écrits quand ils changent, le reste par les variables de la racine.
 import * as THREE from 'three';
 import { ARMES, degatsDe } from './armes.js';
 import { EQUIPES } from './constantes.js';
 import { rayonActeurs } from './touches.js';
-import { actionKey } from '../settings.js';
+import { actionKey, padGlyph, entree } from '../settings.js';
+import { SERIES, ORDRE_SERIES, MEDAILLES, ACCESSOIRES } from './series.js';
 
 // LES VALEURS (§ 3.6 ; CoD §§ 7.4, 9.1) — px CSS, secondes du HUD
 export const REGLAGES_HUD = {
@@ -48,7 +54,16 @@ export const REGLAGES_HUD = {
   flash: { fondu: 0.6 }, mort: { desat: 3 }, lunette: 0.85,
   annonce: { duree: 1.9, min: 0.55, file: 3 },
   objectif: { hauteur: 2.2, marge: 34 },
+  // (L-P) une médaille : 1,8 s, la suivante 0,5 s après au plus tôt, 4 en file ; une annonce du profil : 3,2 s
+  medaille: { duree: 1.8, min: 0.5, file: 4 }, profil: { duree: 3.2 },
 };
+// LES ÉCUSSONS des séries et des médailles (SVG faits main)
+const SVG_SERIES = {
+  drone: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 10h6v4H9z M4 5.5l5 4.5M20 5.5l-5 4.5M4 18.5l5-4.5M20 18.5l-5-4.5" stroke="currentColor" stroke-width="1.6" fill="currentColor"/><circle cx="4" cy="5" r="2.6"/><circle cx="20" cy="5" r="2.6"/><circle cx="4" cy="19" r="2.6"/><circle cx="20" cy="19" r="2.6"/></svg>',
+  gilet: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2.5l4 3 4-3 4 3-1.6 4.2 1.6 1.3V21H4V11l1.6-1.3L4 5.5z M10.2 9h3.6v8h-3.6z" fill-rule="evenodd"/></svg>',
+  sentinelle: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h9v6H7z M16 9h6v2h-6z M11 13h2v3h-2z M12 15.5l-6 6.5h2.4L12 18l3.6 4H18z"/></svg>',
+};
+const SVG_MEDAILLE = '<svg viewBox="0 0 32 32" aria-hidden="true"><path class="r" d="M10 1h4l2 6 2-6h4l-3.5 9h-5z"/><circle cx="16" cy="19" r="10"/><path class="e" d="M16 12.2l2 4.3 4.6.5-3.4 3.1 1 4.6-4.2-2.4-4.2 2.4 1-4.6-3.4-3.1 4.6-.5z"/></svg>';
 // L'HABILLAGE (arbitrage 35 ; § 3.6) : les mots seuls changent
 export const TEXTES = {
   airsoft: { elim: 'TOUCHÉ', par: 'TOUCHÉ PAR', soi: 'TU T’ES TOUCHÉ TOI-MÊME', mort: 'TOUCHÉ' },
@@ -58,7 +73,8 @@ const ZONES_FR = { tete: 'tête', cou: 'cou', torse: 'torse', ventre: 'ventre', 
 // les raisons d'un événement `score` (§ 3.8, § 3.9) : le libellé de son « + »
 const RAISONS = { assist: 'ASSISTANCE', assistance: 'ASSISTANCE', tete: 'TIR À LA TÊTE', couteau: 'AU COUTEAU', distance: 'LONGUE DISTANCE',
   capture: 'CAPTURE', neutralisation: 'NEUTRALISATION', defense: 'DÉFENSE', survie: 'SURVIE', provocation: 'PROVOCATION',
-  manche: 'MANCHE SURVÉCUE', dernierProp: 'DERNIER PROP', aide: 'AIDE', equipe: 'MANCHE GAGNÉE', propElimine: 'PROP TROUVÉ', vraiMeuble: 'VRAI MEUBLE' };
+  manche: 'MANCHE SURVÉCUE', dernierProp: 'DERNIER PROP', aide: 'AIDE', equipe: 'MANCHE GAGNÉE', propElimine: 'PROP TROUVÉ', vraiMeuble: 'VRAI MEUBLE',
+  sentinelle: 'SENTINELLE DÉTRUITE' };
 // LES TITRES de la présentation (§§ 2.3-2.8)
 const TITRES = { equipes: 'MATCH À MORT PAR ÉQUIPES', melee: 'CHACUN POUR SOI', domination: 'DOMINATION', stand: 'STAND DE TIR', essai: 'ESSAI', prophunt: 'PROP HUNT' };
 
@@ -73,6 +89,8 @@ export const SILHOUETTES = {
   frag: 'M24 3.4a4.8 4.8 0 1 0 .01 0z M25.6 1.6h4.4v2.2h-4.4z',
   flash: 'M19.5 3.2h9v9.6h-9z M20.5 1.8h7v1.4h-7z',
   rien: 'M18 4l12 6M30 4L18 10',
+  // (L-P) la sentinelle : une tourelle sur son trépied
+  sentinelle: 'M14 2h14v6H14z M28 3.6h12v2.8H28z M19 8h4v2.5h-4z M21 10l-7 4h2.6l4.4-2.5 4.4 2.5H28z',
 };
 const SVG_TETE = '<svg viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="5" r="3.1"/><path d="M2.4 13.2c.6-3.1 2.4-4.5 4.6-4.5s4 1.4 4.6 4.5z"/></svg>';
 const SVG_CHEVRON = '<svg viewBox="0 0 14 10" aria-hidden="true"><path d="M0 0L7 5.6 14 0v4.2L7 10 0 4.2z"/></svg>';
@@ -85,7 +103,7 @@ const _vise = { acteur: null, zone: null, t: 0 };
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const r1 = (x) => Math.round(x * 10) / 10, r2 = (x) => Math.round(x * 100) / 100;
 const mmss = (s) => { s = Math.max(0, Math.ceil(s - 1e-6)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
-const nomCourt = (id) => { const f = ARMES[id]; return f ? (id === 'frag' ? 'Grenade' : id === 'flash' ? 'Flash' : f.nom.split(' ')[0]) : (id || ''); };
+const nomCourt = (id) => { const f = ARMES[id]; return f ? (id === 'frag' ? 'Grenade' : id === 'flash' ? 'Flash' : f.nom.split(' ')[0]) : id === 'sentinelle' ? 'Sentinelle' : (id || ''); };
 
 // ---- les petits outils du DOM : n'écrire que ce qui change ----
 export function elt(tag, cls, parent, txt) {
@@ -172,6 +190,8 @@ export class HudJeu {
     this._captures = new Map();
     this._stand = null;
     this.ecartPx = 0; this.vise = null; this._vieT = undefined; this._alerte = null; this._presT = undefined; this._chiffreT = undefined;
+    // (L-P) les médailles en file, celle qu'on montre ; l'annonce du profil ; ce que les séries affichent
+    this._medailles = []; this._medaille = null; this._annonceP = null; this._seriesVue = null; this.medaillesVues = 0;
   }
   // (facultative, § 4.5.5 : appelée sous l'écran PRÉPARATION — le DOM est prêt avant la première image)
   preparer() { this._creer(); }
@@ -231,6 +251,23 @@ export class HudJeu {
     this.eMortT = elt('div', 'hj-mort-t', K, ''); this.eMortD = elt('div', 'hj-mort-d', K, ''); this.eMortR = elt('div', 'hj-mort-r', K, '');
     // le stand (la dernière balle)
     this.eStand = N('hj-stand', R, ''); this.eStand.hidden = true;
+    // (L-P) la médaille, l'annonce du profil, les séries, le drone ennemi, l'arme au sol
+    const Md = this.eMed = N('hj-medaille'); Md.innerHTML = SVG_MEDAILLE + '<b></b><span></span>';
+    const Np = this.eNiv = N('hj-niveau'); Np.innerHTML = '<b></b><span></span>';
+    const Se = this.eSeries = N('hj-series'); this.eSerie = [];
+    ORDRE_SERIES.forEach((id, i) => {
+      const s = N('hj-serie s' + i, Se); s.dataset.serie = id;
+      s.innerHTML = `<i class="hj-serie-ic">${SVG_SERIES[id]}</i><i class="hj-serie-k"></i><b class="hj-serie-n">${SERIES[id].n}</b><i class="hj-serie-j"><i></i></i>`;
+      // (au doigt : toucher l'écusson d'une série prête la lance — la touche de la série pressée, lue par lireCommande)
+      s.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'touch' || !s.classList.contains('pret')) return; e.preventDefault(); this._toucherSerie(i); });
+      this.eSerie.push(s);
+    });
+    this.eSeriesTxt = N('hj-series-txt', Se, '');
+    this.eDroneE = N('hj-drone-e', R, 'DRONE ENNEMI');
+    this.eRamasse = N('hj-ramasse', R, '');
+    // (relecture : au doigt, l'invite SE TOUCHE — le bouton contextuel du § 4.8 : la touche d'`interagir` pressée un instant,
+    // comme les écussons des séries ; avant, seuls deux appuis sur RECHARGER ramassaient au doigt)
+    this.eRamasse.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'touch') return; e.preventDefault(); e.stopPropagation(); this._presser('interagir'); });
     hud.appendChild(R);
     // LE CALQUE BLANC DE LA FLASH : hors de #hud (au-dessus de lui, sous la pause : z-index 14 entre 10 et 30)
     this.eFlash = document.getElementById('voile-flash') || elt('div', null, document.body);
@@ -251,6 +288,9 @@ export class HudJeu {
     S('capture', (e) => this._captures.set(e.point, { t0: this.t, equipe: e.equipe, etat: e.etat }));
     S('apparition', (e) => { const L = partie.local; if (L && e.a === L.id) { this._infoMort = null; this._arcs.length = 0; } });
     S('soin', (e) => { const L = partie.local; if (L && e.a === L.id && e.pv >= 1) this._soins = { t0: this.t, pv: (this._soins && this.t - this._soins.t0 < 1 ? this._soins.pv : 0) + e.pv }; });
+    // (L-P) les médailles et les séries de Haythem
+    S('medaille', (e) => this._medailleRecue(e));
+    S('serie', (e) => this._serieRecue(e));
     // (l'annonce posée avant le branchement — par `peupler` — : celle d'une partie sans présentation ; sinon la présentation
     // la dit, voir _majAnnonce)
     if (partie.hud && partie.hud.annonce && partie.phase !== 'presentation') this._pousserAnnonce(partie.hud.annonce.texte, partie.hud.annonce.cls);
@@ -266,6 +306,44 @@ export class HudJeu {
     cacher(this.el, true);
     cacher(this.eFlash, true); this._flashO = -1; this.eFlash.style.opacity = '';
     cacher(this.eDesat, true); cacher(this.eLunette, true); cacher(this.eMort, true);
+  }
+
+  // ---------------------------------------------------------------- (L-P) LES MÉDAILLES, LES SÉRIES, LE PROFIL
+  _medailleRecue(e) {
+    const L = this._local(), M = MEDAILLES[e.id]; if (!L || e.a !== L.id || !M) return;
+    const nom = habillage(this.game) === 'airsoft' && M.nomA ? M.nomA : M.nom;
+    this._pousserXp('+' + (e.xp ?? M.xp), nom, 'medaille');
+    const F = this._medailles;
+    if (F.length >= REGLAGES_HUD.medaille.file) F.shift();
+    F.push({ id: e.id, nom, xp: e.xp ?? M.xp, rang: M.xp >= 75 ? 'or' : M.xp >= 50 ? 'argent' : 'bronze' });
+  }
+  _serieRecue(e) {
+    const L = this._local(); if (!L || e.a !== L.id) return;
+    const S = SERIES[e.id];
+    if (e.etat === 'atteinte') {
+      if (e.xp) this._pousserXp('+' + e.xp, `SÉRIE DE ${e.n}`, 'bonus');
+      if (S) this._pousserAnnonce(`${S.court} PRÊT · ${this._toucheSerie(ORDRE_SERIES.indexOf(e.id))}`, 'info');
+    }
+    else if (e.etat === 'lancee' && S) this._pousserAnnonce(e.id === 'drone' ? 'DRONE EN VOL' : e.id === 'gilet' ? 'GILET ENFILÉ · +60 D’ARMURE' : 'SENTINELLE EN POSITION', 'go');
+    else if (e.etat === 'refusee') this._pousserAnnonce('PAS LA PLACE POUR LA SENTINELLE', 'alerte');
+    else if (e.etat === 'detruite') this._pousserAnnonce('SENTINELLE DÉTRUITE', 'alerte');
+  }
+  // la touche d'une série (rang 0-2), dans la langue de la dernière entrée
+  _toucheSerie(i) {
+    const id = 'serie' + (i + 1);
+    if (entree.manette) return padGlyph(['Pad:Left', 'Pad:Up', 'Pad:Right'][i]).replace(/<[^>]+>/g, '') || ['←', '↑', '→'][i];
+    if (document.body.classList.contains('touch')) return 'TOUCHE L’ÉCUSSON';
+    return actionKey(id);
+  }
+  // au doigt : la touche de la série pressée un instant (js/jeu/entrees_jeu.js la lit comme le clavier)
+  _toucherSerie(i) { this._presser('serie' + (i + 1)); }
+  // la touche d'une action pressée un instant (120 ms : un front pour une action à front, un appui tenu pour `interagir`) —
+  // (relecture) son code TACTILE d'abord (`Tactile:<action>`, que js/input.js lie à chaque action : il marche même si Haythem a
+  // délié la touche du clavier), sinon la première touche liée
+  _presser(action) {
+    const inp = this.game.input, B = inp && inp.bind && inp.bind[action], code = B && (B.find((c) => c === 'Tactile:' + action) || B.find(Boolean));
+    if (!code) return;
+    inp.presser(code); setTimeout(() => inp.relacher(code), 120);
   }
 
   // ---------------------------------------------------------------- LES ÉVÉNEMENTS (pendant le pas : on note, maj montre)
@@ -394,7 +472,68 @@ export class HudJeu {
     this._majLunette(H, fps, C);
     this._majStand(P);
     this._majFlash(H);
+    this._majProgression(H, P, L, C, fps && !cachette && phase !== 'presentation');
     C.ecrire();
+  }
+
+  // ---- (L-P) la médaille, l'annonce du profil, les séries, le drone ennemi, l'arme au sol ----
+  _majProgression(H, P, L, C, montre) {
+    const R = REGLAGES_HUD.medaille;
+    // la médaille : la suivante quand la précédente a eu son temps
+    if (this._medailles.length && (!this._medaille || this.t - this._medaille.t0 >= Math.max(R.min, R.duree * 0.55))) {
+      const m = this._medailles.shift();
+      this._medaille = { ...m, t0: this.t };
+      texte(this.eMed.children[1], m.nom); texte(this.eMed.children[2], '+' + m.xp + ' XP');
+      for (const c of ['or', 'argent', 'bronze']) classe(this.eMed, c, m.rang === c);
+      this.medaillesVues++;
+    }
+    const M = this._medaille;
+    if (M && this.t - M.t0 > R.duree) this._medaille = null;
+    const am = M ? this.t - M.t0 : 0;
+    C.v('mdo', M ? r2(am < 0.12 ? am / 0.12 : am < R.duree - 0.35 ? 1 : clamp((R.duree - am) / 0.35, 0, 1)) : 0);
+    C.v('mdk', M ? r2(am < 0.16 ? 1.6 - 0.6 * am / 0.16 : 1) : 1);
+    // l'annonce du profil (un niveau, un défi, l'or) : prise au profil, 3,2 s
+    const Pf = P && P.aff && P.aff.profil;
+    if (Pf && Pf.prendreAnnonce && (!this._annonceP || this.t - this._annonceP.t0 > REGLAGES_HUD.profil.duree)) {
+      const a = Pf.prendreAnnonce();
+      if (a) {
+        this._annonceP = { ...a, t0: this.t };
+        texte(this.eNiv.children[0], a.texte); texte(this.eNiv.children[1], a.sous || '');
+        classe(this.eNiv, 'defi', a.type === 'defi'); classe(this.eNiv, 'or', a.type === 'or');
+        P.aff.progression?.son?.(a.type === 'niveau' ? 'niveau' : 'defi', 0.6);
+      }
+    }
+    const A = this._annonceP, aa = A ? this.t - A.t0 : 0;
+    if (A && aa > REGLAGES_HUD.profil.duree) this._annonceP = null;
+    C.v('npo', A ? r2(aa < 0.2 ? aa / 0.2 : aa < REGLAGES_HUD.profil.duree - 0.4 ? 1 : clamp((REGLAGES_HUD.profil.duree - aa) / 0.4, 0, 1)) : 0);
+    C.v('npk', A ? r2(aa < 0.25 ? 0.85 + 0.15 * aa / 0.25 : 1) : 1);
+    // LES SÉRIES : la vie (éliminations de cette vie), prête (et sa touche), en cours (son temps)
+    const S = H.series, voir = !!(S && montre);
+    cacher(this.eSeries, !voir);
+    if (voir) {
+      let txt = '';
+      ORDRE_SERIES.forEach((id, i) => {
+        const e = this.eSerie[i], D = SERIES[id], pret = S.dispo.includes(id);
+        const actif = id === 'drone' ? S.drone > 0 : id === 'sentinelle' ? !!S.sentinelle : id === 'gilet' ? S.armure > 0 : false;
+        classe(e, 'pret', pret); classe(e, 'actif', actif && !pret);
+        texte(e.children[1], pret ? this._toucheSerie(i) : '');
+        const k = pret ? 1 : clamp(S.vie / D.n, 0, 1);
+        C.v('sk' + i, r2(k));
+        if (actif && id === 'drone') txt = `DRONE · ${Math.ceil(S.drone)} s`;
+        else if (actif && id === 'sentinelle' && !txt) txt = `SENTINELLE · ${Math.ceil(S.sentinelle.reste)} s · ${Math.ceil(S.sentinelle.vie)} PV`;
+      });
+      if (!txt && S.vie > 0) txt = `SÉRIE ${S.vie}`;
+      texte(this.eSeriesTxt, txt); cacher(this.eSeriesTxt, !txt);
+    } else for (let i = 0; i < 3; i++) C.v('sk' + i, 0);
+    cacher(this.eDroneE, !(voir && S.droneEnnemi));
+    // l'arme au sol qu'on peut ramasser : « F · RAMASSER LE PM-9 (32 / 96) »
+    const Ra = montre && H.ramassage, f = Ra && ARMES[Ra.arme];
+    cacher(this.eRamasse, !f);
+    if (f) {
+      const k = entree.manette ? `${padGlyph('Pad:X').replace(/<[^>]+>/g, '') || 'X'} × 2` : document.body.classList.contains('touch') ? 'TOUCHE' : `${actionKey('interagir')}`;
+      const acc = Ra.acc && ACCESSOIRES[Ra.acc] ? ` + ${ACCESSOIRES[Ra.acc].nom.toLowerCase()}` : '';
+      texte(this.eRamasse, `${k} · RAMASSER ${nomCourt(Ra.arme)}${acc} (${Ra.ch} / ${Ra.res})`);
+    }
   }
 
   // ---- le score, le chrono, la manche (haut gauche) ----
@@ -486,7 +625,9 @@ export class HudJeu {
     const A = H.arme;
     cacher(this.eMun, !(montre && A));
     if (!(montre && A)) return;
-    const f = ARMES[A.id] || null, cap = f && f.chargeur ? f.chargeur : 0, ch = A.chargeur ?? 0, res = A.reserve ?? 0;
+    // (L-P : le chargeur de l'arme TENUE — un chargeur étendu en a 45 —, sinon celui de la fiche)
+    const L = this._local(), g = L && L.arsenal && L.arsenal.arme && L.arsenal.arme.id === A.id ? L.arsenal.arme : null;
+    const f = g || ARMES[A.id] || null, cap = f && f.chargeur ? f.chargeur : 0, ch = A.chargeur ?? 0, res = A.reserve ?? 0;
     texte(this.eMunCh, ch); texte(this.eMunRes, res); texte(this.eMunNom, nomCourt(A.id));
     const bas = cap > 0 && ch < cap * REGLAGES_HUD.munitionsBas, vide = ch <= 0 && res <= 0;
     classe(this.eMun, 'bas', bas); classe(this.eMun, 'vide', vide);
