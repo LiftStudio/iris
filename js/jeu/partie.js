@@ -34,6 +34,7 @@ import { majProps, preparerCatalogue, retirerProp } from './deguisements.js';
 import { Cerveau } from './cerveau.js';
 import { Errant } from './pilotage.js';
 import { entree } from '../settings.js';
+import { prechargerArmes } from './modeles_armes.js';
 
 const ANNEAU = 256;
 // les drapeaux de partie du corps de Haythem, posés à l'entrée et RETIRÉS à la sortie (l'école telle qu'en balade)
@@ -87,6 +88,7 @@ export class Partie {
   // ---------------------------------------------------------------- préparation, entrée, sortie
   async preparer(progres) {
     const g = this.game, P = this.constructor.prerequis, pr = progres || (() => {});
+    const armes = prechargerArmes({ game: g });   // L-X : les 8 GLB des armes, une fois par session, pendant le graphe
     const M = mondeDesParties(g);
     this.monde = M;
     pr('Plan de l’école', 0);
@@ -96,6 +98,7 @@ export class Partie {
     pr('Plan de l’école', 1);
     if (P.avatars) await preparerAvatars(g, this.opts.avatars || [], pr);
     if (P.catalogue) await preparerCatalogue(g, pr);
+    await armes;   // (avant l'arme de vue : elle crée ses armes et compile sa scène)
     pr('Armes et effets', 0);
     const A = this.aff;
     if (A.viewmodel?.preparer) await A.viewmodel.preparer(pr);

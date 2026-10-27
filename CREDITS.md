@@ -34,6 +34,13 @@ fichier liste ce qui vient de tiers dans ce qui a été gardé.
 - Les motos, scooters, vélos, la trottinette et tout le mobilier de la rue sont modelés par le code
   (`js/ecole_rue_mobilier.js`) : aucun fichier.
 
+## Armes
+
+- `assets/armes/*.glb`, `assets/tel/armes/*.glb` : les huit armes 3D (M4A1 → FA-24, Grease Gun M3 → PM-9, fusil à pompe →
+  FP-12, fusil à lunette → TP-50, Makarov → P-17, couteau de combat, grenade, grenade aveuglante) de **3DModelsCC0**
+  (« nisu », https://www.3dmodelscc0.com), domaine public (**CC0 1.0**), conversion GLB par **BoQsc** — adaptées pour IRIS
+  (origine, textures réduites). Preuves de licence : `assets/armes/LICENCES.md`.
+
 ## Textures
 
 - `assets/tex/beton_*` : **Poly Haven** — *Concrete Wall 003* (https://polyhaven.com), licence **CC0 1.0** (domaine

@@ -69,6 +69,8 @@ const prise = (o, p, f, n, doigts, index = doigts, pouce = null) => ({ o, p, f: 
 const POUCE_TENU = [0.8, 0.8, 0.6];
 const POIGNEE = (o = [0, 0, 0]) => prise(o, [0.024, -0.075, 0.062], [-0.10, -0.30, -0.95], [-1, 0.05, 0], [1.05, 1.25, 0.9], [0.30, 0.45, 0.35], POUCE_TENU);
 const GARDE = (o) => prise(o, [-0.022, -0.014, 0.046], [0.42, 0.30, -0.86], [0.25, 1, 0.12], [0.85, 1.05, 0.75], [0.55, 0.6, 0.45], [0.3, 0.2, 0.1]);
+// (L-X : la main gauche SOUS le garde-main des vraies armes, paume vers le haut, doigts autour du côté lointain)
+const GARDE_DESSOUS = (o) => prise(o, [-0.014, -0.030, 0.044], [0.55, 0.40, -0.73], [-0.40, 0.92, 0.05], [0.95, 1.1, 0.8], [0.75, 0.85, 0.6], [0.05, 0, 0]);
 // (F2, demande de L-W : le point tenu du CHARGEUR est le repère `saisieChargeur` des modèles de L-W — le flanc gauche du
 // chargeur, au tiers bas — : les points d'avant tombaient 2 à 4,5 cm sous les vrais chargeurs ; le poignet garde son décalage)
 const SAISIE = (id, repli) => (REPERES[id] && REPERES[id].saisieChargeur) || repli;
@@ -78,25 +80,25 @@ const PRISE_LEVIER = { o: [0, 0, 0], p: null, f: null, n: null };
 // de la perle — par la perle, à 0,24 m, l'arme flottait 66 cm trop loin et la crosse était loin derrière l'œil)
 export const repereVisee = (id) => (REPERES[id] && (REPERES[id].oeilleton || REPERES[id].visee)) || [0, 0.06, 0];
 export const PRISES = {
-  fa24: { d: POIGNEE(), g: GARDE(REPERES.fa24.mainG),
+  fa24: { d: POIGNEE(), g: GARDE_DESSOUS(REPERES.fa24.mainG),
     chargeur: prise(SAISIE('fa24', [0, -0.17, -0.14]), [-0.045, -0.19, -0.075], [0.25, 0.35, -0.90], [1, 0.1, 0.1], [0.9, 1.0, 0.8]),
-    arretoir: prise([-0.028, 0.005, -0.09], [-0.075, -0.035, -0.03], [0.55, 0.40, -0.73], [0.9, 0, 0.3], [0.3, 0.3, 0.2]) },
+    arretoir: prise(REPERES.fa24.arretoir, [-0.075, -0.035, -0.03], [0.55, 0.40, -0.73], [0.9, 0, 0.3], [0.3, 0.3, 0.2]) },
   pm9: { d: POIGNEE(), g: GARDE(REPERES.pm9.mainG),
     chargeur: prise(SAISIE('pm9', [0, -0.15, -0.08]), [-0.045, -0.17, -0.02], [0.25, 0.35, -0.90], [1, 0.1, 0.1], [0.9, 1.0, 0.8]),
-    arretoir: prise([-0.026, 0.01, -0.06], [-0.07, -0.03, 0.0], [0.55, 0.40, -0.73], [0.9, 0, 0.3], [0.3, 0.3, 0.2]) },
+    arretoir: prise(REPERES.pm9.arretoir, [-0.07, -0.03, 0.0], [0.55, 0.40, -0.73], [0.9, 0, 0.3], [0.3, 0.3, 0.2]) },
   // (la pompe : la main gauche suit sa course, 9 cm vers la crosse ; « chargeur » = la fenêtre où l'on pousse les cartouches)
-  fp12: { d: POIGNEE(), g: GARDE(REPERES.fp12.mainG), course: REPERES.fp12.courseMainG || 0.09,
+  fp12: { d: POIGNEE(), g: GARDE_DESSOUS(REPERES.fp12.mainG), course: REPERES.fp12.courseMainG || 0.09,
     chargeur: prise([0, -0.05, -0.10], [-0.035, -0.10, -0.04], [0.3, 0.55, -0.78], [0.3, 1, 0], [0.7, 0.8, 0.6]),
     arretoir: prise([0, -0.05, -0.10], [-0.035, -0.10, -0.04], [0.3, 0.55, -0.78], [0.3, 1, 0], [0.7, 0.8, 0.6]) },
-  tp50: { d: POIGNEE(), g: GARDE(REPERES.tp50.mainG),
+  tp50: { d: POIGNEE(), g: GARDE_DESSOUS(REPERES.tp50.mainG),
     chargeur: prise(SAISIE('tp50', [0, -0.10, -0.12]), [-0.045, -0.13, -0.06], [0.25, 0.35, -0.90], [1, 0.1, 0.1], [0.9, 1.0, 0.8]),
-    arretoir: prise([0.05, 0.03, 0.02], [-0.02, -0.03, 0.06], [0.6, 0.45, -0.66], [0.8, 0.2, 0.4], [0.5, 0.5, 0.4]),
+    arretoir: prise(REPERES.tp50.arretoir, [-0.02, -0.03, 0.06], [0.6, 0.45, -0.66], [0.8, 0.2, 0.4], [0.5, 0.5, 0.4]),
     levier: prise([0.05, 0.03, 0.025], [0.075, -0.035, 0.085], [-0.35, 0.40, -0.85], [-0.55, 0.75, 0.1], [0.8, 1.0, 0.8], [0.6, 0.8, 0.6]) },
   // (le pistolet : poignée inclinée de 15°, la main gauche referme la droite)
-  p17: { d: prise([0, 0, 0], [0.022, -0.072, 0.050], [-0.10, -0.24, -0.96], [-1, 0.05, 0], [1.05, 1.25, 0.9], [0.30, 0.45, 0.35], POUCE_TENU),
-    g: prise(REPERES.p17.mainG, [-0.050, -0.055, 0.035], [0.55, -0.05, -0.83], [0.95, 0.2, 0.1], [1.0, 1.1, 0.8], [0.9, 1.0, 0.7], [0.2, 0.1, 0.1]),
+  p17: { d: prise([0, 0, 0], [0.020, -0.050, 0.058], [-0.20, -0.35, -0.91], [-1, 0.1, 0], [1.05, 1.25, 0.9], [0.30, 0.45, 0.35], POUCE_TENU),
+    g: prise(REPERES.p17.mainG, [-0.030, -0.030, 0.030], [0.65, 0.05, -0.76], [0.92, 0.3, 0.1], [1.0, 1.1, 0.8], [0.9, 1.0, 0.7], [0.2, 0.1, 0.1]),
     chargeur: prise(SAISIE('p17', [0, -0.12, 0.03]), [-0.04, -0.16, 0.05], [0.3, 0.6, -0.74], [0.9, 0.2, 0.1], [0.9, 1.0, 0.8]),
-    arretoir: prise([-0.016, 0.03, -0.02], [-0.06, -0.01, 0.03], [0.55, 0.40, -0.73], [0.9, 0, 0.3], [0.3, 0.3, 0.2]) },
+    arretoir: prise(REPERES.p17.arretoir, [-0.06, -0.01, 0.03], [0.55, 0.40, -0.73], [0.9, 0, 0.3], [0.3, 0.3, 0.2]) },
 };
 // la main tenant un objet (couteau, grenade) : le repère de base des voies dr* (doigts vers l'avant, paume vers la gauche)
 const F0 = new THREE.Vector3(0, 0, -1), N0 = new THREE.Vector3(-1, 0, 0);
