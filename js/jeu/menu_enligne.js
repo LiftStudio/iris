@@ -97,7 +97,10 @@ export class MenuEnLigne {
     if (this.el.hidden) return;
     if (!r) {
       E.className = 'me-etat ko'; S.textContent = 'SERVEUR INTROUVABLE';
-      T.innerHTML = `Le jeu tourne sans son serveur en ligne (lancé par Python). Ferme la fenêtre noire et relance <code>Lancer.bat</code> : avec Node.js
+      // (la version web — GitHub Pages — n'a que les fichiers du jeu : pas de serveur derrière)
+      if (/github\.io$/i.test(location.hostname)) T.innerHTML = `La version web n’a pas encore de serveur pour jouer à plusieurs : en attendant, joue en <b>COMBAT</b>
+        contre les bots. Pour jouer entre amis tout de suite, l’un de vous télécharge le jeu et lance <code>Lancer.bat</code> (voir la page GitHub).`;
+      else T.innerHTML = `Le jeu tourne sans son serveur en ligne (lancé par Python). Ferme la fenêtre noire et relance <code>Lancer.bat</code> : avec Node.js
         installé, il ouvre le jeu ET le serveur sur le même port.<br>Adresse cherchée : <code>${esc(adresseServeur())}</code>`;
       return;
     }

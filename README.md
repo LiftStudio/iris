@@ -4,6 +4,12 @@ L'école **IRIS** (MediaSchool) en 3D, dans le navigateur : la balade libre, un 
 Call of Duty (SISR contre SLAM, contre des bots), un prop hunt, un stand de tir, et **un mode EN LIGNE pour jouer entre
 élèves**.
 
+## Jouer tout de suite, dans le navigateur
+
+**👉 https://liftstudio.github.io/iris/** — rien à installer : ouvre le lien sur un PC (Chrome ou Edge conseillés),
+attends le chargement (une minute la première fois), et joue. La balade, le combat contre les bots, le prop hunt et le
+stand de tir marchent tels quels. Le mode EN LIGNE (entre élèves) demande, lui, le serveur : voir juste en dessous.
+
 ## Installer et jouer (Windows)
 
 1. **Télécharge le jeu** : bouton vert **Code** → **Download ZIP**, puis décompresse le dossier où tu veux.
