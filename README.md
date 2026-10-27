@@ -1,5 +1,38 @@
 # IRIS — l'école en 3D
 
+L'école **IRIS** (MediaSchool) en 3D, dans le navigateur : la balade libre, un jeu de tir à la première personne façon
+Call of Duty (SISR contre SLAM, contre des bots), un prop hunt, un stand de tir, et **un mode EN LIGNE pour jouer entre
+élèves**.
+
+## Installer et jouer (Windows)
+
+1. **Télécharge le jeu** : bouton vert **Code** → **Download ZIP**, puis décompresse le dossier où tu veux.
+   (Ou, si tu as git : `git clone https://github.com/LiftStudio/iris.git`.)
+2. **Installe Node.js** (version LTS, gratuit) : https://nodejs.org. C'est lui qui fait tourner le jeu ET le serveur en
+   ligne. Sans Node, Python suffit pour jouer seul (https://www.python.org, coche « Add Python to PATH »).
+3. **Double-clique `Lancer.bat`** dans le dossier : le navigateur s'ouvre sur http://localhost:8124 (Chrome ou Edge
+   conseillés). Garde la fenêtre noire ouverte tant que tu joues.
+
+Le premier chargement prend une minute (l'école et les avatars) ; les suivants sont plus rapides.
+
+### Jouer à plusieurs (mode EN LIGNE)
+
+- **Sur le même wifi** : un seul joueur lance `Lancer.bat`. La fenêtre noire et l'écran **EN LIGNE** affichent une
+  adresse du genre `http://192.168.1.12:8124` : les autres l'ouvrent dans leur navigateur (PC, téléphone ou tablette),
+  rien à installer de leur côté. Chacun clique **EN LIGNE**, choisit son pseudo et son personnage, puis **JOUER**.
+- **À distance** : voir [serveur/LISEZMOI.md](serveur/LISEZMOI.md) (un tunnel gratuit, sans compte).
+- Au premier lancement, Windows demande l'autorisation pour `node` : **Autoriser**, en cochant **Réseaux privés**.
+
+### Les touches du combat
+
+ZQSD / flèches pour bouger · souris pour viser · clic gauche tirer · clic droit viser · R recharger · Maj sprint ·
+C s'accroupir / glisser · Espace sauter · 1 / 2 ou molette changer d'arme · V couteau · G grenade · F ramasser ·
+**B changer d'arme et de viseur** ·
+Échap pause. Toutes les touches se changent dans OPTIONS.
+
+---
+
+
 Un jeu à part, tiré de **LA CAGE** : le même moteur, le même rendu et la même façon de bouger, mais **sans ballon**. On
 y promène **Haythem**, et rien que lui, dans l'école **IRIS** (MediaSchool) : marcher, courir, sprinter, sauter,
 s'asseoir, danser, sortir son téléphone, prendre l'ascenseur. Pas de match, pas de score, pas de boutique : une balade
